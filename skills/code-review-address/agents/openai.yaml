@@ -1,0 +1,6 @@
+interface:
+  display_name: "Address Code Review"
+  short_description: "Evaluate and address every PR review comment"
+  default_prompt: "Use $code-review-address to evaluate and address every review comment on the current pull request."
+policy:
+  allow_implicit_invocation: false

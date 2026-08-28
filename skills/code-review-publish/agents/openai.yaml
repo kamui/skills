@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Code Review"
+  short_description: "Review changes and publish findings to PR and issue"
+  default_prompt: "Use $code-review-publish to review the changes since main and publish the findings to the linked issue and pull request."
