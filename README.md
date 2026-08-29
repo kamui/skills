@@ -51,7 +51,7 @@ Installation has been checked with the `skills` CLI targets for Codex, Claude Co
 
 ### `code-review-publish`
 
-Reviews a change, publishes one pull-request comment per finding, and adds a review note to the originating issue when the tracker supports it.
+Reviews a change and publishes one pull-request line comment per finding plus a review summary comment on the pull request. When the pull-request author and the reviewer are the same user, the summary is posted as a general pull-request comment. Nothing is published to the originating issue, which serves only as the spec source.
 
 The skill uses the best matching model-invoked code-review skill available. If none is installed, the model performs the review directly. It keeps repository-standards and originating-spec findings separate.
 
@@ -61,7 +61,7 @@ It activates when a caller asks to review an issue-linked pull request and inten
 $code-review-publish
 ```
 
-The host agent needs access to the pull request and issue tracker to publish the review.
+The host agent needs access to the pull request to publish the review.
 
 ### `code-review-address`
 
