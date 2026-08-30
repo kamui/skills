@@ -90,7 +90,7 @@ An addresser asks by replying `needs-info` on the thread it is stuck on, and lea
 
 Severity tells an addresser what a decline costs. An optional finding can be declined on preference without causing `Changes Requested`. Everything else is blocking, including a human's comment carrying no label at all, and holds the review at `Changes Requested` until the reviewer settles it — so declining there needs a reason built to convince the reviewer, not merely to record a position.
 
-A question is not a finding. It carries no axis, counts toward no axis total, and never counts toward the round cap — an unanswered question is not a disputed point, just an open one. Answer a question with `answered` and resolve the thread; a question that turns out to expose a defect becomes a finding in the next review, with its own id.
+A question is not a finding. It carries no axis, counts toward no axis total, and never counts toward the round cap — an unanswered question is not a disputed point, just an open one. Re-reviews link to the same open question rather than posting it again. It keeps the review at `Needs Information` until someone answers it, the reviewer withdraws it as irrelevant, or the reviewer determines its answer cannot change the verdict; it never ages into approval. An unattended loop stops and reports what it is waiting for. Answer a question with `answered` and resolve the thread; a question that turns out to expose a defect becomes a finding in the next review, with its own id.
 
 Questions still open at the end of a run go under `## Open questions` in the summary, so whoever picks the pull request up next sees what is waiting on them.
 
@@ -151,7 +151,7 @@ Every review reaches one status. The findings tell the author what to change; th
 | --- | --- | --- |
 | `Changes Requested` | at least one blocking finding is unsettled | `REQUEST_CHANGES` when authorized; otherwise `COMMENT` |
 | `Needs Information` | no blocking finding is unsettled, but an unanswered question could change the verdict | `COMMENT` |
-| `Approved` | nothing blocks the merge and no outcome-changing question is unanswered | `APPROVE` when authorized; otherwise `COMMENT` |
+| `Approved` — rendered `Approved (advisory)` in a non-gating body | nothing blocks the merge and no outcome-changing question is unanswered | `APPROVE` when authorized; otherwise `COMMENT` |
 
 `Needs Information` is deliberately narrow: it kicks the review back for context that is necessary to decide. It is invalid without a concrete unanswered question naming both the missing information and the person or source expected to provide it.
 
@@ -163,7 +163,7 @@ Derive the status in order rather than judging it separately:
 
 Classify each axis before deriving the status: passed, findings, `Not applicable`, or needs information. With no originating spec, Requirements is `Not applicable` unless the user or repository workflow requires one; a required missing spec becomes a concrete question. An axis the reviewer simply failed to assess is an operational failure to finish or report, not a reason to publish `Needs Information`.
 
-Authorization never changes the status. It changes only which forge event may carry it. A self-review or unauthorized review with no blockers or outcome-changing questions is still `Approved`; present it as `Approved (advisory)` when the forge permits only a comment.
+Authorization never changes the status. It changes only which forge event may carry it. A self-review or unauthorized review with no blockers or outcome-changing questions is still `Approved`; render that status as its defined `Approved (advisory)` form when the forge permits only a comment.
 
 A disputed blocking finding holds the status at `Changes Requested` and needs a person. The round cap stops that finding being re-posted; it does not turn a blocker into a merge.
 
@@ -185,11 +185,11 @@ For a needs-information review, the first line carries the actionable question:
 **Needs Information** — @author, confirm whether retries must preserve request order.
 ```
 
-For an approved review that cannot gate the merge, write `**Approved (advisory)**`. This covers a forge with no review system and a review whose event the forge will not take: GitHub refuses `APPROVE` and `REQUEST_CHANGES` on your own pull request, and an unauthorized reviewer submits `COMMENT` whatever the status. A bare `COMMENT` carries none of those meanings, so the body has to.
+For an approved review that cannot gate the merge, write the table's defined display form, `**Approved (advisory)**`. This covers a forge with no review system and a review whose event the forge will not take: GitHub refuses `APPROVE` and `REQUEST_CHANGES` on your own pull request, and an unauthorized reviewer submits `COMMENT` whatever the status. A bare `COMMENT` carries none of those meanings, so the body has to.
 
-A status can move without the head moving — a decline accepted, a question answered, an `already-addressed` reply verdicted `fixed`, nothing recommitted. Publishing that new status takes a new review: a review's state is fixed at submission, and the update endpoint rewrites a body, not a state. On GitHub only a later `APPROVE` from the same identity clears an earlier `REQUEST_CHANGES`; a `COMMENT` does not, so a move from `Changes Requested` to `Needs Information` or advisory `Approved` also dismisses the review it supersedes.
+A status can move without the head moving — a decline accepted, a question answered, an `already-addressed` reply verdicted `fixed`, nothing recommitted. Publishing that new status takes a new review: a review's state is fixed at submission, and the update endpoint rewrites a body, not a state. On GitHub inspect the superseded review's state before dismissing it. `COMMENTED` carries no gate, so a new review alone settles it. A later gate event supersedes the same identity's earlier gate state; in particular, `APPROVE` clears `CHANGES_REQUESTED`. A new `COMMENT` cannot clear an old `APPROVED` or `CHANGES_REQUESTED` state, so dismiss that gating review when the semantic status moves to `Needs Information` or another non-gating form.
 
-Where the forge refuses that dismissal — a branch protection rule can restrict who may dismiss a review — no event can carry the new status. Write it in the body and report the stale `REQUEST_CHANGES` as needing an authorized actor. Reporting `Changes Requested` instead would state a conclusion the review did not reach.
+Where the forge refuses a required dismissal — a branch protection rule can restrict who may dismiss a review — write the new semantic status in the body and report the exact stale gating state as needing an authorized actor. Changing the conclusion to match the stale event would state a result the review did not reach.
 
 ## Review summary
 
@@ -294,7 +294,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 - **Request a re-review**: `gh pr edit <n> --add-reviewer <login>`, or `gh api --method POST repos/{owner}/{repo}/pulls/<n>/requested_reviewers -f 'reviewers[]=<login>'`. Take `<login>` from the review being addressed. Authoring the pull request is no bar to requesting one: GitHub returns 422 only when `<login>` is the pull request's own author, or the account cannot review it. Where one identity both reviewed and addressed, that refusal is certain and the summary comment is the whole signal.
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
 - **Update a review body**: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'`. This is the second phase of a linked index — the POST that creates the review returns the comment ids its `_links` resolve from. It takes a body and nothing else, so a status change needs a new review rather than an edit to this one.
-- **Supersede or dismiss a review**: a later `APPROVE` from the same identity clears that identity's earlier `REQUEST_CHANGES`; a `COMMENT` leaves it standing. To clear one without approving: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id>/dismissals -f message='...' -f event=DISMISS`. Write access is the baseline, and a branch protection rule restricting who may dismiss a review can refuse it anyway — a `403` there is an answer, not something to retry.
+- **Supersede or dismiss a review**: a later gating event from the same identity supplies its current gate state; in particular, `APPROVE` clears an earlier `REQUEST_CHANGES`. A `COMMENT` leaves an earlier `APPROVED` or `CHANGES_REQUESTED` state standing. To clear a gate without replacing it: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id>/dismissals -f message='...' -f event=DISMISS`. Write access is the baseline, and a branch protection rule restricting who may dismiss a review can refuse it anyway — a `403` there is an answer, not something to retry.
 - **Add a reaction**: `gh api --method POST repos/{owner}/{repo}/pulls/comments/<id>/reactions -f content=eyes`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>/reactions`. Content is one of `+1`, `-1`, `laugh`, `confused`, `heart`, `hooray`, `rocket`, `eyes`. A review object itself takes no reactions — react to its comments.
 - **Resolve or reopen a thread**: GraphQL only, no REST equivalent.
 
