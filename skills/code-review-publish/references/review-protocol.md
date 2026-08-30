@@ -17,22 +17,24 @@ The pull request under review is a fixed target. Neither skill opens, retargets,
 `code-review-publish` posts one comment per finding:
 
 ```markdown
-**[Standards] Duplicated validation in `parseOrder`**
+**[Code] Duplicated validation in `parseOrder`**
 
 `src/order.ts:42` repeats the shape in `src/cart.ts:18`. `CODING_STANDARDS.md` §3: one home per rule.
 
 **Change**: extract `assertOrderShape` and call it from both.
 
-<!-- finding id=standards/order-ts/duplicated-validation head=a1b2c3d -->
+<!-- finding id=code/order-ts/duplicated-validation head=a1b2c3d -->
 ```
 
-- Bold title line, axis tag first: `[Standards]` or `[Spec]`.
-- Evidence: the `file:line`, plus the quoted standard or spec line it breaches.
+- Bold title line, axis tag first: `[Code]` or `[Requirements]`.
+- `[Code]` covers correctness, documented repository standards, and implementation quality.
+- `[Requirements]` covers missing, partial, incorrect, or unrequested behavior against the originating spec.
+- Evidence: the `file:line` and concrete behavior; cite the documented rule or originating requirement when one applies.
 - A **Change**: line naming the concrete edit.
 - Six lines or fewer above the trailer. Whoever acts on it, human or agent, acts from this comment alone.
 - The trailer is an HTML comment: invisible in the rendered view, present in the raw body via `gh api`.
 
-The `id` slugs axis, file, and finding title — never a line number, since lines drift between rounds and the id has to survive that. One finding against the same code keeps one id across every round.
+The `id` slugs the axis (`code` or `requirements`), file, and finding title — never a line number, since lines drift between rounds and the id has to survive that. One finding against the same code keeps one id across every round. Prior findings with legacy `standards` or `spec` ids retain those ids on re-review; renaming one would break its thread correlation.
 
 ## Reply comments
 
@@ -41,7 +43,7 @@ The `id` slugs axis, file, and finding title — never a line number, since line
 ```markdown
 **Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green.
 
-<!-- reply to=standards/order-ts/duplicated-validation disposition=implemented head=9f1e0aa -->
+<!-- reply to=code/order-ts/duplicated-validation disposition=implemented head=9f1e0aa -->
 ```
 
 The bold word is the disposition:
