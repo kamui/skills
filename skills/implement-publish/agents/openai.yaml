@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement and Publish"
+  short_description: "Implement work and publish it as a pull request"
+  default_prompt: "Use $implement-publish to implement the work in the linked issue and open a pull request for it."

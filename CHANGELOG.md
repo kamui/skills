@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `implement-publish`, which implements the work described by a spec, issue, or set of tickets and opens one pull request for it, delegating implementation to the best matching installed skill.
+
 ## [0.0.2] - 2026-08-29
 
 ### Changed
@@ -18,3 +24,4 @@
 
 [0.0.1]: https://github.com/kamui/skills/releases/tag/v0.0.1
 [0.0.2]: https://github.com/kamui/skills/releases/tag/v0.0.2
+[Unreleased]: https://github.com/kamui/skills/compare/v0.0.2...HEAD
