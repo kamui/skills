@@ -17,6 +17,7 @@
 
 ### Changed
 
+- The round-closing re-review ask no longer depends on the forge accepting a review request. Where the forge routes none, or refuses this one because the reviewing identity authored the pull request, the addressing summary carries `Re-requesting review from @<login>.` instead — the mention notifies them, which is what the request was for. `code-review-address` settles which form applies before writing the summary and no longer explains the forge's refusal on the pull request, where a paragraph about a rejected API call was noise around the ask itself.
 - `code-review-address` reconciles the pull request title and description with the final diff and originating spec before closing an addressing round, updating stale metadata while preserving still-valid context and issue links.
 - Review findings use `[Code]` for correctness and implementation quality and `[Requirements]` for fidelity to the originating spec. New stable ids use `code/` and `requirements/`; legacy `standards/` and `spec/` ids keep their original values across re-reviews.
 - `code-review-address` is model-invocable, so a review loop can reach it as its fix step.
