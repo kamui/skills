@@ -88,7 +88,7 @@ Where a user is in the session, ask them directly; it is faster and they may unb
 
 An addresser asks by replying `needs-info` on the thread it is stuck on, and leaves it open. This disposition belongs to an existing finding and never determines the review status directly: the finding keeps its original severity, so a blocking one still means `Changes Requested` while an optional one does not. It is distinct from the reviewer's `Needs Information` status.
 
-A reviewer's whole-change question, such as a required missing spec, belongs under `## Open questions` in the review body rather than on an arbitrary line. Give it the same `question id=... head=...` trailer as a line question. It has no thread to resolve: an addresser answers it with one general pull-request comment in the reply shape, carrying `disposition=answered` and `to=<question id>`. The next review correlates that reply, treats the question as answered, and omits it from `## Open questions`.
+A reviewer's whole-change question, such as a required missing spec, belongs under `## Open questions` in the review body rather than on an arbitrary line. Give it the same `question id=... head=...` trailer as a line question. It has no thread to resolve. The addresser answers it inside the round's single addressing summary: add one concise `answered` entry for the question and its `<!-- reply to=<question id> disposition=answered head=<head> -->` trailer. Multiple whole-change answers share that summary but keep one entry and trailer apiece. The next review correlates the reply trailer, treats the question as answered, and omits it from `## Open questions`.
 
 Severity tells an addresser what a decline costs. An optional finding can be declined on preference without causing `Changes Requested`. Everything else is blocking, including a human's comment carrying no label at all, and holds the review at `Changes Requested` until the reviewer settles it — so declining there needs a reason built to convince the reviewer, not merely to record a position.
 
@@ -195,7 +195,7 @@ Requirements: Passed. Code: Findings — 1 blocking, 2 optional.
 For a needs-information review, the first line carries the actionable question:
 
 ```markdown
-**Needs Information** — @author, confirm whether retries must preserve request order.
+**Needs Information** — @octocat, confirm whether retries must preserve request order.
 
 Requirements: Waiting for information. Code: Passed.
 ```
@@ -228,13 +228,15 @@ A batched review creates its body and its comments in one call, so the comment U
 Resolving every thread leaves a pull request looking untouched. The forge collapses resolved threads, so a round that answered everything and a round that did nothing render the same, and the reviewer has to expand each one to find out which. `code-review-address` closes a round with one general pull-request comment:
 
 ```markdown
-**Addressed** at `5844a3c` — 2 implemented, 1 declined.
+**Addressed** at `5844a3c` — 2 implemented, 1 answered, 1 declined.
 
 - `implemented` — [verdict vocabulary](url), [dismissal authority](url)
+- `answered` — `question/retry-order`: retries preserve request order
 - `declined` — [axis tag rename](url), open for your verdict
 
 `pnpm test` green. Every other thread resolved.
 
+<!-- reply to=question/retry-order disposition=answered head=5844a3c -->
 <!-- addressed head=5844a3c -->
 ```
 
@@ -244,7 +246,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 - the checks run;
 - whether the round is finished or waiting — the sentence the reviewer would otherwise open every thread to infer.
 
-One comment per round, never one per item. A large round makes the summary more necessary, not longer: the detail already sits in the threads and the summary is the index into them. Re-running at the same head updates that comment rather than posting a second.
+One comment per round, never one per item. Whole-change question answers are the only per-item detail in this comment because those questions have no threads: give each a concise answer entry and its own reply trailer in the summary. Every other item's detail stays in its thread, and the summary only indexes it. Re-running at the same head updates that comment rather than posting a second.
 
 Where the forge routes review requests, ask for a re-review from the identity whose review the round addressed. That puts the round in their queue instead of leaving it to be noticed, and it is the counterpart to the reviewer's status — the reviewer says where the change stands, the addresser says it is ready to be looked at again. A re-request does not clear an earlier `REQUEST_CHANGES`; only a later review from that identity, or a dismissal, does.
 
