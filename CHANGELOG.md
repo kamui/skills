@@ -17,6 +17,7 @@
 
 ### Changed
 
+- `code-review-address` reconciles the pull request title and description with the final diff and originating spec before closing an addressing round, updating stale metadata while preserving still-valid context and issue links.
 - Review findings use `[Code]` for correctness and implementation quality and `[Requirements]` for fidelity to the originating spec. New stable ids use `code/` and `requirements/`; legacy `standards/` and `spec/` ids keep their original values across re-reviews.
 - `code-review-address` is model-invocable, so a review loop can reach it as its fix step.
 - `code-review-publish` publishes through the forge's review system when it has one, submitting the summary as the review body with every finding batched as a line comment on the code it names. A general pull-request comment is now the fallback for a forge with no review system or one that refuses the review, not the default for a self-authored pull request.
