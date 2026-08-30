@@ -25,16 +25,18 @@ Follow the repository's branch and commit conventions. If the current branch is 
 
 ### 3. Implement
 
-Honor an implementation skill the user names. Otherwise, invoke the installed implement skill by name; the caller's invocation of this skill authorizes reaching it. If no implementation skill is available, implement the work directly.
+Honor an implementation skill the user names. Otherwise, invoke the model-invoked implementation skill whose description best matches the requested work; the caller's invocation of this skill authorizes reaching it. If no implementation skill is available, implement the work directly.
 
 The implementation must end with the work committed on the branch and the relevant checks run. Follow the repository's conventions for committing and pushing; do not invent a commit policy.
 
 ### 4. Publish the pull request
 
-Push the branch, then create exactly one pull request from it into the base branch. The pull request must:
+Push the branch, then create exactly one pull request from it into the base branch. Before writing, look for an open pull request from this head branch into the base branch. If one exists, update its body when the provider supports edits and report it as an existing publication instead of creating another. Do not create duplicates.
+
+The pull request must:
 
 - summarize the implemented change;
-- link the originating issue and identify it as the spec source;
+- link the originating issue or tickets and identify them as the spec source, or name and link the specification used when the spec is not tracked in the forge;
 - list the verification performed.
 
 Do not change issue status, labels, assignees, or other tracker fields directly.

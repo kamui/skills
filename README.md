@@ -80,7 +80,7 @@ Use the equivalent explicit skill syntax in other harnesses. The host agent need
 
 ### `implement-publish`
 
-Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the installed `implement` skill when one exists, creates a suitable branch when the current one is not pull-request ready, and links the originating issue as the spec source in the pull-request body.
+Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the best matching installed skill, creates a suitable branch when the current one is not pull-request ready, and links the spec source in the pull-request body.
 
 It stops at the pull request. Run `code-review-publish` afterwards to review it.
 
