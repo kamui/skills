@@ -56,7 +56,7 @@ The three skills compose into a loop: `implement-publish` opens a pull request, 
 
 Reviews a change and publishes it through the forge's review system: the summary as the review body, and one line comment per finding on the code that finding names. Where a forge has no review system or refuses the review, the summary falls back to a single pull-request comment. Nothing is published to the originating issue, which serves only as the spec source.
 
-The skill uses the best matching model-invoked code-review skill available. If none is installed, the model performs the review directly. It keeps repository-standards and originating-spec findings separate.
+The skill uses the best matching model-invoked code-review skill available. If none is installed, the model performs the review directly. It keeps **Code** findings about correctness and implementation quality separate from **Requirements** findings about fidelity to the originating spec.
 
 It activates when a caller asks to review an issue-linked pull request and intends to post comments or a review to that pull request. Read-only review requests do not activate it. You can also invoke it directly:
 
@@ -99,13 +99,13 @@ The host agent needs access to the forge to create the pull request.
 `code-review-publish` and `code-review-address` each ship `references/review-protocol.md`, the contract they hand work across. It fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
 
 ```markdown
-**[Standards] Duplicated validation in `parseOrder`**
+**[Code] Duplicated validation in `parseOrder`**
 
 `src/order.ts:42` repeats the shape in `src/cart.ts:18`. `CODING_STANDARDS.md` §3: one home per rule.
 
 **Change**: extract `assertOrderShape` and call it from both.
 
-<!-- finding id=standards/order-ts/duplicated-validation head=a1b2c3d -->
+<!-- finding id=code/order-ts/duplicated-validation head=a1b2c3d -->
 ```
 
 The trailer is invisible in GitHub's rendered view and present in the raw body through `gh api`. Its `id` slugs the axis, file, and finding title rather than a line number, so one finding keeps one identity across rounds even as the code moves under it. Replies carry the mirror form and a disposition — `implemented`, `already-addressed`, `answered`, `declined`, `needs-info`, or `blocked`.
