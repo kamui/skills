@@ -25,6 +25,10 @@ When set to `yes`, PRs run through the same labels and states as issues, using t
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
 
+## Pull request review operations
+
+Reviewing and replying on a pull request needs verbs this file does not carry (batched review submission, inline replies, GraphQL thread resolution). The review skills ship their own `references/review-protocol.md` with those, since they install into repos whose tracker docs differ. This repo is GitHub, so that reference applies as written.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a GitHub issue.

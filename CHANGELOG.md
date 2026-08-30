@@ -4,7 +4,28 @@
 
 ### Added
 
+- `references/review-protocol.md`, mirrored in `code-review-publish` and `code-review-address`: one comment shape for findings and replies, carrying a rendered-invisible trailer so a finding keeps a stable id across review rounds; a shared disposition vocabulary; and a `gh` verb reference covering batched review submission, inline replies, reactions, and GraphQL thread resolution and reopening.
+- Questions as a first-class item on both sides. A reviewer that cannot judge code without knowing something raises a `[Question]` line comment instead of guessing a finding; an addresser stuck on a finding replies `needs-info`. Either asks a user in the session where there is one, and otherwise leaves the question on the pull request so it outlives the run. Questions count toward no axis and toward no round cap, and unanswered ones are listed under `## Open questions` in the summary.
+- An `answered` disposition, which the prose already assumed and the vocabulary lacked.
+- A two-round cap per finding. A finding declined once and then verified unfixed becomes disputed, and is listed for a human to settle instead of being re-posted, so a review loop cannot re-litigate one point forever.
 - `implement-publish`, which implements the work described by a spec, issue, or set of tickets and opens one pull request for it, delegating implementation to the best matching installed skill.
+
+### Changed
+
+- `code-review-address` is model-invocable, so a review loop can reach it as its fix step.
+- `code-review-publish` publishes through the forge's review system when it has one, submitting the summary as the review body with every finding batched as a line comment on the code it names. A general pull-request comment is now the fallback for a forge with no review system or one that refuses the review, not the default for a self-authored pull request.
+- `code-review-publish` submits every line comment in one batched review rather than one review per finding, and its summary indexes findings instead of restating them.
+- `code-review-address` resolves each thread as it finishes it rather than batching resolutions, and either skill can reopen a thread resolved too early.
+- Review verdicts are `fixed`, `accepted`, `obsolete`, and `not-fixed`. `confirmed` was ambiguous — it could be read as the finding being confirmed still present, which is what `not-fixed` names — and there was no verdict for accepting a decline, so a reasoned refusal had nowhere to land.
+- A `declined` reply no longer resolves its own thread. Declining states a position; the reviewer's `accepted` verdict settles it, so a live disagreement stays visible to the round cap instead of being closed by the party that lost it.
+- `code-review-publish` publishes a linked summary index in two phases, since a batched review creates its body and comments in one call and the comment URLs do not exist until it returns.
+- `implement-publish` pushes the head branch before both the existing-pull-request and create paths. Pushing only on the create path left an existing pull request advertising a head without the new work.
+- Both skills close threads, and the bar for closing widened past "its work is done" to cover threads gone obsolete, outdated, or irrelevant. A stale thread from an earlier round is the reviewer's to close.
+- The pull request under review is a fixed target: neither review skill opens, retargets, or closes one. `code-review-publish` stops and reports when a change has no pull request, and `code-review-address` commits fixes to the pull request's existing head branch rather than branching away from it.
+- `code-review-publish` takes its fixed point from the pull request's own merge-base with its base branch instead of asking for one, so a review can run unattended.
+- A finding scoped to a whole file attaches to that file inside the review rather than falling out to a general pull-request comment.
+- Reactions are documented as a signal riding on top of a reply rather than an optional extra, with the reaction-to-meaning mapping both skills share.
+- All three skills drop their capability-negotiation prose. Both review skills read their forge verbs from the shipped protocol reference; `implement-publish` needs only two commands and carries them inline. The freed budget went into the behaviour above rather than into a shorter file: `code-review-publish` is 842 words against 820, `code-review-address` 763 against 839, `implement-publish` 358 against 459, with the 2,148-word protocol reference loaded only when a review skill reaches for it.
 
 ## [0.0.2] - 2026-08-29
 

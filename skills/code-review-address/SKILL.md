@@ -1,80 +1,50 @@
 ---
 name: code-review-address
-description: Manually invoked workflow to address every pull-request review comment and publish a direct response to each one. Load only when the caller explicitly invokes code-review-address.
-disable-model-invocation: true
+description: Address every review comment on a pull request, make the warranted changes, and reply to each one. Use when review feedback on a pull request needs working through, including as the fix step of a review loop.
 ---
 
 # Address code review
 
-Evaluate every review comment, make the warranted changes, and publish a direct response to every comment. A disagreement or no-change decision still requires a reply.
+Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
+
+Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the disposition vocabulary, questions, reactions, thread state, the round cap, and the `gh` verbs.
+
+Invoking this skill authorizes the replies, resolutions, and thread actions below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
 ## Process
 
-### 1. Resolve the target and capabilities
+### 1. Inventory the feedback
 
-Read the repository's issue-tracker instructions, including `docs/agents/issue-tracker.md` when present. Resolve the pull request, its current head SHA and branch, and the connected forge or issue-tracker capabilities for:
+Read `docs/agents/issue-tracker.md` when present, then resolve the pull request, its head SHA and branch. Ask before editing code if it is ambiguous.
 
-- inline review threads and comments;
-- overall review bodies and pull-request comments;
-- replies, thread resolution or closure, and reactions.
+Fetch every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Skip automated status messages unless they ask for a change.
 
-Treat tools by capability, not vendor name. Explicit invocation authorizes the replies, resolutions, closures, and reactions described here. Follow the repository's normal authorization and workflow for commits and pushes.
+Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, requested change, and whether this identity already replied. A review body is its own ledger item when it carries feedback its inline comments do not.
 
-If the pull request is ambiguous, ask before editing code or writing externally. If a capability is absent, continue with the supported actions and record the gap.
+### 2. Evaluate and address each item
 
-### 2. Inventory all review feedback
+Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
 
-Fetch all review feedback, including inline comments, review threads, overall review bodies, and general pull-request comments that contain review feedback. Exclude automated status messages unless they request a code or documentation change.
+Check each item against the current code, the diff, the originating spec, and documented repository standards, then assign a disposition from the protocol. Do not accept feedback on authority — a reviewer, human or agent, can be wrong about this codebase. Where the concern is valid but the requested fix is not, implement the better alternative and say so.
 
-Create a ledger keyed by each item's stable identifier or URL. Record its author, location, parent review, current resolution state, requested change, and whether it already has a substantive response from the current posting identity. Do not respond twice.
+A reviewer's `[Question]` is a ledger item like any other: answer it, mark it `answered`, and resolve the thread.
 
-An overall review body is a separate feedback item when it contains feedback not represented by its inline comments. If the provider cannot reply directly to it, use a pull-request-level reply that links to or clearly identifies the review.
+A finding you already declined and the reviewer has raised again is a dispute, not a repeat. Answer the reviewer's counter-argument rather than restating the original rationale, and where neither side moves, say plainly that it needs a human call — the protocol's round cap stops it there.
 
-### 3. Evaluate and address each item
+Uncertainty resolves to `needs-info`, never to silent compliance or a silent decline — but ask only once the code, spec, standards, and history have failed to answer it. Put the question to a user in the session if there is one; otherwise leave it on the thread, where it outlives this run.
 
-Honor a review-resolution or implementation skill the user names. Otherwise, let normal skill routing select any applicable skill. If none applies, evaluate and implement the feedback directly.
+Apply every warranted change and run the relevant checks before replying. Re-read the resulting diff so each reply describes what the code now does, not what you set out to do.
 
-Check each comment against the current code, diff, originating spec, and documented repository standards. Do not accept feedback blindly. Assign one disposition:
+### 3. Reply to every item
 
-- **Implemented**: make the smallest warranted change and verify it proportionately.
-- **Already addressed**: identify the code, change, or commit that addresses it.
-- **No change required**: explain why the suggestion is inapplicable, incorrect, optional, or intentionally declined, with concrete evidence.
-- **Clarification or alternative**: answer a question, ask a focused question when the evidence is insufficient, or propose a better solution than the requested change.
-- **Blocked**: state the blocker and the remaining action.
+Every item earns a reply, pushing back included — a rejected finding is answered, not ignored. Post one reply per ledger item lacking one, in the protocol's shape, carrying the evidence its disposition requires. Reply to a review body when it holds feedback its threads do not; leave the per-thread detail in the threads. Add a reaction where one says what a sentence would.
 
-Uncertainty is not a reason to accept feedback or silently decline it. Ask the reviewer for the missing information and leave the item open. When the concern is valid but the requested fix is not, explain the tradeoff and suggest or implement the better alternative.
+Resolve each thread as you finish it, not in a batch at the end: reply posted and change live, then resolve. That covers items implemented, already addressed, or answered, and threads gone outdated or irrelevant — the file deleted, the approach replaced. Leave `needs-info` and `blocked` threads open, and resolve nothing whose reply or code change is still missing. A `declined` thread stays open too: declining states a position, and the reviewer accepting it is what settles the disagreement. Where only the reviewer can resolve, report that instead of claiming it.
 
-Apply all warranted code changes and run relevant checks before publishing responses. Re-read the resulting diff so replies describe the actual state. Follow repository conventions for committing and pushing; do not invent a commit policy.
+Re-addressing a pull request, reopen any thread resolved too early — the fix regressed, a later commit undid it, or the earlier reply claimed more than the code delivered — and say why in a new reply on it.
 
-### 4. Reply to every item
+### 4. Verify
 
-Publish one direct, substantive reply for every ledger item that lacks one. Each reply must state the disposition and enough evidence for the reviewer to verify it:
+Re-fetch the review activity and reconcile it against the ledger. Attempt each write once; on an ambiguous result read the target before a single retry. Finish only when every item has a confirmed reply or a reported failure.
 
-- for an implementation, summarize the change and relevant verification, with a commit or location when available;
-- for an already-addressed item, point to the existing implementation;
-- for a no-change decision, give the concise technical or product rationale;
-- for a clarification or alternative, answer, ask the focused question, or explain the proposed approach;
-- for a blocked item, name the blocker and next step.
-
-A reaction never substitutes for the required reply. When the provider supports reactions, add one only when its meaning is unambiguous and useful—for example, a positive acknowledgement for helpful feedback. Do not use negative or argumentative reactions.
-
-Reply to an overall review when it contains independent feedback or when a review-level summary is needed to make the dispositions clear. Avoid duplicating every thread reply in that summary.
-
-### 5. Resolve completed threads
-
-After its reply is confirmed, resolve or close a thread when the provider supports it and no work remains. This includes items implemented, already addressed, answered without a code change, or closed with a justified no-change decision. Leave blocked, incomplete, or awaiting-clarification threads open.
-
-Do not mark a thread resolved before its reply and any required code change are present. If only the reviewer can resolve it, report that limitation instead of claiming success.
-
-### 6. Verify publication
-
-Attempt each external write once. If a result is ambiguous, read the target before one safe retry. Do not duplicate replies, reactions, or resolution actions.
-
-Re-fetch the review activity and reconcile it with the ledger. Finish only after every feedback item has a confirmed reply or a reported publication failure. Report:
-
-- counts by disposition;
-- code changes and checks run;
-- replies posted or already present;
-- threads resolved, left open, or unsupported;
-- reactions added;
-- failed actions and links or stable identifiers for anything requiring follow-up.
+Report counts by disposition, the code changes and checks run, threads resolved, reopened, and left open, questions asked and answered, and links to anything needing follow-up.
