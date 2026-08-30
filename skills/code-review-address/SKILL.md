@@ -39,7 +39,7 @@ Apply every warranted change and run the relevant checks before replying. Re-rea
 
 ### 3. Reply to every item
 
-Every item earns a reply, pushing back included — a rejected finding is answered, not ignored. Post one reply per ledger item lacking one, in the protocol's shape, carrying the evidence its disposition requires. Reply to a review body when it holds feedback its threads do not; leave the per-thread detail in the threads. Add a reaction where one says what a sentence would.
+Every item earns a reply, pushing back included — a rejected finding is answered, not ignored. Post one reply per ledger item lacking one, in the protocol's shape, carrying the evidence its disposition requires. Queue each whole-change question's answer entry and reply trailer for the round's addressing summary rather than posting a separate general comment. Reply to a review body when it holds feedback its threads do not; leave the per-thread detail in the threads. Add a reaction where one says what a sentence would.
 
 Resolve each thread as you finish it, not in a batch at the end: reply posted and change live, then resolve. That covers items implemented, already addressed, or answered, and threads gone outdated or irrelevant — the file deleted, the approach replaced. Leave `needs-info` and `blocked` threads open, and resolve nothing whose reply or code change is still missing. A `declined` thread stays open too: declining states a position, and the reviewer accepting it is what settles the disagreement. Where only the reviewer can resolve, report that instead of claiming it.
 
@@ -47,7 +47,7 @@ Re-addressing a pull request, reopen any thread resolved too early — the fix r
 
 ### 4. Close out the round
 
-Resolving every thread leaves the pull request looking untouched, since the forge collapses what is resolved. Post one general pull-request comment in the protocol's shape: the head addressed, counts by disposition with each item linked to its thread, what still needs someone, and the checks run. Say plainly whether the round is finished or waiting — a round ending at `needs-info` or `blocked` is not done, and this is where the reviewer learns that without opening every thread.
+Resolving every thread leaves the pull request looking untouched, since the forge collapses what is resolved. Post one general pull-request comment in the protocol's shape: the head addressed, counts by disposition with each item linked to its thread where it has one, any whole-change answer entries and reply trailers, what still needs someone, and the checks run. Say plainly whether the round is finished or waiting — a round ending at `needs-info` or `blocked` is not done, and this is where the reviewer learns that without opening every thread.
 
 One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid. Re-running against the same head updates that comment rather than adding a second.
 
