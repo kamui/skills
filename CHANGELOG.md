@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Review findings use `[Code]` for correctness and implementation quality and `[Requirements]` for fidelity to the originating spec. New stable ids use `code/` and `requirements/`; legacy `standards/` and `spec/` ids keep their original values across re-reviews.
 - `code-review-address` is model-invocable, so a review loop can reach it as its fix step.
 - `code-review-publish` publishes through the forge's review system when it has one, submitting the summary as the review body with every finding batched as a line comment on the code it names. A general pull-request comment is now the fallback for a forge with no review system or one that refuses the review, not the default for a self-authored pull request.
 - `code-review-publish` submits every line comment in one batched review rather than one review per finding, and its summary indexes findings instead of restating them.
@@ -25,7 +26,7 @@
 - `code-review-publish` takes its fixed point from the pull request's own merge-base with its base branch instead of asking for one, so a review can run unattended.
 - A finding scoped to a whole file attaches to that file inside the review rather than falling out to a general pull-request comment.
 - Reactions are documented as a signal riding on top of a reply rather than an optional extra, with the reaction-to-meaning mapping both skills share.
-- All three skills drop their capability-negotiation prose. Both review skills read their forge verbs from the shipped protocol reference; `implement-publish` needs only two commands and carries them inline. The freed budget went into the behaviour above rather than into a shorter file: `code-review-publish` is 842 words against 820, `code-review-address` 763 against 839, `implement-publish` 358 against 459, with the 2,148-word protocol reference loaded only when a review skill reaches for it.
+- All three skills drop their capability-negotiation prose. Both review skills read their forge verbs from the shipped protocol reference; `implement-publish` needs only two commands and carries them inline. The freed budget went into the behaviour above rather than into a shorter file: `code-review-publish` is 861 words against 820, `code-review-address` 763 against 839, `implement-publish` 358 against 459, with the 2,198-word protocol reference loaded only when a review skill reaches for it.
 
 ## [0.0.2] - 2026-08-29
 
