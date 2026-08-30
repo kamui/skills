@@ -25,13 +25,13 @@ End with the work committed on the branch and the relevant checks run.
 
 ### 4. Open the pull request
 
-Check for an existing pull request from this head before creating one:
+Push the head branch first — an existing pull request advertises whatever its head points at, so skipping the push leaves the work invisible on a pull request that looks updated. Then check for one before creating another:
 
 ```sh
 gh pr list --head <branch> --base <base> --state open --json number,url
 ```
 
-Update that one's body if it exists; otherwise push and `gh pr create --base <base> --head <branch> --title "..." --body-file -`. Either way, exactly one pull request, and its body must:
+Update that one's body if it exists; otherwise `gh pr create --base <base> --head <branch> --title "..." --body-file -`. Either way, exactly one pull request, and its body must:
 
 - summarize the change;
 - link the originating issue or tickets as the spec source, or name and link the specification when the spec lives outside the forge;

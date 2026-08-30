@@ -39,7 +39,7 @@ The `id` slugs axis, file, and finding title — never a line number, since line
 `code-review-address` replies once per item:
 
 ```markdown
-**Implemented** — extracted `assertOrderShape`; both call sites use it. `pnpm test` green.
+**Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green.
 
 <!-- reply to=standards/order-ts/duplicated-validation disposition=implemented head=9f1e0aa -->
 ```
@@ -97,13 +97,15 @@ A thread stays open only while it still asks something of someone. Both skills c
 
 Resolve a thread when:
 
-- its work is done — implemented, already addressed, answered, or declined for a reason the reviewer accepted;
-- the reviewer verdicts it `obsolete`, the code it described being gone;
+- the reviewer verdicts it `fixed`, `accepted`, or `obsolete`;
+- its work is done and needs no reviewer verdict — a question answered, a finding already addressed by code the reviewer can see;
 - it went outdated or stopped being relevant — the file was deleted, the approach was replaced, the finding was withdrawn.
+
+A `declined` reply does not resolve its own thread. Declining states a position; the reviewer accepting it is what settles the disagreement, and closing early would hide a live dispute from the round cap.
 
 `code-review-address` resolves each thread as it finishes that thread — reply posted, change live — rather than batching resolutions at the end. Threads sitting at `needs-info` or `blocked` stay open.
 
-`code-review-publish` resolves what it verifies fixed, what it finds obsolete, and its own findings once it withdraws them. A stale thread left from an earlier round is the reviewer's to close, not something the addresser inherits.
+`code-review-publish` resolves what it verdicts `fixed`, `accepted`, or `obsolete`, and its own findings once it withdraws them. A stale thread left from an earlier round is the reviewer's to close, not something the addresser inherits.
 
 Reopen a thread rather than file a fresh finding, which would strand the original discussion: the fix regressed, a later commit undid it, or a reply claimed more than the code delivered. Post a new reply on the thread saying why it reopened.
 
@@ -111,22 +113,33 @@ Resolve nothing whose reply is still missing. Where only the other party can res
 
 ## Verdicts and the round cap
 
-Re-reviewing, `code-review-publish` reads each prior finding and its reply, then verdicts the claim against the code — `confirmed`, `not-fixed`, or `obsolete` (the code it described is gone). Verify claims against the diff; a reply's word is evidence of intent, not of outcome.
+Re-reviewing, `code-review-publish` reads each prior finding and its reply, then verdicts it against the code. Verify against the diff: a reply's word is evidence of intent, not of outcome.
 
-A finding `declined` once and then verified `not-fixed` is **disputed**. Publish stops re-posting it and lists it under `## Disputed` in the summary for a human to settle. Two rounds is the cap on any one finding, and that cap is what stops an agent loop re-litigating a point forever.
+| Verdict | Means | The thread |
+| --- | --- | --- |
+| `fixed` | the code now satisfies the finding | resolves |
+| `accepted` | a `declined` reply whose reasoning the reviewer accepts | resolves |
+| `obsolete` | the code the finding described is gone | resolves |
+| `not-fixed` | the finding still stands against the current code | stays open |
+
+`fixed` names the finding's fate, not the reply's credibility, so it cannot be read as "the finding is confirmed still present" — that state is `not-fixed`.
+
+A finding `declined` once and then verdicted `not-fixed` is **disputed**. Publish stops re-posting it and lists it under `## Disputed` in the summary for a human to settle. Two rounds is the cap on any one finding, and that cap is what stops an agent loop re-litigating a point forever.
 
 ## Review summary
 
 One general pull-request comment or review body:
 
 - the reviewed head SHA and the comparison base;
-- an index of findings — axis tag, title, link to each line comment;
+- an index of findings — axis tag, title, and link to each line comment;
 - per-axis counts, and the worst finding within each axis;
 - re-reviewing: the prior head, and one verdict line per prior finding;
 - `## Disputed`, when any finding has hit the cap;
 - `## Open questions`, when any question is unanswered.
 
 The line comment is where a finding lives; the summary indexes and totals. Restating finding text in the summary makes the human read everything twice.
+
+A batched review creates its body and its comments in one call, so the comment URLs do not exist yet when that body is written. Publish in two phases: submit the review with a body carrying the index by `file:line`, read the created comment URLs back, then update the review body with the links. Where the second phase fails, the `file:line` index still stands on its own — never block the review on it.
 
 ## Humans in the loop
 
@@ -185,6 +198,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 - **Reply to an inline comment**: `gh api --method POST repos/{owner}/{repo}/pulls/<n>/comments/<comment_id>/replies -f body='...'`, addressing the thread's first comment id.
 - **General comment**: `gh pr comment <n> --body-file -` with a heredoc.
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
+- **Update a review body**: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'`. This is the second phase of a linked index — the POST that creates the review returns the comment ids its `_links` resolve from.
 - **Add a reaction**: `gh api --method POST repos/{owner}/{repo}/pulls/comments/<id>/reactions -f content=eyes`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>/reactions`. Content is one of `+1`, `-1`, `laugh`, `confused`, `heart`, `hooray`, `rocket`, `eyes`. A review object itself takes no reactions — react to its comments.
 - **Resolve or reopen a thread**: GraphQL only, no REST equivalent.
 
