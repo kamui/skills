@@ -72,7 +72,7 @@ The bold word is the disposition:
 
 ## Questions
 
-Either skill may ask rather than guess. A reviewer that cannot tell whether code is correct without knowing something, and an addresser that cannot act on a finding without an answer, both put the question on the pull request instead of inventing a position.
+Either skill may ask rather than guess. A reviewer that cannot tell whether code is correct without knowing something, and an addresser that cannot act on a finding without an answer, both put the question on the pull request instead of inventing a position. State exactly what information is needed and who should provide it.
 
 Ask only after the legwork fails — the answer is not in the code, the spec, the standards, or the history. A question that reading would have answered costs a round and buys nothing.
 
@@ -86,9 +86,9 @@ Where a user is in the session, ask them directly; it is faster and they may unb
 <!-- question id=question/fetch-ts/timeout-30s head=a1b2c3d -->
 ```
 
-An addresser asks by replying `needs-info` on the thread it is stuck on, and leaves it open.
+An addresser asks by replying `needs-info` on the thread it is stuck on, and leaves it open. A reviewer's whole-change question, such as a required missing spec, belongs under `## Open questions` in the review body rather than on an arbitrary line.
 
-Severity tells an addresser what a decline costs. An optional finding can be declined on preference and the review still lands at `Approved` or `Feedback`. Everything else is blocking, including a human's comment carrying no label at all, and holds the review at `Changes Requested` until the reviewer settles it — so declining there needs a reason built to convince the reviewer, not merely to record a position.
+Severity tells an addresser what a decline costs. An optional finding can be declined on preference without causing `Changes Requested`. Everything else is blocking, including a human's comment carrying no label at all, and holds the review at `Changes Requested` until the reviewer settles it — so declining there needs a reason built to convince the reviewer, not merely to record a position.
 
 A question is not a finding. It carries no axis, counts toward no axis total, and never counts toward the round cap — an unanswered question is not a disputed point, just an open one. Answer a question with `answered` and resolve the thread; a question that turns out to expose a defect becomes a finding in the next review, with its own id.
 
@@ -145,29 +145,33 @@ A finding `declined` once and then verdicted `not-fixed` is **disputed**. Publis
 
 ## Status
 
-Every review reaches one status. The findings tell the author what to change; the status tells them where the change stands — blocked, mergeable, or merely commented on. Without it the author reads every line comment to work out whether any of them stops the merge, which is the one question they opened the review to answer.
+Every review reaches one status. The findings tell the author what to change; the status tells them where the change stands — blocked, waiting on an answer, or approved. Without it the author reads every line comment to work out what has to happen next, which is the one question they opened the review to answer.
 
 | Status | Means | Forge event |
 | --- | --- | --- |
-| `Changes Requested` | at least one blocking finding is unsettled | `REQUEST_CHANGES` |
-| `Approved` | nothing blocks the merge; whatever remains is the author's call | `APPROVE` |
-| `Feedback` | nothing blocks the merge, but the review does not vouch for it | `COMMENT` |
+| `Changes Requested` | at least one blocking finding is unsettled | `REQUEST_CHANGES` when authorized; otherwise `COMMENT` |
+| `Needs Information` | no blocking finding is unsettled, but an unanswered question could change the verdict | `COMMENT` |
+| `Approved` | nothing blocks the merge and no outcome-changing question is unanswered | `APPROVE` when authorized; otherwise `COMMENT` |
 
-`Feedback` rather than `Commented`, because where the status has to be written out every entry on the pull request is already a comment; naming a status after the mechanism distinguishes nothing.
+`Needs Information` is deliberately narrow: it kicks the review back for context that is necessary to decide. It is invalid without a concrete unanswered question naming both the missing information and the person or source expected to provide it.
 
-Derive the status from the findings rather than judging it separately:
+Derive the status in order rather than judging it separately:
 
 - Any unsettled blocking finding, disputed ones included, means `Changes Requested`. A blocking finding settles when the reviewer verdicts it `fixed`, `accepted`, or `obsolete` — until then it counts, whatever its thread says.
-- No unsettled blocking finding, both axes assessed, and approval authorized means `Approved`. Optional findings and answered questions do not hold it back — they are the author's to close.
-- Anything else is `Feedback`: approval unauthorized, an axis unassessed, or an open question whose answer could change a verdict. Name which one in the summary, so `Feedback` never reads as an unexplained withheld approval.
+- With no unsettled blocking finding, any unanswered question whose answer could change the verdict means `Needs Information`.
+- Otherwise the review is `Approved`. Optional findings and answered questions do not hold it back — they are the author's to close.
+
+Classify each axis before deriving the status: passed, findings, `Not applicable`, or needs information. With no originating spec, Requirements is `Not applicable` unless the user or repository workflow requires one; a required missing spec becomes a concrete question. An axis the reviewer simply failed to assess is an operational failure to finish or report, not a reason to publish `Needs Information`.
+
+Authorization never changes the status. It changes only which forge event may carry it. A self-review or unauthorized review with no blockers or outcome-changing questions is still `Approved`; present it as `Approved (advisory)` when the forge permits only a comment.
 
 A disputed blocking finding holds the status at `Changes Requested` and needs a person. The round cap stops that finding being re-posted; it does not turn a blocker into a merge.
 
 ### Where the status goes
 
-Where the forge has a review system, the submitted event is the status. The author reads it off the pull request, and the body does not restate it. Submit `APPROVE` or `REQUEST_CHANGES` only where the user or the repository's documented workflow authorizes this identity to gate a merge.
+The status is the conclusion; the forge event is its transport. Submit `APPROVE` or `REQUEST_CHANGES` only where the user or the repository's documented workflow authorizes this identity to gate a merge. Those events carry the status without restating it in the body.
 
-Where no review event can carry the status, the summary's first line states it in words instead:
+Use `COMMENT` for `Needs Information`, and for any self-review or unauthorized review. Where the event cannot carry the status, the summary's first line states it in words instead:
 
 ```markdown
 **Changes Requested** — 1 blocking finding.
@@ -175,9 +179,15 @@ Where no review event can carry the status, the summary's first line states it i
 Requirements passes. Code has 3 findings: 1 blocking, 2 optional.
 ```
 
-That covers the forge with no review system at all, and the review whose event the forge will not take: GitHub refuses `APPROVE` and `REQUEST_CHANGES` on your own pull request, and an unauthorized reviewer submits `COMMENT` whatever the status. A `COMMENT` standing in for `Changes Requested` carries none of its meaning, so the body has to.
+For a needs-information review, the first line carries the actionable question:
 
-A status can move without the head moving — a decline accepted, a question answered, an `already-addressed` reply verdicted `fixed`, nothing recommitted. Publishing that new status takes a new review: a review's state is fixed at submission, and the update endpoint rewrites a body, not a state. On GitHub only a later `APPROVE` from the same identity clears an earlier `REQUEST_CHANGES`; a `COMMENT` does not, so a drop to `Feedback` also dismisses the review it supersedes.
+```markdown
+**Needs Information** — @author, confirm whether retries must preserve request order.
+```
+
+For an approved review that cannot gate the merge, write `**Approved (advisory)**`. This covers a forge with no review system and a review whose event the forge will not take: GitHub refuses `APPROVE` and `REQUEST_CHANGES` on your own pull request, and an unauthorized reviewer submits `COMMENT` whatever the status. A bare `COMMENT` carries none of those meanings, so the body has to.
+
+A status can move without the head moving — a decline accepted, a question answered, an `already-addressed` reply verdicted `fixed`, nothing recommitted. Publishing that new status takes a new review: a review's state is fixed at submission, and the update endpoint rewrites a body, not a state. On GitHub only a later `APPROVE` from the same identity clears an earlier `REQUEST_CHANGES`; a `COMMENT` does not, so a move from `Changes Requested` to `Needs Information` or advisory `Approved` also dismisses the review it supersedes.
 
 Where the forge refuses that dismissal — a branch protection rule can restrict who may dismiss a review — no event can carry the new status. Write it in the body and report the stale `REQUEST_CHANGES` as needing an authorized actor. Reporting `Changes Requested` instead would state a conclusion the review did not reach.
 
@@ -186,13 +196,13 @@ Where the forge refuses that dismissal — a branch protection rule can restrict
 One general pull-request comment or review body:
 
 - the status on the first line, where no review event carries it, with what drives it — never below the index, never left to be inferred from the counts;
-- the per-axis outcome: which axes pass, which carry findings, which went unassessed;
+- the per-axis outcome: which axes pass, which carry findings, which are `Not applicable`, and which need information;
 - the reviewed head SHA and the comparison base;
 - an index of findings — axis tag, `[Optional]` where it applies, title, and link to each line comment;
 - per-axis counts split blocking and optional, and the worst finding within each axis;
 - re-reviewing: the prior head, and one verdict line per prior finding;
 - `## Disputed`, when any finding has hit the cap;
-- `## Open questions`, when any question is unanswered.
+- `## Open questions`, when any question is unanswered, naming the requested information and who should provide it.
 
 The line comment is where a finding lives; the summary indexes and totals. Restating finding text in the summary makes the human read everything twice.
 
@@ -274,7 +284,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
   Batch all findings into that one `comments` array. One call per finding produces one empty-bodied review per finding.
 
-  `event` follows the status: `REQUEST_CHANGES` or `APPROVE` where authorized, `COMMENT` otherwise. A `COMMENT` standing in for another status means the body states that status in words.
+  For `Changes Requested` or `Approved`, use `REQUEST_CHANGES` or `APPROVE` where authorized. Use `COMMENT` for `Needs Information` and every non-gating review. A `COMMENT` means the body states the status in words.
 
   `line` must be a line the diff touches, on `side` `RIGHT` (or `LEFT` for a deleted line); a range takes `start_line` plus `line`. To comment on a file as a whole, set `"subject_type": "file"` and omit `line`.
 
