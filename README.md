@@ -15,6 +15,7 @@ To install only one skill:
 ```sh
 npx skills@latest add kamui/skills --skill code-review-publish
 npx skills@latest add kamui/skills --skill code-review-address
+npx skills@latest add kamui/skills --skill implement-publish
 ```
 
 The installer asks which supported agents and installation scope to use.
@@ -76,3 +77,17 @@ $code-review-address
 ```
 
 Use the equivalent explicit skill syntax in other harnesses. The host agent needs write access to the pull request to post replies, resolve threads, and add reactions.
+
+### `implement-publish`
+
+Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the best matching installed skill, creates a suitable branch when the current one is not pull-request ready, and links the spec source in the pull-request body.
+
+It stops at the pull request. Run `code-review-publish` afterwards to review it.
+
+It activates when a caller asks to implement work from a spec or issue and publish the result as a pull request. You can also invoke it directly:
+
+```text
+$implement-publish
+```
+
+The host agent needs access to the forge to create the pull request.
