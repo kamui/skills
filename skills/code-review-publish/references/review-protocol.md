@@ -198,6 +198,31 @@ The line comment is where a finding lives; the summary indexes and totals. Resta
 
 A batched review creates its body and its comments in one call, so the comment URLs do not exist yet when that body is written. Publish in two phases: submit the review with a body carrying the index by `file:line`, read the created comment URLs back, then update the review body with the links. Where the second phase fails, the `file:line` index still stands on its own — never block the review on it.
 
+## Addressing summary
+
+Resolving every thread leaves a pull request looking untouched. The forge collapses resolved threads, so a round that answered everything and a round that did nothing render the same, and the reviewer has to expand each one to find out which. `code-review-address` closes a round with one general pull-request comment:
+
+```markdown
+**Addressed** at `5844a3c` — 2 implemented, 1 declined.
+
+- `implemented` — [verdict vocabulary](url), [dismissal authority](url)
+- `declined` — [axis tag rename](url), open for your verdict
+
+`pnpm test` green. Every other thread resolved.
+
+<!-- addressed head=5844a3c -->
+```
+
+- the head it addressed at, and the commits carrying the changes;
+- counts by disposition, each item linked to its thread;
+- what still needs someone: `declined` awaiting a verdict, `needs-info` awaiting an answer, `blocked` items and their blocker;
+- the checks run;
+- whether the round is finished or waiting — the sentence the reviewer would otherwise open every thread to infer.
+
+One comment per round, never one per item. A large round makes the summary more necessary, not longer: the detail already sits in the threads and the summary is the index into them. Re-running at the same head updates that comment rather than posting a second.
+
+Where the forge routes review requests, ask for a re-review from the identity whose review the round addressed. That puts the round in their queue instead of leaving it to be noticed, and it is the counterpart to the reviewer's status — the reviewer says where the change stands, the addresser says it is ready to be looked at again. A re-request does not clear an earlier `REQUEST_CHANGES`; only a later review from that identity, or a dismissal, does.
+
 ## Humans in the loop
 
 Trailers speed up the agent path; they never gate it. A finding or reply written by a human carries no trailer — read it as prose, infer its disposition, and reply to it exactly as to any other. Never skip an item for lacking a trailer, and never address a human reviewer by writing a trailer on their behalf.
@@ -255,7 +280,8 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 - **Self-review**: `event: "COMMENT"` is accepted on your own pull request. `APPROVE` and `REQUEST_CHANGES` return 422 there, so the body's status line is the whole signal.
 - **Reply to an inline comment**: `gh api --method POST repos/{owner}/{repo}/pulls/<n>/comments/<comment_id>/replies -f body='...'`, addressing the thread's first comment id.
-- **General comment**: `gh pr comment <n> --body-file -` with a heredoc.
+- **General comment**: `gh pr comment <n> --body-file -` with a heredoc. This is where an addressing summary goes; find an earlier one to update by grepping `issues/<n>/comments` for its `addressed head=` trailer.
+- **Request a re-review**: `gh pr edit <n> --add-reviewer <login>`, or `gh api --method POST repos/{owner}/{repo}/pulls/<n>/requested_reviewers -f 'reviewers[]=<login>'`. Take `<login>` from the review being addressed. GitHub returns 422 for a request from the pull request's own author, so a self-addressed pull request has only the summary comment.
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
 - **Update a review body**: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'`. This is the second phase of a linked index — the POST that creates the review returns the comment ids its `_links` resolve from. It takes a body and nothing else, so a status change needs a new review rather than an edit to this one.
 - **Supersede or dismiss a review**: a later `APPROVE` from the same identity clears that identity's earlier `REQUEST_CHANGES`; a `COMMENT` leaves it standing. To clear one without approving: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id>/dismissals -f message='...' -f event=DISMISS`. Write access is the baseline, and a branch protection rule restricting who may dismiss a review can refuse it anyway — a `403` there is an answer, not something to retry.
