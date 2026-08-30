@@ -31,7 +31,7 @@ Normalize each finding to an axis, title, evidence, requested change, and stable
 
 ### 3. Publish once
 
-Publish through the forge's review system: one review whose body is the summary and whose line comments are the findings, submitted together. Every finding that names code goes on that code, not into the body — the body indexes, the line comments carry the detail.
+Publish through the forge's review system: one review whose body is the summary and whose line comments are the findings, submitted together. Every finding that names code goes on that code, not into the body — the body indexes, the line comments carry the detail. Index by `file:line` in that first call, then update the review body with the comment links once the call returns them.
 
 Fall back to a single general pull-request comment holding the summary and results only when the forge has no review system or refuses the review. Authoring the pull request yourself is not such a refusal on GitHub, where `event: COMMENT` is accepted; say the verdict in the body.
 
@@ -42,7 +42,7 @@ Fall back to a single general pull-request comment holding the summary and resul
 - React on a reply where a reaction says what a sentence would, per the protocol.
 - Approve only when the user or repository workflow authorizes it; otherwise let the summary record that the axes passed.
 
-Then close out the threads this review settles: those it verified fixed, those it verdicts obsolete, and its own findings it has withdrawn. Reopen any thread whose fix regressed or whose reply claimed more than the code delivered, saying why in a new reply. Leave threads that still ask something of someone open.
+Then close out the threads this review settles: everything it verdicts `fixed`, `accepted`, or `obsolete`, plus its own findings it has withdrawn. An `accepted` verdict is how a decline you agree with gets closed — the addresser leaves it open for you. Reopen any thread whose fix regressed or whose reply claimed more than the code delivered, saying why in a new reply. Leave threads that still ask something of someone open.
 
 Before writing, check for an existing review from this identity at this head. A forge that allows it takes an updated review body; where the line comments are already published and unchangeable, report the review as already published rather than posting a second one. Attempt each write once; on an ambiguous result read the target before a single retry, then report the failure rather than posting again.
 
