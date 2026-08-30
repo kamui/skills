@@ -51,7 +51,7 @@ Resolving every thread leaves the pull request looking untouched, since the forg
 
 One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid. Re-running against the same head updates that comment rather than adding a second.
 
-Where the forge routes review requests, request a re-review from the identity whose review this round addressed, so it lands in their queue instead of waiting to be noticed. GitHub refuses that on your own pull request, where the summary comment is the whole signal.
+Where the forge routes review requests, request a re-review from the identity whose review this round addressed, so it lands in their queue instead of waiting to be noticed. Authoring the pull request is no bar to that — GitHub refuses only a request whose target is the pull request's own author, which is certain where one identity both reviewed and addressed. Report a refusal rather than retrying it; the summary comment is the whole signal there.
 
 ### 5. Verify
 

@@ -31,7 +31,7 @@
 - `code-review-publish` takes its fixed point from the pull request's own merge-base with its base branch instead of asking for one, so a review can run unattended.
 - A finding scoped to a whole file attaches to that file inside the review rather than falling out to a general pull-request comment.
 - Reactions are documented as a signal riding on top of a reply rather than an optional extra, with the reaction-to-meaning mapping both skills share.
-- All three skills drop their capability-negotiation prose. Both review skills read their forge verbs from the shipped protocol reference; `implement-publish` needs only two commands and carries them inline. The freed budget went into the behaviour above rather than into a shorter file: `code-review-publish` is 1122 words against 820, `code-review-address` 1058 against 839, `implement-publish` 358 against 459, with the 3,465-word protocol reference loaded only when a review skill reaches for it.
+- All three skills drop their capability-negotiation prose. Both review skills read their forge verbs from the shipped protocol reference; `implement-publish` needs only two commands and carries them inline. The freed budget went into the behaviour above rather than into a shorter file: `code-review-publish` is 1122 words against 820, `code-review-address` 1090 against 839, `implement-publish` 358 against 459, with the 3,490-word protocol reference loaded only when a review skill reaches for it.
 
 ## [0.0.2] - 2026-08-29
 
