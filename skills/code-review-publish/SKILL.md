@@ -1,68 +1,49 @@
 ---
 name: code-review-publish
-description: Review an issue-linked pull request and publish findings as PR comments or a PR review. Use only when the caller intends both code review and posting feedback to the PR.
+description: Review an issue-linked pull request and publish the findings to it as line comments and a review summary. Use when the caller wants a review posted to the pull request, not just reported back.
 ---
 
 # Publish code review
 
-Review the change with the best available reviewer, then publish the findings to the pull request as a review with line comments. Keep the review's Standards and Spec axes separate throughout. The originating issue is the spec source only; publish nothing to it.
+Review the change, then publish each finding to the pull request as its own comment. The Standards and Spec axes stay separate throughout. The originating issue is the spec source only; publish nothing to it.
+
+Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines where a review goes, the comment shape, the disposition and verdict vocabularies, questions, reactions, thread state, the round cap, and the `gh` verbs.
 
 ## Process
 
-### 1. Resolve the review and publication targets
+### 1. Resolve the targets
 
-Use the fixed point the user supplied. If they omitted it, ask for one so the review has a stable comparison base.
+Read `docs/agents/issue-tracker.md` when present, then resolve the pull request, its head SHA, the originating issue serving as spec source, and the posting identity. The fixed point defaults to the merge-base of the pull request with its base branch, which is what the pull request already means; take a different one only when the user supplies it. Ask before any external write if the pull request or issue is ambiguous.
 
-Read the repository's issue-tracker instructions, including `docs/agents/issue-tracker.md` when present. Resolve:
+Where the change has no pull request, stop and report that. A review publishes to a pull request that already exists; opening one is `implement-publish`'s job.
 
-- the pull request for the current change;
-- the originating issue used as the spec source;
-- the current pull-request head SHA;
-- any earlier review from the posting identity, including its reviewed head SHA, findings, responses, and resolution state;
-- the connected forge capabilities for pull-request reviews, review bodies, and line or general comments.
-
-Follow repository-specific instructions for fetching and writing tracker data. Treat tracker and forge tools by capability, not vendor name. If the issue or pull request is ambiguous, ask the user before any external write. If a target or write capability is absent, continue with the supported target and record the gap for the final report.
+Fetch any earlier review from the posting identity: its `commit_id`, its finding comments and their ids, and the replies, thread ids, and resolution state on those threads. An earlier review at a different head makes this run a re-review.
 
 ### 2. Run the review
 
-Honor a code-review skill the user names. Otherwise, invoke the model-invoked review skill whose description best matches the current change. Give it the fixed point and any spec source the user supplied. If no review skill is available, perform the review directly.
+Honor a code-review skill the user names. Otherwise invoke the model-invoked review skill whose description best matches the change, passing it the fixed point, the spec source, and — re-reviewing — the earlier reviewed head. Failing that, review both axes directly: **Standards** (documented repository standards and code quality) and **Spec** (missing, partial, incorrect, or unrequested behavior against the originating spec). With no spec, mark the Spec axis unavailable rather than inventing requirements.
 
-The review must cover both axes:
+Re-reviewing, keep the original fixed point as the comparison base and evaluate the full pull-request diff, using the earlier head only to locate intervening changes. Verdict every prior finding against the current code.
 
-- **Standards**: violations of documented repository standards and relevant code-quality findings.
-- **Spec**: missing, partial, incorrect, or unrequested behavior compared with the originating spec.
+Where a verdict turns on something the code, spec, standards, and history do not answer, raise a question rather than guess a finding — a fabricated finding costs a round and an agent will dutifully "fix" it. Ask a user in the session if there is one; otherwise carry it as a `[Question]` per the protocol.
 
-If the selected reviewer omits an axis, complete that axis directly. If no spec exists, mark the Spec axis as unavailable instead of inventing requirements.
+Normalize each finding to an axis, title, evidence, requested change, and stable id. These are authoritative for publication; do not merge or rerank the axes.
 
-When an earlier review exists at a different head SHA, treat this run as a re-review. Keep the original fixed point as the comparison base, use the earlier reviewed head to identify intervening changes, and still evaluate the complete pull-request diff. Independently reassess every prior finding against the current code, its responses, the spec, and repository standards as **resolved**, **still present**, **obsolete**, or **superseded**.
+### 3. Publish once
 
-Normalize every finding to an axis, summary, evidence, file and line when available, and requested change. These normalized findings are authoritative for publication. Do not merge or rerank the axes.
+Publish through the forge's review system: one review whose body is the summary and whose line comments are the findings, submitted together. Every finding that names code goes on that code, not into the body — the body indexes, the line comments carry the detail.
 
-### 3. Prepare the publications
+Fall back to a single general pull-request comment holding the summary and results only when the forge has no review system or refuses the review. Authoring the pull request yourself is not such a refusal on GitHub, where `event: COMMENT` is accepted; say the verdict in the body.
 
-Create one pull-request review summary that is not tied to a line of code, containing:
+- A finding about a whole file attaches to that file, still inside the review; only a finding belonging to neither a line nor a file becomes a general pull-request comment.
+- A prior finding still present gets a reply on its existing thread, not a new comment.
+- A finding at the round cap goes under `## Disputed` in the summary and gets no line comment.
+- A question goes on the code it concerns, counts toward no axis, and is listed under `## Open questions` until answered.
+- React on a reply where a reaction says what a sentence would, per the protocol.
+- Approve only when the user or repository workflow authorizes it; otherwise let the summary record that the axes passed.
 
-- the pull request link and reviewed head SHA;
-- for a re-review, the earlier reviewed head SHA and prior-finding dispositions, separate from new findings;
-- separate `Standards` and `Spec` sections;
-- every normalized finding from each section, lightly cleaned only for the forge format;
-- the review's per-axis summary.
+Then close out the threads this review settles: those it verified fixed, those it verdicts obsolete, and its own findings it has withdrawn. Reopen any thread whose fix regressed or whose reply claimed more than the code delivered, saying why in a new reply. Leave threads that still ask something of someone open.
 
-When the pull-request author and the posting identity are the same user, the forge cannot assign an external reviewer: publish the summary as one general pull-request comment. Otherwise, submit the summary and the line comments together as one pull-request review when the forge supports it.
+Before writing, check for an existing review from this identity at this head. A forge that allows it takes an updated review body; where the line comments are already published and unchangeable, report the review as already published rather than posting a second one. Attempt each write once; on an ambiguous result read the target before a single retry, then report the failure rather than posting again.
 
-Create exactly one line comment for each new finding. For a prior finding that is still present, follow up on its existing thread when the provider supports replies; otherwise create one comment that identifies the earlier finding. Each new or follow-up comment must:
-
-- start with `[Standards]` or `[Spec]`;
-- state the finding, its evidence, and the requested change;
-- retain the documented-standard citation or quoted spec evidence supplied by the review;
-- attach to the most specific changed line that supports it.
-
-If a finding cannot attach to a changed line, use one separate general pull-request comment for that finding. A forge may submit several line comments as one review operation, but each finding must remain its own comment. With no new or still-present findings, submit an approval only when the user or repository workflow authorizes it; otherwise leave no line comments and let the review summary record that both axes passed or that an axis lacked a spec.
-
-### 4. Publish once
-
-Before writing, inspect existing pull-request review activity from the posting identity for a review of the same head SHA. Update the matching publication when the provider supports edits. Otherwise, skip already-published items and report them. Do not create duplicates.
-
-Post the pull-request comments together with the review summary. Attempt each external write once. If a write returns an ambiguous result, read the target before deciding whether a retry is safe. Stop after one confirmed retry and report any remaining failure instead of continuing to post.
-
-Finish with links or stable identifiers for the review summary and the pull-request comments, counts by axis, skipped duplicates, and unsupported or failed publication capabilities.
+Finish with links to the review and its comments, counts by axis, disputed findings, open questions, and anything that failed to publish.
