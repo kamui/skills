@@ -7,9 +7,9 @@ description: Address every review comment on a pull request, make the warranted 
 
 Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
 
-Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, reactions, thread state, the round cap, and the `gh` verbs.
+Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, reactions, thread state, the addressing summary, the round cap, and the `gh` verbs.
 
-Invoking this skill authorizes the replies, resolutions, and thread actions below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
+Invoking this skill authorizes the replies, resolutions, thread actions, round summary, and re-review request below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
 ## Process
 
@@ -45,8 +45,16 @@ Resolve each thread as you finish it, not in a batch at the end: reply posted an
 
 Re-addressing a pull request, reopen any thread resolved too early — the fix regressed, a later commit undid it, or the earlier reply claimed more than the code delivered — and say why in a new reply on it.
 
-### 4. Verify
+### 4. Close out the round
+
+Resolving every thread leaves the pull request looking untouched, since the forge collapses what is resolved. Post one general pull-request comment in the protocol's shape: the head addressed, counts by disposition with each item linked to its thread, what still needs someone, and the checks run. Say plainly whether the round is finished or waiting — a round ending at `needs-info` or `blocked` is not done, and this is where the reviewer learns that without opening every thread.
+
+One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid. Re-running against the same head updates that comment rather than adding a second.
+
+Where the forge routes review requests, request a re-review from the identity whose review this round addressed, so it lands in their queue instead of waiting to be noticed. GitHub refuses that on your own pull request, where the summary comment is the whole signal.
+
+### 5. Verify
 
 Re-fetch the review activity and reconcile it against the ledger. Attempt each write once; on an ambiguous result read the target before a single retry. Finish only when every item has a confirmed reply or a reported failure.
 
-Report counts by disposition, blocking findings cleared and any still open, the code changes and checks run, threads resolved, reopened, and left open, questions asked and answered, and links to anything needing follow-up.
+Report counts by disposition, blocking findings cleared and any still open, the code changes and checks run, threads resolved, reopened, and left open, questions asked and answered, the round summary and whether a re-review was requested, and links to anything needing follow-up.
