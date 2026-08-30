@@ -68,7 +68,7 @@ The host agent needs access to the pull request to publish the review.
 
 ### `code-review-address`
 
-Addresses every review comment on a pull request, makes warranted changes, replies directly even when the answer is pushback, and resolves each thread as it finishes it. Re-addressing a pull request, it can reopen a thread that was resolved too early.
+Addresses every review comment on a pull request, makes warranted changes, replies directly even when the answer is pushback, and resolves each thread as it finishes it. Re-addressing a pull request, it can reopen a thread that was resolved too early. Each round closes with one summary comment and a re-review request, so a pull request whose threads are all resolved does not read as one where nothing happened.
 
 The skill is deliberately independent of a particular code-review or implementation skill. Normal skill routing can select another installed skill when useful; if none applies, the model handles the work directly.
 
@@ -119,6 +119,8 @@ Either skill can ask instead of guess. A reviewer that cannot judge code without
 Trailers speed the agent path but never gate it. A human reviewer's comment carries none, and both skills read it as prose and reply to it like any other.
 
 Findings live on the lines they name, never bundled into the review body — the body indexes and totals. Every comment earns a reply, including one that rejects the finding. Both skills close threads as they finish them, whether the thread was fixed, answered, declined, or simply went obsolete, and either can reopen one whose fix regressed. The pull request under review is a fixed target: neither skill opens, retargets, or closes one, and fixes land on its existing head branch. Where the forge supports reactions, both skills use them as a signal on top of a reply: `+1` agreed, `eyes` in progress, `-1` disagreed with the reason in the reply, `confused` where the comment is unclear.
+
+Resolving every thread is what makes a round invisible: the forge collapses resolved threads, so a round that answered everything renders like one that did nothing. `code-review-address` closes each round with a single general comment — the head it addressed, counts by disposition linked to their threads, what still needs someone, the checks run — and, where the forge routes them, a re-review request putting the round in the reviewer's queue. One comment however large the round; the detail stays in the threads.
 
 Re-reviewing, `code-review-publish` verdicts each prior finding against the code rather than against its reply — `fixed`, `accepted`, `obsolete`, or `not-fixed`. A decline does not close its own thread: the addresser states the position, and the reviewer's `accepted` verdict is what settles it, so a disagreement cannot be closed by the party that lost it. A finding declined once and then verified still unfixed is **disputed**: it stops being re-posted and is listed in the summary for a person to settle. Two rounds is the cap on any one finding, which is what keeps an unattended loop from re-litigating the same point forever.
 
