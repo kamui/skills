@@ -7,7 +7,7 @@ description: Address every review comment on a pull request, make the warranted 
 
 Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
 
-Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the disposition vocabulary, questions, reactions, thread state, the round cap, and the `gh` verbs.
+Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, reactions, thread state, the round cap, and the `gh` verbs.
 
 Invoking this skill authorizes the replies, resolutions, and thread actions below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
@@ -19,7 +19,7 @@ Read `docs/agents/issue-tracker.md` when present, then resolve the pull request,
 
 Fetch every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Skip automated status messages unless they ask for a change.
 
-Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, requested change, and whether this identity already replied. A review body is its own ledger item when it carries feedback its inline comments do not.
+Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, severity, requested change, and whether this identity already replied. Only `[Optional]` findings are optional; anything unmarked is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
 
 ### 2. Evaluate and address each item
 
@@ -30,6 +30,8 @@ Check each item against the current code, the diff, the originating spec, and do
 A reviewer's `[Question]` is a ledger item like any other: answer it, mark it `answered`, and resolve the thread.
 
 A finding you already declined and the reviewer has raised again is a dispute, not a repeat. Answer the reviewer's counter-argument rather than restating the original rationale, and where neither side moves, say plainly that it needs a human call — the protocol's round cap stops it there.
+
+Severity sets the bar for a decline, not for whether an item earns a reply. An `[Optional]` finding can be declined on preference. Every unmarked one is blocking and holds the review at `Changes Requested` until the reviewer verdicts it `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
 
 Uncertainty resolves to `needs-info`, never to silent compliance or a silent decline — but ask only once the code, spec, standards, and history have failed to answer it. Put the question to a user in the session if there is one; otherwise leave it on the thread, where it outlives this run.
 
@@ -47,4 +49,4 @@ Re-addressing a pull request, reopen any thread resolved too early — the fix r
 
 Re-fetch the review activity and reconcile it against the ledger. Attempt each write once; on an ambiguous result read the target before a single retry. Finish only when every item has a confirmed reply or a reported failure.
 
-Report counts by disposition, the code changes and checks run, threads resolved, reopened, and left open, questions asked and answered, and links to anything needing follow-up.
+Report counts by disposition, blocking findings cleared and any still open, the code changes and checks run, threads resolved, reopened, and left open, questions asked and answered, and links to anything needing follow-up.
