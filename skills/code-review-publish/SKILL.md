@@ -5,7 +5,7 @@ description: Review an issue-linked pull request and publish the findings to it 
 
 # Publish code review
 
-Review the change, then publish each finding to the pull request as its own comment. The Standards and Spec axes stay separate throughout. The originating issue is the spec source only; publish nothing to it.
+Review the change, then publish each finding to the pull request as its own comment. The Code and Requirements axes stay separate throughout. The originating issue is the spec source only; publish nothing to it.
 
 Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines where a review goes, the comment shape, the disposition and verdict vocabularies, questions, reactions, thread state, the round cap, and the `gh` verbs.
 
@@ -21,7 +21,7 @@ Fetch any earlier review from the posting identity: its `commit_id`, its finding
 
 ### 2. Run the review
 
-Honor a code-review skill the user names. Otherwise invoke the model-invoked review skill whose description best matches the change, passing it the fixed point, the spec source, and — re-reviewing — the earlier reviewed head. Failing that, review both axes directly: **Standards** (documented repository standards and code quality) and **Spec** (missing, partial, incorrect, or unrequested behavior against the originating spec). With no spec, mark the Spec axis unavailable rather than inventing requirements.
+Honor a code-review skill the user names. Otherwise invoke the model-invoked review skill whose description best matches the change, passing it the fixed point, the spec source, and — re-reviewing — the earlier reviewed head. Failing that, review both axes directly: **Code** (correctness, documented repository standards, and code quality) and **Requirements** (missing, partial, incorrect, or unrequested behavior against the originating spec). With no spec, mark the Requirements axis unavailable rather than inventing requirements. If the selected reviewer calls these axes Standards and Spec, map them to Code and Requirements before publication.
 
 Re-reviewing, keep the original fixed point as the comparison base and evaluate the full pull-request diff, using the earlier head only to locate intervening changes. Verdict every prior finding against the current code.
 
