@@ -177,6 +177,8 @@ Requirements passes. Code has 3 findings: 1 blocking, 2 optional.
 
 That covers the forge with no review system at all, and the review whose event the forge will not take: GitHub refuses `APPROVE` and `REQUEST_CHANGES` on your own pull request, and an unauthorized reviewer submits `COMMENT` whatever the status. A `COMMENT` standing in for `Changes Requested` carries none of its meaning, so the body has to.
 
+A status can move without the head moving — a decline accepted, a question answered, a finding verdicted `already-addressed`, nothing recommitted. Publishing that new status takes a new review: a review's state is fixed at submission, and the update endpoint rewrites a body, not a state. On GitHub only a later `APPROVE` from the same identity clears an earlier `REQUEST_CHANGES`; a `COMMENT` does not, so a drop to `Feedback` also dismisses the review it supersedes.
+
 ## Review summary
 
 One general pull-request comment or review body:
@@ -253,7 +255,8 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 - **Reply to an inline comment**: `gh api --method POST repos/{owner}/{repo}/pulls/<n>/comments/<comment_id>/replies -f body='...'`, addressing the thread's first comment id.
 - **General comment**: `gh pr comment <n> --body-file -` with a heredoc.
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
-- **Update a review body**: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'`. This is the second phase of a linked index — the POST that creates the review returns the comment ids its `_links` resolve from.
+- **Update a review body**: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'`. This is the second phase of a linked index — the POST that creates the review returns the comment ids its `_links` resolve from. It takes a body and nothing else, so a status change needs a new review rather than an edit to this one.
+- **Supersede or dismiss a review**: a later `APPROVE` from the same identity clears that identity's earlier `REQUEST_CHANGES`; a `COMMENT` leaves it standing. To clear one without approving: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id>/dismissals -f message='...' -f event=DISMISS`, which needs write access to the repository.
 - **Add a reaction**: `gh api --method POST repos/{owner}/{repo}/pulls/comments/<id>/reactions -f content=eyes`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>/reactions`. Content is one of `+1`, `-1`, `laugh`, `confused`, `heart`, `hooray`, `rocket`, `eyes`. A review object itself takes no reactions — react to its comments.
 - **Resolve or reopen a thread**: GraphQL only, no REST equivalent.
 
