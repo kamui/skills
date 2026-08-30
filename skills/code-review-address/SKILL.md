@@ -9,7 +9,7 @@ Evaluate every review comment, make the warranted changes, and reply to every on
 
 Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, reactions, thread state, the addressing summary, the round cap, and the `gh` verbs.
 
-Invoking this skill authorizes the replies, resolutions, thread actions, round summary, and re-review request below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
+Invoking this skill authorizes the replies, resolutions, thread actions, pull-request title and description edits, round summary, and re-review request below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
 ## Process
 
@@ -47,7 +47,9 @@ Re-addressing a pull request, reopen any thread resolved too early — the fix r
 
 ### 4. Close out the round
 
-Resolving every thread leaves the pull request looking untouched, since the forge collapses what is resolved. Post one general pull-request comment in the protocol's shape: the head addressed, counts by disposition with each item linked to its thread where it has one, any whole-change answer entries and reply trailers, what still needs someone, and the checks run. Say plainly whether the round is finished or waiting — a round ending at `needs-info` or `blocked` is not done, and this is where the reviewer learns that without opening every thread.
+Reconcile the pull request title and description as the protocol's Addressing summary section directs.
+
+Resolving every thread leaves the pull request looking untouched, since the forge collapses what is resolved. Post one general pull-request comment in the protocol's shape: the head addressed, title and description state, counts by disposition with each item linked to its thread where it has one, any whole-change answer entries and reply trailers, what still needs someone, and the checks run. Say plainly whether the round is finished or waiting — a round ending at `needs-info` or `blocked` is not done, and this is where the reviewer learns that without opening every thread.
 
 One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid. Re-running against the same head updates that comment rather than adding a second.
 
@@ -55,6 +57,6 @@ Where the forge routes review requests, request a re-review from the identity wh
 
 ### 5. Verify
 
-Re-fetch the review activity and reconcile it against the ledger. Attempt each write once; on an ambiguous result read the target before a single retry. Finish only when every item has a confirmed reply or a reported failure.
+Re-fetch the pull request metadata and review activity, then reconcile them against the final diff, spec, and ledger. Attempt each write once; on an ambiguous result read the target before a single retry. Finish only when the title and description reflect the resulting change and every item has a confirmed reply or a reported failure.
 
-Report counts by disposition, blocking findings cleared and any still open, the code changes and checks run, threads resolved, reopened, and left open, questions asked and answered, the round summary and whether a re-review was requested, and links to anything needing follow-up.
+Report counts by disposition, blocking findings cleared and any still open, the code changes and checks run, title and description changes or confirmation that each stayed accurate, threads resolved, reopened, and left open, questions asked and answered, the round summary and whether a re-review was requested, and links to anything needing follow-up.

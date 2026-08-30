@@ -225,6 +225,8 @@ A batched review creates its body and its comments in one call, so the comment U
 
 ## Addressing summary
 
+Before closing the round, reconcile the pull request title and description against the resulting diff and originating spec. Edit either field when it no longer describes the change accurately or completely; preserve issue links and still-valid context, and describe the resulting behavior rather than the review chronology. An already-accurate field stays unchanged. The round summary discloses whether each field changed or was confirmed accurate, so the next reviewer can tell that the metadata was reconciled.
+
 Resolving every thread leaves a pull request looking untouched. The forge collapses resolved threads, so a round that answered everything and a round that did nothing render the same, and the reviewer has to expand each one to find out which. `code-review-address` closes a round with one general pull-request comment:
 
 ```markdown
@@ -234,6 +236,8 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 - `answered` — `question/retry-order`: retries preserve request order
 - `declined` — [axis tag rename](url), open for your verdict
 
+Title confirmed accurate. Description updated to include the retry-order contract.
+
 `pnpm test` green. Every other thread resolved.
 
 <!-- reply to=question/retry-order disposition=answered head=5844a3c -->
@@ -241,6 +245,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 ```
 
 - the head it addressed at, and the commits carrying the changes;
+- whether the title and description changed or were confirmed accurate;
 - counts by disposition, each item linked to its thread;
 - what still needs someone: `declined` awaiting a verdict, `needs-info` awaiting an answer, `blocked` items and their blocker;
 - the checks run;
