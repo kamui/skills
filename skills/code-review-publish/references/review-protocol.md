@@ -212,14 +212,27 @@ One general pull-request comment or review body:
 
 - the status on the first line, where no review event carries it, with what drives it — never below the index, never left to be inferred from the counts;
 - the per-axis outcome: Passed, Findings, or `Not applicable`, plus Waiting for information where it applies;
+- a short paragraph, two or three sentences, reading the findings as a whole: what the change does, what drives the status, and what to deal with first. It generalizes — a pattern several findings share, one fault behind them, the shape of the risk — rather than reciting them, and it names at most the two or three findings that decide the outcome. A review with one finding or none says that in a sentence;
 - the reviewed head SHA and the comparison base;
-- an index of findings — axis tag, `[Suggestion]` where it applies, title, and link to each line comment;
-- per-axis counts split blocking and optional, and the worst finding within each axis;
+- an index of findings, ordered within each axis worst first — blocking before optional, and within each of those whatever the author should reach for first. Each entry carries the axis tag, `[Suggestion]` where it applies, the title, and a link to its line comment. Ordering is what makes the top of the index the place to start, so nothing separately announces the worst finding;
+- per-axis counts split blocking and optional;
 - re-reviewing: the prior head, and one verdict line per prior finding;
 - `## Disputed`, when any finding has hit the cap;
 - `## Open questions`, when any question is unanswered, linking each line question and carrying the stable id for each whole-change question.
 
-The line comment is where a finding lives; the summary indexes and totals. Restating finding text in the summary makes the human read everything twice.
+The line comment is where a finding lives; the summary orients, indexes, and totals. The paragraph is the one place that generalizes, and it earns its space by saying what no single finding says; outside it, restating finding text makes the human read everything twice.
+
+Together, on a review whose event cannot carry the status:
+
+```markdown
+**Changes Requested (advisory)** — 1 blocking finding.
+
+Requirements: Passed. Code: Findings — 1 blocking, 2 optional.
+
+Retries are the one thing to fix here: the new path reorders requests the queue downstream assumes are ordered. The two optional findings are the same duplicated shape either side of it, and clear up with it. The rest of the change reads clean against both axes.
+```
+
+Where the forge event carries the status, the axis line opens the body instead, with the paragraph following it.
 
 A batched review creates its body and its comments in one call, so the comment URLs do not exist yet when that body is written. Publish in two phases: submit the review with a body carrying the index by `file:line`, read the created comment URLs back, then update the review body with the links. Where the second phase fails, the `file:line` index still stands on its own — never block the review on it.
 
