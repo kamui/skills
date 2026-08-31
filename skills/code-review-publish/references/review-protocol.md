@@ -232,7 +232,7 @@ Requirements: Passed. Code: Findings — 1 blocking, 2 optional.
 Retries are the one thing to fix here: the new path reorders requests the queue downstream assumes are ordered. The two optional findings are the same duplicated shape either side of it, and clear up with it. The rest of the change reads clean against both axes.
 ```
 
-Where the forge event carries the status, the paragraph opens the body instead, with the axis line above it.
+Where the forge event carries the status, the axis line opens the body instead, with the paragraph following it.
 
 A batched review creates its body and its comments in one call, so the comment URLs do not exist yet when that body is written. Publish in two phases: submit the review with a body carrying the index by `file:line`, read the created comment URLs back, then update the review body with the links. Where the second phase fails, the `file:line` index still stands on its own — never block the review on it.
 
