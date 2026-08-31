@@ -27,7 +27,7 @@ Re-reviewing, keep the original fixed point as the comparison base and evaluate 
 
 Where a verdict turns on something the code, spec, standards, and history do not answer, raise a question rather than guess a finding — a fabricated finding costs a round and an agent will dutifully "fix" it. Ask a user in the session if there is one; otherwise carry it as a `[Question]` per the protocol.
 
-Normalize each finding to an axis, severity, title, evidence, requested change, and stable id. Severity is a judgment about the merge, not about the finding's interest, and blocking is the default the author will assume: label `[Optional]` only where they may act on it or close it unactioned, and leave everything the change should not merge without unmarked. Labelling every finding optional is a review that blocks nothing; labelling none is a review where a nit stops a merge. These are authoritative for publication; do not merge or rerank the axes.
+Normalize each finding to an axis, severity, title, evidence, requested change, and stable id. Severity is a judgment about the merge, not about the finding's interest, and blocking is the default the author will assume: label `[Suggestion]` only where they may act on it or close it unactioned, and leave everything the change should not merge without unmarked. Labelling every finding optional is a review that blocks nothing; labelling none is a review where a nit stops a merge. These are authoritative for publication; do not merge or rerank the axes.
 
 ### 3. Publish once
 

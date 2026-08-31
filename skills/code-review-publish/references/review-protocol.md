@@ -35,10 +35,10 @@ The pull request under review is a fixed target. Neither skill opens, retargets,
 - Six lines or fewer above the trailer. Whoever acts on it, human or agent, acts from this comment alone.
 - The trailer is an HTML comment: invisible in the rendered view, present in the raw body via `gh api`.
 
-`[Optional]` is the one severity marker, for a finding worth saying and not worth blocking on — a nice-to-have, a preference, or food for thought the author may close unactioned. It goes after the axis tag and rides the trailer:
+`[Suggestion]` is the one severity marker, for a finding worth saying and not worth blocking on — a nice-to-have, a preference, or food for thought the author may close unactioned. It goes after the axis tag and rides the trailer:
 
 ```markdown
-**[Code] [Optional] `formatDate` could read the locale from context**
+**[Code] [Suggestion] `formatDate` could read the locale from context**
 
 ...
 
@@ -213,7 +213,7 @@ One general pull-request comment or review body:
 - the status on the first line, where no review event carries it, with what drives it — never below the index, never left to be inferred from the counts;
 - the per-axis outcome: Passed, Findings, or `Not applicable`, plus Waiting for information where it applies;
 - the reviewed head SHA and the comparison base;
-- an index of findings — axis tag, `[Optional]` where it applies, title, and link to each line comment;
+- an index of findings — axis tag, `[Suggestion]` where it applies, title, and link to each line comment;
 - per-axis counts split blocking and optional, and the worst finding within each axis;
 - re-reviewing: the prior head, and one verdict line per prior finding;
 - `## Disputed`, when any finding has hit the cap;

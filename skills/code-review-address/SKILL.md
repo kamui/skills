@@ -19,7 +19,7 @@ Read `docs/agents/issue-tracker.md` when present, then resolve the pull request,
 
 Fetch every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Skip automated status messages unless they ask for a change.
 
-Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, severity, requested change, and whether this identity already replied. Only `[Optional]` findings are optional; anything unmarked is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
+Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, severity, requested change, and whether this identity already replied. Only `[Suggestion]` findings are optional; anything unmarked is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
 
 ### 2. Evaluate and address each item
 
@@ -31,7 +31,7 @@ A reviewer's `[Question]` is a ledger item like any other: answer it, mark it `a
 
 A finding you already declined and the reviewer has raised again is a dispute, not a repeat. Answer the reviewer's counter-argument rather than restating the original rationale, and where neither side moves, say plainly that it needs a human call — the protocol's round cap stops it there.
 
-Severity sets the bar for a decline, not for whether an item earns a reply. An `[Optional]` finding can be declined on preference. Every unmarked one is blocking and holds the review at `Changes Requested` until the reviewer verdicts it `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
+Severity sets the bar for a decline, not for whether an item earns a reply. A `[Suggestion]` finding can be declined on preference. Every unmarked one is blocking and holds the review at `Changes Requested` until the reviewer verdicts it `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
 
 Uncertainty resolves to `needs-info`, never to silent compliance or a silent decline — but ask only once the code, spec, standards, and history have failed to answer it. Put the question to a user in the session if there is one; otherwise leave it on the thread, where it outlives this run.
 
