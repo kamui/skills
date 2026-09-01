@@ -1,156 +1,307 @@
-# Evaluating three agentic code reviewers against a live pull request
+# Evaluating four agentic code-review prototypes on one pinned pull request
 
-**2026-09-01.** An evaluation of three candidates for one job — a one-shot, non-interactive code reviewer whose published output is read by both humans and agents, intended to become the core of an automated review agent:
+**2026-09-01.** This evaluates `code-review-publish-2` through
+`code-review-publish-5` (v2-v5) as reviewer cores for frequent, unattended,
+issue-aware pull-request review. It replaces the stale analysis of three
+reviewers on different revisions of `kamui/shortlist#65`. The experiment here is
+the controlled four-way run against one pinned revision of
+[`kamui/shortlist#66`](https://github.com/kamui/shortlist/pull/66).
 
-- **Matt Pocock's `code-review`** (`mattpocock/skills`, MIT, 87 lines) — the incumbent reviewer that `code-review-publish` currently lands on by description matching.
-- **`code-review-publish-2`** ("v2", [kamui/skills#14](https://github.com/kamui/skills/pull/14)) — two axis finders in parallel plus a mandatory fresh-context verifier.
-- **`code-review-publish-3`** ("v3", [kamui/skills#13](https://github.com/kamui/skills/pull/13)) — a single tool-using reviewer with self-falsification and fail-closed coverage.
+Raw records: [method and inputs](prototype-runs-2026-09-01/README.md),
+[v2](prototype-runs-2026-09-01/v2-run.md),
+[v3](prototype-runs-2026-09-01/v3-run.md),
+[v4](prototype-runs-2026-09-01/v4-run.md),
+[v5](prototype-runs-2026-09-01/v5-run.md),
+[comparison data](prototype-runs-2026-09-01/comparison-data.md), and
+[publication decision](prototype-runs-2026-09-01/publication-decision.md).
 
-Both prototypes were executed end to end against the same pull request, `kamui/shortlist#65`, and both published real reviews there. This document incorporates that live data.
+## Conclusion
 
-**Disclosure.** I wrote v2 in the session that produced this document, then ran and published both prototypes' reviews myself. The analysis was done adversarially against v2 — two of its unfixed defects are recorded below — and v3 and Pocock were steelmanned. Weight the base-choice recommendation accordingly.
+**V4 produced the best review artifact observed here. V5 has the best
+architecture to advance, but this run does not establish that v5 is the best
+reviewer.** V5 was designed after the v2-v4 results on this exact pull request
+exposed calibration gaps, so its clean result is development-set evidence with
+a real overfitting risk, not an independent holdout result.
 
-## Headline
+The evidence supports a synthesis:
 
-**v3 did strictly more work for 61% of v2's tokens** (110,971 vs 182,196 sub-agent tokens), and its falsification and re-review discipline held up on a live run it was never designed-tested for. But **the two runs are not comparable on finding quality** — v3 reviewed the revision that had already been repaired in response to v2's review, so its zero findings measure nothing about recall. The decisive recall experiment has an answer key sitting in the PR history and has not been run.
+- keep v5's integrated reviewer, fail-closed coverage, consequence-triggered
+  fresh verification, action independent from priority, history-aware drift
+  checks, outcome-level requirement reading, run identity, and atomic
+  publication contract;
+- scope the `introduced here` gate so an explicit requirement omission cannot be
+  acquitted merely because the omitted artifact predates the pull request;
+- prevent the verifier from erasing a factually established optional
+  consistency issue merely because its proposed `must-fix` action was too
+  strong; and
+- freeze that revision before testing it on new, adjudicated pull requests.
 
-On design: v3 has the stronger operational spine for automation; v2 has the stronger verification mechanism and dual-audience finding contract. Pocock is not competitive as the reviewer core for these goals. Neither prototype is complete; the synthesis is specified at the end.
+On this PR, the most defensible output remains close to v4's: the Narrow
+entrypoint inconsistency as P2 `consider`, the bundle-contract list as at most P3
+`consider`, and `Approved (advisory)`. V2 and v3 overstate the first item's merge
+consequence. V5 likely over-refutes it.
 
-## Method, and the caveat that governs everything
+## Controlled method
 
-Both prototypes were run faithfully: reference documents treated as authoritative, phase structure followed, sub-agents spawned exactly as each skill specifies, publication done per each skill's output contract. In both runs the orchestrator did target resolution and publication; the reviewing phases ran in sub-agents so token cost could be measured.
+All prototypes received the same phase-1 inputs:
 
-**The runs reviewed different heads of the same PR:**
+| Input | Pinned value |
+| --- | --- |
+| Pull request | [`kamui/shortlist#66`](https://github.com/kamui/shortlist/pull/66) |
+| Head | [`4349ff41ff4d134e09017662dd30420b80e8eb30`](https://github.com/kamui/shortlist/commit/4349ff41ff4d134e09017662dd30420b80e8eb30) |
+| Base and merge-base | `ccd1842d742fd940b2afde4f903c7bdcb3a707eb` on `main` |
+| Diff | 9 files, +160/-6, one commit |
+| Specification | [`kamui/shortlist#45`](https://github.com/kamui/shortlist/issues/45), 10 acceptance criteria, no comments |
+| Prior review state | none |
+| Publication authority | self-review; `COMMENT` only |
 
-| | v2 run | v3 run |
-| --- | --- | --- |
-| Head reviewed | `1c25a91` | `55e1f25` |
-| Diff from merge-base `a4726aa` | 8 files, +194/−6 | 9 files, +245/−18 |
-| Prior review state | none | v2's 3 findings, all replied `implemented`, threads resolved |
-| Published result | 3 findings, Changes Requested (advisory) | 0 findings, Approved (advisory), coverage complete |
+Each run used an isolated clone at that head, with `main` fixed to the same base.
+The orchestrator supplied the same PR, issue, manifest, and empty prior-review
+state. V2-v4 ran without publication; v4 was selected and published only after
+those runs completed. V5 ran later with publication disabled and the original
+empty review state, so the live v4 review did not enter its runtime context. See
+the [controlled conditions](prototype-runs-2026-09-01/README.md#conditions-held-constant).
 
-Between the runs, the PR author addressed v2's review and pushed a fix commit. v3 reviewed the *repaired* code and found nothing partly because there was materially less to find. Any comparison of finding counts between these runs is meaningless, and this document does not make one. What the v3 run does support are claims about **cost, coverage behavior, re-review rigor, and falsification discipline** — all measurable independent of how buggy the target was.
+The controls do not create ground truth. This is one documentation/schema-heavy
+change in one repository, one run per prototype, with no independent
+adjudication of disputed findings. The reviewer author and PR author are the
+same person. The experiment measures behavior, calibration, and operational
+discipline, not population-level recall or false-positive rate.
 
-## The two live runs
+V5 is also adaptive. Its own
+[`DESIGN.md`](https://github.com/kamui/skills/blob/0c110187ade59af364845cb44ff77f4199bc2015/skills/code-review-publish-5/DESIGN.md#L32-L36)
+says this v2-v4 run exposed the calibration gaps it changes. Runtime isolation
+prevents direct contamination, but not design-time exposure to the target.
 
-### v2 at `1c25a91` — 3 findings, Changes Requested
+## Architecture, output, and cost
 
-Two axis finders ran in parallel. The Code finder returned 2 candidates; the Requirements finder restated issue #44's nine acceptance criteria, judged 7 met, and returned 2 candidates for the other two. Both finders independently hit the closed-`Kind`-enum problem from different angles — the Code finder as a P3 doc/validator contradiction, the Requirements finder as a P1 unmet acceptance criterion.
+| | v2 | v3 | v4 | v5 |
+| --- | --- | --- | --- | --- |
+| Architecture | parallel Code + Requirements finders; mandatory fresh verifier | integrated reviewer; self-falsification | integrated reviewer; conditional fresh verifier | integrated reviewer; consequence-triggered fresh verifier |
+| Verifier routing | every candidate | large/coupled/high-risk change or difficult high-impact claim; skipped here | every `must-fix` and named high-risk/contract category | every `must-fix` and consequential-risk category; names alone do not trigger |
+| Agents | 3 | 1 | 2 | 2 |
+| Sub-agent tokens | **253,712** | **110,630** | **175,824** | unavailable |
+| Tool uses | 118 | 49 | 78 | 41 |
+| Wall time | ~851 s | ~663 s | ~879 s | unavailable |
+| Candidates | 6 + 1 passed along | 10 | 10 | 4 |
+| Findings | 4: P1/P1/P2/P2 | 1: P2 blocking | 2: P2/P3, non-blocking | 0 |
+| Status | Changes Requested | Changes Requested | Approved | Approved, no findings |
+| Coverage | complete, both finders 9/9 | complete manifest/risk report; unrecovered PR-body gap disclosed | incomplete, then complete after recovery | complete |
 
-The fresh-context verifier, given claims only:
+The source packages show the progression:
 
-- **merged the duplicate**, keeping the Requirements framing per its dedup rule;
-- **confirmed 3, refuted 0**;
-- **corrected an overstated trigger** — the Code finder claimed runtime provenance corruption; the verifier grepped, found nothing under `skills/` reads `CONTEXT.md`, and rewrote the impact as maintenance vocabulary drift;
-- **demoted that finding P2→P3** on the corrected impact;
-- caught a wrong line reference in another claim.
+- [v2](https://github.com/kamui/skills/blob/f42f70835fbe8aec1a5085d9b75d47d76ef11891/skills/code-review-publish-2/SKILL.md#L44-L77)
+  partitions Code and Requirements, then sends every claim—without finder
+  `support`—to a fresh verifier. It separates `anchor` from `fix` and `claim`
+  from `support`, but derives action from priority.
+- [v3](https://github.com/kamui/skills/blob/a73314fdd30b1a2d4b1a57a4987e37651b160109/skills/code-review-publish-3/SKILL.md#L38-L52)
+  collapses both axes into one reviewer with a requirement ledger, risk checks,
+  manifest, and same-context falsification. Verification is exceptional.
+- [v4](https://github.com/kamui/skills/blob/f6ee104eed7bb814b1911502a2c4fbb91329c815/skills/code-review-publish-4/SKILL.md#L44-L56)
+  adds candidate-triggered verification, claim/support isolation, explicit
+  action, distinct anchor/fix sites, and a context fingerprint.
+- [v5](https://github.com/kamui/skills/blob/0c110187ade59af364845cb44ff77f4199bc2015/skills/code-review-publish-5/SKILL.md#L44-L56)
+  routes by action and consequence, strengthens outcome/history checks, and
+  adds bounded prose plus a file-anchor/body fallback.
 
-Published as one batched review: two `must-fix` P1 line comments (structural validation skipped until completion; `Kind` enum closed against criterion 2) and one `consider` P3. Two findings had fix sites outside the diff and were anchored by what became the anchor ladder.
+V3 is the cheapest measured run: 44% of v2's tokens and 63% of v4's. V4 costs
+less than v2 but more than v3, and its serial primary-plus-verifier path was the
+slowest measured. V2's parallel finders reduce latency but duplicate the
+expensive whole-diff/context pass.
 
-**Loop closure:** the author subsequently implemented all three findings — including the debatable one — replied `implemented` on each thread with verification evidence, and resolved the threads. Precision on this run: 3/3 published findings accepted and acted on.
+V5 used the fewest reported tool calls, but **cannot be called cheapest**. Its
+harness exposed neither sub-agent tokens nor end-to-end time; its five verifier
+orchestration calls also contained 21 shell-command invocations. The full caveat
+is in [comparison data](prototype-runs-2026-09-01/comparison-data.md#cost-and-shape).
 
-### v3 at `55e1f25` — 0 findings, Approved, coverage complete
+## Complete finding-agreement matrix
 
-A single tool-using reviewer (v3's frequent path — no fan-out, no delegated verifier, since the change was not unusually large, coupled, or high-risk) executed phases 2–4:
+Ten distinct items appeared. “Dropped” includes primary falsification,
+fresh-verifier refutation, and pre-candidate acquittal; the run files preserve
+the exact route.
 
-- built a **9-file coverage manifest**, every file `reviewed` with named evidence;
-- built the **requirement ledger** and verified all nine acceptance criteria met, running both suites to completion (288 Python tests, 60 node);
-- executed the rubric's applicable **risk checks** (migration/compatibility, external contracts, stale state, path handling) with per-check evidence, and marked authorization/secrets checks not-applicable with a basis;
-- raised **9 candidates and killed all 9 in falsification**;
-- classified all three prior findings **`fixed`** — by verification, not by trusting the replies.
+| Candidate | v2 | v3 | v4 | v5 | Best-supported interpretation |
+| --- | --- | --- | --- | --- | --- |
+| Narrow entrypoint's closed refresh list | P1 `must-fix` | P2 blocking | P2 `consider` | primary P2 `must-fix`, verifier-refuted | real synchronization ambiguity; P2 `consider` is best calibrated |
+| Bundle contract omits the new Kind by name | P1 `must-fix` | dropped | P3 `consider` | dropped | normative drift; runtime omission unproved; at most P3 |
+| Completion validator's volatile regex is commerce-only | P2 `consider` | dropped | not raised | not raised | asymmetry exists, but predates the change and no wrong generalized outcome is shown |
+| No dedicated freshness-expectation field | P2 `consider` | AC4 met | dropped | dropped | representation question, not demonstrated defect |
+| Research protocol's commerce branch excludes generalized claims | refuted | not raised | not raised | not raised | false; generalized escape is in the same passage |
+| Attestation test treats incomplete fixture as complete | refuted | dropped after execution | dropped after execution | not raised | false; mutation is required setup |
+| Freshness-attestation timing is wrong | not raised | not raised | not raised | dropped | timing is not prohibited; judgment-only check is deliberate |
+| `PROJECT_BRIEF.md` / ADR seed lists are stale | not raised | dropped | dropped | not raised | pre-existing; ADR is historical |
+| Research entrypoint omits refine/mark-inapplicable | acquitted | dropped | dropped | not raised | valid protocol deferral, not a competing closed list |
+| Schema bump required for widened enum | not raised | not raised | dropped | no break found | additive and matches repository precedent |
 
-Publication followed v3's output contract: stale-head re-fetch immediately before writing (head unchanged — publication authorized), one review with the `Intent:`/`Issue fit:`/`Coverage:`/`Reviewed:` body and a machine-readable run trailer (`rubric=codex-81de4f2 … coverage=complete`), and `fixed` verdict replies on the three prior threads.
+Raw dispositions: [finding-level agreement](prototype-runs-2026-09-01/comparison-data.md#finding-level-agreement).
 
-Three observations from this run matter more than the clean result:
+### Narrow: the central disagreement
 
-**It verified replies instead of trusting them.** For the structural-validation finding it copied the base-branch validator and ran base and head against the *same* malformed mid-Research bundle: base printed `structurally valid Shortlist bundle; pool is incomplete`, head rejected it. It also probed the reply's scoping claims — that the blank-template guarantee survives, and that no realistic dangling `S###` reference escapes plain validation — with constructed bundles rather than accepting the prose. That is the correct standard for "a reply states intent, not outcome."
+All four found the unchanged Narrow entrypoint sentence. The facts agree:
 
-**Its base-branch-guidance rule earned its place on precision, not just security.** The strongest killed candidate — that the now-unconditional syntax check would reject legitimately in-progress obligations — was built to P2/blocking before being killed by `record-schemas.md:3`, a *base-branch* rule already requiring a placeholder in any empty required field: the previously-passing bundle was already non-conforming. The reviewer noted it found the killing rule only because the rubric directs reading base-branch guidance for changed paths. I had classified that rule purely as injection defense; it did finding-quality work.
+- the entrypoint requires reading the
+  [narrowing protocol](https://github.com/kamui/shortlist/blob/4349ff41ff4d134e09017662dd30420b80e8eb30/skills/shortlist-narrow/SKILL.md#L10-L12)
+  and later says to
+  [follow it](https://github.com/kamui/shortlist/blob/4349ff41ff4d134e09017662dd30420b80e8eb30/skills/shortlist-narrow/SKILL.md#L35-L46);
+- its point-of-use refresh sentence still names fixed commerce and generalized
+  sets without “for example” or another explicit escape;
+- the changed protocol says to refresh
+  [every applicable ledger-defined Volatile class](https://github.com/kamui/shortlist/blob/4349ff41ff4d134e09017662dd30420b80e8eb30/skills/shortlist/references/narrowing-protocol.md#L66-L70),
+  “not only a fixed commerce list,” including Research-added classes; and
+- the new fixture contains a Research-added
+  [ad-tier feature and price-lock class](https://github.com/kamui/shortlist/blob/4349ff41ff4d134e09017662dd30420b80e8eb30/tests/fixtures/generalized-bundle-streaming/ledger.md#L63-L71).
 
-**The kills were decisive, not timid.** Of nine: two killed by probe-discovered evidence, one by a repo-wide grep, six by gate 7 ("worth the author's time") on taste-level observations — fixture heading conventions, a debatable `Other`-kind classification, cosmetic error ordering. None was a drop-on-uncertainty.
+V3 added positive history evidence: commit `1450bc2` introduced the protocol and
+entrypoint sentences together. V4's verifier established that they matched at
+the merge-base, line 46 is the only stage-entrypoint refresh instruction, and no
+mechanical test checks consistency. It correctly narrowed the mechanism: the
+broad rule is reachable, so this is conflicting point-of-use restatement, not
+total omission.
 
-**Operator deviation, disclosed:** I included a note about a killed candidate in the published summary body. v3's contract says "do not publish a non-actionable observation"; that note arguably violates it. The deviation was mine, not the skill's.
+V5 treated that mitigation as acquittal. Required protocol reading and the
+absence of literal “only” disproved the proposed blocker. That does not fully
+refute the drift: the local sentence has exhaustive-looking bundle branches,
+historically moved with the protocol, is now narrower, and is executable agent
+guidance. P2 `consider` is proportional.
 
-## Measured cost
+This exposes a v5 verdict-shape defect. A verifier should be able to say “the
+must-fix consequence is unproved, but the authoritative synchronization claim
+is confirmed as optional.” Refuting the entire record because its action is too
+strong conflates factual verification with action calibration.
 
-| | v2 | v3 |
-| --- | --- | --- |
-| Sub-agent tokens | **182,196** (finders 69,333 + 64,505; verifier 48,358) | **110,971** |
-| Tool calls | 96 | 61 |
-| Sub-agent wall clock | ~602 s (finders parallel, then verifier) | ~718 s (serial) |
-| Agents spawned | 3 | 1 |
-| Scope delivered | findings + requirement counts | findings + coverage manifest + requirement ledger + risk checks + 3 prior-finding verifications |
+### Bundle-contract enumeration
 
-Add roughly 40–60k orchestrator tokens to each for a whole-run figure.
+The bundle contract ends its list with
+[`or other category-relevant work`](https://github.com/kamui/shortlist/blob/4349ff41ff4d134e09017662dd30420b80e8eb30/skills/shortlist/references/search-bundle-format.md#L202-L208)
+and links the formal schema, which names
+[`Volatile-claim class`](https://github.com/kamui/shortlist/blob/4349ff41ff4d134e09017662dd30420b80e8eb30/skills/shortlist/references/record-schemas.md#L380-L394).
 
-**v3 used 61% of v2's tokens while delivering strictly more scope on a slightly larger diff.** My pre-run estimate ("v3 plausibly 40–50% cheaper") was directionally right and conservative. The trade I had not identified: **v3 is cheaper but slower** — v2's finders parallelize, v3's single reviewer is serial. For an unattended agent, cost almost certainly dominates latency, which favors v3 further.
+V2 made the absent literal name P1. V3/v5 dropped it because the list is open
+and the enum is linked. V4 proved the contract and protocol lists matched at
+base and that a previous Kind addition updated all copies; its verifier then cut
+the impact to normative inconsistency and retained P3 `consider`.
 
-Pocock's stack was not re-measured. Its two 400-word-capped sub-agents constrain output, not input — input cost per finder is comparable to v2's — and its wrapper adds a lossy normalization pass to turn prose findings into publishable comments.
+V4's factual framing is strongest. Publishing a one-line consistency issue is
+a policy choice; omitting it is defensible for a high-signal reviewer. P1 is not.
 
-## Architecture
+## Requirement-ledger divergence
 
-| | Pocock | v2 | v3 |
+| | Met | Partial / not met | Unverifiable |
+| --- | ---: | --- | ---: |
+| v2 | 7 | AC1, AC4, AC6 | 0 |
+| v3 | 8 | AC5 protocol-only; AC6 partial | 0 |
+| v4 | 10 | none; AC1/5/6 “met, with propagation gap” | 0 |
+| v5 | 10 | none | 0 |
+
+All ran 290 Python and 60 Node tests successfully under a modern Python. V2 and
+v4 found no scope creep; v4/v5 explicitly checked both non-goals.
+
+The counts encode different models, not independent truth. V2 treats
+unsynchronized representations as incomplete implementation. V3 emphasizes
+observable paths. V4 separates outcome compliance from optional propagation
+quality. V5 goes furthest toward outcome-level acquittal. V4's two-layer model
+is clearest for this PR.
+
+One defect remains across v3-v5: all eight admission gates include unscoped
+“introduced here.” An explicit acceptance-criterion omission can live in an
+unchanged file because the issue made updating it this change's responsibility.
+V2's
+[`verify.md`](https://github.com/kamui/skills/blob/f42f70835fbe8aec1a5085d9b75d47d76ef11891/skills/code-review-publish-2/references/verify.md#L19-L25)
+states the needed exception: pre-existing refutation applies to Code candidates,
+never Requirements candidates. Outcome and representation gates may still
+acquit the freshness-field claim; pre-existence alone should not.
+
+## Verifier behavior
+
+| | Input discipline | Verdicts | Material effect |
 | --- | --- | --- | --- |
-| Size | 87 lines | 767 lines, 5 refs | 437 lines, 2 refs |
-| Phases | 5 | 4 | 6 |
-| Agents/run | 2 finders | 1–3 (finders + verifier, both skippable) | 1 (+1 conditional verifier) |
-| Verification | none | mandatory, **separate context** | self-falsification, same context |
-| Publishes | no — needs the `code-review-publish` wrapper | yes | yes |
-| Coverage accounting | none | none | per-file manifest, fail-closed, `Incomplete` status |
-| Injection boundary | none | none | untrusted-input rule + base-branch guidance |
-| Stale-head protection | n/a | none within a run | re-fetch before first write |
-| Re-review | stateless (wrapper's protocol handles it) | prior findings ride through the verifier as claims | full-by-default; incremental only with proven ancestry and complete prior coverage |
+| v2 | every claim; `support` withheld | 4 confirmed, 2 refuted, 1 merge | removed two false candidates, merged duplicate, corrected triggers/scope |
+| v3 | not invoked | n/a | primary self-falsification dropped 9/10 |
+| v4 | two survivors; `support` withheld | 2 confirmed | corrected Narrow mechanism/citation; cut bundle impact |
+| v5 | sole must-fix; claim/raw citations only | 1 refuted | changed blocker/Changes Requested into no finding/Approved |
 
-The load-bearing divergence is the verification boundary. v2 buys independence with a fresh agent that never saw the finder's reasoning — mechanism-backed, since a context that already asserted something agrees with itself. v3 buys economy by having one mind generate and falsify its own candidates — evidence-backed, since prior research found **no controlled measurement** that a separate verify pass reduces false positives, only converged industry practice. The v3 run is one data point for v3's side: self-falsification killed nine candidates decisively, including one it had built to blocking severity. One run on one PR is not proof; the same mind can still fail to doubt a claim it is invested in, and this run contained no such claim.
+V2 shows both value and limit: fresh reconstruction caught factual errors but
+did not cure over-calibrated admission and action rules. V3 shows same-context
+falsification can be strong and cheap, but its change-level threshold skipped a
+second look at its sole blocker. V4 shows the best corrective behavior: its
+verifier made both claims more accurate and less severe. It also recovered a
+failed PR-body fetch only after the primary correctly reported provisional
+`Incomplete`; v3 disclosed the same gap less conservatively. V5 shows why
+must-fix verification matters and why a binary admission court can over-acquit.
 
-## Corrections to the pre-run analysis
+No run exercised a published author question. No controlled run verified a
+genuine executable blocker, security/data-loss claim, or race. The
+`plausible`-to-question path remains substantially untested.
 
-Recorded explicitly, since the pre-run comparison circulated before the live data existed.
+## Prototype verdicts
 
-**Wrong: "v3's falsification is drop-on-uncertainty with a recall cost."** I read *"drop the candidate when decisive evidence is missing"* as licensing silent deletion of exactly the hardest bug class. On this run every kill was evidence-driven, none uncertainty-driven. The concern is not refuted — the PR contained no hard-to-prove concurrency or race-class candidate, which is where the failure mode would appear — but I asserted it more confidently than the evidence supported, and the one live run points the other way.
+**V2 — recall baseline, not production frequent path.** It found the widest
+set, exposed cross-axis duplication, and demonstrated meaningful fresh
+refutation. It is by far the most expensive and couples severity to merge
+action, turning documentation drift into P1 blockers. Keep its claims-only
+verification, anti-over-refutation, Requirements exception, and explicit agent
+actions; retire the always-two-finders architecture.
 
-**Overstated: v3's context-pressure risk.** Nine files at 61 tool calls showed no strain. The concern applies at a scale neither prototype has been tested at.
+**V3 — measured cost baseline.** One agent delivered complete inspection,
+requirements, risk checks, and strong execution/history-based falsification at
+the lowest measured cost. Its verifier threshold failed to challenge its only
+consequential conclusion, and its missing-context handling was weaker than
+v4's. Self-falsification is viable; it is not proven sufficient for blockers.
 
-**Overstated: v2's stale-head gap.** Real as a within-run race, but this test did not trigger it — the head moved *between* runs, which both skills handle by re-resolving at phase 1. v3's re-fetch-before-write remains the stronger design; no live harm was demonstrated.
+**V4 — best observed author artifact.** It retained the two real-looking drifts,
+made both optional, improved them through verification, and handled coverage
+recovery transparently. It was slower and its “public contract” trigger was
+ambiguous. It wins artifact quality, not general architecture.
 
-**Understated: v3's base-branch-guidance rule.** Filed pre-run under operational hardening; the run showed it killing the strongest false candidate. It is a precision mechanism as much as a security one.
+**V5 — architecture to advance, calibration unproven.** Consequence-based
+routing, outcome reading, history checks, and publication hardening are the
+right direction. But cost is missing, candidate count fell from ten to four,
+the target informed its design, and its sole verifier decision may have erased
+a valid optional issue. Freeze and test it; do not call this zero-finding result
+superior precision yet.
 
-**Confirmed: v3's coverage discipline is real, not aspirational.** The manifest carried per-file evidence including which surrounding code was read, and the risk checks were probed, not asserted.
+## Publication outcome
 
-## Defect register
+V4 was selected after v2-v4 and posted as
+[review 5076220814](https://github.com/kamui/shortlist/pull/66#pullrequestreview-5076220814):
 
-**v3, open — rubric gate 2 is unscoped over requirement findings.** The eight admission gates are conjunctive over all findings, and gate 2 reads *"Introduced here: the reviewed change caused it. Do not report a pre-existing problem."* A requirements gap is measured against the issue, not the diff — the issue made it this change's job whether or not the code predates it. The best finding of the v2 run was exactly this shape: an acceptance criterion unmet at a validator gate the diff never touched. A literal gate-2 reading kills it; v3's Issue-fit section arguably rescues it; the ambiguity is the bug. This is the same unscoped-exclusion defect v2 had and fixed in `verify.md`. Fix: scope gate 2 to non-requirement kinds explicitly.
+- [P2 Narrow `consider`](https://github.com/kamui/shortlist/pull/66#discussion_r3902611240)
+- [P3 bundle-contract `consider`](https://github.com/kamui/shortlist/pull/66#discussion_r3902611259)
 
-**v3, open — priority/blocking independence is underspecified.** Separating impact (`P0`–`P3`) from merge judgment (`Required change` vs `Suggestion`) is more expressive than v2's derivation rule, but nothing states which priorities default to blocking. That invites run-to-run variance — precisely what an automated pipeline should not have.
+The self-review used `COMMENT`, stated `Approved (advisory)`, rechecked the head,
+validated anchors, fingerprinted context, and submitted one batch. V2/v3 were
+withheld. V5 ran later and was withheld; posting it after v4 would test re-review,
+not the controlled first-review condition. The
+[publication record](prototype-runs-2026-09-01/publication-decision.md) says this
+selection was not a categorical prototype verdict.
 
-**v2, open — no injection boundary.** Nothing treats PR text, issue text, diffs, or comments as untrusted, and nothing evaluates standards against the base-branch version of guidance files, so a PR could in principle redefine the rules used to judge it. For an unattended agent on arbitrary PRs this is v2's most important gap, and v3's handling is the single strongest passage in any of the three skills.
+## Recommendation and unresolved experiments
 
-**v2, open — no coverage accounting.** A finder that silently skips a file yields a clean review; there is no manifest and no `Incomplete` status, so zero-findings-from-unfinished-work can become approval.
+Advance v5 with two corrections:
 
-**Pocock — structural, for these goals.** One clause of noise control; a taste-based Fowler-smell checklist that manufactures candidates ("possible Feature Envy" exists in almost any diff); findings as free prose a wrapper must lossily normalize into ids and severities; interactive branches, including a hard stop telling the user to run `/setup-matt-pocock-skills` when `docs/agents/issue-tracker.md` is absent — fatal in an unattended loop outside this ecosystem. Its durable contributions already live inside both prototypes: the two-axis separation, the merge-base fixed point, spec-line-quoted requirement findings, and the scope-creep bucket.
+1. Scope change attribution by kind: explicit linked requirements are judged by
+   whether this change was responsible for the outcome, not whether the omitted
+   file happened to change.
+2. Separate factual verdict from action correction: after disproving
+   `must-fix`, assess whether the core claim survives as `consider` before using
+   `refuted`.
 
-## What the runs did not test
+Retain v5's rule against inventing fields, schemas, or tests where outcomes admit
+several representations. Keep history as evidence, not an automatic finding.
+Then pre-register the workflow version and run a frozen, blinded evaluation:
 
-- **v3's finding-path output contract.** Zero findings meant zero inline comments — no `Required change:`/`Suggestion:` rendering, no anchoring decision, no suggestion block. The run says nothing about v3's dual-audience quality on the path that matters most.
-- **v2's question path.** Neither v2 run produced a `plausible` verdict, so `plausible`→question has never fired end to end.
-- **False-positive rate on a known-clean PR** — the number an automated loop most depends on — for either prototype.
-- **Large diffs**, where v2's partitioned contexts and v3's single context should diverge.
+1. known-clean and adjudicated known-defective PRs, including executable bugs
+   and requirements omitted from unchanged files;
+2. a behavioral Narrow test: do agents given both documents refresh the
+   Research-added ad-tier/price-lock class?;
+3. a true low-impact inconsistency intentionally proposed as `must-fix`, where
+   the verifier should downgrade rather than erase it;
+4. genuine correctness, security, compatibility, data-loss, and hard-to-replay
+   claims exercising `confirmed`, `plausible`, and `refuted`;
+5. repeated seeds and large/coupled diffs to measure variance and context limits;
+6. re-review, stale head, missing context, invalid anchors, file-only findings,
+   ambiguous writes, and v5's GitHub body fallback; and
+7. complete v5 input/output token, wall-time, tool, and verifier-share capture.
 
-## Verdict
-
-**v3 has the better skeleton for the automated future, and now has live evidence for its economy, coverage, and falsification discipline. v2 has the better verification mechanism, the richer agent-action contract, and the only demonstrated finding-precision record (3/3 accepted and implemented).** The live run moved the balance toward v3 more than predicted — chiefly on cost-per-scope and the demonstrated precision value of base-branch guidance.
-
-For the automated review agent, the synthesis: **take v3's operational spine** — injection boundary, base-branch guidance evaluation, fail-closed coverage with `Incomplete`, stale-head re-fetch, single-reviewer frequent path, pinned-rubric run trailer — **and port four things from v2**:
-
-1. The **fresh-context verifier, mandatory for blocking findings only**, conditional elsewhere. This splits the two cost models: the expensive independent check is spent exactly where a false positive becomes a work request for an agent.
-2. The **anti-over-refutation asymmetry** — `plausible` by default, `refuted` only with a quoted line, plus the explicit realistic-state list (races, cold-cache nils, falsy zeros, lost regex anchors) that must not be dismissed as speculative. v3 has no equivalent, and this is where its falsification is most likely to fail on a harder PR.
-3. **`plausible` → question rather than drop**, so an unproven-but-real mechanism asks instead of vanishing.
-4. The **explicit permission line** on non-blocking findings ("Closing this without action is a correct response") and the **required trigger field** — v2's concrete guards against agent over-compliance, and the only mechanism that gives an addressing agent a test for whether its own fix worked.
-
-Plus v3's gate-2 scoping fix, and a stated priority→blocking default to kill the variance.
-
-## The decisive experiments, not yet run
-
-1. **Run v3 against head `1c25a91`** — the original revision, where three real findings are known to exist and were all accepted and implemented by the author. This is the apples-to-apples recall test with a verified answer key, and the single most informative measurement still available. If v3 finds all three, its cheaper architecture wins outright and the ported verifier becomes optional; if it misses the requirements-shaped one, gate 2 is the likely culprit and the port list above is vindicated.
-2. **Run both against a known-clean PR** to measure false-positive rate directly.
-3. **Run both against a large diff** to locate v3's context ceiling and v2's cost ceiling.
+Until then: v4 won observed artifact quality, v3 won measured economy, and v5
+is the architecture worth testing next.
