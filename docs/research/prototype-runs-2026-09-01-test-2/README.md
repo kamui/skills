@@ -53,9 +53,15 @@ test convention (Tcl) that no run executed.
   by every run and executed by none.
 - Each prototype's own reference documents were treated as authoritative and its phase structure
   followed as written, including its own fan-out and verification policy.
+- **Harness and model:** every run (orchestrator and all sub-agents) used the **GLM-5.3-Flash** model
+  at the **High** reasoning setting, driven by the **opencode** CLI harness with the context-mode MCP
+  toolset. Sub-agents were spawned with opencode's `task` tool (general-purpose agents); the
+  orchestrator passed each skill's reference files and the phase-1 packet as file paths the
+  sub-agents read themselves.
 - **Harness difference vs test 1:** this harness does not report sub-agent token counts, so token
-  totals are **unavailable** for all four runs. Tool-use counts are the sub-agents' self-reported
-  invocation counts. Wall clock is the orchestrator's measurement of each sub-agent's span.
+  totals are **unavailable** for all four runs (test 1's harness reported them). Tool-use counts are
+  the sub-agents' self-reported invocation counts. Wall clock is the orchestrator's measurement of
+  each sub-agent's span.
 
 ## What differs between the runs
 
