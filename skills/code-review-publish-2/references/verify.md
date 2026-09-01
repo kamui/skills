@@ -21,7 +21,7 @@ Read the cited `anchor` and `fix` sites and enough of the surrounding code to ju
 - factually wrong — the code does not say what the candidate claims. Quote the actual line.
 - provably impossible — a type, constant, or invariant rules it out. Show it.
 - already handled — a guard, check, or earlier return covers it. Cite it.
-- pre-existing — the defect is real but this change did not introduce it. Cite the prior state.
+- pre-existing — **Code candidates only** — the defect is real but this change did not introduce it. Cite the prior state. Never refute a Requirements candidate this way: a requirements gap is measured against the issue, not the diff, and the issue made it this change's job whether or not the code predates it.
 - no observable effect — pure style, with no behavior consequence and no documented rule requiring it.
 
 ## The asymmetry
@@ -43,7 +43,7 @@ This asymmetry is the point of the step. A verifier who refutes on uncertainty d
 
 ## Deduplicate
 
-Two candidates are the same finding when fixing one fixes the other. Merge them, keep the better-anchored `file:line`, and keep the higher priority.
+Two candidates are the same finding when fixing one fixes the other. Merge them, keep the anchor that sits higher on the ladder, keep the surviving claim's fix site, and keep the higher priority.
 
 Where a Code candidate and a Requirements candidate describe the same defect, keep the **Requirements** one: "the change does not do what was asked" is the more useful frame for whoever acts on it, and it carries the issue citation.
 
@@ -52,6 +52,14 @@ Where a Code candidate and a Requirements candidate describe the same defect, ke
 Keep the finder's priority unless it is clearly wrong against what you found. Correcting it is in scope — a finder that could not see the whole picture may have over- or under-rated something. Say when you change one and why.
 
 Remember what `P0` means: it holds under any input, with no assumptions. A defect that needs a specific configuration to bite is not `P0` however bad it is when it bites.
+
+## Prior findings, on a re-review
+
+A re-review adds the earlier round's findings to your list wherever their fate turns on the code: anything replied `implemented` or `already-addressed`, and anything never answered. Treat each as a claim about the **current** code at its recorded `fix` site. You are deliberately not given the replies — a reply's word is evidence of intent, not of outcome, and the outcome is what you check.
+
+The verdicts map outward: `confirmed` means the finding is `not-fixed`; `refuted` because the code now satisfies it means `fixed`; `refuted` because the code it described is gone means `obsolete`; `plausible` keeps its thread open, with your note on what would settle it. The pre-existing refutation never applies here — a prior finding was in scope when it was made.
+
+Declined findings do not reach you. Whether a decline's reasoning holds is not a code question.
 
 ## What to return
 

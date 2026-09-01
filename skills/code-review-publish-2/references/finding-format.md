@@ -27,7 +27,7 @@ Action derives from priority, so one judgment produces both: `P0`/`P1` → `must
 
 Do not label everything `consider` and do not label nothing `consider`. The first is a review that blocks nothing; the second is a review where a nit stops a merge.
 
-**Confidence** — `confirmed` only. A finding published as a finding has been confirmed. `plausible` findings publish as questions, `refuted` ones do not publish at all.
+**Confidence** — implicit, never written. Publication is the assertion: a finding published as a finding was verified `confirmed`. `plausible` publishes as a question and `refuted` does not publish at all, so a confidence key in the trailer would never vary.
 
 ## Anchor and fix site
 
@@ -38,7 +38,7 @@ A finding has two locations and they are not always the same one. The forge cons
 
 Choose the anchor in order, taking the first that applies:
 
-1. The fix site is in the diff — anchor there.
+1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds or rewrites attaches to the file, still inside the review.
 2. Otherwise, the diff line that **makes the finding true**: the change that opened the gap, or that stranded code elsewhere.
 3. Otherwise, the diff line that most directly **demonstrates** it — a test that looks like it covers the case and does not, a call site that breaks.
 4. Otherwise the finding has no honest anchor, and it goes in the review body. Do not attach it to an unrelated line merely to make it a line comment.
@@ -48,11 +48,15 @@ Where the two differ, `Change` names the fix site in prose **and** the trailer c
 ```markdown
 **[Code] [consider] [P3] `CONTEXT.md` glossary still describes four obligation kinds**
 
-`record-schemas.md:392` broadened the vocabulary; the canonical glossary was not updated with it.
+`record-schemas.md:392` broadened the obligation vocabulary; the canonical glossary was not updated with it and still lists four.
+
+**Triggers when**: a maintainer extending the ledger trusts the glossary and writes code or docs that contradict the enum.
 
 **Change**: update the `Research obligation` entry at `CONTEXT.md:326-327` to carry all five kinds.
 
-<!-- finding id=code/record-schemas/stale-glossary action=consider priority=P3 fix=CONTEXT.md:326 head=a1b2c3d -->
+Closing this without action is a correct response.
+
+<!-- finding id=code/record-schemas/stale-glossary axis=code action=consider priority=P3 fix=CONTEXT.md:326 head=a1b2c3d -->
 ```
 
 A human reads the prose and goes where it says. An agent that parsed only the anchor would edit the wrong line — so this is the one place where omitting a machine-readable field turns a helpful comment into a harmful one.
@@ -85,7 +89,7 @@ A finding comment:
 
 **Change**: rethrow inside the catch at `src/order.ts:47`, or attach the validation failure to the returned result.
 
-<!-- finding id=code/order-ts/swallowed-validation-error axis=code action=must-fix priority=P1 confidence=confirmed head=a1b2c3d -->
+<!-- finding id=code/order-ts/swallowed-validation-error axis=code action=must-fix priority=P1 head=a1b2c3d -->
 ```
 
 Four parts, and each one serves a specific reader:
@@ -95,7 +99,7 @@ Four parts, and each one serves a specific reader:
 3. **`Triggers when`.** The concrete inputs, state, or environment that produce the wrong behavior. This is the field an agent uses to check its own fix, so "could be wrong under some conditions" is not an answer. A finding that cannot name its trigger is a `question`, not a finding.
 4. **`Change`.** The concrete edit. A human can work a fix out from the diagnosis; an agent handed only a diagnosis invents one. Name the file, the site, and what to do there. Where the fix is a literal replacement, give it as a fenced ```suggestion``` block with exact whitespace — and only then, because a suggestion block that does not apply cleanly is worse than prose.
 
-Six lines or fewer above the trailer.
+Nothing above the trailer but these parts, and the evidence stays one paragraph — where it wants a second, that is usually two findings, or argument that belongs in `support`.
 
 A `consider` finding adds one line before the trailer, verbatim:
 
@@ -120,10 +124,10 @@ A question:
 An HTML comment: invisible rendered, present in the raw body via `gh api`. It is the machine-authoritative copy of the tag line — where the two disagree, a reader should trust the trailer, so do not let them disagree.
 
 ```
-<!-- finding id=<id> axis=<code|requirements> action=<must-fix|consider> priority=<P0-P3> confidence=confirmed fix=<file:line> head=<short sha> -->
+<!-- finding id=<id> axis=<code|requirements> action=<must-fix|consider> priority=<P0-P3> fix=<file:line> head=<short sha> -->
 ```
 
-`fix` is present only when the edit belongs somewhere other than the line the comment sits on. The anchor itself needs no key — the forge already reports the comment's `path` and `original_line`.
+`fix` is present only when the edit belongs somewhere other than the line the comment sits on. The anchor itself needs no key — the forge already reports the comment's `path` and `original_line`. A question's trailer carries only `id`, `action=question`, and `head`: no axis, no priority, no fix.
 
 `id` slugs the axis, the file, and the finding — `code/order-ts/swallowed-validation-error`. **Never a line number**: lines drift between rounds and the id has to survive that. One finding against the same code keeps one id across every round, which is what lets a re-review correlate it to its thread and verdict it rather than posting it again.
 

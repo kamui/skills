@@ -13,7 +13,7 @@ Two properties govern every decision here:
 
 **Never ask the user anything.** This runs unattended to post a review. Where you would ask, publish a `question` finding instead and let the status carry it. The one exception is an operational failure that prevents reviewing at all — stop and report that rather than publishing a review you could not complete.
 
-**Every finding has two readers.** A human triages it; an agent acts on it. A human reads severity as advice and applies judgment; an agent reads it as an instruction and does the work. So each finding carries a human-facing priority *and* an agent-facing action, and the low band says in words that closing it unactioned is correct. See [`references/finding-format.md`](references/finding-format.md), which is the contract the whole skill exists to produce.
+**Every finding has two readers.** A human triages it; an agent acts on it. A human reads severity as advice and applies judgment; an agent reads it as an instruction and does the work. So each finding carries a human-facing priority *and* an agent-facing action, and the low band says in words that closing it unactioned is correct. Read [`references/finding-format.md`](references/finding-format.md) before anything else — it is the contract the whole skill exists to produce.
 
 ## Process
 
@@ -60,7 +60,9 @@ It returns one verdict per candidate — `confirmed`, `plausible`, or `refuted` 
 - `confirmed` becomes a finding at its priority.
 - `plausible` becomes a **question**, whatever its priority. The mechanism is real but the trigger is not established, and an agent handed that as a finding will change working code to satisfy a scenario nobody has demonstrated. Asking costs a round; a wrong fix costs a round *and* the code.
 
-If the verifier returns nothing, that is a clean review, not a failure.
+Re-reviewing, add to the verifier's list every prior finding whose fate turns on the code — replied `implemented` or `already-addressed`, or never answered — as a claim about the current code at its recorded `fix` site, withholding the replies for the same reason `support` is withheld: a reply's word is evidence of intent, not of outcome. Its verdicts map to the thread vocabulary — `confirmed` → `not-fixed`, `refuted` → `fixed` or `obsolete`, `plausible` → the thread stays open with a note on what would settle it. A `declined` finding turns on reasoning rather than code: judging it is yours, and accepting it closes the thread.
+
+Finders that return no candidates on a first review make this step unnecessary; skip it. If the verifier runs and returns nothing, that is a clean review, not a failure.
 
 Carry the Requirements finder's restated requirement list and its met / not-met / unverifiable counts through to step 4. The axis outcome is derived from those, not from how many findings survived verification: an axis whose requirements are all met is `Passed`, and so is one whose every candidate was refuted. Both are different statements from `Not applicable`, which means the axis was never in scope.
 
@@ -70,7 +72,7 @@ Follow [`references/publishing.md`](references/publishing.md) for the comment sh
 
 One review: the summary as its body, the findings as its line comments, submitted in one call. Every finding that names code goes on that code — the body indexes, the line comments carry the detail, and whoever acts on a finding acts from its comment alone.
 
-Re-reviewing, verdict every prior finding against the current code before writing anything, reply on its existing thread rather than posting a new comment, and resolve what you settle. A finding declined once and still standing is disputed: list it in the summary and stop re-posting it. Two rounds is the cap on any one finding, and that cap is what stops two agents re-litigating a point forever.
+Re-reviewing, carry step 3's verdicts onto the prior findings: reply on each existing thread rather than posting a new comment, and resolve what you settle. A finding declined once and still standing is disputed: list it in the summary and stop re-posting it. Two rounds is the cap on any one finding, and that cap is what stops two agents re-litigating a point forever.
 
 Attempt each write once. On an ambiguous result, read the target before a single retry, then report the failure rather than posting again.
 

@@ -81,9 +81,17 @@ The verifier receives the claims and the repository, not the finders' reasoning.
 
 The three-state vocabulary — `confirmed` / `plausible` / `refuted`, defaulting to `plausible`, with `refuted` requiring a quoted line that proves it — is preferred over a bare confidence float because it forces the verifier to produce evidence rather than a number. A verifier that refutes on uncertainty deletes real bugs and reports a clean review; one that confirms on plausibility passes the finders' noise straight through. The middle verdict exists so neither has to happen.
 
+The same machinery re-verdicts prior findings on a re-review. An open finding is a claim about the current code at its recorded fix site, so it rides through the verifier like any candidate — `confirmed` maps to `not-fixed`, `refuted` to `fixed` or `obsolete` — and the replies are withheld for the same reason `support` is: a reply's word is evidence of intent, not of outcome. Only a declined finding stays with the orchestrator, because judging a decline's reasoning is not a code question.
+
 ### `plausible` publishes as a question, not a finding
 
 This follows directly from constraint 3. An agent handed an unproven finding will change working code to satisfy a scenario nobody demonstrated. Asking costs a round; a wrong fix costs a round *and* the code.
+
+### Precision at the edges, recall in the middle
+
+The built-in's high-effort calibration says catching real bugs matters more than avoiding false positives — "err on the side of surfacing." That is the right calibration for a human reading a terminal and the wrong one here: under publish-then-act, every surfaced finding defaults to a work request, and c-CRAB's authors warn that agents already over-raise robustness and testing concerns relative to humans. This pipeline would convert "unaligned but useful" into "unaligned and merged."
+
+So every published edge is precision-framed — the eight criteria, the exclusion lists, "prefer outputting no findings." Recall is protected in exactly one place, the finder-to-verifier hand-off, where finders are told not to self-censor what they half-believe. Generosity is safe there because the verifier stands behind it; it is safe nowhere downstream of the verifier.
 
 ### Action alongside priority
 
@@ -103,19 +111,21 @@ For a human, a diagnosis is enough — they work the fix out. An agent handed on
 
 Codex criterion 4. This is contested and the alternative is defensible: Claude Code's built-in explicitly puts bugs on unchanged lines of a touched function *in* scope, because the change re-exposes them. The strict reading is taken here because every finding this skill publishes becomes a work request against the author of this change. The counter-argument is recorded in `references/code-axis.md` so it can be flipped after seeing real output.
 
+The first run exposed a scoping subtlety: the exclusion belongs to the **Code axis only**. A requirements gap is measured against the issue, not the diff — the issue made it this change's job whether or not the code predates it. The run's best finding was exactly this shape (an acceptance criterion requiring structural validation, at a validator gate the diff never touched), and a verifier applying the pre-existing refutation across both axes would have deleted it. `references/verify.md` now scopes that refutation to Code candidates.
+
 ## What is original
 
 The dual-audience finding contract: `action` beside `priority`, the explicit permission line, the required `trigger`, the trailer as machine-authoritative copy of the human-facing tag line, and the routing of verified-`plausible` candidates to questions. That contract is the reason the skill is assembled rather than adopted, and it is what `references/finding-format.md` exists to specify.
 
 Claude Code's built-in `/code-review` informed the *design* of `references/verify.md` — its three-state vocabulary and refute-with-evidence asymmetry are good engineering. It is proprietary and compiled into the CLI; no text is taken from it, and none should be. Its `ReportFindings` tool schema is worth studying as independent confirmation of the dual-audience premise: it carries both `summary` and `short_summary` for two rendering contexts, a distinct `failure_scenario`, and an `outcome` field set only when re-reporting after fixes — an agent-response channel built into the finding itself.
 
-## Known friction, from the first real run
+## What the first real run surfaced
 
 Tested against `kamui/shortlist#65`, an issue-linked PR with nine acceptance criteria. Two finders produced 4 candidates; the verifier confirmed 3, merged 1 as a duplicate of another, refuted 0, corrected one trigger it found overstated, and demoted one priority. Three findings published. Two problems surfaced. Both were the same mistake in two places — **one field doing two jobs for two different consumers** — and both are now resolved in the contract.
 
 **Anchoring versus the fix site.** `file`/`line` was carrying both "where the reader should see this" and "where the edit goes." The forge constrains the first (GitHub takes line comments only on diff lines) and nothing constrains the second. Two of three findings in this run had fix sites outside the diff — one in `CONTEXT.md`, untouched by the change; one at a validator gate the change never edited.
 
-Resolved by splitting `anchor` from `fix`, with an ordered ladder for choosing the anchor when the fix site is not in the diff: the line that makes the finding true, else the line that most directly demonstrates it, else the review body — never an unrelated line picked just to get a line comment. The trailer gained a `fix=` key, which matters more than it looks under constraint 3: a human reads the `Change` prose and goes where it says, but an agent that parsed only the anchor would edit the wrong line.
+Resolved by splitting `anchor` from `fix`, with an ordered ladder for choosing the anchor when the fix site is not in the diff: the line that makes the finding true, else the line that most directly demonstrates it, else the review body — never an unrelated line picked just to get a line comment. The trailer gained a `fix=` key, which matters more than it looks under constraint 3: a human reads the `Change` prose and goes where it says, but an agent that parsed only the anchor would edit the wrong line. Publishing also validates every anchor against the diff before the batched call, because one bad anchor fails the entire review submission.
 
 **What the verifier may see.** `evidence` was carrying both "what is alleged" and "why the finder believes it." Passing it whole erodes the fresh-context property the verify step depends on; stripping it aggressively starves the verifier and biases it toward refuting. The claims were compressed by hand for this run.
 

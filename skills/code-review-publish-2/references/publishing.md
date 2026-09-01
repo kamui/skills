@@ -22,7 +22,7 @@ Derive it in that order, never by judging it as a whole:
 
 A question keeps a review at `Needs Information` until someone answers it, you withdraw it, or you determine its answer cannot change the verdict. It never ages into approval.
 
-Classify each axis before deriving the status — `Passed`, `Findings`, `Not applicable`, or `Waiting for information`. Anything left unassessed means the review did not finish: stop before publishing and report the operational failure. An incomplete review has no status and must never fall through to `Approved`.
+Classify each axis before deriving the status — `Passed`, `Findings`, `Not applicable`, or `Waiting for information`. An axis is `Waiting for information` when an open question prevents completing its assessment; the question itself still carries no axis and counts toward no total. Anything left unassessed means the review did not finish: stop before publishing and report the operational failure. An incomplete review has no status and must never fall through to `Approved`.
 
 With no originating issue, Requirements is `Not applicable`.
 
@@ -79,9 +79,13 @@ JSON
 
 One call per finding produces one empty review per finding, which is the failure mode this shape exists to avoid.
 
+Validate every anchor against the diff before submitting — `git diff <base>...<head> --unified=0` gives the touched ranges cheaply, and one comment on an untouched line fails the entire batched call. An anchor that fails validation moves down the ladder, to the file (`subject_type: file`) and then the body, never into a doomed request.
+
 `line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. For a whole file, set `"subject_type": "file"` and omit `line`. A finding the ladder gave no honest anchor goes in the body, with its `fix` site named there.
 
 The comment URLs do not exist when the body is written, so publish in two phases: submit with the index by `file:line`, read back the created comment URLs, then `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with the links. If the second phase fails, the `file:line` index stands on its own — never block a review on it.
+
+Questions ride inside the same review, anchored by the same ladder. A whole-change question, and any finding the ladder sent to the body, appears there in full — tag line through trailer — under `## Open questions` or under its axis in the index.
 
 ## Re-review
 
@@ -101,7 +105,7 @@ Reading prior activity:
   ' -f owner=<owner> -f repo=<repo> -F pr=<n>
   ```
 
-Correlate prior findings by trailer `id`, not by line. Verdict each against the current code — a reply's word is evidence of intent, not of outcome, so check the diff:
+Correlate prior findings by trailer `id`, not by line. The verify step supplies the verdict wherever it turns on the code; judging a decline is the reviewer's own call. Either way a reply's word is evidence of intent, not of outcome:
 
 | Verdict | Means | Thread |
 | --- | --- | --- |
