@@ -1,4 +1,4 @@
-# Design notes — code-review-publish-2a
+# Design notes — code-review-deep-publish
 
 v2a is the Panel line's second iteration: `code-review-publish-2` (v2, PR #14, seeded at commit
 `f42f708`) with the fixes the three 2026-09-01 test runs proved necessary, and nothing that would
@@ -8,6 +8,12 @@ and the three v2 run records it synthesizes. v2's original assembly rationale �
 thirteen published reviewers, the Codex-rubric base, the pr-agent Requirements graft, the
 dual-audience finding contract — is in v2's own `DESIGN.md` on its branch and is inherited here
 unchanged.
+
+## Positioning
+
+The v2a prototype is now named `code-review-deep-publish`. It runs on two deliberate occasions: as
+the recall-first escalation for large or high-risk changes, and as the standing comparator arm in
+review-skill evaluations. The frequent path belongs to `code-review-publish`.
 
 ## The pole statement
 
@@ -139,6 +145,21 @@ Two fixes applied identically in v5a, for comparability:
   trailer so a later run knows whose contract it is reading. The context-fingerprint script was
   *not* adopted — that is a Skeptic-line mechanism; the trailer's pinned SHAs are v2a's identity
   record.
+
+### C7. Token efficiency around the pole
+
+The clean test-1 comparison put the Panel line at 253.7k tokens versus roughly 175k for the
+single-reviewer-plus-verifier lines
+([aggregate analysis § 8](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#8-economics-what-the-cost-data-actually-supports)).
+The trace behind that comparison recorded 118 tool calls: 91.3k and 99.8k tokens in the two finders,
+then 62.5k in the verifier.
+
+Three changes target waste around that architecture. The orchestrator now reads the diff, commits,
+manifest, and base-branch guidance once, then gives both finders a byte-identical prompt prefix for
+cache reuse. The verifier follows claim-dependent call sites but stops expanding once decisive
+evidence supports a verdict. Both finder ledgers keep every hypothesis while limiting each row to
+four compact fields on one line. The two full-diff analyses and verification of every candidate
+remain mandatory.
 
 ### Subtractions
 
