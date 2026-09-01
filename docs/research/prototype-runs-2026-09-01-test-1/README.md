@@ -37,8 +37,8 @@ M tests/test_generalized_bundle.py
 
 ## Conditions held constant
 
-- Each run got its own clone (`/tmp/run-v2`, `/tmp/run-v3`, `/tmp/run-v4`, `/tmp/run-v5`) at the same head, with
-  `main` pinned to the base SHA, so no run could disturb another's working tree.
+- Each run got its own clone at the same head, with `main` pinned to the base SHA, so no run could
+  disturb another's working tree.
 - Phase 1 (target resolution) was done once by the orchestrator and handed to every run identically:
   same run identity, same manifest, same issue text, same "no prior review state".
 - V2-v4 were not allowed to publish during comparison. V4 was selected and published only after
@@ -46,9 +46,14 @@ M tests/test_generalized_bundle.py
   state `none`, so the existing live v4 review could not influence its first-review result.
 - Each prototype's own reference documents were treated as authoritative and its phase structure
   followed as written, including its own fan-out and verification policy.
-- Sub-agent token counts are as reported by the harness for v2-v4. The v5 harness did not expose
-  token or end-to-end wall-time totals; v5 reported 41 total tool calls. Orchestrator
-  tokens are not included.
+- **Harness and model:** every run (orchestrator and all sub-agents) used **Claude Opus 5 (1M
+  context)** at the **High** reasoning setting, driven by the **Claude Code** CLI harness. Sub-agents
+  were spawned with Claude Code's `Agent` tool (general-purpose agents); the orchestrator handed each
+  skill's reference files and the phase-1 brief to the reviewer as paths it read itself.
+- Sub-agent token counts, tool-use counts, and wall-clock spans are as reported by that harness for
+  all four runs, so the cost columns are directly comparable. Orchestrator tokens are not included.
+  A verifier's tokens and tool calls are reported separately from its primary's rather than folded
+  into them.
 
 ## What differs between the runs
 
@@ -64,7 +69,7 @@ Only the skill under test:
 - `v2-run.md` — output and metadata
 - `v3-run.md` — output and metadata
 - `v4-run.md` — output and metadata
-- `v5-run.md` — output and metadata, including the pre-run forward-test correction
+- `v5-run.md` — output and metadata
 - `comparison-data.md` — side-by-side metadata table, extended after the v5 run
 
 ## Reproducing

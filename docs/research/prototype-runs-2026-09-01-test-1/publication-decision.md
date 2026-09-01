@@ -50,13 +50,18 @@ Judged on the published artifact's value to the PR author, not on the architectu
 
 V5 ran after the v4 publication, but received the original pinned `none` prior-review state and did
 not read current live review state. Publication remained disabled. It would have produced
-`Approved (advisory)` with no findings.
+`Approved (advisory)` with two `consider` findings — the same two items v4 published, both at P3:
 
-Its primary reviewer initially proposed the Narrow entrypoint's fixed refresh list as a P2
-`must-fix`. The mandatory fresh verifier refuted the claim because the entrypoint explicitly
-requires following the broader ledger-driven protocol and its older examples do not say they are
-exclusive. The primary accepted the correction. V5 also dropped the bundle-contract list because
-its prose is open-ended and links the complete formal schema.
+- anchor `narrowing-protocol.md:68`, fix `shortlist-narrow/SKILL.md:46`
+- anchor `research-protocol.md:295`, fix `search-bundle-format.md:208`
+
+Its primary reviewer proposed the Narrow entrypoint's fixed refresh list as a P2 `must-fix`. The
+mandatory fresh verifier confirmed the underlying claim but downgraded the record to P3 `consider`
+and `maintainability`, because `shortlist-narrow/SKILL.md:37` requires following the broader
+ledger-driven protocol, which keeps canonical behavior intact. It also replaced the trigger example
+with the `policy terms` class, which the stage skill genuinely omits. The primary validated each
+correction against the diff and accepted it. That downgrade is what moved the run from
+`Changes Requested` to `Approved`.
 
 The existing v4 review was not edited, contradicted, or supplemented. V5 is retained as controlled
 evaluation data in `v5-run.md`; publishing it after v4 would instead exercise re-review and prior
@@ -66,6 +71,6 @@ thread handling, which was not the test requested here.
 
 It is not a verdict on which prototype is best. V2 found two items the others missed, and whether
 those are real defects or over-flagging is exactly the question the analysis pass has to settle.
-The same is true of v3 and v5 dropping the bundle-contract item that v2 and v4 confirmed, and v5's
-verifier refuting the Narrow finding that v2-v4 all published. Publishing v4 records which single
+The same is true of v3 dropping the bundle-contract item that v2, v4, and v5 confirmed, and of the
+four-way split on how severely to treat the Narrow finding. Publishing v4 records which single
 artifact was judged most defensible after the original three-way test, before v5 existed.
