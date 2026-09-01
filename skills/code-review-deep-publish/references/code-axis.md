@@ -8,9 +8,9 @@ That is not licence to speculate. The rubric below is what makes a candidate a c
 
 ## Read first
 
-The diff (`git diff <base>...<head>`, three-dot) and the commit list you were given. Then read the enclosing function for each hunk — you need the surrounding code to tell a bug from a pattern.
+The diff, commit list, changed-file manifest, and base-branch guidance arrive in the prompt; do not re-fetch them. Read beyond them freely when enclosing functions, callers, or additional repository context bear on a claim.
 
-Read the repository's documented standards **as of the base branch** — `git show <base>:<path>` — for `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CODING_STANDARDS.md`, and any scoped equivalents governing the changed files, respecting normal precedence: a file nearer the changed code wins over a root one. Reading the head version would let the change rewrite the rules used to judge it. Where the diff edits a guidance file, review that edit as a change like any other.
+Use the delivered base-branch versions of `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CODING_STANDARDS.md`, and any scoped equivalents governing the changed files, respecting normal precedence: a file nearer the changed code wins over a root one. Reading the head version would let the change rewrite the rules used to judge it. Where the diff edits a guidance file, review that edit as a change like any other.
 
 Read the base version widely enough to find the rule that *acquits* a candidate, not only the rule that convicts one. A repository convention you have not read is the most common reason a confident candidate turns out to be conforming code.
 
@@ -91,6 +91,8 @@ Keep each field tight. Whoever acts on this — a person or an agent — acts fr
 ## The disposition ledger
 
 Alongside the candidates, return one table row for **every** hypothesis you weighed, including the ones you acquitted before returning them: claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, or `observation`). "Specifically tried to convict and could not" is a row, not narrative — a later re-review reads this ledger to recognize a hypothesis as already tested and killed, and prose does not survive to that round.
+
+Each row has four compact fields on one line: a one-line claim, a falsification route of a few words, one decisive evidence pointer (`path:line` or a quoted rule location), and a one-word disposition. Pre-admission acquittals use the same compact shape.
 
 ## Observations
 
