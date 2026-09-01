@@ -1,9 +1,9 @@
 ---
-name: code-review-publish-3
-description: "Prototype: review an issue-linked pull request under a high-signal Codex-derived rubric and publish one human-readable, agent-actionable review. Invoke explicitly when testing the v3 review workflow."
+name: code-review-publish-4
+description: "Prototype: review an issue-linked pull request with an integrated Codex-derived review and conditional fresh verification, then publish human-readable, agent-actionable feedback. Invoke explicitly when testing the hybrid v4 workflow."
 ---
 
-# Publish code review v3 — prototype
+# Publish code review v4 — hybrid prototype
 
 This is an isolated prototype. It does not replace `code-review-publish` and does not use that skill's `review-protocol.md` as a specification.
 
@@ -39,17 +39,21 @@ Use every clearly relevant issue. With none, review the code and state that issu
 
 Create the complete changed-file manifest and private requirement ledger defined by the rubric. Do not publish satisfied entries. Derive the rubric's targeted risk checks from actual paths and behavior, and record their evidence-backed outcomes.
 
-Report an existing review instead of duplicating it only when the head, base, merge-base, rubric version, linked-issue content, applicable base-branch guidance, and later replies/thread state are unchanged. Replies can change status without changing code.
+Report an existing review instead of duplicating it only when the head, base, merge-base, `workflow` version, and recomputed `context` digest match its run trailer, and no relevant PR, issue, review, comment, or reply was created or updated after that review. Exclude only the candidate review and its own original comments from the later-state check; include replies to them. The output contract defines the version and digest. Replies can change status without changing code.
 
 ## 3. Review once, then falsify
 
 Inspect the complete merge-base diff under the rubric. Expand context only as needed: enclosing symbol, then relevant callers, interfaces, configuration, tests, or history. Finish the manifest after the first issue. Read relevant tests and current CI; run only safe, proportionate focused checks without changing files.
 
-Falsify and deduplicate every candidate under the rubric. Only verified candidates become findings. Use the same reviewer for this frequent path.
+The primary reviewer owns the complete diff and requirement ledger. For every candidate, keep the rubric's private record with a falsifiable `claim` about the artifact and separate `support` describing what the reviewer inspected, ran, inferred, or could not establish.
 
-When delegation is available, use at most one batched independent verifier only for a high-risk change, unusually coupled or very large diff, or high-impact candidate whose proof remains difficult. Give it the candidates and minimum raw evidence, and ask it to disprove them. The verifier does not write or publish.
+Falsify and deduplicate every candidate under the rubric in the primary context. Only survivors are eligible for verification or publication. This single integrated reviewer is the complete frequent path; do not fan out separate code and requirements finders.
 
-Account for every changed file and risk check. A failed fetch, omitted patch, tool failure, or unfinished verification makes coverage incomplete; zero findings from incomplete coverage is never approval.
+Independently verify every surviving candidate that is proposed as `must-fix`, concerns security or authorization, risks data loss or corruption, changes a destructive migration, or changes a public or external contract. Also verify a code-decided prior `must-fix` finding during re-review. An ordinary `consider` candidate may be verified when its proof spans modules or remains difficult after falsification. Do not invoke a verifier for a clean run or straightforward optional feedback.
+
+When at least one candidate qualifies, read [`references/verifier.md`](references/verifier.md) and run exactly one batched verifier in the fresh isolated context it specifies. Treat a missing, failed, or incomplete mandatory verdict as incomplete coverage. The verifier never finds new issues, renders comments, writes, or publishes.
+
+Account for every changed file and risk check. A failed fetch, omitted patch, unresolved evidence-affecting tool failure, or unfinished verification makes coverage incomplete; a recovered operation does not. Zero findings from incomplete coverage is never approval.
 
 ## 4. Re-review without losing state
 
@@ -57,14 +61,14 @@ Default to the full diff. Review only the delta when the earlier head is an ance
 
 ## 5. Validate before writing
 
-Before any external write, verify every rubric gate, stable id, diff anchor and side, priority/blocking/source/action combination, suggestion block, deduplication decision, coverage entry, and summary status. Follow the publication invariants in the output contract.
+Before any external write, verify every rubric gate, stable id, inline diff anchor and side when used, evidence and actual fix locations, priority/action/blocking/source combination, suggestion block, deduplication decision, coverage entry, and summary status. Follow the publication invariants in the output contract.
 
 Re-fetch the pull-request head immediately before the first write. If it differs from the reviewed head or cannot be read, publish nothing and report the stale review.
 
 ## 6. Publish one review
 
-Submit one forge-native review with the summary and every new inline finding. Use the smallest valid changed range, a file-level comment for a whole-file finding, and the body only for whole-change questions. Reply to surviving findings on their existing threads.
+Submit one forge-native review with the summary and every new finding. Use the smallest valid changed range, a file-level comment for a whole-file finding, and the body for whole-change questions or a verified finding that has no honest inline or file-level anchor. Reply to surviving findings on their existing threads.
 
-Use `COMMENT` unless gating is separately authorized; self-reviews always use it. Fall back to one general PR comment only when a non-gating native review is unavailable or refused. After an ambiguous write, read the target before one retry. After a conclusive pre-creation rejection for a malformed comment, repair or omit only that comment, confirm no review exists, and retry the batch once.
+Use `COMMENT` unless gating is separately authorized; self-reviews always use it. Fall back to one general PR comment only when a non-gating native review is unavailable or refused. After an ambiguous write, read the target before one retry. After a conclusive pre-creation rejection for a malformed comment, repair its anchor or relocate its complete prose into the body as the output contract specifies, rebuild the summary and payload, confirm no review exists, and retry the batch once.
 
 Read the published review back. Finish by reporting its status, reviewed head, coverage, review URL, finding URLs, open questions, disputed findings, and anything that failed to publish.

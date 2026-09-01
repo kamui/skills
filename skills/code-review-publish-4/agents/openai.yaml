@@ -1,0 +1,6 @@
+interface:
+  display_name: "Publish Code Review v4 (Hybrid Prototype)"
+  short_description: "Issue-aware PR review with selective verification"
+  default_prompt: "Use $code-review-publish-4 to review the current pull request and publish one high-signal review."
+policy:
+  allow_implicit_invocation: false
