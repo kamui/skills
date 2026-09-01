@@ -1,13 +1,15 @@
 ---
-name: code-review-publish-2a
-description: "Prototype reviewer, Panel line (v2 → v2a). Review a pull request on two parallel axes — Code and Requirements — verify every candidate finding in a fresh context, and publish the survivors as line comments under one status. Findings are written to be acted on by a human or an agent. Use when the caller explicitly asks for code-review-publish-2a; otherwise prefer code-review-publish."
+name: code-review-deep-publish
+description: "Run a recall-first panel review with two independent finders and mandatory fresh-context verification of every candidate. Use for large or high-risk changes, including concurrency, failover, data-integrity, security or authorization surfaces, and wide multi-module diffs, where extra recall justifies roughly 1.5× the token cost of code-review-publish; also use as the standing comparator arm in review-skill evaluations. For routine reviews prefer code-review-publish. Invoke only when the caller explicitly asks for code-review-deep-publish."
 ---
 
-# Publish code review (prototype, Panel line)
+# Publish deep code review (Panel line)
 
 Review the pull request, verify what the review found, publish what survives.
 
-This is a prototype of `code-review-publish` built on a different reviewer. It does the reviewing itself rather than delegating to whichever review skill happens to be installed, because the finding contract below is the point of the skill and a delegated reviewer will not honor it. It is the Panel-line comparator: skepticism lives outside the reviewer, in independent parallel finders and a mandatory fresh-context verifier, and the recall that buys is worth its token premium.
+This is the recall-first Panel-line reviewer. Run it for large or high-risk changes where added recall warrants the cost, and as the standing comparator arm in review-skill evaluations. `code-review-publish` owns the routine path.
+
+This skill does the reviewing itself because the finding contract below is its point. Skepticism lives outside the reviewer, in independent parallel finders and a mandatory fresh-context verifier. That architecture costs roughly 1.5× the routine reviewer and must stay intact.
 
 Two properties govern every decision here:
 
@@ -41,16 +43,33 @@ Pin `base`, `head`, and `merge-base` together as the run identity, and record th
 
 Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
+Materialize the shared finder inputs once before spawning: the full `git diff <base>...<head>` output, the commit list, and every base-branch guidance file that applies to a changed path. Guidance includes `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CODING_STANDARDS.md`, and scoped equivalents. Read each guidance file with `git show <base>:<path>` and record that base-branch provenance beside its contents.
+
 An earlier review at a different head makes this a re-review. Keep the original comparison base; use the earlier head only to locate what changed since.
 
 ### 2. Find
 
 Spawn **two sub-agents in parallel**, one per axis. No further fan-out: extra finders over the same diff multiply the expensive pass and buy little, because they miss the same things.
 
-Give each the comparison base, the head, the diff command (`git diff <base>...<head>`, three-dot), the commit list, the absolute path to its brief, which it reads first, and the absolute path to [`references/finding-format.md`](references/finding-format.md), which defines the anchor ladder and the claim/support split both briefs depend on:
+Build each finder prompt as one shared block followed by one axis-specific block, in that exact order. Construct the shared block once and reuse the same bytes for both prompts. It contains:
 
-- **Code** — [`references/code-axis.md`](references/code-axis.md). Correctness, documented repository standards, implementation quality.
-- **Requirements** — [`references/requirements-axis.md`](references/requirements-axis.md). Also give it the issue text. Missing, partial, or incorrect behavior against the spec, plus behavior the spec never asked for.
+- the pinned run identity: base, head, and merge-base;
+- the changed-file manifest;
+- the commit list;
+- the full diff text;
+- the applicable guidance file contents, each with its base-branch provenance;
+- the absolute path to [`references/finding-format.md`](references/finding-format.md), which defines the anchor ladder and claim/support split.
+
+Append the axis-specific block last:
+
+- **Code**: name the Code axis, give the absolute path to [`references/code-axis.md`](references/code-axis.md), and instruct the finder to read that brief first.
+- **Requirements**: name the Requirements axis, give the absolute path to [`references/requirements-axis.md`](references/requirements-axis.md), instruct the finder to read that brief first, and include the issue text or pull request body used as its substitute.
+
+On a re-review, append the prior findings and disposition ledger for that axis to its axis-specific block. Nothing axis-specific may precede the shared block. The identical leading bytes let the harness's prompt cache serve the second copy cheaply; re-rendering the shared material per finder, or putting an axis label before it, defeats that cache path.
+
+The handover replaces mechanical shared fetches, not investigation. Both finders may read more of the repository, including enclosing functions, callers, and conventions that acquit a candidate.
+
+If the full diff exceeds the harness's practical prompt limit, give both finders the current command-based instruction to run `git diff <base>...<head>` and fetch the other shared inputs themselves. Use the fallback for both finders and state it in the run report.
 
 Both return *candidates*, not findings. A candidate is not yet publishable and the finders are told to be generous within their rubric: a finder that silently drops what it half-believes bypasses step 3, which is where half-believed things are supposed to be settled.
 
@@ -62,7 +81,7 @@ A finder may return **observations** as well: accurate facts that fail the candi
 
 Each finder also returns the manifest back, every file marked `reviewed` or `ignored` with a reason. Merge the two: a file both finders ignored without a defensible reason, a fetch that failed, or a brief that ended early leaves the run **incomplete**, and an incomplete run cannot approve. Coverage is about what was inspected and says nothing about what was published — inspecting everything and finding nothing is the good outcome, not a suspicious one.
 
-Re-reviewing, also give each finder the prior findings for its axis and the prior round's disposition ledger, so it neither re-derives standing findings under new ids nor re-tests hypotheses the ledger already killed.
+Re-reviewing, the prior findings and disposition ledger let each finder avoid re-deriving standing findings under new ids or re-testing hypotheses the ledger already killed.
 
 ### 3. Verify
 

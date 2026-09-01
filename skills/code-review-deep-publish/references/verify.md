@@ -12,7 +12,7 @@ Questions from the Requirements axis's "cannot tell from the code" bucket never 
 
 ## For each candidate
 
-Read the cited `anchor` and `fix` sites and enough of the surrounding code to judge the claim. The anchor is where the comment will attach, which is not always where the defect lives; judge the defect, not the anchor. Follow the call sites when the claim depends on them. Then rule:
+Read the cited `anchor` and `fix` sites, then only enough surrounding context to decide the claim; follow call sites when the claim depends on them, and stop expanding once a verdict's evidence is decisive. The anchor is where the comment will attach, which is not always where the defect lives; judge the defect, not the anchor. Then rule:
 
 **`confirmed`** — you can name the inputs, state, or environment that trigger it and say what goes wrong. Quote the line that carries the defect. If the candidate's stated trigger was wrong but a real trigger exists, confirm it and correct the trigger.
 
