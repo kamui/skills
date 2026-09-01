@@ -1,8 +1,9 @@
 # Prototype run data — v2, v3, v4, v5 against `redis/redis#15680` (test 2)
 
 **2026-09-01.** Raw outputs and metadata from a second controlled comparison of the same four
-code-review prototypes against a different pull request. **Data only — no analysis.** Analysis is a
-separate pass. The first comparison set lives in [`../prototype-runs-2026-09-01-test-1/`](../prototype-runs-2026-09-01-test-1/).
+code-review prototypes against a different pull request. **Data only** — the analysis of this run
+lives in [`../2026-09-01-code-review-prototype-evaluation-test-2.md`](../2026-09-01-code-review-prototype-evaluation-test-2.md).
+The first comparison set lives in [`../prototype-runs-2026-09-01-test-1/`](../prototype-runs-2026-09-01-test-1/).
 
 ## The target
 

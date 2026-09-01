@@ -15,6 +15,12 @@ Raw records: [method and inputs](prototype-runs-2026-09-01-test-1/README.md),
 [comparison data](prototype-runs-2026-09-01-test-1/comparison-data.md), and
 [publication decision](prototype-runs-2026-09-01-test-1/publication-decision.md).
 
+A second controlled run of the same four prototypes, against a merged upstream C
+pull request with no originating issue, is analyzed separately in
+[the test-2 evaluation](2026-09-01-code-review-prototype-evaluation-test-2.md).
+It used a different model and harness, so the two runs may be read side by side
+but not differenced.
+
 ## Conclusion
 
 **V4 and v5 produced equivalent-quality review artifacts, and v5 reached its

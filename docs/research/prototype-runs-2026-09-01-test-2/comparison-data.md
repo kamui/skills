@@ -1,6 +1,7 @@
 # Comparison data — v2, v3, v4, v5 on `redis/redis#15680`
 
-**2026-09-01. Data only — no analysis.** Every number here is measured or directly observed.
+**2026-09-01. Data only.** Every number here is measured or directly observed; the analysis is in
+[`../2026-09-01-code-review-prototype-evaluation-test-2.md`](../2026-09-01-code-review-prototype-evaluation-test-2.md).
 All runs (orchestrator and sub-agents) used the GLM-5.3-Flash model at the High reasoning setting
 under the opencode CLI harness with context-mode MCP. Token totals are unavailable from this
 harness (see test-2 README); wall clock is the orchestrator's measurement of each sub-agent's span;
