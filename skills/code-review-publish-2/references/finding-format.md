@@ -29,6 +29,49 @@ Do not label everything `consider` and do not label nothing `consider`. The firs
 
 **Confidence** — `confirmed` only. A finding published as a finding has been confirmed. `plausible` findings publish as questions, `refuted` ones do not publish at all.
 
+## Anchor and fix site
+
+A finding has two locations and they are not always the same one. The forge constrains where a comment may attach — GitHub takes line comments only on lines the diff touches — but nothing constrains where the edit belongs.
+
+- **`anchor`** — the `file:line` the comment attaches to. Must be a line the diff touches.
+- **`fix`** — where the edit goes. Omitted when it is the anchor.
+
+Choose the anchor in order, taking the first that applies:
+
+1. The fix site is in the diff — anchor there.
+2. Otherwise, the diff line that **makes the finding true**: the change that opened the gap, or that stranded code elsewhere.
+3. Otherwise, the diff line that most directly **demonstrates** it — a test that looks like it covers the case and does not, a call site that breaks.
+4. Otherwise the finding has no honest anchor, and it goes in the review body. Do not attach it to an unrelated line merely to make it a line comment.
+
+Where the two differ, `Change` names the fix site in prose **and** the trailer carries it as `fix=`:
+
+```markdown
+**[Code] [consider] [P3] `CONTEXT.md` glossary still describes four obligation kinds**
+
+`record-schemas.md:392` broadened the vocabulary; the canonical glossary was not updated with it.
+
+**Change**: update the `Research obligation` entry at `CONTEXT.md:326-327` to carry all five kinds.
+
+<!-- finding id=code/record-schemas/stale-glossary action=consider priority=P3 fix=CONTEXT.md:326 head=a1b2c3d -->
+```
+
+A human reads the prose and goes where it says. An agent that parsed only the anchor would edit the wrong line — so this is the one place where omitting a machine-readable field turns a helpful comment into a harmful one.
+
+## Claim and support
+
+A finder produces two things about every candidate, and only one of them crosses to the verifier.
+
+- **`claim`** — a flat, falsifiable statement of what is wrong, with its citations: the quoted code, the quoted rule, the quoted requirement. Written to be checked, not to persuade.
+- **`support`** — how the finder came to believe it: what it ran, what it read, what it remains unsure of.
+
+The test for which is which: **the claim describes the artifact; the support describes the finder.** Anything that would read identically had a different finder found the same defect is claim. Anything in the first person, or that reports a process, is support.
+
+Quoted lines from the repository and the spec are facts about the artifact, so they belong in the claim. The split withholds argument, not evidence.
+
+`support` reaches neither the pull request nor the verifier. It exists so a finder has somewhere to put its uncertainty other than the finding itself, and so a run can be audited afterwards. A verifier told that the finder already demonstrated something believes it, and the step decays into agreement; re-deriving the claim from the code is the entire check.
+
+The published comment's evidence paragraph is written from the `claim`.
+
 ## Shape
 
 A finding comment:
@@ -48,7 +91,7 @@ A finding comment:
 Four parts, and each one serves a specific reader:
 
 1. **The tag line.** Axis, action, priority, then a title of at most 80 characters, imperative or declarative, naming the defect rather than the area. A human scans it; an agent parses it. It is redundant with the trailer on purpose — the trailer is authoritative, the tag line is what a human sees.
-2. **The evidence.** `file:line` and what the code actually does. Cite the documented rule or the originating requirement where one applies, quoting it. One paragraph. Quote at most three lines of code — a diff the reader already has does not need reproducing.
+2. **The evidence.** Written from the `claim`: `file:line` and what the code actually does. Cite the documented rule or the originating requirement where one applies, quoting it. One paragraph. Quote at most three lines of code — a diff the reader already has does not need reproducing.
 3. **`Triggers when`.** The concrete inputs, state, or environment that produce the wrong behavior. This is the field an agent uses to check its own fix, so "could be wrong under some conditions" is not an answer. A finding that cannot name its trigger is a `question`, not a finding.
 4. **`Change`.** The concrete edit. A human can work a fix out from the diagnosis; an agent handed only a diagnosis invents one. Name the file, the site, and what to do there. Where the fix is a literal replacement, give it as a fenced ```suggestion``` block with exact whitespace — and only then, because a suggestion block that does not apply cleanly is worse than prose.
 
@@ -77,8 +120,10 @@ A question:
 An HTML comment: invisible rendered, present in the raw body via `gh api`. It is the machine-authoritative copy of the tag line — where the two disagree, a reader should trust the trailer, so do not let them disagree.
 
 ```
-<!-- finding id=<id> axis=<code|requirements> action=<must-fix|consider> priority=<P0-P3> confidence=confirmed head=<short sha> -->
+<!-- finding id=<id> axis=<code|requirements> action=<must-fix|consider> priority=<P0-P3> confidence=confirmed fix=<file:line> head=<short sha> -->
 ```
+
+`fix` is present only when the edit belongs somewhere other than the line the comment sits on. The anchor itself needs no key — the forge already reports the comment's `path` and `original_line`.
 
 `id` slugs the axis, the file, and the finding — `code/order-ts/swallowed-validation-error`. **Never a line number**: lines drift between rounds and the id has to survive that. One finding against the same code keeps one id across every round, which is what lets a re-review correlate it to its thread and verdict it rather than posting it again.
 

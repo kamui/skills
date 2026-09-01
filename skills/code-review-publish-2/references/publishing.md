@@ -79,7 +79,7 @@ JSON
 
 One call per finding produces one empty review per finding, which is the failure mode this shape exists to avoid.
 
-`line` must be a line the diff touches, `side` `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. For a whole file, set `"subject_type": "file"` and omit `line`. A finding belonging to neither a line nor a file goes in the body.
+`line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. For a whole file, set `"subject_type": "file"` and omit `line`. A finding the ladder gave no honest anchor goes in the body, with its `fix` site named there.
 
 The comment URLs do not exist when the body is written, so publish in two phases: submit with the index by `file:line`, read back the created comment URLs, then `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with the links. If the second phase fails, the `file:line` index stands on its own — never block a review on it.
 

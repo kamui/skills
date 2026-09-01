@@ -66,9 +66,11 @@ Deduplicate before returning: one candidate per distinct defect, at the site whe
 Per candidate:
 
 - `id` — `code/<file-slug>/<defect-slug>`. Never a line number.
-- `file` and `line` — where the fix goes. The line must be one the diff touches.
+- `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site.
+- `fix` — where the edit actually goes, when that is not the anchor. Omit when they are the same.
 - `title` — 80 characters or fewer, naming the defect.
-- `evidence` — what the code does, with the `file:line`. Quote the rule where one applies. At most three lines of quoted code.
+- `claim` — a flat, falsifiable statement of what is wrong, with the quoted code and the quoted rule. Written to be checked, not to persuade. This is what the verifier receives.
+- `support` — what you ran, what you read, and what you remain unsure of. First person is fine here and nowhere else. The verifier never sees this, so do not put anything load-bearing in it.
 - `trigger` — the concrete inputs, state, or environment producing the wrong behavior. Required. If you cannot write one, you do not have a candidate; if the mechanism is real but the trigger is uncertain, say so here and let the verifier route it.
 - `change` — the concrete edit: file, site, what to do.
 - `priority` — `P0` blocking release or major usage, holding under any input; `P1` urgent; `P2` normal; `P3` nice to have.

@@ -60,9 +60,11 @@ If you were given no originating issue, return `not-applicable` immediately and 
 The restated requirement list, then per candidate:
 
 - `id` — `requirements/<slug>` for compliance, `requirements/unrequested/<slug>` for scope creep. Never a line number.
-- `file` and `line` — where the gap is best addressed. For a wholly missing requirement, the file where the work belongs; if there is genuinely no such site, say so and it will attach to the change as a whole.
+- `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site. A wholly missing requirement often has no honest anchor — say so, and it will attach to the change as a whole rather than to an unrelated line.
+- `fix` — where the work belongs, when that is not the anchor. For a missing requirement this is usually the file the work should live in.
 - `title` — 80 characters or fewer.
-- `evidence` — the quoted issue line, and what the diff does or does not do about it.
+- `claim` — a flat, falsifiable statement of the gap: the quoted issue line, and what the diff does or does not do about it. Written to be checked, not to persuade. This is what the verifier receives.
+- `support` — what you ran, what you read, and what you remain unsure of. The verifier never sees this, so do not put anything load-bearing in it.
 - `trigger` — the observable consequence: what a user or caller gets that the issue said they should not, or does not get that the issue said they should.
 - `change` — what would satisfy the requirement.
 - `priority` — `P0` a core requirement of the issue is absent or wrong; `P1` a stated requirement partially met; `P2` a secondary requirement, or scope creep; `P3` a nice-to-have the issue mentioned without requiring.

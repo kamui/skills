@@ -37,20 +37,22 @@ An earlier review at a different head makes this a re-review. Keep the original 
 
 Spawn **two sub-agents in parallel**, one per axis. No further fan-out: extra finders over the same diff multiply the expensive pass and buy little, because they miss the same things.
 
-Give each the comparison base, the head, the diff command (`git diff <base>...<head>`, three-dot), the commit list, and the absolute path to its brief, which it reads first:
+Give each the comparison base, the head, the diff command (`git diff <base>...<head>`, three-dot), the commit list, the absolute path to its brief, which it reads first, and the absolute path to [`references/finding-format.md`](references/finding-format.md), which defines the anchor ladder and the claim/support split both briefs depend on:
 
 - **Code** — [`references/code-axis.md`](references/code-axis.md). Correctness, documented repository standards, implementation quality.
 - **Requirements** — [`references/requirements-axis.md`](references/requirements-axis.md). Also give it the issue text. Missing, partial, or incorrect behavior against the spec, plus behavior the spec never asked for.
 
 Both return *candidates*, not findings. A candidate is not yet publishable and the finders are told to be generous within their rubric: a finder that silently drops what it half-believes bypasses step 3, which is where half-believed things are supposed to be settled.
 
+Each candidate arrives split into a `claim` and a `support`. Keep them apart from here on — the split is what makes step 3 a check rather than a second opinion.
+
 Re-reviewing, also give each finder the prior findings for its axis so it does not re-derive them from scratch under new ids.
 
 ### 3. Verify
 
-Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Give it the merged candidate list and the repository. Do not give it the finders' reasoning.
+Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Give it the repository and each candidate's `id`, `axis`, `anchor`, `fix`, `title`, `claim`, `trigger`, and `priority`. **Withhold every `support` field.** Pass the claims verbatim rather than summarising them — editing a claim on the way through makes you a second finder.
 
-The fresh context is the entire mechanism. A verifier that has already seen why the finder believed something agrees with itself, which checks nothing. A verifier that has only the claim must reconstruct it from the code or fail to.
+The fresh context is the entire mechanism. A verifier that has already seen why the finder believed something agrees with itself, which checks nothing. A verifier that has only the claim must reconstruct it from the code or fail to. `support` is where a finder's demonstrations and hedging live, and it is withheld for exactly that reason: a verifier told the finder already proved something believes it.
 
 It returns one verdict per candidate — `confirmed`, `plausible`, or `refuted` — and a deduplicated list. Then:
 
