@@ -1,9 +1,9 @@
 ---
-name: code-review-publish-4
-description: "Prototype: review an issue-linked pull request with an integrated Codex-derived review and conditional fresh verification, then publish human-readable, agent-actionable feedback. Invoke explicitly when testing the hybrid v4 workflow."
+name: code-review-publish-5
+description: "Prototype: review an issue-linked pull request with one integrated reviewer and consequence-triggered fresh verification, then publish concise human-readable, agent-actionable feedback. Invoke explicitly when testing the v5 workflow."
 ---
 
-# Publish code review v4 — hybrid prototype
+# Publish code review v5 — calibrated hybrid prototype
 
 This is an isolated prototype. It does not replace `code-review-publish` and does not use that skill's `review-protocol.md` as a specification.
 
@@ -37,7 +37,7 @@ Use every clearly relevant issue. With none, review the code and state that issu
 
 ## 2. Build private review context
 
-Create the complete changed-file manifest and private requirement ledger defined by the rubric. Do not publish satisfied entries. Derive the rubric's targeted risk checks from actual paths and behavior, and record their evidence-backed outcomes.
+Create the complete changed-file manifest and private requirement ledger defined by the rubric. Give every explicit requirement and non-goal an evidence-backed `met`, `partial`, or `not-verifiable` disposition; keep satisfied entries private. Derive the rubric's targeted risk checks from actual paths and behavior, and record their evidence-backed outcomes.
 
 Report an existing review instead of duplicating it only when the head, base, merge-base, `workflow` version, and recomputed `context` digest match its run trailer, and no relevant PR, issue, review, comment, or reply was created or updated after that review. Exclude only the candidate review and its own original comments from the later-state check; include replies to them. The output contract defines the version and digest. Replies can change status without changing code.
 
@@ -49,9 +49,9 @@ The primary reviewer owns the complete diff and requirement ledger. For every ca
 
 Falsify and deduplicate every candidate under the rubric in the primary context. Only survivors are eligible for verification or publication. This single integrated reviewer is the complete frequent path; do not fan out separate code and requirements finders.
 
-Independently verify every surviving candidate that is proposed as `must-fix`, concerns security or authorization, risks data loss or corruption, changes a destructive migration, or changes a public or external contract. Also verify a code-decided prior `must-fix` finding during re-review. An ordinary `consider` candidate may be verified when its proof spans modules or remains difficult after falsification. Do not invoke a verifier for a clean run or straightforward optional feedback.
+Independently verify every surviving candidate proposed as `must-fix`, plus every candidate involving security or authorization, data loss or corruption, destructive migration, or an externally observable compatibility break. Also verify a code-decided prior `must-fix` finding during re-review. Artifact names such as “contract,” `SKILL.md`, or “public” do not trigger verification by themselves.
 
-When at least one candidate qualifies, read [`references/verifier.md`](references/verifier.md) and run exactly one batched verifier in the fresh isolated context it specifies. Treat a missing, failed, or incomplete mandatory verdict as incomplete coverage. The verifier never finds new issues, renders comments, writes, or publishes.
+When at least one candidate qualifies, read [`references/verifier.md`](references/verifier.md) and run exactly one batched verifier in the fresh isolated context it specifies. Once the batch exists, include an ordinary `consider` survivor only when its proof spans modules, remains difficult, or independent reconstruction could materially change its trigger, impact, action, or remedy. Treat a missing, failed, or incomplete mandatory verdict as incomplete coverage. The verifier never finds new issues, renders comments, writes, or publishes.
 
 Account for every changed file and risk check. A failed fetch, omitted patch, unresolved evidence-affecting tool failure, or unfinished verification makes coverage incomplete; a recovered operation does not. Zero findings from incomplete coverage is never approval.
 
@@ -67,7 +67,7 @@ Re-fetch the pull-request head immediately before the first write. If it differs
 
 ## 6. Publish one review
 
-Submit one forge-native review with the summary and every new finding. Use the smallest valid changed range, a file-level comment for a whole-file finding, and the body for whole-change questions or a verified finding that has no honest inline or file-level anchor. Reply to surviving findings on their existing threads.
+Submit one forge-native review with the summary and every new finding. Use the smallest valid changed range. Use a file-level comment for a whole-file finding only when the forge supports it inside the same native review batch; otherwise put its complete prose in the body, as for a whole-change question or any verified finding without an honest line anchor. Reply to surviving findings on their existing threads.
 
 Use `COMMENT` unless gating is separately authorized; self-reviews always use it. Fall back to one general PR comment only when a non-gating native review is unavailable or refused. After an ambiguous write, read the target before one retry. After a conclusive pre-creation rejection for a malformed comment, repair its anchor or relocate its complete prose into the body as the output contract specifies, rebuild the summary and payload, confirm no review exists, and retry the batch once.
 

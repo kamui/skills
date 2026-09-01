@@ -4,7 +4,7 @@ This document records the reasoning behind the prototype. It is not part of the 
 
 ## Problem being solved
 
-`code-review-publish-4` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
+`code-review-publish-5` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
 
 The quality of the human review and any later agent response both depend on the same foundation. The reviewer therefore needs to produce feedback that is:
 
@@ -23,11 +23,17 @@ The prototype has one complete reviewer and, only when warranted, one narrower v
 
 1. The primary reviewer resolves the pull request and issues, builds one requirement ledger, inspects the full merge-base diff, finds candidates across both code behavior and issue fit, and tries to disprove each candidate.
 2. Straightforward optional findings can proceed after that primary falsification. A clean review stops there.
-3. Every proposed merge blocker and every surviving security, authorization, data-loss, destructive-migration, or public-contract candidate goes to one batched verifier with fresh context. Difficult cross-module optional findings may go too.
+3. Every proposed merge blocker and every surviving security, authorization, data-loss, destructive-migration, or externally observable compatibility candidate goes to one batched verifier with fresh context. An artifact being named a contract does not trigger the pass by itself.
 4. The verifier receives claims and raw citations, but not the primary reviewer's reasoning. It fact-checks only the supplied candidates and returns `confirmed`, `plausible`, or `refuted`; it neither searches for new findings nor publishes.
 5. The primary reviewer drops refuted claims, turns only outcome-changing plausible claims into questions, renders confirmed findings, and performs the publication safety checks.
 
-This is hybrid because the common path retains one integrated review rather than paying for multiple independent searches, while consequential assertions receive a second look that is less likely to inherit the first reviewer's assumptions.
+This is hybrid because the common path retains one integrated review rather than paying for multiple independent searches, while consequential assertions receive a second look that is less likely to inherit the first reviewer's assumptions. Once that pass exists, difficult optional survivors can share the batch at low marginal cost.
+
+## What v5 changes
+
+A controlled v2/v3/v4 run on one issue-heavy pull request exposed three calibration gaps. V2 coupled priority to action and escalated documentary drift to P1 blockers. V3 found strong history evidence cheaply but filtered out a useful normative-consistency observation because no runtime failure was proven. V4 produced the best artifact, yet treated a contradiction in an agent's executable `SKILL.md` as optional and invoked its verifier through an ambiguous “public contract” threshold.
+
+V5 keeps v4's architecture and changes the decision rules: explicit requirements left incomplete on authoritative execution paths are `must-fix` independently of priority or fix size; concrete authoritative drift can qualify as a low-priority `consider` without inventing a runtime failure; propagation candidates inspect merge-base and synchronization history; representation ambiguity becomes a question rather than a prescribed schema; and verifier routing follows consequence and action. Public prose also receives a soft word budget so dual-audience structure does not become review fatigue.
 
 ## Priority order
 
@@ -41,7 +47,7 @@ Every candidate is actively falsified before publication. Generic preferences, t
 
 The linked issue supplies product intent, acceptance criteria, invariants, and non-goals. The reviewer converts those into a private requirement ledger and checks the implementation against it. This preserves the strongest part of Matt Pocock's review approach and PR-Agent's ticket context without exposing a repetitive compliance table.
 
-Issue context does not reduce the evidence threshold. Missing or contradicted requirements become findings only when the code demonstrates the gap. Unknowns that could change the verdict become focused questions instead of accusations.
+Issue context does not reduce the evidence threshold. Missing or contradicted requirements become findings only when the artifacts demonstrate the gap. The reviewer judges the required outcome rather than demanding an unstated representation. Unknowns that could change the verdict become focused questions instead of accusations.
 
 ### 3. Complete inspection with fail-closed coverage
 
@@ -53,19 +59,19 @@ Coverage and comment volume are separate: inspect the complete merge-base diff, 
 
 Visible prose is the authoritative interface. Each finding has explicit `Triggers when`, `Impact`, and `Change` fields, so either a person or an addressing agent can act without decoding metadata or opening another protocol document. Optional feedback explicitly says that closing without action is valid.
 
-Stable hidden trailers support deduplication, thread correlation, and re-review automation. They never contain meaning omitted from the prose, and human comments without trailers remain first-class input. Priority communicates impact; the independent `must-fix` or `consider` action communicates whether the author must change code before merge. The review also distinguishes the changed-line anchor used by the forge from a different location that actually needs editing.
+Stable hidden trailers support deduplication, thread correlation, and re-review automation. They never contain meaning omitted from the prose, and human comments without trailers remain first-class input. Priority communicates impact; the independent `must-fix` or `consider` action communicates whether the author must change code before merge. Explicit requirement gaps on authoritative agent instructions can therefore be P2/P3 and still block. The review also distinguishes the changed-line anchor used by the forge from a different location that actually needs editing.
 
 ### 5. Safe, deterministic publication
 
 The reviewer pins the base, merge-base, and head before analysis, then re-fetches the head immediately before writing. A stale or unreadable head aborts publication. New findings are submitted in one native review batch, using exact diff sides and the smallest useful anchors.
 
-The semantic status is always written in the review body. The forge event is a permission decision, not the verdict: `COMMENT` is the default, and `APPROVE` or `REQUEST_CHANGES` is used only when the reviewer is separately authorized to gate the merge.
+The semantic status is always written in the review body. The forge event is a permission decision, not the verdict: `COMMENT` is the default, and `APPROVE` or `REQUEST_CHANGES` is used only when the reviewer is separately authorized to gate the merge. Whole-file findings retain a first-class file anchor; on GitHub they move into the same review body because its documented batch endpoint exposes line comments but not file subjects, preserving atomic publication without inventing a line anchor.
 
 ### 6. Routine-run efficiency
 
 The frequent path uses one tool-using reviewer to gather candidates and falsify them. It does not copy the default multi-agent fan-out used by several review systems. A clean review or one containing only straightforward optional feedback pays for no second model pass.
 
-At most one independent verifier handles all candidates that cross deterministic thresholds. Fresh context is important: the verifier gets a falsifiable artifact claim and raw evidence, not the primary reviewer's support narrative or conclusion. Batching retains the value of independent confirmation without starting one agent per finding.
+At most one independent verifier handles all candidates that cross deterministic consequence thresholds. Fresh context is important: the verifier gets a falsifiable artifact claim and raw evidence, not the primary reviewer's support narrative or conclusion. Batching retains the value of independent confirmation without starting one agent per finding. Straightforward low-risk optional feedback does not create a verifier, but may share a batch already required by a blocker.
 
 Context expansion is surgical: diff, enclosing symbol, then only the callers, interfaces, configuration, tests, or history needed to resolve a candidate. The verifier instructions are a conditional reference, so normal runs do not spend context tokens loading them. A deterministic helper computes the input fingerprint without spending prompt tokens on serialization rules. This design record is never loaded during review.
 
@@ -92,7 +98,7 @@ The skill uses portable Markdown instructions and forge-neutral concepts where p
 | Docker and Anthropic review workflows | Candidate generation followed by deliberate falsification |
 | Gemini, OpenHands, and GitHub Agentic Workflows | Untrusted-input boundaries, complete manifests, exact anchors, deduplication, one batched review |
 | Existing local review protocol | Stable identities, dispositions, thread continuity, advisory status, prose-first interoperability |
-| Prototype comparison findings | Claim/support isolation, conditional fresh verification, explicit action, and distinct anchor/fix locations |
+| Prototype comparison findings | Claim/support isolation, conditional fresh verification, explicit action, distinct anchor/fix locations, history-based drift proof, and consequence-based routing |
 
 ## Deliberate non-goals
 
