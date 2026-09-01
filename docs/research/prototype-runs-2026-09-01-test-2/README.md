@@ -2,7 +2,7 @@
 
 **2026-09-01.** Raw outputs and metadata from a second controlled comparison of the same four
 code-review prototypes against a different pull request. **Data only** — the analysis of this run
-lives in [`../2026-09-01-code-review-prototype-evaluation-test-2.md`](../2026-09-01-code-review-prototype-evaluation-test-2.md).
+lives in [`evaluation.md`](evaluation.md).
 The first comparison set lives in [`../prototype-runs-2026-09-01-test-1/`](../prototype-runs-2026-09-01-test-1/).
 
 ## The target
@@ -85,6 +85,7 @@ therefore have no counterpart here.
 - `v4-run.md` — output and metadata
 - `v5-run.md` — output and metadata
 - `comparison-data.md` — side-by-side metadata table
+- `evaluation.md` — the analysis of this run
 
 No `publication-decision.md`: nothing was published; all four runs were data-only.
 

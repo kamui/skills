@@ -1,6 +1,7 @@
 # Comparison data — v2, v3, v4, v5 on `kamui/shortlist#66`
 
-**2026-09-01. Data only — no analysis.** Every number here is measured or directly observed.
+**2026-09-01. Data only.** Every number here is measured or directly observed; the analysis is in
+[`evaluation.md`](evaluation.md).
 
 All four runs used the same model and harness — Claude Opus 5 (1M context) at High reasoning under
 the Claude Code CLI — so the cost columns are directly comparable. See

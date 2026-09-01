@@ -7,17 +7,17 @@ reviewers on different revisions of `kamui/shortlist#65`. The experiment here is
 the controlled four-way run against one pinned revision of
 [`kamui/shortlist#66`](https://github.com/kamui/shortlist/pull/66).
 
-Raw records: [method and inputs](prototype-runs-2026-09-01-test-1/README.md),
-[v2](prototype-runs-2026-09-01-test-1/v2-run.md),
-[v3](prototype-runs-2026-09-01-test-1/v3-run.md),
-[v4](prototype-runs-2026-09-01-test-1/v4-run.md),
-[v5](prototype-runs-2026-09-01-test-1/v5-run.md),
-[comparison data](prototype-runs-2026-09-01-test-1/comparison-data.md), and
-[publication decision](prototype-runs-2026-09-01-test-1/publication-decision.md).
+Raw records: [method and inputs](README.md),
+[v2](v2-run.md),
+[v3](v3-run.md),
+[v4](v4-run.md),
+[v5](v5-run.md),
+[comparison data](comparison-data.md), and
+[publication decision](publication-decision.md).
 
 A second controlled run of the same four prototypes, against a merged upstream C
 pull request with no originating issue, is analyzed separately in
-[the test-2 evaluation](2026-09-01-code-review-prototype-evaluation-test-2.md).
+[the test-2 evaluation](../prototype-runs-2026-09-01-test-2/evaluation.md).
 It used a different model and harness, so the two runs may be read side by side
 but not differenced.
 
@@ -78,7 +78,7 @@ below are directly comparable. V2-v4 ran without publication; v4 was selected an
 published only after those runs completed. V5 ran later with publication disabled
 and the original empty review state, so the live v4 review did not enter its
 runtime context. See the
-[controlled conditions](prototype-runs-2026-09-01-test-1/README.md#conditions-held-constant).
+[controlled conditions](README.md#conditions-held-constant).
 
 The controls do not create ground truth. This is one documentation/schema-heavy
 change in one repository, one run per prototype, with no independent
@@ -135,7 +135,7 @@ candidates through the batch rather than short-circuiting.
 
 Cost differences at this scale are not decision-grade. Nothing here separates v4
 from v5 economically. The full breakdown is in
-[comparison data](prototype-runs-2026-09-01-test-1/comparison-data.md#cost-and-shape).
+[comparison data](comparison-data.md#cost-and-shape).
 
 ## Complete finding-agreement matrix
 
@@ -159,7 +159,7 @@ the exact route.
 | Freshness-attestation timing | not raised | not raised | not raised | not raised | — |
 
 Raw dispositions:
-[finding-level agreement](prototype-runs-2026-09-01-test-1/comparison-data.md#finding-level-agreement).
+[finding-level agreement](comparison-data.md#finding-level-agreement).
 
 ### Narrow: the central disagreement
 
@@ -336,7 +336,7 @@ withheld. V5 ran later and was withheld; posting it after v4 would test re-revie
 not the controlled first-review condition. Its would-be output names the same two
 items at P3/P3 with the same `Approved (advisory)` status, so nothing about the
 published artifact would change materially. The
-[publication record](prototype-runs-2026-09-01-test-1/publication-decision.md)
+[publication record](publication-decision.md)
 says this selection was not a categorical prototype verdict.
 
 ## Recommendation and unresolved experiments
@@ -373,7 +373,7 @@ tie-break for multi-file drift anchors. The digest one matters most: two
 reviewers can compute different `context` values from identical inputs, which
 directly weakens the duplicate-review check that digest exists to serve. All six
 are listed with proposed fixes in the
-[v5 run record](prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity).
+[v5 run record](v5-run.md#run-conditions-and-observed-ambiguity).
 
 Until the frozen evaluation runs: v4 won observed artifact quality by a margin
 too thin to call, v3 won measured economy, and v5 is the architecture worth

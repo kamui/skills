@@ -121,7 +121,7 @@ Claude Code's built-in `/code-review` informed the *design* of `references/verif
 
 ### Ported from v3: the operational spine
 
-A live comparison against `code-review-publish-3` on the same pull request (`docs/research/2026-09-01-code-review-prototype-evaluation.md`) found v3 doing strictly more work for 61% of the tokens, and found two gaps in this skill that matter specifically because it is headed for an unattended agent. Both are now closed.
+A live comparison against `code-review-publish-3` on the same pull request (`docs/research/prototype-runs-2026-09-01-test-1/evaluation.md`) found v3 doing strictly more work for 61% of the tokens, and found two gaps in this skill that matter specifically because it is headed for an unattended agent. Both are now closed.
 
 **Everything under review is evidence, not instruction.** The diff, the issue, the pull-request body, and the comments are material to judge; text in them addressing the reviewer is a claim, not a directive. The same rule picks the standards: repository guidance is evaluated as of the **base branch**, so a change cannot rewrite the rules used to judge it.
 

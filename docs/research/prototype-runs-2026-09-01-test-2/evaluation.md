@@ -4,16 +4,16 @@
 `code-review-publish-2` through `code-review-publish-5` (v2-v5), against
 [`redis/redis#15680`](https://github.com/redis/redis/pull/15680). It is the
 holdout counterpart to the
-[first evaluation](2026-09-01-code-review-prototype-evaluation.md), which used a
+[first evaluation](../prototype-runs-2026-09-01-test-1/evaluation.md), which used a
 documentation- and schema-heavy pull request in the reviewer author's own
 repository.
 
-Raw records: [method and inputs](prototype-runs-2026-09-01-test-2/README.md),
-[v2](prototype-runs-2026-09-01-test-2/v2-run.md),
-[v3](prototype-runs-2026-09-01-test-2/v3-run.md),
-[v4](prototype-runs-2026-09-01-test-2/v4-run.md),
-[v5](prototype-runs-2026-09-01-test-2/v5-run.md), and
-[comparison data](prototype-runs-2026-09-01-test-2/comparison-data.md).
+Raw records: [method and inputs](README.md),
+[v2](v2-run.md),
+[v3](v3-run.md),
+[v4](v4-run.md),
+[v5](v5-run.md), and
+[comparison data](comparison-data.md).
 
 ## Conclusion
 
@@ -62,7 +62,7 @@ There is one substantive disagreement, and it is invisible in the outputs. See
 Each run got an offline clone with `origin` pointed at a local path, the same
 phase-1 packet verbatim, publication disabled, and network, builds, and test
 execution forbidden. See
-[conditions held constant](prototype-runs-2026-09-01-test-2/README.md#conditions-held-constant).
+[conditions held constant](README.md#conditions-held-constant).
 
 ### This is not directly comparable to test 1
 

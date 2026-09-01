@@ -1,7 +1,8 @@
 # Prototype run data — v2, v3, v4, v5 against `kamui/shortlist#66`
 
 **2026-09-01.** Raw outputs and metadata from running four code-review prototypes against one
-pull request under controlled conditions. **Data only — no analysis.** Analysis is a separate pass.
+pull request under controlled conditions. **Data only** — the analysis of this run lives in
+[`evaluation.md`](evaluation.md).
 
 ## The target
 
@@ -71,6 +72,8 @@ Only the skill under test:
 - `v4-run.md` — output and metadata
 - `v5-run.md` — output and metadata
 - `comparison-data.md` — side-by-side metadata table, extended after the v5 run
+- `publication-decision.md` — which run's output was published, and why
+- `evaluation.md` — the analysis of this run
 
 ## Reproducing
 
