@@ -1,5 +1,7 @@
 # Evaluating four agentic code-review prototypes on one pinned pull request
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** This evaluates `code-review-publish-2` through
 `code-review-publish-5` (v2-v5) as reviewer cores for frequent, unattended,
 issue-aware pull-request review. It replaces the stale analysis of three

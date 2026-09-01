@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute the deterministic context digest used by code-review-publish-5."""
+"""Compute the deterministic context digest used by code-review-publish."""
 
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ def digest(payload: Any) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Print the v5 review context SHA-256 for a structured JSON input."
+        description="Print the code-review-publish context SHA-256 for structured JSON input."
     )
     parser.add_argument("input", nargs="?", default="-", help="JSON file, or - for stdin")
     parser.add_argument("--json", help="JSON value supplied directly instead of a file")
