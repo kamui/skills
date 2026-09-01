@@ -29,7 +29,7 @@ All applicable conditions are gates. Report every candidate that passes them; ze
 
 ## Issue fit
 
-Translate explicit issue requirements, acceptance criteria, invariants, and non-goals into the private ledger before judging implementation fit.
+Translate explicit issue requirements, acceptance criteria, invariants, and non-goals into the private ledger before judging implementation fit. A satisfied (`met`) ledger entry is one line: the requirement, its disposition, and one evidence pointer. Only a `partial` or `not-verifiable` entry carries additional explanation.
 
 A requirement finding still needs concrete evidence. Admit it when the change demonstrably omits, contradicts, or misimplements an explicit requirement. Behavior not mentioned by the issue is a finding only when it violates an explicit non-goal, materially broadens permissions/API/data behavior, or creates another qualifying defect. Necessary implementation detail is not scope creep merely because the issue did not enumerate it.
 
@@ -112,6 +112,7 @@ Use a suggestion block only for a small exact replacement that completely fixes 
 Retain enough structure to verify, deduplicate, re-review, and publish safely:
 
 ```yaml
+# A survivor record; a dropped candidate retains only the compact ledger row described below.
 id: stable-path-and-concept-id
 anchor:
   type: line
@@ -151,6 +152,6 @@ anchor:
   path: skills/job-runner/SKILL.md
 ```
 
-`claim` is a flat, falsifiable statement about the changed artifact. `support` records the primary reviewer's process, reasoning, and uncertainty; it stays private and is withheld from an independent verifier. Evidence citations may be passed to the verifier without the support narrative. Keep `disposition` and its decisive falsification evidence for every raised candidate, including dropped candidates, so a clean-verdict verifier can attack the acquittals. For every candidate that is not a survivor, the retained ledger row is at most a one-line `claim`, the `kind`, the one-word `disposition`, a one-line falsification reason, and one decisive evidence pointer in `path:line` form; survivors keep the full record shape shown above.
+`claim` is a flat, falsifiable statement about the changed artifact. `support` records the primary reviewer's process, reasoning, and uncertainty; it stays private and is withheld from an independent verifier. It is budgeted at three entries total across `inspected`, `checks`, and `uncertainty`, each one line; anything longer is argument, and argument is not evidence. Evidence citations may be passed to the verifier without the support narrative. Keep `disposition` and its decisive falsification evidence for every raised candidate, including dropped candidates, so a clean-verdict verifier can attack the acquittals. For every candidate that is not a survivor, the retained ledger row is at most a one-line `claim`, the `kind`, the one-word `disposition`, a one-line falsification reason, and one decisive evidence pointer in `path:line` form; survivors keep the full record shape shown above.
 
 Only records that pass primary falsification may be rendered. Candidates that meet the independent-verification threshold in `SKILL.md` must also be `independent-confirmed`; other candidates may be `primary-confirmed`. A verifier-confirmed candidate remains `independent-confirmed` when a correction lowers its action or priority. Kinds are defined by the output contract; use `concurrency` or `invariant` when the claim breaks a cross-path state rule so the verifier performs its bug-class check. Confidence is an internal admission decision, not a number shown to the author.
