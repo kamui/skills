@@ -131,24 +131,4 @@ An HTML comment: invisible rendered, present in the raw body via `gh api`. It is
 
 `fix` is present only when the edit belongs somewhere other than the line the comment sits on. The anchor itself needs no key — the forge already reports the comment's `path` and `original_line`. A question's trailer carries only `id`, `action=question`, and `head`: no axis, no priority, no fix.
 
-`id` slugs the axis, the file, and the finding — `code/order-ts/swallowed-validation-error`. **Never a line number**: lines drift between rounds and the id has to survive that. One finding against the same code keeps one id across every round, which is what lets a re-review correlate it to its thread and verdict it rather than posting it again.
-
-A candidate the verifier ruled `plausible` publishes as a question and takes a `question/...` id, not the axis id it was proposed under. If a later round confirms it, it becomes a finding under its own axis id and the question resolves as answered. The two ids stay distinct on purpose: the record then shows a question that turned out to expose a defect, rather than a finding that silently changed shape between rounds.
-
-A responding agent replies with a matching trailer:
-
-```
-<!-- reply to=<finding id> disposition=<implemented|already-addressed|answered|declined|needs-info|blocked> head=<full 40-hex sha> -->
-```
-
-and a re-review writes its verdict on the thread:
-
-```
-<!-- verdict on=<finding id> verdict=<fixed|accepted|obsolete|not-fixed> head=<full 40-hex sha> -->
-```
-
-`fixed` names the finding's fate, not the reply's credibility — a finding that still stands is `not-fixed`. `accepted` is how a decline you agree with gets closed.
-
-## Humans without trailers
-
-A finding or reply written by a person carries no trailer. Read it as prose, infer what it means, and treat it exactly as any other item. Never skip something for lacking a trailer, and never write a trailer on a person's behalf. The trailers speed up the agent path; they do not gate it.
+Reply, verdict, and ID correlation rules are in [`publishing.md`](publishing.md).

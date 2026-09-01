@@ -1,4 +1,0 @@
-interface:
-  display_name: "Publish Code Review 2a"
-  short_description: "Review a PR on two axes, verify the findings, publish them"
-  default_prompt: "Use $code-review-publish-2a to review this pull request against its originating issue and publish the verified findings as a pull-request review with line comments."
