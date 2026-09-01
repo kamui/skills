@@ -1,5 +1,7 @@
 # Evaluating four agentic code-review prototypes on a merged upstream C pull request
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** This analyzes the second controlled four-way run of
 `code-review-publish-2` through `code-review-publish-5` (v2-v5), against
 [`redis/redis#15680`](https://github.com/redis/redis/pull/15680). It is the

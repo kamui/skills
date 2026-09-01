@@ -1,10 +1,10 @@
 # Design goals and priorities
 
-This document records the reasoning behind the prototype. It is not part of the runtime instructions: `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, and the conditionally loaded `references/verifier.md` remain authoritative.
+This document records the reasoning behind the current workflow, which was developed as the v5 prototype before being promoted to `code-review-publish`. It is not part of the runtime instructions: `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, and the conditionally loaded `references/verifier.md` remain authoritative.
 
 ## Problem being solved
 
-`code-review-publish-5` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
+`code-review-publish` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
 
 The quality of the human review and any later agent response both depend on the same foundation. The reviewer therefore needs to produce feedback that is:
 
@@ -15,11 +15,11 @@ The quality of the human review and any later agent response both depend on the 
 - safe to publish once, against the exact revision reviewed;
 - economical enough to run routinely.
 
-The existing `review-protocol.md` informed useful ideas such as stable finding identity, explicit dispositions, thread continuity, and visible semantic status. It was deliberately not treated as a compatibility specification or output schema for this prototype.
+The existing `review-protocol.md` informed useful ideas such as stable finding identity, explicit dispositions, thread continuity, and visible semantic status. It was deliberately not treated as a compatibility specification or output schema while this workflow was prototyped.
 
 ## Hybrid architecture at a glance
 
-The prototype has one complete reviewer and, only when warranted, one narrower verifier:
+The workflow has one complete reviewer and, only when warranted, one narrower verifier:
 
 1. The primary reviewer resolves the pull request and issues, builds one requirement ledger, inspects the full merge-base diff, finds candidates across both code behavior and issue fit, and tries to disprove each candidate.
 2. Straightforward optional findings can proceed after that primary falsification. A clean review stops there.
@@ -29,11 +29,11 @@ The prototype has one complete reviewer and, only when warranted, one narrower v
 
 This is hybrid because the common path retains one integrated review rather than paying for multiple independent searches, while consequential assertions receive a second look that is less likely to inherit the first reviewer's assumptions. Once that pass exists, difficult optional survivors can share the batch at low marginal cost.
 
-## What v5 changes
+## Origin in the v5 prototype
 
 A controlled v2/v3/v4 run on one issue-heavy pull request exposed three calibration gaps. V2 coupled priority to action and escalated documentary drift to P1 blockers. V3 found strong history evidence cheaply but filtered out a useful normative-consistency observation because no runtime failure was proven. V4 produced the best artifact, yet treated a contradiction in an agent's executable `SKILL.md` as optional and invoked its verifier through an ambiguous “public contract” threshold.
 
-V5 keeps v4's architecture and changes the decision rules: explicit requirements left incomplete on authoritative execution paths are `must-fix` independently of priority or fix size; concrete authoritative drift can qualify as a low-priority `consider` without inventing a runtime failure; propagation candidates inspect merge-base and synchronization history; representation ambiguity becomes a question rather than a prescribed schema; and verifier routing follows consequence and action. Public prose also receives a soft word budget so dual-audience structure does not become review fatigue.
+The v5 prototype kept v4's architecture and changed the decision rules: explicit requirements left incomplete on authoritative execution paths are `must-fix` independently of priority or fix size; concrete authoritative drift can qualify as a low-priority `consider` without inventing a runtime failure; propagation candidates inspect merge-base and synchronization history; representation ambiguity becomes a question rather than a prescribed schema; and verifier routing follows consequence and action. Public prose also receives a soft word budget so dual-audience structure does not become review fatigue. That v5 workflow is now invoked as `code-review-publish`, without a version suffix.
 
 ## Priority order
 
@@ -110,9 +110,9 @@ The skill uses portable Markdown instructions and forge-neutral concepts where p
 - Treating an issue omission, risk keyword, style preference, or missing test as a finding without a demonstrated consequence.
 - Using a gating review event merely because the semantic verdict is `Approved` or `Changes Requested`.
 
-## How to evaluate the prototype
+## How to evaluate the workflow
 
-The useful comparison is behavioral rather than aesthetic. Test the prototype repeatedly on known-clean and known-defective pull requests and measure:
+The useful comparison is behavioral rather than aesthetic. Test the workflow repeatedly on known-clean and known-defective pull requests and measure:
 
 - recall of blocking and high-impact defects;
 - false findings on clean changes;

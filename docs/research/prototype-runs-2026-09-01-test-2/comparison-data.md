@@ -1,5 +1,7 @@
 # Comparison data — v2, v3, v4, v5 on `redis/redis#15680`
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01. Data only.** Every number here is measured or directly observed; the analysis is in
 [`evaluation.md`](evaluation.md).
 All runs (orchestrator and sub-agents) used the GLM-5.3-Flash model at the High reasoning setting
