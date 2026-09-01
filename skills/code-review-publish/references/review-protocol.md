@@ -66,7 +66,7 @@ The bold word is the disposition:
 | `implemented` | change made | what changed, the check run, the commit |
 | `already-addressed` | the code already satisfied it | where |
 | `answered` | a question resolved, no code change | the answer |
-| `declined` | correct to leave as-is | the technical reason |
+| `declined` | correct to leave as-is, or not this change's job | the reason: technical for a blocking finding, scope or preference for an optional one |
 | `needs-info` | cannot act without an answer | the focused question |
 | `blocked` | warranted, not yet possible | the blocker and the next step |
 
@@ -91,6 +91,8 @@ An addresser asks by replying `needs-info` on the thread it is stuck on, and lea
 A reviewer's whole-change question, such as a required missing spec, belongs under `## Open questions` in the review body rather than on an arbitrary line. Give it the same `question id=... head=...` trailer as a line question. It has no thread to resolve. The addresser answers it inside the round's single addressing summary: add one concise `answered` entry for the question and its `<!-- reply to=<question id> disposition=answered head=<head> -->` trailer. Multiple whole-change answers share that summary but keep one entry and trailer apiece. The next review correlates the reply trailer, treats the question as answered, and omits it from `## Open questions`.
 
 Severity tells an addresser what a decline costs. An optional finding can be declined on preference without causing `Changes Requested`. Everything else is blocking, including a human's comment carrying no label at all, and holds the review at `Changes Requested` until the reviewer settles it — so declining there needs a reason built to convince the reviewer, not merely to record a position.
+
+An optional finding is a proposal, and the addresser's job on one is to decide it rather than to perform it. Implementing takes an affirmative reason — a real defect underneath it, a documented standard behind it, or code this change already touches — and absent one the finding is declined. Implementing on reflex is how a reviewer's passing preference becomes unrequested change in someone else's pull request, widening the diff every later reader has to verify and burying the work the pull request exists for. Declining is an ordinary outcome there, not a failure to engage, and it costs a sentence: an optional decline has to be honest, where a blocking one has to be persuasive.
 
 A question is not a finding. It carries no axis, counts toward no axis total, and never counts toward the round cap — an unanswered question is not a disputed point, just an open one. Re-reviews link to the same open question rather than posting it again. It keeps the review at `Needs Information` until someone answers it, the reviewer withdraws it as irrelevant, or the reviewer determines its answer cannot change the verdict; it never ages into approval. An unattended loop stops and reports what it is waiting for. Answer a line question with `answered` and resolve its thread; answer a whole-change question through the general-comment path above. A question that turns out to expose a defect becomes a finding in the next review, with its own id.
 
