@@ -11,16 +11,22 @@ Every completed review reaches exactly one status. The findings tell the author 
 | Status | Means |
 | --- | --- |
 | `Changes Requested` | at least one `must-fix` finding is unsettled |
-| `Needs Information` | no unsettled `must-fix`, but an open question could change the verdict |
-| `Approved` | nothing blocks the merge and no outcome-changing question is open |
+| `Incomplete` | nothing blocking is known, but the review did not inspect everything it should have |
+| `Needs Information` | coverage is complete and no `must-fix` is unsettled, but an open question could change the verdict |
+| `Approved` | coverage is complete, nothing blocks the merge, and no outcome-changing question is open |
 
 Derive it in that order, never by judging it as a whole:
 
 1. Any unsettled `must-fix`, disputed ones included → `Changes Requested`. A `must-fix` settles only when this review verdicts it `fixed`, `accepted`, or `obsolete` — not when the author replies to it.
-2. Otherwise, any open question whose answer could change the verdict → `Needs Information`.
-3. Otherwise → `Approved`. `consider` findings and answered questions do not hold a review back; they are the author's to close.
+2. Otherwise, coverage short of complete → `Incomplete`.
+3. Otherwise, any open question whose answer could change the verdict → `Needs Information`.
+4. Otherwise → `Approved`. `consider` findings and answered questions do not hold a review back; they are the author's to close.
+
+`Incomplete` is the status that stops a truncated run from reading as a clean one. A review that skipped a file, lost a fetch, or abandoned a check has not earned `Approved`, and the two are indistinguishable from the outside unless the review says so. It publishes whatever it did verify and names what it did not — findings from an incomplete review are still findings. It is not a failure state: an operational failure that prevents classification still stops the run before publishing.
 
 A question keeps a review at `Needs Information` until someone answers it, you withdraw it, or you determine its answer cannot change the verdict. It never ages into approval.
+
+Coverage is `complete` only when every file in the changed-file manifest is `reviewed` or `ignored` with a defensible reason, and every fetch and check the run started either finished or is named as unfinished. It measures inspection, not output: a complete review with no findings is the good outcome.
 
 Classify each axis before deriving the status — `Passed`, `Findings`, `Not applicable`, or `Waiting for information`. An axis is `Waiting for information` when an open question prevents completing its assessment; the question itself still carries no axis and counts toward no total. Anything left unassessed means the review did not finish: stop before publishing and report the operational failure. An incomplete review has no status and must never fall through to `Approved`.
 
@@ -30,7 +36,7 @@ With no originating issue, Requirements is `Not applicable`.
 
 The status is the conclusion; the event is its transport, and authorization changes only the transport.
 
-Submit `APPROVE` or `REQUEST_CHANGES` only where the caller or the repository's documented workflow authorizes this identity to gate a merge. Otherwise submit `COMMENT` and state the status in words on the summary's first line, rendered `Changes Requested (advisory)` or `Approved (advisory)`. `Needs Information` uses `COMMENT` natively.
+Submit `APPROVE` or `REQUEST_CHANGES` only where the caller or the repository's documented workflow authorizes this identity to gate a merge. Otherwise submit `COMMENT` and state the status in words on the summary's first line, rendered `Changes Requested (advisory)` or `Approved (advisory)`. `Needs Information` and `Incomplete` use `COMMENT` natively — neither has a gating form, and `Incomplete` must never be carried by `APPROVE` whatever the authorization.
 
 GitHub refuses `APPROVE` and `REQUEST_CHANGES` on your own pull request and accepts `COMMENT` there, so authoring the pull request is not a reason to fall back to a general comment — it is a reason the body has to carry the status.
 
@@ -40,7 +46,7 @@ The review body:
 
 - the status on the first line where the event does not carry it, with what drives it;
 - the per-axis outcome;
-- the reviewed head SHA and the comparison base;
+- the run identity — reviewed head, base ref, and merge-base — and the coverage line, naming the uncovered files where coverage is short;
 - **one short paragraph, two or three sentences**, reading the findings as a whole: what the change does, what drives the status, what to deal with first. It generalizes — a pattern several findings share, one fault behind them, the shape of the risk — rather than reciting them, and names at most the two or three findings that decide the outcome. This is the only place that generalizes, and it earns its space by saying what no single finding says. A review with one finding or none says so in a sentence;
 - an index of findings, worst first within each axis, each entry carrying its tags, title, and a link to its comment;
 - counts by axis and action;
@@ -54,7 +60,7 @@ Do not restate finding text outside the index — the line comment is where a fi
 **Changes Requested (advisory)** — 1 blocking finding, 1 open question.
 
 Code: Findings — 1 blocking, 2 optional. Requirements: Passed.
-Reviewed `a1b2c3d` against `main` (merge-base `9e8d7c6`).
+Reviewed `a1b2c3d` against `main` (merge-base `9e8d7c6`). Coverage: complete.
 
 Retries are the thing to fix: the new path swallows validation errors the queue downstream
 assumes have already been raised. The two optional findings are the same duplicated shape
@@ -63,6 +69,8 @@ deliberate; if it is, nothing else here blocks.
 ```
 
 ## One review, one call
+
+**Re-read the head immediately before this call.** If it differs from the reviewed head, or cannot be read, publish nothing and report the stale review — the anchors were computed against a diff that has moved, so every line comment risks landing on code that no longer says what the finding claims. This check costs one API call and is the difference between a stale review and a wrong one.
 
 Submit the body and every line comment together. One call, one timeline entry.
 
@@ -82,6 +90,14 @@ One call per finding produces one empty review per finding, which is the failure
 Validate every anchor against the diff before submitting — `git diff <base>...<head> --unified=0` gives the touched ranges cheaply, and one comment on an untouched line fails the entire batched call. An anchor that fails validation moves down the ladder, to the file (`subject_type: file`) and then the body, never into a doomed request.
 
 `line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. For a whole file, set `"subject_type": "file"` and omit `line`. A finding the ladder gave no honest anchor goes in the body, with its `fix` site named there.
+
+End the body with a run trailer, so a later run can correlate what this one covered without re-deriving it:
+
+```
+<!-- review-run head=<short sha> base-ref=<branch> base-sha=<short sha> merge-base=<short sha> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
+```
+
+Values are single tokens with no spaces; list issues sorted and comma-separated.
 
 The comment URLs do not exist when the body is written, so publish in two phases: submit with the index by `file:line`, read back the created comment URLs, then `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with the links. If the second phase fails, the `file:line` index stands on its own — never block a review on it.
 
