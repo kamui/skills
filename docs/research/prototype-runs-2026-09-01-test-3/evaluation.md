@@ -1,5 +1,7 @@
 # Evaluating four agentic code-review prototypes against a pull request with a known, real regression
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** This analyzes the third controlled four-way run of `code-review-publish-2` through
 `code-review-publish-5` (v2-v5), against
 [`tokio-rs/tokio#7757`](https://github.com/tokio-rs/tokio/pull/7757). Unlike the first two targets —

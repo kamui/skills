@@ -1,5 +1,7 @@
 # Comparison data — v2, v3, v4, v5 on `tokio-rs/tokio#7757`
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01. Data only.** Every number here is measured or directly observed; the analysis is in
 [`evaluation.md`](evaluation.md). All runs used Claude Code's `Agent` tool (`general-purpose`
 sub-agents) at this session's default model. See [README.md](README.md#methodology-note-hindsight-contamination)

@@ -35,7 +35,9 @@ The pull request under review is a fixed target. Neither skill opens, retargets,
 - Six lines or fewer above the trailer. Whoever acts on it, human or agent, acts from this comment alone.
 - The trailer is an HTML comment: invisible in the rendered view, present in the raw body via `gh api`.
 
-`[Suggestion]` is the one severity marker, for a finding worth saying and not worth blocking on — a nice-to-have, a preference, or food for thought the author may close unactioned. It goes after the axis tag and rides the trailer:
+The current `code-review-publish` contract labels findings `[P0]` through `[P3]` and then `[must-fix]` or `[consider]`; its trailers carry matching `priority`, `action`, and `blocking` fields. When addressing those findings, map `[must-fix]` or `action=must-fix blocking=true` to blocking, and `[consider]` or `action=consider blocking=false` to the optional semantics below. A visible action/trailer mismatch is malformed feedback to clarify rather than silently choosing one.
+
+For legacy reviews, `[Suggestion]` is the one severity marker for a finding worth saying and not worth blocking on — a nice-to-have, a preference, or food for thought the author may close unactioned. It goes after the axis tag and rides the trailer:
 
 ```markdown
 **[Code] [Suggestion] `formatDate` could read the locale from context**
