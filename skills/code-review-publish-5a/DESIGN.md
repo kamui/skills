@@ -1,0 +1,49 @@
+# v5a design and evidence
+
+This document records why the v5a prototype differs from v5. It is not runtime instruction. `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, and the conditionally loaded `references/verifier.md` are authoritative.
+
+## Question this prototype answers
+
+Can v5 retain its economical single-reviewer frequent path while recovering accurate questions and observations, checking high-risk clean verdicts, and making verification and rendering behavior deterministic enough to grade?
+
+V5a keeps v5's integrated primary, per-candidate falsification ledger, consequence-triggered fresh verifier, action/priority separation, anchor/fix separation, complete-diff coverage, and atomic publication. It does not adopt v2's default parallel axes or N-version replication. A low-risk clean review still finishes with one reviewer.
+
+Workflow identifier: `v5a-1`.
+
+## Change map
+
+Each row states an externally checkable intent. The next prototype run can grade the mechanism as worked, inert, or harmful against that intent.
+
+| ID | Runtime change | Checkable intent | Evidence |
+| --- | --- | --- | --- |
+| G1 | Add a statically-unresolvable question channel with no priority, explicit `Change no code for this` framing, and a named way to answer. | An empirical/runtime or unrecorded product fact that no static source can settle appears under `Open questions`; a merely under-researched candidate does not. | [test 3 v2 question](../../docs/research/prototype-runs-2026-09-01-test-3/v2-run.md#candidate), [aggregate graft 1](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#graft-from-the-other-three) |
+| G2 | Scope the introduced-here gate to Code candidates; a `kind=requirement` candidate is measured against the explicit requirement even when its missing implementation predates the diff or lives in an unchanged file. | A required outcome omitted entirely from unchanged code can survive this gate, while a pre-existing Code defect still fails it. | [requirement-ledger divergence](../../docs/research/prototype-runs-2026-09-01-test-1/evaluation.md#requirement-ledger-divergence) |
+| G3 | On high-risk changes with zero survivors, run a fresh verifier over the complete disposition ledger. | Concurrency, failover, data-integrity, or security changes with a clean primary verdict receive `clean verdict stands` or a named re-opened disposition; low-risk clean changes do not incur a verifier. | [test 2 unobserved verifier](../../docs/research/prototype-runs-2026-09-01-test-2/evaluation.md#the-unobserved-verifier), [aggregate clean-verdict conclusion](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#5-clean-verdicts-are-structurally-unverified) |
+| G4 | Give unrecoverable context failures an orchestrator recovery protocol: provisional `Incomplete`, affected candidates and gates named, affected falsifications resumed after supply. | Missing input cannot fall through to `Approved`, cannot become an author question, and does not force a full re-review after recovery. | [test 1 v4 orchestrator question](../../docs/research/prototype-runs-2026-09-01-test-1/v4-run.md#the-orchestrator-question--a-distinguishing-event) |
+| G5 | Render genuinely contestable rubric terms with both readings and the applied reading under `Ambiguities`. | A run facing two supportable interpretations records the disagreement instead of silently selecting policy. | [test 1 v4 ambiguity](../../docs/research/prototype-runs-2026-09-01-test-1/v4-run.md#the-orchestrator-question--a-distinguishing-event), [aggregate graft 7](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#graft-from-the-other-three) |
+| N1 | Add a summary-only `Observations` channel capped at three one-sentence facts with evidence pointers, no action language, priority, id, trailer, or anchor comment. | Accurate facts that fail only consequence admission, and verifier asides, remain visible without changing findings or status; dropped candidates are not routinely preserved. | [test 2 disagreement](../../docs/research/prototype-runs-2026-09-01-test-2/evaluation.md#the-one-real-disagreement), [aggregate observations conclusion](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#4-every-architecture-loses-accurate-sub-threshold-observations) |
+| N2 | Require the verifier to name the broken invariant, enumerate governed sibling paths, assess fix protection per path, and widen narrow remedies for `concurrency` and `invariant` candidates. | A verifier cannot confirm one interleaving while leaving the proposed `change` narrower than the statically visible bug class. | [aggregate test 3 deeper lesson](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#3-test-3s-deeper-lesson-four-projections-of-one-defect-and-a-fix-sufficiency-gap) |
+| N3 | Permit one fresh follow-up batch for candidates that become render-eligible after the initial batch dispatch, then stop. | A late must-fix-shaped candidate gets one independent decision instead of being dropped solely due to batch timing; no verifier loop is possible. | [test 3 v4 notes](../../docs/research/prototype-runs-2026-09-01-test-3/v4-run.md#notes-on-the-run) |
+| N4 | Make `plausible` mandatory when the verifier can neither complete the failing trace nor refute a specific step; route it through G1. | A forced indeterminate trace produces a question rather than an overconfident confirmation or refutation. If the next evaluation still produces no `plausible` verdict, remove this branch rather than preserve dead contract surface. | [aggregate verifier conclusion](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#2-fresh-context-verification-earns-its-cost--but-part-of-its-vocabulary-is-dead) |
+| F1.1 | Define `guidance` digest membership exhaustively as applicable base-branch `AGENTS.md`/`CLAUDE.md` files plus root `CONTEXT.md`, with explicit exclusions. | Two conforming reviewers given identical repository state and changed paths select the same guidance entries. | [v5 ambiguity 2](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.2 | Include ordinary `consider` candidates by input-visible proof difficulty, and preserve `independent-confirmed` after a verifier downgrade. | Batch membership no longer predicts a future verdict; a confirmed downgraded candidate remains independently confirmed. | [v5 ambiguity 5](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.3 | Require full 40-hex commit SHAs in every trailer. | Re-review and stale-head comparisons never depend on an abbreviated identifier. | [v5 ambiguity 3](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.4 | Use `path:line` for single-line and `path:start-end` for range summary anchors. | Every example and generated coordinate follows one unambiguous rule. | [v5 ambiguity 4](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.5 | Place optional `Source` after `Change` and the `consider` permission sentence last before the trailer. | A `consider` finding with a source has exactly one valid field order. | [v5 ambiguity 1](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.6 | Anchor multi-file drift first on the changed line stating the drifted rule, then lexicographically by path and by smallest range. | Identical evidence produces the same anchor. | [v5 ambiguity 6](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F2 | Stop only closed-unmerged targets; explicitly invoked merged PRs run as retrospective audits with publication disabled by default and a visible mode line. | Known-outcome evaluation can run without silently violating phase 1 or writing to a merged PR. | [test 3 closed-PR rule](../../docs/research/prototype-runs-2026-09-01-test-3/evaluation.md#the-unresolved-closed-pull-request-rule) |
+
+## Cost and safety bounds
+
+- The frequent path remains one integrated reviewer. G3 adds a second context only for the intersection of a high-risk surface and zero surviving candidates.
+- Candidate verification starts with one batch. N3 permits one follow-up batch only after the initial dispatch; later mandatory verification gaps fail closed as `Incomplete`.
+- Clean-verdict verification attacks existing acquittals rather than searching for findings, preserving the verifier's narrow role and making its result attributable to a ledger entry.
+- Questions require static unresolvability. Observations require a standing fact and are capped. These channels therefore expose useful uncertainty without weakening finding admission.
+- Retrospective mode changes publication authority, not review rigor: it produces the same complete would-be artifact but performs no external write by default.
+
+## Deliberate exclusions
+
+- N-version primary replication and reconciliation remain a separate experimental direction.
+- Model-tier splits remain unencoded because the runs did not test them.
+- V2's parallel Code and Requirements finders do not become the default architecture.
+- V5 remains untouched; v5a is a separate prototype package and workflow identity.
