@@ -67,7 +67,11 @@ When step 1 found any prior review, reply, or trailer-bearing comment from the p
 
 ## 5. Validate before writing
 
-Before any external write, verify every rubric gate, stable id, inline diff anchor and side when used, evidence and actual fix locations, priority/action/blocking/source combination, suggestion block, deduplication decision, question and observation eligibility, coverage entry, and summary status. Follow the publication invariants in the output contract.
+Before any external write, verify what only judgment settles: every rubric gate, that each cited evidence location and actual fix location is real, the suggestion block, the deduplication decision, question and observation eligibility, the coverage entry, and the summary status. Keep each stable id on the same defect concept across heads.
+
+Run [`scripts/validate_review.py`](scripts/validate_review.py) on the assembled payload — the summary body and run trailer plus every finding, question, and observation — and fix every reported violation before any external write. It owns the mechanical checks: trailer grammar and commit-SHA width, anchor shape and side, summary anchor coordinates, field order, priority/action/blocking combinations, question form, and the observation cap. Treat a violation the reviewer believes is a false positive as an `Ambiguities` entry rather than ignoring it silently; the reference text wins and the script is what gets fixed.
+
+Follow the publication invariants in the output contract.
 
 Re-fetch the pull-request head immediately before the first write. If it differs from the reviewed head or cannot be read, publish nothing and report the stale review. In non-publishing retrospective mode, skip the write and report the complete would-be review instead.
 
