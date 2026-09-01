@@ -19,7 +19,7 @@ For each candidate, provide `id`, `kind`, `priority`, `action`, `anchor`, option
 
 `claim` is the falsifiable statement about the changed artifact. `support` is the primary reviewer's private account of what it inspected, ran, inferred, or could not establish. Separating them prevents the verifier from merely agreeing with the first reviewer's reasoning.
 
-For clean-verdict mode, give it the same pinned coordinates and rules plus the complete candidate disposition ledger: each `id`, `kind`, `claim`, disposition, decisive evidence, and falsification reason. Withhold `support` and the primary's narrative argument here too.
+For clean-verdict mode, give it the same pinned coordinates and rules plus the complete candidate disposition ledger: each `id`, `kind`, `claim`, disposition, decisive evidence, and falsification reason. Each ledger entry is passed in the compact form of at most a one-line `claim`, the `kind`, the one-word `disposition`, a one-line falsification reason, and one decisive evidence pointer in `path:line` form; the verifier requests nothing beyond the ledger and reads the cited code itself. Withhold `support` and the primary's narrative argument here too.
 
 ## Verification task
 
@@ -54,7 +54,7 @@ For each id, return the verdict, a concise independent justification, the decisi
 
 ## Clean-verdict task
 
-Attack each acquittal in the supplied disposition ledger using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. Do not invent a new claim. Return exactly one batch conclusion:
+Attack each acquittal in the supplied disposition ledger using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. Do not invent a new claim. The ledger is never filtered by risk surface: every disposition from the run is present, including candidates whose subject looks unrelated to the surface that triggered this batch. Return exactly one batch conclusion:
 
 - `clean verdict stands` when every disposition survives; or
 - `disposition <id> does not hold; re-open it` for each existing candidate whose stated acquittal is contradicted or unsupported.
