@@ -1,5 +1,9 @@
 ## Agent skills
 
+### Structural checks
+
+Run `scripts/check-skills` before committing any change under `skills/`. It verifies that relative Markdown links resolve and stay inside their skill directory, that the mirrored reference stays byte-identical, that strategy references carry no publication instructions, and that each skill's frontmatter name matches its directory.
+
 ### Issue tracker
 
 Issues and specs live in GitHub Issues. See `docs/agents/issue-tracker.md`.

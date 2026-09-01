@@ -1,0 +1,155 @@
+#!/bin/sh
+
+set -eu
+
+# Structural checks for skills/. No arguments, run from the repository root.
+# One line per failure on stderr; non-zero exit when any check fails.
+
+failures_file=""
+tmp_dir=""
+
+fail() {
+  printf 'check-skills: %s\n' "$*" >&2
+  exit 1
+}
+
+cleanup() {
+  if [ -n "$tmp_dir" ]; then
+    case "$tmp_dir" in
+      "${TMPDIR:-/tmp}"/check-skills.*)
+        rm -rf -- "$tmp_dir"
+        ;;
+    esac
+  fi
+}
+
+record_failure() {
+  printf '%s\n' "$*" >>"$failures_file"
+}
+
+[ "$#" -eq 0 ] || fail "takes no arguments"
+
+[ -d skills ] || fail "no skills/ directory here; run from the repository root"
+
+tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/check-skills.XXXXXX")
+trap cleanup 0 1 2 15
+
+failures_file="$tmp_dir/failures"
+: >"$failures_file"
+
+repo_root=$(pwd -P)
+
+# 1. Link resolution and self-containment. scripts/sync-global-skills installs
+#    and byte-verifies each skill directory independently, so a relative link
+#    that escapes skills/<name>/ would be broken after install.
+
+find skills -type f -name '*.md' -print | LC_ALL=C sort >"$tmp_dir/md-files"
+
+while IFS= read -r md_file; do
+  skill_name=$(printf '%s' "$md_file" | cut -d/ -f2)
+  link_dir=$(dirname "$md_file")
+
+  # Links inside fenced code blocks are examples, not live links.
+  awk '
+    /^```/ { in_fence = !in_fence; next }
+    in_fence { next }
+    { print }
+  ' "$md_file" >"$tmp_dir/link-source"
+
+  grep -oE '\[[^]]*\]\([^)]*\)' "$tmp_dir/link-source" |
+    sed -e 's/^\[[^]]*\](\(.*\))$/\1/' >"$tmp_dir/links"
+
+  while IFS= read -r target; do
+    case "$target" in
+      '' | '#'*) continue ;;
+      http://* | https://*) continue ;;
+    esac
+
+    link_path=${target%%#*}
+    if [ -z "$link_path" ]; then
+      continue
+    fi
+
+    case "$link_path" in
+      /*)
+        record_failure "$md_file: absolute link target: $target"
+        continue
+        ;;
+    esac
+
+    if ! resolved_dir=$(cd "$link_dir" && cd "$(dirname "$link_path")" 2>/dev/null && pwd -P); then
+      record_failure "$md_file: link target does not resolve: $target"
+      continue
+    fi
+
+    case "$resolved_dir" in
+      "$repo_root/skills/$skill_name" | "$repo_root/skills/$skill_name"/*) ;;
+      *)
+        record_failure "$md_file: link escapes skills/$skill_name/: $target"
+        continue
+        ;;
+    esac
+
+    resolved_file="$resolved_dir/$(basename "$link_path")"
+    if [ ! -f "$resolved_file" ]; then
+      record_failure "$md_file: link target is not an existing file: $target"
+    fi
+  done <"$tmp_dir/links"
+done <"$tmp_dir/md-files"
+
+# 2. Mirror integrity.
+
+mirror_publish=skills/code-review-publish/references/review-protocol.md
+mirror_address=skills/code-review-address/references/review-protocol.md
+
+if [ ! -f "$mirror_publish" ] || [ ! -f "$mirror_address" ]; then
+  record_failure "mirrored reference missing: $mirror_publish or $mirror_address"
+elif ! cmp -s "$mirror_publish" "$mirror_address"; then
+  record_failure "$mirror_publish and $mirror_address are not byte-identical"
+fi
+
+# 3. Strategy documents contain no publication instructions. This is a
+#    heuristic tripwire, not a proof: publication belongs to the coordinator
+#    (SKILL.md) and the output contract, so these strings should never appear
+#    in a strategy reference.
+
+for strategy_file in skills/*/references/strategy-*.md; do
+  [ -f "$strategy_file" ] || continue
+
+  if grep -Eq 'gh api|gh pr |graphql|--method POST|pulls/.*/reviews' "$strategy_file"; then
+    record_failure "$strategy_file: strategy document contains publication instructions"
+  fi
+done
+
+# 4. Frontmatter name matches directory.
+
+for skill_md in skills/*/SKILL.md; do
+  [ -f "$skill_md" ] || continue
+  skill_dir=$(basename "$(dirname "$skill_md")")
+
+  frontmatter_name=$(
+    awk '
+      NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+      in_frontmatter && $0 == "---" { exit }
+      in_frontmatter && /^name:/ {
+        sub(/^name:[[:space:]]*/, "")
+        gsub(/^"|"$/, "")
+        print
+        exit
+      }
+    ' "$skill_md"
+  )
+
+  if [ -z "$frontmatter_name" ]; then
+    record_failure "$skill_md: no frontmatter name"
+  elif [ "$frontmatter_name" != "$skill_dir" ]; then
+    record_failure "$skill_md: frontmatter name '$frontmatter_name' does not match directory '$skill_dir'"
+  fi
+done
+
+if [ -s "$failures_file" ]; then
+  cat "$failures_file" >&2
+  exit 1
+fi
+
+printf 'check-skills: all checks passed\n'
