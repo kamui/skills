@@ -52,11 +52,14 @@ durable summary coordinates in their rendered form (``path:line``,
 ``path:start-end``, or ``path (file)``).
 
 Where a check could disagree with the reference text, the reference text wins
-and this script is the thing that must be fixed. Two deliberate reading notes:
+and this script is the thing that must be fixed. Three deliberate reading notes:
 the observation evidence check requires an ``Evidence:`` pointer rather than
 exactly one coordinate, because the output contract's own example pairs two
-coordinates for a single drift pointer; and ``context`` is a SHA-256 digest
-rather than a commit SHA, so the 40-hex commit rule does not apply to it.
+coordinates for a single drift pointer; ``context`` is a SHA-256 digest
+rather than a commit SHA, so the 40-hex commit rule does not apply to it; and
+the one-sentence observation check masks the abbreviations ``e.g.``, ``i.e.``,
+``etc.``, ``vs.``, ``cf.``, and ``et al.`` so they do not count as sentence
+breaks.
 """
 
 from __future__ import annotations
@@ -115,6 +118,7 @@ QUESTION_TITLE_RE = re.compile(r"\A\*\*\[(?P<tag>[^\]]+)\]")
 SUMMARY_ANCHOR_RE = re.compile(r"anchor `(?P<coordinate>[^`]+)`")
 SUMMARY_FIX_RE = re.compile(r"fix `(?P<coordinate>[^`]+)`")
 WORD_SHOULD_MUST_RE = re.compile(r"\b(should|must)\b", re.IGNORECASE)
+ABBREVIATION_RE = re.compile(r"\b(?:e\.g|i\.e|etc|vs|cf|et al)\.(?=\s)", re.IGNORECASE)
 
 
 class Report:
@@ -447,7 +451,8 @@ def check_observation(report: Report, location: str, item: dict[str, Any]) -> No
     if not separator or not evidence.strip():
         report.add(location, "observation-form", "an observation ends with one `Evidence:` pointer")
         claim = text
-    sentences = [part for part in claim.strip().split(". ") if part.strip()]
+    masked = ABBREVIATION_RE.sub(lambda m: m.group(0).replace(".", "\x00"), claim.strip())
+    sentences = [part for part in masked.split(". ") if part.strip()]
     if len(sentences) != 1 or not claim.strip().endswith("."):
         report.add(location, "observation-form", "an observation is exactly one sentence before its evidence pointer")
 
@@ -613,6 +618,16 @@ def consider_payload() -> dict[str, Any]:
     return payload
 
 
+def abbreviation_payload() -> dict[str, Any]:
+    """An observation whose abbreviation must not read as a sentence break."""
+    payload = valid_payload()
+    payload["items"][2]["markdown"] = (
+        "The first configuration sentence covers more re-point shapes (e.g. same-shard "
+        "moves) than the implementation does. Evidence: `redis.conf:1903`."
+    )
+    return payload
+
+
 def _mutate(mutation) -> dict[str, Any]:
     payload = valid_payload()
     mutation(payload)
@@ -775,7 +790,12 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
 def self_test() -> int:
     failures: list[str] = []
-    for name, payload in (("contract example review", valid_payload()), ("consider finding", consider_payload())):
+    passing = (
+        ("contract example review", valid_payload()),
+        ("consider finding", consider_payload()),
+        ("observation with abbreviation", abbreviation_payload()),
+    )
+    for name, payload in passing:
         lines = validate(payload)
         if lines:
             failures.append(f"{name}: expected no violations, got: {'; '.join(lines)}")
@@ -790,7 +810,7 @@ def self_test() -> int:
     if failures:
         print(f"validate_review: {len(failures)} self-test case(s) failed")
         return 1
-    print(f"validate_review: self-test passed ({2 + len(failing_cases())} cases)")
+    print(f"validate_review: self-test passed ({len(passing) + len(failing_cases())} cases)")
     return 0
 
 

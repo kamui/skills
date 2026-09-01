@@ -12,7 +12,7 @@ Review one existing pull request without modifying its code, then publish one re
 Read these references before reviewing:
 
 - [`references/review-rubric.md`](references/review-rubric.md) is authoritative for admitting, verifying, and prioritizing findings.
-- [`references/output-contract.md`](references/output-contract.md) is authoritative for comments, statuses, replies, re-review state, and publication; it delegates reply dispositions and prior-item classification to [`references/re-review.md`](references/re-review.md), which is read only when step 4 requires it.
+- [`references/output-contract.md`](references/output-contract.md) is authoritative for comments, statuses, replies, re-review state, and publication.
 
 ## Boundaries
 

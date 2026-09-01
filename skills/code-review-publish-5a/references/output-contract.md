@@ -67,7 +67,7 @@ Do not create an observation merely to preserve a dropped candidate. The fact it
 
 ## Replies and prior state
 
-[`re-review.md`](re-review.md) is authoritative for reply dispositions, reply trailers, and the classification of prior items on re-review — including the `disputed` state named under `Status` and the `Disputed` and `Prior findings` summary sections — and is read when a prior review, reply, or trailer-bearing comment exists.
+[`re-review.md`](re-review.md) defines reply dispositions, reply trailers, and the prior-item classification whose outcomes feed the `disputed` status input and populate the `Disputed` and `Prior findings` summary sections defined below. Read it when a prior review, reply, or trailer-bearing comment exists.
 
 ## Status
 
