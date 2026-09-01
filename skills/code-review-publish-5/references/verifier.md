@@ -30,6 +30,8 @@ For each candidate, independently:
 5. Confirm that the issue, pull-request description, rules, or history do not make it intentional.
 6. Check whether another candidate requests the same underlying change.
 
+For synchronization drift, compare the peer artifacts at the merge-base and inspect the last commit that changed their shared rule. For a requirement candidate, verify the required outcome without assuming a particular representation. Calibrate `action` independently from priority: an explicit requirement gap on an authoritative execution path may be P2/P3 and still `must-fix`, while optional normative consistency remains `consider` when canonical behavior is intact.
+
 Do not search the rest of the pull request for new findings. Do not weaken a verdict merely because a test has not yet been written; decide from the strongest available evidence.
 
 ## Verdicts
