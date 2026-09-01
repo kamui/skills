@@ -25,13 +25,13 @@ Build a ledger keyed by finding id, falling back to the comment id for anything 
 
 Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
 
-Check each item against the current code, the diff, the originating spec, and documented repository standards, then assign a disposition from the protocol. Do not accept feedback on authority — a reviewer, human or agent, can be wrong about this codebase. Where the concern is valid but the requested fix is not, implement the better alternative and say so.
+Check each item against the current code, the diff, the originating spec, and documented repository standards, then assign a disposition from the protocol. Do not accept feedback on authority — a reviewer, human or agent, can be wrong about this codebase, and can be right in general without being right for this change. A **Change**: line names what the reviewer would do; whether it should be done here is yours to settle. Where the concern is valid but the requested fix is not, implement the better alternative and say so.
 
 A reviewer's `[Question]` is a ledger item like any other: answer it, mark it `answered`, and resolve the thread.
 
 A finding you already declined and the reviewer has raised again is a dispute, not a repeat. Answer the reviewer's counter-argument rather than restating the original rationale, and where neither side moves, say plainly that it needs a human call — the protocol's round cap stops it there.
 
-Severity sets the bar for a decline, not for whether an item earns a reply. A `[Suggestion]` finding can be declined on preference. Every unmarked one is blocking and holds the review at `Changes Requested` until the reviewer verdicts it `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
+Severity sets the bar for a decline, not for whether an item earns a reply. A `[Suggestion]` finding is a proposal to weigh, and the protocol's default on one is to decline: implementing it takes an affirmative reason — a real defect underneath it, a documented standard behind it, or code this change already touches — and where none holds, decline it in a sentence and move on. Weigh it before the fix looks easy, because ease is not a reason. Every unmarked one is blocking and holds the review at `Changes Requested` until the reviewer verdicts it `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
 
 Uncertainty resolves to `needs-info`, never to silent compliance or a silent decline — but ask only once the code, spec, standards, and history have failed to answer it. Put the question to a user in the session if there is one; otherwise leave it on the thread, where it outlives this run.
 
