@@ -74,17 +74,24 @@ Drop the candidate when decisive evidence is missing or contradicts it. Preserve
 ## Priorities and blocking
 
 - `P0`: universal release blocker or critical failure requiring immediate action.
-- `P1`: urgent, high-impact defect that should be fixed before the next release or merge.
-- `P2`: ordinary, concrete defect the author should fix.
+- `P1`: urgent defect with serious or broadly affecting consequences.
+- `P2`: ordinary, concrete defect with material impact.
 - `P3`: low-impact but still worthwhile issue.
 
-Priority describes impact and urgency. Blocking is an independent merge judgment. The visible action label makes that judgment explicit: `Required change` blocks; `Suggestion` does not. Avoid overstating severity.
+Priority describes impact and urgency. Action is an independent merge judgment:
+
+- `must-fix` means the requested outcome is necessary before merge and `blocking=true`.
+- `consider` means the feedback is optional and `blocking=false`.
+
+A P2 can be `must-fix`. P0 is inherently `must-fix`; otherwise do not infer action from priority or inflate priority to communicate action.
 
 ## Comment quality
 
 Use one comment per distinct defect. Choose the smallest useful changed range, normally no more than 5–10 lines. The comment must let a person or agent act without opening another document merely to understand the request.
 
-Write a short imperative title. State the trigger and impact immediately and concretely. End with an explicit required behavior or suggestion. Cite an issue requirement or repository rule only when it materially supports the finding. Use a matter-of-fact tone without praise, blame, filler, or a restatement of the location already supplied by the inline anchor.
+Write a short imperative title. Give three explicit fields: `Triggers when`, `Impact`, and `Change`. `Change` states the outcome to implement, not a vague instruction to investigate. For `consider`, explicitly grant permission to close the comment without changing code. Cite an issue requirement or repository rule only when it materially supports the finding. Use a matter-of-fact tone without praise, blame, filler, or a restatement of the location already supplied by the inline anchor.
+
+Distinguish placement from repair. The `anchor` is the smallest valid changed range where the forge can attach the comment. `fix` is the actual location the author or agent should edit when it differs from the anchor. If there is no honest changed-line or changed-file anchor, put the item in the review body rather than attaching it to unrelated code.
 
 Use a suggestion block only for a small exact replacement that completely fixes the finding. Preserve indentation and diff side. Otherwise request behavior in prose rather than guessing a patch.
 
@@ -94,21 +101,33 @@ Retain enough structure to verify, deduplicate, re-review, and publish safely:
 
 ```yaml
 id: stable-path-and-concept-id
-path: src/example.ts
-start_line: 42
-end_line: 44
-side: RIGHT
+anchor:
+  path: src/example.ts
+  start_line: 42
+  end_line: 44
+  side: RIGHT
+fix: src/retry-policy.ts:18
 priority: P1
+action: must-fix
 blocking: true
 kind: bug
 title: Preserve the idempotency key across retries
+claim: A new idempotency key is created for every retry attempt
 trigger: Response timeout after the server commits the charge
 impact: The retry can submit a second non-idempotent charge
 evidence:
   - src/example.ts:42 creates a key per attempt
+support:
+  inspected:
+    - retry caller and payment-client tests
+  checks:
+    - timeout-after-commit path traced manually
+  uncertainty: none
 requirement_source: issue-123/acceptance-criterion-2
-requested_behavior: Reuse one key for every attempt of the logical charge
-verification: passed
+change: Reuse one key for every attempt of the logical charge
+verification: independent-confirmed
 ```
 
-Only verified records may be rendered and published. Confidence is an internal admission decision, not a number shown to the author.
+`claim` is a flat, falsifiable statement about the changed artifact. `support` records the primary reviewer's process, reasoning, and uncertainty; it stays private and is withheld from an independent verifier. Evidence citations may be passed to the verifier without the support narrative.
+
+Only records that pass primary falsification may be rendered. Candidates that meet the independent-verification threshold in `SKILL.md` must also be `independent-confirmed`; other candidates may be `primary-confirmed`. Confidence is an internal admission decision, not a number shown to the author.

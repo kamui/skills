@@ -5,20 +5,29 @@ The review is **human-readable, agent-actionable, and mechanically correlatable*
 ## Finding comment
 
 ```markdown
-**[P1] Preserve the idempotency key across retries**
+**[P1] [must-fix] Preserve the idempotency key across retries**
 
-When the server commits a charge but the response times out, this branch creates
-a new key for the retry and can submit a second charge.
+**Triggers when:** The server commits a charge but its response times out and the
+client retries.
 
-**Required change:** Reuse one idempotency key across every attempt for the same
-logical charge.
+**Impact:** The retry uses a new idempotency key and can submit a second charge.
+
+**Change:** In `src/retry-policy.ts`, reuse one idempotency key across every attempt
+for the same logical charge.
 
 **Source:** Issue #123, acceptance criterion 2.
 
-<!-- finding id=payments/retry-idempotency head=a1b2c3d priority=P1 kind=requirement blocking=true -->
+<!-- finding id=payments/retry-idempotency head=a1b2c3d priority=P1 action=must-fix blocking=true kind=requirement fix=src/retry-policy.ts:18 -->
 ```
 
-The title, trigger, impact, and action must make sense without the trailer. Omit `Source` unless an issue or repository rule materially supports the finding. Use `**Suggestion:**` and `blocking=false` for non-blocking feedback. Do not publish a non-actionable observation.
+The title, trigger, impact, and change must make sense without the trailer. Omit `Source` unless an issue or repository rule materially supports the finding. The two action forms are:
+
+- `[must-fix]`, `action=must-fix`, and `blocking=true` for an outcome required before merge.
+- `[consider]`, `action=consider`, and `blocking=false` for optional feedback. Append the exact sentence `Closing this without action is a correct response.` after `Change`.
+
+Priority and action are separate fields. P0 is inherently `must-fix`; otherwise do not derive action mechanically from priority. In particular, P2/P3 do not mean optional. Do not publish a non-actionable observation.
+
+The forge anchor and the repair site may differ. The inline API fields identify the changed-line `anchor`; optional trailer field `fix=<path>:<line>` identifies where the author or agent should edit. Omit `fix` when it is the anchor. Name a different fix site in the visible `Change` text as well, because the trailer is never authoritative.
 
 Stable ids describe the path and defect concept, never a line number. Keep the same id while the same defect survives across heads.
 
@@ -29,14 +38,20 @@ Kinds are compact internal routing aids: `bug`, `security`, `performance`, `main
 ```markdown
 **[Question] Must retries preserve request order?**
 
-The new queue retries at the tail, while existing callers assume FIFO order. The
-issue and history do not establish whether reordering is allowed. An answer changes
-whether this is a blocking regression.
+**Evidence:** The new queue retries at the tail, while existing callers consume it
+as FIFO. The issue, tests, and history do not establish whether reordering is allowed.
 
-<!-- question id=queue/retry-order head=a1b2c3d -->
+**Why it matters:** The answer determines whether this is a merge-blocking regression.
+
+**Next step:** Confirm whether retry order is part of the contract; do not change
+code solely for this question.
+
+<!-- question id=queue/retry-order head=a1b2c3d action=question -->
 ```
 
 Ask only after repository evidence is exhausted. A question is not a finding and has no priority. Whole-change questions belong in the review body rather than on an arbitrary line.
+
+When a `plausible` candidate becomes a question, retain its stable concept id and change only the trailer type from `finding` to `question`. This keeps later answers and any code-decided finding correlated across runs.
 
 ## Replies and prior state
 
@@ -69,10 +84,10 @@ On re-review, classify each prior item as `fixed`, `accepted`, `obsolete`, `stil
 
 Derive one semantic status after findings, questions, coverage, and prior state are complete:
 
-1. `Changes Requested` when any blocking finding is unsettled, including a disputed or not-verifiable blocker.
+1. `Changes Requested` when any `must-fix` finding is unsettled, including a disputed or not-verifiable blocker.
 2. `Incomplete` when no blocker is known but material coverage or verification did not finish.
 3. `Needs Information` when coverage is complete and an unanswered question could change the verdict.
-4. `Approved` otherwise. Non-blocking suggestions do not prevent approval.
+4. `Approved` otherwise. `consider` findings do not prevent approval.
 
 Authorization changes only the forge event, never the semantic status:
 
@@ -90,7 +105,7 @@ Always write the semantic status in the body. Add `(advisory)` to `Changes Reque
 Keep the body useful without duplicating inline comments:
 
 ```markdown
-**Changes Requested (advisory)** — 1 required change.
+**Changes Requested (advisory)** — 1 must-fix finding.
 
 **Intent:** Add retries for charge submission without changing payment semantics.
 
@@ -102,14 +117,16 @@ Keep the body useful without duplicating inline comments:
 
 ## Findings
 
-- [P1] Preserve the idempotency key across retries — `src/payments.ts:42`
+- [P1] [must-fix] Preserve the idempotency key across retries — anchor `src/payments.ts:42`; fix `src/retry-policy.ts:18`
 
-<!-- review-run head=a1b2c3d base-ref=main base-sha=b2c3d4e merge-base=d4e5f6a rubric=codex-81de4f2 issues=acme/payments#123 coverage=complete -->
+<!-- review-run head=a1b2c3d base-ref=main base-sha=b2c3d4e merge-base=d4e5f6a workflow=v4-1 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->
 ```
 
-Trailer fields are single ASCII tokens separated by spaces. Represent issues as sorted, comma-separated `owner/repo#number` coordinates, or `issues=none`; never put spaces in the value. The `file:line` finding index remains the durable summary reference. Return forge URLs to the caller after publication instead of editing the review body.
+`workflow=v4-1` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change. Compute `context` with [`../scripts/context_fingerprint.py`](../scripts/context_fingerprint.py), supplying JSON objects `pr`, `issues`, `specs`, and `guidance` from the exact reviewed inputs. Each issue includes `coordinate`, `title`, `body`, and comments with `id`, `author`, timestamps, and `body`; each guidance entry has `path` and full `blob_sha`. A spec uses its URL or coordinate as `identity`; the helper derives a content identity for inline text when it is omitted. The helper normalizes order and prints the full SHA-256. Recompute it rather than trusting PR-supplied metadata.
 
-Include only non-empty conditional sections: `Open questions`, `Disputed`, `Prior findings`, and `Coverage gaps`. A clean review says so briefly. Do not add scores, effort estimates, generic praise, empty security/test sections, or repeated finding prose.
+Trailer fields are single ASCII tokens separated by spaces. Percent-encode spaces and percent signs inside coordinate values. Represent issues as sorted, comma-separated `owner/repo#number` coordinates, or `issues=none`; never put literal spaces in the value. The anchor coordinate is the durable summary reference; add the fix coordinate when it differs. Return forge URLs to the caller after publication instead of editing the review body.
+
+Include only non-empty conditional sections: `Open questions`, `Unanchored findings`, `Disputed`, `Prior findings`, and `Coverage gaps`. An unanchored finding contains its complete finding-comment prose plus the decisive evidence coordinate and optional fix coordinate. A clean review says so briefly. Do not add scores, effort estimates, generic praise, empty security/test sections, or repeated finding prose.
 
 ## Coverage
 
@@ -122,10 +139,11 @@ An incomplete review may publish verified findings already found, but its body m
 - Re-fetch the head immediately before writing; a stale or unreadable head aborts all publication.
 - Submit one review body and all new inline comments in one forge-native review call.
 - Inline anchors use the correct diff side: `RIGHT` for added/current lines and `LEFT` for deleted lines.
-- If the forge conclusively rejects a batch before creating a review because one comment is malformed, repair or omit only that comment, confirm no review exists, and retry the batch at most once.
+- If the forge conclusively rejects a batch before creating a review because one comment is malformed, repair its anchor. If no valid anchor exists, move its complete visible finding prose into an `Unanchored findings` body section with the decisive evidence coordinate and optional fix coordinate. Recompute counts, status, index entries, and the complete payload; confirm no review exists; then retry at most once. Never drop a verified finding to make a batch succeed.
 - A general comment is a fallback only when a non-gating native review is unavailable or refused.
 - Re-read the target after an ambiguous write result before one retry.
 - Store the run trailer in the summary and finding/question trailers in raw comment bodies.
+- Before writing, confirm that the visible priority, action, change, and fix site agree with the trailer and forge anchor. Repair a mismatch; if a consistent valid inline form is impossible, move the complete finding to `Unanchored findings`. Never choose hidden metadata over visible prose or omit a verified finding.
 
 On GitHub, the batched shape is:
 

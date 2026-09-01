@@ -1,10 +1,10 @@
 # Design goals and priorities
 
-This document records the reasoning behind the prototype. It is not part of the runtime instructions: `SKILL.md`, `references/review-rubric.md`, and `references/output-contract.md` remain authoritative.
+This document records the reasoning behind the prototype. It is not part of the runtime instructions: `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, and the conditionally loaded `references/verifier.md` remain authoritative.
 
 ## Problem being solved
 
-`code-review-publish-3` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
+`code-review-publish-4` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
 
 The quality of the human review and any later agent response both depend on the same foundation. The reviewer therefore needs to produce feedback that is:
 
@@ -16,6 +16,18 @@ The quality of the human review and any later agent response both depend on the 
 - economical enough to run routinely.
 
 The existing `review-protocol.md` informed useful ideas such as stable finding identity, explicit dispositions, thread continuity, and visible semantic status. It was deliberately not treated as a compatibility specification or output schema for this prototype.
+
+## Hybrid architecture at a glance
+
+The prototype has one complete reviewer and, only when warranted, one narrower verifier:
+
+1. The primary reviewer resolves the pull request and issues, builds one requirement ledger, inspects the full merge-base diff, finds candidates across both code behavior and issue fit, and tries to disprove each candidate.
+2. Straightforward optional findings can proceed after that primary falsification. A clean review stops there.
+3. Every proposed merge blocker and every surviving security, authorization, data-loss, destructive-migration, or public-contract candidate goes to one batched verifier with fresh context. Difficult cross-module optional findings may go too.
+4. The verifier receives claims and raw citations, but not the primary reviewer's reasoning. It fact-checks only the supplied candidates and returns `confirmed`, `plausible`, or `refuted`; it neither searches for new findings nor publishes.
+5. The primary reviewer drops refuted claims, turns only outcome-changing plausible claims into questions, renders confirmed findings, and performs the publication safety checks.
+
+This is hybrid because the common path retains one integrated review rather than paying for multiple independent searches, while consequential assertions receive a second look that is less likely to inherit the first reviewer's assumptions.
 
 ## Priority order
 
@@ -39,9 +51,9 @@ Coverage and comment volume are separate: inspect the complete merge-base diff, 
 
 ### 4. Equal usability for humans and agents
 
-Visible prose is the authoritative interface. Each finding states the concrete trigger, impact, and required behavior or suggestion, so either a person or an addressing agent can act without decoding metadata or opening another protocol document.
+Visible prose is the authoritative interface. Each finding has explicit `Triggers when`, `Impact`, and `Change` fields, so either a person or an addressing agent can act without decoding metadata or opening another protocol document. Optional feedback explicitly says that closing without action is valid.
 
-Stable hidden trailers support deduplication, thread correlation, and re-review automation. They never contain meaning omitted from the prose, and human comments without trailers remain first-class input. Priority and blocking are separate concepts: priority communicates impact, while `Required change` versus `Suggestion` communicates the requested action.
+Stable hidden trailers support deduplication, thread correlation, and re-review automation. They never contain meaning omitted from the prose, and human comments without trailers remain first-class input. Priority communicates impact; the independent `must-fix` or `consider` action communicates whether the author must change code before merge. The review also distinguishes the changed-line anchor used by the forge from a different location that actually needs editing.
 
 ### 5. Safe, deterministic publication
 
@@ -51,9 +63,11 @@ The semantic status is always written in the review body. The forge event is a p
 
 ### 6. Routine-run efficiency
 
-The frequent path uses one tool-using reviewer to gather candidates and falsify them. It does not copy the default multi-agent fan-out used by several review systems. At most one independent verifier is added when the change is unusually large, coupled, or high-risk, or when a high-impact candidate remains difficult to prove.
+The frequent path uses one tool-using reviewer to gather candidates and falsify them. It does not copy the default multi-agent fan-out used by several review systems. A clean review or one containing only straightforward optional feedback pays for no second model pass.
 
-Context expansion is surgical: diff, enclosing symbol, then only the callers, interfaces, configuration, tests, or history needed to resolve a candidate. Detailed output and rubric rules live in references, while this design record is not loaded during review.
+At most one independent verifier handles all candidates that cross deterministic thresholds. Fresh context is important: the verifier gets a falsifiable artifact claim and raw evidence, not the primary reviewer's support narrative or conclusion. Batching retains the value of independent confirmation without starting one agent per finding.
+
+Context expansion is surgical: diff, enclosing symbol, then only the callers, interfaces, configuration, tests, or history needed to resolve a candidate. The verifier instructions are a conditional reference, so normal runs do not spend context tokens loading them. A deterministic helper computes the input fingerprint without spending prompt tokens on serialization rules. This design record is never loaded during review.
 
 ### 7. Re-review continuity
 
@@ -78,6 +92,7 @@ The skill uses portable Markdown instructions and forge-neutral concepts where p
 | Docker and Anthropic review workflows | Candidate generation followed by deliberate falsification |
 | Gemini, OpenHands, and GitHub Agentic Workflows | Untrusted-input boundaries, complete manifests, exact anchors, deduplication, one batched review |
 | Existing local review protocol | Stable identities, dispositions, thread continuity, advisory status, prose-first interoperability |
+| Prototype comparison findings | Claim/support isolation, conditional fresh verification, explicit action, and distinct anchor/fix locations |
 
 ## Deliberate non-goals
 
@@ -102,4 +117,4 @@ The useful comparison is behavioral rather than aesthetic. Test the prototype re
 - whether humans and addressing agents implement the intended remedy correctly;
 - input/output tokens, tool calls, latency, and variance between runs.
 
-The most important open design questions are where to set the conditional-verifier threshold, whether a deterministic intake/fingerprint helper is worth maintaining, and how much hidden structure improves re-review without making the visible review feel machine-oriented.
+The most important open design questions are whether the verifier thresholds produce the right recall/cost tradeoff in real pull requests, whether a broader deterministic intake helper is worth maintaining, and how much hidden structure improves re-review without making the visible review feel machine-oriented.
