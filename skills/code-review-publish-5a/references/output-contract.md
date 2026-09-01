@@ -67,30 +67,7 @@ Do not create an observation merely to preserve a dropped candidate. The fact it
 
 ## Replies and prior state
 
-Read replies as prose first. Recognize these visible dispositions when present:
-
-| Disposition | Meaning | Required evidence |
-| --- | --- | --- |
-| `implemented` | the requested change was made | what changed, commit, verification |
-| `already-addressed` | current code already satisfies it | the decisive location or behavior |
-| `answered` | a question was resolved without code | the answer and its source |
-| `declined` | the author intentionally leaves it unchanged | technical or product rationale |
-| `needs-info` | action needs a missing answer | the smallest focused question |
-| `blocked` | the change is warranted but cannot proceed | blocker and next step |
-
-An agent reply may carry this optional trailer:
-
-```markdown
-**Implemented** in `9f1e0aa` — retries now reuse the logical charge's key.
-
-**Verification:** `pnpm test payments` passes with a timeout-after-commit case.
-
-<!-- reply to=payments/retry-idempotency disposition=implemented head=9f1e0aa0b1c2d3e4f5061728394a5b6c7d8e9f01 -->
-```
-
-Never require or add a trailer on a human's behalf. Verify replies against current code. A reply states intent; it does not prove outcome.
-
-On re-review, classify each prior item as `fixed`, `accepted`, `obsolete`, `still-open`, or `not-verifiable`. Resolve the first three. `Accepted` means the rereviewer verified that technical evidence makes the finding fail the rubric, or an authorized human explicitly accepted the residual risk; the author's `declined` disposition alone is not acceptance. Keep the other states open, replying on the existing thread rather than creating a duplicate. A declined item that remains after one verified re-review becomes `disputed`; list it for a person and stop re-posting it.
+[`re-review.md`](re-review.md) is authoritative for reply dispositions, reply trailers, and the classification of prior items on re-review — including the `disputed` state named under `Status` and the `Disputed` and `Prior findings` summary sections — and is read when a prior review, reply, or trailer-bearing comment exists.
 
 ## Status
 

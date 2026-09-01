@@ -12,7 +12,7 @@ Review one existing pull request without modifying its code, then publish one re
 Read these references before reviewing:
 
 - [`references/review-rubric.md`](references/review-rubric.md) is authoritative for admitting, verifying, and prioritizing findings.
-- [`references/output-contract.md`](references/output-contract.md) is authoritative for comments, statuses, replies, re-review state, and publication.
+- [`references/output-contract.md`](references/output-contract.md) is authoritative for comments, statuses, replies, re-review state, and publication; it delegates reply dispositions and prior-item classification to [`references/re-review.md`](references/re-review.md), which is read only when step 4 requires it.
 
 ## Boundaries
 
@@ -63,7 +63,7 @@ When a rubric or contract term has two genuinely supportable readings in this re
 
 ## 4. Re-review without losing state
 
-Default to the full diff. Review only the delta when the earlier head is an ancestor, base and merge-base continuity is proven, the earlier review was complete, and the delta's interactions are bounded; otherwise review in full. Carry and classify every unresolved item under the output contract. Reply on its existing thread. After one verified re-review, a still-valid declined finding becomes disputed: stop re-posting it, but keep its blocking effect for human settlement.
+When step 1 found any prior review, reply, or trailer-bearing comment from the posting identity, read [`references/re-review.md`](references/re-review.md) before continuing; it is authoritative for delta-vs-full re-review, carried findings, thread replies, and disputed findings. On a first review, skip it.
 
 ## 5. Validate before writing
 
