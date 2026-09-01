@@ -1,0 +1,6 @@
+interface:
+  display_name: "Publish Code Review v3 (Prototype)"
+  short_description: "Issue-aware, high-signal PR review prototype"
+  default_prompt: "Use $code-review-publish-3 to review the current pull request and publish one high-signal review."
+policy:
+  allow_implicit_invocation: false
