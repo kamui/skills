@@ -47,3 +47,9 @@ Each row states an externally checkable intent. The next prototype run can grade
 - Model-tier splits remain unencoded because the runs did not test them.
 - V2's parallel Code and Requirements finders do not become the default architecture.
 - V5 remains untouched; v5a is a separate prototype package and workflow identity.
+
+## Change notes
+
+Entries below record post-prototype reorganizations. They do not change review behavior and do not increment `v5a-1` unless stated.
+
+- **Re-review split into a conditionally loaded reference (issue #30).** `SKILL.md` section 4's body and the output contract's `Replies and prior state` section moved verbatim into [`references/re-review.md`](references/re-review.md), leaving pointers behind. Motivation is per-run token load: the re-review and prior-state machinery is dead weight on a first review, and `references/verifier.md` already establishes the conditional-load pattern. Pure relocation — no rule text changed, no workflow identifier change.
