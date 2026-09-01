@@ -1,7 +1,8 @@
 # Publication decision
 
 **2026-09-01.** Which run's output was published to `kamui/shortlist#66`, and why. This is a
-selection record, not the comparative analysis — that is a separate pass.
+selection record, not the comparative analysis — that is a separate pass. The publication decision
+was made after v2-v4; the later v5 controlled run is recorded below without rewriting that history.
 
 ## Published: v4
 
@@ -11,7 +12,7 @@ selection record, not the comparative analysis — that is a separate pass.
 - [`narrowing-protocol.md:68`](https://github.com/kamui/shortlist/pull/66#discussion_r3902611240) — P2, fix at `shortlist-narrow/SKILL.md:46`
 - [`research-protocol.md:295`](https://github.com/kamui/shortlist/pull/66#discussion_r3902611259) — P3, fix at `search-bundle-format.md:208`
 
-v2's and v3's outputs were **not** published, so the PR remains re-runnable for further comparison.
+V2's, v3's, and v5's outputs were **not** published.
 
 ## Why v4's output
 
@@ -21,7 +22,7 @@ Judged on the published artifact's value to the PR author, not on the architectu
    rubber-stamping: it corrected F1's trigger basis, reordered F1's requirement citation to lead
    with the criterion the text straightforwardly violates, and **cut F2's impact as "not
    establishable"** — explicitly instructing that its priority not be raised.
-2. **Severity calibration is the most defensible of the three.** Both items are
+2. **Severity calibration was the most defensible of the first three.** Both items are
    documentation-sync drift with one-line fixes and a limited blast radius. v2 published the same
    two as P1 `must-fix` and derived `Changes Requested`, which would block a merge on doc drift
    whose own reviewer noted the reader has a working link to the correct enumeration.
@@ -45,10 +46,26 @@ Judged on the published artifact's value to the PR author, not on the architectu
 - The summary footer discloses that v2 and v3 also reviewed this PR and that their output was
   withheld, so a later reader of the PR is not misled about how the review was produced.
 
+## Later v5 controlled run
+
+V5 ran after the v4 publication, but received the original pinned `none` prior-review state and did
+not read current live review state. Publication remained disabled. It would have produced
+`Approved (advisory)` with no findings.
+
+Its primary reviewer initially proposed the Narrow entrypoint's fixed refresh list as a P2
+`must-fix`. The mandatory fresh verifier refuted the claim because the entrypoint explicitly
+requires following the broader ledger-driven protocol and its older examples do not say they are
+exclusive. The primary accepted the correction. V5 also dropped the bundle-contract list because
+its prose is open-ended and links the complete formal schema.
+
+The existing v4 review was not edited, contradicted, or supplemented. V5 is retained as controlled
+evaluation data in `v5-run.md`; publishing it after v4 would instead exercise re-review and prior
+thread handling, which was not the test requested here.
+
 ## What this decision is not
 
-It is not a verdict on which prototype is best. v2 found two items the others missed, and whether
-those are real defects or over-flagging is exactly the question the analysis pass has to settle —
-the same is true of v3's decision to drop the bundle-contract item that both v2 and v4 confirmed.
-Publishing v4 reflects which single artifact was most defensible to put in front of the author
-today, on this PR.
+It is not a verdict on which prototype is best. V2 found two items the others missed, and whether
+those are real defects or over-flagging is exactly the question the analysis pass has to settle.
+The same is true of v3 and v5 dropping the bundle-contract item that v2 and v4 confirmed, and v5's
+verifier refuting the Narrow finding that v2-v4 all published. Publishing v4 records which single
+artifact was judged most defensible after the original three-way test, before v5 existed.
