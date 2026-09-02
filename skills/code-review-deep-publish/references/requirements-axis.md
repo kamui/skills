@@ -32,6 +32,14 @@ Each restated requirement lands in exactly one bucket.
 
 That third bucket is load-bearing. Without it, an uncertain requirement becomes either a false finding or a silent omission — and a false requirements finding is the expensive kind, because an agent acting on it will build something nobody asked for.
 
+Before marking each requirement `Met`, decide whether it changes a named vocabulary, enum, schema field, or normative enumeration. If it does, complete a **paired peer-contract sweep**:
+
+1. Search the whole repository for the new term.
+2. Read the base version of the changed contract and search the whole repository for a distinctive phrase or member that remains unchanged in the new version. Searching only for the new term cannot find copies that are stale because they omit it.
+3. Inspect every result from both searches, including files outside the changed-file manifest. Record each live peer in the disposition ledger.
+
+The sweep is complete only when every live peer includes the new contract or you have shown that it governs a different mechanism. A similarly named file does not stand in for its siblings.
+
 ## Step 3: find what nobody asked for
 
 Then read the diff the other way round: **behavior in the change that no requirement calls for.** One candidate per distinct piece of scope creep.
