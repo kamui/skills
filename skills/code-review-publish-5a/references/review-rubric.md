@@ -71,7 +71,7 @@ Before admitting a candidate, actively try to disprove it:
 7. Search current review threads and CI output for the same issue.
 8. Confirm a valid, minimal changed-line or file anchor.
 
-For propagation or synchronization drift, compare the peer artifacts at the merge-base and inspect the last commit that changed the shared rule or vocabulary. Use that history to decide whether the files are intentionally distinct or normally move in lockstep.
+For propagation or synchronization drift, first establish the peer set: search the whole repository, case-insensitively, for the rule's old wording as well as its new vocabulary — consumers restate a rule in their own words and keep the phrases the change replaced. A sweep confined to the changed file's directory, or keyed to one exact sentence, does not establish that no consumer exists. Then compare the peer artifacts at the merge-base and inspect the last commit that changed the shared rule or vocabulary; use that history to decide whether the files are intentionally distinct or normally move in lockstep.
 
 Drop the candidate when decisive evidence contradicts it or the reviewer has not completed the available static legwork. Preserve a focused question only under the static-unresolvability rule above.
 
