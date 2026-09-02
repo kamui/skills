@@ -182,6 +182,69 @@ searches once for the new term and once for a distinctive phrase or member that 
 base contract, then accounts for every live result in the disposition ledger before marking that
 requirement met. This preserves C1 through C5 and fixes discovery where the miss occurred.
 
+### C9. Sweep trigger covers list-opening changes; Code axis sweeps for sync drift
+
+The first post-C8 run against `kamui/shortlist#66` missed the other known drift on that target:
+`narrowing-protocol.md` replaced a closed Volatile-refresh list with an open rule, and
+`shortlist-narrow/SKILL.md:46` still carries the closed list. Neither finder raised or acquitted
+it. Replication showed the miss was mechanism, not noise: 1 of 5 unchanged Requirements runs and
+0 of 5 Code runs found it, while every run that swept the Kind enum found C8's own target. The
+finder's transcript states the cause in its own words — "the peer-contract sweep was run for the
+one enum-touching requirement." C8's trigger, "changes a named vocabulary, enum, schema field, or
+normative enumeration," reads as membership changes to a surviving list; a change that retires a
+closed list in favor of an open rule was classified as prose generalization, so no sweep
+obligation ever reached the consumer file. A diagnostic run with only the per-requirement scope
+made emphatic ("every qualifying requirement, not just the first") still missed, isolating the
+trigger classification rather than sweep scope. The identical text on Opus classified the
+refresh-rule change as a fourth qualifying contract and found the item, matching the
+Sonnet-tier execution pattern recorded for v5a.
+
+Two changes, each restructured after a first attempt failed validation. `requirements-axis.md`
+now opens the sort step with a **changed-contract scan**: before sorting any requirement, write
+down every vocabulary, enum, schema field, or normative enumeration the diff renames, extends,
+narrows, or retires, with a closed list replaced by an open rule named as the most commonly
+missed kind — nothing in the new text looks like a list any more, and its stale peers are the
+files still carrying the retired one. A generalization diff usually contains more than one, and
+the sweep is owed to each. The contract list is a required output: per contract, the two search
+terms used and every live peer found with its disposition. Both legs are repo-wide and
+case-insensitive, and the old-wording leg must be keyed to a short distinctive fragment — two or
+three consecutive members of the retired list, or one rare phrase — never a whole sentence,
+because consumers restate a rule in their own words and keep only fragments. `code-axis.md`
+gains a "Sync drift from a changed rule" section carrying the same discipline into an axis that
+had no sweep at all: a peer that matched at base and was made stale by the diff satisfies
+criterion 4 even though the stale line is untouched, and before treating such a change as clean
+the finder enumerates the qualifying contracts, sweeps each separately, and records every live
+result in the ledger. Cross-axis duplicates land under the existing dedup rule, as v2a's
+original run already demonstrated for this item.
+
+The first attempt at both stated the rule declaratively — the trigger sentence extended to name
+list-opening changes, the Code section describing the paired sweep — and it moved neither axis
+(0 of 3 Requirements runs, 0 of 3 Code runs). The transcripts show why the restructure was
+needed. One Requirements run read the extended trigger and still wrote "the only contract this
+diff opens/generalizes," naming the Kind enum; another acquitted the Narrow item on a
+misreading; a third demoted the known bundle item to an observation. The Code runs swept, but
+keyed their old-wording legs to whole base sentences or to the wrong contract. Meanwhile both
+runs that had ever found the item unprompted — the one passing Requirements replicate and the
+Opus diagnostic — began by enumerating the diff's qualifying contracts as an explicit artifact.
+The restructure makes that artifact mandatory rather than asking the finder to classify
+correctly in passing.
+
+The validation runs also surfaced a third live drift on this target that no prior round had
+tracked: `skills/shortlist/scripts/validate-completion.py:2948` still hardcodes the retired
+Volatile term list as a regex, and is called unconditionally.
+
+Validation: three fresh Requirements runs and three fresh Code runs against the same pinned
+target, Sonnet 5, offline clone, publication disabled. All three Requirements runs enumerated the
+diff's changed contracts before sorting, ran a fragment-keyed old-wording sweep for each, and
+raised both known drifts as candidates — 3 of 3, against 1 of 5 for the unchanged rubric and 0 of
+3 for the first attempt. The Code axis improved less evenly: one run raised both items, one swept
+the consumer file and then acquitted it on a false claim that an earlier pull request had already
+generalized it, and one never reached the file, collapsing its contract list back onto the enum.
+Panel-wide every run pair surfaced the item, because the Requirements axis carried it in all
+three, but the Code axis is the weaker leg and is worth re-scoring in the next repeated-seed
+evaluation. Both Code runs that swept widely also reached the `validate-completion.py` drift, one
+of them with an executed reproduction.
+
 ### Subtractions
 
 None structural. Beyond the deletions listed under C2 and C5, no working v2 machinery was removed
