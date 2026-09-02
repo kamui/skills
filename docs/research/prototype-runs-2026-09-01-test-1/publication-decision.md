@@ -1,5 +1,7 @@
 # Publication decision
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Which run's output was published to `kamui/shortlist#66`, and why. This is a
 selection record, not the comparative analysis — that is a separate pass. The publication decision
 was made after v2-v4; the later v5 controlled run is recorded below without rewriting that history.

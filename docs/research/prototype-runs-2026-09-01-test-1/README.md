@@ -1,5 +1,7 @@
 # Prototype run data — v2, v3, v4, v5 against `kamui/shortlist#66`
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Raw outputs and metadata from running four code-review prototypes against one
 pull request under controlled conditions. **Data only** — the analysis of this run lives in
 [`evaluation.md`](evaluation.md).

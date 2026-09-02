@@ -1,5 +1,7 @@
 # Prototype run data — v2, v3, v4, v5 against `tokio-rs/tokio#7757` (test 3)
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Raw outputs and metadata from a third controlled comparison of the same four
 code-review prototypes against a different pull request. **Data only** — the analysis of this run
 lives in [`evaluation.md`](evaluation.md).
