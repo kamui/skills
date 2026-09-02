@@ -161,6 +161,27 @@ evidence supports a verdict. Both finder ledgers keep every hypothesis while lim
 four compact fields on one line. The two full-diff analyses and verification of every candidate
 remain mandatory.
 
+### C8. Paired peer-contract sweep before a requirement passes
+
+The first v2a rerun against `kamui/shortlist#66` missed a stale bundle-contract enumeration that
+the original v2 finder, v4, v5, and the same round's v5a run found. Four fresh unchanged v2a
+Requirements runs missed it too. The 0/5 result rules out an isolated bad sample. Removing only
+C3's disposition-ledger output requirement produced the same miss, so ledger construction was not
+the cause.
+
+The original transcript shows the finder searching freshness terms, opening
+`category-bundle-format.md`, acquitting its separate cache-reuse rule, and never searching for
+`search-bundle-format.md`, `discovery branch`, or `safeguard`. An initial peer-sweep fix still
+missed in two fresh runs. Both searched new vocabulary and found the Narrow drift, but neither
+searched an unchanged phrase from the old obligation-kind list. A new-term search cannot discover
+a stale copy that omits the new term.
+
+`requirements-axis.md` now makes a paired peer-contract sweep the completion criterion for each
+requirement that changes a vocabulary, enum, schema field, or normative enumeration. The finder
+searches once for the new term and once for a distinctive phrase or member that survives from the
+base contract, then accounts for every live result in the disposition ledger before marking that
+requirement met. This preserves C1 through C5 and fixes discovery where the miss occurred.
+
 ### Subtractions
 
 None structural. Beyond the deletions listed under C2 and C5, no working v2 machinery was removed
