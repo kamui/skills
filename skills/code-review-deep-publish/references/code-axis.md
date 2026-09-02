@@ -49,6 +49,12 @@ Apply the bar asymmetrically:
 - Adding docstrings, comments, or type hints; removing unused imports or variables; adding missing imports; narrowing an exception type. These are noise at review time.
 - Style with no observable effect on behavior, unless a documented standard names it.
 
+## Sync drift from a changed rule
+
+When the diff changes a rule, vocabulary, enum, schema field, or normative enumeration that other files restate — documentation, sibling skills or modules, templates, prose in fixtures — a copy left carrying the old text is a defect this change introduced: the peer matched at base, and the diff made it stale, so criterion 4 is satisfied even though the stale line itself is untouched. A change that retires a closed list in favor of an open rule counts the same way; the stale copy is the one still carrying the retired list.
+
+Before treating any of these changes as clean, establish the peer set. First list every qualifying contract the diff touches — each changed rule, vocabulary, enum, schema field, or normative enumeration, counting any closed list that was opened or retired — and sweep each one separately; sweeping one contract does not discharge another. Per contract, search the whole repository, case-insensitively, twice: once for the new vocabulary, and once for the old wording the change replaced or retired. Key the old-wording search to a short distinctive fragment — two or three consecutive members of the retired list, or one rare phrase from the old rule — never to a whole sentence, because consumers restate a rule in their own words and keep only fragments of the old phrasing. A sweep confined to the changed file's directory does not establish that no consumer exists. Inspect every live result, record each in the disposition ledger, and compare surviving peers against their base versions to tell a file that is intentionally distinct from one that normally moves in lockstep.
+
 ## Standards findings specifically
 
 Flag a standards violation only when you can quote **the rule** and **the line that breaks it**. Name the file the rule lives in and quote its text. No style preferences, no inferences from a document's general spirit, no "this seems against the intent of".
