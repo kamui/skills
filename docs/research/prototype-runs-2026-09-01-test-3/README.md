@@ -142,3 +142,5 @@ mirror-truncation step only prevents the *reviewing agent* from directly reading
 objects.
 
 See [`addendum-2026-09-03.md`](addendum-2026-09-03.md) for the 2026-09-03 v2a/v5a re-test against this same pinned target, run on Sonnet 5 with the mirror **truncated at the merge-base** — which closes the hindsight-contamination problem this README discloses above. Headline: v5a found the ground-truth defect and its verifier corrected the fix to the invariant level; v2a missed it, explicitly acquitting the two branches that carry it, and published a different (also verifier-confirmed) stranding defect instead. See [`v2a-run.md`](v2a-run.md) and [`v5a-run.md`](v5a-run.md).
+
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
