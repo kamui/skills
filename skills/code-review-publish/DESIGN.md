@@ -1,126 +1,61 @@
-# Design goals and priorities
+# v5a design and evidence
 
-This document records the reasoning behind the current workflow, which was developed as the v5 prototype before being promoted to `code-review-publish`. It is not part of the runtime instructions: `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, and the conditionally loaded `references/verifier.md` remain authoritative.
+This document records why the v5a prototype differs from v5. It is not runtime instruction. `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, and the conditionally loaded `references/verifier.md` are authoritative.
 
-## Problem being solved
+## Question this prototype answers
 
-`code-review-publish` is intended for frequent, non-interactive review of an existing pull request. One invocation must gather the pull request and issue context, review the entire change, and publish useful feedback without asking the caller to steer the analysis.
+Can v5 retain its economical single-reviewer frequent path while recovering accurate questions and observations, checking high-risk clean verdicts, and making verification and rendering behavior deterministic enough to grade?
 
-The quality of the human review and any later agent response both depend on the same foundation. The reviewer therefore needs to produce feedback that is:
+V5a keeps v5's integrated primary, per-candidate falsification ledger, consequence-triggered fresh verifier, action/priority separation, anchor/fix separation, complete-diff coverage, and atomic publication. It does not adopt v2's default parallel axes or N-version replication. A low-risk clean review still finishes with one reviewer.
 
-- accurate enough that authors will trust and act on it;
-- aware of the originating issue rather than judging only local code quality;
-- complete about what it inspected, without manufacturing comments to appear thorough;
-- understandable from visible prose by a human or an agent;
-- safe to publish once, against the exact revision reviewed;
-- economical enough to run routinely.
+Workflow identifier: `v5a-1`.
 
-The existing `review-protocol.md` informed useful ideas such as stable finding identity, explicit dispositions, thread continuity, and visible semantic status. It was deliberately not treated as a compatibility specification or output schema while this workflow was prototyped.
+## Change map
 
-## Hybrid architecture at a glance
+Each row states an externally checkable intent. The next prototype run can grade the mechanism as worked, inert, or harmful against that intent.
 
-The workflow has one complete reviewer and, only when warranted, one narrower verifier:
+| ID | Runtime change | Checkable intent | Evidence |
+| --- | --- | --- | --- |
+| G1 | Add a statically-unresolvable question channel with no priority, explicit `Change no code for this` framing, and a named way to answer. | An empirical/runtime or unrecorded product fact that no static source can settle appears under `Open questions`; a merely under-researched candidate does not. | [test 3 v2 question](../../docs/research/prototype-runs-2026-09-01-test-3/v2-run.md#candidate), [aggregate graft 1](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#graft-from-the-other-three) |
+| G2 | Scope the introduced-here gate to Code candidates; a `kind=requirement` candidate is measured against the explicit requirement even when its missing implementation predates the diff or lives in an unchanged file. | A required outcome omitted entirely from unchanged code can survive this gate, while a pre-existing Code defect still fails it. | [requirement-ledger divergence](../../docs/research/prototype-runs-2026-09-01-test-1/evaluation.md#requirement-ledger-divergence) |
+| G3 | On high-risk changes with zero survivors, run a fresh verifier over the complete disposition ledger. | Concurrency, failover, data-integrity, or security changes with a clean primary verdict receive `clean verdict stands` or a named re-opened disposition; low-risk clean changes do not incur a verifier. | [test 2 unobserved verifier](../../docs/research/prototype-runs-2026-09-01-test-2/evaluation.md#the-unobserved-verifier), [aggregate clean-verdict conclusion](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#5-clean-verdicts-are-structurally-unverified) |
+| G4 | Give unrecoverable context failures an orchestrator recovery protocol: provisional `Incomplete`, affected candidates and gates named, affected falsifications resumed after supply. | Missing input cannot fall through to `Approved`, cannot become an author question, and does not force a full re-review after recovery. | [test 1 v4 orchestrator question](../../docs/research/prototype-runs-2026-09-01-test-1/v4-run.md#the-orchestrator-question--a-distinguishing-event) |
+| G5 | Render genuinely contestable rubric terms with both readings and the applied reading under `Ambiguities`. | A run facing two supportable interpretations records the disagreement instead of silently selecting policy. | [test 1 v4 ambiguity](../../docs/research/prototype-runs-2026-09-01-test-1/v4-run.md#the-orchestrator-question--a-distinguishing-event), [aggregate graft 7](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#graft-from-the-other-three) |
+| N1 | Add a summary-only `Observations` channel capped at three one-sentence facts with evidence pointers, no action language, priority, id, trailer, or anchor comment. | Accurate facts that fail only consequence admission, and verifier asides, remain visible without changing findings or status; dropped candidates are not routinely preserved. | [test 2 disagreement](../../docs/research/prototype-runs-2026-09-01-test-2/evaluation.md#the-one-real-disagreement), [aggregate observations conclusion](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#4-every-architecture-loses-accurate-sub-threshold-observations) |
+| N2 | Require the verifier to name the broken invariant, enumerate governed sibling paths, assess fix protection per path, and widen narrow remedies for `concurrency` and `invariant` candidates. | A verifier cannot confirm one interleaving while leaving the proposed `change` narrower than the statically visible bug class. | [aggregate test 3 deeper lesson](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#3-test-3s-deeper-lesson-four-projections-of-one-defect-and-a-fix-sufficiency-gap) |
+| N3 | Permit one fresh follow-up batch for candidates that become render-eligible after the initial batch dispatch, then stop. | A late must-fix-shaped candidate gets one independent decision instead of being dropped solely due to batch timing; no verifier loop is possible. | [test 3 v4 notes](../../docs/research/prototype-runs-2026-09-01-test-3/v4-run.md#notes-on-the-run) |
+| N4 | Make `plausible` mandatory when the verifier can neither complete the failing trace nor refute a specific step; route it through G1. | A forced indeterminate trace produces a question rather than an overconfident confirmation or refutation. If the next evaluation still produces no `plausible` verdict, remove this branch rather than preserve dead contract surface. | [aggregate verifier conclusion](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#2-fresh-context-verification-earns-its-cost--but-part-of-its-vocabulary-is-dead) |
+| F1.1 | Define `guidance` digest membership exhaustively as applicable base-branch `AGENTS.md`/`CLAUDE.md` files plus root `CONTEXT.md`, with explicit exclusions. | Two conforming reviewers given identical repository state and changed paths select the same guidance entries. | [v5 ambiguity 2](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.2 | Include ordinary `consider` candidates by input-visible proof difficulty, and preserve `independent-confirmed` after a verifier downgrade. | Batch membership no longer predicts a future verdict; a confirmed downgraded candidate remains independently confirmed. | [v5 ambiguity 5](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.3 | Require full 40-hex commit SHAs in every trailer. | Re-review and stale-head comparisons never depend on an abbreviated identifier. | [v5 ambiguity 3](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.4 | Use `path:line` for single-line and `path:start-end` for range summary anchors. | Every example and generated coordinate follows one unambiguous rule. | [v5 ambiguity 4](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.5 | Place optional `Source` after `Change` and the `consider` permission sentence last before the trailer. | A `consider` finding with a source has exactly one valid field order. | [v5 ambiguity 1](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F1.6 | Anchor multi-file drift first on the changed line stating the drifted rule, then lexicographically by path and by smallest range. | Identical evidence produces the same anchor. | [v5 ambiguity 6](../../docs/research/prototype-runs-2026-09-01-test-1/v5-run.md#run-conditions-and-observed-ambiguity) |
+| F2 | Stop only closed-unmerged targets; explicitly invoked merged PRs run as retrospective audits with publication disabled by default and a visible mode line. | Known-outcome evaluation can run without silently violating phase 1 or writing to a merged PR. | [test 3 closed-PR rule](../../docs/research/prototype-runs-2026-09-01-test-3/evaluation.md#the-unresolved-closed-pull-request-rule) |
 
-1. The primary reviewer resolves the pull request and issues, builds one requirement ledger, inspects the full merge-base diff, finds candidates across both code behavior and issue fit, and tries to disprove each candidate.
-2. Straightforward optional findings can proceed after that primary falsification. A clean review stops there.
-3. Every proposed merge blocker and every surviving security, authorization, data-loss, destructive-migration, or externally observable compatibility candidate goes to one batched verifier with fresh context. An artifact being named a contract does not trigger the pass by itself.
-4. The verifier receives claims and raw citations, but not the primary reviewer's reasoning. It fact-checks only the supplied candidates and returns `confirmed`, `plausible`, or `refuted`; it neither searches for new findings nor publishes.
-5. The primary reviewer drops refuted claims, turns only outcome-changing plausible claims into questions, renders confirmed findings, and performs the publication safety checks.
+## Cost and safety bounds
 
-This is hybrid because the common path retains one integrated review rather than paying for multiple independent searches, while consequential assertions receive a second look that is less likely to inherit the first reviewer's assumptions. Once that pass exists, difficult optional survivors can share the batch at low marginal cost.
+- The frequent path remains one integrated reviewer. G3 adds a second context only for the intersection of a high-risk surface and zero surviving candidates.
+- Candidate verification starts with one batch. N3 permits one follow-up batch only after the initial dispatch; later mandatory verification gaps fail closed as `Incomplete`.
+- Clean-verdict verification attacks existing acquittals rather than searching for findings, preserving the verifier's narrow role and making its result attributable to a ledger entry.
+- Questions require static unresolvability. Observations require a standing fact and are capped. These channels therefore expose useful uncertainty without weakening finding admission.
+- Retrospective mode changes publication authority, not review rigor: it produces the same complete would-be artifact but performs no external write by default.
 
-## Origin in the v5 prototype
+## Deliberate exclusions
 
-A controlled v2/v3/v4 run on one issue-heavy pull request exposed three calibration gaps. V2 coupled priority to action and escalated documentary drift to P1 blockers. V3 found strong history evidence cheaply but filtered out a useful normative-consistency observation because no runtime failure was proven. V4 produced the best artifact, yet treated a contradiction in an agent's executable `SKILL.md` as optional and invoked its verifier through an ambiguous “public contract” threshold.
+- N-version primary replication and reconciliation remain a separate experimental direction.
+- Model-tier splits remain unencoded because the runs did not test them.
+- V2's parallel Code and Requirements finders do not become the default architecture.
+- V5 remains untouched; v5a is a separate prototype package and workflow identity.
 
-The v5 prototype kept v4's architecture and changed the decision rules: explicit requirements left incomplete on authoritative execution paths are `must-fix` independently of priority or fix size; concrete authoritative drift can qualify as a low-priority `consider` without inventing a runtime failure; propagation candidates inspect merge-base and synchronization history; representation ambiguity becomes a question rather than a prescribed schema; and verifier routing follows consequence and action. Public prose also receives a soft word budget so dual-audience structure does not become review fatigue. That v5 workflow is now invoked as `code-review-publish`, without a version suffix.
+## Change notes
 
-## Priority order
+Entries below record post-prototype reorganizations. They do not change review behavior and do not increment `v5a-1` unless stated.
 
-### 1. High-signal findings
-
-The first priority is minimizing weak or speculative feedback while retaining concrete defects the author would want to fix. The adapted Codex rubric is the finding-admission rule: a candidate needs meaningful impact, a proven trigger and consequence, evidence that this change introduced it, and an actionable remedy.
-
-Every candidate is actively falsified before publication. Generic preferences, tool-enforced trivia, praise, scores, effort estimates, and checklist filler are excluded. A clean review is preferable to comments created merely to fill a template.
-
-### 2. Fidelity to the originating issue
-
-The linked issue supplies product intent, acceptance criteria, invariants, and non-goals. The reviewer converts those into a private requirement ledger and checks the implementation against it. This preserves the strongest part of Matt Pocock's review approach and PR-Agent's ticket context without exposing a repetitive compliance table.
-
-Issue context does not reduce the evidence threshold. Missing or contradicted requirements become findings only when the artifacts demonstrate the gap. The reviewer judges the required outcome rather than demanding an unstated representation. Unknowns that could change the verdict become focused questions instead of accusations.
-
-### 3. Complete inspection with fail-closed coverage
-
-High signal must not be achieved by silently skipping difficult files. Every changed file—including deletions, renames, binaries, generated files, and omitted patches—is accounted for as reviewed, deliberately ignored with a reason, or unreviewed.
-
-Coverage and comment volume are separate: inspect the complete merge-base diff, but publish only candidates that pass the rubric. Failed fetches, tool failures, or unfinished risk checks make the review incomplete; zero findings from incomplete work can never produce approval.
-
-### 4. Equal usability for humans and agents
-
-Visible prose is the authoritative interface. Each finding has explicit `Triggers when`, `Impact`, and `Change` fields, so either a person or an addressing agent can act without decoding metadata or opening another protocol document. Optional feedback explicitly says that closing without action is valid.
-
-Stable hidden trailers support deduplication, thread correlation, and re-review automation. They never contain meaning omitted from the prose, and human comments without trailers remain first-class input. Priority communicates impact; the independent `must-fix` or `consider` action communicates whether the author must change code before merge. Explicit requirement gaps on authoritative agent instructions can therefore be P2/P3 and still block. The review also distinguishes the changed-line anchor used by the forge from a different location that actually needs editing.
-
-### 5. Safe, deterministic publication
-
-The reviewer pins the base, merge-base, and head before analysis, then re-fetches the head immediately before writing. A stale or unreadable head aborts publication. New findings are submitted in one native review batch, using exact diff sides and the smallest useful anchors.
-
-The semantic status is always written in the review body. The forge event is a permission decision, not the verdict: `COMMENT` is the default, and `APPROVE` or `REQUEST_CHANGES` is used only when the reviewer is separately authorized to gate the merge. Whole-file findings retain a first-class file anchor; on GitHub they move into the same review body because its documented batch endpoint exposes line comments but not file subjects, preserving atomic publication without inventing a line anchor.
-
-### 6. Routine-run efficiency
-
-The frequent path uses one tool-using reviewer to gather candidates and falsify them. It does not copy the default multi-agent fan-out used by several review systems. A clean review or one containing only straightforward optional feedback pays for no second model pass.
-
-At most one independent verifier handles all candidates that cross deterministic consequence thresholds. Fresh context is important: the verifier gets a falsifiable artifact claim and raw evidence, not the primary reviewer's support narrative or conclusion. Batching retains the value of independent confirmation without starting one agent per finding. Straightforward low-risk optional feedback does not create a verifier, but may share a batch already required by a blocker.
-
-Context expansion is surgical: diff, enclosing symbol, then only the callers, interfaces, configuration, tests, or history needed to resolve a candidate. The verifier instructions are a conditional reference, so normal runs do not spend context tokens loading them. A deterministic helper computes the input fingerprint without spending prompt tokens on serialization rules. This design record is never loaded during review.
-
-### 7. Re-review continuity
-
-A new run reads earlier reviews, replies, and thread state before generating feedback. Stable concept-based IDs survive line movement. Prior unresolved findings are verified against current code and carried forward rather than silently disappearing or being duplicated.
-
-Full re-review is the default. Incremental review is allowed only with proven ancestry, base and merge-base continuity, complete prior coverage, and a bounded delta. A declined finding gets one verified re-review before becoming a human-visible dispute instead of entering an endless agent loop.
-
-### 8. Clear provenance and portability
-
-The core rubric is an attributed adaptation of the Apache-2.0 OpenAI Codex rubric, with its pinned source, modification notice, copyright, and license included in the package. Other systems influenced workflow choices, but their prompt text was not copied.
-
-The skill uses portable Markdown instructions and forge-neutral concepts where practical. GitHub's batched review shape is included as the concrete implementation example because this repository uses GitHub.
-
-## What was grafted from other approaches
-
-| Source | Adapted contribution |
-| --- | --- |
-| OpenAI Codex | Finding-admission gates, priority calibration, concise actionable comments |
-| Matt Pocock's code-review skill | Merge-base fixed point, originating issue/spec, repository-specific standards |
-| PR-Agent | Ticket context, private requirement assessment, surgical context expansion |
-| `misospace/pr-reviewer-action` | Fail-closed coverage, stale-head protection, carried findings, evaluation mindset |
-| Docker and Anthropic review workflows | Candidate generation followed by deliberate falsification |
-| Gemini, OpenHands, and GitHub Agentic Workflows | Untrusted-input boundaries, complete manifests, exact anchors, deduplication, one batched review |
-| Existing local review protocol | Stable identities, dispositions, thread continuity, advisory status, prose-first interoperability |
-| Prototype comparison findings | Claim/support isolation, conditional fresh verification, explicit action, distinct anchor/fix locations, history-based drift proof, and consequence-based routing |
-
-## Deliberate non-goals
-
-- Being a drop-in implementation of `review-protocol.md`.
-- Modifying code, addressing comments, editing issue state, or merging the pull request.
-- Running multiple standards/spec/reviewer agents on every pull request.
-- Acting as a comprehensive security audit or a substitute for repository tests and CI.
-- Publishing numeric confidence, code-quality scores, effort estimates, or generic praise.
-- Treating an issue omission, risk keyword, style preference, or missing test as a finding without a demonstrated consequence.
-- Using a gating review event merely because the semantic verdict is `Approved` or `Changes Requested`.
-
-## How to evaluate the workflow
-
-The useful comparison is behavioral rather than aesthetic. Test the workflow repeatedly on known-clean and known-defective pull requests and measure:
-
-- recall of blocking and high-impact defects;
-- false findings on clean changes;
-- missed explicit issue requirements;
-- duplicate findings and resurrected resolved findings;
-- invalid or misleading line anchors;
-- false approvals when coverage is incomplete;
-- whether humans and addressing agents implement the intended remedy correctly;
-- input/output tokens, tool calls, latency, and variance between runs.
-
-The most important open design questions are whether the verifier thresholds produce the right recall/cost tradeoff in real pull requests, whether a broader deterministic intake helper is worth maintaining, and how much hidden structure improves re-review without making the visible review feel machine-oriented.
+- **Re-review split into a conditionally loaded reference (issue #30).** `SKILL.md` section 4's body and the output contract's `Replies and prior state` section moved verbatim into [`references/re-review.md`](references/re-review.md), leaving pointers behind. Motivation is per-run token load: the re-review and prior-state machinery is dead weight on a first review, and `references/verifier.md` already establishes the conditional-load pattern. Pure relocation — no rule text changed, no workflow identifier change.
+- **Mechanical pre-publication checks moved to a script (issue #31).** [`scripts/validate_review.py`](scripts/validate_review.py) now checks trailer grammar and commit-SHA width (F1.3), summary anchor coordinates (F1.4), finding field order (F1.5), priority/action/blocking combinations, question form, anchor shape, and the observation cap; `SKILL.md` step 5 keeps only the semantic judgments. No rule changed: every check is derived from `references/output-contract.md` and `references/review-rubric.md`, and where the two could disagree the reference text wins. Motivated by the token cost of a long model-executed checklist and by avoiding the failed-publish, repair, rebuild, retry loop.
+- **Compact G3 ledger rows (issue #33).** The clean-verdict batch still receives every disposition from the run — filtering by risk surface is explicitly forbidden, since a cross-cutting acquittal is what the batch exists to attack — but a non-survivor row is now capped at a one-line claim, the kind, the one-word disposition, a one-line falsification reason, and one `path:line` evidence pointer. Survivor records are unchanged, as are the G3 trigger conditions and the batch's two allowed conclusions. Motivated by the token cost of the second context on a candidate-heavy run.
+- **Output budgets on private records (issue #34).** `support` is capped at three one-line entries across `inspected`/`checks`/`uncertainty`, a satisfied requirement-ledger entry is one line, and the example YAML record is annotated as survivor-shaped. The non-survivor ledger-row cap was already added by the G3 change note above and is referenced rather than restated. Survivor records, the claim/support split, what is withheld from the verifier, and the published finding's ~160-word budget are all unchanged. Motivated by output-token pricing: these private artifacts are generated tokens, billed at roughly five times the input rate.
+- **Digest determinism is regression-tested (issue #35).** [`scripts/test_context_fingerprint.py`](scripts/test_context_fingerprint.py) drives `context_fingerprint.py` through its stdin interface and pins key-order and array-order invariance, comment-id type normalization, sensitivity to every semantic field, an F1.1 guidance-membership fixture whose excluded entries change the digest, and rejection of malformed payloads. `context_fingerprint.py` is unchanged; no nondeterminism was found. Rationale: the step-2 duplicate-review short-circuit skips a whole review on a digest match, so its value depends entirely on two conforming runs reproducing the same digest.
+- **Repo-wide peer-set search for drift candidates (handoff 6).** This entry, unlike the others, is a rule change: the rubric's propagation/synchronization-drift paragraph now requires establishing the peer set by a repository-wide, case-insensitive search for both the rule's old wording and its new vocabulary before comparing peers, and states that a directory-scoped or single-sentence sweep does not establish absence. The workflow identifier stays `v5a-1` because the change tightens execution of an existing mechanism rather than adding or removing one. Evidence: on the pinned target-1 run, the v5a reviewer stated the correct drift-sweep intent and then scoped its grep to `skills/shortlist/`, missing the `shortlist-narrow/SKILL.md:46` consumer drift that five other runs found; five fresh replicates plus one stubbed-obligation diagnostic run all repeated the miss — most via directory-scoped sweeps, one via a repo-wide but case-sensitive grep whose keyword the consumer states only in lowercase. The retained risk-check category ("external contracts … version skew") and this paragraph were verbatim-identical to v5's, so the miss was execution scope, not a dropped clause.
+- **Cleanup from the review of the five changes above.** Three corrections, no rule changes. `SKILL.md`'s reference list no longer restates the step-4 pointer to `re-review.md` — the conditional load is stated where it fires, matching how `references/verifier.md` is handled. The output contract's pointer now says `re-review.md` defines the classification that *populates* the `Disputed` and `Prior findings` summary sections, which the contract itself still defines. And `validate_review.py`'s one-sentence observation check masks the abbreviations `e.g.`, `i.e.`, `etc.`, `vs.`, `cf.`, and `et al.` so they are not read as sentence breaks, with a passing fixture pinning it. For the record on issue #30's byte criterion: the re-review split shrank the always-loaded trio (`SKILL.md`, `review-rubric.md`, `output-contract.md`) by 1,402 bytes at its commit — the ceiling under a verbatim move is roughly 1.5k, not the 2.5k the issue asked for — and the load-bearing savings are the ~2.2k-byte `re-review.md` skipped on every first review plus the output-token caps of issues #33 and #34.

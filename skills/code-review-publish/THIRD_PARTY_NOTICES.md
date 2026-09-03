@@ -6,7 +6,7 @@
 
 <https://github.com/openai/codex/blob/81de4f251cfdaf32ecb85e2160ebfc11a562d44b/codex-rs/prompts/templates/review/rubric.md>
 
-Copyright 2025 OpenAI. Licensed under the Apache License, Version 2.0. This skill changes the source material for issue-linked review, tool-using evidence collection, candidate falsification, complete-diff coverage, re-review state, and human-and-agent-readable publication. See `licenses/Apache-2.0.txt`.
+Copyright 2025 OpenAI. Licensed under the Apache License, Version 2.0. The prototype changes the source material for issue-linked review, tool-using evidence collection, candidate falsification, complete-diff coverage, re-review state, and human-and-agent-readable publication. The v5a iteration also adds clean-verdict verification, bug-class checks, question and observation channels, and deterministic output rules. See `licenses/Apache-2.0.txt`.
 
 ## Design provenance
 

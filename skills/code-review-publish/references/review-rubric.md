@@ -17,7 +17,7 @@ Use this rubric as the finding-admission rule. More specific user instructions a
 ## Admit a finding only when every condition holds
 
 1. **Meaningful impact:** it affects correctness, security, performance, maintainability, or an explicit issue requirement enough that the author would benefit from fixing it.
-2. **Introduced here:** the reviewed change caused it. Do not report a pre-existing problem unless the change materially worsens it.
+2. **Introduced here — Code candidates:** the reviewed change caused it. Do not report a pre-existing Code problem unless the change materially worsens it. This gate never refutes a `kind=requirement` candidate: when an explicit requirement makes an outcome this change's responsibility, the missing implementation may live entirely in an unchanged or pre-existing artifact.
 3. **Discrete and actionable:** it describes one defect with an attainable outcome, not a broad codebase critique.
 4. **Proven consequence:** for behavior, identify the concrete input, state, environment, or call path and observable impact. For an authoritative instruction or maintainability contract, demonstrate the exact contradiction or drift and the concrete reader or maintenance consequence. Speculation about downstream breakage is insufficient.
 5. **Grounded intent:** it does not depend on an unstated assumption about the codebase or author's intent.
@@ -25,17 +25,17 @@ Use this rubric as the finding-admission rule. More specific user instructions a
 7. **Worth the author's time:** the author would probably act if they understood the evidence. Tool-enforced trivia and generic preferences do not qualify.
 8. **Proportionate rigor:** the requested behavior matches the reliability and engineering practices evident in this repository.
 
-All eight conditions are gates. Report every candidate that passes them; zero findings is a valid and preferable result when none do.
+All applicable conditions are gates. Report every candidate that passes them; zero findings is a valid and preferable result when none do.
 
 ## Issue fit
 
-Translate explicit issue requirements, acceptance criteria, invariants, and non-goals into the private ledger before judging implementation fit.
+Translate explicit issue requirements, acceptance criteria, invariants, and non-goals into the private ledger before judging implementation fit. A satisfied (`met`) ledger entry is one line: the requirement, its disposition, and one evidence pointer. Only a `partial` or `not-verifiable` entry carries additional explanation.
 
 A requirement finding still needs concrete evidence. Admit it when the change demonstrably omits, contradicts, or misimplements an explicit requirement. Behavior not mentioned by the issue is a finding only when it violates an explicit non-goal, materially broadens permissions/API/data behavior, or creates another qualifying defect. Necessary implementation detail is not scope creep merely because the issue did not enumerate it.
 
-Judge the required outcome, not an imagined representation. When the issue permits multiple implementations and the current design plausibly satisfies it indirectly, do not demand a particular field, type, test, or schema. Ask a focused question only when that representation choice could change whether the requirement is met and repository evidence cannot establish the intent.
+Judge the required outcome, not an imagined representation. When the issue permits multiple implementations and the current design plausibly satisfies it indirectly, do not demand a particular field, type, test, or schema. Ask a focused question only when that representation choice could change whether the requirement is met and no static evidence could settle it.
 
-When code cannot establish an outcome, mark the ledger entry `not-verifiable`. Ask a question only if the answer could change the verdict and code, issue text, repository rules, tests, and history cannot supply it.
+When code cannot establish an outcome, mark the ledger entry `not-verifiable`. Publish a question only when all static sources available to the reviewer—code, issue and pull-request text, repository rules, tests, configuration, and history—cannot settle an outcome-changing fact. Empirical runtime or load behavior and an unrecorded product decision qualify; an incompletely researched or weakly supported candidate does not. A question has no priority, proposes no code change, and names the benchmark, measurement, maintainer decision, or other answer that would settle it.
 
 ## Repository rules
 
@@ -65,15 +65,19 @@ Before admitting a candidate, actively try to disprove it:
 1. Trace the alleged trigger through the current code.
 2. Check whether unchanged surrounding code prevents the failure.
 3. Check relevant callers, tests, types, configuration, and CI evidence.
-4. Confirm that the change introduced the behavior.
+4. For a Code candidate, confirm that the change introduced the behavior. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation.
 5. Confirm that the issue or pull-request description does not make it intentional.
 6. Verify any rule or requirement citation and its scope.
 7. Search current review threads and CI output for the same issue.
 8. Confirm a valid, minimal changed-line or file anchor.
 
-For propagation or synchronization drift, compare the peer artifacts at the merge-base and inspect the last commit that changed the shared rule or vocabulary. Use that history to decide whether the files are intentionally distinct or normally move in lockstep.
+For propagation or synchronization drift, first establish the peer set: search the whole repository, case-insensitively, for the rule's old wording as well as its new vocabulary — consumers restate a rule in their own words and keep the phrases the change replaced. A sweep confined to the changed file's directory, or keyed to one exact sentence, does not establish that no consumer exists. Then compare the peer artifacts at the merge-base and inspect the last commit that changed the shared rule or vocabulary; use that history to decide whether the files are intentionally distinct or normally move in lockstep.
 
-Drop the candidate when decisive evidence is missing or contradicts it. Preserve a focused question only when the missing fact could change the verdict.
+Drop the candidate when decisive evidence contradicts it or the reviewer has not completed the available static legwork. Preserve a focused question only under the static-unresolvability rule above.
+
+## Observations
+
+Route an accurate fact to `Observations` when it fails finding admission specifically on meaningful or proven consequence, or when a verifier reports a relevant aside outside its candidate verdicts. The fact still needs a decisive repository evidence pointer. An observation is explicitly non-actionable: it has no priority, action, stable finding id, or anchor comment, and its sentence uses descriptive language without `should` or `must`. The output contract caps and renders this summary-only channel. A fact that might meet the finding gates with more available static work remains a candidate, not an observation.
 
 ## Priorities and blocking
 
@@ -99,7 +103,7 @@ Write a short imperative title. Give three explicit fields: `Triggers when`, `Im
 
 Keep an ordinary finding to roughly 160 words before its trailer. Use at most two decisive evidence facts; exceed the budget only when the extra context prevents a materially wrong fix.
 
-Distinguish placement from repair. The `anchor` is the smallest honest changed range or changed file that identifies the finding. `fix` is the actual location the author or agent should edit when it differs from the anchor. A line anchor needs its range and diff side; a file anchor needs only `type: file` and `path`. If the selected forge cannot include a file-level comment in the same native review batch, retain the file anchor for identity and evidence but render the complete finding in the review body. Never attach it to an unrelated changed line merely to obtain an inline comment.
+Distinguish placement from repair. The `anchor` is the smallest honest changed range or changed file that identifies the finding. `fix` is the actual location the author or agent should edit when it differs from the anchor. A line anchor needs its range and diff side; a file anchor needs only `type: file` and `path`. For drift proven by several equally honest changed lines, choose the changed line that states the rule being drifted from; if more than one remains, choose the lexicographically first path, then the smallest range. If the selected forge cannot include a file-level comment in the same native review batch, retain the file anchor for identity and evidence but render the complete finding in the review body. Never attach it to an unrelated changed line merely to obtain an inline comment.
 
 Use a suggestion block only for a small exact replacement that completely fixes the finding. Preserve indentation and diff side. Otherwise request behavior in prose rather than guessing a patch.
 
@@ -108,6 +112,7 @@ Use a suggestion block only for a small exact replacement that completely fixes 
 Retain enough structure to verify, deduplicate, re-review, and publish safely:
 
 ```yaml
+# A survivor record; a dropped candidate retains only the compact ledger row described below.
 id: stable-path-and-concept-id
 anchor:
   type: line
@@ -135,6 +140,8 @@ support:
 requirement_source: issue-123/acceptance-criterion-2
 change: Reuse one key for every attempt of the logical charge
 verification: independent-confirmed
+disposition: survivor
+falsification: No unchanged guard prevents the timeout-after-commit trace
 ```
 
 For a whole-file finding, use this anchor shape instead:
@@ -145,6 +152,6 @@ anchor:
   path: skills/job-runner/SKILL.md
 ```
 
-`claim` is a flat, falsifiable statement about the changed artifact. `support` records the primary reviewer's process, reasoning, and uncertainty; it stays private and is withheld from an independent verifier. Evidence citations may be passed to the verifier without the support narrative.
+`claim` is a flat, falsifiable statement about the changed artifact. `support` records the primary reviewer's process, reasoning, and uncertainty; it stays private and is withheld from an independent verifier. It is budgeted at three entries total across `inspected`, `checks`, and `uncertainty`, each one line; anything longer is argument, and argument is not evidence. Evidence citations may be passed to the verifier without the support narrative. Keep `disposition` and its decisive falsification evidence for every raised candidate, including dropped candidates, so a clean-verdict verifier can attack the acquittals. For every candidate that is not a survivor, the retained ledger row is at most a one-line `claim`, the `kind`, the one-word `disposition`, a one-line falsification reason, and one decisive evidence pointer in `path:line` form; survivors keep the full record shape shown above.
 
-Only records that pass primary falsification may be rendered. Candidates that meet the independent-verification threshold in `SKILL.md` must also be `independent-confirmed`; other candidates may be `primary-confirmed`. Confidence is an internal admission decision, not a number shown to the author.
+Only records that pass primary falsification may be rendered. Candidates that meet the independent-verification threshold in `SKILL.md` must also be `independent-confirmed`; other candidates may be `primary-confirmed`. A verifier-confirmed candidate remains `independent-confirmed` when a correction lowers its action or priority. Kinds are defined by the output contract; use `concurrency` or `invariant` when the claim breaks a cross-path state rule so the verifier performs its bug-class check. Confidence is an internal admission decision, not a number shown to the author.

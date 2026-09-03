@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a would-be code-review-publish-5a review against the mechanical
+"""Validate a would-be code-review-publish review against the mechanical
 rules of ``references/output-contract.md`` and ``references/review-rubric.md``.
 
 The reviewer keeps every semantic judgment (is the evidence real, is the fix
