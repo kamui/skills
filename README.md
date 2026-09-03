@@ -16,6 +16,7 @@ To install only one skill:
 npx skills@latest add kamui/skills --skill code-review-publish
 npx skills@latest add kamui/skills --skill code-review-address
 npx skills@latest add kamui/skills --skill implement-publish
+npx skills@latest add kamui/skills --skill code-review-publish-legacy  # legacy, kept for historical purposes
 ```
 
 The installer asks which supported agents and installation scope to use.
@@ -46,17 +47,17 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-All three skills are model-invocable, so a driving agent can run the loop end to end. Each is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+Three skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
 ## Skills
 
-The three skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. A shared review protocol is what makes the hand-offs work; see [The review protocol](#the-review-protocol).
+The skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. A shared review protocol is what makes the hand-offs work; see [The review protocol](#the-review-protocol).
 
 ### `code-review-publish`
 
-Reviews a change and publishes it through the forge's review system: the summary as the review body, and one line comment per finding on the code that finding names. Where a forge has no review system or refuses the review, the summary falls back to a single pull-request comment. Nothing is published to the originating issue, which serves only as the spec source.
+Reviews an issue-linked pull request and publishes one forge-native review: the summary as the review body, findings as comments on the code they name, and replies on the threads of earlier findings it settles. One integrated reviewer inspects the complete merge-base diff against a private evidence rubric; every `must-fix`, security, data-integrity, and compatibility finding is verified in a fresh context before publication, and a mechanical validator checks the assembled payload before anything is written.
 
-The skill uses the best matching model-invoked code-review skill available. If none is installed, the model performs the review directly. It keeps **Code** findings about correctness and implementation quality separate from **Requirements** findings about fidelity to the originating spec, and reaches one status — `Changes Requested`, `Needs Information`, or `Approved` — so the author knows whether anything stops the merge before reading a single finding.
+Findings, questions, and observations are separate channels, so uncertainty routes to a question instead of becoming a finding an agent would dutifully "fix". A run trailer records the workflow version and a context digest, so an unchanged pull request is reported rather than re-reviewed. This skill supersedes `code-review-publish-legacy`, which is kept only for historical purposes.
 
 It activates when a caller asks to review an issue-linked pull request and intends to post comments or a review to that pull request. Read-only review requests do not activate it. You can also invoke it directly:
 
@@ -65,6 +66,14 @@ $code-review-publish
 ```
 
 The host agent needs access to the pull request to publish the review.
+
+### `code-review-publish-legacy`
+
+The former `code-review-publish`, kept for historical purposes. It reviews a change along two axes — **Code** (correctness and implementation quality) and **Requirements** (fidelity to the originating spec) — and publishes the findings as line comments under one status, using the shared review protocol below. It is not model-invocable: `code-review-publish` should be used instead, and this skill runs only when explicitly invoked by name:
+
+```text
+$code-review-publish-legacy
+```
 
 ### `code-review-address`
 
@@ -96,7 +105,7 @@ The host agent needs access to the forge to create the pull request.
 
 ## The review protocol
 
-`code-review-publish` and `code-review-address` each ship `references/review-protocol.md`, the contract they hand work across. It fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
+`code-review-publish-legacy` and `code-review-address` each ship `references/review-protocol.md`, the contract they hand work across. It fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
 
 ```markdown
 **[Code] Duplicated validation in `parseOrder`**
@@ -122,6 +131,6 @@ Findings live on the lines they name, never bundled into the review body — the
 
 Resolving every thread is what makes a round invisible: the forge collapses resolved threads, so a round that answered everything renders like one that did nothing. `code-review-address` first reconciles the pull request title and description with the resulting diff and originating spec, preserving issue links and context that remain valid. It then closes the round with a single general comment — the head it addressed, counts by disposition linked to their threads, what still needs someone, the checks run — and an ask for a re-review that puts the round in the reviewer's queue. Where the forge routes review requests, that ask is a review request; where it will not route one — no review requests at all, or the reviewer is the pull request's own author — the summary carries a line mentioning the reviewer, which notifies them just the same. The forge's refusal is never itself reported on the pull request. One comment however large the round; the detail stays in the threads.
 
-Re-reviewing, `code-review-publish` verdicts each prior finding against the code rather than against its reply — `fixed`, `accepted`, `obsolete`, or `not-fixed`. A decline does not close its own thread: the addresser states the position, and the reviewer's `accepted` verdict is what settles it, so a disagreement cannot be closed by the party that lost it. A finding declined once and then verified still unfixed is **disputed**: it stops being re-posted and is listed in the summary for a person to settle. Two rounds is the cap on any one finding, which is what keeps an unattended loop from re-litigating the same point forever.
+Re-reviewing, `code-review-publish-legacy` verdicts each prior finding against the code rather than against its reply — `fixed`, `accepted`, `obsolete`, or `not-fixed`. A decline does not close its own thread: the addresser states the position, and the reviewer's `accepted` verdict is what settles it, so a disagreement cannot be closed by the party that lost it. A finding declined once and then verified still unfixed is **disputed**: it stops being re-posted and is listed in the summary for a person to settle. Two rounds is the cap on any one finding, which is what keeps an unattended loop from re-litigating the same point forever.
 
 The two copies of the file are byte-identical because skills install one at a time and neither can point at the other's copy. Edit them together.

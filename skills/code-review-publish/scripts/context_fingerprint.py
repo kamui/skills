@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute the deterministic context digest used by code-review-publish-5a."""
+"""Compute the deterministic context digest used by code-review-publish."""
 
 from __future__ import annotations
 
