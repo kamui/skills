@@ -31,3 +31,5 @@ these columns against the original GLM-5.3-Flash round or against test 1's Sonne
 
 The pinned target, its manifest, and the original four runs' data are in
 [`../prototype-runs-2026-09-01-test-2/`](../prototype-runs-2026-09-01-test-2/).
+
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
