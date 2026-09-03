@@ -96,3 +96,5 @@ No `publication-decision.md`: nothing was published; all four runs were data-onl
 The pinned inputs and run files permit a replay against the same head. The clone must be offline
 (`origin` a local path) with the phase-1 packet supplied verbatim; the PR is merged, so derived
 statuses are advisory reconstructions, not live review state.
+
+See [`addendum-2026-09-03.md`](addendum-2026-09-03.md), [`v2a-run.md`](v2a-run.md), and [`v5a-run.md`](v5a-run.md) for the 2026-09-03 v2a/v5a re-test against this same pinned target, run on Sonnet 5. An earlier 2026-09-02 round of the same two prototypes ran on `claude-fable-5-1` and is kept in [`../prototype-runs-2026-09-01-test-2-fable/`](../prototype-runs-2026-09-01-test-2-fable/). Note for anyone reading this record's "all four runs found it clean" conclusion: the Fable round found a real, verifier-confirmed defect in this change (`src/cluster_legacy.c:5428`) that none of the four original runs raised — and the Sonnet round then missed it. See the 2026-09-03 addendum for what that does and does not license.
