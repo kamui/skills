@@ -33,3 +33,5 @@ had previously reported. It also raised an AC4 question that held the derived st
 Run conditions, model verification, the packet reconstruction, the side-by-side table, and the
 regression watch covering all three of this round's runs live in the shared addendum at
 [`../prototype-runs-2026-09-01-test-1/addendum-2026-09-02.md`](../prototype-runs-2026-09-01-test-1/addendum-2026-09-02.md).
+
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
