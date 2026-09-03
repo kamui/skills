@@ -144,7 +144,7 @@ def digest(payload: Any) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Print the code-review-publish context SHA-256 for structured JSON input."
+        description="Print the v5a review context SHA-256 for a structured JSON input."
     )
     parser.add_argument("input", nargs="?", default="-", help="JSON file, or - for stdin")
     parser.add_argument("--json", help="JSON value supplied directly instead of a file")

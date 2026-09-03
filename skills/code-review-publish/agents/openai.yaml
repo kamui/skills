@@ -1,4 +1,4 @@
 interface:
-  display_name: "Publish Code Review (Calibrated Hybrid)"
+  display_name: "Publish Code Review"
   short_description: "Issue-aware PR review with calibrated verification"
   default_prompt: "Use $code-review-publish to review the current pull request and publish one high-signal review."
