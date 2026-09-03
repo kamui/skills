@@ -122,4 +122,4 @@ modern Python runtime.
 ## Publication decision
 
 V4's output was published to PR #66 after the first three runs finished. V5 ran later and was not
-published. See `publication-decision.md`.
+published.

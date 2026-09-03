@@ -14,8 +14,7 @@ Raw records: [method and inputs](README.md),
 [v3](v3-run.md),
 [v4](v4-run.md),
 [v5](v5-run.md),
-[comparison data](comparison-data.md), and
-[publication decision](publication-decision.md).
+[comparison data](comparison-data.md).
 
 A second controlled run of the same four prototypes, against a merged upstream C
 pull request with no originating issue, is analyzed separately in
@@ -337,9 +336,8 @@ validated anchors, fingerprinted context, and submitted one batch. V2/v3 were
 withheld. V5 ran later and was withheld; posting it after v4 would test re-review,
 not the controlled first-review condition. Its would-be output names the same two
 items at P3/P3 with the same `Approved (advisory)` status, so nothing about the
-published artifact would change materially. The
-[publication record](publication-decision.md)
-says this selection was not a categorical prototype verdict.
+published artifact would change materially. This selection was not a categorical
+prototype verdict.
 
 ## Recommendation and unresolved experiments
 
