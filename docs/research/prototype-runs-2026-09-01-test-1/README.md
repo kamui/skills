@@ -82,3 +82,5 @@ Only the skill under test:
 The pinned inputs and run files permit a replay against the same head. Because v4 is now published
 live, a controlled replay must use the recorded `none` prior-review state rather than reading current
 PR review state; publication should remain disabled unless the test explicitly evaluates re-review.
+
+See [`addendum-2026-09-02.md`](addendum-2026-09-02.md) for the v2a/v5a re-test against this same pinned target, added after handoffs 5 and 6's fixes, and [`addendum-2026-09-03.md`](addendum-2026-09-03.md) for the model-matched post-C9 re-run that closes the confound the first addendum disclosed. v2a was run three times: pre-C9 ([`v2a-run-pre-c9.md`](v2a-run-pre-c9.md), Sonnet 5), post-C9 on Fable 5.1 (kept in [`../prototype-runs-2026-09-01-test-1-fable/`](../prototype-runs-2026-09-01-test-1-fable/)), and post-C9 on Sonnet 5 ([`v2a-run.md`](v2a-run.md)) — the last of which establishes that the recovered recall is attributable to the C9 fix rather than to a model change.
