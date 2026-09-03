@@ -1,6 +1,6 @@
 # Prototype run data — v2, v3, v4, v5 against `tokio-rs/tokio#7757` (test 3)
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`.
 
 **2026-09-01.** Raw outputs and metadata from a third controlled comparison of the same four
 code-review prototypes against a different pull request. **Data only** — the analysis of this run
@@ -143,4 +143,4 @@ objects.
 
 See [`addendum-2026-09-03.md`](addendum-2026-09-03.md) for the 2026-09-03 v2a/v5a re-test against this same pinned target, run on Sonnet 5 with the mirror **truncated at the merge-base** — which closes the hindsight-contamination problem this README discloses above. Headline: v5a found the ground-truth defect and its verifier corrected the fix to the invariant level; v2a missed it, explicitly acquitting the two branches that carry it, and published a different (also verifier-confirmed) stranding defect instead. See [`v2a-run.md`](v2a-run.md) and [`v5a-run.md`](v5a-run.md).
 
-The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-aggregate-tests-1-4-v2a-v5a.md`](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md).

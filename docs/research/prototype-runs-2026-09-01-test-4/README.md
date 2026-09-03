@@ -2,7 +2,7 @@
 
 > **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
 > that workflow to `skills/code-review-publish` on `main`; new experiments should invoke
-> `/code-review-publish` without the `-5` suffix. “v2a” is `code-review-deep-publish` (PR #18, the
+> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`. “v2a” is `code-review-deep-publish` (PR #18, the
 > Panel line) and “v5a” is `code-review-publish-5a` (PR #19, the Skeptic line).
 
 **2026-09-03.** Raw outputs and metadata from a fourth controlled comparison of the code-review
@@ -298,4 +298,4 @@ fresh bare repo and confirming the negative `git cat-file -e` checks above. The 
 merged and its withdrawal is public record, so a replay done today cannot un-know GT-2 — the
 truncation only prevents the *reviewing agent* from reading it out of local git objects.
 
-The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-aggregate-tests-1-4-v2a-v5a.md`](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md).

@@ -1,12 +1,11 @@
 # Aggregate analysis — code-review prototypes v2–v5 across the three 2026-09-01 test runs
 
-> **Scope, read first.** This file was renamed to `prototype-runs-test-1-to-4-aggregate-analysis.md`
-> ahead of its content. **The analysis below still covers tests 1–3 only.** Test 4
-> (`microsoft/playwright#29698`) is recorded in
-> [`prototype-runs-2026-09-01-test-4/`](prototype-runs-2026-09-01-test-4/) but has **not** been
-> folded in here yet; the v2a/v5a cross-run synthesis lives separately in
-> [`prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
-> Folding test 4 in is a pending synthesis pass.
+> **Scope.** Tests 1–3 only, prototypes v2–v5, the first twelve runs. This is the earlier of the two
+> aggregate analyses. The later one —
+> [`prototype-runs-aggregate-tests-1-4-v2a-v5a.md`](prototype-runs-aggregate-tests-1-4-v2a-v5a.md) —
+> covers all four tests and all twenty-six runs and grades the patched prototypes v2a and v5a. Read
+> that one for the current picture; read this one for the contract the patched prototypes were built
+> against.
 
 > **Naming status.** “v5” is the historical prototype name used by this record. PR #17 promoted that
 > workflow to `skills/code-review-publish`; **PR #42 (2026-09-03) then replaced it there with v5a**,
