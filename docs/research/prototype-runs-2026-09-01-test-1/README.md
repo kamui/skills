@@ -74,7 +74,6 @@ Only the skill under test:
 - `v4-run.md` — output and metadata
 - `v5-run.md` — output and metadata
 - `comparison-data.md` — side-by-side metadata table, extended after the v5 run
-- `publication-decision.md` — which run's output was published, and why
 - `evaluation.md` — the analysis of this run
 
 ## Reproducing
