@@ -26,6 +26,8 @@ these columns against the original GLM-5.3-Flash round or against test 1's Sonne
   follow-up verifier batches
 - [`addendum-2026-09-02.md`](addendum-2026-09-02.md) — run conditions, model verification, packet
   reconstruction, mirror truncation, side-by-side table, finding-level agreement, regression watch
+- [`comparison-data.md`](comparison-data.md) — normalized side-by-side measurements
+- [`evaluation.md`](evaluation.md) — analysis of the shared defect, mechanism behavior, and limits
 
 The pinned target, its manifest, and the original four runs' data are in
 [`../prototype-runs-2026-09-01-test-2/`](../prototype-runs-2026-09-01-test-2/).
