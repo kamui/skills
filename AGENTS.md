@@ -14,7 +14,7 @@ Use the single-context layout. See `docs/agents/domain.md`.
 
 ### Mirrored reference
 
-`references/review-protocol.md` is byte-identical in `code-review-publish` and `code-review-address`. Skills install one at a time, so neither can point at the other's copy. Edit both together and `diff` them before committing.
+`references/review-protocol.md` is byte-identical in `code-review-publish-legacy` and `code-review-address`. Skills install one at a time, so neither can point at the other's copy. Edit both together and `diff` them before committing.
 
 ### Global skill sync
 
