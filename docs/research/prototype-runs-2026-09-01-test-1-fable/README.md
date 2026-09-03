@@ -27,6 +27,8 @@ had previously reported. It also raised an AC4 question that held the derived st
 
 - [`v2a-run.md`](v2a-run.md) — the run record, including both finders' ledgers and the verifier's
   verdicts verbatim
+- [`comparison-data.md`](comparison-data.md) — normalized measurements and cross-model sensitivity
+- [`evaluation.md`](evaluation.md) — analysis of the Fable result and its evidentiary limits
 
 Run conditions, model verification, the packet reconstruction, the side-by-side table, and the
 regression watch covering all three of this round's runs live in the shared addendum at
