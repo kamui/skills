@@ -7,7 +7,7 @@
 > the Skeptic line). Neither branch moved during the runs analyzed here.
 
 **2026-09-03.** Successor to
-[`prototype-runs-2026-09-01-aggregate-analysis.md`](prototype-runs-2026-09-01-aggregate-analysis.md).
+[`prototype-runs-test-1-to-4-aggregate-analysis.md`](prototype-runs-test-1-to-4-aggregate-analysis.md).
 That document synthesized twelve runs of v2–v5 on three targets and set the contract the two
 patched prototypes were built against (handoffs 1 and 2, kept in the untracked `handoffs/` working directory). This one covers every run recorded under
 `docs/research/` since — fourteen more, on four targets, two model tiers — and grades every design
