@@ -1,6 +1,17 @@
 # Aggregate analysis — code-review prototypes v2–v5 across the three 2026-09-01 test runs
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+> **Scope, read first.** This file was renamed to `prototype-runs-test-1-to-4-aggregate-analysis.md`
+> ahead of its content. **The analysis below still covers tests 1–3 only.** Test 4
+> (`microsoft/playwright#29698`) is recorded in
+> [`prototype-runs-2026-09-01-test-4/`](prototype-runs-2026-09-01-test-4/) but has **not** been
+> folded in here yet; the v2a/v5a cross-run synthesis lives separately in
+> [`prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
+> Folding test 4 in is a pending synthesis pass.
+
+> **Naming status.** “v5” is the historical prototype name used by this record. PR #17 promoted that
+> workflow to `skills/code-review-publish`; **PR #42 (2026-09-03) then replaced it there with v5a**,
+> so `/code-review-publish` now invokes v5a, `skills/code-review-publish-legacy` is the v1 legacy
+> reviewer, and v5 itself is no longer present on `main` (pin it from `571f31d` if needed).
 
 **2026-09-01.** Synthesis of the three controlled comparisons of `code-review-publish-2` through
 `code-review-publish-5`:
