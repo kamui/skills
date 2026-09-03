@@ -1,125 +1,152 @@
-# Comparison data — v2, v3, v4, v5 on `kamui/shortlist#66`
+# Comparison data — v2–v5 plus v2a/v5a on `kamui/shortlist#66`
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
+> that workflow to `skills/code-review-publish` on `main`; new work should invoke
+> `/code-review-publish` without the `-5` suffix.
 
-**2026-09-01. Data only.** Every number here is measured or directly observed; the analysis is in
-[`evaluation.md`](evaluation.md).
+**2026-09-01–03. Data only.** This is a from-scratch consolidation of every run record in this
+directory: [v2](v2-run.md), [v3](v3-run.md), [v4](v4-run.md), [v5](v5-run.md),
+[v2a before C9](v2a-run-pre-c9.md), [v2a after C9](v2a-run.md), and [v5a](v5a-run.md).
+Interpretation is in [evaluation.md](evaluation.md). The separate
+[Fable 5.1 v2a run](../prototype-runs-2026-09-01-test-1-fable/comparison-data.md) is not pooled into
+these tables.
 
-All four runs used the same model and harness — Claude Opus 5 (1M context) at High reasoning under
-the Claude Code CLI — so the cost columns are directly comparable. See
-[conditions held constant](README.md#conditions-held-constant).
+## Comparison boundaries
 
-## Cost and shape
+There are two internally useful cohorts, not one seven-way cost experiment:
 
-| | v2 | v3 | v4 | v5 |
-| --- | --- | --- | --- | --- |
-| Agents spawned | 3 | 1 | 2 | 2 |
-| **Sub-agent tokens** | **253,712** | **110,630** | **175,824** | **174,563** |
-| — breakdown | 91,333 + 99,834 finders; 62,545 verifier | 110,630 reviewer | 128,616 reviewer; 47,208 verifier | 128,013 reviewer; 46,550 verifier |
-| Tool uses | 118 | 49 | 78 | 64 |
-| Wall clock (sub-agents) | ~851 s (finders parallel) | ~663 s | ~879 s | ~986 s |
-| Verifier used? | yes, mandatory | no (frequent path) | yes, conditional threshold met | yes, one `must-fix` + one batched `consider` |
-| Verifier share of tokens | 25% | — | 27% | 27% |
+| Cohort        | Runs                         | Model / harness                                  | What may be compared                                                 |
+| ------------- | ---------------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
+| Original      | v2, v3, v4, v5               | Claude Opus 5 (1M), High reasoning / Claude Code | Output, tokens, tools, and run shape within the four-way cohort      |
+| Sonnet retest | v2a pre-C9, v2a post-C9, v5a | `claude-sonnet-5`, default reasoning / `t3code`  | Finding behavior; the two v2a runs form a controlled C9 before/after |
+
+The model, reasoning setting, harness, metering boundary, and run dates differ between cohorts.
+Their cost columns must not be differenced. V2a and v5a were also designed after their authors had
+seen this target, so all retest results are development-set mechanism checks, not holdout estimates
+of general review quality.
+
+## Cost and shape — original cohort
+
+|                  | v2                                       | v3                  | v4                                         | v5                                                   |
+| ---------------- | ---------------------------------------- | ------------------- | ------------------------------------------ | ---------------------------------------------------- |
+| Architecture     | 2 axis finders + mandatory verifier      | integrated reviewer | integrated reviewer + conditional verifier | integrated reviewer + consequence-triggered verifier |
+| Agents spawned   | 3                                        | 1                   | 2                                          | 2                                                    |
+| Sub-agent tokens | **253,712**                              | **110,630**         | **175,824**                                | **174,563**                                          |
+| Breakdown        | 91,333 + 99,834 finders; 62,545 verifier | 110,630 reviewer    | 128,616 reviewer; 47,208 verifier          | 128,013 reviewer; 46,550 verifier                    |
+| Tool uses        | 118                                      | 49                  | 78                                         | 64                                                   |
+| Wall clock       | ~851 s                                   | ~663 s              | ~879 s                                     | ~986 s                                               |
+| Verifier         | mandatory; ran                           | optional; skipped   | conditional; ran                           | consequence-triggered; ran                           |
+
+V3 used 44% of v2's tokens. V4 and v5 were within 1% of one another and each spent about 27% of
+its measured tokens on verification.
+
+## Cost and shape — Sonnet retest
+
+Nested-agent metering differs by run, so the two token rows are reported separately rather than
+collapsed into a misleading total.
+
+|                                | v2a pre-C9                                  | v2a post-C9                                                | v5a                                                  |
+| ------------------------------ | ------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
+| Skill commit                   | `5db5903`                                   | `87c68a9`                                                  | `c5f76df`                                            |
+| Architecture                   | 2 axis finders + mandatory verifier         | 2 axis finders + mandatory verifier                        | integrated reviewer + consequence-triggered verifier |
+| Child agents                   | 3                                           | 3                                                          | 1 verifier                                           |
+| Primary / outer-wrapper tokens | 182,133                                     | 218,249                                                    | 160,853 for the whole outer run                      |
+| Internal child-agent tokens    | 246,621                                     | 272,657 (112,792 + 103,578 + 56,287)                       | not separately broken out                            |
+| Child-agent tool uses          | 106                                         | 107                                                        | included in the reported 64-tool outer run           |
+| Wall clock                     | ~726 s child-agent path; ~1,551 s outer run | ~20 min finder dispatch through verifier; ~25–30 min total | ~758 s                                               |
+| Verifier                       | ran; 1 candidate                            | ran; 5 candidates                                          | ran; 1 survivor                                      |
+
+The post-C9 v2a record calls the complete run four agents when it includes the outer orchestrator
+and three when it counts spawned children. This table uses the latter definition consistently.
 
 ## Output
 
-| | v2 | v3 | v4 | v5 |
-| --- | --- | --- | --- | --- |
-| Candidates raised | 6 (+1 passed-along) | 10 | 10 | 6 |
-| Dropped before publication | 2 refuted, 1 merged | 9 dropped | 8 dropped in falsification, 0 refuted | 4 in falsification, 0 refuted |
-| **Findings** | **4** | **1** | **2** | **2** |
-| Blocking findings | 2 | 1 | 0 | 0 |
-| Priority spread | P1, P1, P2, P2 | P2 | P2, P3 | P3, P3 |
-| Questions | 0 | 0 | 0 to author; 1 to orchestrator | 0 |
-| Coverage reported | complete | complete, fetch gap disclosed | incomplete → complete after recovery | complete |
-| **Derived status** | Changes Requested (advisory) | Changes Requested (advisory) | **Approved (advisory)** | **Approved (advisory)** |
+|                             | v2                             | v3                            | v4                             | v5             | v2a pre-C9   | v2a post-C9                           | v5a                   |
+| --------------------------- | ------------------------------ | ----------------------------- | ------------------------------ | -------------- | ------------ | ------------------------------------- | --------------------- |
+| Candidates raised           | 6 (+1 passed along)            | 10                            | 10                             | 6              | 1            | 5                                     | 4                     |
+| Pre-publication disposition | 2 refuted, 1 merged            | 9 dropped                     | 8 dropped                      | 4 dropped      | 0 refuted    | 5 confirmed, 2 cross-axis merges      | 3 refuted             |
+| **Findings**                | **4**                          | **1**                         | **2**                          | **2**          | **1**        | **3**                                 | **1**                 |
+| Blocking findings           | 2                              | 1                             | 0                              | 0              | 0            | 1                                     | 1                     |
+| Priority / action           | P1 must-fix ×2; P2 consider ×2 | P2 blocking                   | P2 consider; P3 consider       | P3 consider ×2 | P3 consider  | P1 must-fix; P1 consider; P3 consider | P2 must-fix           |
+| Questions                   | 0                              | 0                             | 0 to author; 1 to orchestrator | 0              | 0            | 0                                     | 0                     |
+| Coverage                    | complete                       | complete; fetch gap disclosed | incomplete, then recovered     | complete       | complete     | complete                              | complete              |
+| **Derived status**          | **Changes Requested**          | **Changes Requested**         | **Approved**                   | **Approved**   | **Approved** | **Changes Requested**                 | **Changes Requested** |
+
+All statuses are advisory. V4 was the only review actually published; every other run was data-only.
 
 ## Finding-level agreement
 
-Twelve distinct items were considered by at least one run.
+“Dropped” includes finder acquittal, primary falsification, or verifier refutation. “Missed” means
+the item is absent from the run's candidate, acquittal, question, and observation records.
 
-| Item | v2 | v3 | v4 | v5 |
-| --- | --- | --- | --- | --- |
-| Narrow skill's closed refresh list | **confirmed** P1 must-fix | **admitted** P2 blocking | **confirmed** P2 consider | **confirmed** P3 consider (verifier-downgraded from P2 must-fix) |
-| `search-bundle-format.md:208` five-kind enumeration | **confirmed** P1 must-fix | dropped (gates 1/4) | **confirmed** P3 consider | **confirmed** P3 consider |
-| `validate-completion.py` commerce-only volatile regex | **confirmed** P2 consider | dropped (gates 2/4/6) | not raised | not raised |
-| Freshness expectation has no recording site | **confirmed** P2 consider | not raised (AC4 met) | dropped (gate 2, pre-existing at base) | not raised (AC4 met; `Observed` already required on every Evidence record) |
-| `research-protocol.md` commerce branch excludes generalized claims | **refuted** | not raised | not raised | dropped (per-bundle-type Freshness split cannot fire) |
-| Attestation test asserts complete on "incomplete" bundle | **refuted** (factually wrong) | dropped #5 | dropped #1 | acquitted pre-candidate by executing the validator |
-| `PROJECT_BRIEF.md` / ADR 0017 stale seed lists | not raised | dropped #4 | dropped #3 | dropped (not lockstep peers at base) |
-| `shortlist-research/SKILL.md:39` omits refine/mark-inapplicable | acquitted, not raised | dropped #3 | dropped #2 | not raised |
-| Schema bump for widened enum | not raised | not raised | dropped #6 | no compatibility break found |
-| `narrowing-protocol.md:68` cites "the ledger" in a commerce-shared section | not raised | not raised | not raised | dropped (gate 4) |
-| Streaming fixture record 8's negative `Why it applies` | not raised | not raised | not raised | dropped (base fixture uses the identical idiom) |
-| Freshness-attestation timing | not raised | not raised | not raised | not raised |
+| Item                                                                | v2                     | v3                      | v4                      | v5                         | v2a pre-C9                           | v2a post-C9               | v5a                        |
+| ------------------------------------------------------------------- | ---------------------- | ----------------------- | ----------------------- | -------------------------- | ------------------------------------ | ------------------------- | -------------------------- |
+| Narrow skill's closed refresh list (`shortlist-narrow/SKILL.md:46`) | P1 must-fix            | P2 blocking             | P2 consider             | P3 consider                | **missed**                           | P1 must-fix; both axes    | P2 must-fix                |
+| Bundle contract's stale Kind list (`search-bundle-format.md:208`)   | P1 must-fix            | dropped                 | P3 consider             | P3 consider                | P3 consider                          | P1 consider; both axes    | not raised                 |
+| Commerce-only timestamp regex (`validate-completion.py:2949`)       | **P2 consider**        | dropped                 | not raised              | not raised                 | not raised                           | **missed**                | observation, not a finding |
+| AC4 freshness expectation has no defined carrier                    | **P2 consider**        | requirement marked met  | dropped                 | requirement marked met     | acquitted as pre-existing/unaffected | not raised                | not raised                 |
+| Research skill still says obligations are add-only                  | acquitted / not raised | dropped                 | dropped                 | not raised                 | not raised                           | P3 consider               | not raised                 |
+| Attestation test treats an incomplete fixture as complete           | refuted                | dropped after execution | dropped after execution | acquitted before candidacy | not raised                           | acquitted after tests     | not raised                 |
+| ADR / `PROJECT_BRIEF.md` obligation lists                           | not raised             | dropped                 | dropped                 | dropped                    | observations / acquittals            | observations / acquittals | observations / acquittals  |
 
-**All four confirmed the Narrow closed refresh list**, with four different calibrations: P1
-`must-fix`, P2 blocking, P2 `consider`, and P3 `consider`.
+The later 2026-09-02 addendum describes the timestamp regex and AC4 carrier as new to the Fable
+run. The primary [v2 record](v2-run.md) already contains the same regex at the same fix line as F3
+and the AC4 carrier as F4. This rewrite uses the raw run record as the source of truth and treats
+the later Fable results as independent
+rediscoveries, not first discoveries.
 
-**Three of four confirmed `search-bundle-format.md:208`** — v2 as P1 `must-fix`, v4 and v5 as P3
-`consider`. Only v3 dropped it.
+## Requirement-ledger comparison
 
-**Independently reached, same conclusion in all four:** every run killed the attestation-test
-candidate, and all but v2 did so by executing the validator and finding the mutation is required
-setup. V2 reached it through a verifier refutation of an out-of-axis observation one finder passed
-along; v3 and v4 reached it inside falsification; v5 acquitted it before it became a candidate.
+The original issue has 10 acceptance criteria, but the post-C9 v2a run restated them as 11 rows.
+Counts are therefore run-native and are not a common score.
 
-**Maximum disagreement:** `search-bundle-format.md:208` — v2 P1 blocking versus v3 dropping it
-entirely, with v4 and v5 landing together at P3 non-blocking.
+|             | Met | Partial / not met                           | Unverifiable / cannot tell |
+| ----------- | --: | ------------------------------------------- | -------------------------: |
+| v2          |   7 | 3 (AC1, AC4, AC6)                           |                          0 |
+| v3          |   8 | 2 (AC5 protocol-only, AC6 partial)          |                          0 |
+| v4          |  10 | 0; three marked “met, with propagation gap” |                          0 |
+| v5          |  10 | 0                                           |                          0 |
+| v2a pre-C9  |   9 | 1                                           |                          0 |
+| v2a post-C9 |   9 | 2                                           |                          0 |
+| v5a         |   9 | 1                                           |                          0 |
 
-**Only v5 raised** the `narrowing-protocol.md:68` ledger-scope imprecision and the streaming
-fixture's negative `Why it applies`; it dropped both.
+All original runs and the post-C9 v2a run executed both suites: 290 Python and 60 Node tests passed.
+V5a re-ran the 290 Python tests and deliberately omitted the unrelated Node suite, disclosing that
+choice in its coverage line.
 
-## Requirement ledger comparison — issue #45, 10 criteria
+## Verifier behavior
 
-| | v2 | v3 | v4 | v5 |
-| --- | --- | --- | --- | --- |
-| Met | 7 | 8 | 10 (3 flagged "met, with propagation gap") | 10 |
-| Partial / not met | 3 (AC1, AC4, AC6) | 2 (AC5 protocol-only, AC6 partial) | 0 | 0 |
-| Unverifiable | 0 | 0 | 0 | 0 |
-| Scope creep found | 0 (explicit pass) | not separately reported | 0 (non-goals explicitly checked) | 0 (non-goal checked) |
+| Run         | Input / trigger                            | Verdicts                        | Material effect                                                                           |
+| ----------- | ------------------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------- |
+| v2          | every candidate; finder `support` withheld | 4 confirmed, 2 refuted, 1 merge | removed two false claims, merged a duplicate, corrected triggers; blockers remained       |
+| v3          | not invoked                                | —                               | sole blocker received no fresh check                                                      |
+| v4          | 2 survivors; `support` withheld            | 2 confirmed                     | corrected Narrow mechanism and cut an overstated bundle impact                            |
+| v5          | 2 survivors; claim and raw citations only  | 2 confirmed                     | replaced a weak trigger and changed P2 must-fix to P3 consider, moving status to Approved |
+| v2a pre-C9  | 1 candidate; `support` withheld            | 1 confirmed                     | narrowed the bundle-contract trigger; no action change                                    |
+| v2a post-C9 | 5 candidates; `support` withheld           | 5 confirmed, 2 merges           | retained the Narrow item as must-fix; corrected the Research-skill trigger                |
+| v5a         | sole must-fix survivor                     | 1 confirmed                     | confirmed the Narrow item and its blocking action                                         |
 
-All four verified AC10 by running both suites: 290 Python tests and 60 Node tests, green under a
-modern Python runtime.
+## Distinguishing observations
 
-## Verifier behavior, where one ran
+- The model-matched v2a before/after is the cleanest mechanism result in this directory. C9 changed
+  the Narrow item from absent in both ledgers to independently raised by both axes. It also increased
+  the returned finding set from one to three.
+- C9 did not make recall exhaustive. The post-C9 Sonnet run missed the validator regex even though
+  its reported old-fragment sweep should have approached it, and its Requirements finder failed to
+  return the required row-wise disposition ledger.
+- V5a's repo-wide peer sweep found the exact Narrow sibling it was introduced to find. It did not
+  reproduce the bundle-contract or regex findings, and it made the Narrow drift blocking.
+- The same Narrow fact spans the full action range: P1/P2 blocker in four runs and P2/P3 advisory in
+  three. Agreement on the defect is much stronger than agreement on merge consequence.
+- V5 is still the only run here whose verifier crossed the blocking boundary in the safer direction
+  while preserving the finding.
+- The separate Fable run found four advisory drifts and produced the corpus's only `plausible`
+  verdict on this target. Its different model and interrupted execution keep it outside the cost
+  cohort, but its unique recall is material evidence of run variance.
 
-| | v2 | v4 | v5 |
-| --- | --- | --- | --- |
-| Input discipline | claims only, `support` withheld | claims only, `support` withheld | claim and raw citations only, `support` withheld |
-| Candidates submitted | 7 | 2 | 2 (1 mandatory, 1 batched under the `consider` clause) |
-| Verdicts | 4 confirmed, 2 refuted, 1 merge | 2 confirmed, 0 refuted, 0 merges | **2 confirmed**, 0 refuted, 0 merges |
-| Corrections made | 2 triggers corrected, 1 refinement | 1 trigger basis corrected, 1 requirement citation reordered, **1 impact cut as "not establishable"** | 1 impact refined plus a missed lockstep commit supplied; **1 trigger example replaced and the record downgraded P2→P3, must-fix→consider, requirement→maintainability** |
-| Priority moves | 0 | 0 (explicitly said *do not raise* F2) | 1 downgrade; 0 raises |
-| Refutation evidence | quoted decisive line each time | n/a | n/a — nothing was refuted |
-| Effect on derived status | none | none | **Changes Requested → Approved**, without erasing a finding |
+## Publication outcome
 
-## Distinguishing behaviors observed
-
-- **v2** was the only run to produce a **cross-axis duplicate** and merge it (its Code and
-  Requirements finders independently found the Narrow list from different angles; the verifier merged
-  them keeping the Requirements frame). Its verifier was also the only one to refute anything.
-- **v3** was the only run to cite **commit history as evidence for a finding** — `1450bc2`
-  introduced the protocol line and the skill line together, establishing lockstep maintenance and
-  making the omission drift rather than design. V5 later used the same commit plus `1c25a91` and
-  `55e1f25` to establish a second, four-document lockstep set.
-- **v4** was the only run to **stop and ask the orchestrator**, to distinguish a recoverable from an
-  unrecoverable fetch in its status derivation, and to **flag an ambiguous policy call** (whether
-  `SKILL.md` files are a "public/external contract" for its mandatory-verification threshold)
-  instead of silently resolving it.
-- **v5** was the only run whose verifier **downgraded a candidate across the blocking boundary
-  rather than confirming or erasing it** — turning a provisional P2 `must-fix` into a published P3
-  `consider`, which is what moved the run from `Changes Requested` to `Approved`. It was also the
-  only run to route verification by action rather than artifact name, to use outcome-level
-  representation to avoid requiring a new freshness field, and to acquit the attestation test before
-  it ever became a candidate.
-- All four **used base-branch state to acquit candidates**, not only to convict: v2 cleared a
-  fixture's `Not applicable` seed and a suspected duplicate test block; v3 cleared `PROJECT_BRIEF`/ADR
-  drift and the schema question; v4 cleared the freshness-expectation gap and the development-repo
-  path citation; v5 cleared the ADR/`PROJECT_BRIEF` lists by proving they were never lockstep peers,
-  and cleared the streaming fixture's negative disposition against the base fixture's own idiom.
-
-## Publication decision
-
-V4's output was published to PR #66 after the first three runs finished. V5 ran later and was not
-published.
+V4 was selected after the original v2–v4 comparison and published as
+[review 5076220814](https://github.com/kamui/shortlist/pull/66#pullrequestreview-5076220814), with
+the Narrow and bundle-contract findings as non-blocking `consider` comments and an
+`Approved (advisory)` summary. The later runs were withheld to preserve the research condition.
