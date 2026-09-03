@@ -297,3 +297,5 @@ The pinned inputs permit a replay against the same head. Rebuild the mirror by p
 fresh bare repo and confirming the negative `git cat-file -e` checks above. The pull request is
 merged and its withdrawal is public record, so a replay done today cannot un-know GT-2 — the
 truncation only prevents the *reviewing agent* from reading it out of local git objects.
+
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
