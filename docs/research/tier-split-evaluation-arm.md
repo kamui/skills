@@ -2,7 +2,7 @@
 
 **2026-09-01.** This document specifies one experiment arm for the next evaluation round of the
 `code-review-publish` line. It extends the protocol in
-[Aggregate analysis § Before calling it: the evaluation protocol](prototype-runs-2026-09-01-aggregate-analysis.md#before-calling-it-the-evaluation-protocol),
+[Aggregate analysis § Before calling it: the evaluation protocol](prototype-runs-aggregate-tests-1-3-v2-v5.md#before-calling-it-the-evaluation-protocol),
 whose item 4 puts a controlled model-tier comparison after — and only after — repeated seeds with one
 model held constant. Nothing here changes a skill default: no `SKILL.md`, reference, or
 `agents/openai.yaml` selects a tier as a result of this document. v5a's design record keeps
@@ -18,16 +18,16 @@ Two observations from the aggregate analysis motivate testing it rather than ass
 - **Recall at the Sonnet tier.** Test 3 (`tokio-rs/tokio#7757`) ran on Claude Sonnet 5, and every
   prototype caught the ground-truth production regression that 52 human review threads and an
   approval had missed, from a static pass over the merge-base diff
-  ([experiment grid](prototype-runs-2026-09-01-aggregate-analysis.md#the-experiment-grid),
-  [aggregate outcomes](prototype-runs-2026-09-01-aggregate-analysis.md#aggregate-outcomes)). The
+  ([experiment grid](prototype-runs-aggregate-tests-1-3-v2-v5.md#the-experiment-grid),
+  [aggregate outcomes](prototype-runs-aggregate-tests-1-3-v2-v5.md#aggregate-outcomes)). The
   same analysis records that test 3's mirror history was not truncated at the merge-base, so its
   *severity calibration* is contaminated by hindsight
-  ([methodology debts](prototype-runs-2026-09-01-aggregate-analysis.md#9-methodology-debts-that-gate-the-next-iteration));
+  ([methodology debts](prototype-runs-aggregate-tests-1-3-v2-v5.md#9-methodology-debts-that-gate-the-next-iteration));
   the recall observation is what carries here, and it is the reason this arm is plausible, not proven.
 - **Restraint below the Opus tier.** Test 2 (`redis/redis#15680`) ran on GLM-5.3-Flash, a cheaper
   model than either Claude tier, and every prototype raised and killed its candidates — 29 across the
   four runs — publishing zero findings on a clean PR with no originating issue
-  ([aggregate outcomes](prototype-runs-2026-09-01-aggregate-analysis.md#aggregate-outcomes)). The
+  ([aggregate outcomes](prototype-runs-aggregate-tests-1-3-v2-v5.md#aggregate-outcomes)). The
   no-false-positives discipline is enforced by the falsification gates in the skill text, and it held
   without the strongest model.
 
@@ -53,7 +53,7 @@ model assignment only — no arm may edit skill text, thresholds, or verifier tr
 
 Using test 1's measured v5 shape — 128k tokens in the primary context and 46.6k in the verifier
 context, the only clean, comparable token data the program has
-([economics](prototype-runs-2026-09-01-aggregate-analysis.md#8-economics-what-the-cost-data-actually-supports))
+([economics](prototype-runs-aggregate-tests-1-3-v2-v5.md#8-economics-what-the-cost-data-actually-supports))
 — and assuming an 80/20 input/output split within each context, at first-party prices of
 Opus 5 $5/MTok input and $25/MTok output and Sonnet 5 $2/MTok input and $10/MTok output:
 
@@ -120,5 +120,5 @@ weaker review for less.
 - **Where it is recorded.** Model assignment is per-run-record metadata. Each run record states the
   model for the orchestrating context, the primary context, and each verifier context, mirroring the
   existing `Model / harness` rows in the `prototype-runs-2026-09-01-test-*/v*-run.md` records and the
-  [experiment grid](prototype-runs-2026-09-01-aggregate-analysis.md#the-experiment-grid). A run whose
+  [experiment grid](prototype-runs-aggregate-tests-1-3-v2-v5.md#the-experiment-grid). A run whose
   record does not state all three is excluded from the arm's results.

@@ -5,7 +5,10 @@ pinned run identity, the ground truth, and the conditions held constant across a
 
 > **Promotion status:** “v5” is the historical prototype name. PR #17 promoted this workflow to
 > `skills/code-review-publish` on `main`; the snapshot under test is that skill, unchanged since the
-> promotion commit. This run completed in a single pass.
+> promotion commit. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so
+> `/code-review-publish` now invokes v5a, not the v5 workflow this run tests.
+> `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin
+> it from `571f31d`. This run completed in a single pass.
 
 ---
 
