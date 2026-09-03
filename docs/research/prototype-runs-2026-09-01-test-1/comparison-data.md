@@ -2,7 +2,7 @@
 
 > **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
 > that workflow to `skills/code-review-publish` on `main`; new work should invoke
-> `/code-review-publish` without the `-5` suffix.
+> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`.
 
 **2026-09-01–03. Data only.** This is a from-scratch consolidation of every run record in this
 directory: [v2](v2-run.md), [v3](v3-run.md), [v4](v4-run.md), [v5](v5-run.md),

@@ -2,7 +2,7 @@
 
 > **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
 > that workflow to `skills/code-review-publish` on `main`; new work should invoke
-> `/code-review-publish` without the `-5` suffix.
+> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`.
 
 **2026-09-01–03.** This reevaluates v2–v5 together with the later v2a/v5a runs on
 [`tokio-rs/tokio#7757`](https://github.com/tokio-rs/tokio/pull/7757). The pull request shipped a
