@@ -1,5 +1,7 @@
 # Prototype run data — v2, v3, v4, v5 against `kamui/shortlist#66`
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Raw outputs and metadata from running four code-review prototypes against one
 pull request under controlled conditions. **Data only** — the analysis of this run lives in
 [`evaluation.md`](evaluation.md).
@@ -72,7 +74,6 @@ Only the skill under test:
 - `v4-run.md` — output and metadata
 - `v5-run.md` — output and metadata
 - `comparison-data.md` — side-by-side metadata table, extended after the v5 run
-- `publication-decision.md` — which run's output was published, and why
 - `evaluation.md` — the analysis of this run
 
 ## Reproducing
@@ -80,3 +81,7 @@ Only the skill under test:
 The pinned inputs and run files permit a replay against the same head. Because v4 is now published
 live, a controlled replay must use the recorded `none` prior-review state rather than reading current
 PR review state; publication should remain disabled unless the test explicitly evaluates re-review.
+
+See [`addendum-2026-09-02.md`](addendum-2026-09-02.md) for the v2a/v5a re-test against this same pinned target, added after handoffs 5 and 6's fixes, and [`addendum-2026-09-03.md`](addendum-2026-09-03.md) for the model-matched post-C9 re-run that closes the confound the first addendum disclosed. v2a was run three times: pre-C9 ([`v2a-run-pre-c9.md`](v2a-run-pre-c9.md), Sonnet 5), post-C9 on Fable 5.1 (kept in [`../prototype-runs-2026-09-01-test-1-fable/`](../prototype-runs-2026-09-01-test-1-fable/)), and post-C9 on Sonnet 5 ([`v2a-run.md`](v2a-run.md)) — the last of which establishes that the recovered recall is attributable to the C9 fix rather than to a model change.
+
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
