@@ -1,5 +1,7 @@
 # v5 run — `code-review-publish-5` against `kamui/shortlist#66`
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Data only. Not published to the PR.
 
 ## Metadata

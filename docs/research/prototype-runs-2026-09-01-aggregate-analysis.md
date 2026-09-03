@@ -1,5 +1,7 @@
 # Aggregate analysis — code-review prototypes v2–v5 across the three 2026-09-01 test runs
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Synthesis of the three controlled comparisons of `code-review-publish-2` through
 `code-review-publish-5`:
 

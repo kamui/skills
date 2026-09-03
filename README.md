@@ -51,13 +51,15 @@ Three skills are model-invocable, so a driving agent can run the loop end to end
 
 ## Skills
 
-The skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. A shared review protocol is what makes the hand-offs work; see [The review protocol](#the-review-protocol).
+The skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff).
 
 ### `code-review-publish`
 
-Reviews an issue-linked pull request and publishes one forge-native review: the summary as the review body, findings as comments on the code they name, and replies on the threads of earlier findings it settles. One integrated reviewer inspects the complete merge-base diff against a private evidence rubric; every `must-fix`, security, data-integrity, and compatibility finding is verified in a fresh context before publication, and a mechanical validator checks the assembled payload before anything is written.
+Reviews the complete merge-base diff and publishes one forge-native review containing every verified finding. One integrated reviewer checks both implementation behavior and issue fit against a private evidence rubric, falsifies each candidate, and invokes one fresh batched verifier for every proposed `must-fix` and other consequential claim — security, data loss, compatibility. A mechanical validator checks the assembled payload before anything is written.
 
-Findings, questions, and observations are separate channels, so uncertainty routes to a question instead of becoming a finding an agent would dutifully "fix". A run trailer records the workflow version and a context digest, so an unchanged pull request is reported rather than re-reviewed. This skill supersedes `code-review-publish-legacy`, which is kept only for historical purposes.
+Each finding carries an impact priority and an independent action: `must-fix` blocks the merge, while `consider` is optional. The review reaches `Changes Requested`, `Incomplete`, `Needs Information`, or `Approved`, and reports its coverage. Publication is atomic against a freshly checked head; findings without an honest line anchor remain complete in the review body rather than being attached to unrelated code.
+
+Findings, questions, and observations are separate channels, so uncertainty routes to a question instead of becoming a finding an agent would dutifully "fix". A run trailer records the workflow version and a context digest, so an unchanged pull request is reported rather than re-reviewed. This workflow was evaluated as the v5a prototype; it supersedes the v5 workflow that previously filled this skill and the two-axis reviewer, now kept as `code-review-publish-legacy` for historical purposes.
 
 It activates when a caller asks to review an issue-linked pull request and intends to post comments or a review to that pull request. Read-only review requests do not activate it. You can also invoke it directly:
 
@@ -103,9 +105,21 @@ $implement-publish
 
 The host agent needs access to the forge to create the pull request.
 
+## The review handoff
+
+`code-review-publish` owns finding admission, review status, and publication through [`references/review-rubric.md`](skills/code-review-publish/references/review-rubric.md) and [`references/output-contract.md`](skills/code-review-publish/references/output-contract.md). `code-review-address` owns replies, dispositions, thread state, and round closeout through its [`review-protocol.md`](skills/code-review-address/references/review-protocol.md).
+
+A published finding is understandable from visible prose alone: its title states priority and action, and its `Triggers when`, `Impact`, and `Change` fields explain the defect and requested outcome. Optional findings explicitly say they may be closed without action. Hidden trailers add stable ids, reviewed heads, and correlation metadata for agents, but human comments without trailers remain first-class input.
+
+The addresser evaluates every item against the current code and replies with one visible disposition: `implemented`, `already-addressed`, `answered`, `declined`, `needs-info`, or `blocked`. A reply states intent rather than proof, so the next review verifies it against the code. Findings that survive one verified decline become disputes for a person instead of looping indefinitely.
+
+The reviewer submits one semantic status after coverage is known: `Changes Requested` for unsettled `must-fix` findings, `Incomplete` for unfinished material coverage or verification, `Needs Information` for an outcome-changing unanswered question, and `Approved` otherwise. Forge authorization controls only whether that status travels as `REQUEST_CHANGES`, `APPROVE`, or the default `COMMENT`; it never changes the conclusion.
+
+The internal `workflow=v5a-1` trailer remains the behavior version for deduplication and re-review continuity. It is not a skill name. Callers and new prototypes invoke `$code-review-publish` from `main`.
+
 ## The review protocol
 
-`code-review-publish-legacy` and `code-review-address` each ship `references/review-protocol.md`, the contract they hand work across. It fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
+`code-review-publish-legacy` and `code-review-address` each ship `references/review-protocol.md`. It fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
 
 ```markdown
 **[Code] Duplicated validation in `parseOrder`**

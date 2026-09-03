@@ -1,5 +1,7 @@
 # Prototype run data — v2, v3, v4, v5 against `redis/redis#15680` (test 2)
 
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+
 **2026-09-01.** Raw outputs and metadata from a second controlled comparison of the same four
 code-review prototypes against a different pull request. **Data only** — the analysis of this run
 lives in [`evaluation.md`](evaluation.md).
@@ -94,3 +96,7 @@ No `publication-decision.md`: nothing was published; all four runs were data-onl
 The pinned inputs and run files permit a replay against the same head. The clone must be offline
 (`origin` a local path) with the phase-1 packet supplied verbatim; the PR is merged, so derived
 statuses are advisory reconstructions, not live review state.
+
+See [`addendum-2026-09-03.md`](addendum-2026-09-03.md), [`v2a-run.md`](v2a-run.md), and [`v5a-run.md`](v5a-run.md) for the 2026-09-03 v2a/v5a re-test against this same pinned target, run on Sonnet 5. An earlier 2026-09-02 round of the same two prototypes ran on `claude-fable-5-1` and is kept in [`../prototype-runs-2026-09-01-test-2-fable/`](../prototype-runs-2026-09-01-test-2-fable/). Note for anyone reading this record's "all four runs found it clean" conclusion: the Fable round found a real, verifier-confirmed defect in this change (`src/cluster_legacy.c:5428`) that none of the four original runs raised — and the Sonnet round then missed it. See the 2026-09-03 addendum for what that does and does not license.
+
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
