@@ -2,12 +2,12 @@
 
 > **Promotion status:** "v5" is the historical prototype name used by this record. PR #17 promoted
 > that workflow to `skills/code-review-publish` on `main`; new experiments should invoke
-> `/code-review-publish` without the `-5` suffix. "v2a" is `code-review-deep-publish` (PR #18,
+> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`. "v2a" is `code-review-deep-publish` (PR #18,
 > pinned `87c68a9`, the Panel line) and "v5a" is `code-review-publish-5a` (PR #19, pinned `c5f76df`,
 > the Skeptic line). Neither branch moved during the runs analyzed here.
 
 **2026-09-03.** Successor to
-[`prototype-runs-test-1-to-4-aggregate-analysis.md`](prototype-runs-test-1-to-4-aggregate-analysis.md).
+[`prototype-runs-aggregate-tests-1-3-v2-v5.md`](prototype-runs-aggregate-tests-1-3-v2-v5.md).
 That document synthesized twelve runs of v2–v5 on three targets and set the contract the two
 patched prototypes were built against (handoffs 1 and 2, kept in the untracked `handoffs/` working directory). This one covers every run recorded under
 `docs/research/` since — fourteen more, on four targets, two model tiers — and grades every design

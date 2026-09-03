@@ -1,6 +1,6 @@
 # Prototype run data — v2, v3, v4, v5 against `kamui/shortlist#66`
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix.
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`.
 
 **2026-09-01.** Raw outputs and metadata from running four code-review prototypes against one
 pull request under controlled conditions. **Data only** — the analysis of this run lives in
@@ -84,4 +84,4 @@ PR review state; publication should remain disabled unless the test explicitly e
 
 See [`addendum-2026-09-02.md`](addendum-2026-09-02.md) for the v2a/v5a re-test against this same pinned target, added after handoffs 5 and 6's fixes, and [`addendum-2026-09-03.md`](addendum-2026-09-03.md) for the model-matched post-C9 re-run that closes the confound the first addendum disclosed. v2a was run three times: pre-C9 ([`v2a-run-pre-c9.md`](v2a-run-pre-c9.md), Sonnet 5), post-C9 on Fable 5.1 (kept in [`../prototype-runs-2026-09-01-test-1-fable/`](../prototype-runs-2026-09-01-test-1-fable/)), and post-C9 on Sonnet 5 ([`v2a-run.md`](v2a-run.md)) — the last of which establishes that the recovered recall is attributable to the C9 fix rather than to a model change.
 
-The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md`](../prototype-runs-2026-09-03-aggregate-analysis-v2a-v5a.md).
+The aggregate analysis covering this directory alongside every other run recorded through 2026-09-03 — the change-by-change scorecards for v2a and v5a, the pole comparison, the regression watch, and the next-experiment recommendation — is [`../prototype-runs-aggregate-tests-1-4-v2a-v5a.md`](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md).

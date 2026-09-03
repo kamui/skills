@@ -31,7 +31,7 @@ PUBLISH:             no (render only, never post)
 
 **Out of scope, deliberately:** the interpretive layer. That means **both**
 `evaluation.md` (this test's analysis) and any update to
-`docs/research/prototype-runs-test-1-to-4-aggregate-analysis.md` (the cross-test synthesis). The user
+`docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md` (the cross-test synthesis). The user
 may want a different model to synthesize those, so a run-collection agent must not pre-empt the
 choice by writing them.
 
@@ -73,7 +73,7 @@ pull requests with independently checkable ground truth. Results live in
 | `docs/research/prototype-runs-2026-09-01-test-4/comparison-data.md` | Table formats: cost/shape, output, ground-truth matrix, false positives, verifier contributions. |
 | `docs/research/prototype-runs-2026-09-01-test-4/evaluation.md` | Analysis voice and depth — **format reference for the later synthesis pass; you are not writing this one.** |
 | `docs/research/prototype-runs-2026-09-01-test-3/addendum-2026-09-03.md` | Where mirror truncation was established. |
-| `docs/research/prototype-runs-test-1-to-4-aggregate-analysis.md` | Cross-test findings so far. |
+| `docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md` | Cross-test findings so far. |
 | Memory: `handoff-3-prototype-run-program` | Per-test results not to re-derive. |
 | Memory: `subagent-model-must-be-explicit` | Model discipline. |
 | Memory: `prototype-run-orchestration-hazards` | The three failure modes that have cost real work. |
@@ -348,7 +348,7 @@ each prototype should take from it, limits. Format reference:
 `docs/research/prototype-runs-2026-09-01-test-4/evaluation.md`. Remove the *(pending)* marker from
 the README's file list when it lands.
 
-**`docs/research/prototype-runs-test-1-to-4-aggregate-analysis.md`** (cross-test): a rewrite, not an
+**`docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md`** (cross-test): a rewrite, not an
 append — folding a new test in changes the cross-test claims. Separate this from the per-test
 evaluation; it may want a different model again.
 
