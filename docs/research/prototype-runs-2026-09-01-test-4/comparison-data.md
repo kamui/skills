@@ -1,0 +1,199 @@
+# Comparison data — v2, v2a, v5, v5a on `microsoft/playwright#29698`
+
+> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
+> that workflow to `skills/code-review-publish` on `main`; new work should invoke
+> `/code-review-publish` without the `-5` suffix.
+
+**2026-09-03. Data only.** This consolidates the four run records in this directory:
+[v2](v2-run.md), [v2a](v2a-run.md), [v5](v5-run.md), [v5a](v5a-run.md). Interpretation is in
+[evaluation.md](evaluation.md); the pinned target, the ground truth, and the conditions held
+constant are in [README.md](README.md).
+
+Unlike tests 1–3, all four runs here are in **one cohort**: same model, same harness, same packet,
+same truncated mirror, same session. Cost figures are directly comparable across the four columns —
+the first time that has been true in this program.
+
+## Comparison boundaries
+
+| Cohort | Runs | Model / harness | History available |
+| --- | --- | --- | --- |
+| Test 4 | v2, v2a, v5, v5a | explicit `claude-sonnet-5` / `t3code` | mirror truncated at the pinned head; merge commit, `#29811` and `#30111` all unreachable |
+
+**Model verification.** Every agent in all four runs was checked after the fact by reading
+`message.model` from its harness transcript rather than trusting intent. All nineteen agent
+transcripts belonging to this test report `claude-sonnet-5` on every assistant turn — the four run
+orchestrators, the four axis finders, and the four verifiers. `model: "sonnet"` also appears in the
+recorded `Agent` tool-call parameters, confirming it was passed explicitly at every level and never
+inherited. Both the v2 and v2a orchestrators flagged their finders' model as an evidence gap they
+could not close from inside their own context; the transcript check closes it.
+
+## Run continuity
+
+A session rate limit interrupted the first attempt. What survived and what was redone:
+
+| Run | Find phase | Verify + Publish | Notes |
+| --- | --- | --- | --- |
+| v2 | completed in attempt 1, **reused verbatim** | fresh orchestrator, attempt 2 | Same packet, same two finder reports; finders not re-run |
+| v2a | completed in attempt 1, **reused verbatim** | fresh orchestrator, attempt 2 | Same packet, same two finder reports; finders not re-run |
+| v5 | — | **clean single-pass full run**, attempt 2 | Attempt 1 died before producing usable output; nothing carried over |
+| v5a | — | **clean single-pass full run**, attempt 2 | Attempt 1 died before producing usable output; nothing carried over |
+
+The two Panel-line runs therefore have an orchestrator-context discontinuity between Find and
+Verify that the two Skeptic-line runs do not. The discontinuity sits at a point where the
+architecture already imposes a context boundary — v2/v2a finders are fresh-context sub-agents whose
+reports are the orchestrator's whole input to Verify — so the substitute orchestrator received the
+same information the original had. It is disclosed rather than scrubbed because it is a real
+difference in run conditions, and because the second orchestrators lacked one thing the first had:
+direct visibility into their finders' model parameter.
+
+## Cost and shape
+
+| | v2 | v2a | v5 | v5a |
+| --- | --- | --- | --- | --- |
+| Line | Panel | Panel, patched | Skeptic | Skeptic, patched |
+| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `code-review-publish` | `code-review-publish-5a` |
+| Pinned commit | `3c93b42` | `87c68a9` | `571f31d` | `c5f76df` |
+| Architecture | 2 axis finders + verifier | 2 axis finders + verifier | integrated reviewer + verifier | integrated reviewer + verifier |
+| Agents spawned | 3 | 3 | 1 | 1 |
+| Sub-agent tokens | **198,466** (Code 99,128 + Requirements 55,058 + verifier 44,280) | **222,873** (Code 111,274 + Requirements 76,669 + verifier 34,930) | **35,917** (verifier only) | **44,198** (verifier only) |
+| Tool uses | 110 (sub-agents 85 + orchestrator 25) | ~123 (sub-agents 94 + orchestrator ~29) | ~63 (primary ~44 + verifier 19) | ~100 (primary ~77 + verifier 23) |
+| Wall clock | finders 554 s / 294 s, verifier 221 s; Verify session ~9 min | finders 617 s / 366 s, verifier 117 s; Verify session ~10 min | **~12 min, single pass** | **~15 min, single pass** |
+| Verifier policy | mandatory when candidates exist | mandatory when candidates exist | consequence-triggered | consequence-triggered, candidate mode |
+| Verifier ran? | yes | yes | yes | yes |
+| `context` digest | not computed by this skill | not computed by this skill | `5800da33…3c67` | `ade4903f…44dd` |
+
+The Panel line costs roughly **4–6× the metered sub-agent tokens** of the Skeptic line on this
+target, and the gap is not an artifact of what each meter counts: v2 and v2a spawn every reviewing
+agent as a sub-agent, so their finders are metered, while v5 and v5a do the primary review in the
+top-level agent, which the harness does not meter. The true Skeptic-line totals are therefore higher
+than the cells show — but their *sub-agent* work really is one verifier each, against three agents
+each for the Panel line. Tool-use counts, which are self-reported on the same basis for all four,
+show a smaller gap: 110 and ~123 against ~63 and ~100.
+
+## Output
+
+| | v2 | v2a | v5 | v5a |
+| --- | --- | --- | --- | --- |
+| Candidates raised | 6 (4 Code + 2 Requirements) | 3 (3 Code + 0 Requirements) | 3 rendered, ~14 examined and dropped | 14 considered |
+| Sent to verifier | 6 | 3 | 1 | 1 |
+| Verifier verdicts | 4 `confirmed`, 2 `plausible`, 0 `refuted` | 3 `confirmed`, 0 `plausible`, 0 `refuted` | 1 `confirmed` | 1 `confirmed` |
+| **Findings** | **4** | **3** | **3** | **2** |
+| Blocking findings | 2 | 1 | 1 | 1 |
+| Priority spread | P1, P1, P3, P3 | P2, P3, P3 | P2, P3, P3 | P1, P3 |
+| Questions | 2 | 0 | 0 | 1 |
+| Observations | 1 (verifier's out-of-scope note; skill has no bounded section) | 3 published, at the cap; 2 more dropped to stay under it | 0 standalone (folded into finding prose) | 1 (cap 3) |
+| Ambiguities | — | — | — | 1 recorded |
+| Coverage | complete, 10/10 | complete, 10/10 | complete, 10/10 | complete, 10/10 |
+| **Status** | **Changes Requested (advisory)** | **Changes Requested (advisory)** | **Changes Requested (advisory)** | **Changes Requested (advisory)** |
+
+All four statuses are advisory, event `COMMENT`. **Status is unanimous for the fourth test running
+and again fails to distinguish the runs.** The axis outcomes underneath it do differ: v2 reports
+Requirements as *Waiting for information* (3/3 met, 1 unverifiable, 2 questions) while v2a reports
+Requirements *Passed* (7/7 met, 0 questions) — on the same diff and the same issue.
+
+## Ground-truth matrix
+
+The four ground-truth items are defined in [README.md](README.md). GT-1 and GT-2 are confirmed by
+upstream commits the runs could not reach; GT-3 and GT-4 are checkable inside the pinned diff.
+
+| | v2 | v2a | v5 | v5a |
+| --- | --- | --- | --- | --- |
+| **GT-1** — new tests hit the live internet (`#29795`, fixed 2 days later by `#29811`) | **not raised** | **not raised** | **not raised** | **not raised** |
+| **GT-2** — API surface wrong; `removeCookies` deleted and folded into `clearCookies` 24 days later (`#30111`) | not raised | **not raised** — Requirements axis returned *Passed*, 7/7 | not raised as a finding; anti-“sugar” rule checked and **acquitted as compliant** | **raised and dropped** — ledger item A5 quotes `CONTRIBUTING.md`'s "Avoid adding 'sugar' API… unless very common" and notes the method is fully expressible as `cookies()`+`clearCookies()`+`addCookies()`; dropped because the maintainer approved it |
+| **GT-3** — generated `types.d.ts` stale against its own `.md` source | **examined and acquitted** — file marked *ignored, generated artifact*; both conflicting sentences quoted, then dismissed as "caught by CI's clean-tree check, not by manual review" | **published**, P3 `consider` | **published**, P3 `consider` | **published**, P3 `consider` |
+| **GT-4** — docs entry carries only a `js` snippet where every sibling carries js/java/python/csharp | **not raised** | **not raised** | **not raised** | **not raised** |
+
+**GT-1 is a clean four-way miss.** Every run read the 231-line test file in full and every run
+commented on it in its manifest — v2 noted it "never exercises… a concurrent-cookie-write
+scenario," v2a verified all eight tests' AND-semantics and recorded "No defect," v5 checked its
+naming convention, v5a used it to falsify other candidates. None noticed that all eight tests
+destructure a `server` fixture they never use and navigate to `https://www.example.com` instead.
+Three of the four runs additionally had the WebKit flake on that exact spec file quoted verbatim in
+their packet and treated it only as weak corroboration for the concurrency finding.
+
+**GT-3 is the discriminator.** Three of four published it; v2 is the sole miss, and its miss is a
+documented acquittal rather than an oversight — the finder found the drift, wrote it down, and
+reasoned itself out of reporting it on the grounds that CI would catch it. It would have: that is
+exactly why the job would have been red.
+
+## Upstream-checkable follow-ups on the runs' own findings
+
+Two items the runs raised can be scored against what upstream actually did, using `#30111`'s diff.
+
+| Item | What upstream did | v2 | v2a | v5 | v5a |
+| --- | --- | --- | --- | --- | --- |
+| Clear-then-re-add is not atomic; a concurrently written cookie is lost | **Not fixed.** `#30111` rewrote this exact function and kept the snapshot → `doClearCookies()` → re-add shape | **published P1 must-fix** | **published P2 must-fix** | **published P2 must-fix** | **published P1 must-fix** |
+| `filter.domain === cookie.domain` exact string match is too narrow | **Partly vindicated.** `#30111` widened `name`/`domain`/`path` to `string \| RegExp` and documents `clearCookies({ domain: /.*my-origin\.com/ })`; plain-string comparison stayed exact | **published P1 must-fix** (dot-prefix/RFC 6265 argument, verifier-confirmed) | **acquitted** — "rests on an unstated assumption; insufficiently evidenced" | **dropped** — reframed as case-sensitivity and acquitted as "expected exact-match behavior" | **routed to a published question** — asks whether a header-set `Domain=` cookie matches, and names the experiment that would settle it |
+
+The unanimous blocking finding is the one upstream declined to act on; the finding the four runs
+disagreed most sharply about is the one upstream partially conceded. Unanimity is not accuracy here
+in either direction.
+
+## False positives
+
+| Item | v2 | v2a | v5 | v5a |
+| --- | --- | --- | --- | --- |
+| `since: v1.43` should be `v1.42` (base is `1.42.0-next`) | **published P3** | **published P3** | **published P3** | **considered as ledger item A6 and dropped** — "plausible, ordinary release-boundary practice… not proven wrong" |
+
+Upstream kept `since: v1.43`, and `#30111`'s replacement options carry the same tag. Three of four
+runs published a wrong finding here; **v5a is the only run that reached the correct disposition**,
+and it did so by applying an evidentiary gate rather than by knowing the answer — it recorded that
+the claim was plausible but unproven and declined to publish on that basis.
+
+## Secondary items and disagreements
+
+| Item | v2 | v2a | v5 | v5a |
+| --- | --- | --- | --- | --- |
+| Doc doesn't state that an empty filter throws | **published P3 consider** | not raised | not raised | not raised |
+| Issue's `removeCookies([obj1, obj2])` array shape not implemented | **published as a question** | acquitted → observation (author accepted the redesign) | acquitted (deliberate, maintainer-directed) | acquitted |
+| Domain/path filter dimensions exceed "remove a specific cookie" | **published as a question** (P2 scope-creep candidate → question) | not raised | not raised | not raised |
+| `protocol.yml` unrelated whitespace edit | acquitted (small obvious cleanup) | **published observation** | dropped (harmless drive-by) | **published observation** |
+| `protocol.yml` / `channels.ts` alphabetical-ordering break | rejected as a nitpick | **published observation** | not raised | not raised |
+| `BrowserContextRemoveCookiesOptions = {}` empty-type boilerplate | not raised | not raised | acquitted (matches sibling pattern) | not raised |
+| New spec file naming vs `browsercontext-clearcookies.spec.ts` | not raised | acquitted (no single convention exists) | acquitted (pre-existing inconsistency) | not raised |
+
+## Verifier contributions
+
+| Run | Material verifier effect |
+| --- | --- |
+| v2 | Confirmed 4, routed 2 to questions, refuted 0. **Caught a fabricated citation**: a finder cited test lines `435-454` in a 231-line file (correct site `212-230`), and flagged a pattern of imprecise line citations across both finders as an out-of-scope note |
+| v2a | Confirmed 3, refuted 0, merged 0. Contributed 2 additional accurate observations that were dropped to stay inside the 3-item cap |
+| v5 | Confirmed the race and **corrected the proposed remedy** — established that no backend exposes a filtered-delete primitive at the needed scope, so the fix cannot be "use the native delete" |
+| v5a | Confirmed the race, **corrected the remedy the same way**, and **corrected the anchor range** from `283-292` to `279-293` |
+
+Both Skeptic-line verifiers independently reached the same correction to the same proposed fix. The
+Panel-line verifiers, given more candidates, spent their effort on adjudication and citation
+checking rather than on remedy design.
+
+## Mechanism results
+
+- **v2a:** the doc-sync/drift sweep is what separates v2a from v2 on GT-3 — its Code finder reached
+  the drift by using `addCookies`'s JSDoc as a control to establish that generated blocks normally
+  match their `.md` source verbatim. The Requirements-axis changed-contract sweep ran, swept
+  `removeCookies` and `clearCookies` repo-wide, and returned a **clean negative**. Question routing
+  did not fire (0 questions). The observation cap bound at 3 and forced 2 accurate items out.
+- **v5a:** the fix-sufficiency check fired and, with the verifier, replaced a backend-specific
+  remedy with a reconciliation-after-restore fix that holds on all three backends. The question
+  channel fired, on domain matching. The clean-verdict verifier did not apply (2 survivors). The
+  `context` digest was recomputed twice through order-shuffled inputs and matched. The review
+  validator ran and passed with zero violations, and its self-test was run first.
+- **v5:** consequence-triggered verification fired exactly once, on the data-loss candidate, and the
+  two `consider` findings were published primary-confirmed without verification — the designed
+  behavior.
+- **v2:** the mandatory-verification rule sent all 6 candidates, including 2 that the verifier ruled
+  `plausible` and routed to questions rather than refuting.
+
+## Sandbox and hygiene disclosures
+
+- v2's Code finder wrote the diff to `/tmp/handoff4_pr.diff`, outside its two permitted directories,
+  to read it in one pass. Contents derived entirely from the permitted repo; disclosed by the finder
+  itself.
+- v5 briefly wrote two scratch files outside its sandboxed roots and deleted them; disclosed.
+- v5a made one incidental directory *listing* outside its sandbox, reading no file contents;
+  disclosed.
+- v2a had one transient scratch-file false start, created and deleted, never read by a sub-agent.
+- No run read git history beyond the pinned head. Every run enumerated its history commands, and
+  the lists contain only `git status`/`git branch`/`git rev-parse`/`git log --oneline -1`/
+  `git diff main…review-head`/`git show main:<path>` forms.
+- No run executed anything against the repository. The only scripts run were v5's and v5a's own
+  helper scripts, which is explicitly permitted and which touch no repository code.
