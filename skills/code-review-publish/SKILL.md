@@ -43,7 +43,7 @@ Report an existing review instead of duplicating it only when the head, base, me
 
 ## 3. Review once, then falsify
 
-Inspect the complete merge-base diff under the rubric. Expand context only as needed: enclosing symbol, then relevant callers, interfaces, configuration, tests, or history. Finish the manifest after the first issue. Read relevant tests and current CI; run only safe, proportionate focused checks without changing files.
+Read the complete merge-base diff **once**, as one `git diff <merge-base>...<head> --unified=5` invocation (split by path only when the harness output limit forces it); do not re-read it per file or as `git show` of individual commits unless a candidate's history check needs a specific commit. For each hunk, read the enclosing symbol as a bounded range (the function, class, or section that contains it), not the file. Read a whole file only when it is at most 300 lines, or when a named candidate's trace requires it — record the candidate id beside the read in the private record. A file the diff adds is already fully present in the diff; do not read it again. Batch searches: one `grep -n` over all relevant paths, not one per file. Expand further only as needed: relevant callers, interfaces, configuration, tests, or history, each read as a bounded range. Finish the manifest after the first issue. Read relevant tests and current CI; run only safe, proportionate focused checks without changing files.
 
 The primary reviewer owns the complete diff and requirement ledger. For every candidate, keep the rubric's private record with a falsifiable `claim` about the artifact and separate `support` describing what the reviewer inspected, ran, inferred, or could not establish.
 
