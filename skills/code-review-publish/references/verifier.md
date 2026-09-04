@@ -45,13 +45,15 @@ Do not search the rest of the pull request for new findings. If an accurate, sub
 
 ## Verdicts
 
-Return exactly one verdict for every supplied id:
+Return exactly one verdict for every supplied *candidate* id:
 
 - `confirmed`: decisive evidence establishes the trigger, qualifying impact, requested outcome, and either the Code introduced-here condition or the explicit requirement responsibility.
 - `plausible`: the verifier can neither construct the claimed failing trace end-to-end nor refute any specific step of that trace from repository evidence. Return `plausible` whenever both conditions hold; do not force uncertainty into `confirmed` or `refuted`.
 - `refuted`: decisive evidence shows the claim is false, prevented, intentional, lacks a qualifying impact, or—only for a Code candidate—is pre-existing.
 
-For each id, return the verdict, a concise independent justification, the decisive code or requirement citations, and any correction to `trigger`, `impact`, `priority`, `action`, `anchor`, `fix`, or `change`. Also return groups of duplicate ids that should be merged. Do not return publication-ready prose.
+A related non-survivor row supplied under related-acquittal mode is not a candidate: it takes exactly one `holds` or `re-open` ruling under the clean-verdict task and never a verdict from this list.
+
+For each candidate id, return the verdict, a concise independent justification, the decisive code or requirement citations, and any correction to `trigger`, `impact`, `priority`, `action`, `anchor`, `fix`, or `change`. Also return groups of duplicate ids that should be merged. Do not return publication-ready prose.
 
 ## Clean-verdict task
 
@@ -61,7 +63,9 @@ Attack each acquittal supplied to you, using its cited code and the narrow surro
 2. State the concrete condition under which that premise would be false.
 3. Trace the *opposite* branch of every conditional the premise depends on — a failed lookup, a NULL pointer, an error return, an empty list, a timeout, a counter already decremented — through the current code, citing `path:line` for each step.
 4. Either construct the complete failing state transition from trigger to observable consequence, or cite the specific step that is impossible.
-5. Re-reading the ledger's own reasoning and agreeing with it is not a verdict. A `holds` ruling — including every row covered by `clean verdict stands` — must cite at least one line the ledger row did not cite.
+5. Re-reading the ledger's own reasoning and agreeing with it is not a verdict. A `holds` ruling on a fully attacked row — including every such row covered by `clean verdict stands` — must cite at least one line the ledger row did not cite.
+
+Attack depth follows the row's `kind`. The five steps apply in full to every row whose `kind` is `bug`, `concurrency`, `invariant`, or `security`. Every other row — `performance`, `maintainability`, or `requirement` — gets a one-citation check instead: read the row's evidence pointer, confirm or contradict its stated fact, and return `holds` or `re-open` without tracing conditionals. The row list itself does not shrink; in zero-survivor mode every disposition from the run is still present. Depth is reduced, coverage is not. Related-acquittal mode supplies only the four full-depth kinds, so every row it carries gets the full procedure.
 
 Do not invent a new claim. In zero-survivor mode the ledger is never filtered by risk surface: every disposition from the run is present, including candidates whose subject looks unrelated to the surface that triggered this batch. In related-acquittal mode the batch carries only the related rows defined in `SKILL.md`, and the verifier may request no others.
 
