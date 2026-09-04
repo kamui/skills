@@ -78,6 +78,33 @@ Quoted lines from the repository and the spec are facts about the artifact, so t
 
 The published comment's evidence paragraph is written from the `claim`.
 
+## Finder candidate block
+
+End the candidate material with exactly one fenced `candidates` block. Use one exact
+`### Candidate` heading per candidate and these fields in this order; a zero-candidate report uses
+`None.` as the block's entire content. Continuation lines belong to the preceding field.
+
+`````markdown
+````candidates
+### Candidate
+id: code/file-slug/defect-slug
+axis: Code
+anchor: path/to/file.ext:123
+fix: (same as anchor)
+title: Short defect title
+claim: Flat, falsifiable claim with evidence pointers.
+support: Finder process, checks, and uncertainty.
+trigger: Concrete input, state, or environment that produces the wrong outcome.
+priority: P2
+action: must-fix
+````
+`````
+
+Use `Code` or `Requirements` for `axis`. Keep `fix` present and write `(same as anchor)` when it is
+the anchor. The verifier-prompt builder carries every other field verbatim and removes `support`
+mechanically, so load-bearing evidence belongs in `claim` and the concrete scenario belongs in
+`trigger`.
+
 ## Shape
 
 A finding comment:

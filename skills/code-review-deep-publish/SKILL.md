@@ -43,7 +43,7 @@ Pin `base`, `head`, and `merge-base` together as the run identity, and record th
 
 Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
-Materialize the shared finder inputs once before spawning: the full `git diff <base>...<head>` output, the commit list, and every base-branch guidance file that applies to a changed path. Guidance includes `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CODING_STANDARDS.md`, and scoped equivalents. Read each guidance file with `git show <base>:<path>` and record that base-branch provenance beside its contents.
+Run `scripts/build_shared_block.py` with the pinned identity; its output is the shared block. Do not re-read the diff or guidance files to build it by hand.
 
 An earlier review at a different head makes this a re-review. Keep the original comparison base; use the earlier head only to locate what changed since.
 
@@ -85,7 +85,7 @@ Re-reviewing, the prior findings and disposition ledger let each finder avoid re
 
 ### 3. Verify
 
-Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Give it the repository and each candidate's `id`, `axis`, `anchor`, `fix`, `title`, `claim`, `trigger`, `priority`, and `action`. **Withhold every `support` field.** Pass the claims verbatim rather than summarising them — editing a claim on the way through makes you a second finder.
+Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Run `scripts/build_verifier_prompt.py` on the two finder reports and use its output as the prompt; it withholds every `support` field mechanically. Read each finder's `ledger`, `counts`, and `manifest` blocks for coverage and status; do not re-read the finders' prose to build the verifier prompt.
 
 One class of item never goes to the verifier: the Requirements axis's **"cannot tell from the code"** bucket. Those resolve to questions at the finder — a question is not a defect claim, and `confirmed`/`refuted` presupposes something the code either does or does not do. Route them straight to publication as questions, each carrying why no static evidence can settle it and what measurement or answer would.
 
@@ -117,7 +117,7 @@ Re-reviewing, carry step 3's verdicts onto the prior findings: reply on each exi
 
 Attempt each write once. On an ambiguous result, read the target before a single retry, then report the failure rather than posting again.
 
-Finish by reporting: the status, the review link, the run identity, coverage and any files it left uncovered, counts by axis and action, the questions raised, the observations published, anything dropped as refuted (count only), and anything that failed to publish. On a retrospective run with publication disabled, report the full would-be review instead of a link.
+Finish with the short form: status, run identity, coverage, counts, questions, observations, refuted count, and publication result. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more; on a retrospective run with publication disabled, report the full would-be review instead of a link.
 
 ## Why this shape
 
