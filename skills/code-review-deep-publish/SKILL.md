@@ -46,6 +46,8 @@ Build the **changed-file manifest** from `git diff <base>...<head> --name-status
 
 Run `python3 scripts/build_shared_block.py` with the pinned identity; its output is the shared block. Do not re-read the diff or guidance files to build it by hand. On a non-zero exit, report the script's output and stop the step — hand-building the block is not the fallback.
 
+When the run conditions permit test execution, run the repository's permitted test suites **once** here and put the one-line result summary per suite in the shared block. Finders and the verifier may run a single focused test that decides a candidate; they do not re-run a suite.
+
 An earlier review at a different head makes this a re-review. Keep the original comparison base; use the earlier head only to locate what changed since.
 
 ### 2. Find
@@ -59,6 +61,7 @@ Build each finder prompt as one shared block followed by one axis-specific block
 - the commit list;
 - the full diff text;
 - the applicable guidance file contents, each with its base-branch provenance;
+- the one-line result summary for each test suite run in step 1, when any;
 - the absolute path to [`references/finding-format.md`](references/finding-format.md), which defines the anchor ladder and claim/support split.
 
 Append the axis-specific block last:
