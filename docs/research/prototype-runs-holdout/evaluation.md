@@ -61,13 +61,28 @@ and had them corrected by the verifier; none of those corrections changed a disp
 
 ### (c) `python/typeshed#9458` — GT-c1, the missing re-export
 
-_Pending the Panel seed and the scorer; interim from the run documents:_ GT-c1 `found` in `v5b`
-seed 3 and `v5b-effort-medium` seed 3, `not raised` in the other four Skeptic-line cells and in the
-ablation. Every one of the seven cells published the `can_read_destructive` omission (a true,
-un-anticipated omission of the same class as GT-c1; adjudicated true from the upstream trees); `v5b`
-seed 3 also published T-c2 (`default_backoff`), and the effort seed 3 published five omissions
-including GT-c1. The ablation cell found five must-fix omissions including T-c2 and withheld all of
-them for lack of a verifier, ending `Incomplete` with one `consider` published.
+| Cell | GT-c1 | T-c2 | T-c3 | Other true omissions published | False | Status | Band |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| v5b seed 1 | not raised | not raised | not raised | `can_read_destructive` (P2 must-fix) | 0 | Changes Requested | in band |
+| v5b seed 2 | not raised | not raised | not raised | `can_read_destructive` (P2 must-fix); abstractmethod style item as P3 consider | 0 | Changes Requested | in band |
+| v5b seed 3 | **found** (P2 must-fix) | **found** (P2 must-fix) | not raised | — | 0 | Changes Requested | in band |
+| v5b-effort-medium seed 2 | not raised | not raised | not raised | `can_read_destructive` | 0 | Changes Requested | in band |
+| v5b-effort-medium seed 3 | **found** (P2 must-fix) | not raised | not raised | `can_read_destructive`, `credential_provider` attribute, retry accessors on `RedisCluster` and on `Redis`/`ConnectionPool` | 0 | Changes Requested | in band |
+| v5b-effort-medium seed 4 | not raised | not raised | not raised | `can_read_destructive` | 0 | Changes Requested | in band |
+| v5b-noverify seed 1 | not raised | raised, withheld | not raised | `get_message` timeout (P3 consider); five must-fix omissions withheld | 0 | Incomplete | arm's rule followed |
+| Panel seed 1 | **found** (P1 must-fix) | **found** (P2 consider) | **found** (P2 consider) | `can_read_destructive` (raised to P1 by the verifier), retry accessors (P1), `bitfield_ro`, `ExpiryT`, `get_message` timeout; one question | 0 | Changes Requested | in band |
+
+Every published omission on this target is true against the upstream 4.4.0 tree and the stub at head
+(the scorer re-checked each name), and no acquittal on the ground-truth surface was false; the
+ablation cell's miss of GT-c1 is a miss, not an acquittal (no ledger row). Recall of GT-c1: `v5b`
+one of three, the lower-effort arm one of three, the ablation zero of one, the Panel one of one. The
+un-anticipated `can_read_destructive` rename was the one omission every Skeptic-line seed but one
+found, because it is visible inside the diff's own hunks; the package-init omission the target was
+chosen for sits in a file the diff never touches, and the upstream trees in the packet did not change
+how often it was seen. The Panel cell's Requirements finder, restating twenty-one requirements from
+the stubsabot reference, is the only run that recovered all three ground-truth items; it also asked
+a question about five submodules the packet's diff and trees disagree on, a genuine inconsistency in
+the packet that no other run noticed.
 
 ### (d) `astral-sh/uv#4424` — GT-d1, the deferred naming
 
@@ -188,10 +203,15 @@ trace, the miss a verifier had a chance to catch and, in `v5b` seed 3, did not.
 3. **The published fix names the re-land's invariant in at least two of three seeds on (a) — FAIL.**
    One of three (`invariant` by the progress-gate route); one `branch`; one none.
 4. **The question channel fires on (e) in every seed — FAIL.** Zero of three.
-5. **Recall on (c) and (d) at least matches the Panel arm's** — _pending the Panel seed 1 cells;_
-   n=1 per target for the Panel.
+5. **Recall on (c) and (d) at least matches the Panel arm's — FAIL** (Panel at n=1 per target).
+   (c): `v5b` union over three seeds found GT-c1 and T-c2; the Panel found GT-c1, T-c2, and T-c3 in
+   one run. (d): `v5b` found GT-d1 in no seed; the Panel published it as a question.
 
-**v2a retirement condition** — _pending; reportable only at n=1 on two targets._
+**v2a retirement condition** (aggregate analysis §8) — **not met**, on the two targets where both
+arms ran, at Panel n=1. `v5b`'s union recall over adjudicated true items is below the Panel's on both
+(c) and (d), and the Panel produced a true item no `v5b` seed produced on more than one target:
+T-c3, `bitfield_ro`, and the retry accessors on (c); GT-d1 as a question and T-d2 as a verified
+finding on (d). The Panel paid 2.4× the cost and an hour or more per run for it.
 
 ## Cost
 
