@@ -11,6 +11,7 @@ Usage::
 
     python3 scripts/validate_review.py < payload.json
     python3 scripts/validate_review.py --render < payload.json
+    python3 scripts/validate_review.py --emit-batch < payload.json > batch.json
     python3 scripts/validate_review.py --self-test
 
 ``--render`` prints the exact summary reference fragment for each finding and
@@ -18,9 +19,21 @@ question item, one per line in item order, so the reviewer pastes generated
 text into the summary body instead of composing a link by hand. The validator
 then requires each fragment to appear in ``summary.body`` exactly once.
 
-Exit codes: ``0`` valid (or every fragment rendered), ``1`` one or more
-violations (one line each, in the form ``<location>: <rule>: <detail>``),
-``2`` the payload could not be read.
+``--emit-batch`` validates the payload and, when it has zero violations,
+prints the forge-native one-call review body as JSON: ``commit_id`` (the run
+trailer's ``head``), ``event`` (``COMMENT``), ``body`` (``summary.body``,
+unchanged), and ``comments`` — one entry per finding or question with a line
+anchor, in item order, carrying ``path``, ``line``/``side`` (the anchor's end
+line and side), ``start_line``/``start_side`` when the anchor spans more than
+one line, and ``body`` (the item's markdown, a blank line, then its trailer).
+File-anchored items and observations produce no comment: the summary body
+already carries their prose. A payload with any violation prints the
+violations and emits nothing, so the batch can never drift from what
+validated. The script never posts; the forge call stays in ``SKILL.md``.
+
+Exit codes: ``0`` valid (or every fragment rendered, or the batch emitted),
+``1`` one or more violations (one line each, in the form
+``<location>: <rule>: <detail>``), ``2`` the payload could not be read.
 
 Input schema (JSON object on stdin)::
 
@@ -78,6 +91,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import urllib.parse
 from typing import Any
@@ -682,17 +696,23 @@ def validate(payload: Any) -> list[str]:
     return report.lines
 
 
+def run_trailer_fields(summary: dict[str, Any]) -> dict[str, str]:
+    """The run trailer's fields, from ``summary.trailer`` or the trailer embedded in the body."""
+    raw_trailer = summary.get("trailer")
+    if raw_trailer is None:
+        match = RUN_TRAILER_RE.search(summary.get("body") or "")
+        raw_trailer = match.group(0) if match else None
+    if raw_trailer is None:
+        return {}
+    return check_run_trailer(Report(), "summary.trailer", raw_trailer)
+
+
 def render(payload: Any) -> tuple[list[str], list[str]]:
     """Return (fragments in item order, violations) for ``--render``."""
     if not isinstance(payload, dict) or not isinstance(payload.get("summary"), dict):
         return [], ["input: schema: payload must be a JSON object with a `summary` object"]
     summary = payload["summary"]
-    raw_trailer = summary.get("trailer")
-    if raw_trailer is None:
-        match = RUN_TRAILER_RE.search(summary.get("body") or "")
-        raw_trailer = match.group(0) if match else None
-    run_fields = check_run_trailer(Report(), "summary.trailer", raw_trailer) if raw_trailer is not None else {}
-    run = run_identity(summary, run_fields)
+    run = run_identity(summary, run_trailer_fields(summary))
     if run is None:
         return [], ["summary.trailer: trailer-sha: `--render` needs a run trailer whose `head` is a full 40-hex SHA when `repository_url` is present"]
     fragments: list[str] = []
@@ -704,6 +724,36 @@ def render(payload: Any) -> tuple[list[str], list[str]]:
         else:
             fragments.append(fragment)
     return fragments, violations
+
+
+def emit_batch(payload: dict[str, Any], event: str = "COMMENT") -> dict[str, Any]:
+    """Project a zero-violation payload into GitHub's one-call review body.
+
+    Call ``validate`` first: this projection assumes the payload is valid and
+    never alters prose, anchors, or ``summary.body``.
+    """
+    summary = payload["summary"]
+    comments: list[dict[str, Any]] = []
+    for _index, item in referenced_items(payload.get("items", [])):
+        anchor = item.get("anchor") or {}
+        if anchor.get("type") != "line":
+            continue
+        comment: dict[str, Any] = {
+            "path": anchor["path"],
+            "line": anchor["end_line"],
+            "side": anchor["side"],
+        }
+        if anchor["start_line"] != anchor["end_line"]:
+            comment["start_line"] = anchor["start_line"]
+            comment["start_side"] = anchor["side"]
+        comment["body"] = f"{item['markdown']}\n\n{item['trailer']}"
+        comments.append(comment)
+    return {
+        "commit_id": run_trailer_fields(summary).get("head"),
+        "event": event,
+        "body": summary["body"],
+        "comments": comments,
+    }
 
 
 HEAD = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
@@ -1286,6 +1336,68 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
     ]
 
 
+EMIT_BATCH_CASES = 3
+
+
+def emit_batch_cases() -> list[str]:
+    """Failures from the ``--emit-batch`` cases: the projection, the CLI on a valid payload, the CLI on an invalid one."""
+    failures: list[str] = []
+    payload = valid_payload()
+    finding, question = payload["items"][0], payload["items"][1]
+    batch = emit_batch(payload)
+    want = {
+        "commit_id": HEAD,
+        "event": "COMMENT",
+        "body": SUMMARY_BODY,
+        "comments": [
+            {
+                "path": "src/payments.ts",
+                "line": 42,
+                "side": "RIGHT",
+                "body": f"{FINDING_MARKDOWN}\n\n{finding['trailer']}",
+            }
+        ],
+    }
+    if batch != want:
+        failures.append(f"emit-batch on the contract example: got {batch!r}, want {want!r}")
+    if question["anchor"]["type"] != "file" or any(c["path"] == question["anchor"]["path"] for c in batch["comments"]):
+        failures.append("emit-batch: the file-anchored question must produce no comment")
+    if validate(payload):
+        failures.append("emit-batch: the contract example must still validate after projection")
+    finding["anchor"] = line_anchor("src/payments.ts", 40, 42)
+    del finding["fix"]
+    finding["trailer"] = finding["trailer"].replace(" fix=src/retry-policy.ts:18", "")
+    ranged = emit_batch(payload)["comments"]
+    want_ranged = {
+        "path": "src/payments.ts",
+        "line": 42,
+        "side": "RIGHT",
+        "start_line": 40,
+        "start_side": "RIGHT",
+        "body": f"{FINDING_MARKDOWN}\n\n{finding['trailer']}",
+    }
+    if ranged != [want_ranged]:
+        failures.append(f"emit-batch multi-line anchor: got {ranged!r}, want {[want_ranged]!r}")
+
+    command = [sys.executable, __file__, "--emit-batch"]
+    valid = subprocess.run(command, input=json.dumps(valid_payload()), capture_output=True, text=True, encoding="utf-8")
+    try:
+        printed = json.loads(valid.stdout)
+    except ValueError:
+        printed = None
+    if valid.returncode != 0 or printed != want or valid.stderr:
+        failures.append(f"--emit-batch on the contract example: exit {valid.returncode}, stdout {valid.stdout!r}, stderr {valid.stderr!r}")
+
+    invalid_payload = _mutate(lambda p: p["items"][2].__setitem__("markdown", OBSERVATION_MARKDOWN.replace("covers", "should cover", 1)))
+    violations = validate(invalid_payload)
+    if len(violations) != 1:
+        failures.append(f"--emit-batch fixture: expected exactly one violation, got: {'; '.join(violations)}")
+    invalid = subprocess.run(command, input=json.dumps(invalid_payload), capture_output=True, text=True, encoding="utf-8")
+    if invalid.returncode != 1 or invalid.stdout != "".join(f"{line}\n" for line in violations):
+        failures.append(f"--emit-batch on one violation: exit {invalid.returncode}, stdout {invalid.stdout!r}")
+    return failures
+
+
 def self_test() -> int:
     failures: list[str] = []
     run = {"head": HEAD, "repository_url": REPOSITORY_URL}
@@ -1323,12 +1435,13 @@ def self_test() -> int:
     bare = validate(_mutate(lambda p: _rewrite_fragment(p, PLAIN_FINDING_FRAGMENT)))
     if not any("bare code-span form" in line for line in bare):
         failures.append(f"bare code span: expected the --render hint, got: {'; '.join(bare)}")
+    failures.extend(emit_batch_cases())
     for failure in failures:
         print(failure)
     if failures:
         print(f"validate_review: {len(failures)} self-test case(s) failed")
         return 1
-    print(f"validate_review: self-test passed ({len(passing) + len(failing_cases()) + 3} cases)")
+    print(f"validate_review: self-test passed ({len(passing) + len(failing_cases()) + 3 + EMIT_BATCH_CASES} cases, emit-batch included)")
     return 0
 
 
@@ -1343,6 +1456,12 @@ def main() -> int:
         action="store_true",
         help="print each finding and question item's summary reference fragment, one per line, and exit",
     )
+    parser.add_argument(
+        "--emit-batch",
+        action="store_true",
+        help="print the forge-native one-call review body for a payload with zero violations, and exit",
+    )
+    parser.add_argument("--event", default="COMMENT", choices=("COMMENT",), help="review event; only COMMENT is emitted")
     args = parser.parse_args()
 
     if args.self_test:
@@ -1357,6 +1476,15 @@ def main() -> int:
     except (OSError, ValueError) as error:
         print(f"validate_review: {error}", file=sys.stderr)
         return 2
+
+    if args.emit_batch:
+        violations = validate(payload)
+        if violations:
+            for line in violations:
+                print(line)
+            return 1
+        print(json.dumps(emit_batch(payload, args.event), indent=2))
+        return 0
 
     if args.render:
         fragments, violations = render(payload)

@@ -179,4 +179,4 @@ On GitHub, the `Create a review for a pull request` batch documents line comment
 }
 ```
 
-Post it with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/reviews --input <payload>`. GitHub's separate review-comment endpoint documents `subject_type: "file"`, but using it would break this workflow's atomic one-review publication invariant. Use the equivalent forge-native operation elsewhere.
+Post it with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/reviews --input batch.json` as `--emit-batch` printed it. GitHub's separate review-comment endpoint documents `subject_type: "file"`, but using it would break this workflow's atomic one-review publication invariant. Use the equivalent forge-native operation elsewhere.
