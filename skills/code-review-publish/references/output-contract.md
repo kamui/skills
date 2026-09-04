@@ -51,7 +51,7 @@ the maintainer answer settles whether the candidate should re-open as a finding.
 
 Ask only when the rubric's static-unresolvability bar is met: no static evidence could settle the fact. A question is not a finding, has no priority, requests no code change, and states who or what measurement can answer it. Whole-change questions belong in the review body rather than on an arbitrary line.
 
-When a `plausible` candidate becomes a question, retain its stable concept id and change only the trailer type from `finding` to `question`. This keeps later answers and any code-decided finding correlated across runs.
+When a verified candidate becomes a question because its settling fact is statically unresolvable, retain its stable concept id and change only the trailer type from `finding` to `question`. This keeps later answers and any code-decided finding correlated across runs.
 
 ## Observations
 

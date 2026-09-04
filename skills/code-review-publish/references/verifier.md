@@ -50,11 +50,10 @@ Do not search the rest of the pull request for new findings. If an accurate, sub
 
 ## Verdicts
 
-Return exactly one verdict for every supplied *candidate* id:
+Return exactly one of the two verdicts below for every supplied *candidate* id:
 
 - `confirmed`: decisive evidence establishes the trigger, qualifying impact, requested outcome, and either the Code introduced-here condition or the explicit requirement responsibility.
-- `plausible`: the verifier can neither construct the claimed failing trace end-to-end nor refute any specific step of that trace from repository evidence. Return `plausible` whenever both conditions hold; do not force uncertainty into `confirmed` or `refuted`.
-- `refuted`: decisive evidence shows the claim is false, prevented, intentional under step 5, lacks a qualifying impact, or—only for a Code candidate—is pre-existing, meaning the failing path was already unsafe at the merge-base under the same guarantees; unchanged code whose relied-on guarantee the diff removed is not pre-existing.
+- `refuted`: decisive evidence shows the claim is false, prevented, intentional under step 5, lacks a qualifying impact, or—only for a Code candidate—is pre-existing, meaning the failing path was already unsafe at the merge-base under the same guarantees; unchanged code whose relied-on guarantee the diff removed is not pre-existing. `refuted` also applies when the verifier can neither construct the claimed failing trace end-to-end nor refute a specific step of it from repository evidence. In that last case the verifier must name, in one sentence, the single fact that would settle the claim and who or what measurement can supply it.
 
 A related non-survivor row supplied under related-acquittal mode is not a candidate: it takes exactly one `holds` or `re-open` ruling under the clean-verdict task and never a verdict from this list.
 
@@ -90,8 +89,8 @@ The single non-actionable `observation` aside permitted by the verification task
 The primary reviewer owns the final decision and must validate any corrections against the diff:
 
 - Publish a mandatory-verification candidate only when it is `confirmed`.
-- Drop a `refuted` candidate without mentioning it.
-- Do not publish a `plausible` candidate as a finding. Turn its single missing fact into a question when the answer could change the review outcome and no static evidence can settle it; name the benchmark, measurement, author, or maintainer decision that can. Frame it as `Change no code for this`, give it no priority, and keep the candidate's stable id while changing the trailer type from `finding` to `question`.
+- Drop a `refuted` candidate without mentioning it, except as the next bullet provides.
+- When a `refuted` verdict names a settling fact rather than a contradiction, drop the candidate as a finding. Publish a question for it only when the rubric's static-unresolvability rule is met (no static source available to the reviewer could settle it) and the answer could change the review outcome; the question keeps the candidate's stable id and takes the `question` trailer type. Otherwise record it as dropped.
 - Keep `independent-confirmed` when a confirmed candidate is corrected from `must-fix` to `consider` or otherwise falls below the threshold that originally put it in the batch.
 - Merge duplicates around one stable id and one requested outcome.
 - If the verifier omits a candidate, fails, or cannot inspect required evidence, mark verification and coverage incomplete. Do not publish that candidate or approve the change on the strength of incomplete verification.
