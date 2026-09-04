@@ -165,7 +165,7 @@ effort: medium
 directories that existed when the session began, so a definition written into a new directory
 mid-session is not loaded until restart, and a dispatch naming it fails or falls back to the
 session effort. The definition is committed at
-[`.claude/agents/v5b-primary-effort-medium.md`](../../../.claude/agents/v5b-primary-effort-medium.md)
+`.claude/agents/v5b-primary-effort-medium.md` (committed in PR #114, removed after the grid)
 (#60's first pull request) so every grid session started with it loaded; both grid-only definitions were removed once the arm's six cells had run, so they exist only in the history of that branch. Before the first cell, dispatch a trivial probe through the
 definition and read `effort` from the probe's transcript as described under item 4 below; the grid
 does not start until the probe shows `medium`. Record the probe's transcript path in
@@ -178,7 +178,7 @@ valid cell of this arm ran:** a child agent inherits its *parent's* effort, not 
 so a verifier batch dispatched by a `medium` primary as a plain `Agent` call also runs at `medium`.
 The first two cells of this arm (seed 1 on (b) and (c)) did exactly that, were discarded under the
 rule below, and their seed numbers were retired. Verifier batches in this arm are therefore dispatched
-through a second definition, [`.claude/agents/v5b-verifier-effort-high.md`](../../../.claude/agents/v5b-verifier-effort-high.md)
+through a second definition, `.claude/agents/v5b-verifier-effort-high.md` (added during the grid, removed after it)
 (`model: sonnet`, `effort: high`), which pins them at the default; a nested probe (a `medium` primary
 spawning one such verifier) verified `high` on the child before the first valid cell. The `v5b` arm's
 verifiers are plain `Agent` calls, so the two arms' verifiers differ only in that definition's
