@@ -81,14 +81,28 @@ def normalize(payload: Any) -> dict[str, Any]:
                 }
             )
         comments.sort(key=lambda comment: (int(comment["id"]), canonical_key(comment)))
-        issues.append(
-            {
-                "coordinate": string(issue.get("coordinate"), "issue.coordinate"),
-                "title": string(issue.get("title"), "issue.title"),
-                "body": string(issue.get("body"), "issue.body"),
-                "comments": comments,
-            }
-        )
+        comments_available = issue.get("comments_available", True)
+        if not isinstance(comments_available, bool):
+            raise ValueError(
+                f"issues[{issue_index}].comments_available must be a boolean"
+            )
+        normalized_issue: dict[str, Any] = {
+            "coordinate": string(issue.get("coordinate"), "issue.coordinate"),
+            "title": string(issue.get("title"), "issue.title"),
+            "body": string(issue.get("body"), "issue.body"),
+            "comments": comments,
+        }
+        if not comments_available:
+            # Unavailable comments are a distinct input from zero comments:
+            # two runs that differ here must not share a digest. The key is
+            # only added when false so digests for existing inputs are unchanged.
+            if comments:
+                raise ValueError(
+                    f"issues[{issue_index}].comments must be absent or empty "
+                    "when comments_available is false"
+                )
+            normalized_issue["comments_available"] = False
+        issues.append(normalized_issue)
     issues.sort(
         key=lambda issue: (utf8_key(issue["coordinate"]), canonical_key(issue))
     )
