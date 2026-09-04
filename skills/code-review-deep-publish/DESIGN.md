@@ -27,8 +27,9 @@ any of them as defeating the skill's purpose:
 - **Two parallel axis finders** (Code, Requirements), each independently sweeping the full diff.
   This is the recall engine: highest recall in tests 1 and 3, including the only extra
   independently-confirmed true finding of the program (test 3's mandatory-work-on-caller-thread).
-- **Mandatory fresh-context verification of every candidate**, with `support` withheld so the
-  verifier gets claims only, and `verify.md`'s anti-over-refutation asymmetry. v2's verifier is the
+- **Mandatory fresh-context verification of every candidate and every acquittal related to one**,
+  with `support` withheld so the verifier gets claims only, and `verify.md`'s
+  anti-over-refutation asymmetry. v2's verifier is the
   only one that ever refuted candidates in a run where others confirmed (test 1: two false
   candidates removed, one cross-axis duplicate merged).
 - **The Requirements-candidate exception** to pre-existing-at-base refutation (`verify.md`
@@ -335,6 +336,25 @@ touches that. Estimated saving: −5–10k tokens and −1–3 minutes of wall c
 with suites, and none on one without. Quality risk is none: the suite result reaches both finders
 exactly as before, by a cheaper route. The workflow identifier stays `v2a-1`; issue #59 bumps it once
 after all v2b behavior changes land (tracking epic #62).
+
+### C11. Acquittals related to a candidate are verified
+
+The test 3 tokio run exposed a hole inside the Panel line's verification boundary: the Code finder
+acquitted the two branches that carried the shipped regression while a different `WouldBlock`
+candidate survived, so the false acquittals never reached a verifier that received candidates only
+([test 3 v2a run](../../docs/research/prototype-runs-2026-09-01-test-3/v2a-run.md);
+[addendum](../../docs/research/prototype-runs-2026-09-01-test-3/addendum-2026-09-03.md)). Step 3 now
+adds every related acquitted ledger row to the existing candidate dispatch: related means its evidence
+is in a candidate's anchor or fix file, or its claim names the same function, branch, state field, or
+lock. `verify.md` applies the same adversarial five-step procedure as the Skeptic line, including an
+opposite-branch trace and a fresh citation before `holds`; a premise-contradicting fact is `re-open`,
+never an observation.
+
+This extends the Panel pole's verify-everything property rather than adopting consequence-triggered
+routing. A re-opened acquittal is reported to the caller and keeps its axis `Waiting for information`;
+it is not a verifier-created finding and this run has no second verifier dispatch. The high-risk
+zero-candidate dispatch and the re-open round from #54 were deliberately left out on cost, so a later
+round may promote the row. Specified by [issue #64](https://github.com/kamui/skills/issues/64).
 
 ### C12. Generated artifacts are compared to their source
 
