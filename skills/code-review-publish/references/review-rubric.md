@@ -21,7 +21,7 @@ Use this rubric as the finding-admission rule. More specific user instructions a
 3. **Discrete and actionable:** it describes one defect with an attainable outcome, not a broad codebase critique.
 4. **Proven consequence:** for behavior, identify the concrete input, state, environment, or call path and observable impact. For an authoritative instruction or maintainability contract, demonstrate the exact contradiction or drift and the concrete reader or maintenance consequence. Speculation about downstream breakage is insufficient.
 5. **Grounded intent:** it does not depend on an unstated assumption about the codebase or author's intent.
-6. **Unintentional:** the pull-request description, linked issue, repository rules, and history do not establish it as a deliberate behavior change.
+6. **Unintentional:** the pull-request description, linked issue, repository rules, and history do not establish it as a deliberate behavior change. A maintainer's approval, LGTM, or merge establishes acceptance only of what the review record explicitly addresses. It does not establish acceptance of a candidate the record never discusses, and it is **provisional** for unreleased public API surface — a new exported method, type, option, protocol entry, or documented command that appears in no released version at the merge-base. An explicit deferral in the review record (for example "we can fix this during the API review", "let's revisit the name later", "good enough for now") is evidence that the deferred question is *open*, and a candidate about that question passes this gate.
 7. **Worth the author's time:** the author would probably act if they understood the evidence. Tool-enforced trivia and generic preferences do not qualify.
 8. **Proportionate rigor:** the requested behavior matches the reliability and engineering practices evident in this repository.
 
@@ -31,7 +31,7 @@ All applicable conditions are gates. Report every candidate that passes them; ze
 
 Translate explicit issue requirements, acceptance criteria, invariants, and non-goals into the private ledger before judging implementation fit. A satisfied (`met`) ledger entry is one line: the requirement, its disposition, and one evidence pointer. Only a `partial` or `not-verifiable` entry carries additional explanation.
 
-A requirement finding still needs concrete evidence. Admit it when the change demonstrably omits, contradicts, or misimplements an explicit requirement. Behavior not mentioned by the issue is a finding only when it violates an explicit non-goal, materially broadens permissions/API/data behavior, or creates another qualifying defect. Necessary implementation detail is not scope creep merely because the issue did not enumerate it.
+A requirement finding still needs concrete evidence. Admit it when the change demonstrably omits, contradicts, or misimplements an explicit requirement. Behavior not mentioned by the issue is a finding only when it violates an explicit non-goal, materially broadens permissions/API/data behavior, or creates another qualifying defect. For unreleased public API surface, whether the surface should exist in this shape at all is an outcome-changing question when a repository rule (such as an API-guidelines section) or an explicit review deferral bears on it; route it under the question rule when static sources cannot settle it, and as a repository-rule finding when a cited rule is contradicted. Necessary implementation detail is not scope creep merely because the issue did not enumerate it.
 
 Judge the required outcome, not an imagined representation. When the issue permits multiple implementations and the current design plausibly satisfies it indirectly, do not demand a particular field, type, test, or schema. Ask a focused question only when that representation choice could change whether the requirement is met and no static evidence could settle it.
 
@@ -66,7 +66,7 @@ Before admitting a candidate, actively try to disprove it:
 2. Check whether unchanged surrounding code prevents the failure.
 3. Check relevant callers, tests, types, configuration, and CI evidence.
 4. For a Code candidate, confirm that the change introduced the behavior. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation.
-5. Confirm that the issue or pull-request description does not make it intentional.
+5. Confirm under gate 6 that the issue, pull-request description, rules, and review record do not make it intentional.
 6. Verify any rule or requirement citation and its scope.
 7. Search current review threads and CI output for the same issue.
 8. Confirm a valid, minimal changed-line or file anchor.
