@@ -159,6 +159,43 @@ the two failures above: a finder's accurate observation that fails the candidate
 briefs § Observations), and a verifier aside (`verify.md`, replacing the old "say so at the end in
 one line" text).
 
+Two runs showed the channel's edges. On test 2 Fable the `redis.conf:1795` first-sentence scope fact
+was raised twice: the Requirements finder made it candidate R2, the verifier confirmed it at
+`P3 consider`, and the Code finder returned the same fact as an observation, so the would-be review
+carried it as a finding *and* as an observation ([test 2 Fable v2a
+run](../../docs/research/prototype-runs-2026-09-01-test-2-fable/v2a-run.md) § "The `redis.conf`
+item and the third-party state, per finder", and its C5 note "confirmed, with a split"). On test 4
+both finders flagged the same `protocol.yml:3234` trailing-whitespace fix, and the orchestrator
+merged them "by analogy to the candidate-dedup principle" because the Deduplicate rule was written
+for candidates; five observation-shaped items then met the cap of three, and the verifier's two
+accurate asides were dropped with no record, one of them noted as folding "into Finding 1's own
+evidence" ([test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md) § 4
+rows 10, 22, 27, 28 and § 9 "Judgment call — Observations cap"). The aggregate scorecard's verdict
+on C5 reads "worked; no cross-axis dedup, cap binds" ([aggregate
+analysis](../../docs/research/prototype-runs-aggregate-tests-1-4-v2a-v5a.md) § 3 row C5).
+
+Four edits. `verify.md` § Deduplicate now covers observations: two are the same when they cite the
+same `file:line` or state the same fact, and one that describes the fact of a confirmed candidate
+is not an observation at all — the finding carries it. `publishing.md` § The summary applies that
+rule to the pooled observations before the cap, because `scripts/build_verifier_prompt.py`
+forwards candidates and related acquitted rows only, so a finder's observation never reaches the
+verifier and the orchestrator is the only place the cross-axis duplicate can be caught. The same
+paragraph records every observation the cap drops in the run report as
+`observation (unpublished, cap)` with its evidence pointer — the caller receives them in the
+session report, not the pull request — and forbids folding a dropped observation or a verifier
+aside into a finding's prose, which is the test-4 row-27 move. `SKILL.md` step 4's closing report
+lists the observations dropped at the cap. The cap stays three, as does the route into the channel.
+
+Checked on paper against the test 2 Fable run: R2 is confirmed at `P3 consider`; the Code finder's
+observation states the same fact at the same `file:line`, so the pool drops it, and the
+`redis.conf` fact publishes once, as the finding. Against test 4: the two whitespace observations
+collapse by rule rather than by analogy, three publish as before, and rows 27 and 28 appear in the
+run report as `observation (unpublished, cap)` with their pointers instead of vanishing, row 27 no
+longer folded into Finding 1. Expected cost is ≈0: the comparison is one the verifier already makes
+for candidates, and the record is a few hundred output tokens on a run that overflows the cap.
+Specified by [issue #58](https://github.com/kamui/skills/issues/58). The workflow identifier stays
+`v2a-1` until #59.
+
 ### C6. Closed-PR rule and trailer parity
 
 Two fixes applied identically in v5a, for comparability:

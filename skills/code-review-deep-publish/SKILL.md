@@ -125,7 +125,7 @@ Re-reviewing, carry step 3's verdicts onto the prior findings: reply on each exi
 
 Attempt each write once. On an ambiguous result, read the target before a single retry, then report the failure rather than posting again.
 
-Finish with the short form: status, run identity, coverage, counts, questions, observations, refuted count, and publication result. Name the files it discusses as rendered coordinate links — observations keep their code spans — including on a retrospective run with publication disabled, where the would-be review is reported instead of a link. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more.
+Finish with the short form: status, run identity, coverage, counts, questions, observations, the observations dropped at the cap, refuted count, and publication result. Name the files it discusses as rendered coordinate links — observations keep their code spans — including on a retrospective run with publication disabled, where the would-be review is reported instead of a link. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more.
 
 ## Why this shape
 
