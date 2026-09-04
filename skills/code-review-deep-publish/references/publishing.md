@@ -84,11 +84,19 @@ deliberate; if it is, nothing else here blocks.
 
 [`docs/ops.md`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/docs/ops.md) — the diff rewrites the file and keeps the synchronous sequence as the first example, while the queue path is the documented default now.
 
+**Triggers when**: a reader follows the quickstart's first example — they call the synchronous path the queue path replaced, and nothing in the document says so.
+
 **Change**: rewrite the quickstart's first example against the queue path.
 
 Closing this without action is a correct response.
 
 <!-- finding id=code/ops-md/sync-quickstart axis=code action=consider priority=P3 head=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 -->
+
+## Observations
+
+These are accurate observations, not findings — no action is requested.
+
+- The retry loop logs each attempt at `info` level (`src/retry-policy.ts:31` in the pre-image).
 
 ## Open questions
 
@@ -99,12 +107,6 @@ The new queue path defaults to 30s — [`src/config.ts`](https://github.com/acme
 **Change no code for this.** Answer it, or say what would settle it.
 
 <!-- finding id=question/queue-timeout-30s action=question head=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 -->
-
-## Observations
-
-These are accurate observations, not findings — no action is requested.
-
-- The retry loop logs each attempt at `info` level (`src/retry-policy.ts:31` in the pre-image).
 ```
 
 This body is the phase-1 fixture: every index entry, body-resident finding, and whole-change question carries its coordinate as a rendered fragment whose text is the unchanged coordinate, and the observations pointer is a code span. Phase 2 makes each index title link to its comment and leaves every file fragment byte-identical.
