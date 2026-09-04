@@ -252,11 +252,11 @@ of them with an executed reproduction.
 The Panel line pays for every shared input twice, because two finders sweep the same diff. Test
 suites had no owner in the skill at all, so both finders picked them up independently. On test 1 the
 Code finder's own method note records `python3 -m unittest discover -s tests -p "test_*.py"` in its
-clone (290 tests) and three of its ledger rows are acquitted on `290 tests pass`, while the
+clone (290 tests) and four of its ledger rows cite the passing suite as evidence, while the
 Requirements finder separately recorded 290 Python and 60 Node tests passing as its verification of
 requirement 11 ([test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md), §2
-Observations item 9 and §4). The same Python suite was therefore executed twice, in two contexts, for one suite's
-worth of information — and the run's own Coverage line reports it once.
+Observations item 9 and §4). The same Python suite was therefore executed twice, in two contexts,
+for one suite's worth of information — and the run's own Coverage line reports it once.
 
 Step 1 now runs the repository's permitted suites once, before spawning, and puts a one-line result
 summary per suite into the shared block alongside the diff, manifest, commit list, and guidance. That
