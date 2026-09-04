@@ -22,9 +22,9 @@ trailer) appends four sections after `## history`. The script reports; it does
 not decide the review's scope.
 
 - `## delta-conditions`: `ancestor: yes|no` (`git merge-base --is-ancestor
-  <prior-head> <head>`), `merge-base-unchanged: yes|no` (the pinned
-  `--merge-base` against `git merge-base <base-ref> <head>`, or
-  `unknown (no --base-ref)` when `--base-ref NAME` is not given), and
+  <prior-head> <head>`), `merge-base-unchanged: yes|no` (compare `git
+  merge-base <base-ref> <prior-head>` with `git merge-base <base-ref> <head>`,
+  or `unknown (no --base-ref)` when `--base-ref NAME` is not given), and
   `prior-head-reachable: yes|no` (`git cat-file -e <prior-head>`).
 - `## delta-manifest`: the manifest format below, for `<prior-head>...<head>`.
 - `## delta-diff`: `git diff <prior-head>...<head> --function-context`,
@@ -311,7 +311,6 @@ def build_history(
 
 
 def build_conditions(
-    merge_base: str,
     head: str,
     prior_head: str,
     base_ref: Optional[str],
@@ -325,8 +324,10 @@ def build_conditions(
     )
     if base_ref is None:
         merge_base_unchanged = "unknown (no --base-ref)"
+    elif not reachable:
+        merge_base_unchanged = "no"
     else:
-        pinned = run_git(["rev-parse", "--verify", f"{merge_base}^{{commit}}"], cwd).strip()
+        pinned = run_git(["merge-base", base_ref, prior_head], cwd).strip()
         current = run_git(["merge-base", base_ref, head], cwd).strip()
         merge_base_unchanged = "yes" if pinned == current else "no"
     return {
@@ -363,14 +364,13 @@ def build_overlap(
 
 
 def build_delta(
-    merge_base: str,
     head: str,
     prior_head: str,
     base_ref: Optional[str],
     full_ranges: list[dict[str, Any]],
     cwd: Optional[str],
 ) -> dict[str, Any]:
-    conditions = build_conditions(merge_base, head, prior_head, base_ref, cwd)
+    conditions = build_conditions(head, prior_head, base_ref, cwd)
     delta: dict[str, Any] = {
         "prior_head": prior_head,
         "base_ref": base_ref,
@@ -493,7 +493,7 @@ def build_context(
         "history": build_history(merge_base, manifest, cwd),
     }
     if prior_head is not None:
-        context["delta"] = build_delta(merge_base, head, prior_head, base_ref, ranges, cwd)
+        context["delta"] = build_delta(head, prior_head, base_ref, ranges, cwd)
     return context
 
 
@@ -575,10 +575,18 @@ def self_test() -> int:
             print(f"self-test setup failed: {error}")
             return 1
 
-        def run(*extra: str) -> Optional[str]:
+        def run(
+            *extra: str, pinned_merge_base: Optional[str] = None
+        ) -> Optional[str]:
             """Run the script; return its stdout, or None after recording the failure."""
             completed = subprocess.run(
-                [sys.executable, os.path.abspath(__file__), "--merge-base", merge_base, *extra],
+                [
+                    sys.executable,
+                    os.path.abspath(__file__),
+                    "--merge-base",
+                    pinned_merge_base or merge_base,
+                    *extra,
+                ],
                 cwd=repository,
                 env=environment,
                 capture_output=True,
@@ -707,10 +715,21 @@ def self_test() -> int:
             git("checkout", "-q", "topic")
             git("merge", "-q", "--no-edit", "trunk")
             merged = git("rev-parse", "HEAD").strip()
+            current_merge_base = git("merge-base", "trunk", merged).strip()
         except GitError as error:
             print(f"self-test setup failed: {error}")
             return 1
-        output = run("--head", merged, "--prior-head", amended, "--base-ref", "trunk")
+        if current_merge_base == merge_base:
+            failures.append(f"{case}: moving trunk did not move the merge-base")
+        output = run(
+            "--head",
+            merged,
+            "--prior-head",
+            amended,
+            "--base-ref",
+            "trunk",
+            pinned_merge_base=current_merge_base,
+        )
         if output is not None:
             expect_conditions(
                 case,
@@ -721,10 +740,18 @@ def self_test() -> int:
             passed.append(case)
 
         # An unreachable prior head is reported, not a failure.
-        output = run("--head", merged, "--prior-head", "0" * 40)
+        output = run(
+            "--head", merged, "--prior-head", "0" * 40, "--base-ref", "trunk"
+        )
         if output is not None:
             expect_conditions(
-                "unreachable prior head", output, {"ancestor": "no", "prior-head-reachable": "no"}
+                "unreachable prior head",
+                output,
+                {
+                    "ancestor": "no",
+                    "merge-base-unchanged": "no",
+                    "prior-head-reachable": "no",
+                },
             )
             if section_of(output, "delta-overlap").strip() != "```\n\n```":
                 failures.append("unreachable prior head: delta-overlap is not empty")
