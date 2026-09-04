@@ -1,10 +1,10 @@
 # Re-review and prior state
 
-Read this reference only when `SKILL.md` step 4 requires it.
+Read this reference only when `SKILL.md` step 2 requires it.
 
 ## Re-review without losing state
 
-Run `python3 scripts/review_context.py --merge-base <sha> --head <sha> --base-ref <base> --prior-head <prior head from the run trailer>` once. Review the **delta** when all of the following hold: `ancestor: yes`, `merge-base-unchanged: yes`, the earlier review's trailer says `coverage=complete`, and the reviewer judges the delta's interactions bounded from `## delta-overlap`. Two exceptions widen a delta review: a delta hunk that overlaps a range where a prior finding is still open is reviewed together with that whole enclosing range at head, and a path the prior review listed under `Coverage gaps` is reviewed in full. When any condition fails, review the full diff and write which condition failed in the private record. A delta review still reads `## delta-diff` under step 3's rules and still runs every prior-item classification below. Carry and classify every unresolved item under the output contract. Reply on its existing thread. After one verified re-review, a still-valid declined finding becomes disputed: stop re-posting it, but keep its blocking effect for human settlement.
+Use the single context run from `SKILL.md` step 2. Review the **delta** when all of the following hold: `ancestor: yes`, `merge-base-unchanged: yes`, the earlier review's trailer says `coverage=complete`, and the reviewer judges the delta's interactions bounded from `## delta-overlap`. Two exceptions widen a delta review: a delta hunk that overlaps a range where a prior finding is still open is reviewed together with that whole enclosing range at head, and a path the prior review listed under `Coverage gaps` is reviewed in full. When any condition fails, review the full diff and write which condition failed in the private record. A delta review still reads `## delta-diff` under step 3's rules and still runs every prior-item classification below. Carry and classify every unresolved item under the output contract. Reply on its existing thread. After one verified re-review, a still-valid declined finding becomes disputed: stop re-posting it, but keep its blocking effect for human settlement.
 
 ## Replies and prior state
 
