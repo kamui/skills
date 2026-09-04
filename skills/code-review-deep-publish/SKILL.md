@@ -32,6 +32,7 @@ Read `docs/agents/issue-tracker.md` when present for the forge's verbs. Then res
 - the comparison base — the merge-base of the head with the base branch, which is what the pull request already means. Take a different fixed point only when the caller supplies one;
 - the originating issue, from `Closes #n` / `Fixes #n` / a bare `#n` in the pull request body, then the branch name, then the commit messages. This is the spec source. Read it with its comments;
 - the posting identity (`gh api user --jq .login`), and whether it authored the pull request;
+- the base repository's canonical web URL (`gh api repos/{owner}/{repo}/pulls/<n> --jq .base.repo.html_url`), which every coordinate link resolves under;
 - any earlier review from that identity: its `commit_id`, its findings' ids and trailers, the replies on those threads, and thread resolution state.
 
 No pull request means there is nothing to publish to. Stop and report it; opening one is `implement-publish`'s job.
@@ -40,7 +41,7 @@ A **closed** pull request — abandoned or rejected without merge — has nothin
 
 No originating issue is a normal state, not a failure. The Requirements axis still runs — against the pull request body's behavioral claims and its explicit non-goals, which are the only statement of intent available. Give the Requirements finder the body in place of the issue; its brief says how to use it. Report issue alignment as **unavailable** in the published summary. Do not invent requirements beyond what the body claims.
 
-Pin `base`, `head`, and `merge-base` together as the run identity, and record them. Everything downstream is judged against that triple; a review that cannot name it has nothing to publish.
+Pin `base`, `head`, and `merge-base` together as the run identity, and record them alongside the base repository's canonical web URL. Everything downstream is judged against that triple; a review that cannot name it has nothing to publish.
 
 Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
@@ -111,7 +112,7 @@ Carry the Requirements finder's restated requirement list and its met / not-met 
 
 ### 4. Publish once
 
-Follow [`references/publishing.md`](references/publishing.md) for the comment shape's transport, the status ladder, and the forge verbs.
+Follow [`references/publishing.md`](references/publishing.md) for the comment shape's transport, the status ladder, and the forge verbs. Render every coordinate fragment the body carries with `python3 scripts/link_coordinate.py` — its `render` command per coordinate, its `check` command against anything already written; on a non-zero exit, report the script's output and stop the step, because a hand-written fragment is not the fallback.
 
 Re-read the pull request head immediately before the first write. If it no longer matches the reviewed head, or cannot be read, **publish nothing**: the diff the findings were anchored against has moved, and every line comment would land on code that no longer says what the finding claims. Report the stale review and the head it was computed for.
 
@@ -121,7 +122,7 @@ Re-reviewing, carry step 3's verdicts onto the prior findings: reply on each exi
 
 Attempt each write once. On an ambiguous result, read the target before a single retry, then report the failure rather than posting again.
 
-Finish with the short form: status, run identity, coverage, counts, questions, observations, refuted count, and publication result. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more; on a retrospective run with publication disabled, report the full would-be review instead of a link.
+Finish with the short form: status, run identity, coverage, counts, questions, observations, refuted count, and publication result. Name the files it discusses as rendered coordinate links — observations keep their code spans — including on a retrospective run with publication disabled, where the would-be review is reported instead of a link. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more.
 
 ## Why this shape
 
