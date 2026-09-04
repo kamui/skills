@@ -30,7 +30,9 @@ total minus the research report.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | _(target a) v5b seed 1_ | | | | | | | |
 
-Group rows by target, arms in the order v5b, v2a, v5b-without-verifier, then the Fable tier-split runs.
+Group rows by target, arms in the order v5b, v2a, v5b-without-verifier, then `v5b-effort-medium`
+on targets (b) and (c) only (see [`README.md`](README.md#lower-effort-primary-arm)), then the Fable
+tier-split runs.
 Where a run's primary was not metered, pass `--harness-note "primary not metered"` so the harness-total
 cell says so, and treat the row as a lower bound in the ranking.
 
@@ -72,6 +74,20 @@ Per run against the adjudicated band written before the runs. Written by #60.
 
 `message.model` from every transcript belonging to this evaluation, per run. Written by #60 before
 scoring.
+
+## Effort verification
+
+For every run, the effort as passed and as verified from the transcript's top-level `effort` field,
+read from the same lines as `message.model`, per sub-agent: the primary and each verifier batch. The
+`v5b-effort-medium` rows show `medium` on the primary and the default on every verifier; every other
+row shows the default throughout. A row whose verified value differs from the value passed is a
+discarded run and is recorded under Run continuity, not here. Alongside it, per run: tool-call
+count (primary and each verifier) and wall clock, the two figures #68 compares across the arm.
+
+| Run | Sub-agent | Effort passed | Effort verified | Tool calls | Wall clock |
+| --- | --- | --- | --- | --- | --- |
+| _(target b) v5b-effort-medium seed 1_ | primary | `medium` | | | |
+| _(target b) v5b-effort-medium seed 1_ | verifier batch 1 | default | | | |
 
 ## Sandbox and hygiene disclosures
 

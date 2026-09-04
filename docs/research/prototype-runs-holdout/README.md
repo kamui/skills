@@ -2,7 +2,8 @@
 
 **Status: method only; no cell has run.** This directory was created ahead of the holdout evaluation
 (#60) by #67, which fixes how every run in it is metered, and #69, which fixes what a dispatch may ask
-a run to do. Everything #60 specifies — the six targets, their ground truth and calibration bands, the
+a run to do; #68 adds one lower-effort arm with its adoption rule written before any run. Everything
+#60 specifies — the six targets, their ground truth and calibration bands, the
 conditions, the model verification, the run documents, and `evaluation.md` — is written by #60 and
 lands here. The full experimental design is #60's body and
 [aggregate analysis §8 "The holdout demand"](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md#the-holdout-demand);
@@ -20,8 +21,8 @@ a single cohort, one model passed explicitly on every `Agent` call and verified 
 `message.model` before scoring, a truncated mirror with negative `git cat-file -e` checks recorded per
 clone, identical phase-1 packets across arms, per-run sandboxes with self-disclosure, and the
 expensive phase persisted to disk before any verifier is dispatched. #60 adds three seeds per cell and
-the ground-truth-before-run rule. The rest of this section is the metering rule #67 adds and the
-dispatch-hygiene rule #69 adds.
+the ground-truth-before-run rule. The rest of this section is the metering rule #67 adds, the
+dispatch-hygiene rule #69 adds, and the lower-effort arm #68 adds.
 
 ### Dispatch hygiene
 
@@ -100,10 +101,79 @@ stays in the table for continuity with the corpus, whose numbers are all raw. Th
 the total is expected to differ by arm — in test 4 the Panel run documents are 89–93 KB against
 57–75 KB for the Skeptic line — so subtracting it moves the ratios, not just the totals.
 
+### Lower-effort primary arm
+
+One arm beyond the three #60 specifies, added by #68 as a measurement and nothing more: it adopts
+lower effort nowhere. Every run in the corpus ran at the harness default effort. The `claude-api`
+skill's model notes say `output_config.effort` is the first quality-trading lever after caching, that
+lower effort produces fewer and more consolidated tool calls and terser output, and that the tradeoff
+is workload-specific. The two redis Sonnet misses were reasoning failures — both primaries and one
+verifier accepted the same false premise — of the kind lower effort would plausibly worsen, and the
+corpus cannot say by how much.
+
+**Arm:** `code-review-publish` (v5b) with the **primary one effort step below the harness default**
+and every verifier batch at the default. Row label `v5b-effort-medium`.
+
+**Targets and seeds:** three seeds on target (b), high-risk and adjudicated clean, where reasoning
+depth is most likely to degrade; three seeds on target (c), the requirements omission in an unchanged
+file, where search breadth is. Six runs. Same packets, same mirror, same model, same conditions as
+the v5b cells on those targets; the arm differs from v5b in the primary's effort and in nothing else.
+
+**How effort is set and why `medium`.** In Claude Code the effort is a harness setting, not skill
+text. The `Agent` call carries `model` but no effort parameter; effort is set per sub-agent by the
+`effort` field in an agent definition's frontmatter, which overrides the session level for that
+sub-agent. The arm therefore dispatches its primary through a project-local definition that #60
+creates for the grid and removes afterwards:
+
+```yaml
+---
+name: v5b-primary-effort-medium
+description: code-review-publish primary at one effort step below the harness default (#68)
+model: sonnet
+effort: medium
+---
+```
+
+Claude Code's documented default for `claude-sonnet-5` is `high`, so one step below is `medium`.
+The default is confirmed at run time from the session header, which names the active effort beside
+the model, and recorded in the run document; if the observed default is not `high`, the arm runs one
+step below whatever is observed and the README's figure is corrected before the first cell. Verifier
+batches are dispatched exactly as the v5b arm dispatches them, with no definition and no effort
+override, so they inherit the default. **No verifier batch runs below the default, in this arm or any
+other**: the verifier is the mechanism the corpus shows is most reasoning-sensitive.
+
+**Recorded per run, beside the four scoring dimensions:**
+
+1. Harness-reported tokens, metered as [above](#metering-per-run).
+2. Tool-call count, the primary's own and each verifier's, from the `Agent` result's usage block
+   where the harness reports one and self-reported otherwise, labelled as test 4 labels them.
+3. Wall clock, start to end of the run.
+4. The effort **as passed** (the definition's `effort` field, or "none; default" for the verifiers)
+   and **as verified from the transcript**: every assistant line of a sub-agent transcript carries a
+   top-level `effort` beside `message.model`, so the model check #60 already requires reads both
+   fields from the same lines. Verify the whole transcript, not the first turns; a resumed agent can
+   pick up a different level. A run whose verified effort differs from the effort passed is
+   discarded and re-run, as an interrupted run is.
+
+**Adoption rule, fixed here before any run.** Effort tiering by risk surface — lower effort on a
+review whose diff touches no risk-surface path and whose review produces zero survivors, default or
+higher otherwise — is adopted only if, across the six runs, the lower-effort arm shows **no loss on
+dimension 2** (no false finding and no false acquittal that the v5b cells on the same target and seed
+do not also show) **and loses no more than one ground-truth item** in total against those cells.
+Otherwise the result is recorded in `evaluation.md` and the default stays. Meeting the rule
+authorises a ticket proposing the tiering, not a change to skill text or harness defaults on the
+strength of this arm alone.
+
+**If the harness cannot pass effort per sub-agent** at the pinned commit — the `effort` field is
+ignored, or the transcript shows the default on the primary — `evaluation.md` records that with the
+harness version and the transcript evidence, no run counts toward the arm, and #68 is closed as not
+testable.
+
 ## Files
 
 - `README.md` — this file; #60 adds targets, ground truth, conditions, and model verification
 - `<target>/<arm>-seed<n>-payload.md` and `<target>/<arm>-seed<n>-run.md` — one pair per run
 - `comparison-data.md` — side-by-side metadata with the production-shaped cost column
-- `evaluation.md` — pass/fail against each #60 success criterion; written by #60
+- `evaluation.md` — pass/fail against each #60 success criterion, plus the lower-effort arm's six
+  runs and whether the #68 adoption rule was met; written by #60
 - [`../tools/cost_split.py`](../tools/cost_split.py) — the metering script; `--self-test` checks it
