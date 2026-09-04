@@ -58,9 +58,9 @@ A file anchor carries exactly ``type`` and ``path``; a line anchor also carries
 base repository's canonical web URL; when present, ``RIGHT`` line anchors, file
 anchors, and fix sites render as commit-pinned blob links at the run trailer's
 head, and a ``LEFT`` anchor stays a code span. When absent, every coordinate
-renders as a code span. The former ``summary.anchors`` override is gone: the
-summary is checked by string equality against the fragments ``--render``
-produces, under the one rule ``summary-reference``.
+renders as a code span. There is no payload override for the summary's
+coordinates: the summary is checked by string equality against the fragments
+``--render`` produces, under the one rule ``summary-reference``.
 
 Where a check could disagree with the reference text, the reference text wins
 and this script is the thing that must be fixed. Three deliberate reading notes:
@@ -127,8 +127,10 @@ TRAILER_RE = re.compile(r"\A<!--\s+(?P<kind>\S+)(?P<fields>(?:\s+\S+)*)\s+-->\Z"
 RUN_TRAILER_RE = re.compile(r"<!--\s+review-run\b[^>]*-->")
 FINDING_TITLE_RE = re.compile(r"\A\*\*\[(?P<priority>[^\]]+)\]\s+\[(?P<action>[^\]]+)\]")
 QUESTION_TITLE_RE = re.compile(r"\A\*\*\[(?P<tag>[^\]]+)\]")
-SUMMARY_ANCHOR_WORD_RE = re.compile(r"(?<![\w-])anchor ")
-SUMMARY_FIX_WORD_RE = re.compile(r"; fix ")
+# An entry is the word followed by a coordinate — a code span or a link — so
+# prose may say "the file anchor is lost" without counting as one.
+SUMMARY_ANCHOR_ENTRY_RE = re.compile(r"(?<![\w-])anchor (?=\[?`)")
+SUMMARY_FIX_ENTRY_RE = re.compile(r"; fix (?=\[?`)")
 BLOB_LINK_RE = re.compile(r"https?://[^\s()<>]+?/blob/(?P<revision>[^/\s()]+)/")
 REPOSITORY_URL_RE = re.compile(r"\Ahttps?://[^\s/]+(?:/[^\s]*)?\Z")
 SUMMARY_REFERENCE = "summary-reference"
@@ -372,8 +374,10 @@ def check_summary_references(report: Report, body: str, summary: dict[str, Any],
 
     Every finding and question item's rendered fragment appears exactly once;
     the body renders exactly one ``anchor `` entry per such item and one
-    ``; fix `` per item with a fix; and when ``repository_url`` is present,
-    every blob link in the body points at the run head.
+    ``; fix `` per item with a fix, where an entry is the word followed by a
+    coordinate in backticks or a link (prose may use the word freely); and
+    when ``repository_url`` is present, every blob link in the body points at
+    the run head.
     """
     run = run_identity(summary, run_fields)
     if run is None:
@@ -401,14 +405,14 @@ def check_summary_references(report: Report, body: str, summary: dict[str, Any],
                 report.add(location, SUMMARY_REFERENCE, "the summary renders a fix but the item has none")
         if item.get("fix") is not None:
             expected_fixes += 1
-    anchors = len(SUMMARY_ANCHOR_WORD_RE.findall(body))
+    anchors = len(SUMMARY_ANCHOR_ENTRY_RE.findall(body))
     if anchors != len(referenced):
         report.add(
             "summary.body",
             SUMMARY_REFERENCE,
             f"the body renders {anchors} `anchor ` entries for {len(referenced)} finding and question items",
         )
-    fixes = len(SUMMARY_FIX_WORD_RE.findall(body))
+    fixes = len(SUMMARY_FIX_ENTRY_RE.findall(body))
     if fixes != expected_fixes:
         report.add(
             "summary.body",
@@ -840,6 +844,62 @@ def consider_payload() -> dict[str, Any]:
     return payload
 
 
+UNANCHORED_FRAGMENT = f"anchor [`scripts/__pycache__/validate_review.cpython-314.pyc`]({BLOB}/scripts/__pycache__/validate_review.cpython-314.pyc) (file)"
+
+UNANCHORED_FINDING_MARKDOWN = """**[P2] [must-fix] Remove the committed bytecode cache**
+
+**Triggers when:** The change is merged: the diff adds a CPython bytecode cache
+as a tracked file, and nothing ignores it. The file anchor is lost on GitHub's
+batch endpoint, so this finding lives in the body.
+
+**Impact:** Every self-test run rewrites the file and dirties the working tree.
+
+**Change:** Delete the file and ignore `__pycache__/`."""
+
+
+def unanchored_payload() -> dict[str, Any]:
+    """A file-anchored finding placed in `Unanchored findings` instead of `Findings`.
+
+    GitHub's review batch cannot carry a file subject, so this is the layout
+    every file-anchored finding produces there. Its complete prose uses the
+    word ``anchor``, which must not count as a rendered entry.
+    """
+    payload = valid_payload()
+    finding = payload["items"][0]
+    finding["id"] = "scripts/committed-pycache"
+    finding["markdown"] = UNANCHORED_FINDING_MARKDOWN
+    finding["trailer"] = (
+        f"<!-- finding id=scripts/committed-pycache head={HEAD} priority=P2 "
+        "action=must-fix blocking=true kind=maintainability -->"
+    )
+    finding["priority"] = "P2"
+    finding["kind"] = "maintainability"
+    finding["anchor"] = {"type": "file", "path": "scripts/__pycache__/validate_review.cpython-314.pyc"}
+    del finding["fix"]
+    del payload["items"][1]
+    payload["summary"]["body"] = f"""**Changes Requested (advisory)** — 1 must-fix finding.
+
+**Intent:** Render summary coordinates as commit-pinned links.
+
+**Issue fit:** Met; the one blocker is a committed bytecode cache, not the feature.
+
+**Coverage:** Complete merge-base diff reviewed, the committed cache included.
+
+**Reviewed:** `a1b2c3d` against merge-base `d4e5f6a`.
+
+## Unanchored findings
+
+GitHub's review batch cannot carry a file subject, so this finding's complete prose is here.
+
+- [P2] [must-fix] Remove the committed bytecode cache — {UNANCHORED_FRAGMENT}
+
+{UNANCHORED_FINDING_MARKDOWN}
+
+{RUN_TRAILER}
+"""
+    return payload
+
+
 def abbreviation_payload() -> dict[str, Any]:
     """An observation whose abbreviation must not read as a sentence break."""
     payload = valid_payload()
@@ -1010,6 +1070,12 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
         payload["summary"]["body"] = payload["summary"]["body"].replace(
             "\n## Open questions",
             f"- [P2] [consider] An entry with no item — anchor [`src/extra.ts:1`]({BLOB}/src/extra.ts?plain=1#L1)\n\n## Open questions",
+        )
+
+    def coordinate_shaped_anchor_in_prose(payload):
+        payload["summary"]["body"] = payload["summary"]["body"].replace(
+            "\n## Open questions",
+            "The old anchor `src/legacy.ts:7` no longer exists.\n\n## Open questions",
         )
 
     def bare_code_span_with_repository_url(payload):
@@ -1186,6 +1252,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
             SUMMARY_REFERENCE,
         ),
         ("extra rendered entry with no item", _mutate(extra_rendered_entry), SUMMARY_REFERENCE),
+        ("coordinate-shaped anchor reference in prose", _mutate(coordinate_shaped_anchor_in_prose), SUMMARY_REFERENCE),
         ("bare code span for a RIGHT anchor with repository_url", _mutate(bare_code_span_with_repository_url), SUMMARY_REFERENCE),
         ("linked LEFT anchor", _mutate(linked_left_anchor), SUMMARY_REFERENCE),
         ("fix rendered for an item without one", _mutate(fix_rendered_without_item_fix), SUMMARY_REFERENCE),
@@ -1227,6 +1294,7 @@ def self_test() -> int:
         ("code-span fallback without repository_url", plain_payload()),
         ("consider finding", consider_payload()),
         ("observation with abbreviation", abbreviation_payload()),
+        ("file-anchored finding laid out in Unanchored findings", unanchored_payload()),
     ]
     for name, anchor, fix, fragment in render_cases():
         item: dict[str, Any] = {"type": "finding", "anchor": anchor}
