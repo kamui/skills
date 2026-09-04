@@ -86,6 +86,7 @@ count (primary and each verifier) and wall clock, the two figures #68 compares a
 
 | Run | Sub-agent | Effort passed | Effort verified | Tool calls | Wall clock |
 | --- | --- | --- | --- | --- | --- |
+| _pre-grid probe (transcript path)_ | `v5b-primary-effort-medium` | `medium` | | | |
 | _(target b) v5b-effort-medium seed 1_ | primary | `medium` | | | |
 | _(target b) v5b-effort-medium seed 1_ | verifier batch 1 | default | | | |
 
