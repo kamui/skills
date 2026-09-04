@@ -69,6 +69,33 @@ status keys on action alone. Both axis briefs return `action` per candidate.
 **Checkable intent** (handoff 3's success test): on the test-1 target, v2a still *finds* both
 drifts — that is the recall pole — but lands them in the non-blocking band.
 
+The post-C9 test-1 runs measured that intent on two models, and it held on one. Both runs found both
+drifts. The Fable run landed the Narrow drift `P2 consider`, its verifier noting that the stage
+skill links to and says to follow the protocol, so the stale list is paraphrase drift rather than a
+broken execution path. The model-matched Sonnet run confirmed the same item `P1 must-fix`, published
+the bundle drift `P1 consider`, and derived `Changes Requested` on an author-adjudicated approvable
+change ([test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) §2 and §7;
+[test 1 evaluation](../../docs/research/prototype-runs-2026-09-01-test-1/evaluation.md) § "Narrow
+refresh drift: stable fact, unstable action"; [aggregate
+analysis](../../docs/research/prototype-runs-aggregate-tests-1-4-v2a-v5a.md) §2 "v2a C1", §3 row C1,
+and §5 item 3). Its verifier defended `must-fix` from this section's own calibration sentence — an
+executed skill step is an authoritative execution path — and both priorities sat above every
+calibrated run on the item (v4, v5, and the Fable run: P2/P3). The decoupling mechanism worked; the
+calibration text left two joints loose. [Issue #55](https://github.com/kamui/skills/issues/55)
+tightens both. `finding-format.md` now says when a restatement is on an authoritative execution
+path: only when the stale text carries no link or reference to the canonical rule, **and** following
+it literally causes a named wrong action the canonical text forbids; when either fails, the drift is
+`consider`. It also caps restatement drift — a second document carrying an older version of a rule
+whose canonical statement is correct — at `P2` when the stale document is executed as instructions
+and `P3` otherwise. `verify.md` § Priority and action asks the verifier to quote the wrong action
+and the forbidding canonical line before confirming `must-fix` on a documentary candidate, and to
+name the non-documentary consequence before confirming `P1`. `requirements-axis.md`'s priority scale
+no longer reads a requirement met at its canonical implementation, with only a sibling document
+stale, as `P1`. On paper against the test-1 Narrow finding, the first part of the test fails —
+`shortlist-narrow/SKILL.md:46` links to the protocol — so the item lands `consider`, and the
+bundle-contract item lands `P3 consider`. The two-part test still licenses `must-fix` where the
+stale text is the executed one and causes a wrong action, and action stays independent of priority.
+
 ### C2. The no-issue rule reviews the body's claims and non-goals
 
 v2's rule made the Requirements axis `Not applicable` on any PR without a linked issue — silently
