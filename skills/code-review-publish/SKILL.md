@@ -53,7 +53,7 @@ Independently verify every surviving candidate proposed as `must-fix`, plus ever
 
 Read [`references/verifier.md`](references/verifier.md) when verification is required. When at least one candidate qualifies, run one initial candidate batch in the fresh isolated context it specifies. Include an ordinary `consider` survivor only when proving or refuting its existing claim requires a cross-module trace or another difficult reconstruction. A candidate included because it was initially mandatory keeps `independent-confirmed` when the verifier confirms its claim but downgrades its priority or action below the mandatory threshold.
 
-The clean-verdict check has two trigger modes, and every row either mode supplies is ruled on under the adversarial procedure in `references/verifier.md`.
+The clean-verdict check has two trigger modes, and every row either mode supplies is ruled on under the clean-verdict task in `references/verifier.md`, at the attack depth that reference sets for the row's `kind`.
 
 Zero-survivor mode: when zero candidates survive *as findings* — a candidate routed to `Observations` is not a survivor — and the changed behavior touches a concurrency or failover path, a data-integrity surface, or a security or authorization boundary, run one clean-verdict batch instead of a candidate batch. Give it the complete candidate disposition ledger and decisive evidence. Its only conclusions are `clean verdict stands` or `disposition <id> does not hold; re-open it`; it attacks acquittals and does not search for new findings.
 

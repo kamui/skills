@@ -57,7 +57,7 @@ For each candidate id, return the verdict, a concise independent justification, 
 
 ## Clean-verdict task
 
-Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. This task runs in the two modes `SKILL.md` defines: a zero-survivor batch carrying the complete disposition ledger, and the related-acquittal rows that ride along with a candidate batch. Follow this procedure for every row you rule on, in either mode:
+Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. This task runs in the two modes `SKILL.md` defines: a zero-survivor batch carrying the complete disposition ledger, and the related-acquittal rows that ride along with a candidate batch. Follow this procedure for every row you rule on, in either mode, to the depth the kind rule below sets:
 
 1. Restate the row's decisive premise in one sentence — the fact the acquittal depends on, such as "`sender->slaveof` is always non-NULL when `updateShardId()` runs."
 2. State the concrete condition under which that premise would be false.
@@ -72,7 +72,7 @@ Do not invent a new claim. In zero-survivor mode the ledger is never filtered by
 In zero-survivor mode, return exactly one batch conclusion:
 
 - `clean verdict stands` when every disposition survives that procedure; or
-- `disposition <id> does not hold; re-open it` for each existing candidate whose stated acquittal is contradicted or unsupported.
+- `disposition <id> does not hold; re-open it` for each supplied ledger row whose stated acquittal is contradicted or unsupported.
 
 In related-acquittal mode, return `holds` or `re-open` for each related row alongside the candidate verdicts, on the same standard: `re-open` when the stated acquittal is contradicted or unsupported. A `re-open` carries the same wording as the zero-survivor conclusion, `disposition <id> does not hold; re-open it`.
 
