@@ -91,6 +91,6 @@ The primary reviewer owns the final decision and must validate any corrections a
 - Merge duplicates around one stable id and one requested outcome.
 - If the verifier omits a candidate, fails, or cannot inspect required evidence, mark verification and coverage incomplete. Do not publish that candidate or approve the change on the strength of incomplete verification.
 - Treat every returned `re-open`, in either clean-verdict mode, as a re-opened disposition: re-run falsification on that record and use the one permitted follow-up batch if it becomes render-eligible. Do not downgrade it to an observation.
-- Route a verifier `observation` aside through the rubric and output cap; it never becomes a finding without full primary admission and any required follow-up verification.
+- Route a verifier `observation` aside through the rubric and output cap; it never becomes a finding without full primary admission and any required follow-up verification. An aside the cap excludes is recorded in the private record as unpublished, not merged into a finding's prose.
 
 Independent confirmation does not replace the rubric. The primary reviewer still checks every admission gate, renders the authoritative prose, validates anchors and metadata, and performs the stale-head check before publication.
