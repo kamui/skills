@@ -19,3 +19,7 @@ Use the single-context layout. See `docs/agents/domain.md`.
 ### Global skill sync
 
 After successfully pushing or merging a change under `skills/` into `origin/main`, run `scripts/sync-global-skills` and report its result. The script owns installation and provenance-checked removal; do not reproduce those operations by hand.
+
+### Scripts
+
+Skill scripts are standard-library Python 3.9+, invoked as `python3 scripts/<name>.py`; repo tooling is POSIX `sh`. macOS and Linux only. Scripts do mechanical work and the model keeps every review judgment. See `docs/agents/scripts.md` before adding or changing one.
