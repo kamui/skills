@@ -161,6 +161,8 @@ evidence supports a verdict. Both finder ledgers keep every hypothesis while lim
 four compact fields on one line. The two full-diff analyses and verification of every candidate
 remain mandatory.
 
+C14 supersedes the cache-reuse claim above: the measured harness did not reuse that prefix.
+
 ### C8. Paired peer-contract sweep before a requirement passes
 
 The first v2a rerun against `kamui/shortlist#66` missed a stale bundle-contract enumeration that
@@ -244,6 +246,24 @@ Panel-wide every run pair surfaced the item, because the Requirements axis carri
 three, but the Code axis is the weaker leg and is worth re-scoring in the next repeated-seed
 evaluation. Both Code runs that swept widely also reached the `validate-completion.py` drift, one
 of them with an executed reproduction.
+
+### C14. Orchestration is script-driven
+
+The Panel runs made the orchestrator 30–45% of total token use even though it made no review
+judgment beyond status derivation. Most of that work was mechanical: reading and reproducing the
+shared diff and guidance, re-reading both finder reports to remove private reasoning, hand-building
+the verifier prompt, and then reproducing the reports for the caller. The byte-identical finder
+prefix described in C7 produced no measured cache reuse, so this decision supersedes that proposed
+saving rather than depending on it.
+
+[`build_shared_block.py`](scripts/build_shared_block.py) now gathers and renders the pinned finder
+inputs, and [`build_verifier_prompt.py`](scripts/build_verifier_prompt.py) parses the structured
+finder blocks and removes every `support` field. The caller report carries only status, identity,
+coverage, counts, questions, observations, the refuted count, and the publication result. These
+changes remove orchestrator tokens without changing review judgment: candidate generation,
+falsification, verification, deduplication, status derivation, and publication decisions remain
+where the process already assigns them. This is the script-driven boundary specified by
+[issue #65](https://github.com/kamui/skills/issues/65).
 
 ### Subtractions
 

@@ -82,8 +82,9 @@ Say plainly where you could not finish: a file you could not read, a check you s
 Per candidate:
 
 - `id` — `code/<file-slug>/<defect-slug>`. Never a line number.
+- `axis` — `Code`.
 - `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site.
-- `fix` — where the edit actually goes, when that is not the anchor. Omit when they are the same.
+- `fix` — where the edit actually goes; write `(same as anchor)` when they are the same.
 - `title` — 80 characters or fewer, naming the defect.
 - `claim` — a flat, falsifiable statement of what is wrong, with the quoted code and the quoted rule. Written to be checked, not to persuade. This is what the verifier receives.
 - `support` — what you ran, what you read, and what you remain unsure of. First person is fine here and nowhere else. The verifier never sees this, so do not put anything load-bearing in it.
@@ -93,6 +94,11 @@ Per candidate:
 - `action` — `must-fix` or `consider`, judged independently of priority by the calibration in `finding-format.md` § Vocabularies: blocking needs a demonstrated merge consequence, not a severity label.
 
 Keep each field tight. Whoever acts on this — a person or an agent — acts from these fields alone.
+
+Then end the candidate material with the fenced `candidates` block defined by
+`finding-format.md` § Finder candidate block. It repeats the verifier-input fields, including `axis`,
+and always carries `fix` as specified there; `change` remains in the candidate description for
+publication.
 
 ## The disposition ledger
 

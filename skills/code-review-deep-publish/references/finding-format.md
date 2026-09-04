@@ -40,7 +40,7 @@ A finding has two locations and they are not always the same one. The forge cons
 
 Choose the anchor in order, taking the first that applies:
 
-1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds or rewrites attaches to the file, still inside the review.
+1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds or rewrites has no single line: it goes in the review body, still inside the review, because the batched review call takes line comments only (`publishing.md` § One review, one call).
 2. Otherwise, the diff line that **makes the finding true**: the change that opened the gap, or that stranded code elsewhere.
 3. Otherwise, the diff line that most directly **demonstrates** it — a test that looks like it covers the case and does not, a call site that breaks.
 4. Otherwise the finding has no honest anchor, and it goes in the review body. Do not attach it to an unrelated line merely to make it a line comment.
@@ -77,6 +77,46 @@ Quoted lines from the repository and the spec are facts about the artifact, so t
 `support` reaches neither the pull request nor the verifier. It exists so a finder has somewhere to put its uncertainty other than the finding itself, and so a run can be audited afterwards. A verifier told that the finder already demonstrated something believes it, and the step decays into agreement; re-deriving the claim from the code is the entire check.
 
 The published comment's evidence paragraph is written from the `claim`.
+
+## Finder candidate block
+
+End the candidate material with exactly one fenced `candidates` block. Use one exact
+`### Candidate` heading per candidate and these fields in this order; a zero-candidate report uses
+`None.` as the block's entire content.
+
+`````markdown
+````candidates
+### Candidate
+id: code/file-slug/defect-slug
+axis: Code
+anchor: path/to/file.ext:123
+fix: (same as anchor)
+title: Short defect title
+claim: Flat, falsifiable claim with evidence pointers.
+support: Finder process, checks, and uncertainty.
+trigger: Concrete input, state, or environment that produces the wrong outcome.
+priority: P2
+action: must-fix
+````
+`````
+
+Use `Code` or `Requirements` for `axis`. Keep `fix` present and write `(same as anchor)` when it is
+the anchor. The verifier-prompt builder carries every other field verbatim and removes `support`
+mechanically, so load-bearing evidence belongs in `claim` and the concrete scenario belongs in
+`trigger`.
+
+Each field appears once, and the order above is the grammar rather than a house style. A column-zero
+line that begins with one of these ten labels is always a field line, and it must name the next field
+still expected; the builder refuses a candidate whose column-zero label is out of order or repeated,
+because it cannot tell a quoted `support: enabled` from the candidate's own routing and will not
+guess. Every other line continues the field above it and is carried through verbatim, so a `claim`
+quoting configuration or code that begins with a field label indents that line — `  priority: high`
+reaches the verifier as written, while `priority: high` at column zero is refused. Write `anchor`,
+`fix`, and every ledger row's evidence as one whole repository-relative `path:line` coordinate (or,
+for a `fix` that names a file, the bare path), optionally in backticks; a path may contain spaces,
+because the builder reads the whole field as the coordinate rather than picking a path out of prose.
+It relates a ledger row to a candidate by whole file identity, so `foo.py` and `src/foo.py` are two
+different files and neither stands in for the other.
 
 ## Shape
 
