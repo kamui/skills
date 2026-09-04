@@ -1084,10 +1084,10 @@ discarded-agent rows.
 
 ## Sign-off
 
-The six targets above are a proposal until the maintainer signs off on them in the pull request
-that adds this section. The alternates considered, for each shape, are listed in that pull
-request. No cell is dispatched before sign-off, and no cell is dispatched for a target whose
-ground truth and calibration band are not in this file at the commit the run records.
+The six targets above were proposed in pull request #114 and **signed off by the maintainer on
+2026-09-04**. The alternates considered, for each shape, are listed in that pull request. No cell
+is dispatched for a target whose ground truth and calibration band are not in this file at the
+commit the run records.
 
 ## Files
 
