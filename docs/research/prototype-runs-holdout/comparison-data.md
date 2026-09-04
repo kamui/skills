@@ -93,14 +93,22 @@ For every run, the effort as passed and as verified from the transcript's top-le
 read from the same lines as `message.model`, per sub-agent: the primary and each verifier batch. The
 `v5b-effort-medium` rows show `medium` on the primary and the default on every verifier; every other
 row shows the default throughout. A row whose verified value differs from the value passed is a
-discarded run and is recorded under Run continuity, not here. Alongside it, per run: tool-call
-count (primary and each verifier) and wall clock, the two figures #68 compares across the arm.
+discarded run and is recorded under Run continuity, not here. Alongside it, per sub-agent: turns,
+tool calls, thinking tokens, and wall clock, copied from that sub-agent's block in the run document
+(the `transcript_usage.py` output pasted there under item 1 of the
+[metering rule](README.md#metering-per-run); the [billed-usage table](#per-run--billed-usage) above
+carries only each run's total row), the figures #68 compares across the arm. The `Thinking` column
+is the one the arm exists to move; the rest show whether lower effort also consolidated the
+primary's turns and tool calls.
 
-| Run | Sub-agent | Effort passed | Effort verified | Tool calls | Wall clock |
-| --- | --- | --- | --- | --- | --- |
-| _pre-grid probe (transcript path)_ | `v5b-primary-effort-medium` | `medium` | | | |
-| _(target b) v5b-effort-medium seed 1_ | primary | `medium` | | | |
-| _(target b) v5b-effort-medium seed 1_ | verifier batch 1 | default | | | |
+| Run | Sub-agent | Effort passed | Effort verified | Turns | Tool calls | Thinking | Wall clock |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| _pre-grid probe (transcript path)_ | `v5b-primary-effort-medium` | `medium` | | | | | |
+| _(target b) v5b-effort-medium seed 1_ | primary | `medium` | | | | | |
+| _(target b) v5b-effort-medium seed 1_ | verifier batch 1 | default | | | | | |
+
+The `v5b` rows on targets (b) and (c) are the arm's controls; fill their turns, tool calls,
+thinking, and wall here too, so the comparison reads off one table.
 
 ## Sandbox and hygiene disclosures
 
