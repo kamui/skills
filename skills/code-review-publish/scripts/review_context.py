@@ -25,6 +25,13 @@ Range lines read `<path>:<start>-<end> @head` and `<path>:<start>-<end>
 spans on that side. A side a hunk covers no lines on -- the merge-base side of a
 pure addition, the head side of a pure deletion -- has no line.
 
+The diff is followed by `note: no function context for <path>; read enclosing
+ranges by hand` for each modified path whose every hunk header carries an empty
+section. A path the diff adds or deletes in full draws no note, since the diff
+already holds every line of it. Every section passes `-M` to git, so the
+manifest, diff, and ranges rest on one rename decision whatever `diff.renames`
+is set to.
+
 Exit codes:
     0  the context was written to stdout
     1  a --self-test assertion failed; unused in normal operation
@@ -218,10 +225,17 @@ def build_ranges(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def build_notes(files: list[dict[str, Any]]) -> list[str]:
-    """Name each path whose every hunk header carries no enclosing context."""
+    """Name each path whose every hunk header carries no enclosing context.
+
+    A path the diff adds or deletes in full is skipped: its only hunk header is
+    empty by construction, and the diff already holds every line of it, so
+    there is no enclosing range left to read.
+    """
     notes: list[str] = []
     for entry in files:
         if not entry["hunks"]:
+            continue
+        if entry["old_path"] is None or entry["new_path"] is None:
             continue
         if any(hunk["section"] for hunk in entry["hunks"]):
             continue
@@ -308,7 +322,7 @@ def render_markdown(context: dict[str, Any]) -> str:
 
 def build_context(merge_base: str, head: str, cwd: Optional[str] = None) -> dict[str, Any]:
     manifest = build_manifest(merge_base, head, cwd)
-    diff_text = run_git(["diff", f"{merge_base}...{head}", "--function-context"], cwd)
+    diff_text = run_git(["diff", "-M", f"{merge_base}...{head}", "--function-context"], cwd)
     files = parse_diff(diff_text)
     return {
         "merge_base": merge_base,
@@ -375,15 +389,21 @@ def self_test() -> int:
         try:
             git("init", "-q", "--template=")
             git("config", "diff.python.xfuncname", "^def ")
+            git("config", "diff.renames", "false")
             write(".gitattributes", "*.py diff=python\n")
             write("a.py", base_file)
+            write("old.txt", "alpha\nbeta\ngamma\n")
+            write("c.txt", "1\n2\n3\n")
             git("add", ".")
-            git("commit", "-q", "-m", "Add a.py")
+            git("commit", "-q", "-m", "Add a.py, old.txt, and c.txt")
             merge_base = git("rev-parse", "HEAD").strip()
             write("a.py", head_file)
             write("b.py", "def h():\n    return 0\n")
-            git("add", ".")
-            git("commit", "-q", "-m", "Change g and add b.py")
+            write("new.txt", "alpha\nbeta\ndelta\n")
+            os.remove(os.path.join(repository, "old.txt"))
+            write("c.txt", "1\n2\n4\n")
+            git("add", "-A", ".")
+            git("commit", "-q", "-m", "Change g, add b.py, rename old.txt, edit c.txt")
             head = git("rev-parse", "HEAD").strip()
         except GitError as error:
             print(f"self-test setup failed: {error}")
@@ -416,6 +436,16 @@ def self_test() -> int:
     a_py_diff = diff.split("diff --git a/b.py")[0]
     if "a/a.py" not in a_py_diff or "def g():" not in a_py_diff:
         failures.append("the diff section's hunk for a.py does not contain `def g():`")
+
+    if not re.search(r"^R new\.txt <- old\.txt ", manifest, re.MULTILINE):
+        failures.append("manifest is missing an `R new.txt <- old.txt` line")
+    if "rename from old.txt" not in diff:
+        failures.append("the diff section does not detect the old.txt -> new.txt rename")
+
+    if "note: no function context for b.py" in diff:
+        failures.append("the diff section notes the added file b.py")
+    if "note: no function context for c.txt; read enclosing ranges by hand" not in diff:
+        failures.append("the diff section is missing the note for c.txt")
 
     if not re.search(r"^a\.py:\d+-\d+ @head$", ranges, re.MULTILINE):
         failures.append("ranges is missing an `a.py:<start>-<end> @head` line")
