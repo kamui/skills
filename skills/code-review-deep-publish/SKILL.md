@@ -33,7 +33,8 @@ Read `docs/agents/issue-tracker.md` when present for the forge's verbs. Then res
 - the originating issue, from `Closes #n` / `Fixes #n` / a bare `#n` in the pull request body, then the branch name, then the commit messages. This is the spec source. Read it with its comments;
 - the posting identity (`gh api user --jq .login`), and whether it authored the pull request;
 - the base repository's canonical web URL (`gh api repos/{owner}/{repo}/pulls/<n> --jq .base.repo.html_url`), which every coordinate link resolves under;
-- any earlier review from that identity: its `commit_id`, its findings' ids and trailers, the replies on those threads, and thread resolution state.
+- any earlier review from that identity: its `commit_id`, its findings' ids and trailers, the replies on those threads, and thread resolution state;
+- any explicit deferral in the review threads: every review comment, by any participant in any round, that explicitly postpones a design, naming, or API-shape decision. Record each verbatim with its author and the surface it concerns. Step 2 forwards these to the Requirements finder, and on a first review nothing else from prior review reaches a finder.
 
 No pull request means there is nothing to publish to. Stop and report it; opening one is `implement-publish`'s job.
 
@@ -68,7 +69,7 @@ Build each finder prompt as one shared block followed by one axis-specific block
 Append the axis-specific block last:
 
 - **Code**: name the Code axis, give the absolute path to [`references/code-axis.md`](references/code-axis.md), and instruct the finder to read that brief first.
-- **Requirements**: name the Requirements axis, give the absolute path to [`references/requirements-axis.md`](references/requirements-axis.md), instruct the finder to read that brief first, and include the issue text or pull request body used as its substitute.
+- **Requirements**: name the Requirements axis, give the absolute path to [`references/requirements-axis.md`](references/requirements-axis.md), instruct the finder to read that brief first, and include the issue text or pull request body used as its substitute. Include, verbatim, every explicit deferral of a design, naming, or API-shape decision found in the pull request's review comments — any participant, any round — each with its author and the surface it concerns. Include nothing else from prior review on a first review; a deferral is evidence that a question is open, and that is the only thing the finder needs it for.
 
 On a re-review, append the prior findings and disposition ledger for that axis to its axis-specific block. Nothing axis-specific may precede the shared block. The identical leading bytes let the harness's prompt cache serve the second copy cheaply; re-rendering the shared material per finder, or putting an axis label before it, defeats that cache path.
 
@@ -110,7 +111,7 @@ Re-reviewing, add to the verifier's list every prior finding whose fate turns on
 
 Finders that return no candidates on a first review make this step unnecessary; skip it. If the verifier runs and returns nothing, that is a clean review, not a failure.
 
-Carry the Requirements finder's restated requirement list and its met / not-met / unverifiable counts through to step 4. The axis outcome is derived from those, not from how many findings survived verification: an axis whose requirements are all met is `Passed`, and so is one whose every candidate was refuted. On the no-issue path the same ledger is built from the body's claims and non-goals, and the summary carries "issue alignment unavailable" beside the axis outcome.
+Carry the Requirements finder's restated requirement list and its met / not-met / unverifiable counts through to step 4. The axis outcome is derived from those, not from how many findings survived verification: an axis whose requirements are all met is `Passed`, and so is one whose every candidate was refuted — unless a review-record deferral question is open, which keeps the axis at `Waiting for information` (`references/requirements-axis.md` § Step 2). On the no-issue path the same ledger is built from the body's claims and non-goals, and the summary carries "issue alignment unavailable" beside the axis outcome.
 
 ### 4. Publish once
 
