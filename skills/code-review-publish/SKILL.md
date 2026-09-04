@@ -34,7 +34,7 @@ Resolve originating issues in this order:
 3. a user-supplied issue or spec;
 4. a branch-name or commit-message reference only when it resolves uniquely.
 
-Use every clearly relevant issue. With none, review the code and state that issue alignment was unavailable; require an issue only when the repository workflow does. Read prior reviews, comments, replies, and thread state from the posting identity. Record reviewed heads, stable ids, and unresolved requests. Treat comments without trailers as first-class evidence. Pin `head`, `base`, and `merge-base` as the run identity.
+Use every clearly relevant issue. With none, review the code and state that issue alignment was unavailable; require an issue only when the repository workflow does. Read prior reviews, comments, replies, and thread state from the posting identity. Record reviewed heads, stable ids, and unresolved requests. Also record every explicit deferral of a design, naming, or API-shape decision found in any participant's review comments, with its author and the surface it concerns; step 3 treats each as an open question, not as acceptance. Treat comments without trailers as first-class evidence. Pin `head`, `base`, and `merge-base` as the run identity.
 
 ## 2. Build private review context
 
