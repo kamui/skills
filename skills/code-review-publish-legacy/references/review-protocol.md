@@ -100,20 +100,6 @@ A question is not a finding. It carries no axis, counts toward no axis total, an
 
 Questions still open at the end of a run go under `## Open questions` in the summary, so whoever picks the pull request up next sees what is waiting on them.
 
-## Reactions
-
-Where the forge supports them, a reaction is a cheap signal riding on top of a reply, never standing in for one. Either side may use them — a reviewer on a reply, an addresser on a finding — to say what a reply would otherwise spend a sentence on:
-
-| Reaction | Says |
-| --- | --- |
-| `+1` | agreed, acting on it |
-| `eyes` | seen, work in progress |
-| `-1` | disagreed; the reply carries the reason |
-| `confused` | unclear; the reply asks the question |
-| `hooray`, `heart`, `rocket` | a genuinely good catch, worth saying so |
-
-One reaction per comment is plenty. A reaction never closes an item: every comment still earns its reply.
-
 ## Thread state
 
 A thread stays open only while it still asks something of someone. Both skills close threads, and either may reopen one.
@@ -336,7 +322,6 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
 - **Update a review body**: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'`. This is the second phase of a linked index — the POST that creates the review returns the comment ids its `_links` resolve from. It takes a body and nothing else, so a status change needs a new review rather than an edit to this one.
 - **Supersede or dismiss a review**: a later gating event from the same identity supplies its current gate state; in particular, `APPROVE` clears an earlier `REQUEST_CHANGES`. A `COMMENT` leaves an earlier `APPROVED` or `CHANGES_REQUESTED` state standing. To clear a gate without replacing it: `gh api --method PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id>/dismissals -f message='...' -f event=DISMISS`. Write access is the baseline, and a branch protection rule restricting who may dismiss a review can refuse it anyway — a `403` there is an answer, not something to retry.
-- **Add a reaction**: `gh api --method POST repos/{owner}/{repo}/pulls/comments/<id>/reactions -f content=eyes`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>/reactions`. Content is one of `+1`, `-1`, `laugh`, `confused`, `heart`, `hooray`, `rocket`, `eyes`. A review object itself takes no reactions — react to its comments.
 - **Resolve or reopen a thread**: GraphQL only, no REST equivalent.
 
   ```sh
