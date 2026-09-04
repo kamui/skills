@@ -26,7 +26,7 @@ fix: packages/browserContext.ts:291-292
 title: removeCookies loses concurrent writes
 claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.
   The write at `packages/browserContext.ts:291` is not atomic. The shipped policy reads
-priority: high
+  priority: high
   and nothing downgrades it.
 support: private finder process and uncertainty
 trigger: A page writes a cookie between the clear and restore operations.
@@ -44,11 +44,23 @@ A root-level helper of the same name drifts | diff the two files | browserContex
 """
 
 REQUIREMENTS_REPORT = """```candidates
-None.
+### Candidate
+id: requirements/release-notes/missing-flag
+axis: Requirements
+anchor: docs/Release Notes.md:3
+fix: (same as anchor)
+title: Release notes omit the new flag
+claim: The issue asks for the flag to be documented and the notes do not mention it.
+support: Searched the notes for the flag name.
+trigger: A reader looks up the flag in the release notes.
+priority: P3
+action: must-fix
 ```
 
 ```ledger
 The issue requires selective removal | inspect implementation | packages/browserContext.ts:279-292 | acquitted
+A root-level notes file shares only the basename | diff the two files | Release Notes.md:9 | acquitted
+The notes do describe the previous flag | read the section | `docs/Release Notes.md:40` | acquitted
 ```
 """
 
@@ -127,15 +139,45 @@ def main() -> int:
                 failures.append("a row sharing only a class name was treated as related")
             if "root-level helper of the same name" in result.stdout:
                 failures.append("a row sharing only a path suffix was treated as related")
-            if "priority: high\n  and nothing downgrades it." not in result.stdout:
-                failures.append("a field-like line inside the claim was not carried verbatim")
+            if "shares only the basename" in result.stdout:
+                failures.append(
+                    "a row whose path shares only the basename after a space was treated as related"
+                )
+            if "notes do describe the previous flag" not in result.stdout:
+                failures.append(
+                    "a row citing the same file as a candidate, with a space in its path, was dropped"
+                )
+            if "  priority: high\n  and nothing downgrades it." not in result.stdout:
+                failures.append("an indented field-like line inside the claim was not carried verbatim")
             if "priority: P2" not in result.stdout:
                 failures.append("the candidate's own priority was lost to the claim's quoted line")
+
+        column_zero_priority = CODE_REPORT.replace("  priority: high\n", "priority: high\n")
+        assert column_zero_priority != CODE_REPORT
+        code.write_text(column_zero_priority, encoding="utf-8")
+        result = invoke(code, requirements)
+        if result.returncode != 1 or "column-zero priority line inside claim" not in result.stdout:
+            failures.append(
+                "a column-zero field label quoted inside a claim was not refused with exit 1: "
+                f"exit {result.returncode}, {result.stdout.strip()!r}"
+            )
+
+        column_zero_support = CODE_REPORT.replace(
+            "  and nothing downgrades it.\n", "support: enabled\n  and nothing downgrades it.\n"
+        )
+        assert column_zero_support != CODE_REPORT
+        code.write_text(column_zero_support, encoding="utf-8")
+        result = invoke(code, requirements)
+        if result.returncode != 1 or "second column-zero support line inside support" not in result.stdout:
+            failures.append(
+                "a claim line matching the next expected field was not refused with exit 1: "
+                f"exit {result.returncode}, {result.stdout.strip()!r}"
+            )
 
         missing_claim = CODE_REPORT.replace(
             "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
             "  The write at `packages/browserContext.ts:291` is not atomic. The shipped policy reads\n"
-            "priority: high\n"
+            "  priority: high\n"
             "  and nothing downgrades it.\n",
             "",
         )
@@ -161,7 +203,7 @@ def main() -> int:
             "title": "title: removeCookies loses concurrent writes\n",
             "claim": "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
             "  The write at `packages/browserContext.ts:291` is not atomic. The shipped policy reads\n"
-            "priority: high\n"
+            "  priority: high\n"
             "  and nothing downgrades it.\n",
             "trigger": "trigger: A page writes a cookie between the clear and restore operations.\n",
             "priority": "priority: P2\n",

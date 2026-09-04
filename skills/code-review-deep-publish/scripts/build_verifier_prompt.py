@@ -21,8 +21,12 @@ Exit codes:
 
 Input schema: each finder report carries a fenced ```candidates block of
 `### Candidate` sections whose fields are `id`, `axis`, `anchor`, `fix`,
-`title`, `claim`, `support`, `trigger`, `priority`, `action`, and a fenced
-```ledger block of `claim | probe | evidence | disposition` rows.
+`title`, `claim`, `support`, `trigger`, `priority`, `action`, once each in
+that order, every field line at column zero, and a fenced ```ledger block of
+`claim | probe | evidence | disposition` rows. A line quoted inside a field
+that begins with one of those labels is indented. `anchor`, `fix`, and a
+row's evidence are whole `path:line` coordinates or file paths, which may
+contain spaces.
 """
 
 from __future__ import annotations
@@ -57,7 +61,8 @@ SUPPORT_LABEL_RE = re.compile(
 )
 FIELD_LIKE_RE = re.compile(r"^(?:-\s+)?(?:\*\*)?[A-Za-z][A-Za-z0-9_-]*(?:\*\*)?:")
 HEADING_RE = re.compile(r"^### Candidate(?:\s+.*)?$")
-LOCATION_RE = re.compile(r"(?P<path>[A-Za-z0-9_.@+-]+(?:/[A-Za-z0-9_.@+-]+)*):\d+(?:-\d+)?")
+COORDINATE_RE = re.compile(r"^(?P<path>.+?):\d+(?:-\d+)?$")
+BARE_PATH_RE = re.compile(r"^(?P<path>[^\s`|()]*(?:/|\.(?=[^\s`|()]))[^\s`|()]*)$")
 CODE_SPAN_RE = re.compile(r"`([^`\n]+)`")
 IDENTIFIER_RE = re.compile(
     r"\b[A-Za-z_][A-Za-z0-9_]*(?:(?:::|\.)[A-Za-z_][A-Za-z0-9_]*)*(?:\(\))?\b"
@@ -114,27 +119,39 @@ def fenced_blocks(markdown: str, info: str) -> list[str]:
 def parse_candidate_section(label: str, lines: list[str]) -> Candidate:
     """Split a candidate section into its fields, keeping continuation text verbatim.
 
-    The fields appear once each, in `CANDIDATE_FIELDS` order, so a line opens a
-    field only when it names the next one still expected. Any other line belongs
-    to the field above it, including a line that looks like `name: value` — a
-    `claim` quoting configuration or code is entitled to a column-zero
-    `priority: high` without it being read as the candidate's own routing.
+    A column-zero line naming a candidate field is always a field line, and the
+    fields appear once each in `CANDIDATE_FIELDS` order, so the one it names
+    must be the next field still expected; a column-zero label out of that
+    order is refused rather than guessed at, because the parser cannot tell a
+    quoted `support: enabled` from the candidate's own routing. Every other
+    line continues the field above it verbatim, so a `claim` quotes a line that
+    begins with a field label by indenting it.
     """
     fields: dict[str, str] = {}
     current: str | None = None
     expected = list(CANDIDATE_FIELDS)
     for line in lines:
         match = FIELD_RE.match(line)
-        if match and expected and match.group(1) == expected[0]:
+        if match:
             field, value = match.groups()
-            fields[field] = value
-            current = field
-            expected.pop(0)
-            continue
+            if expected and field == expected[0]:
+                fields[field] = value
+                current = field
+                expected.pop(0)
+                continue
+            if field in fields:
+                raise ReportError(
+                    f"{label} has a second column-zero {field} line inside {current}; "
+                    "indent it to quote it"
+                )
+            raise ReportError(
+                f"{label} is missing {expected[0]} before {field}, or quotes a column-zero "
+                f"{field} line inside {current} that should be indented"
+            )
         if current is None:
             if not line.strip():
                 continue
-            if match or FIELD_LIKE_RE.match(line):
+            if FIELD_LIKE_RE.match(line):
                 raise ReportError(
                     f"{label} opens with {line.split(':', 1)[0].strip()}, expected {expected[0]}"
                 )
@@ -216,20 +233,43 @@ def parse_ledger(report: str, axis_label: str) -> list[LedgerRow]:
     return rows
 
 
-def paths(text: str) -> set[str]:
-    """Every repository-relative file path cited as a `path:line` coordinate.
+def coordinate_path(text: str) -> str | None:
+    """The file a whole `path:line` coordinate or bare file path names, or None.
 
-    Paths are normalized to their repository-relative form, so a `./` prefix or
-    a redundant `.` segment compares equal to the plain path. They are compared
-    as whole file identities and never by suffix: a repository holding both
-    `foo.py` and `src/foo.py` has two files,
-    and treating a row about one as evidence about the other is exactly the
-    unrelated work the related-only filter exists to keep out of the verifier.
+    The text is the complete field or code span, so the path runs from its
+    first character to the final `:line`, spaces included: `src/My File.py:14`
+    names `src/My File.py`, never `File.py`. A bare path counts when it has no
+    whitespace and carries a `/` or a `.`, which is what lets a `fix` name the
+    file a missing requirement belongs in.
     """
-    return {
-        PurePosixPath(match.group("path")).as_posix()
-        for match in LOCATION_RE.finditer(text)
-    }
+    text = text.strip()
+    if len(text) >= 2 and text[0] == text[-1] == "`":
+        text = text[1:-1].strip()
+    match = COORDINATE_RE.match(text) or BARE_PATH_RE.match(text)
+    if not match:
+        return None
+    return PurePosixPath(match.group("path")).as_posix()
+
+
+def paths(text: str) -> set[str]:
+    """Every repository-relative file identity a field cites.
+
+    The field is read as one coordinate first, and failing that each of its
+    code spans is; a coordinate is never picked out of running prose, because
+    prose gives no boundary for a path containing spaces. Paths are normalized
+    to their repository-relative form — a `./` prefix, a redundant `.` segment,
+    or a doubled slash compares equal to the plain path — and then compared as
+    whole file identities, never by suffix: a repository holding both `foo.py`
+    and `src/foo.py` has two files, and treating a row about one as evidence
+    about the other is exactly the unrelated work the related-only filter
+    exists to keep out of the verifier.
+    """
+    whole = coordinate_path(text)
+    if whole is not None:
+        return {whole}
+    found = {coordinate_path(span) for span in CODE_SPAN_RE.findall(text)}
+    found.discard(None)
+    return found
 
 
 def is_type_name(name: str) -> bool:
@@ -250,7 +290,7 @@ def is_type_name(name: str) -> bool:
 def symbolic_names(text: str) -> set[str]:
     names: set[str] = set()
     for span in CODE_SPAN_RE.findall(text):
-        if "/" not in span and not LOCATION_RE.search(span):
+        if "/" not in span and coordinate_path(span) is None:
             names.add(span.removesuffix("()"))
     for token in IDENTIFIER_RE.findall(text):
         normalized = token.removesuffix("()")
@@ -272,9 +312,7 @@ def is_related(row: LedgerRow, candidates: list[Candidate]) -> bool:
     row_paths = paths(row.evidence)
     row_names = symbolic_names(row.claim)
     for candidate in candidates:
-        candidate_paths = paths(
-            candidate.fields["anchor"] + "\n" + candidate.fields["fix"]
-        )
+        candidate_paths = paths(candidate.fields["anchor"]) | paths(candidate.fields["fix"])
         if row_paths & candidate_paths:
             return True
         if row_names & symbolic_names(candidate.fields["claim"]):

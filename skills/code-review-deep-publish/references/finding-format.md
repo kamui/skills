@@ -105,14 +105,18 @@ the anchor. The verifier-prompt builder carries every other field verbatim and r
 mechanically, so load-bearing evidence belongs in `claim` and the concrete scenario belongs in
 `trigger`.
 
-Each field appears once, and the order above is the grammar rather than a house style: a line opens
-a field only when it names the next field still expected. Every other line continues the field above
-it and is carried through verbatim, a line that reads `name: value` included. That is what lets a
-`claim` quote configuration or code containing a column-zero `priority: high` without the builder
-reading it as the candidate's own routing. Write `anchor`, `fix`, and every ledger row's evidence as
-repository-relative `path:line` coordinates: the builder relates a ledger row to a candidate by whole
-file identity, so `foo.py` and `src/foo.py` are two different files and neither stands in for the
-other.
+Each field appears once, and the order above is the grammar rather than a house style. A column-zero
+line that begins with one of these ten labels is always a field line, and it must name the next field
+still expected; the builder refuses a candidate whose column-zero label is out of order or repeated,
+because it cannot tell a quoted `support: enabled` from the candidate's own routing and will not
+guess. Every other line continues the field above it and is carried through verbatim, so a `claim`
+quoting configuration or code that begins with a field label indents that line — `  priority: high`
+reaches the verifier as written, while `priority: high` at column zero is refused. Write `anchor`,
+`fix`, and every ledger row's evidence as one whole repository-relative `path:line` coordinate (or,
+for a `fix` that names a file, the bare path), optionally in backticks; a path may contain spaces,
+because the builder reads the whole field as the coordinate rather than picking a path out of prose.
+It relates a ledger row to a candidate by whole file identity, so `foo.py` and `src/foo.py` are two
+different files and neither stands in for the other.
 
 ## Shape
 
