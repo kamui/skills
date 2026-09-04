@@ -460,6 +460,14 @@ def self_test() -> int:
         check_argv("a.md?x=1:9", f"[`a.md?x=1:9`]({base}/a.md?x=1?plain=1#L9)"),
     )
     expect_violation(
+        "Markdown-link injection through a path fails the check",
+        check_argv(
+            "src/a](https://evil.example)b.ts:5",
+            "[`src/a](https://evil.example)b.ts:5`]"
+            f"({base}/src/a](https://evil.example)b.ts?plain=1#L5)",
+        ),
+    )
+    expect_violation(
         "backtick in the coordinate fails render",
         ["render", "--repo-url", repo, "--revision", head, "--coordinate", "src/a`b.ts:1"],
     )
