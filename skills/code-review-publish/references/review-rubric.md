@@ -17,7 +17,7 @@ Use this rubric as the finding-admission rule. More specific user instructions a
 ## Admit a finding only when every condition holds
 
 1. **Meaningful impact:** it affects correctness, security, performance, maintainability, or an explicit issue requirement enough that the author would benefit from fixing it.
-2. **Introduced here — Code candidates:** the reviewed change caused it. Do not report a pre-existing Code problem unless the change materially worsens it. This gate never refutes a `kind=requirement` candidate: when an explicit requirement makes an outcome this change's responsibility, the missing implementation may live entirely in an unchanged or pre-existing artifact.
+2. **Introduced here — Code candidates:** the reviewed change caused it. Do not report a pre-existing Code problem unless the change materially worsens it. Unchanged code is introduced-here when the change removed or weakened a guarantee that code relied on — a lock scope, an ordering, an ownership rule, a validated invariant — so that a path that was safe at the merge-base is unsafe at the head. Decide it by comparing the relied-on guarantee at base and head, not by whether the line changed. A path that was already unsafe at the merge-base is pre-existing. This gate never refutes a `kind=requirement` candidate: when an explicit requirement makes an outcome this change's responsibility, the missing implementation may live entirely in an unchanged or pre-existing artifact.
 3. **Discrete and actionable:** it describes one defect with an attainable outcome, not a broad codebase critique.
 4. **Proven consequence:** for behavior, identify the concrete input, state, environment, or call path and observable impact. For an authoritative instruction or maintainability contract, demonstrate the exact contradiction or drift and the concrete reader or maintenance consequence. Speculation about downstream breakage is insufficient.
 5. **Grounded intent:** it does not depend on an unstated assumption about the codebase or author's intent.
@@ -65,7 +65,7 @@ Before admitting a candidate, actively try to disprove it:
 1. Trace the alleged trigger through the current code.
 2. Check whether unchanged surrounding code prevents the failure.
 3. Check relevant callers, tests, types, configuration, and CI evidence.
-4. For a Code candidate, confirm that the change introduced the behavior. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation.
+4. For a Code candidate, confirm that the change introduced the behavior, or that it removed the guarantee an unchanged path relied on; state which of the two applies and cite the base-branch guarantee (`git show <merge-base>:<path>`) and the head-branch code that no longer provides it. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation.
 5. Confirm under gate 6 that the issue, pull-request description, rules, and review record do not make it intentional.
 6. Verify any rule or requirement citation and its scope.
 7. Search current review threads and CI output for the same issue.
