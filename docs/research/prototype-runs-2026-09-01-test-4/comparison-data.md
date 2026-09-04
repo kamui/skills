@@ -277,3 +277,31 @@ run's billed cost, less than #67's 15–25% estimate, because output is not the 
   and 18 with more than one. #89 reported 101 turns, 40 of them without a tool call and none with
   more than one; those were content-block lines, not requests. #90, which acts on that count, should
   start from the request figures here.
+
+### Output by kind
+
+`transcript_usage.py --by-kind` (#95) splits an agent's billed output into **thinking**, taken from
+`usage` because thinking blocks are stored empty, and **visible** output: every `text` block and
+every `tool_use` input, counted in characters (`len` of the text, `len` of `json.dumps` of the
+input) and given the visible tokens in proportion. **File writes** are a second accounting of some
+of the same characters, per destination path — a `Write` call under its `file_path`, a `Bash`
+heredoc under the redirect target parsed from its command — measured in the same serialized
+characters as the `tool:` bucket they are part of, so the two are reported separately and never
+summed. Each content block is counted once per request. The figures below are
+`transcript_usage.py <transcript> --prices 2,10 --by-kind` on the same four transcripts as the
+table above.
+
+| Run / agent | Thinking | Visible | File writes (chars) | Paths written >1× | Largest path (chars, times written) | Text |
+| --- | --- | --- | --- | --- | --- | --- |
+| v5a primary | 48,085 | 41,815 tokens over 103,920 chars | 83,487 (80%) | 1 of 5 | `/tmp/handoff4/reports/v5a-report.md` 61,923, 2× | 2,529 |
+| v5a verifier | 6,938 | 4,721 tokens over 9,622 chars | 0 (0%) | 0 of 0 | — | 5,999 |
+| v5 primary | 37,564 | 40,810 tokens over 106,013 chars | 79,520 (75%) | 1 of 2 | `/tmp/handoff4/reports/v5-report.md` 78,158, 2× | 2,766 |
+| v2a orchestrator, attempt 2 | 26,696 | 57,415 tokens over 147,331 chars | 131,303 (89%) | 1 of 1 | `/tmp/handoff4/reports/v2a-report.md` 131,303, 2× | 2,952 |
+
+File writes are most of the visible output of every agent that wrote a file: 80% of the v5a
+primary's visible characters, 75% of the v5 primary's and 89% of the v2a attempt-2 orchestrator's,
+against 0% for the v5a verifier, which wrote none. On each of those three the one path written more
+than once was written exactly twice, and it carries 74% (v5a primary), 98% (v5 primary) and 100%
+(v2a orchestrator) of that agent's file-write characters. The largest path on every agent is that
+agent's research report, the largest of them `/tmp/handoff4/reports/v2a-report.md` at 131,303
+characters over two writes.
