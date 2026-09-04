@@ -1,9 +1,10 @@
 # Holdout evaluation — method
 
 **Status: method only; no cell has run.** This directory was created ahead of the holdout evaluation
-(#60) by #67, which fixes how every run in it is metered. Everything #60 specifies — the six targets,
-their ground truth and calibration bands, the conditions, the model verification, the run documents,
-and `evaluation.md` — is written by #60 and lands here. The full experimental design is #60's body and
+(#60) by #67, which fixes how every run in it is metered, and #69, which fixes what a dispatch may ask
+a run to do. Everything #60 specifies — the six targets, their ground truth and calibration bands, the
+conditions, the model verification, the run documents, and `evaluation.md` — is written by #60 and
+lands here. The full experimental design is #60's body and
 [aggregate analysis §8 "The holdout demand"](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md#the-holdout-demand);
 this file carries only the parts of the method that were decided before the runs.
 
@@ -19,7 +20,27 @@ a single cohort, one model passed explicitly on every `Agent` call and verified 
 `message.model` before scoring, a truncated mirror with negative `git cat-file -e` checks recorded per
 clone, identical phase-1 packets across arms, per-run sandboxes with self-disclosure, and the
 expensive phase persisted to disk before any verifier is dispatched. #60 adds three seeds per cell and
-the ground-truth-before-run rule. The rest of this section is the metering rule #67 adds.
+the ground-truth-before-run rule. The rest of this section is the metering rule #67 adds and the
+dispatch-hygiene rule #69 adds.
+
+### Dispatch hygiene
+
+A dispatch gives a run its target, its conditions, and its output contract. It leaves the arm's own
+execution alone, so the grid meters the skill and not the demonstration.
+
+Two instructions in the test-1 to test-4 dispatches broke that rule and do not carry forward. Runs were
+told to compute the `context` digest three times, to show it was deterministic, and to invoke the arm's
+scripts with `--self-test` inside the run, to show the validator was sound. Both demonstrate F1 rather
+than review the target, and every v5a run document carries them at a cost of roughly 3–5k tokens.
+
+A holdout dispatch asks for the digest **once**, as the arm's own contract specifies, and asks for no
+in-run self-test. Determinism and validator soundness are established once, before the grid starts, by
+running the arm's script regression tests in this repository — for the Skeptic line
+`python3 skills/code-review-publish/scripts/test_context_fingerprint.py` and
+`python3 skills/code-review-publish/scripts/validate_review.py --self-test` — and recording that they
+passed at the pinned commit. That is CI's job once this repository has CI. Metering a run afterwards
+with `cost_split.py`, including its `--self-test`, is the researcher's work outside the run and is
+unaffected.
 
 ### Two files per run
 
