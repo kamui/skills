@@ -2,13 +2,15 @@
 """Build the shared, judgment-free input block for both review finders.
 
 Purpose: assemble the pinned diff, changed-file manifest, ancestor guidance
-files, and finding-format pointer that both finders receive verbatim, so no
-finder re-reads the repository to construct its own inputs.
+files, test-suite result summaries, and finding-format pointer that both
+finders receive verbatim, so no finder re-reads the repository to construct
+its own inputs.
 
 Usage:
     python3 scripts/build_shared_block.py --repo <path> --base-ref <ref>
         --base-sha <sha> --head-sha <sha> --merge-base <sha>
-        --finding-format <absolute path> [--max-bytes <n>]
+        --finding-format <absolute path> [--suite-results <path>]
+        [--max-bytes <n>]
 
 The block is written to stdout; an oversized-diff notice goes to stderr.
 
@@ -19,6 +21,8 @@ Exit codes:
 Input schema: the pinned run identity (base ref, base SHA, head SHA,
 merge-base) and a local git repository containing all three commits. The
 finding-format path is an absolute path echoed into the block, not read.
+When supplied, suite-results is a UTF-8 file containing one result-summary
+line per suite.
 """
 
 from __future__ import annotations
@@ -46,6 +50,10 @@ class GitFailure(Exception):
         self.command = command
         self.detail = detail
         super().__init__(detail)
+
+
+class InputError(OSError):
+    """An argument named an input file the script could not read."""
 
 
 def run_git(repo: Path, *arguments: str) -> str:
@@ -151,6 +159,14 @@ def fenced(text: str, language: str = "text") -> str:
 
 def build(args: argparse.Namespace) -> tuple[str, str | None]:
     repo = Path(args.repo).resolve()
+    suite_results = None
+    if args.suite_results:
+        try:
+            suite_results = Path(args.suite_results).read_text(encoding="utf-8")
+        except OSError as error:
+            raise InputError(
+                f"cannot read suite results {args.suite_results}: {error}"
+            ) from error
     manifest = run_git(repo, "diff", f"{args.merge_base}...{args.head_sha}", "--name-status")
     commits = run_git(
         repo,
@@ -198,6 +214,9 @@ def build(args: argparse.Namespace) -> tuple[str, str | None]:
     else:
         sections.append("## Applicable base-branch guidance\n\nNone.")
 
+    if suite_results is not None:
+        sections.append("## Test suite results\n\n" + fenced(suite_results))
+
     sections.append(
         "## Finding format\n\n"
         f"Read `{args.finding_format}` before reviewing and follow its finding contract."
@@ -218,6 +237,10 @@ def main() -> int:
         "--finding-format", required=True, help="absolute path to references/finding-format.md"
     )
     parser.add_argument(
+        "--suite-results",
+        help="UTF-8 file containing one result-summary line per test suite",
+    )
+    parser.add_argument(
         "--max-bytes",
         type=int,
         default=200_000,
@@ -232,6 +255,9 @@ def main() -> int:
 
     try:
         output, notice = build(args)
+    except InputError as error:
+        write_stream(sys.stderr, f"build_shared_block: {error}\n")
+        return 2
     except GitFailure as error:
         write_stream(
             sys.stderr,

@@ -86,6 +86,8 @@ def invoke(
             str(code),
             "--requirements",
             str(requirements),
+            "--suite-results",
+            str(code.parent / "suite-results.txt"),
         ],
         capture_output=True,
         check=False,
@@ -100,9 +102,14 @@ def main() -> int:
         code = root / "code.md"
         requirements = root / "requirements.md"
         brief = root / "verify.md"
+        suite_results = root / "suite-results.txt"
         code.write_text(CODE_REPORT, encoding="utf-8")
         requirements.write_text(REQUIREMENTS_REPORT, encoding="utf-8")
         brief.write_text("# Verifier brief\n", encoding="utf-8")
+        suite_results.write_text(
+            "python: 290 tests passed\nnode: 60 tests passed\n",
+            encoding="utf-8",
+        )
 
         before_related_acquittals = invoke(code, requirements)
         if "Related acquitted ledger rows" in before_related_acquittals.stdout:
@@ -118,6 +125,9 @@ def main() -> int:
                 f"Verifier brief: `{brief}`",
                 "Repository: `/tmp/review-repo`",
                 f"- base SHA: `{'a' * 40}`",
+                "## Test suite results",
+                "python: 290 tests passed",
+                "node: 60 tests passed",
                 "id: code/browser-context/remove-cookies-race",
                 "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
                 "  The write at `packages/browserContext.ts:291` is not atomic.",

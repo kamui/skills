@@ -247,6 +247,31 @@ three, but the Code axis is the weaker leg and is worth re-scoring in the next r
 evaluation. Both Code runs that swept widely also reached the `validate-completion.py` drift, one
 of them with an executed reproduction.
 
+### C10. Test suites run once, before the fan-out
+
+The Panel line pays for every shared input twice, because two finders sweep the same diff. Test
+suites had no owner in the skill at all, so both finders picked them up independently. On test 1 the
+Code finder's own method note records `python3 -m unittest discover -s tests -p "test_*.py"` in its
+clone (290 tests) and four of its ledger rows cite the passing suite as evidence, while the
+Requirements finder separately recorded 290 Python and 60 Node tests passing as its verification of
+requirement 11 ([test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md), §2
+Observations item 9 and §4). The same Python suite was therefore executed twice, in two contexts,
+for one suite's worth of information — and the run's own Coverage line reports it once.
+
+Step 1 now runs the repository's permitted suites once, before spawning, and puts a one-line result
+summary per suite into the shared block alongside the diff, manifest, commit list, and guidance. That
+is the same treatment C7 gave every other shared input, and it extends C7's byte-identical-prefix
+property rather than competing with it. Both finder briefs and the verifier brief say the results
+arrive in the prompt.
+
+The rule is *suite once*, not *no tests*. A finder or the verifier may still run a single focused test
+that decides a candidate, which is where executed evidence actually changes a verdict — one Code run
+under C9 reached the `validate-completion.py` drift with an executed reproduction, and nothing here
+touches that. Estimated saving: −5–10k tokens and −1–3 minutes of wall clock per run on a repository
+with suites, and none on one without. Quality risk is none: the suite result reaches both finders
+exactly as before, by a cheaper route. The workflow identifier stays `v2a-1`; issue #59 bumps it once
+after all v2b behavior changes land (tracking epic #62).
+
 ### C14. Orchestration is script-driven
 
 The Panel runs made the orchestrator 30–45% of total token use even though it made no review

@@ -2,7 +2,7 @@
 
 Two finders proposed candidate findings against a pull request. You rule on each one.
 
-You receive each candidate's **claim** and the repository. You do **not** receive its `support` — what the finder ran, what it read, how sure it was — and that is deliberate: a verifier shown the argument agrees with the argument, and one told a demonstration already succeeded believes it. You have a statement about the code, and the code. Reconstruct it or fail to.
+You receive each candidate's **claim**, the repository, and the test-suite result summaries when suites ran before the finder fan-out. Do not re-run a suite; you may run a single focused test that decides a candidate. You do **not** receive the candidate's `support` — what the finder ran, what it read, how sure it was — and that is deliberate: a verifier shown the argument agrees with the argument, and one told a demonstration already succeeded believes it. You have a statement about the code, the code, and shared suite results. Reconstruct the claim or fail to.
 
 The claim carries quoted lines from the repository and the spec. Those are facts about the artifact, not argument, so treat them as pointers to check rather than as findings already established — a misquotation is itself grounds to refute.
 
