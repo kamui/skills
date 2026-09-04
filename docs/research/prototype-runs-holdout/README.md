@@ -122,6 +122,18 @@ is workload-specific. The two redis Sonnet misses were reasoning failures — bo
 verifier accepted the same false premise — of the kind lower effort would plausibly worsen, and the
 corpus cannot say by how much.
 
+The billed figures from #89 make the arm the first efficiency cell to run. In the test-4 v5a run,
+per request from the transcripts
+([test 4 `comparison-data.md`, Billed usage](../prototype-runs-2026-09-01-test-4/comparison-data.md#billed-usage-added-2026-09-89)),
+the primary's thinking was 48,085 of its 89,900 output tokens (53%), about $0.48 of its $2.00 at
+Sonnet 5 list (24%), and the verifier's 6,938 of 11,659. Output is billed at five times the input
+rate and wall clock follows output, so effort is the third-largest cost lever after turn count and
+the context each request replays (#90, #91), and the only one that acts on output tokens. (#68's
+body quotes the per-line sums #89 first reported, 50,819 of 93,939; the per-request figures here
+supersede them, as the test-4 table explains.) Because `transcript_usage.py` reports thinking
+tokens per sub-agent, the arm's effect is read directly from that column rather than inferred from
+totals.
+
 **Arm:** `code-review-publish` (v5b) with the **primary one effort step below the harness default**
 and every verifier batch at the default. Row label `v5b-effort-medium`.
 
@@ -165,10 +177,16 @@ other**: the verifier is the mechanism the corpus shows is most reasoning-sensit
 
 **Recorded per run, beside the four scoring dimensions:**
 
-1. Harness-reported tokens, metered as [above](#metering-per-run).
-2. Tool-call count, the primary's own and each verifier's, from the `Agent` result's usage block
-   where the harness reports one and self-reported otherwise, labelled as test 4 labels them.
-3. Wall clock, start to end of the run.
+1. Billed usage from the transcripts, metered as [above](#metering-per-run) with
+   `transcript_usage.py`: one block per sub-agent (the primary and each verifier batch) plus the
+   total, including the `Thinking` column, which is the figure the arm exists to move. The legacy
+   `subagent_tokens` figure stays beside it as the metering rule says.
+2. Turn count and tool-call count, the primary's own and each verifier's, from the same script's
+   `Turns` and `Tool calls` columns (requests and distinct `tool_use` ids, as the test-4 billed
+   table defines them), not from the `Agent` result's usage block or self-report.
+3. Wall clock: each sub-agent's `Wall` from the same script, and the run's elapsed time from
+   dispatch to the final report, recorded separately because the sub-agents' walls sum to more
+   than the elapsed time when batches overlap.
 4. The effort **as passed** (the definition's `effort` field, or "none; default" for the verifiers)
    and **as verified from the transcript**: every assistant line of a sub-agent transcript carries a
    top-level `effort` beside `message.model`, so the model check #60 already requires reads both
@@ -184,6 +202,12 @@ do not also show) **and loses no more than one ground-truth item** in total agai
 Otherwise the result is recorded in `evaluation.md` and the default stays. Meeting the rule
 authorises a ticket proposing the tiering, not a change to skill text or harness defaults on the
 strength of this arm alone.
+
+Whether or not the rule is met, `evaluation.md` reports the arm's cost effect per target as the
+median of the six figures in items 1–3 against the v5b cells on the same target and seeds: thinking
+tokens, output tokens, turns, tool calls, per-sub-agent wall, elapsed time, and billed and
+production-shaped cost. The quality result (dimensions 1–4) and the cost result are stated
+separately, so a saving that fails the rule is still on record for a later ticket.
 
 **If the harness cannot pass effort per sub-agent** at the pinned commit — the `effort` field is
 ignored, or the probe's and the primaries' transcripts show the default with the definition
