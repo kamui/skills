@@ -96,7 +96,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5a-1"
+WORKFLOW = "v5b-1"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -1447,7 +1447,7 @@ def self_test() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Check a would-be v5a review payload against the mechanical output-contract rules."
+        description="Check a would-be v5b review payload against the mechanical output-contract rules."
     )
     parser.add_argument("input", nargs="?", default="-", help="JSON file, or - for stdin")
     parser.add_argument("--self-test", action="store_true", help="run the embedded fixtures and exit")

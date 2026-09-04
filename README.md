@@ -117,7 +117,7 @@ The addresser evaluates every item against the current code and replies with one
 
 The reviewer submits one semantic status after coverage is known: `Changes Requested` for unsettled `must-fix` findings, `Incomplete` for unfinished material coverage or verification, `Needs Information` for an outcome-changing unanswered question, and `Approved` otherwise. Forge authorization controls only whether that status travels as `REQUEST_CHANGES`, `APPROVE`, or the default `COMMENT`; it never changes the conclusion.
 
-The internal `workflow=v5a-1` trailer remains the behavior version for deduplication and re-review continuity. It is not a skill name. Callers and new prototypes invoke `$code-review-publish` from `main`.
+The internal `workflow=v5b-1` trailer (bumped from `v5a-1` by issue #52 once the v5b changes landed) remains the behavior version for deduplication and re-review continuity. It is not a skill name. Callers and new prototypes invoke `$code-review-publish` from `main`.
 
 ## The review protocol
 
