@@ -93,7 +93,7 @@ When a rubric or contract term has two genuinely supportable readings in this re
 
 ## 4. Re-review without losing state
 
-When step 1 found any prior review, reply, or trailer-bearing comment from the posting identity, read [`references/re-review.md`](references/re-review.md) before continuing; it is authoritative for delta-vs-full re-review, carried findings, thread replies, and disputed findings. On a first review, skip it.
+When step 1 found any prior review, reply, or trailer-bearing comment from the posting identity, read [`references/re-review.md`](references/re-review.md) before continuing; it is authoritative for delta-vs-full re-review, carried findings, thread replies, and disputed findings. Take the prior head from the earlier review's run trailer (`head=`). A delta review's summary names the delta range (`<prior head>..<head>`) in its first paragraph and carries every open prior item; the run trailer's `context` digest is computed over the full inputs exactly as on a first review, so deduplication is unchanged. On a first review, skip it.
 
 ## 5. Validate before writing
 
