@@ -101,7 +101,23 @@ seed 1's P1 is over. Zero false findings on this target.
 
 ### (f) `spf13/cobra#1938` — first review, re-review, stale-head probe
 
-_Pending._
+One seed, `v5b`, on `kamui/cobra-holdout#9`. This is the only target that published.
+
+| Round | GT recall / classification | Published | False | Band |
+| --- | --- | --- | --- | --- |
+| first review at `R1` | GT-f1 **not raised**, GT-f2 **not raised**, GT-f3 **not raised** | one P3 `consider` (name the `TestGetEnvConfig` cases with `t.Run`), one observation | 0 | **under**: `Approved (advisory)` on a diff whose test is red |
+| re-review at `R2` | the one prior item classified `fixed` against commit `9740ecead`; the ParseBool-ignored-error fact raised and acquitted as intentional (in band as `consider`, not published) | second review naming `97b7001…1107319`, one observation, one thread reply with `disposition=implemented` | 0 | in band |
+| stale-head probe | full re-review done, validator clean, batch built; pre-write re-fetch saw `276cddd6…` against the reviewed `1107319c…` | **nothing** | — | correct |
+
+The first review read `TestGetEnvConfig` to anchor its `t.Run` suggestion and never engaged the
+`defer assertNoErr(t, os.Unsetenv(...))` lines that make four of five cases fail; the maintainer
+saw it on the same head. The re-review path worked as the reference specifies: delta selection with
+an unchanged merge-base (the `context` digest was byte-identical across rounds), widening of the
+test file because the delta overlapped the prior anchor, commit-level classification, a `Prior
+findings` section, a reply trailer, and the stale-head abort, confirmed from the forge: the pull
+request carries exactly the two reviews and the one reply. Two gaps in the reference surfaced:
+observations have no carry-forward vocabulary (the run handled it in prose), and the `ancestor` and
+`merge-base-unchanged` tokens are never written down, only inferable.
 
 ## The lower-effort arm (#68)
 
