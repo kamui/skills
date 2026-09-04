@@ -63,22 +63,27 @@ once inside the report) and overstates the report by the payload's size.
 
 Each run document's Metadata section records:
 
-1. **Harness-reported tokens for the run.** Record what the harness meters and say what that
-   covers, as test 4 did: the run's own usage block when the orchestrator dispatched it as a
-   sub-agent, plus the usage block of every sub-agent the run spawned. Where the primary is not
-   metered, pass `--harness-note "primary not metered"` to the script so both its outputs say so;
-   the figure is then a lower bound of the run and the comparison treats it as one.
+1. **Billed usage from transcripts.** After the run, locate every transcript the run produced
+   (the run's own sub-agent transcript plus one per sub-agent it spawned) and run
+   `python3 docs/research/tools/transcript_usage.py <paths> --prices 2,10 --report <run.md>`.
+   Paste its block into the run document. Read `message.model` from the same lines for the model
+   verification #60 requires. Record the transcript paths. Keep the harness's `subagent_tokens`
+   beside it as `legacy`, for continuity with the corpus; rank on the billed figure. Where the
+   legacy figure omits the primary, pass `--harness-note "primary not metered"` to `cost_split.py`
+   so the legacy split says so.
 2. **A self-reported approximate split** of that total into five parts: instruction load (skill
    files read), repository reads, private records (ledger, notes, staging files), review payload,
    research report. The first three are the run's own estimate and are labelled as such.
 3. **The payload's and report's byte sizes.** Where the harness does not expose output tokens per
    file, convert at **4 bytes per token** and label the result `est.`; where it does, record the
    metered count and label it `metered`. The byte sizes are exact either way.
-4. **The production-shaped figure:** harness total minus the research report. Only the report is
-   subtracted. Instruction load, repository reads, and private records are costs a production run
-   pays too (the ledger is required by the skill), so they stay in.
+4. **The production-shaped figure:** billed total minus the report's estimated output cost, as
+   the script prints. Only the report is subtracted. Instruction load, repository reads, and
+   private records are costs a production run pays too (the ledger is required by the skill), so
+   they stay in.
 
-Compute items 2–4 with the shared script so every run document does it the same way:
+Item 4 comes from `transcript_usage.py --report`. Compute items 2–3, and the same split of the
+legacy figure, with the sibling script so every run document does it the same way:
 
 ```sh
 python3 docs/research/tools/cost_split.py \
