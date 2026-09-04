@@ -49,6 +49,8 @@ Two candidates are the same finding when fixing one fixes the other. Merge them,
 
 Where a Code candidate and a Requirements candidate describe the same defect, keep the **Requirements** one: "the change does not do what was asked" is the more useful frame for whoever acts on it, and it carries the issue citation.
 
+Deduplicate observations too: two observations are the same when they cite the same `file:line` or state the same fact; keep one. An observation that describes the same fact as a candidate you confirmed is not an observation; drop it, the finding carries the fact.
+
 ## Priority and action
 
 Keep the finder's priority unless it is clearly wrong against what you found. Correcting it is in scope — a finder that could not see the whole picture may have over- or under-rated something. Say when you change one and why.
