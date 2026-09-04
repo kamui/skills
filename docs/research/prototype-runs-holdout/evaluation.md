@@ -13,7 +13,7 @@ stated here with its reasoning.
 | --- | --- | --- | --- |
 | `v5b` | 18 (six targets × 3) | 15 on (a)–(e); (f) one seed (first review, re-review, stale probe) | (f) seeds 2–3 cut |
 | `v5b-effort-medium` (#68) | 6 | 6 valid ((b), (c) seeds 2–4); seeds 1 discarded | discards under the effort rule, see README |
-| `v5b-noverify` (ablation) | 18 | 5 (seed 1 on (a)–(e)) | seeds 2–3 cut |
+| `v5b-noverify` (ablation) | 18 | 4 (seed 1 on (a)–(d)) | (e) and seeds 2–3 cut |
 | Panel (`v2a` with #53–#58) | 18 | 2 (seed 1 on (c), (d)) | the arm the issue names first to cut; kept only where criterion 5 needs it |
 | Fable tier split | 6 | 0 | maintainer directed Sonnet-only; not measured |
 
@@ -168,9 +168,9 @@ it (all disclosed); and three primaries at each effort mis-derived line numbers 
 
 ## The ablation (`v5b-noverify`)
 
-Five cells, one per target. On (b) and (c) the arm did what the README predicted: it reached the
+Four cells, one each on (a)–(d). On (b) and (c) the arm did what the README predicted: it reached the
 verification trigger and withheld, ending `Incomplete` with its must-fix candidates listed and
-unpublished. On (a), (d), and (e) it never reached a mandatory trigger and so behaved like `v5b`
+unpublished. On (a) and (d) it never reached a mandatory trigger and so behaved like `v5b`
 without a verifier: on (a) that meant approving the hot loop on the primary's own exhaustive-sounding
 trace, the miss a verifier had a chance to catch and, in `v5b` seed 3, did not.
 
@@ -195,14 +195,16 @@ trace, the miss a verifier had a chance to catch and, in `v5b` seed 3, did not.
 
 ## Cost
 
-| Arm | Runs | Median billed ($) | Median production-shaped ($) | #62 estimate |
-| --- | --- | --- | --- | --- |
-| `v5b` | 15 | 3.97 | 3.84 | ~1.8–2.3 |
-| `v5b-effort-medium` | 6 | 2.33 | 2.23 | — |
-| `v5b-noverify` | 5 | 2.75 | 2.66 | ~1.6–2.0 |
-| Panel | 2 | _pending_ | | ~4.3–4.8 |
+| Arm | Runs | Median billed ($) | Median production-shaped ($) | Median wall | #62 estimate |
+| --- | --- | --- | --- | --- | --- |
+| `v5b` | 18 (15 retrospective + the three (f) rounds) | 3.62 | 3.50 | ~25 min | ~1.8–2.3 |
+| `v5b-effort-medium` | 6 | 2.33 | 2.23 | ~16 min | — |
+| `v5b-noverify` | 4 | 2.75 | 2.66 | ~16 min | ~1.6–2.0 |
+| Panel (`v2a` + #53–#58) | 2 | 8.87 | 8.43 | 61 and 77 min | ~4.3–4.8 |
 
-`v5b` ran about 1.7–2.2× the #62 estimate. The estimate was built from one test-4 run of a smaller
+`v5b` ran about 1.6–2× the #62 estimate and the Panel about 2×; the Panel cells cost 2.4× the `v5b`
+median on the same targets ((c) $10.25 against $4.42, (d) $7.48 against $3.13) and took an hour or
+more each, most of it in finder re-dispatches after the #53 shape validator rejected a first report. The estimate was built from one test-4 run of a smaller
 diff; here the primaries read more (median 84 turns against 55) and thought more (median 59k
 thinking tokens against 48k). Discards: $6.07 (two effort seed-1 cells) plus a stopped dispatch,
 recorded under Run continuity; no session-limit event occurred.

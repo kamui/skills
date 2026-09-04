@@ -79,6 +79,7 @@ research report's estimated output cost and is the field used for ranking.
 | (c) v5b seed 1 | claude-sonnet-5 | 91 | 99 | 2 | 182 | 238,191 | 10,753,479 | 79,345 | 29,742 | 0:18:19 | 3.54 | 11,733 | **3.42** |
 | (c) v5b seed 2 | claude-sonnet-5 | 97 | 100 | 2 | 194 | 456,230 | 11,475,554 | 98,083 | 47,841 | 0:26:41 | 4.42 | 16,819 | **4.25** |
 | (c) v5b seed 3 | claude-sonnet-5 | 105 | 117 | 2 | 210 | 291,938 | 14,501,101 | 114,392 | 58,619 | 0:25:35 | 4.77 | 14,818 | **4.63** |
+| (c) panel seed 1 | claude-sonnet-5 | 207 | 231 | 6 | 414 | 1,102,092 | 24,340,413 | 262,733 | 113,193 | 1:17:09 | 10.25 | 26,539 | **9.99** |
 | (c) v5b-noverify seed 1 | claude-sonnet-5 | 101 | 100 | 1 | 202 | 268,758 | 15,377,076 | 93,855 | 61,120 | 0:20:47 | 4.69 | 8,740 | **4.60** |
 | (c) v5b-effort-medium seed 2 | claude-sonnet-5 | 79 | 88 | 2 | 158 | 178,343 | 6,920,091 | 57,550 | 15,236 | 0:13:28 | 2.41 | 9,731 | **2.31** |
 | (c) v5b-effort-medium seed 3 | claude-sonnet-5 | 135 | 133 | 2 | 270 | 430,648 | 14,492,029 | 107,087 | 48,159 | 0:29:38 | 5.05 | 12,242 | **4.92** |
@@ -86,10 +87,14 @@ research report's estimated output cost and is the field used for ranking.
 | (d) v5b seed 1 | claude-sonnet-5 | 93 | 96 | 1 | 186 | 223,107 | 12,880,895 | 83,882 | 55,654 | 0:18:08 | 3.97 | 8,639 | **3.89** |
 | (d) v5b seed 2 | claude-sonnet-5 | 74 | 79 | 1 | 148 | 191,191 | 8,982,539 | 51,552 | 30,532 | 0:12:03 | 2.79 | 6,692 | **2.72** |
 | (d) v5b seed 3 | claude-sonnet-5 | 75 | 80 | 1 | 150 | 227,473 | 9,823,595 | 60,070 | 48,481 | 0:15:45 | 3.13 | 8,760 | **3.05** |
+| (d) panel seed 1 | claude-sonnet-5 | 156 | 175 | 6 | 312 | 739,951 | 16,595,974 | 231,254 | 90,602 | 1:01:18 | 7.48 | 61,208 | **6.87** |
 | (d) v5b-noverify seed 1 | claude-sonnet-5 | 68 | 72 | 1 | 136 | 210,551 | 9,077,616 | 65,210 | 40,720 | 0:13:51 | 2.99 | 7,975 | **2.91** |
 | (e) v5b seed 1 | claude-sonnet-5 | 92 | 93 | 2 | 184 | 249,684 | 9,726,463 | 112,083 | 63,956 | 0:25:09 | 3.69 | 12,458 | **3.57** |
 | (e) v5b seed 2 | claude-sonnet-5 | 98 | 101 | 2 | 196 | 288,320 | 11,839,337 | 120,949 | 67,205 | 0:29:37 | 4.30 | 17,830 | **4.12** |
 | (e) v5b seed 3 | claude-sonnet-5 | 112 | 110 | 2 | 224 | 464,205 | 12,032,208 | 126,727 | 67,274 | 0:34:27 | 4.83 | 16,207 | **4.67** |
+| (f) v5b seed 1-probe | claude-sonnet-5 | 45 | 49 | 1 | 90 | 136,826 | 3,803,424 | 67,197 | 44,785 | 0:13:11 | 1.77 | 6,592 | **1.71** |
+| (f) v5b seed 1-r1 | claude-sonnet-5 | 41 | 50 | 1 | 82 | 143,560 | 3,625,251 | 62,776 | 38,444 | 0:12:00 | 1.71 | 6,998 | **1.64** |
+| (f) v5b seed 1-r2 | claude-sonnet-5 | 47 | 49 | 1 | 94 | 158,224 | 4,538,632 | 56,133 | 33,190 | 0:12:49 | 1.86 | 6,626 | **1.80** |
 
 Group rows by target, arms in the order v5b, v2a, v5b-without-verifier, then `v5b-effort-medium`
 on targets (b) and (c) only (see [`README.md`](README.md#lower-effort-primary-arm)), then the Fable
@@ -102,7 +107,8 @@ cost or the legacy harness context-size figure.
 
 | Arm | Runs | Median production-shaped ($) | Median billed ($) | Median report share | Median thinking | Median turns |
 | --- | --- | --- | --- | --- | --- | --- |
-| v5b | 15 | 3.84 | 3.97 | 3.4% | 58,619 | 84 |
+| v5b | 18 | 3.50 | 3.62 | 3.4% | 55,489.0 | 78.5 |
+| v2a (Panel, with merged fixes) | 2 | 8.43 | 8.87 | 5.3% | 101,897.5 | 181.5 |
 | v5b-noverify | 4 | 2.66 | 2.75 | 3.1% | 47,318.0 | 68.0 |
 | v5b-effort-medium | 6 | 2.23 | 2.33 | 4.8% | 26,543.0 | 74.0 |
 
@@ -116,11 +122,14 @@ cost or the legacy harness context-size figure.
 | (b) | v5b-noverify | 1 | 1.65 | 1.72 | 27,400 | 50,067 | 54 | 59 |
 | (b) | v5b-effort-medium | 3 | 1.80 | 1.93 | 29,908 | 70,552 | 50 | 49 |
 | (c) | v5b | 3 | 4.25 | 4.42 | 47,841 | 98,083 | 97 | 100 |
+| (c) | v2a (Panel, with merged fixes) | 1 | 9.99 | 10.25 | 113,193 | 262,733 | 207 | 231 |
 | (c) | v5b-noverify | 1 | 4.60 | 4.69 | 61,120 | 93,855 | 101 | 100 |
 | (c) | v5b-effort-medium | 3 | 2.51 | 2.62 | 17,736 | 57,712 | 81 | 88 |
 | (d) | v5b | 3 | 3.05 | 3.13 | 48,481 | 60,070 | 75 | 80 |
+| (d) | v2a (Panel, with merged fixes) | 1 | 6.87 | 7.48 | 90,602 | 231,254 | 156 | 175 |
 | (d) | v5b-noverify | 1 | 2.91 | 2.99 | 40,720 | 65,210 | 68 | 72 |
 | (e) | v5b | 3 | 4.12 | 4.30 | 67,205 | 120,949 | 98 | 101 |
+| (f) | v5b | 3 | 1.71 | 1.77 | 38,444 | 62,776 | 45 | 49 |
 
 Report the research-report cost share (estimated report output cost over billed cost) per arm as
 well: it is the correction factor the aggregate analysis's §7 conclusion 8 waits on, and it is
@@ -212,7 +221,7 @@ Per run against the adjudicated band written before the runs. Written by #60.
 ## Model verification
 
 `message.model` from every transcript belonging to this evaluation, read from every assistant line by
-`finish_cell.py` at close-out and recorded in each run document's preamble. 43 transcripts across 25 runs; every assistant line reports `claude-sonnet-5`. The discarded seed-1 effort cells and the effort probes are listed under Run continuity and
+`finish_cell.py` at close-out and recorded in each run document's preamble. 58 transcripts across 30 runs; every assistant line reports `claude-sonnet-5`. The discarded seed-1 effort cells and the effort probes are listed under Run continuity and
 Effort verification.
 
 ## Effort verification
