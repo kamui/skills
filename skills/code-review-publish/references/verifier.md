@@ -30,7 +30,7 @@ For each candidate, independently:
 2. Reproduce or trace the stated trigger through the current code.
 3. Establish the observable impact and whether unchanged code prevents it.
 4. For a Code candidate, confirm that the reviewed diff introduced the behavior. For `kind=requirement`, decide whether the explicit requirement made this change responsible for the outcome; never refute it merely because the missing implementation predates the diff or lives in an unchanged file.
-5. Confirm that the issue, pull-request description, rules, or history do not make it intentional.
+5. Confirm that the issue, pull-request description, rules, history, or review record do not make it intentional. A maintainer's approval, LGTM, or merge establishes intent only for what the review record explicitly addresses; it is provisional for public API surface that appears in no released version at the merge-base, and an explicit deferral in that record ("we can fix this during the API review") marks the deferred question open, not settled.
 6. Check whether another candidate requests the same underlying change.
 
 For synchronization drift, compare the peer artifacts at the merge-base and inspect the last commit that changed their shared rule. For a requirement candidate, verify the required outcome without assuming a particular representation. Calibrate `action` independently from priority: an explicit requirement gap on an authoritative execution path may be P2/P3 and still `must-fix`, while optional normative consistency remains `consider` when canonical behavior is intact.
@@ -49,7 +49,7 @@ Return exactly one verdict for every supplied *candidate* id:
 
 - `confirmed`: decisive evidence establishes the trigger, qualifying impact, requested outcome, and either the Code introduced-here condition or the explicit requirement responsibility.
 - `plausible`: the verifier can neither construct the claimed failing trace end-to-end nor refute any specific step of that trace from repository evidence. Return `plausible` whenever both conditions hold; do not force uncertainty into `confirmed` or `refuted`.
-- `refuted`: decisive evidence shows the claim is false, prevented, intentional, lacks a qualifying impact, or—only for a Code candidate—is pre-existing.
+- `refuted`: decisive evidence shows the claim is false, prevented, intentional under step 5, lacks a qualifying impact, or—only for a Code candidate—is pre-existing.
 
 A related non-survivor row supplied under related-acquittal mode is not a candidate: it takes exactly one `holds` or `re-open` ruling under the clean-verdict task and never a verdict from this list.
 
