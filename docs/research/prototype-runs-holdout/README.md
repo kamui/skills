@@ -123,7 +123,7 @@ the v5b cells on those targets; the arm differs from v5b in the primary's effort
 text. The `Agent` call carries `model` but no effort parameter; effort is set per sub-agent by the
 `effort` field in an agent definition's frontmatter, which overrides the session level for that
 sub-agent. The arm therefore dispatches its primary through a project-local definition that #60
-creates for the grid and removes afterwards:
+creates for the grid and removes afterwards, at `.claude/agents/v5b-primary-effort-medium.md`:
 
 ```yaml
 ---
@@ -133,6 +133,16 @@ model: sonnet
 effort: medium
 ---
 ```
+
+**The definition must exist before the grid's session starts.** Claude Code watches agent
+directories that existed when the session began; this repository has no `.claude/agents/` today, so
+a definition written into a new directory mid-session is not loaded until restart, and a dispatch
+naming it fails or falls back to the session effort. Either commit the file or write it, then launch
+the session, or pass the same definition at launch with `--agents` as JSON carrying `description`,
+`prompt`, `model`, and `effort`. Before the first cell, dispatch a trivial probe through the
+definition and read `effort` from the probe's transcript as described under item 4 below; the grid
+does not start until the probe shows `medium`. Record the probe's transcript path in
+`comparison-data.md` under Effort verification.
 
 Claude Code's documented default for `claude-sonnet-5` is `high`, so one step below is `medium`.
 The default is confirmed at run time from the session header, which names the active effort beside
@@ -165,9 +175,10 @@ authorises a ticket proposing the tiering, not a change to skill text or harness
 strength of this arm alone.
 
 **If the harness cannot pass effort per sub-agent** at the pinned commit — the `effort` field is
-ignored, or the transcript shows the default on the primary — `evaluation.md` records that with the
-harness version and the transcript evidence, no run counts toward the arm, and #68 is closed as not
-testable.
+ignored, or the probe's and the primaries' transcripts show the default with the definition
+confirmed loaded — `evaluation.md` records that with the harness version and the transcript
+evidence, no run counts toward the arm, and #68 is closed as not testable. A definition that was
+never loaded is a setup failure, not that evidence: fix the loading and probe again.
 
 ## Files
 
