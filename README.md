@@ -57,7 +57,7 @@ The skills compose into a loop: `implement-publish` opens a pull request, `code-
 
 ### `code-review-publish`
 
-Reviews the complete merge-base diff and publishes one forge-native review containing every verified finding. One integrated reviewer checks both implementation behavior and issue fit against a private evidence rubric, falsifies each candidate, and invokes one fresh batched verifier for every proposed `must-fix` and other consequential claim — security, data loss, compatibility. A mechanical validator checks the assembled payload before anything is written.
+Reviews the complete merge-base diff and publishes one forge-native review containing every verified finding. One integrated reviewer checks both implementation behavior and issue fit against a private evidence rubric, falsifies each candidate, and invokes one fresh batched verifier for every proposed `must-fix` and other consequential claim — security, data loss, compatibility. A mechanical validator checks the assembled payload before anything is written. `scripts/review_context.py` builds the changed-file manifest, function-context diff, and per-hunk ranges in one call.
 
 Each finding carries an impact priority and an independent action: `must-fix` blocks the merge, while `consider` is optional. The review reaches `Changes Requested`, `Incomplete`, `Needs Information`, or `Approved`, and reports its coverage. Publication is atomic against a freshly checked head; findings without an honest line anchor remain complete in the review body rather than being attached to unrelated code.
 
