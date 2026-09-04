@@ -290,6 +290,38 @@ falsification, verification, deduplication, status derivation, and publication d
 where the process already assigns them. This is the script-driven boundary specified by
 [issue #65](https://github.com/kamui/skills/issues/65).
 
+### C15. Ledger shape is enforced mechanically
+
+C3 made the disposition ledger a required return, and six of the seven corpus runs complied. The
+model-matched test-1 run did not: the Requirements finder returned a prose changed-contract sweep in
+the ledger's place, the orchestrator correctly refused to fabricate rows, and that axis's search
+process — which files it checked and dismissed — became unauditable from its output
+([test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) §4;
+[aggregate analysis](../../docs/research/prototype-runs-aggregate-tests-1-4-v2a-v5a.md) §3 row C3
+and §5 item 8). The ledger is what made every false acquittal in the corpus quotable, and a return
+a finder can decline to produce is a rule, not a mechanism.
+
+Both axis briefs now end the report with fenced `ledger` and `manifest` blocks, plus a `counts`
+block on the Requirements axis, in a row grammar a script can check, and
+[`validate_finder_report.py`](scripts/validate_finder_report.py) checks it before step 3, the way
+`code-review-publish` gates its own output with `validate_review.py` (issue #31). A violation
+re-dispatches the finder once with its original prompt, the violation lines, and the instruction
+to return the same review in shape; a second failure leaves the axis `incomplete` and the summary
+names it. The script validates shape only — block presence and order, field counts, the
+disposition set, the evidence pointer form, manifest coverage, and the three integer counts — and
+never reads the repository, runs git, or judges a row.
+
+This is an enforcement of C3, not a rule change: the ledger means what it meant, the dispositions
+are the ones C3 and C4 defined, and the rows the verifier-prompt builder (C14) already parses are
+the rows the validator admits. Reformatting the test-4 Code finder's verbatim ledger into the
+blocks showed where the grammar bites: six of its fifteen rows carried a sentence in the evidence
+field where the brief asked for one pointer, and each needed a location supplied — which is the
+row shape the briefs now spell out for acquittals that rest on an absence. Expected cost is
++5–7k tokens per run, because the retry fired once in seven corpus runs. Specified by
+[issue #53](https://github.com/kamui/skills/issues/53), which named this section C10; that number
+went to the suite-once change and C11–C13 are held by #64, #56, and #57. The workflow identifier
+stays `v2a-1` until #59.
+
 ### Subtractions
 
 None structural. Beyond the deletions listed under C2 and C5, no working v2 machinery was removed
