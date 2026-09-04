@@ -31,7 +31,7 @@ import argparse
 import re
 import sys
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 CANDIDATE_FIELDS = (
     "id",
@@ -112,23 +112,33 @@ def fenced_blocks(markdown: str, info: str) -> list[str]:
 
 
 def parse_candidate_section(label: str, lines: list[str]) -> Candidate:
+    """Split a candidate section into its fields, keeping continuation text verbatim.
+
+    The fields appear once each, in `CANDIDATE_FIELDS` order, so a line opens a
+    field only when it names the next one still expected. Any other line belongs
+    to the field above it, including a line that looks like `name: value` — a
+    `claim` quoting configuration or code is entitled to a column-zero
+    `priority: high` without it being read as the candidate's own routing.
+    """
     fields: dict[str, str] = {}
     current: str | None = None
+    expected = list(CANDIDATE_FIELDS)
     for line in lines:
         match = FIELD_RE.match(line)
-        if match:
+        if match and expected and match.group(1) == expected[0]:
             field, value = match.groups()
-            if field in fields:
-                raise ReportError(f"{label} repeats field {field}")
             fields[field] = value
             current = field
+            expected.pop(0)
             continue
-        if FIELD_LIKE_RE.match(line):
-            raise ReportError(f"{label} has unknown field {line.split(':', 1)[0].strip()}")
         if current is None:
-            if line.strip():
-                raise ReportError(f"{label} has text before its first field")
-            continue
+            if not line.strip():
+                continue
+            if match or FIELD_LIKE_RE.match(line):
+                raise ReportError(
+                    f"{label} opens with {line.split(':', 1)[0].strip()}, expected {expected[0]}"
+                )
+            raise ReportError(f"{label} has text before its first field")
         fields[current] += "\n" + line
 
     fields = {name: value.rstrip() for name, value in fields.items()}
@@ -207,11 +217,19 @@ def parse_ledger(report: str, axis_label: str) -> list[LedgerRow]:
 
 
 def paths(text: str) -> set[str]:
-    return {match.group("path") for match in LOCATION_RE.finditer(text)}
+    """Every repository-relative file path cited as a `path:line` coordinate.
 
-
-def same_path(left: str, right: str) -> bool:
-    return left == right or left.endswith(f"/{right}") or right.endswith(f"/{left}")
+    Paths are normalized to their repository-relative form, so a `./` prefix or
+    a redundant `.` segment compares equal to the plain path. They are compared
+    as whole file identities and never by suffix: a repository holding both
+    `foo.py` and `src/foo.py` has two files,
+    and treating a row about one as evidence about the other is exactly the
+    unrelated work the related-only filter exists to keep out of the verifier.
+    """
+    return {
+        PurePosixPath(match.group("path")).as_posix()
+        for match in LOCATION_RE.finditer(text)
+    }
 
 
 def is_type_name(name: str) -> bool:
@@ -257,7 +275,7 @@ def is_related(row: LedgerRow, candidates: list[Candidate]) -> bool:
         candidate_paths = paths(
             candidate.fields["anchor"] + "\n" + candidate.fields["fix"]
         )
-        if any(same_path(left, right) for left in row_paths for right in candidate_paths):
+        if row_paths & candidate_paths:
             return True
         if row_names & symbolic_names(candidate.fields["claim"]):
             return True

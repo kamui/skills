@@ -82,7 +82,7 @@ The published comment's evidence paragraph is written from the `claim`.
 
 End the candidate material with exactly one fenced `candidates` block. Use one exact
 `### Candidate` heading per candidate and these fields in this order; a zero-candidate report uses
-`None.` as the block's entire content. Continuation lines belong to the preceding field.
+`None.` as the block's entire content.
 
 `````markdown
 ````candidates
@@ -104,6 +104,15 @@ Use `Code` or `Requirements` for `axis`. Keep `fix` present and write `(same as 
 the anchor. The verifier-prompt builder carries every other field verbatim and removes `support`
 mechanically, so load-bearing evidence belongs in `claim` and the concrete scenario belongs in
 `trigger`.
+
+Each field appears once, and the order above is the grammar rather than a house style: a line opens
+a field only when it names the next field still expected. Every other line continues the field above
+it and is carried through verbatim, a line that reads `name: value` included. That is what lets a
+`claim` quote configuration or code containing a column-zero `priority: high` without the builder
+reading it as the candidate's own routing. Write `anchor`, `fix`, and every ledger row's evidence as
+repository-relative `path:line` coordinates: the builder relates a ledger row to a candidate by whole
+file identity, so `foo.py` and `src/foo.py` are two different files and neither stands in for the
+other.
 
 ## Shape
 
