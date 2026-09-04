@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""CLI regression tests for build_verifier_prompt.py."""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+SCRIPT = Path(__file__).resolve().parent / "build_verifier_prompt.py"
+
+CODE_REPORT = """Finder prose is outside the machine-readable blocks.
+
+````candidates
+### Candidate
+id: code/browser-context/remove-cookies-race
+axis: Code
+anchor: packages/browserContext.ts:291
+fix: packages/browserContext.ts:291-292
+title: removeCookies loses concurrent writes
+claim: `removeCookies` clears the context before restoring its snapshot.
+  The write at `packages/browserContext.ts:291` is not atomic.
+support: private finder process and uncertainty
+trigger: A page writes a cookie between the clear and restore operations.
+priority: P2
+action: must-fix
+````
+
+```ledger
+The reset branch also clears cookies | compare the live path | packages/browserContext.ts:540-544 | acquitted
+The `removeCookies` reset premise holds elsewhere | trace the opposite branch | packages/other.ts:12 | acquitted
+An unrelated generated file may drift | regenerate it | packages/types.d.ts:10 | acquitted
+```
+"""
+
+REQUIREMENTS_REPORT = """```candidates
+None.
+```
+
+```ledger
+The issue requires selective removal | inspect implementation | packages/browserContext.ts:279-292 | acquitted
+```
+"""
+
+
+def invoke(code: Path, requirements: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--brief",
+            str(code.parent / "verify.md"),
+            "--repo",
+            "/tmp/review-repo",
+            "--base-sha",
+            "a" * 40,
+            "--head-sha",
+            "b" * 40,
+            "--merge-base",
+            "c" * 40,
+            "--code",
+            str(code),
+            "--requirements",
+            str(requirements),
+        ],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+
+
+def main() -> int:
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        code = root / "code.md"
+        requirements = root / "requirements.md"
+        brief = root / "verify.md"
+        code.write_text(CODE_REPORT, encoding="utf-8")
+        requirements.write_text(REQUIREMENTS_REPORT, encoding="utf-8")
+        brief.write_text("# Verifier brief\n", encoding="utf-8")
+
+        before_related_acquittals = invoke(code, requirements)
+        if "Related acquitted ledger rows" in before_related_acquittals.stdout:
+            failures.append("acquitted rows were included before the verifier brief enabled them")
+
+        brief.write_text("# Verifier brief\n\n## Related acquittals\n", encoding="utf-8")
+
+        result = invoke(code, requirements)
+        if result.returncode != 0:
+            failures.append(f"normal invocation exited {result.returncode}: {result.stderr.strip()}")
+        else:
+            for fragment in (
+                f"Verifier brief: `{brief}`",
+                "Repository: `/tmp/review-repo`",
+                f"- base SHA: `{'a' * 40}`",
+                "id: code/browser-context/remove-cookies-race",
+                "claim: `removeCookies` clears the context before restoring its snapshot.\n"
+                "  The write at `packages/browserContext.ts:291` is not atomic.",
+                "trigger: A page writes a cookie between the clear and restore operations.",
+                "The reset branch also clears cookies | compare the live path | "
+                "packages/browserContext.ts:540-544 | acquitted",
+                "The `removeCookies` reset premise holds elsewhere | trace the opposite branch | "
+                "packages/other.ts:12 | acquitted",
+                "The issue requires selective removal | inspect implementation | "
+                "packages/browserContext.ts:279-292 | acquitted",
+            ):
+                if fragment not in result.stdout:
+                    failures.append(f"normal output is missing {fragment!r}")
+            if "support" in result.stdout.casefold() or "private finder process" in result.stdout:
+                failures.append("private finder material survived into stdout")
+            if "unrelated generated file" in result.stdout:
+                failures.append("unrelated acquitted row was sent to the verifier")
+
+        missing_claim = CODE_REPORT.replace(
+            "claim: `removeCookies` clears the context before restoring its snapshot.\n"
+            "  The write at `packages/browserContext.ts:291` is not atomic.\n",
+            "",
+        )
+        code.write_text(missing_claim, encoding="utf-8")
+        result = invoke(code, requirements)
+        if result.returncode != 1 or "missing claim" not in result.stderr:
+            failures.append("a candidate without claim was not refused with exit 1")
+
+        missing_trigger = CODE_REPORT.replace(
+            "trigger: A page writes a cookie between the clear and restore operations.\n",
+            "",
+        )
+        code.write_text(missing_trigger, encoding="utf-8")
+        result = invoke(code, requirements)
+        if result.returncode != 1 or "missing trigger" not in result.stderr:
+            failures.append("a candidate without trigger was not refused with exit 1")
+
+        leaked = CODE_REPORT.replace(
+            "  The write at `packages/browserContext.ts:291` is not atomic.\n",
+            "  The write at `packages/browserContext.ts:291` is not atomic.\n"
+            "  support leaked into the claim\n",
+        )
+        code.write_text(leaked, encoding="utf-8")
+        result = invoke(code, requirements)
+        if result.returncode != 1 or "private field text survived" not in result.stderr:
+            failures.append("private-field text injected into a claim was not refused")
+
+    for failure in failures:
+        print(failure)
+    if failures:
+        print(f"test_build_verifier_prompt: {len(failures)} failure(s)")
+        return 1
+    print("test_build_verifier_prompt: all cases passed")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

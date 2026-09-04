@@ -76,8 +76,9 @@ Do not infer requirements from the diff itself — a review that derives require
 The restated requirement list, then per candidate:
 
 - `id` — `requirements/<slug>` for compliance, `requirements/unrequested/<slug>` for scope creep. Never a line number.
+- `axis` — `Requirements`.
 - `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site. A wholly missing requirement often has no honest anchor — say so, and it will attach to the change as a whole rather than to an unrelated line.
-- `fix` — where the work belongs, when that is not the anchor. For a missing requirement this is usually the file the work should live in.
+- `fix` — where the work belongs; write `(same as anchor)` when it is the anchor. For a missing requirement this is usually the file the work should live in.
 - `title` — 80 characters or fewer.
 - `claim` — a flat, falsifiable statement of the gap: the quoted issue line, and what the diff does or does not do about it. Written to be checked, not to persuade. This is what the verifier receives.
 - `support` — what you ran, what you read, and what you remain unsure of. The verifier never sees this, so do not put anything load-bearing in it.
@@ -85,6 +86,11 @@ The restated requirement list, then per candidate:
 - `change` — what would satisfy the requirement.
 - `priority` — `P0` a core requirement of the issue is absent or wrong; `P1` a stated requirement partially met; `P2` a secondary requirement, or scope creep; `P3` a nice-to-have the issue mentioned without requiring.
 - `action` — `must-fix` or `consider`, judged independently of priority by the calibration in `finding-format.md` § Vocabularies: blocking needs a demonstrated merge consequence, not a severity label. A question carries no action judgment beyond `question` itself.
+
+Then end the candidate material with the fenced `candidates` block defined by
+`finding-format.md` § Finder candidate block. It repeats the verifier-input fields, including `axis`,
+and always carries `fix` as specified there; `change` remains in the candidate description for
+publication.
 
 Plus, separately, the counts: requirements met, not met, and unverifiable.
 
