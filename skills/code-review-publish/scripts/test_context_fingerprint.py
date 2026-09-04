@@ -256,6 +256,48 @@ def case_guidance_membership() -> None:
     expect_different("dropping an included entry changes the digest", BASE, variant(drop_included_entry))
 
 
+def case_comments_available() -> None:
+    """Unavailable comments are hashed distinctly from zero comments.
+
+    A run that could not obtain an issue's comments verbatim passes
+    `comments_available: false` and no comments. Its digest must differ from a
+    run over the same issue that genuinely has zero comments, or the
+    duplicate-review short-circuit would treat the two as the same inputs.
+    The explicit `true` is the default, so existing digests are unchanged.
+    """
+
+    def unavailable(payload):
+        payload["issues"][1]["comments_available"] = False
+
+    def unavailable_with_comments_absent(payload):
+        del payload["issues"][1]["comments"]
+        payload["issues"][1]["comments_available"] = False
+
+    def unavailable_but_comments_present(payload):
+        payload["issues"][0]["comments_available"] = False
+
+    def explicit_true(payload):
+        payload["issues"][0]["comments_available"] = True
+        payload["issues"][1]["comments_available"] = True
+
+    def non_boolean(payload):
+        payload["issues"][1]["comments_available"] = "no"
+
+    expect_different("unavailable comments differ from zero comments", BASE, variant(unavailable))
+    expect_equal(
+        "absent comments equal empty comments when unavailable",
+        variant(unavailable),
+        variant(unavailable_with_comments_absent),
+    )
+    expect_error(
+        "unavailable comments with a non-empty list",
+        variant(unavailable_but_comments_present),
+        "must be absent or empty when comments_available is false",
+    )
+    expect_equal("explicit comments_available true equals omitted", BASE, variant(explicit_true))
+    expect_error("non-boolean comments_available", variant(non_boolean), "comments_available must be a boolean")
+
+
 def case_errors() -> None:
     """Malformed payloads are rejected, never silently hashed."""
 
@@ -302,6 +344,7 @@ CASES = (
     case_repeated_invocation,
     case_sensitivity,
     case_guidance_membership,
+    case_comments_available,
     case_errors,
 )
 
