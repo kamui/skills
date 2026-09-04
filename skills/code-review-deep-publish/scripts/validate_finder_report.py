@@ -15,7 +15,7 @@ Usage:
 The report is read from stdin as markdown. `--manifest` names the
 orchestrator's changed-file manifest, one repository-relative path per line;
 a `git diff --name-status` line is accepted too, and its last tab-separated
-field is taken as the path.
+field is taken as the path, so a rename or copy lists under its new path.
 
 Exit codes:
     0  the report conforms
@@ -62,7 +62,7 @@ AXES = ("code", "requirements")
 DISPOSITIONS = ("candidate", "acquitted", "observation", "question")
 STATUSES = ("reviewed", "ignored")
 COUNT_KEYS = ("met", "not-met", "unverifiable")
-FENCE_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})[ \t]*(?P<info>[^`\s]*)[ \t]*$")
+FENCE_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})(?P<info>[^`\s]*)[ \t]*$")
 COORDINATE_RE = re.compile(r"^(?P<tick>`?)(?P<path>[^`]+?):\d+(?:-\d+)?(?P=tick)$")
 QUOTED_RULE_RE = re.compile(r"^`?(?P<path>[^`§]+?)`?[ \t]*§[ \t]*\S.*$")
 SEPARATOR_RE = re.compile(r"^[-:\s]+$")
@@ -471,6 +471,8 @@ def self_test_cases() -> list[tuple[str, str, str, int, str]]:
         ("requirements passes", "requirements", req, 0, ""),
         ("missing ledger block", "requirements",
          req.replace("```ledger", "```record"), 1, "ledger:0: missing ledger block"),
+        ("info string after whitespace is not a ledger block", "code",
+         code.replace("```ledger", "``` ledger"), 1, "ledger:0: missing ledger block"),
         ("missing manifest block", "code",
          code.replace("```manifest", "```files"), 1, "manifest:0: missing manifest block"),
         ("missing counts block", "requirements",
