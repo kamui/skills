@@ -45,7 +45,7 @@ A repository-rule finding must cite the applicable file and smallest supporting 
 
 ## Complete inspection
 
-Review the entire merge-base diff, including deletion-only, renamed, generated, binary, and patch-omitted files. Inspect enough surrounding code to understand each changed path. Follow callers, interfaces, configuration, tests, or history only when they can prove or disprove a candidate.
+Review the entire merge-base diff, including deletion-only, renamed, generated, binary, and patch-omitted files. Inspect enough surrounding code to understand each changed path. Bounded ranges around each hunk are the default; a whole-file read is a decision that names the candidate it serves, except for files of at most 300 lines. Follow callers, interfaces, configuration, tests, or history only when they can prove or disprove a candidate.
 
 Use risk signals to direct attention, not to create findings. Where applicable, explicitly verify the changed behavior around:
 
