@@ -12,7 +12,7 @@ Usage::
 
     python3 docs/research/tools/transcript_usage.py <agent-*.jsonl>... \\
         --prices 2,10 [--cache-write-mult 1.25] [--cache-read-mult 0.1] \\
-        [--report <run.md>] [--row "<label>" | --json]
+        [--report <run.md>] [--by-kind] [--row "<label>" | --json]
 
     python3 docs/research/tools/transcript_usage.py --header
     python3 docs/research/tools/transcript_usage.py --self-test
@@ -59,6 +59,22 @@ cost. With ``--json`` it prints the same numbers as JSON. ``--header`` prints
 the table header from the same column list as ``--row``, so the two cannot
 diverge; production-shaped cells are ``—`` when no report was supplied.
 
+``--by-kind`` adds an ``output by kind`` block after each printed block and a
+``by_kind`` object to each ``--json`` entry; it leaves the ``--row`` /
+``--header`` columns alone. Thinking comes from ``usage`` (thinking blocks are
+stored empty, so their characters cannot be counted); the rest of the output is
+*visible*, and is split across ``text`` and one ``tool:<name>`` bucket per tool
+in proportion to the characters each contributes: ``len`` of a text block's
+text, ``len`` of ``json.dumps`` of a tool call's input. A content block is
+counted once per request even where the harness re-emits it on more than one
+line. File writes are a **second** accounting of the same characters, reported
+on their own line and never summed with the buckets: a ``Write`` call under its
+``file_path``, and a ``Bash`` call whose command carries a heredoc under the
+redirect target parsed out of that command, each measured in the same
+serialized characters as its ``tool:`` bucket so a write is a part of the
+bucket it came from. Their per-path counts say how much of the writing is the
+same file written again.
+
 Exit codes: ``0`` success; ``1`` a self-test assertion failed, on stdout;
 ``2`` a transcript cannot be read or has no billed assistant turns, or an
 argument is invalid, naming the path or argument on stderr.
@@ -67,8 +83,10 @@ argument is invalid, naming the path or argument on stderr.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -103,6 +121,97 @@ COUNT_FIELDS = (
     "output",
     "thinking",
 )
+
+
+# The redirect target of a heredoc command: ``> path``, ``>> path``, ``tee path``
+# or ``tee -a path``, with the path optionally quoted.
+WRITE_PATH_RE = re.compile(r"""(?:>>?|tee(?: -a)?)\s*['"]?([^\s'"|;&]+)""")
+
+NO_PATH = "(no path)"
+
+
+def block_identity(item: dict) -> tuple:
+    """What makes a content block itself, for counting it once per request.
+
+    The harness writes one line per content block and re-emits a block on a
+    later line of the same request, so a block's position in its line's
+    ``content`` list does not distinguish it from its neighbours: in a recorded
+    transcript every line carries one block at index 0. A tool call is
+    identified by its ``id`` and anything else by a digest of the block, so a
+    re-emission matches the first sighting and a different block does not.
+    """
+    tool_id = item.get("id")
+    if item.get("type") == "tool_use" and isinstance(tool_id, str) and tool_id:
+        return ("tool_use", tool_id)
+    blob = json.dumps(item, ensure_ascii=False, sort_keys=True, default=str)
+    return (item.get("type"), hashlib.sha256(blob.encode("utf-8")).hexdigest())
+
+
+def add_block_chars(item: dict, kinds: dict, writes: dict) -> None:
+    """Add one content block's characters to the per-kind and per-file-write tallies.
+
+    ``kinds`` buckets every visible character exactly once. ``writes`` is a
+    second accounting of some of the same characters, per destination path, so
+    the two are reported separately and never summed.
+    """
+    kind = item.get("type")
+    if kind == "text":
+        text = item.get("text")
+        if isinstance(text, str):
+            kinds["text"] = kinds.get("text", 0) + len(text)
+        return
+    if kind != "tool_use":
+        return  # thinking blocks are stored empty; nothing else is billed as visible output
+    name = item.get("name")
+    if not isinstance(name, str) or not name:
+        name = "unknown"
+    data = item.get("input")
+    if not isinstance(data, dict):
+        data = {}
+    bucket = f"tool:{name}"
+    chars = len(json.dumps(data))
+    kinds[bucket] = kinds.get(bucket, 0) + chars
+
+    # Where the call wrote a file, the same characters again under that path, so a
+    # write is measured in the same unit as the bucket it is a part of.
+    path: Optional[str] = None
+    if name == "Write":
+        target = data.get("file_path")
+        path = target if isinstance(target, str) and target else NO_PATH
+    elif name == "Bash":
+        command = data.get("command")
+        if isinstance(command, str) and "<<" in command:
+            match = WRITE_PATH_RE.search(command)
+            path = match.group(1) if match else NO_PATH
+    if path is None:
+        return
+    entry = writes.setdefault(path, {"count": 0, "chars": 0})
+    entry["count"] += 1
+    entry["chars"] += chars
+
+
+def token_share(chars: int, total_chars: int, visible: int) -> int:
+    """The share of ``visible`` tokens that ``chars`` characters account for."""
+    if total_chars <= 0 or visible <= 0:
+        return 0
+    return round(chars * visible / total_chars)
+
+
+def allocate(kind_chars: dict, visible: int) -> dict:
+    """Split ``visible`` tokens across the buckets in proportion to characters.
+
+    Each bucket is rounded and the rounding remainder lands on the largest one,
+    so the parts sum to ``visible`` exactly.
+    """
+    total_chars = sum(kind_chars.values())
+    parts = {name: {"chars": chars, "tokens": 0} for name, chars in kind_chars.items()}
+    if not parts or total_chars <= 0 or visible <= 0:
+        return parts
+    for name, chars in kind_chars.items():
+        parts[name]["tokens"] = token_share(chars, total_chars, visible)
+    largest = max(kind_chars, key=lambda name: (kind_chars[name], name))
+    parts[largest]["tokens"] += visible - sum(part["tokens"] for part in parts.values())
+    return parts
 
 
 def prices_arg(text: str) -> tuple[float, float]:
@@ -169,6 +278,11 @@ class Usage:
         self.first: Optional[datetime] = None
         self.last: Optional[datetime] = None
         self.wall_seconds = 0.0
+        # Visible-output accounting, filled by read_transcript(): characters and
+        # their share of the visible tokens, per bucket and per written path.
+        self.chars = 0
+        self.kinds: dict = {}
+        self.writes: dict = {}
 
     def add_model(self, model) -> None:
         if isinstance(model, str) and model and model != "<synthetic>" and model not in self.models:
@@ -180,6 +294,16 @@ class Usage:
         for model in other.models:
             self.add_model(model)
         self.wall_seconds += other.wall_seconds
+        self.chars += other.chars
+        for name, part in other.kinds.items():
+            mine = self.kinds.setdefault(name, {"chars": 0, "tokens": 0})
+            mine["chars"] += part["chars"]
+            mine["tokens"] += part["tokens"]
+        for path, part in other.writes.items():
+            mine = self.writes.setdefault(path, {"count": 0, "chars": 0, "tokens": 0})
+            mine["count"] += part["count"]
+            mine["chars"] += part["chars"]
+            mine["tokens"] += part["tokens"]
 
     def cost(self, prices: tuple[float, float], write_mult: float, read_mult: float, output: Optional[int] = None) -> float:
         price_in, price_out = prices
@@ -190,6 +314,23 @@ class Usage:
             + self.counts["cache_read"] * price_in * read_mult
             + out * price_out
         ) / 1_000_000
+
+    def by_kind(self) -> dict:
+        """Thinking, and the visible output split by bucket and by written path.
+
+        Buckets and paths are ordered by characters, largest first.
+        """
+        def ordered(table: dict) -> dict:
+            return {name: dict(part)
+                    for name, part in sorted(table.items(), key=lambda kv: (-kv[1]["chars"], kv[0]))}
+
+        return {
+            "thinking": self.counts["thinking"],
+            "visible": max(0, self.counts["output"] - self.counts["thinking"]),
+            "chars": self.chars,
+            "kinds": ordered(self.kinds),
+            "writes": ordered(self.writes),
+        }
 
     def as_dict(self) -> dict:
         data = {"label": self.label}
@@ -213,6 +354,11 @@ def read_transcript(path: str) -> Usage:
     # are one API request; lines without one stand alone.
     turns: dict = {}
     anonymous = 0
+    # Characters per bucket and per written path, over the whole transcript, with
+    # the content blocks already accounted for keyed by (turn, block identity).
+    kind_chars: dict = {}
+    write_chars: dict = {}
+    seen_blocks: set = set()
     for raw in raw_lines:
         try:
             obj = json.loads(raw)
@@ -248,12 +394,21 @@ def read_transcript(path: str) -> Usage:
         content = message.get("content")
         if isinstance(content, list):
             for item in content:
-                if isinstance(item, dict) and item.get("type") == "tool_use":
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") == "tool_use":
                     tool_id = item.get("id")
                     if isinstance(tool_id, str) and tool_id:
                         turn["tool_ids"].add(tool_id)
                     else:
                         turn["tool_uses"] += 1
+                # One block's characters count once per request: the harness
+                # re-emits a block on more than one line of the same request.
+                block_key = (key, block_identity(item))
+                if block_key in seen_blocks:
+                    continue
+                seen_blocks.add(block_key)
+                add_block_chars(item, kind_chars, write_chars)
         usage.add_model(message.get("model"))
         stamp = parse_timestamp(obj.get("timestamp"))
         if stamp is not None:
@@ -279,6 +434,17 @@ def read_transcript(path: str) -> Usage:
                 usage.last = stamp
     if usage.first is not None and usage.last is not None:
         usage.wall_seconds = (usage.last - usage.first).total_seconds()
+
+    # Thinking is billed but unreadable; the rest of the output is what the
+    # characters above account for.
+    visible = max(0, counts["output"] - counts["thinking"])
+    usage.chars = sum(kind_chars.values())
+    usage.kinds = allocate(kind_chars, visible)
+    usage.writes = {
+        path: {"count": part["count"], "chars": part["chars"],
+               "tokens": token_share(part["chars"], usage.chars, visible)}
+        for path, part in write_chars.items()
+    }
     return usage
 
 
@@ -289,6 +455,27 @@ def report_tokens(path: Optional[str]) -> Optional[int]:
         return round(os.path.getsize(path) / 4)
     except OSError as exc:
         raise SystemExit(f"transcript_usage: cannot read {path}: {exc.strerror}")
+
+
+def by_kind_lines(usage: Usage, width: int) -> list[str]:
+    """The ``output by kind`` block: thinking, the visible buckets, then file writes."""
+    data = usage.by_kind()
+    lines = ["output by kind"]
+    lines.append(f"{'thinking':<{width}} {fmt(data['thinking']):>12} tokens (from usage)")
+    lines.append(f"{'visible':<{width}} {fmt(data['visible']):>12} tokens over {fmt(data['chars'])} chars")
+    for name, part in data["kinds"].items():
+        lines.append(f"  {name:<{width - 2}} {fmt(part['tokens']):>12} tokens {fmt(part['chars']):>9} chars")
+    writes = data["writes"]
+    lines.append(
+        f"{'file writes':<{width}} {fmt(sum(p['tokens'] for p in writes.values())):>12} tokens "
+        f"{fmt(sum(p['chars'] for p in writes.values())):>9} chars in "
+        f"{fmt(sum(p['count'] for p in writes.values()))} writes to {fmt(len(writes))} paths"
+    )
+    for path, part in writes.items():
+        # A path written once is not a rewrite, so the count is only worth printing above one.
+        again = f", written {fmt(part['count'])} times" if part["count"] > 1 else ""
+        lines.append(f"  {path:<{width - 2}} {fmt(part['tokens']):>12} tokens {fmt(part['chars']):>9} chars{again}")
+    return lines
 
 
 def block_lines(usage: Usage, args: argparse.Namespace, shaped_tokens: Optional[int]) -> list[str]:
@@ -317,6 +504,8 @@ def block_lines(usage: Usage, args: argparse.Namespace, shaped_tokens: Optional[
             f"{'production-shaped':<{width}} {shaped:>12.2f} $ (output {fmt(shaped_output)} after subtracting "
             f"the report's {fmt(shaped_tokens)} est. tokens)"
         )
+    if getattr(args, "by_kind", False):
+        lines.extend(by_kind_lines(usage, width))
     return lines
 
 
@@ -361,6 +550,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cache-write-mult", type=non_negative_float, default=1.25, help="cache-write price as a multiple of the input price (default 1.25)")
     parser.add_argument("--cache-read-mult", type=non_negative_float, default=0.1, help="cache-read price as a multiple of the input price (default 0.1)")
     parser.add_argument("--report", metavar="PATH", help="research report file; its bytes ÷ 4 come off the output for the production-shaped cost")
+    parser.add_argument("--by-kind", action="store_true", help="add an output-by-kind block splitting visible output across text, tool inputs and file writes")
     parser.add_argument("--row", metavar="LABEL", help="print one Markdown table row of the totals labelled LABEL instead of the blocks")
     parser.add_argument("--header", action="store_true", help="print the Markdown table header matching --row and exit")
     parser.add_argument("--json", action="store_true", help="print the numbers as JSON instead of blocks")
@@ -407,9 +597,13 @@ def main(argv: Optional[list[str]] = None) -> int:
             entry = usage.as_dict()
             entry["path"] = args.transcripts[usages.index(usage)]
             entry["cost"] = round(usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult), 6)
+            if args.by_kind:
+                entry["by_kind"] = usage.by_kind()
             data["transcripts"].append(entry)
         entry = total.as_dict()
         entry["cost"] = round(total.cost(args.prices, args.cache_write_mult, args.cache_read_mult), 6)
+        if args.by_kind:
+            entry["by_kind"] = total.by_kind()
         if shaped_tokens is not None:
             shaped_output = max(0, total.counts["output"] - shaped_tokens)
             entry["report_tokens"] = shaped_tokens
@@ -565,6 +759,66 @@ def self_test() -> int:
         check("report row exits 0", r.returncode == 0, r.stderr)
         report_row = f"| v5a primary | claude-sonnet-5 | 2 | 1 | 1 | 10 | 150 | 2,150 | 80 | 20 | 0:00:10 | {expected_cost:.2f} | 1,000 | **0.00** |"
         check("report row content", r.stdout.strip() == report_row, r.stdout)
+
+        # Two requests, the second written as two lines that re-emit one block: the
+        # visible output splits across text, tool inputs and the file the calls wrote.
+        heredoc = {"command": "cat > /tmp/x.md <<'EOF'\nbody\nEOF"}
+        write_input = {"file_path": "/tmp/x.md", "content": "xxxxxxxx"}
+        bash_chars = len(json.dumps(heredoc))
+        write_chars = len(json.dumps(write_input))
+        kinds_usage = {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0,
+                       "output_tokens": 100, "output_tokens_details": {"thinking_tokens": 40}}
+        write_usage = {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0,
+                       "output_tokens": 60, "output_tokens_details": {"thinking_tokens": 0}}
+        write_block = {"type": "tool_use", "id": "toolu_2", "name": "Write", "input": write_input}
+        kinds_file = os.path.join(tmp, "kinds.jsonl")
+        with open(kinds_file, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(assistant(kinds_usage, [
+                {"type": "text", "text": "aaaa"},
+                {"type": "tool_use", "id": "toolu_1", "name": "Bash", "input": heredoc},
+            ], "2026-09-03T22:00:05.000Z", "req_1")) + "\n")
+            fh.write(json.dumps(assistant(write_usage, [write_block], "2026-09-03T22:00:06.000Z", "req_2")) + "\n")
+            fh.write(json.dumps(assistant(write_usage, [write_block], "2026-09-03T22:00:07.000Z", "req_2")) + "\n")
+
+        r = run(kinds_file, "--prices", "2,10", "--by-kind", "--json")
+        check("by-kind exits 0", r.returncode == 0, r.stderr)
+        try:
+            by_kind = json.loads(r.stdout)["total"]["by_kind"]
+        except (ValueError, KeyError):
+            by_kind = {"kinds": {}, "writes": {}}
+            check("by-kind json parses", False, r.stdout)
+        kinds = by_kind.get("kinds", {})
+        writes = by_kind.get("writes", {})
+        check("by-kind thinking", by_kind.get("thinking") == 40, repr(by_kind.get("thinking")))
+        check("by-kind visible", by_kind.get("visible") == 120, repr(by_kind.get("visible")))
+        check("by-kind chars", by_kind.get("chars") == 4 + bash_chars + write_chars, repr(by_kind.get("chars")))
+        check("by-kind text chars", kinds.get("text", {}).get("chars") == 4, repr(kinds.get("text")))
+        check("by-kind bash chars", kinds.get("tool:Bash", {}).get("chars") == bash_chars, repr(kinds.get("tool:Bash")))
+        check("by-kind write counted once", kinds.get("tool:Write", {}).get("chars") == write_chars,
+              f"got {kinds.get('tool:Write')!r}, want {write_chars} (not {2 * write_chars})")
+        check("by-kind allocation sums to visible", sum(part["tokens"] for part in kinds.values()) == 120,
+              repr({name: part["tokens"] for name, part in kinds.items()}))
+        check("by-kind largest bucket first", list(kinds) == ["tool:Bash", "tool:Write", "text"], repr(list(kinds)))
+        check("by-kind write count", writes.get("/tmp/x.md", {}).get("count") == 2, repr(writes.get("/tmp/x.md")))
+        check("by-kind write chars", writes.get("/tmp/x.md", {}).get("chars") == bash_chars + write_chars,
+              repr(writes.get("/tmp/x.md")))
+
+        r = run(kinds_file, "--prices", "2,10", "--by-kind")
+        check("by-kind block exits 0", r.returncode == 0, r.stderr)
+        check("by-kind block heading", "output by kind" in r.stdout, r.stdout)
+        check("by-kind block thinking", "thinking                     40 tokens (from usage)" in r.stdout, r.stdout)
+        check("by-kind block visible", f"visible                     120 tokens over {fmt(4 + bash_chars + write_chars)} chars" in r.stdout, r.stdout)
+        check("by-kind block writes", "in 2 writes to 1 paths" in r.stdout, r.stdout)
+        check("by-kind block rewrite noted", "written 2 times" in r.stdout, r.stdout)
+
+        r = run(kinds_file, "--prices", "2,10")
+        check("without the flag exits 0", r.returncode == 0, r.stderr)
+        check("without the flag no by-kind block", "output by kind" not in r.stdout, r.stdout)
+
+        plain_row = run(kinds_file, "--prices", "2,10", "--row", "x")
+        by_kind_row = run(kinds_file, "--prices", "2,10", "--by-kind", "--row", "x")
+        check("row unchanged by the flag", plain_row.stdout == by_kind_row.stdout,
+              f"{plain_row.stdout!r} vs {by_kind_row.stdout!r}")
 
         r = run("--header")
         check("header exits 0", r.returncode == 0, r.stderr)
