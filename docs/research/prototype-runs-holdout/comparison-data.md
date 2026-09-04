@@ -158,57 +158,49 @@ Per run: status, finding count by priority, questions, observations, verifier di
 
 ## Ground-truth matrix
 
-Items are defined per target in [`README.md`](README.md#targets). Cells take `found`, `raised`,
-`acquitted`, or `not raised` per the scoring rule; one column per run, filled after each cell
-completes. Target (b)'s matrix has no recall rows; its false-finding and false-acquittal counts
-are in the next section.
+Cells take `found`, `raised`, `acquitted`, or `not raised` per the README's scoring rule; the
+adjudication behind each cell is in [`evaluation.md`](evaluation.md). Arms and seeds that were cut
+are absent. Target (b) has no recall rows; its acquittal checks are in the next section.
 
 ### (a) `hyperium/hyper#3952`
 
-| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **GT-a1** — flush readiness taken as write readiness; hot loop on unbuffered writers | | | | | | | | | |
-| **GT-a1 fix** (dimension 4: `invariant` / `branch` / `none`) | | | | | | | | | |
+| | v5b s1 | v5b s2 | v5b s3 | noverify s1 |
+| --- | --- | --- | --- | --- |
+| **GT-a1** — flush readiness taken as write readiness; hot loop on unbuffered writers | **found** (steady-state mechanism) | found, closing-path projection only | acquitted | acquitted |
+| **GT-a1 fix** (dimension 4) | **invariant** (progress-gated retry) | branch (clear `body_rx` on `close()`) | none | none |
 
 ### (c) `python/typeshed#9458`
 
-| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 | effort s1 | effort s2 | effort s3 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **GT-c1** — `__init__.pyi` missing `CredentialProvider`, `UsernamePasswordCredentialProvider` | | | | | | | | | | | | |
-| T-c2 — `default_backoff` missing from both `__init__.pyi` | | | | | | | | | | | | |
-| T-c3 — `MaxConnectionsError` missing from `exceptions.pyi` | | | | | | | | | | | | |
+_Filled from the (c) scorer; see `evaluation.md`._
 
 ### (d) `astral-sh/uv#4424`
 
-| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **GT-d1** — `prefer-*` value naming, deferred in review, reshaped by #4602 | | | | | | | | | |
-| T-d2 — `EnvironmentPreference::Any → OnlySystem` undescribed | | | | | | | | | |
+| | v5b s1 | v5b s2 | v5b s3 | noverify s1 | Panel s1 |
+| --- | --- | --- | --- | --- | --- |
+| **GT-d1** — `prefer-*` value naming, deferred in review, reshaped by #4602 | raised | raised | raised | raised | **found** (question) |
+| T-d2 — `EnvironmentPreference::Any → OnlySystem` undescribed | dropped (traced to `e783a799`) | observation | observation | dropped | **found** (P2 consider, confirmed) |
 
 ### (e) `pola-rs/polars#24771`
 
-| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **GT-e1** — question published on the benchmark claim | | | | | | | | | |
-| T-e1 — unchecked integer accumulation | | | | | | | | | |
+| | v5b s1 | v5b s2 | v5b s3 |
+| --- | --- | --- | --- |
+| **GT-e1** — question published on the benchmark claim | not raised | raised (ledger `not-verifiable`) | not raised |
+| T-e1 — unchecked integer accumulation | found, P2 must-fix (over) | found, P1 must-fix (over) | found, P2 must-fix (over) |
+| interval-mode leading sign accepted (un-anticipated; adjudicated true, P3 in band) | found, P1 must-fix (over) | found, P2 must-fix | found, P3 consider |
 
 ### (f) `spf13/cobra#1938` — first review at `R1`
 
-| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **GT-f1** — test unsets env vars at `defer` time | | | | | | | | | |
-| **GT-f2** — exported `GetEnvConfig` with unexported suffixes | | | | | | | | | |
-| GT-f3 — `off` sentinel vs `ACTIVE_HELP=0` convention | | | | | | | | | |
+| | v5b s1 |
+| --- | --- |
+| **GT-f1** — test unsets env vars at `defer` time | not raised |
+| **GT-f2** — exported `GetEnvConfig` with unexported suffixes | not raised |
+| GT-f3 — `off` sentinel vs `ACTIVE_HELP=0` convention | not raised |
 
 ### (f) re-review at `R2`
 
-One row per prior item the run published, with the adjudicated classification from the README
-and the classification the run gave; plus the stale-head probe's outcome (`no write` /
-`wrote`).
-
 | Run | Prior item | Adjudicated | Run's classification | Reply posted on thread | Delta named `97b7001..1107319` | Stale probe |
 | --- | --- | --- | --- | --- | --- | --- |
-| _(f) v5b seed 1_ | | | | | | |
+| (f) v5b seed 1 | `completions/getenvconfig-test-missing-subtests` (P3 consider) | fixed (`9740ecead`) | fixed | yes, `disposition=implemented` | yes | **no write** (re-fetch saw `276cddd6…`) |
 
 ## False findings and false acquittals
 
