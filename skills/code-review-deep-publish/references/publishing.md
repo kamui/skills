@@ -153,10 +153,10 @@ Validate every anchor against the diff before submitting — `git diff <base>...
 End the body with a run trailer, so a later run can correlate what this one covered without re-deriving it:
 
 ```
-<!-- review-run workflow=v2a-1 head=<full 40-hex sha> base-ref=<branch> base-sha=<full 40-hex sha> merge-base=<full 40-hex sha> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
+<!-- review-run workflow=v2b-1 head=<full 40-hex sha> base-ref=<branch> base-sha=<full 40-hex sha> merge-base=<full 40-hex sha> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
 ```
 
-Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2a-1` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs are this run's identity record.
+Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2b-1` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs are this run's identity record.
 
 The comment URLs do not exist when the body is written, so publish in two phases: submit with the index entries carrying their rendered coordinate fragments — the phase-1 body is complete and clickable on its own — then read back the created comment URLs and `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with each entry's title now linked to its comment and every file fragment left byte-identical. If the second phase fails, the phase-1 body stands on its own — never block a review on it.
 
@@ -238,4 +238,3 @@ Before writing, check for an existing review from this identity at this head and
   ```
 
   A branch protection rule can refuse this. A `403` is an answer, not something to retry: write the new status in the body and report the stale gating state as needing an authorized actor.
-
