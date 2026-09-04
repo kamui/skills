@@ -247,6 +247,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 
 - the head it addressed at, and the commits carrying the changes;
 - counts by disposition, each item linked to its thread;
+- a file coordinate the summary names outside a linked thread item rendered as an immutable link at the addressed full head SHA — `https://<host>/<owner>/<repo>/blob/<full sha>/<path>?plain=1#L<line>`, `#L<start>-L<end>` for a range, neither the query nor the fragment for a whole file — with the code-formatted coordinate as its text, never a branch URL or a bare code span;
 - what still needs someone: `declined` awaiting a verdict, `needs-info` awaiting an answer, `blocked` items and their blocker;
 - the checks run;
 - where the forge will not route a re-review request, one line asking for one by mentioning the reviewing identity;
