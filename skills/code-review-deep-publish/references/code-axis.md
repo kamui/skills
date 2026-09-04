@@ -75,7 +75,7 @@ Deduplicate before returning: one candidate per distinct defect, at the site whe
 
 You were given the changed-file manifest. Return it with every entry marked `reviewed` or `ignored` plus a reason — a lockfile, a generated artifact, a pure data fixture with no logic. "Nothing stood out" is `reviewed`; skipping a file because it was long or unfamiliar is not a reason, and neither is running out of room.
 
-Say plainly where you could not finish: a file you could not read, a check you started and abandoned, a patch the forge omitted. That makes the run incomplete, which is a fair outcome and cheaper than the alternative — a silent skip becomes an approval nobody earned.
+Say plainly where you could not finish: a file you could not read, a check you started and abandoned, a patch the forge omitted. That makes the run incomplete, which is a fair outcome and cheaper than the alternative — a silent skip becomes an approval nobody earned. Return the manifest as the fenced `manifest` block defined in § Report tail.
 
 ## What to return
 
@@ -102,10 +102,25 @@ publication.
 
 ## The disposition ledger
 
-Alongside the candidates, return one table row for **every** hypothesis you weighed, including the ones you acquitted before returning them: claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, or `observation`). "Specifically tried to convict and could not" is a row, not narrative — a later re-review reads this ledger to recognize a hypothesis as already tested and killed, and prose does not survive to that round.
+Alongside the candidates, return one ledger row for **every** hypothesis you weighed, including the ones you acquitted before returning them: claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, or `observation`). "Specifically tried to convict and could not" is a row, not narrative — a later re-review reads this ledger to recognize a hypothesis as already tested and killed, and prose does not survive to that round.
 
-Each row has four compact fields on one line: a one-line claim, a falsification route of a few words, one decisive evidence pointer (`path:line` or a quoted rule location), and a one-word disposition. Pre-admission acquittals use the same compact shape.
+Each row has four compact fields on one line: a one-line claim, a falsification route of a few words, one decisive evidence pointer (`path:line` or a quoted rule location), and a one-word disposition. Pre-admission acquittals use the same compact shape. Return the ledger as the fenced `ledger` block defined in § Report tail; a ledger written as prose or as a markdown table is non-conforming and will be sent back.
 
 ## Observations
 
 An accurate fact that fails the candidate bar — a doc sentence broader than the code, an unused artifact, a scoping imprecision with no wrong outcome — is an **observation**, not a dropped thought. Return it separately: one sentence plus one `file:line` evidence pointer, stating what is, never what should be. Observations skip the verifier and publish only in the review summary's bounded `Observations` section.
+
+## Report tail
+
+End the report with these two fenced blocks, in this order, each with the exact info string shown, and no fenced block after them. The orchestrator runs `scripts/validate_finder_report.py` on the report before anything downstream reads it; a report that fails is sent back once for the same review in this shape, and a second failure leaves the axis incomplete.
+
+`````markdown
+```ledger
+<one-line claim> | <falsification route> | <path:line or quoted-rule location> | <candidate|acquitted|observation>
+```
+```manifest
+<path> | <reviewed|ignored> | <reason>
+```
+`````
+
+Rows are one per line, four (`ledger`) or three (`manifest`) pipe-separated fields, no header row, no blank rows, and no `|` inside a field. The evidence field is one whole pointer: `path:line`, `path:start-end`, or a quoted-rule location written `` `path` § heading ``, optionally in backticks. An acquittal that rests on an absence — no rule in the guidance, no code path that reaches the claim — points at the section that would have carried the rule or the line the claim was about, not at a sentence of explanation. The disposition is one of `candidate`, `acquitted`, or `observation`; `question` belongs to the Requirements axis. At least one row is a `candidate` unless the candidate section says "no candidates". Every path in the manifest you were given appears exactly once in the `manifest` block, its status is `reviewed` or `ignored`, and an `ignored` row carries a reason. A renamed or copied entry is listed once, under its new path. The Code axis returns no `counts` block.
