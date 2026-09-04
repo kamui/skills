@@ -13,6 +13,7 @@ For candidate mode, give the verifier only:
 - the repository and pinned base, head, and merge-base;
 - linked issue/spec coordinates and applicable base-branch rule coordinates;
 - the following candidate record for each candidate;
+- the `ranges` lines from `scripts/review_context.py` for each candidate's anchor and fix, so the verifier reads them in one message;
 - when `SKILL.md`'s related-acquittal mode applies, the related non-survivor ledger rows, each in the compact form described for clean-verdict mode below; and
 - permission to inspect the cited code and the narrow callers, tests, configuration, history, or issue text needed to decide it.
 
