@@ -11,7 +11,7 @@ Implement the work, then open one pull request linked to its spec. This skill st
 
 ### 1. Resolve the targets
 
-Read `docs/agents/issue-tracker.md` when present, then resolve the spec — the issue, tickets, or written specification describing the work — and the base branch to merge into. Ask the user before any external write if either is ambiguous.
+Read `docs/agents/issue-tracker.md` when present, then resolve the spec — the issue, tickets, or written specification describing the work — and the base branch to merge into. The spec includes every issue the user provides and every one inferred from the request, branch name, or commits; record each so the pull request can account for it. Ask the user before any external write if either is ambiguous.
 
 ### 2. Prepare the branch
 
@@ -34,7 +34,7 @@ gh pr list --head <branch> --base <base> --state open --json number,url
 Update that one's body if it exists; otherwise `gh pr create --base <base> --head <branch> --title "..." --body-file -`. Either way, exactly one pull request, and its body must:
 
 - summarize the change;
-- link the originating issue or tickets as the spec source, or name and link the specification when the spec lives outside the forge;
+- reference every issue resolved in step 1, each with its disposition: **closes** it, using the forge's closing keyword so the merge closes the issue; **partially implements** it, naming what remains open; or **affects** it, stating how. When the spec lives outside the forge, name and link the specification instead;
 - list the verification performed.
 
 Leave issue status, labels, and assignees alone.
