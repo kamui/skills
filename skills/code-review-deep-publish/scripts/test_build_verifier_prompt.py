@@ -25,7 +25,9 @@ anchor: packages/browserContext.ts:291
 fix: packages/browserContext.ts:291-292
 title: removeCookies loses concurrent writes
 claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.
-  The write at `packages/browserContext.ts:291` is not atomic.
+  The write at `packages/browserContext.ts:291` is not atomic. The shipped policy reads
+priority: high
+  and nothing downgrades it.
 support: private finder process and uncertainty
 trigger: A page writes a cookie between the clear and restore operations.
 priority: P2
@@ -37,6 +39,7 @@ The reset branch also clears cookies | compare the live path | packages/browserC
 The `removeCookies` reset premise holds elsewhere | trace the opposite branch | packages/other.ts:12 | acquitted
 An unrelated generated file may drift | regenerate it | packages/types.d.ts:10 | acquitted
 The `BrowserContext` constructor validates its options | inspect the constructor | packages/context/create.ts:8 | acquitted
+A root-level helper of the same name drifts | diff the two files | browserContext.ts:14 | acquitted
 ```
 """
 
@@ -122,10 +125,18 @@ def main() -> int:
                 failures.append("unrelated acquitted row was sent to the verifier")
             if "constructor validates its options" in result.stdout:
                 failures.append("a row sharing only a class name was treated as related")
+            if "root-level helper of the same name" in result.stdout:
+                failures.append("a row sharing only a path suffix was treated as related")
+            if "priority: high\n  and nothing downgrades it." not in result.stdout:
+                failures.append("a field-like line inside the claim was not carried verbatim")
+            if "priority: P2" not in result.stdout:
+                failures.append("the candidate's own priority was lost to the claim's quoted line")
 
         missing_claim = CODE_REPORT.replace(
             "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
-            "  The write at `packages/browserContext.ts:291` is not atomic.\n",
+            "  The write at `packages/browserContext.ts:291` is not atomic. The shipped policy reads\n"
+            "priority: high\n"
+            "  and nothing downgrades it.\n",
             "",
         )
         code.write_text(missing_claim, encoding="utf-8")
@@ -149,7 +160,9 @@ def main() -> int:
             "fix": "fix: packages/browserContext.ts:291-292\n",
             "title": "title: removeCookies loses concurrent writes\n",
             "claim": "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
-            "  The write at `packages/browserContext.ts:291` is not atomic.\n",
+            "  The write at `packages/browserContext.ts:291` is not atomic. The shipped policy reads\n"
+            "priority: high\n"
+            "  and nothing downgrades it.\n",
             "trigger": "trigger: A page writes a cookie between the clear and restore operations.\n",
             "priority": "priority: P2\n",
             "action": "action: must-fix\n",
@@ -162,9 +175,8 @@ def main() -> int:
                 failures.append(f"a candidate with a blank {field} was not refused with exit 1")
 
         leaked = CODE_REPORT.replace(
-            "  The write at `packages/browserContext.ts:291` is not atomic.\n",
-            "  The write at `packages/browserContext.ts:291` is not atomic.\n"
-            "  support: leaked into the claim\n",
+            "  and nothing downgrades it.\n",
+            "  and nothing downgrades it.\n  support: leaked into the claim\n",
         )
         code.write_text(leaked, encoding="utf-8")
         result = invoke(code, requirements)
