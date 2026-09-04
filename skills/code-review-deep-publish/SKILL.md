@@ -95,6 +95,8 @@ Re-reviewing, the prior findings and disposition ledger let each finder avoid re
 
 Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Run `python3 scripts/build_verifier_prompt.py` on the two finder reports, passing the same result-summary file with `--suite-results` when suites ran, and use its output as the prompt; it withholds every `support` field mechanically. On a non-zero exit, report the script's output and stop the step; the fix is to the finder report or to the script, never to the prompt by hand. Read each finder's `ledger`, `counts`, and `manifest` blocks for coverage and status; do not re-read the finders' prose to build the verifier prompt.
 
+Also give it every finder ledger row with disposition `acquitted` that is **related** to a candidate: the row's evidence pointer is in the same file as a candidate's `anchor` or `fix`, or its claim names the same function, branch, state field, or lock as a candidate's claim. Pass each as its compact four-field row, after the candidates. The verifier rules `holds` or `re-open` on each related row in the same report.
+
 One class of item never goes to the verifier: the Requirements axis's **"cannot tell from the code"** bucket. Those resolve to questions at the finder — a question is not a defect claim, and `confirmed`/`refuted` presupposes something the code either does or does not do. Route them straight to publication as questions, each carrying why no static evidence can settle it and what measurement or answer would.
 
 The fresh context is the entire mechanism. A verifier that has already seen why the finder believed something agrees with itself, which checks nothing. A verifier that has only the claim must reconstruct it from the code or fail to. `support` is where a finder's demonstrations and hedging live, and it is withheld for exactly that reason: a verifier told the finder already proved something believes it.
@@ -104,6 +106,8 @@ It returns one verdict per candidate — `confirmed`, `plausible`, or `refuted` 
 - `refuted` is dropped silently. It never reaches the pull request and is not mentioned in the summary.
 - `confirmed` becomes a finding at its priority and action. The verifier may have recalibrated either — a confirmed fact whose merge consequence is disproved lands as `consider`, still published.
 - `plausible` becomes a **question**, whatever its priority. The mechanism is real but the trigger is not established, and an agent handed that as a finding will change working code to satisfy a scenario nobody has demonstrated. Asking costs a round; a wrong fix costs a round *and* the code.
+
+A `re-open` ruling is returned to the caller in the run report as `acquittal re-opened: <row>` with the verifier's cited evidence, and the summary's status derivation treats it as an open question on that axis (`Waiting for information`), never as a finding: the verifier cannot add findings, and this skill runs no second verifier dispatch. A later round may promote it.
 
 Verifier **observations** — accurate asides outside its mandate to verdict — join the finders' in the summary's `Observations` section, never the verdict list.
 
