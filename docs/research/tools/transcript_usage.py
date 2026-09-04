@@ -53,9 +53,11 @@ Per transcript: ``turns``, ``lines``, ``tool_calls``, ``text_only_turns``
 ``wall`` (last minus first assistant timestamp, ``H:MM:SS``; the ``TOTAL``
 wall is the sum over transcripts, not the span), and ``cost``.
 Output: one labelled block per transcript and a ``TOTAL`` block; with
-``--row`` one Markdown table row of the totals, labelled; with ``--json``
-the same numbers as JSON. ``--header`` prints the table header from the same
-column list as ``--row``, so the two cannot diverge.
+``--row`` one Markdown table row of the totals, labelled; when ``--report``
+is also given, the row populates the report estimate and production-shaped
+cost. With ``--json`` it prints the same numbers as JSON. ``--header`` prints
+the table header from the same column list as ``--row``, so the two cannot
+diverge; production-shaped cells are ``—`` when no report was supplied.
 
 Exit codes: ``0`` success; ``1`` a self-test assertion failed, on stdout;
 ``2`` a transcript cannot be read or has no billed assistant turns, or an
@@ -74,7 +76,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 COLUMNS = (
-    "Agent",
+    "Run / agent",
     "Model",
     "Turns",
     "Tool calls",
@@ -85,7 +87,9 @@ COLUMNS = (
     "Output",
     "Thinking",
     "Wall",
-    "Cost ($)",
+    "Billed cost ($)",
+    "Report output (est.)",
+    "Production-shaped ($)",
 )
 
 COUNT_FIELDS = (
@@ -316,10 +320,19 @@ def block_lines(usage: Usage, args: argparse.Namespace, shaped_tokens: Optional[
     return lines
 
 
-def row_line(usage: Usage, label: str, args: argparse.Namespace) -> str:
+def row_line(usage: Usage, label: str, args: argparse.Namespace, shaped_tokens: Optional[int]) -> str:
     c = usage.counts
+    shaped_cost = "—"
+    report_output = "—"
+    if shaped_tokens is not None:
+        shaped_output = max(0, c["output"] - shaped_tokens)
+        cost = usage.cost(
+            args.prices, args.cache_write_mult, args.cache_read_mult, output=shaped_output
+        )
+        shaped_cost = f"**{cost:.2f}**"
+        report_output = fmt(shaped_tokens)
     by_column = {
-        "Agent": label,
+        "Run / agent": label,
         "Model": ", ".join(usage.models) if usage.models else "—",
         "Turns": fmt(c["turns"]),
         "Tool calls": fmt(c["tool_calls"]),
@@ -330,7 +343,9 @@ def row_line(usage: Usage, label: str, args: argparse.Namespace) -> str:
         "Output": fmt(c["output"]),
         "Thinking": fmt(c["thinking"]),
         "Wall": wall_text(usage.wall_seconds),
-        "Cost ($)": f"{usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult):.2f}",
+        "Billed cost ($)": f"{usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult):.2f}",
+        "Report output (est.)": report_output,
+        "Production-shaped ($)": shaped_cost,
     }
     assert tuple(by_column) == COLUMNS, "row cells and COLUMNS disagree"
     return table_row(by_column[name] for name in COLUMNS)
@@ -379,7 +394,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         total.absorb(usage)
 
     if args.row is not None:
-        print(row_line(total, args.row, args))
+        print(row_line(total, args.row, args, shaped_tokens))
         return 0
 
     if args.json:
@@ -543,14 +558,19 @@ def self_test() -> int:
 
         r = run(simple, "--prices", "2,10", "--row", "v5a primary")
         check("row exits 0", r.returncode == 0, r.stderr)
-        expected_row = f"| v5a primary | claude-sonnet-5 | 2 | 1 | 1 | 10 | 150 | 2,150 | 80 | 20 | 0:00:10 | {expected_cost:.2f} |"
+        expected_row = f"| v5a primary | claude-sonnet-5 | 2 | 1 | 1 | 10 | 150 | 2,150 | 80 | 20 | 0:00:10 | {expected_cost:.2f} | — | — |"
         check("row content", r.stdout.strip() == expected_row, r.stdout)
+
+        r = run(simple, "--prices", "2,10", "--report", report, "--row", "v5a primary")
+        check("report row exits 0", r.returncode == 0, r.stderr)
+        report_row = f"| v5a primary | claude-sonnet-5 | 2 | 1 | 1 | 10 | 150 | 2,150 | 80 | 20 | 0:00:10 | {expected_cost:.2f} | 1,000 | **0.00** |"
+        check("report row content", r.stdout.strip() == report_row, r.stdout)
 
         r = run("--header")
         check("header exits 0", r.returncode == 0, r.stderr)
-        header = "| Agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Cost ($) |"
+        header = "| Run / agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Billed cost ($) | Report output (est.) | Production-shaped ($) |"
         check("header row", r.stdout.splitlines()[0] == header, r.stdout)
-        check("header separator", r.stdout.splitlines()[1] == "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", r.stdout)
+        check("header separator", r.stdout.splitlines()[1] == "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", r.stdout)
         check("header cell count matches row", header.count("|") == expected_row.count("|"), f"{header} vs {expected_row}")
 
         r = run(simple, "--prices", "2,10", "--cache-write-mult", "2", "--cache-read-mult", "0.5", "--json")

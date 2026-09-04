@@ -82,8 +82,12 @@ Each run document's Metadata section records:
    private records are costs a production run pays too (the ledger is required by the skill), so
    they stay in.
 
-Item 4 comes from `transcript_usage.py --report`. Compute items 2–3, and the same split of the
-legacy figure, with the sibling script so every run document does it the same way:
+Items 1 and 4 come from `transcript_usage.py --report`. Re-run that command with
+`--row "<arm> seed <n>"` and paste the line into the billed-usage table in
+[`comparison-data.md`](comparison-data.md), whose header is `transcript_usage.py --header` output.
+
+Compute items 2–3, and the same split of the legacy context-size figure, with the sibling script so
+every run document keeps the corpus's companion data in the same form:
 
 ```sh
 python3 docs/research/tools/cost_split.py \
@@ -94,16 +98,18 @@ python3 docs/research/tools/cost_split.py \
 ```
 
 Paste its block into the run document verbatim. Re-run it with `--row "<arm> seed <n>"` and paste
-that line into the cost table in [`comparison-data.md`](comparison-data.md), whose header is the
-script's `--header` output. The script exits `1`
+that line into the legacy companion table in `comparison-data.md`, whose header is
+`cost_split.py --header` output. This table preserves the self-reported split and historical
+`subagent_tokens`; it does not determine the ranking. The script exits `1`
 when the report or the sum of the reported parts exceeds the harness total, which means the split
 double-counts something; fix the inputs, not the table.
 
 ### Ranking
 
-Arms are ranked on the **production-shaped** column, not on the raw harness figure. The raw figure
-stays in the table for continuity with the corpus, whose numbers are all raw. The report's share of
-the total is expected to differ by arm — in test 4 the Panel run documents are 89–93 KB against
+Arms are ranked on the **production-shaped billed cost** column from `transcript_usage.py`, not on
+the raw billed cost or the legacy harness context-size figure. Both stay in the tables for audit and
+continuity. Report the research-report share as its estimated output cost divided by billed cost;
+the share is expected to differ by arm — in test 4 the Panel run documents are 89–93 KB against
 57–75 KB for the Skeptic line — so subtracting it moves the ratios, not just the totals.
 
 ### Lower-effort primary arm
