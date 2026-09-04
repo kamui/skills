@@ -39,7 +39,7 @@ Apply the bar asymmetrically:
 
 ## What is not a candidate
 
-- Anything a linter, typechecker, formatter, or compiler catches. Assume CI runs them; do not run them yourself and do not report what they would say.
+- Anything a linter, typechecker, formatter, or compiler catches. Assume CI runs them; do not run them yourself and do not report what they would say — except when the diff already shows the tool did not run or did not catch it: a generated artifact in the diff whose content contradicts its source in the same diff, or a lint-enforced convention the diff already violates, is a candidate. "A tool would catch this" is a hypothesis; a diff that contains the stale artifact falsifies it.
 - Pre-existing issues, including real ones on lines the change did not modify.
 - Something that looks like a bug and is not.
 - Pedantic nitpicks a senior engineer would not raise in review.
@@ -51,7 +51,7 @@ Apply the bar asymmetrically:
 
 ## Sync drift from a changed rule
 
-When the diff changes a rule, vocabulary, enum, schema field, or normative enumeration that other files restate — documentation, sibling skills or modules, templates, prose in fixtures — a copy left carrying the old text is a defect this change introduced: the peer matched at base, and the diff made it stale, so criterion 4 is satisfied even though the stale line itself is untouched. A change that retires a closed list in favor of an open rule counts the same way; the stale copy is the one still carrying the retired list.
+When the diff changes a rule, vocabulary, enum, schema field, or normative enumeration that other files restate — documentation, sibling skills or modules, templates, prose in fixtures — a copy left carrying the old text is a defect this change introduced: the peer matched at base, and the diff made it stale, so criterion 4 is satisfied even though the stale line itself is untouched. A change that retires a closed list in favor of an open rule counts the same way; the stale copy is the one still carrying the retired list. A generated artifact and its source are a peer pair under this section; treat a generator that was not re-run as a stale peer.
 
 Before treating any of these changes as clean, establish the peer set. First list every qualifying contract the diff touches — each changed rule, vocabulary, enum, schema field, or normative enumeration, counting any closed list that was opened or retired — and sweep each one separately; sweeping one contract does not discharge another. Per contract, search the whole repository, case-insensitively, twice: once for the new vocabulary, and once for the old wording the change replaced or retired. Key the old-wording search to a short distinctive fragment — two or three consecutive members of the retired list, or one rare phrase from the old rule — never to a whole sentence, because consumers restate a rule in their own words and keep only fragments of the old phrasing. A sweep confined to the changed file's directory does not establish that no consumer exists. Inspect every live result, record each in the disposition ledger, and compare surviving peers against their base versions to tell a file that is intentionally distinct from one that normally moves in lockstep.
 
@@ -74,6 +74,8 @@ Deduplicate before returning: one candidate per distinct defect, at the site whe
 ## Account for every file
 
 You were given the changed-file manifest. Return it with every entry marked `reviewed` or `ignored` plus a reason — a lockfile, a generated artifact, a pure data fixture with no logic. "Nothing stood out" is `reviewed`; skipping a file because it was long or unfamiliar is not a reason, and neither is running out of room.
+
+A generated file may be marked `ignored` only after comparing its diff hunks against the source it is generated from (name the source in the reason). The comparison is textual — the artifact's hunks against the source's hunks — and does not require running the generator. A generated file whose hunks disagree with its source is `reviewed`, with the disagreement as a candidate.
 
 Say plainly where you could not finish: a file you could not read, a check you started and abandoned, a patch the forge omitted. That makes the run incomplete, which is a fair outcome and cheaper than the alternative — a silent skip becomes an approval nobody earned. Return the manifest as the fenced `manifest` block defined in § Report tail.
 
