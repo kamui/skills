@@ -38,9 +38,13 @@ For synchronization drift, compare the peer artifacts at the merge-base and insp
 
 For every confirmed `kind=concurrency` or `kind=invariant` candidate:
 
-1. name the broken invariant;
-2. enumerate the sibling code paths governed by it and state for each whether the proposed `change` protects that path; and
-3. when the proposed fix covers only one projection of the bug class, correct `change` to the invariant-level outcome that covers every exposed sibling path.
+1. **State the invariant at the rule level, not the transition level.** Name which counters, flags, queue contents, or ownership records must stay consistent with which operations, and under which lock or ordering that consistency was guaranteed at the merge-base. Do not name it as "during X" (a transition); name it as "A must never be observed inconsistent with B".
+2. **State whether the candidate's failing interleaving requires runtime shutdown, teardown, or an error path.** If it does, additionally ask whether the same rule can fail in steady state, and trace at least one steady-state interleaving (normal spawn, normal wake, normal idle) to a `holds` or `fails` verdict with `path:line` citations.
+3. **Enumerate sibling interleavings before sibling code paths.** For each pair of concurrent actors that touch the rule's state — producer vs consumer, spawner vs worker-going-idle, spawner vs worker-exiting, spawner vs shutdown, claimant vs releaser — state whether the rule holds, citing the lines where each actor reads and writes the shared state.
+4. **Then enumerate sibling code paths** governed by the rule and state for each whether the proposed `change` protects it.
+5. **Widen `change` to the rule level when needed.** When the proposed fix covers only one interleaving or one path, correct `change` to the outcome that restores the rule for every failing interleaving found in steps 2–3. If the rule can only be restored by re-serializing two operations, say which two and under which lock.
+
+A `change` that closes the shutdown projection while a steady-state projection of the same rule remains open is narrower than the bug class; say so in the correction.
 
 Do not search the rest of the pull request for new findings. If an accurate, sub-threshold fact surfaces incidentally, return at most one explicitly non-actionable `observation` aside with a decisive evidence pointer and no `should` or `must` language. An incidental fact that contradicts the decisive premise of any ledger row the verifier was given is **not** an aside. Return it as `disposition <id> does not hold; re-open it`, citing the contradicted premise and the decisive `path:line`. Use the observation aside only for facts that contradict no row. Do not weaken a verdict merely because a test has not yet been written; decide from the strongest available evidence.
 
