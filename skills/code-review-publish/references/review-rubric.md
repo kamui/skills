@@ -22,7 +22,7 @@ Use this rubric as the finding-admission rule. More specific user instructions a
 4. **Proven consequence:** for behavior, identify the concrete input, state, environment, or call path and observable impact. For an authoritative instruction or maintainability contract, demonstrate the exact contradiction or drift and the concrete reader or maintenance consequence. Speculation about downstream breakage is insufficient.
 5. **Grounded intent:** it does not depend on an unstated assumption about the codebase or author's intent.
 6. **Unintentional:** the pull-request description, linked issue, repository rules, and history do not establish it as a deliberate behavior change. A maintainer's approval, LGTM, or merge establishes acceptance only of what the review record explicitly addresses. It does not establish acceptance of a candidate the record never discusses, and it is **provisional** for unreleased public API surface — a new exported method, type, option, protocol entry, or documented command that appears in no released version at the merge-base. An explicit deferral in the review record (for example "we can fix this during the API review", "let's revisit the name later", "good enough for now") is evidence that the deferred question is *open*, and a candidate about that question passes this gate.
-7. **Worth the author's time:** the author would probably act if they understood the evidence. Tool-enforced trivia and generic preferences do not qualify.
+7. **Worth the author's time:** the author would probably act if they understood the evidence. Tool-enforced trivia and generic preferences do not qualify. "A tool or CI job would catch this" is not a disposition when the diff already shows the tool did not: a generated artifact whose content contradicts its source inside the same diff is a candidate, and a lint-enforced convention the diff already violates is a candidate.
 8. **Proportionate rigor:** the requested behavior matches the reliability and engineering practices evident in this repository.
 
 All applicable conditions are gates. Report every candidate that passes them; zero findings is a valid and preferable result when none do.
@@ -54,7 +54,10 @@ Use risk signals to direct attention, not to create findings. Where applicable, 
 - path normalization, file serving, traversal, and symlinks;
 - migrations, destructive operations, rollback, and compatibility;
 - retries, idempotency, partial failure, stale state, and concurrency;
-- external contracts, dependency upgrades, serialization, and version skew.
+- external contracts, dependency upgrades, serialization, and version skew;
+- test and generated-artifact hygiene: unused fixtures, live network access in tests, stale generated output, missing per-language variants.
+
+A new or changed test, fixture, generated artifact, or documentation entry is code under review with its own standard, in addition to being evidence about the implementation. For every such file, check without further reads: fixtures or parameters that are declared but unused, and network, filesystem, or external-host access where the repository provides a local fixture or server for it. For a **new file or new entry**, additionally run one batched search, not a file read, to establish the local convention: for a new test or fixture file, one `grep -l` over its sibling glob for the accessor of any fixture the new file declares but does not use; for a new entry in a file whose other entries carry per-language, per-platform, or per-target variants, one count of those variant markers over the containing file. A variant the siblings carry and the new entry omits, or a fixture the siblings use and the new file bypasses, is a candidate under the ordinary gates. A hygiene candidate is `maintainability` for routing and never qualifies for mandatory verification on its own.
 
 Every changed file must be `reviewed`, `ignored` with a defensible reason, or `unreviewed`. Any unreviewed material makes coverage incomplete. An incomplete review may report verified findings but cannot approve the change.
 
