@@ -26,7 +26,7 @@ For clean-verdict mode, give it the same pinned coordinates and rules plus the c
 
 For each candidate, independently:
 
-1. Read the cited anchor and actual fix site, then only enough surrounding context to decide the claim.
+1. Read the cited anchor and actual fix site as bounded ranges at head and at the merge-base (`git show <merge-base>:<path>` with a line range), then only enough surrounding context to decide the claim. Read a whole file only when a conditional the claim depends on cannot be located otherwise; say so.
 2. Reproduce or trace the stated trigger through the current code.
 3. Establish the observable impact and whether unchanged code prevents it.
 4. For a Code candidate, confirm that the reviewed diff introduced the behavior. For `kind=requirement`, decide whether the explicit requirement made this change responsible for the outcome; never refute it merely because the missing implementation predates the diff or lives in an unchanged file.
