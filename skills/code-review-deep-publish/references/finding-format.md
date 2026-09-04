@@ -40,7 +40,7 @@ A finding has two locations and they are not always the same one. The forge cons
 
 Choose the anchor in order, taking the first that applies:
 
-1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds or rewrites attaches to the file, still inside the review.
+1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds or rewrites has no single line: it goes in the review body, still inside the review, because the batched review call takes line comments only (`publishing.md` § One review, one call).
 2. Otherwise, the diff line that **makes the finding true**: the change that opened the gap, or that stranded code elsewhere.
 3. Otherwise, the diff line that most directly **demonstrates** it — a test that looks like it covers the case and does not, a call site that breaks.
 4. Otherwise the finding has no honest anchor, and it goes in the review body. Do not attach it to an unrelated line merely to make it a line comment.

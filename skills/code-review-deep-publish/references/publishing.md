@@ -32,7 +32,7 @@ A question keeps a review at `Needs Information` until someone answers it, you w
 
 Coverage is `complete` only when every file in the changed-file manifest is `reviewed` or `ignored` with a defensible reason, and every fetch and check the run started either finished or is named as unfinished. It measures inspection, not output: a complete review with no findings is the good outcome.
 
-Classify each axis before deriving the status — `Passed`, `Findings`, or `Waiting for information`. An axis is `Waiting for information` when an open question prevents completing its assessment; the question itself still carries no axis and counts toward no total. Anything left unassessed means the review did not finish: stop before publishing and report the operational failure. An incomplete review has no status and must never fall through to `Approved`.
+Classify each axis before deriving the status — `Passed`, `Findings`, or `Waiting for information`. An axis is `Waiting for information` when an open question prevents completing its assessment; the question itself still carries no axis and counts toward no total. A bounded gap — a changed file the run could not read, a check it started and did not finish — is a coverage shortfall, not an unclassified axis: classify the axis on what was inspected, name the gap in the coverage line, and let step 2 of the ladder yield `Incomplete`, which publishes the verified findings with `COMMENT`. Stop before publishing only on an operational failure that leaves an axis with no classification at all — a finder that never returned, a diff that could not be read — and report that failure to the caller instead. A review with no status publishes nothing, and nothing falls through to `Approved`.
 
 With no originating issue, the Requirements axis still classifies normally — it ran against the pull request body's claims and non-goals — and the summary states **issue alignment: unavailable** beside its outcome.
 
@@ -96,9 +96,9 @@ JSON
 
 One call per finding produces one empty review per finding, which is the failure mode this shape exists to avoid.
 
-Validate every anchor against the diff before submitting — `git diff <base>...<head> --unified=0` gives the touched ranges cheaply, and one comment on an untouched line fails the entire batched call. An anchor that fails validation moves down the ladder, to the file (`subject_type: file`) and then the body, never into a doomed request.
+Validate every anchor against the diff before submitting — `git diff <base>...<head> --unified=0` gives the touched ranges cheaply, and one comment on an untouched line fails the entire batched call. An anchor that fails validation moves down the ladder to the body, never into a doomed request.
 
-`line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. For a whole file, set `"subject_type": "file"` and omit `line`. A finding the ladder gave no honest anchor goes in the body, with its `fix` site named there.
+`line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. This call takes line comments only: GitHub documents `subject_type: file` on its single-comment endpoint, not in this call's `comments[]`, and one entry without a valid `line` fails the whole batch. So a finding whose honest anchor is a whole file goes in the body, as does a finding the ladder gave no anchor, each with its `fix` site named there.
 
 End the body with a run trailer, so a later run can correlate what this one covered without re-deriving it:
 
