@@ -372,6 +372,21 @@ The prior analysis's nine, with the new corpus.
    both primaries were metered, 1.2–1.8×. On test 4 the premium bought one false positive and no
    recall the cheaper line lacked; on test 1 it bought two real drifts; on test 3 it bought a real
    sibling finding and a good question while missing the ground truth.
+
+   **Metering correction (2026-09-03, #67).** Every token figure in this analysis, the ratios above
+   included, is a harness-reported total that contains the research report each run wrote: verifier
+   prompts, verbatim verifier reports, the complete ledger, the specific answers the dispatch
+   demanded. Those run documents are 15–100 KB each, all of it output tokens billed at five times the
+   input rate. A production run emits the review payload and nothing else. The corpus figures are
+   therefore upper bounds for production; the estimate behind #67 and the #62 cost review is that
+   production is 15–25% cheaper than they say, and nobody has measured it. The share is not equal
+   across arms either — test 4's Panel run documents are 89–93 KB against 57–75 KB for the Skeptic
+   line — so the correction moves the ratios, not only the totals. The holdout evaluation (#60)
+   meters payload and report separately and ranks arms on a production-shaped figure, harness total
+   minus the report, under the method in
+   [`prototype-runs-holdout/README.md`](prototype-runs-holdout/README.md); the correction factor it
+   measures replaces the estimate here once it exists.
+
 9. **Methodology debts — two paid, three new.** Mirror truncation and the closed-PR rule are done
    and worked (test 3's contamination is closed; retrospective mode ran on three targets). Model is now
    passed explicitly and verified from transcripts. New debts: rate limits destroyed unsaved phases in
