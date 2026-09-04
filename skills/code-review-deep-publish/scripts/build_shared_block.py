@@ -1,5 +1,25 @@
 #!/usr/bin/env python3
-"""Build the shared, judgment-free input block for both review finders."""
+"""Build the shared, judgment-free input block for both review finders.
+
+Purpose: assemble the pinned diff, changed-file manifest, ancestor guidance
+files, and finding-format pointer that both finders receive verbatim, so no
+finder re-reads the repository to construct its own inputs.
+
+Usage:
+    python3 scripts/build_shared_block.py --repo <path> --base-ref <ref>
+        --base-sha <sha> --head-sha <sha> --merge-base <sha>
+        --finding-format <absolute path> [--max-bytes <n>]
+
+The block is written to stdout; an oversized-diff notice goes to stderr.
+
+Exit codes:
+    0  the block was written
+    2  a git command failed, naming the command on stderr
+
+Input schema: the pinned run identity (base ref, base SHA, head SHA,
+merge-base) and a local git repository containing all three commits. The
+finding-format path is an absolute path echoed into the block, not read.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +28,7 @@ import re
 import shlex
 import subprocess
 import sys
+import typing
 from pathlib import Path, PurePosixPath
 
 GUIDANCE_NAMES = (
@@ -42,6 +63,19 @@ def run_git(repo: Path, *arguments: str) -> str:
     if result.returncode != 0:
         raise GitFailure(command, result.stderr.strip())
     return result.stdout
+
+
+def write_stream(stream: typing.TextIO, text: str) -> None:
+    """Write text that may carry surrogates from `errors="surrogateescape"`.
+
+    Git output is decoded with `surrogateescape`, so a byte the repository holds
+    that is not valid UTF-8 survives as a lone surrogate. Encoding it back the
+    same way round-trips the original byte; printing it to a strict stdout would
+    raise `UnicodeEncodeError` and lose the whole block.
+    """
+    stream.flush()
+    stream.buffer.write(text.encode("utf-8", errors="surrogateescape"))
+    stream.buffer.flush()
 
 
 def changed_paths(repo: Path, merge_base: str, head_sha: str) -> list[str]:
@@ -199,16 +233,16 @@ def main() -> int:
     try:
         output, notice = build(args)
     except GitFailure as error:
-        print(
-            f"build_shared_block: git command failed: {shlex.join(error.command)}",
-            file=sys.stderr,
+        write_stream(
+            sys.stderr,
+            f"build_shared_block: git command failed: {shlex.join(error.command)}\n",
         )
         if error.detail:
-            print(error.detail, file=sys.stderr)
+            write_stream(sys.stderr, error.detail + "\n")
         return 2
-    print(output, end="")
+    write_stream(sys.stdout, output)
     if notice:
-        print(notice, file=sys.stderr)
+        write_stream(sys.stderr, notice + "\n")
     return 0
 
 

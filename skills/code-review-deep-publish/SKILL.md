@@ -1,6 +1,7 @@
 ---
 name: code-review-deep-publish
 description: "Run a recall-first panel review with two independent finders and mandatory fresh-context verification of every candidate. Use for large or high-risk changes, including concurrency, failover, data-integrity, security or authorization surfaces, and wide multi-module diffs, where extra recall justifies roughly 1.5× the token cost of code-review-publish; also use as the standing comparator arm in review-skill evaluations. For routine reviews prefer code-review-publish. Invoke only when the caller explicitly asks for code-review-deep-publish."
+compatibility: Requires git and Python 3.9+ on macOS or Linux
 ---
 
 # Publish deep code review (Panel line)
@@ -43,7 +44,7 @@ Pin `base`, `head`, and `merge-base` together as the run identity, and record th
 
 Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
-Run `scripts/build_shared_block.py` with the pinned identity; its output is the shared block. Do not re-read the diff or guidance files to build it by hand.
+Run `python3 scripts/build_shared_block.py` with the pinned identity; its output is the shared block. Do not re-read the diff or guidance files to build it by hand. On a non-zero exit, report the script's output and stop the step — hand-building the block is not the fallback.
 
 An earlier review at a different head makes this a re-review. Keep the original comparison base; use the earlier head only to locate what changed since.
 
@@ -85,7 +86,7 @@ Re-reviewing, the prior findings and disposition ledger let each finder avoid re
 
 ### 3. Verify
 
-Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Run `scripts/build_verifier_prompt.py` on the two finder reports and use its output as the prompt; it withholds every `support` field mechanically. Read each finder's `ledger`, `counts`, and `manifest` blocks for coverage and status; do not re-read the finders' prose to build the verifier prompt.
+Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Run `python3 scripts/build_verifier_prompt.py` on the two finder reports and use its output as the prompt; it withholds every `support` field mechanically. On a non-zero exit, report the script's output and stop the step; the fix is to the finder report or to the script, never to the prompt by hand. Read each finder's `ledger`, `counts`, and `manifest` blocks for coverage and status; do not re-read the finders' prose to build the verifier prompt.
 
 One class of item never goes to the verifier: the Requirements axis's **"cannot tell from the code"** bucket. Those resolve to questions at the finder — a question is not a defect claim, and `confirmed`/`refuted` presupposes something the code either does or does not do. Route them straight to publication as questions, each carrying why no static evidence can settle it and what measurement or answer would.
 

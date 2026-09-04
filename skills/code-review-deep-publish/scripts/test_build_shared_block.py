@@ -21,6 +21,26 @@ def git(repo: Path, *arguments: str) -> str:
     return result.stdout.strip()
 
 
+def invoke_argv(repo: Path, base_sha: str, head_sha: str, *extra: str) -> list[str]:
+    return [
+        sys.executable,
+        str(SCRIPT),
+        "--repo",
+        str(repo),
+        "--base-ref",
+        "main",
+        "--base-sha",
+        base_sha,
+        "--head-sha",
+        head_sha,
+        "--merge-base",
+        base_sha,
+        "--finding-format",
+        "/tmp/finding-format.md",
+        *extra,
+    ]
+
+
 def invoke(
     repo: Path,
     base_sha: str,
@@ -28,23 +48,7 @@ def invoke(
     *extra: str,
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [
-            sys.executable,
-            str(SCRIPT),
-            "--repo",
-            str(repo),
-            "--base-ref",
-            "main",
-            "--base-sha",
-            base_sha,
-            "--head-sha",
-            head_sha,
-            "--merge-base",
-            base_sha,
-            "--finding-format",
-            "/tmp/finding-format.md",
-            *extra,
-        ],
+        invoke_argv(repo, base_sha, head_sha, *extra),
         capture_output=True,
         check=False,
         text=True,
@@ -108,6 +112,24 @@ def main() -> int:
                     failures.append(f"normal output is missing {fragment!r}")
             if "irrelevant guidance" in result.stdout:
                 failures.append("guidance outside changed-path ancestors was included")
+
+        (repo / "src/pkg/latin1.c").write_bytes(b"/* caf\xe9 */\nint x;\n")
+        git(repo, "add", "src/pkg/latin1.c")
+        git(repo, "commit", "-q", "-m", "Add a Latin-1 comment")
+        latin1_sha = git(repo, "rev-parse", "HEAD")
+
+        raw = subprocess.run(
+            invoke_argv(repo, base_sha, latin1_sha),
+            capture_output=True,
+            check=False,
+        )
+        if raw.returncode != 0:
+            failures.append(
+                f"a non-UTF-8 diff byte exited {raw.returncode}: "
+                f"{raw.stderr.decode('utf-8', 'replace').strip()}"
+            )
+        if b"/* caf\xe9 */" not in raw.stdout:
+            failures.append("the non-UTF-8 diff byte did not survive into the block")
 
         fallback = invoke(repo, base_sha, head_sha, "--max-bytes", "1")
         command = f"git diff {base_sha}...{head_sha}"

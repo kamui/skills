@@ -3,12 +3,17 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent / "build_verifier_prompt.py"
+SUPPORT_LABEL_RE = re.compile(
+    r"^[ \t]*(?:-\s+)?(?:\*\*)?support(?:\*\*)?:",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 CODE_REPORT = """Finder prose is outside the machine-readable blocks.
 
@@ -45,7 +50,9 @@ The issue requires selective removal | inspect implementation | packages/browser
 """
 
 
-def invoke(code: Path, requirements: Path) -> subprocess.CompletedProcess[str]:
+def invoke(
+    code: Path, requirements: Path, repo: str = "/tmp/review-repo"
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
             sys.executable,
@@ -53,7 +60,7 @@ def invoke(code: Path, requirements: Path) -> subprocess.CompletedProcess[str]:
             "--brief",
             str(code.parent / "verify.md"),
             "--repo",
-            "/tmp/review-repo",
+            repo,
             "--base-sha",
             "a" * 40,
             "--head-sha",
@@ -109,7 +116,7 @@ def main() -> int:
             ):
                 if fragment not in result.stdout:
                     failures.append(f"normal output is missing {fragment!r}")
-            if "support" in result.stdout.casefold() or "private finder process" in result.stdout:
+            if SUPPORT_LABEL_RE.search(result.stdout) or "private finder process" in result.stdout:
                 failures.append("private finder material survived into stdout")
             if "unrelated generated file" in result.stdout:
                 failures.append("unrelated acquitted row was sent to the verifier")
@@ -123,7 +130,7 @@ def main() -> int:
         )
         code.write_text(missing_claim, encoding="utf-8")
         result = invoke(code, requirements)
-        if result.returncode != 1 or "missing claim" not in result.stderr:
+        if result.returncode != 1 or "missing claim" not in result.stdout:
             failures.append("a candidate without claim was not refused with exit 1")
 
         missing_trigger = CODE_REPORT.replace(
@@ -132,7 +139,7 @@ def main() -> int:
         )
         code.write_text(missing_trigger, encoding="utf-8")
         result = invoke(code, requirements)
-        if result.returncode != 1 or "missing trigger" not in result.stderr:
+        if result.returncode != 1 or "missing trigger" not in result.stdout:
             failures.append("a candidate without trigger was not refused with exit 1")
 
         blank_values = {
@@ -151,18 +158,39 @@ def main() -> int:
             assert original in CODE_REPORT, field
             code.write_text(CODE_REPORT.replace(original, f"{field}:   \n"), encoding="utf-8")
             result = invoke(code, requirements)
-            if result.returncode != 1 or f"empty {field}" not in result.stderr:
+            if result.returncode != 1 or f"empty {field}" not in result.stdout:
                 failures.append(f"a candidate with a blank {field} was not refused with exit 1")
 
         leaked = CODE_REPORT.replace(
             "  The write at `packages/browserContext.ts:291` is not atomic.\n",
             "  The write at `packages/browserContext.ts:291` is not atomic.\n"
-            "  support leaked into the claim\n",
+            "  support: leaked into the claim\n",
         )
         code.write_text(leaked, encoding="utf-8")
         result = invoke(code, requirements)
-        if result.returncode != 1 or "private field text survived" not in result.stderr:
+        if result.returncode != 1 or "private field text survived" not in result.stdout:
             failures.append("private-field text injected into a claim was not refused")
+
+        wordy = CODE_REPORT.replace(
+            "title: removeCookies loses concurrent writes\n",
+            "title: removeCookies leaves unsupported writes that nothing supports\n",
+        )
+        code.write_text(wordy, encoding="utf-8")
+        result = invoke(code, requirements, repo="/Users/x/Support/repo")
+        if result.returncode != 0:
+            failures.append(
+                "a candidate whose prose contains the word support was refused: "
+                f"exit {result.returncode}"
+            )
+        if "unsupported writes that nothing supports" not in result.stdout:
+            failures.append("the prose containing the word support was dropped from the prompt")
+
+        code.write_text(CODE_REPORT, encoding="utf-8")
+        result = invoke(code, root / "missing.md")
+        if result.returncode != 2 or "cannot read" not in result.stderr:
+            failures.append(
+                f"an unreadable report exited {result.returncode}, expected 2 naming the input"
+            )
 
     for failure in failures:
         print(failure)
