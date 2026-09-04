@@ -189,10 +189,3 @@ Before writing, check for an existing review from this identity at this head and
 
   A branch protection rule can refuse this. A `403` is an answer, not something to retry: write the new status in the body and report the stale gating state as needing an authorized actor.
 
-## Reactions
-
-Where the forge has them, a reaction rides on top of a reply and never replaces one: `+1` agreed and acting, `eyes` seen and in progress, `-1` disagreed with the reason in the reply, `confused` unclear with the question in the reply, `hooray`/`heart`/`rocket` a genuinely good catch. One per comment.
-
-```sh
-gh api --method POST repos/{owner}/{repo}/pulls/comments/<id>/reactions -f content=eyes
-```
