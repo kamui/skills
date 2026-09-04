@@ -94,7 +94,7 @@ Always write the semantic status in the body. Add `(advisory)` to `Changes Reque
 Keep the body useful without duplicating inline comments:
 
 ```markdown
-**Changes Requested (advisory)** — 1 must-fix finding.
+**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.
 
 **Intent:** Add retries for charge submission without changing payment semantics.
 
@@ -106,7 +106,11 @@ Keep the body useful without duplicating inline comments:
 
 ## Findings
 
-- [P1] [must-fix] Preserve the idempotency key across retries — anchor `src/payments.ts:42`; fix `src/retry-policy.ts:18`
+- [P1] [must-fix] Preserve the idempotency key across retries — anchor [`src/payments.ts:42`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/payments.ts?plain=1#L42); fix [`src/retry-policy.ts:18`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/retry-policy.ts?plain=1#L18)
+
+## Open questions
+
+- [Question] Must retries preserve request order? — anchor [`src/queue.ts`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/queue.ts) (file)
 
 <!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5a-1 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->
 ```
@@ -123,7 +127,19 @@ Exclude target-branch versions, instruction files whose directory scope covers n
 
 Trailer fields are single ASCII tokens separated by spaces. Every commit SHA in every trailer is the full 40 lowercase hexadecimal characters; visible prose may abbreviate it. Percent-encode spaces and percent signs inside coordinate values. Represent issues as sorted, comma-separated `owner/repo#number` coordinates, or `issues=none`; never put literal spaces in the value. The anchor coordinate is the durable summary reference: `path:line` for a single-line anchor, `path:start-end` for a range, or `path` plus the visible `(file)` marker for a file anchor. Add the fix coordinate when it differs. Return forge URLs to the caller after publication instead of editing the review body.
 
-Keep the ordinary summary near 200 words before conditional sections. A merged-target audit always adds a `Mode` line: `**Mode:** Retrospective review of merged pull request; publication disabled.` by default, or `**Mode:** Retrospective review of merged pull request; publication separately authorized.` when that authorization exists. Include only non-empty conditional sections: `Open questions`, `Observations`, `Ambiguities`, `Unanchored findings`, `Disputed`, `Prior findings`, and `Coverage gaps`. `Ambiguities` names the contestable term, gives both supportable readings, and states which reading governed the run. An unanchored finding contains its complete finding-comment prose plus the decisive evidence coordinate and optional fix coordinate. A file-anchored finding also goes in `Unanchored findings` when the forge cannot represent a file subject inside the same review batch; keep its visible `(file)` coordinate so this transport fallback is not mistaken for missing evidence. A clean review says so briefly. Do not narrate other dropped candidates or add scores, effort estimates, generic praise, empty security/test sections, or repeated finding prose.
+Keep the ordinary summary near 200 words before conditional sections. A merged-target audit always adds a `Mode` line: `**Mode:** Retrospective review of merged pull request; publication disabled.` by default, or `**Mode:** Retrospective review of merged pull request; publication separately authorized.` when that authorization exists. Include only non-empty conditional sections: `Open questions`, `Observations`, `Ambiguities`, `Unanchored findings`, `Disputed`, `Prior findings`, and `Coverage gaps`. `Ambiguities` names the contestable term, gives both supportable readings, and states which reading governed the run. An unanchored finding contains its complete finding-comment prose plus the decisive evidence coordinate and optional fix coordinate, rendered as the same generated fragment (Summary references). A file-anchored finding's entry goes in `Unanchored findings` instead of `Findings` when the forge cannot represent a file subject inside the same review batch, so its fragment still appears exactly once; keep its visible `(file)` coordinate so this transport fallback is not mistaken for missing evidence. A clean review says so briefly. Do not narrate other dropped candidates or add scores, effort estimates, generic praise, empty security/test sections, or repeated finding prose.
+
+### Summary references
+
+Every finding and question entry in the body — in `Findings`, `Open questions`, and `Unanchored findings` alike — carries its coordinates as the fragment `python3 scripts/validate_review.py --render` prints for that item, pasted verbatim; the reviewer never composes a URL by hand. With `summary.repository_url` set to the base repository's canonical web URL (`gh api repos/{owner}/{repo}/pulls/<n> --jq .base.repo.html_url`), a `RIGHT` line anchor, a file anchor, and a fix site each render as a Markdown link whose text is the unchanged code-formatted coordinate and whose target is the commit-pinned blob URL at the run trailer's full head SHA: `?plain=1#L<line>` or `?plain=1#L<start>-L<end>` on every line link so a rendered file opens as source, neither on a file link, and the path percent-decoded once then encoded once. The `(file)` marker stays visible after a file link. The link is known before submission, so one-call publication is unchanged and nothing depends on a post-publication body rewrite.
+
+```markdown
+anchor [`src/payments.ts:42`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/payments.ts?plain=1#L42); fix [`src/retry-policy.ts:18`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/retry-policy.ts?plain=1#L18)
+```
+
+The validator's `summary-reference` rule checks the body by string equality against those generated fragments: each item's fragment appears exactly once, the body carries one `anchor ` entry per finding and question item and one `; fix ` entry for exactly the items that have a fix, and — when `repository_url` is present — every blob link in the body points at the run head, so a bare code-span coordinate for a `RIGHT` or file anchor, a linked `LEFT` anchor, a malformed or disagreeing coordinate, a skipped fix, and a moving branch link all fail under that one name. An entry is the word `anchor ` or the sequence `; fix ` followed by a coordinate in backticks or a link, so prose in the body — complete finding prose in `Unanchored findings` included — may use the word anchor freely but must not write a coordinate in that shape outside the generated fragments.
+
+A `LEFT` line anchor stays a code span with its fix still linked, because the line belongs to the merge-base; observation evidence and prior-finding references stay code spans because nothing records which revision their prose was read against. Merge-base and rename links, and structured provenance for those pointers, are [issue #84](https://github.com/kamui/skills/issues/84)'s items, so do not guess a revision for them. Without `repository_url` — a forge whose URL shape is not GitHub's — every coordinate renders as a code span in the same positions.
 
 ## Coverage
 
