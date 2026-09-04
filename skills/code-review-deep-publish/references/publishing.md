@@ -54,14 +54,14 @@ The review body:
 - the per-axis outcome;
 - the run identity — reviewed head, base ref, and merge-base — and the coverage line, naming the uncovered files where coverage is short;
 - **one short paragraph, two or three sentences**, reading the findings as a whole: what the change does, what drives the status, what to deal with first. It generalizes — a pattern several findings share, one fault behind them, the shape of the risk — rather than reciting them, and names at most the two or three findings that decide the outcome. This is the only place that generalizes, and it earns its space by saying what no single finding says. A review with one finding or none says so in a sentence;
-- an index of findings, worst first within each axis, each entry carrying its tags, title, and a link to its comment;
+- an index of findings, worst first within each axis, each entry carrying its tags, its title, and its anchor as a rendered coordinate fragment — followed by `; fix` and the fix's fragment when the fix differs — the title linking its comment once phase 2 has read the comment URLs back;
 - counts by axis and action;
 - re-reviewing: the prior head and one verdict line per prior finding;
 - `## Observations`, when any exist;
 - `## Open questions`, when any are unanswered;
 - `## Disputed`, when any finding has hit the round cap.
 
-`## Observations` is bounded and explicitly non-actionable: at most **three** items, each one sentence plus one `file:line` evidence pointer, none carrying "should" or "must" language, none anchored as a line comment, none counted in any total. It opens with the sentence "These are accurate observations, not findings — no action is requested." It exists so an accurate fact that failed the finding bar — a finder's sub-threshold observation, a verifier aside — surfaces instead of dying out-of-band. More than three means the reviewer is smuggling findings; keep the three with the most decisive evidence and drop the rest.
+`## Observations` is bounded and explicitly non-actionable: at most **three** items, each one sentence plus one `file:line` evidence pointer, none carrying "should" or "must" language, none anchored as a line comment, none counted in any total. It opens with the sentence "These are accurate observations, not findings — no action is requested." It exists so an accurate fact that failed the finding bar — a finder's sub-threshold observation, a verifier aside — surfaces instead of dying out-of-band. More than three means the reviewer is smuggling findings; keep the three with the most decisive evidence and drop the rest. The evidence pointer stays a code span, never a link — Coordinate links says why.
 
 Do not restate finding text outside the index — the line comment is where a finding lives, and repeating it makes the reader read everything twice. Do not mention refuted candidates; report the count to the caller in the session instead.
 
@@ -75,7 +75,55 @@ Retries are the thing to fix: the new path swallows validation errors the queue 
 assumes have already been raised. The two optional findings are the same duplicated shape
 either side of it and clear up with it. The open question is whether the 30s timeout is
 deliberate; if it is, nothing else here blocks.
+
+- [Code] [must-fix] [P1] — `parseOrder` swallows the validation error on the retry path — anchor [`src/order.ts:47`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/order.ts?plain=1#L47)
+- [Code] [consider] [P2] — `retryOnce` drops the idempotency key across attempts — anchor [`src/order.ts:61`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/order.ts?plain=1#L61); fix [`src/retry-policy.ts:18`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/retry-policy.ts?plain=1#L18)
+- [Code] [consider] [P3] — the quickstart still documents the synchronous call — anchor [`docs/ops.md`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/docs/ops.md)
+
+**[Code] [consider] [P3] the quickstart still documents the synchronous call**
+
+[`docs/ops.md`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/docs/ops.md) — the diff rewrites the file and keeps the synchronous sequence as the first example, while the queue path is the documented default now.
+
+**Change**: rewrite the quickstart's first example against the queue path.
+
+Closing this without action is a correct response.
+
+<!-- finding id=code/ops-md/sync-quickstart axis=code action=consider priority=P3 head=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 -->
+
+## Open questions
+
+**[Question] Is the 30s queue timeout deliberate?**
+
+The new queue path defaults to 30s — [`src/config.ts`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/config.ts) is where the diff sets it — where every caller it replaces used 5s. The issue is silent on timeouts and the history shows no rationale. If it is deliberate, a comment saying why would stop the next reader changing it.
+
+**Change no code for this.** Answer it, or say what would settle it.
+
+<!-- finding id=question/queue-timeout-30s action=question head=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 -->
+
+## Observations
+
+These are accurate observations, not findings — no action is requested.
+
+- The retry loop logs each attempt at `info` level (`src/retry-policy.ts:31` in the pre-image).
 ```
+
+This body is the phase-1 fixture: every index entry, body-resident finding, and whole-change question carries its coordinate as a rendered fragment whose text is the unchanged coordinate, and the observations pointer is a code span. Phase 2 makes each index title link to its comment and leaves every file fragment byte-identical.
+
+## Coordinate links
+
+Every file coordinate the body carries is rendered by `python3 scripts/link_coordinate.py`, which owns the URL rule so no review composes a URL by hand. A coordinate the rule can express renders as a link whose visible text is the unchanged coordinate:
+
+```markdown
+anchor [`src/order.ts:47`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/order.ts?plain=1#L47)
+```
+
+- the link resolves under the base repository's canonical web URL at the reviewed full head SHA — immutable across force-pushes, readable from outside the pull request, never a branch URL or an abbreviated SHA;
+- a line or range carries `?plain=1#L<line>` or `?plain=1#L<start>-L<end>`; a file anchor carries neither;
+- a distinct fix site renders its own fragment and follows the anchor as `; fix` with its fragment;
+- a `LEFT` anchor stays a code span: it belongs to the merge-base, and merge-base and rename links are [issue #84](https://github.com/kamui/skills/issues/84)'s item;
+- an observation's evidence pointer stays a code span: the ledger row behind it does not record the side or revision the evidence was read at, and structured provenance is [issue #84](https://github.com/kamui/skills/issues/84)'s item.
+
+Render each fragment with the script's `render` command, and `check` a fragment already written whenever the body is assembled or updated; a non-zero exit stops the step — report the script's output and fix the inputs, never the fragment by hand. File links sit beside the comment links, not in place of them: a comment link reaches the thread, a file link reaches the code the finding was read against.
 
 ## One review, one call
 
@@ -98,7 +146,7 @@ One call per finding produces one empty review per finding, which is the failure
 
 Validate every anchor against the diff before submitting — `git diff <base>...<head> --unified=0` gives the touched ranges cheaply, and one comment on an untouched line fails the entire batched call. An anchor that fails validation moves down the ladder to the body, never into a doomed request.
 
-`line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line); a range takes `start_line` plus `line`. This call takes line comments only: GitHub documents `subject_type: file` on its single-comment endpoint, not in this call's `comments[]`, and one entry without a valid `line` fails the whole batch. So a finding whose honest anchor is a whole file goes in the body, as does a finding the ladder gave no anchor, each with its `fix` site named there.
+`line` is the finding's `anchor`, and must be a line the diff touches — `finding-format.md` § Anchor and fix site is what chose it, so do not re-derive one here. `side` is `RIGHT` (`LEFT` for a deleted line — a `LEFT` anchor stays a code span in the body; Coordinate links says why); a range takes `start_line` plus `line`. This call takes line comments only: GitHub documents `subject_type: file` on its single-comment endpoint, not in this call's `comments[]`, and one entry without a valid `line` fails the whole batch. So a finding whose honest anchor is a whole file goes in the body, as does a finding the ladder gave no anchor, each appearing there in full with its anchor and `fix` coordinates rendered as the same fragments (Coordinate links).
 
 End the body with a run trailer, so a later run can correlate what this one covered without re-deriving it:
 
@@ -108,9 +156,9 @@ End the body with a run trailer, so a later run can correlate what this one cove
 
 Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2a-1` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs are this run's identity record.
 
-The comment URLs do not exist when the body is written, so publish in two phases: submit with the index by `file:line`, read back the created comment URLs, then `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with the links. If the second phase fails, the `file:line` index stands on its own — never block a review on it.
+The comment URLs do not exist when the body is written, so publish in two phases: submit with the index entries carrying their rendered coordinate fragments — the phase-1 body is complete and clickable on its own — then read back the created comment URLs and `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with each entry's title now linked to its comment and every file fragment left byte-identical. If the second phase fails, the phase-1 body stands on its own — never block a review on it.
 
-Questions ride inside the same review, anchored by the same ladder. A whole-change question, and any finding the ladder sent to the body, appears there in full — tag line through trailer — under `## Open questions` or under its axis in the index.
+Questions ride inside the same review, anchored by the same ladder. A whole-change question, and any finding the ladder sent to the body, appears there in full — tag line through trailer — under `## Open questions` or under its axis in the index, with the anchor and `fix` coordinates its prose names rendered as the same fragments (Coordinate links).
 
 ## Re-review
 
