@@ -374,14 +374,14 @@ approval-as-closure gate test 4 showed failing. `requirements-axis.md` Step 2 ga
 rule, **Deferred by the review record**: a deferred decision on unreleased public surface lands in
 the "cannot tell" bucket as a question naming the deferral, its author, and the decision, unless a
 repository rule settles it, in which case it is a `requirements/unrequested/` candidate citing the
-rule. It is never `Met`, it counts as unverifiable, and an axis with an open deferral question is
-`Waiting for information`, not `Passed`. Step 3's creep list adds the duplicate-capability case: a
-new public surface expressible by composing existing methods is creep worth raising when guidance
-discourages it or the issue asked for a capability rather than a method — the `removeCookies`-
-beside-`clearCookies()` shape, which playwright's `CONTRIBUTING.md` "avoid adding sugar API" rule
-covers. `publishing.md` § Status says an unresolved deferral on the axis's subject keeps the
-Requirements axis at `Waiting for information`, and `SKILL.md` step 3's outcome derivation carries
-the same exception.
+rule. It is never `Met`, it joins the restated list as its own entry and counts there as
+unverifiable, and an axis with an open deferral question is `Waiting for information`, not `Passed`.
+Step 3's creep list adds the duplicate-capability case: a new public surface expressible by
+composing existing methods is creep worth raising when guidance discourages it or the issue asked
+for a capability rather than a method — the `removeCookies`- beside-`clearCookies()` shape, which
+playwright's `CONTRIBUTING.md` "avoid adding sugar API" rule covers. `publishing.md` § Status says
+an unresolved deferral on the axis's subject keeps the Requirements axis at `Waiting for
+information`, and `SKILL.md` step 3's outcome derivation carries the same exception.
 
 The rule needs an explicit postponement in a review comment. A suggestion the author declined, or a
 preference a reviewer stated once and dropped, is not a deferral, and a naming nit does not become
@@ -392,12 +392,12 @@ Checked on paper against test 4's pinned head (`cb02d5ba`, test 4 README): step 
 receives it after the issue text; `removeCookies` is absent from every released version, so the
 deferred naming and API-shape decision lands in the "cannot tell" bucket as a question naming
 `pavelfeldman`, the deferral, and the decision — whether the filter parameter, and a second
-cookie-removal method beside `clearCookies()`, keep their shape before release. The counts read
-`met=7 not-met=0 unverifiable=1`, the axis is `Waiting for information` rather than `Passed`, and
-the question publishes without passing through the verifier. Expected cost is ≈0: the extraction is
-a few hundred tokens, and an open deferral yields one question in place of `Passed`. Specified by
-[issue #57](https://github.com/kamui/skills/issues/57). The workflow identifier stays `v2a-1` until
-#59.
+cookie-removal method beside `clearCookies()`, keep their shape before release. The restated list
+grows to eight entries, the counts read `met=7 not-met=0 unverifiable=1`, the axis is `Waiting for
+information` rather than `Passed`, and the question publishes without passing through the verifier.
+Expected cost is ≈0: the extraction is a few hundred tokens, and an open deferral yields one
+question in place of `Passed`. Specified by [issue #57](https://github.com/kamui/skills/issues/57).
+The workflow identifier stays `v2a-1` until #59.
 
 ### C14. Orchestration is script-driven
 
