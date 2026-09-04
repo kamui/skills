@@ -1,6 +1,6 @@
 # Holdout evaluation — method
 
-**Status: targets proposed; ground truth and calibration bands committed; no cell has run.**
+**Status: the grid ran on 2026-09-04, reduced at the maintainer's direction; results and verdicts are in [`evaluation.md`](evaluation.md), per-run metering in [`comparison-data.md`](comparison-data.md).**
 This directory was created ahead of the holdout evaluation (#60) by #67, which fixes how every
 run in it is metered, and #69, which fixes what a dispatch may ask a run to do; #68 adds one
 lower-effort arm with its adoption rule written before any run. #60 adds, below, the six targets
@@ -8,8 +8,10 @@ with their pinned run identities, ground truth, and calibration bands, the condi
 verification rule, the scoring rule, and the success criteria. The full experimental design is
 #60's body and
 [aggregate analysis §8 "The holdout demand"](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md#the-holdout-demand).
-The six targets are a **proposal awaiting sign-off** ([Sign-off](#sign-off)); the run documents,
-`comparison-data.md`'s per-run sections, and `evaluation.md` follow once cells run.
+The six targets were signed off ([Sign-off](#sign-off)) and the run documents live in the
+per-target directories (`a-hyper-3952/` … `f-cobra-1938/`), one `-run.md` and one `-payload.md` per
+cell, each with an orchestrator preamble carrying the model and effort verification and the billed
+usage. What ran and what was cut is the first section of `evaluation.md`.
 
 The directory is undated because it predates the runs. #60 may rename it to
 `prototype-runs-<date>-holdout/` when the grid starts; the one link that points here by path, in
