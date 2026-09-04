@@ -63,22 +63,31 @@ once inside the report) and overstates the report by the payload's size.
 
 Each run document's Metadata section records:
 
-1. **Harness-reported tokens for the run.** Record what the harness meters and say what that
-   covers, as test 4 did: the run's own usage block when the orchestrator dispatched it as a
-   sub-agent, plus the usage block of every sub-agent the run spawned. Where the primary is not
-   metered, pass `--harness-note "primary not metered"` to the script so both its outputs say so;
-   the figure is then a lower bound of the run and the comparison treats it as one.
+1. **Billed usage from transcripts.** After the run, locate every transcript the run produced
+   (the run's own sub-agent transcript plus one per sub-agent it spawned) and run
+   `python3 docs/research/tools/transcript_usage.py <paths> --prices 2,10 --report <run.md>`.
+   Paste its block into the run document. Read `message.model` from the same lines for the model
+   verification #60 requires. Record the transcript paths. Keep the harness's `subagent_tokens`
+   beside it as `legacy`, for continuity with the corpus; rank on the billed figure. Where the
+   legacy figure omits the primary, pass `--harness-note "primary not metered"` to `cost_split.py`
+   so the legacy split says so.
 2. **A self-reported approximate split** of that total into five parts: instruction load (skill
    files read), repository reads, private records (ledger, notes, staging files), review payload,
    research report. The first three are the run's own estimate and are labelled as such.
 3. **The payload's and report's byte sizes.** Where the harness does not expose output tokens per
    file, convert at **4 bytes per token** and label the result `est.`; where it does, record the
    metered count and label it `metered`. The byte sizes are exact either way.
-4. **The production-shaped figure:** harness total minus the research report. Only the report is
-   subtracted. Instruction load, repository reads, and private records are costs a production run
-   pays too (the ledger is required by the skill), so they stay in.
+4. **The production-shaped figure:** billed total minus the report's estimated output cost, as
+   the script prints. Only the report is subtracted. Instruction load, repository reads, and
+   private records are costs a production run pays too (the ledger is required by the skill), so
+   they stay in.
 
-Compute items 2–4 with the shared script so every run document does it the same way:
+Items 1 and 4 come from `transcript_usage.py --report`. Re-run that command with
+`--row "<arm> seed <n>"` and paste the line into the billed-usage table in
+[`comparison-data.md`](comparison-data.md), whose header is `transcript_usage.py --header` output.
+
+Compute items 2–3, and the same split of the legacy context-size figure, with the sibling script so
+every run document keeps the corpus's companion data in the same form:
 
 ```sh
 python3 docs/research/tools/cost_split.py \
@@ -89,16 +98,18 @@ python3 docs/research/tools/cost_split.py \
 ```
 
 Paste its block into the run document verbatim. Re-run it with `--row "<arm> seed <n>"` and paste
-that line into the cost table in [`comparison-data.md`](comparison-data.md), whose header is the
-script's `--header` output. The script exits `1`
+that line into the legacy companion table in `comparison-data.md`, whose header is
+`cost_split.py --header` output. This table preserves the self-reported split and historical
+`subagent_tokens`; it does not determine the ranking. The script exits `1`
 when the report or the sum of the reported parts exceeds the harness total, which means the split
 double-counts something; fix the inputs, not the table.
 
 ### Ranking
 
-Arms are ranked on the **production-shaped** column, not on the raw harness figure. The raw figure
-stays in the table for continuity with the corpus, whose numbers are all raw. The report's share of
-the total is expected to differ by arm — in test 4 the Panel run documents are 89–93 KB against
+Arms are ranked on the **production-shaped billed cost** column from `transcript_usage.py`, not on
+the raw billed cost or the legacy harness context-size figure. Both stay in the tables for audit and
+continuity. Report the research-report share as its estimated output cost divided by billed cost;
+the share is expected to differ by arm — in test 4 the Panel run documents are 89–93 KB against
 57–75 KB for the Skeptic line — so subtracting it moves the ratios, not just the totals.
 
 ### Lower-effort primary arm
