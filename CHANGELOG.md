@@ -4,7 +4,7 @@
 
 ### Added
 
-- `references/review-protocol.md`, mirrored in `code-review-publish-legacy` and `code-review-address`: one comment shape for findings and replies, carrying a rendered-invisible trailer so a finding keeps a stable id across review rounds; a shared disposition vocabulary; and a `gh` verb reference covering batched review submission, inline replies, reactions, and GraphQL thread resolution and reopening.
+- `references/review-protocol.md`, mirrored in `code-review-publish-legacy` and `code-review-address`: one comment shape for findings and replies, carrying a rendered-invisible trailer so a finding keeps a stable id across review rounds; a shared disposition vocabulary; and a `gh` verb reference covering batched review submission, inline replies, and GraphQL thread resolution and reopening.
 - Questions as a first-class item on both sides. A reviewer that cannot judge code without knowing something raises a `[Question]` instead of guessing a finding; an addresser stuck on a finding replies `needs-info`. A whole-change question carries a stable id in the review body and closes when its answer entry and reply trailer appear in the round's addressing summary. Questions count toward no axis and toward no round cap; the same open question is not re-posted, and it holds `Needs Information` until answered or withdrawn rather than aging into approval.
 - An `answered` disposition, which the prose already assumed and the vocabulary lacked.
 - A two-round cap per finding. A finding declined once and then verified unfixed becomes disputed, and is listed for a human to settle instead of being re-posted, so a review loop cannot re-litigate one point forever.
@@ -35,8 +35,11 @@
 - The pull request under review is a fixed target: neither review skill opens, retargets, or closes one. `code-review-publish-legacy` stops and reports when a change has no pull request, and `code-review-address` commits fixes to the pull request's existing head branch rather than branching away from it.
 - `code-review-publish-legacy` takes its fixed point from the pull request's own merge-base with its base branch instead of asking for one, so a review can run unattended.
 - A finding scoped to a whole file attaches to that file inside the review rather than falling out to a general pull-request comment.
-- Reactions are documented as a signal riding on top of a reply rather than an optional extra, with the reaction-to-meaning mapping both skills share.
 - All three skills drop their capability-negotiation prose. Both review skills read their forge verbs from the shipped protocol reference; `implement-publish` needs only two commands and carries them inline. The freed budget went into the behaviour above rather than into a shorter file: `code-review-publish-legacy` is 1,184 words against 820, `code-review-address` 1,172 against 839, `implement-publish` 358 against 459, with the 4,141-word protocol reference loaded only when a review skill reaches for it.
+
+### Removed
+
+- Reactions from the review protocol and both skills that used it. A reaction repeated what the reply's disposition and trailer already said, its main reader is an agent that reads the reply body rather than the reaction, and posting one cost a request per comment.
 
 ## [0.0.2] - 2026-08-29
 
