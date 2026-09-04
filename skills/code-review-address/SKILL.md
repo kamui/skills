@@ -7,7 +7,7 @@ description: Address every review comment on a pull request, make the warranted 
 
 Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
 
-Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, reactions, thread state, the addressing summary, the round cap, and the `gh` verbs.
+Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, thread state, the addressing summary, the round cap, and the `gh` verbs.
 
 Invoking this skill authorizes the replies, resolutions, thread actions, pull-request title and description edits, round summary, and re-review request below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
@@ -39,7 +39,7 @@ Apply every warranted change and run the relevant checks before replying. Re-rea
 
 ### 3. Reply to every item
 
-Every item earns a reply, pushing back included — a rejected finding is answered, not ignored. Post one reply per ledger item lacking one, in the protocol's shape, carrying the evidence its disposition requires. Queue each whole-change question's answer entry and reply trailer for the round's addressing summary rather than posting a separate general comment. Reply to a review body when it holds feedback its threads do not; leave the per-thread detail in the threads. Add a reaction where one says what a sentence would.
+Every item earns a reply, pushing back included — a rejected finding is answered, not ignored. Post one reply per ledger item lacking one, in the protocol's shape, carrying the evidence its disposition requires. Queue each whole-change question's answer entry and reply trailer for the round's addressing summary rather than posting a separate general comment. Reply to a review body when it holds feedback its threads do not; leave the per-thread detail in the threads.
 
 Resolve each thread as you finish it, not in a batch at the end: reply posted and change live, then resolve. That covers items implemented, already addressed, or answered, and threads gone outdated or irrelevant — the file deleted, the approach replaced. Leave `needs-info` and `blocked` threads open, and resolve nothing whose reply or code change is still missing. A `declined` thread stays open too: declining states a position, and the reviewer accepting it is what settles the disagreement. Where only the reviewer can resolve, report that instead of claiming it.
 
