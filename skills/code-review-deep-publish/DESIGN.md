@@ -254,14 +254,15 @@ suites had no owner in the skill at all, so both finders picked them up independ
 Code finder's own method note records `python3 -m unittest discover -s tests -p "test_*.py"` in its
 clone (290 tests) and three of its ledger rows are acquitted on `290 tests pass`, while the
 Requirements finder separately recorded 290 Python and 60 Node tests passing as its verification of
-requirement 11 ([test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md), §3
-item 9 and §4). The same Python suite was therefore executed twice, in two contexts, for one suite's
+requirement 11 ([test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md), §2
+Observations item 9 and §4). The same Python suite was therefore executed twice, in two contexts, for one suite's
 worth of information — and the run's own Coverage line reports it once.
 
 Step 1 now runs the repository's permitted suites once, before spawning, and puts a one-line result
 summary per suite into the shared block alongside the diff, manifest, commit list, and guidance. That
 is the same treatment C7 gave every other shared input, and it extends C7's byte-identical-prefix
-property rather than competing with it. Both finder briefs say the results arrive in the prompt.
+property rather than competing with it. Both finder briefs and the verifier brief say the results
+arrive in the prompt.
 
 The rule is *suite once*, not *no tests*. A finder or the verifier may still run a single focused test
 that decides a candidate, which is where executed evidence actually changes a verdict — one Code run
