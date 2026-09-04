@@ -103,7 +103,7 @@ def parse_candidate_section(label: str, lines: list[str]) -> Candidate:
     for field in CANDIDATE_FIELDS:
         if field not in fields:
             raise ReportError(f"{label} is missing {field}")
-    for field in ("claim", "trigger"):
+    for field in VERIFIER_FIELDS:
         if not fields[field].strip():
             raise ReportError(f"{label} has an empty {field}")
     return Candidate(label=label, fields=fields)
@@ -182,6 +182,21 @@ def same_path(left: str, right: str) -> bool:
     return left == right or left.endswith(f"/{right}") or right.endswith(f"/{left}")
 
 
+def is_type_name(name: str) -> bool:
+    """A PascalCase token with no member access reads as a class or type name.
+
+    Relatedness keys on a shared function, branch, state field, or lock; two
+    claims that share only a type name are not related.
+    """
+    return (
+        name[0].isupper()
+        and not name.isupper()
+        and "_" not in name
+        and "." not in name
+        and "::" not in name
+    )
+
+
 def symbolic_names(text: str) -> set[str]:
     names: set[str] = set()
     for span in CODE_SPAN_RE.findall(text):
@@ -200,7 +215,7 @@ def symbolic_names(text: str) -> set[str]:
                 names.add(normalized.rsplit(".", 1)[-1])
             if "::" in normalized:
                 names.add(normalized.rsplit("::", 1)[-1])
-    return {name for name in names if len(name) >= 4}
+    return {name for name in names if len(name) >= 4 and not is_type_name(name)}
 
 
 def is_related(row: LedgerRow, candidates: list[Candidate]) -> bool:

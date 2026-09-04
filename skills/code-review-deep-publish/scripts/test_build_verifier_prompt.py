@@ -19,7 +19,7 @@ axis: Code
 anchor: packages/browserContext.ts:291
 fix: packages/browserContext.ts:291-292
 title: removeCookies loses concurrent writes
-claim: `removeCookies` clears the context before restoring its snapshot.
+claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.
   The write at `packages/browserContext.ts:291` is not atomic.
 support: private finder process and uncertainty
 trigger: A page writes a cookie between the clear and restore operations.
@@ -31,6 +31,7 @@ action: must-fix
 The reset branch also clears cookies | compare the live path | packages/browserContext.ts:540-544 | acquitted
 The `removeCookies` reset premise holds elsewhere | trace the opposite branch | packages/other.ts:12 | acquitted
 An unrelated generated file may drift | regenerate it | packages/types.d.ts:10 | acquitted
+The `BrowserContext` constructor validates its options | inspect the constructor | packages/context/create.ts:8 | acquitted
 ```
 """
 
@@ -96,7 +97,7 @@ def main() -> int:
                 "Repository: `/tmp/review-repo`",
                 f"- base SHA: `{'a' * 40}`",
                 "id: code/browser-context/remove-cookies-race",
-                "claim: `removeCookies` clears the context before restoring its snapshot.\n"
+                "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
                 "  The write at `packages/browserContext.ts:291` is not atomic.",
                 "trigger: A page writes a cookie between the clear and restore operations.",
                 "The reset branch also clears cookies | compare the live path | "
@@ -112,9 +113,11 @@ def main() -> int:
                 failures.append("private finder material survived into stdout")
             if "unrelated generated file" in result.stdout:
                 failures.append("unrelated acquitted row was sent to the verifier")
+            if "constructor validates its options" in result.stdout:
+                failures.append("a row sharing only a class name was treated as related")
 
         missing_claim = CODE_REPORT.replace(
-            "claim: `removeCookies` clears the context before restoring its snapshot.\n"
+            "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
             "  The write at `packages/browserContext.ts:291` is not atomic.\n",
             "",
         )
@@ -131,6 +134,25 @@ def main() -> int:
         result = invoke(code, requirements)
         if result.returncode != 1 or "missing trigger" not in result.stderr:
             failures.append("a candidate without trigger was not refused with exit 1")
+
+        blank_values = {
+            "id": "id: code/browser-context/remove-cookies-race\n",
+            "axis": "axis: Code\n",
+            "anchor": "anchor: packages/browserContext.ts:291\n",
+            "fix": "fix: packages/browserContext.ts:291-292\n",
+            "title": "title: removeCookies loses concurrent writes\n",
+            "claim": "claim: `removeCookies` on `BrowserContext` clears the context before restoring its snapshot.\n"
+            "  The write at `packages/browserContext.ts:291` is not atomic.\n",
+            "trigger": "trigger: A page writes a cookie between the clear and restore operations.\n",
+            "priority": "priority: P2\n",
+            "action": "action: must-fix\n",
+        }
+        for field, original in blank_values.items():
+            assert original in CODE_REPORT, field
+            code.write_text(CODE_REPORT.replace(original, f"{field}:   \n"), encoding="utf-8")
+            result = invoke(code, requirements)
+            if result.returncode != 1 or f"empty {field}" not in result.stderr:
+                failures.append(f"a candidate with a blank {field} was not refused with exit 1")
 
         leaked = CODE_REPORT.replace(
             "  The write at `packages/browserContext.ts:291` is not atomic.\n",
