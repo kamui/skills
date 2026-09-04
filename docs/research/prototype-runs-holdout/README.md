@@ -44,7 +44,8 @@ Each run document's Metadata section records:
 1. **Harness-reported tokens for the run.** Record what the harness meters and say what that
    covers, as test 4 did: the run's own usage block when the orchestrator dispatched it as a
    sub-agent, plus the usage block of every sub-agent the run spawned. Where the primary is not
-   metered, say so; the figure is then a lower bound of the run and the comparison notes it.
+   metered, pass `--harness-note "primary not metered"` to the script so both its outputs say so;
+   the figure is then a lower bound of the run and the comparison treats it as one.
 2. **A self-reported approximate split** of that total into five parts: instruction load (skill
    files read), repository reads, private records (ledger, notes, staging files), review payload,
    research report. The first three are the run's own estimate and are labelled as such.
@@ -66,7 +67,8 @@ python3 docs/research/tools/cost_split.py \
 ```
 
 Paste its block into the run document verbatim. Re-run it with `--row "<arm> seed <n>"` and paste
-that line into the cost table in [`comparison-data.md`](comparison-data.md). The script exits `1`
+that line into the cost table in [`comparison-data.md`](comparison-data.md), whose header is the
+script's `--header` output. The script exits `1`
 when the report or the sum of the reported parts exceeds the harness total, which means the split
 double-counts something; fix the inputs, not the table.
 

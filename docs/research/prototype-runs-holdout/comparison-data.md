@@ -18,10 +18,11 @@ and its cell re-run clean; record the discard here.
 ## Cost
 
 One row per run, pasted verbatim from `python3 docs/research/tools/cost_split.py --row "<arm> seed <n>"`
-(see [`README.md`](README.md#metering-per-run) for the inputs). Token cells are the harness-reported
-figures where the harness meters them and self-reported estimates elsewhere; the payload and report
-cells carry their byte sizes and whether the token count is `metered` or `est.` at 4 bytes per token.
-**Production-shaped** is the harness total minus the research report.
+(see [`README.md`](README.md#metering-per-run) for the inputs); the header below is the script's
+`--header` output. Token cells are the harness-reported figures where the harness meters them and
+self-reported estimates elsewhere; the payload and report cells carry their byte sizes and whether
+the token count is `metered` or `est.` at 4 bytes per token. **Production-shaped** is the harness
+total minus the research report.
 
 ### Per run
 
@@ -30,8 +31,8 @@ cells carry their byte sizes and whether the token count is `metered` or `est.` 
 | _(target a) v5b seed 1_ | | | | | | | |
 
 Group rows by target, arms in the order v5b, v2a, v5b-without-verifier, then the Fable tier-split runs.
-Where a run's primary was not metered, say so in the row's harness-total cell and treat the row as a
-lower bound in the ranking.
+Where a run's primary was not metered, pass `--harness-note "primary not metered"` so the harness-total
+cell says so, and treat the row as a lower bound in the ranking.
 
 ### Per arm — ranked on production-shaped
 

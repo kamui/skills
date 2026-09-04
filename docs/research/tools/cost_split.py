@@ -18,8 +18,9 @@ Usage::
         --report <target>/<arm>-seed<n>-run.md \\
         [--instruction-load N] [--repository-reads N] [--private-records N] \\
         [--payload-tokens N] [--report-tokens N] [--bytes-per-token 4] \\
-        [--row "<label>"]
+        [--harness-note "primary not metered"] [--row "<label>"]
 
+    python3 docs/research/tools/cost_split.py --header
     python3 docs/research/tools/cost_split.py --self-test
 
 By default the payload and report are converted from their byte sizes at
@@ -33,8 +34,11 @@ a reported part prints as ``unattributed``.
 
 Output: a labelled block for the run document, or with ``--row`` one
 Markdown table row in the column order of the holdout ``comparison-data.md``
-cost table (run, harness total, instruction load, repository reads, private
-records, payload, research report, production-shaped).
+cost table. ``--header`` prints that table's header from the same column
+list, so the header and the rows cannot diverge. ``--harness-note`` appends a
+qualifier to the harness-total cell in both forms; use it to mark a run whose
+primary the harness did not meter, so the row reads as a lower bound without
+hand-editing the pasted line.
 
 Exit codes: ``0`` success; ``1`` the figures are inconsistent (the research
 report, or the sum of the reported parts, exceeds the harness total), one
@@ -85,6 +89,18 @@ def non_negative_int(text: str) -> int:
 
 def fmt(value: int) -> str:
     return f"{value:,}"
+
+
+def harness_cell(total: int, note: Optional[str]) -> str:
+    return fmt(total) if not note else f"{fmt(total)} ({note})"
+
+
+def table_row(cells) -> str:
+    return "| " + " | ".join(cells) + " |"
+
+
+def header_lines() -> list[str]:
+    return [table_row(COLUMNS), table_row("---" for _ in COLUMNS)]
 
 
 def file_bytes(path: str) -> int:
@@ -149,20 +165,22 @@ def compute(args: argparse.Namespace) -> tuple[list[str], list[str]]:
             kind = "metered" if part.metered else "est."
             return f"{fmt(part.tokens)} ({fmt(part.size)} B, {kind})"
 
-        cells = [
-            args.row,
-            fmt(total),
-            cell(args.instruction_load),
-            cell(args.repository_reads),
-            cell(args.private_records),
-            part_cell(payload),
-            part_cell(report),
-            f"**{fmt(production)}**",
-        ]
-        return ["| " + " | ".join(cells) + " |"], []
+        by_column = {
+            "Run": args.row,
+            "Harness total": harness_cell(total, args.harness_note),
+            "Instruction load": cell(args.instruction_load),
+            "Repository reads": cell(args.repository_reads),
+            "Private records": cell(args.private_records),
+            "Review payload": part_cell(payload),
+            "Research report": part_cell(report),
+            "Production-shaped": f"**{fmt(production)}**",
+        }
+        assert tuple(by_column) == COLUMNS, "row cells and COLUMNS disagree"
+        return [table_row(by_column[name] for name in COLUMNS)], []
 
     width = 18
-    lines = [f"{'harness total':<{width}} {fmt(total):>10} tokens (harness-reported)"]
+    source = "harness-reported" + (f"; {args.harness_note}" if args.harness_note else "")
+    lines = [f"{'harness total':<{width}} {fmt(total):>10} tokens ({source})"]
     for label, value in optional:
         if value is None:
             lines.append(f"{label:<{width}} {'':>10} not reported")
@@ -186,6 +204,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Split a run's harness tokens into payload, report, and rest; print the production-shaped figure.",
     )
     parser.add_argument("--self-test", action="store_true", help="run the built-in checks and exit")
+    parser.add_argument("--header", action="store_true", help="print the comparison-data.md cost table header and exit")
     parser.add_argument("--harness-total", type=non_negative_int, help="harness-reported tokens for the whole run")
     parser.add_argument("--payload", help="path to the review payload file")
     parser.add_argument("--report", help="path to the research report file")
@@ -195,6 +214,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--payload-tokens", type=non_negative_int, help="metered output tokens for the payload, if the harness exposes them")
     parser.add_argument("--report-tokens", type=non_negative_int, help="metered output tokens for the report, if the harness exposes them")
     parser.add_argument("--bytes-per-token", type=positive_float, default=4.0, help="conversion rate for the byte estimate (default 4)")
+    parser.add_argument("--harness-note", metavar="TEXT", help="qualifier appended to the harness-total cell, e.g. 'primary not metered'")
     parser.add_argument("--row", metavar="LABEL", help="print one comparison-data.md table row labelled LABEL instead of the block")
     return parser
 
@@ -204,6 +224,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     args = parser.parse_args(argv)
     if args.self_test:
         return self_test()
+    if args.header:
+        for line in header_lines():
+            print(line)
+        return 0
     missing = [name for name in ("harness_total", "payload", "report") if getattr(args, name) is None]
     if missing:
         parser.error("required: " + ", ".join("--" + m.replace("_", "-") for m in missing))
@@ -274,6 +298,21 @@ def self_test() -> int:
         check("row exits 0", r.returncode == 0, r.stderr)
         expected = "| v5b seed 1 | 280,000 | 40,000 | — | — | 2,000 (8,000 B, est.) | 15,000 (60,000 B, est.) | **265,000** |"
         check("row content", r.stdout.strip() == expected, r.stdout)
+
+        r = run(*base, "--harness-note", "primary not metered")
+        check("note exits 0", r.returncode == 0, r.stderr)
+        check("note in block", "harness total         280,000 tokens (harness-reported; primary not metered)" in r.stdout, r.stdout)
+
+        r = run(*base, "--row", "v5b seed 2", "--harness-note", "primary not metered")
+        check("note row exits 0", r.returncode == 0, r.stderr)
+        check("note in row", r.stdout.startswith("| v5b seed 2 | 280,000 (primary not metered) | — |"), r.stdout)
+
+        r = run("--header")
+        check("header exits 0", r.returncode == 0, r.stderr)
+        header = "| Run | Harness total | Instruction load | Repository reads | Private records | Review payload | Research report | Production-shaped |"
+        check("header row", r.stdout.splitlines()[0] == header, r.stdout)
+        check("header separator", r.stdout.splitlines()[1] == "| --- | --- | --- | --- | --- | --- | --- | --- |", r.stdout)
+        check("header cell count matches row", header.count("|") == expected.count("|"), f"{header} vs {expected}")
 
         r = run("--harness-total", "10000", "--payload", payload, "--report", report)
         check("report exceeds total exits 1", r.returncode == 1, f"rc={r.returncode} {r.stderr}")
