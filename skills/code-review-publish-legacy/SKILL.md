@@ -7,7 +7,7 @@ description: "Legacy: review an issue-linked pull request along two axes (Code a
 
 Review the change, then publish each finding to the pull request as its own comment, under one status saying whether the change is good to merge. The Code and Requirements axes stay separate throughout. The originating issue is the spec source only; publish nothing to it.
 
-Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines where a review goes, the comment shape, the severity and status vocabularies, the disposition and verdict vocabularies, questions, reactions, thread state, the round cap, and the `gh` verbs.
+Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines where a review goes, the comment shape, the severity and status vocabularies, the disposition and verdict vocabularies, questions, thread state, the round cap, and the `gh` verbs.
 
 ## Process
 
@@ -43,7 +43,6 @@ Fall back to a single general pull-request comment holding the summary and resul
 - A prior finding still present gets a reply on its existing thread, not a new comment.
 - A finding at the round cap goes under `## Disputed` in the summary and gets no line comment.
 - A question goes on the code it concerns, counts toward no axis, and is listed under `## Open questions` until answered. A whole-change question follows the protocol's body-level question path.
-- React on a reply where a reaction says what a sentence would, per the protocol.
 
 Then close out the threads this review settles: everything it verdicts `fixed`, `accepted`, or `obsolete`, plus its own findings it has withdrawn. An `accepted` verdict is how a decline you agree with gets closed — the addresser leaves it open for you. Reopen any thread whose fix regressed or whose reply claimed more than the code delivered, saying why in a new reply. Leave threads that still ask something of someone open.
 
