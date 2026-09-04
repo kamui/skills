@@ -299,6 +299,49 @@ with suites, and none on one without. Quality risk is none: the suite result rea
 exactly as before, by a cheaper route. The workflow identifier stays `v2a-1`; issue #59 bumps it once
 after all v2b behavior changes land (tracking epic #62).
 
+### C12. Generated artifacts are compared to their source
+
+On test 4 the ancestor Panel run's Code finder found the one ground-truth item checkable inside the
+diff and reasoned itself out of reporting it. `packages/playwright-core/types/types.d.ts` is
+generated from `docs/src/api/*.md`; the head's final commit rewrote the markdown description and
+never regenerated the types, so the two disagreed inside the same diff, four files apart. The finder
+marked `types.d.ts` and `channels.ts` "ignored — generated artifact", quoted both conflicting
+sentences in its manifest row, and wrote: "That's exactly the class of thing the clean-tree check
+exists to catch, so it isn't reported as a candidate"
+([test 4 v2 run](../../docs/research/prototype-runs-2026-09-01-test-4/v2-run.md) § Code-axis
+manifest; [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md)
+§ "GT-3"). The CI job would have been red; the diff in front of the finder was the proof that the
+generator had not been run. v2a recovered the item through C9's sync-drift section, using
+`addCookies`'s JSDoc as a control, but `code-axis.md` still carried the rule that produced the
+miss: "Anything a linter, typechecker, formatter, or compiler catches. Assume CI runs them; do not
+run them yourself and do not report what they would say." The aggregate analysis names the
+mechanism: what counts as terminal evidence is the calibration lever nobody tuned, and the finder
+treated tooling as closure on a diff where the tooling had demonstrably closed nothing
+([aggregate analysis](../../docs/research/prototype-runs-aggregate-tests-1-4-v2a-v5a.md) § 7,
+conclusion 11).
+
+Three edits to `code-axis.md`, all textual checks; none requires running a generator. The first
+"What is not a candidate" bullet keeps the assume-CI default for ordinary style and adds the
+carve-out: when the diff itself shows the tool did not run or did not catch it — a generated
+artifact whose content contradicts its source in the same diff, or a lint-enforced convention the
+diff already violates — the item is a candidate, because "a tool would catch this" is a hypothesis
+and a diff containing the stale artifact falsifies it. "Account for every file" now permits
+`ignored` on a generated file only after its hunks have been compared against the source it is
+generated from, with the source named in the reason; hunks that disagree make the file `reviewed`
+and the disagreement a candidate. "Sync drift from a changed rule" names a generated artifact and
+its source as a peer pair, so a generator that was not re-run is handled as a stale peer by the
+sweep C9 already requires.
+
+Checked on paper against test 4's pinned head (`cb02d5ba`, test 4 README):
+`docs/src/api/class-browsercontext.md:1016` says "At least one of the removal criteria should be
+provided" and `packages/playwright-core/types/types.d.ts:8442` says "will throw an error if either
+name, domain or path has not been passed"; under the manifest rule the file is `reviewed` and the
+contradiction is a candidate. Expected cost is ≈0 to +3k tokens per run: comparing a generated
+file's hunks against its source is a read the finder usually makes anyway, and the rule adds one
+read on pull requests that touch generated files. Specified by
+[issue #56](https://github.com/kamui/skills/issues/56). The workflow identifier stays `v2a-1`
+until #59.
+
 ### C14. Orchestration is script-driven
 
 The Panel runs made the orchestrator 30–45% of total token use even though it made no review
