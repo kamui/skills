@@ -1,5 +1,29 @@
 #!/usr/bin/env python3
-"""Build a verifier prompt from machine-readable finder report blocks."""
+"""Build a verifier prompt from machine-readable finder report blocks.
+
+Purpose: render the fresh-context verifier's prompt from the two finder
+reports, carrying every candidate field except `support` and only those
+acquitted ledger rows that relate to a candidate, so the verifier never sees
+the finder's own demonstrations.
+
+Usage:
+    python3 scripts/build_verifier_prompt.py --brief <absolute path>
+        --repo <path> --base-sha <sha> --head-sha <sha> --merge-base <sha>
+        --code <report> --requirements <report>
+
+The prompt is written to stdout; violations are written to stdout too, one per
+line, and the reason for an unreadable input to stderr.
+
+Exit codes:
+    0  the prompt was written
+    1  a report violates the finding format (one violation per line on stdout)
+    2  the brief or a finder report could not be read
+
+Input schema: each finder report carries a fenced ```candidates block of
+`### Candidate` sections whose fields are `id`, `axis`, `anchor`, `fix`,
+`title`, `claim`, `support`, `trigger`, `priority`, `action`, and a fenced
+```ledger block of `claim | probe | evidence | disposition` rows.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +51,10 @@ FIELD_RE = re.compile(
     + "|".join(CANDIDATE_FIELDS)
     + r")(?:\*\*)?:[ \t]?(.*)$"
 )
+SUPPORT_LABEL_RE = re.compile(
+    r"^[ \t]*(?:-\s+)?(?:\*\*)?support(?:\*\*)?:",
+    re.IGNORECASE | re.MULTILINE,
+)
 FIELD_LIKE_RE = re.compile(r"^(?:-\s+)?(?:\*\*)?[A-Za-z][A-Za-z0-9_-]*(?:\*\*)?:")
 HEADING_RE = re.compile(r"^### Candidate(?:\s+.*)?$")
 LOCATION_RE = re.compile(r"(?P<path>[A-Za-z0-9_.@+-]+(?:/[A-Za-z0-9_.@+-]+)*):\d+(?:-\d+)?")
@@ -34,6 +62,10 @@ CODE_SPAN_RE = re.compile(r"`([^`\n]+)`")
 IDENTIFIER_RE = re.compile(
     r"\b[A-Za-z_][A-Za-z0-9_]*(?:(?:::|\.)[A-Za-z_][A-Za-z0-9_]*)*(?:\(\))?\b"
 )
+
+
+class InputError(OSError):
+    """An argument named an input the script could not read."""
 
 
 class ReportError(ValueError):
@@ -245,14 +277,14 @@ def build(args: argparse.Namespace) -> str:
     try:
         brief = Path(args.brief).read_text(encoding="utf-8")
     except OSError as error:
-        raise ReportError(f"cannot read verifier brief {args.brief}: {error}") from error
+        raise InputError(f"cannot read verifier brief {args.brief}: {error}") from error
 
     reports: list[tuple[str, str]] = []
     for axis_label, path in (("Code", args.code), ("Requirements", args.requirements)):
         try:
             reports.append((axis_label, Path(path).read_text(encoding="utf-8")))
         except OSError as error:
-            raise ReportError(f"cannot read {axis_label} report {path}: {error}") from error
+            raise InputError(f"cannot read {axis_label} report {path}: {error}") from error
 
     candidates: list[Candidate] = []
     ledger_rows: list[LedgerRow] = []
@@ -291,7 +323,7 @@ def build(args: argparse.Namespace) -> str:
         sections.append("\n\n".join(related_sections))
 
     output = "\n\n".join(sections) + "\n"
-    if "support" in output.casefold():
+    if SUPPORT_LABEL_RE.search(output):
         raise ReportError("private field text survived into the verifier prompt")
     return output
 
@@ -314,8 +346,11 @@ def main() -> int:
 
     try:
         output = build(args)
-    except ReportError as error:
+    except InputError as error:
         print(f"build_verifier_prompt: {error}", file=sys.stderr)
+        return 2
+    except ReportError as error:
+        print(f"build_verifier_prompt: {error}")
         return 1
     print(output, end="")
     return 0
