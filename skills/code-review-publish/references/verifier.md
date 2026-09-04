@@ -12,7 +12,8 @@ For candidate mode, give the verifier only:
 
 - the repository and pinned base, head, and merge-base;
 - linked issue/spec coordinates and applicable base-branch rule coordinates;
-- the following candidate record for each candidate; and
+- the following candidate record for each candidate;
+- when `SKILL.md`'s related-acquittal mode applies, the related non-survivor ledger rows, each in the compact form described for clean-verdict mode below; and
 - permission to inspect the cited code and the narrow callers, tests, configuration, history, or issue text needed to decide it.
 
 For each candidate, provide `id`, `kind`, `priority`, `action`, `anchor`, optional `fix`, `title`, `claim`, `trigger`, `impact`, `change`, raw code citations, and any requirement or rule citation. Do not provide the primary reviewer's `support`, confidence, conclusion, or argument for believing the claim.
@@ -40,26 +41,44 @@ For every confirmed `kind=concurrency` or `kind=invariant` candidate:
 2. enumerate the sibling code paths governed by it and state for each whether the proposed `change` protects that path; and
 3. when the proposed fix covers only one projection of the bug class, correct `change` to the invariant-level outcome that covers every exposed sibling path.
 
-Do not search the rest of the pull request for new findings. If an accurate, sub-threshold fact surfaces incidentally, return at most one explicitly non-actionable `observation` aside with a decisive evidence pointer and no `should` or `must` language. Do not weaken a verdict merely because a test has not yet been written; decide from the strongest available evidence.
+Do not search the rest of the pull request for new findings. If an accurate, sub-threshold fact surfaces incidentally, return at most one explicitly non-actionable `observation` aside with a decisive evidence pointer and no `should` or `must` language. An incidental fact that contradicts the decisive premise of any ledger row the verifier was given is **not** an aside. Return it as `disposition <id> does not hold; re-open it`, citing the contradicted premise and the decisive `path:line`. Use the observation aside only for facts that contradict no row. Do not weaken a verdict merely because a test has not yet been written; decide from the strongest available evidence.
 
 ## Verdicts
 
-Return exactly one verdict for every supplied id:
+Return exactly one verdict for every supplied *candidate* id:
 
 - `confirmed`: decisive evidence establishes the trigger, qualifying impact, requested outcome, and either the Code introduced-here condition or the explicit requirement responsibility.
 - `plausible`: the verifier can neither construct the claimed failing trace end-to-end nor refute any specific step of that trace from repository evidence. Return `plausible` whenever both conditions hold; do not force uncertainty into `confirmed` or `refuted`.
 - `refuted`: decisive evidence shows the claim is false, prevented, intentional, lacks a qualifying impact, or—only for a Code candidate—is pre-existing.
 
-For each id, return the verdict, a concise independent justification, the decisive code or requirement citations, and any correction to `trigger`, `impact`, `priority`, `action`, `anchor`, `fix`, or `change`. Also return groups of duplicate ids that should be merged. Do not return publication-ready prose.
+A related non-survivor row supplied under related-acquittal mode is not a candidate: it takes exactly one `holds` or `re-open` ruling under the clean-verdict task and never a verdict from this list.
+
+For each candidate id, return the verdict, a concise independent justification, the decisive code or requirement citations, and any correction to `trigger`, `impact`, `priority`, `action`, `anchor`, `fix`, or `change`. Also return groups of duplicate ids that should be merged. Do not return publication-ready prose.
 
 ## Clean-verdict task
 
-Attack each acquittal in the supplied disposition ledger using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. Do not invent a new claim. The ledger is never filtered by risk surface: every disposition from the run is present, including candidates whose subject looks unrelated to the surface that triggered this batch. Return exactly one batch conclusion:
+Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. This task runs in the two modes `SKILL.md` defines: a zero-survivor batch carrying the complete disposition ledger, and the related-acquittal rows that ride along with a candidate batch. Follow this procedure for every row you rule on, in either mode, to the depth the kind rule below sets:
 
-- `clean verdict stands` when every disposition survives; or
-- `disposition <id> does not hold; re-open it` for each existing candidate whose stated acquittal is contradicted or unsupported.
+1. Restate the row's decisive premise in one sentence — the fact the acquittal depends on, such as "`sender->slaveof` is always non-NULL when `updateShardId()` runs."
+2. State the concrete condition under which that premise would be false.
+3. Trace the *opposite* branch of every conditional the premise depends on — a failed lookup, a NULL pointer, an error return, an empty list, a timeout, a counter already decremented — through the current code, citing `path:line` for each step.
+4. Either construct the complete failing state transition from trigger to observable consequence, or cite the specific step that is impossible.
+5. Re-reading the ledger's own reasoning and agreeing with it is not a verdict. A `holds` ruling on a fully attacked row — including every such row covered by `clean verdict stands` — must cite at least one line the ledger row did not cite.
+
+Attack depth follows the row's `kind`. The five steps apply in full to every row whose `kind` is `bug`, `concurrency`, `invariant`, or `security`. Every other row — `performance`, `maintainability`, or `requirement` — gets a one-citation check instead: read the row's evidence pointer, confirm or contradict its stated fact, and return `holds` or `re-open` without tracing conditionals. The row list itself does not shrink; in zero-survivor mode every disposition from the run is still present. Depth is reduced, coverage is not. Related-acquittal mode supplies only the four full-depth kinds, so every row it carries gets the full procedure.
+
+Do not invent a new claim. In zero-survivor mode the ledger is never filtered by risk surface: every disposition from the run is present, including candidates whose subject looks unrelated to the surface that triggered this batch. In related-acquittal mode the batch carries only the related rows defined in `SKILL.md`, and the verifier may request no others.
+
+In zero-survivor mode, return exactly one batch conclusion:
+
+- `clean verdict stands` when every disposition survives that procedure; or
+- `disposition <id> does not hold; re-open it` for each supplied ledger row whose stated acquittal is contradicted or unsupported.
+
+In related-acquittal mode, return `holds` or `re-open` for each related row alongside the candidate verdicts, on the same standard: `re-open` when the stated acquittal is contradicted or unsupported. A `re-open` carries the same wording as the zero-survivor conclusion, `disposition <id> does not hold; re-open it`.
 
 For every re-opened id, cite the failed disposition step and decisive evidence. The primary reviewer re-runs falsification on only those records and uses the one permitted follow-up candidate batch if any becomes render-eligible.
+
+The single non-actionable `observation` aside permitted by the verification task is available in both modes on the same terms, with one limit. An incidental fact that contradicts the decisive premise of any ledger row the verifier was given is **not** an aside. Return it as `disposition <id> does not hold; re-open it`, citing the contradicted premise and the decisive `path:line`. Use the observation aside only for facts that contradict no row.
 
 ## Primary reviewer handling
 
@@ -71,6 +90,7 @@ The primary reviewer owns the final decision and must validate any corrections a
 - Keep `independent-confirmed` when a confirmed candidate is corrected from `must-fix` to `consider` or otherwise falls below the threshold that originally put it in the batch.
 - Merge duplicates around one stable id and one requested outcome.
 - If the verifier omits a candidate, fails, or cannot inspect required evidence, mark verification and coverage incomplete. Do not publish that candidate or approve the change on the strength of incomplete verification.
+- Treat every returned `re-open`, in either clean-verdict mode, as a re-opened disposition: re-run falsification on that record and use the one permitted follow-up batch if it becomes render-eligible. Do not downgrade it to an observation.
 - Route a verifier `observation` aside through the rubric and output cap; it never becomes a finding without full primary admission and any required follow-up verification.
 
 Independent confirmation does not replace the rubric. The primary reviewer still checks every admission gate, renders the authoritative prose, validates anchors and metadata, and performs the stale-head check before publication.
