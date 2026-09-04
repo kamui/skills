@@ -63,6 +63,8 @@ When a `plausible` candidate becomes a question, retain its stable concept id an
 - The first configuration sentence covers same-shard re-points more broadly than the implementation does. Evidence: `redis.conf:1903`, `src/replication.c:2701`.
 ```
 
+When more than three qualify, publish the three with the most decisive evidence and record each of the rest in the private record as `observation (unpublished, cap)`. A fact belongs to exactly one channel: an unpublished observation and a verifier aside stay in that record rather than folded into a finding's `Impact` or `Change` prose.
+
 Do not create an observation merely to preserve a dropped candidate. The fact itself must stand, and it must have failed finding admission on consequence or arrived as a verifier aside.
 
 ## Replies and prior state
