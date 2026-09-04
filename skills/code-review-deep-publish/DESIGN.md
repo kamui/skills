@@ -15,23 +15,28 @@ The v2a prototype is now named `code-review-deep-publish`. It runs on two delibe
 the recall-first escalation for large or high-risk changes, and as the standing comparator arm in
 review-skill evaluations. The frequent path belongs to `code-review-publish`.
 
-## The pole statement
+## v2b
 
-v2a exists to be measured against, not to win. The program advanced the Skeptic line (v5 → v5a) as
-the production candidate and kept the Panel line alive as the standing recall comparator — and a
-comparator is only worth running if it stays *architecturally distant* from what it measures
-(aggregate analysis § "Keep v2 as the standing comparator"). Every convergence shrinks what the
-comparison can detect. So these are deliberately preserved, and future edits should treat removing
-any of them as defeating the skill's purpose:
+Workflow identifier: `v2b-1`. A `v2a-1` trailer remains readable because v2b changes the identifier,
+not the trailer vocabulary.
+
+### The pole statement
+
+v2b keeps v2a's purpose: it exists to be measured against, not to win. The program advanced the
+Skeptic line (v5 → v5a) as the production candidate and kept the Panel line alive as the standing
+recall comparator — and a comparator is only worth running if it stays *architecturally distant*
+from what it measures (aggregate analysis § "Keep v2 as the standing comparator"). Every convergence
+shrinks what the comparison can detect. These properties remain the pole, and removing any of them
+defeats the skill's purpose:
 
 - **Two parallel axis finders** (Code, Requirements), each independently sweeping the full diff.
   This is the recall engine: highest recall in tests 1 and 3, including the only extra
   independently-confirmed true finding of the program (test 3's mandatory-work-on-caller-thread).
 - **Mandatory fresh-context verification of every candidate and every acquittal related to one**,
   with `support` withheld so the verifier gets claims only, and `verify.md`'s
-  anti-over-refutation asymmetry. v2's verifier is the
-  only one that ever refuted candidates in a run where others confirmed (test 1: two false
-  candidates removed, one cross-axis duplicate merged).
+  anti-over-refutation asymmetry. v2's verifier is the only one that ever refuted candidates in a
+  run where others confirmed (test 1: two false candidates removed, one cross-axis duplicate
+  merged).
 - **The Requirements-candidate exception** to pre-existing-at-base refutation (`verify.md`
   § refuted, "pre-existing"). v5a grafted this *from* v2; the original wording stays here verbatim.
 - **The question channel** — the Requirements axis's "cannot tell from the code" bucket. It
@@ -44,7 +49,24 @@ any of them as defeating the skill's purpose:
 
 Deliberately **not** adopted from the Skeptic line, for the same reason: consequence-triggered
 verification routing, conditional verification, the context-fingerprint script, N-version
-replication. The trailer's pinned SHAs are v2a's identity record; it needs no fingerprint.
+replication. The trailer's pinned SHAs are v2b's identity record; it needs no fingerprint.
+
+### Change map
+
+Each row states an externally checkable intent. A prototype run can grade the mechanism as worked,
+inert, or harmful against that intent.
+
+| ID | Runtime change | Checkable intent | Evidence |
+| --- | --- | --- | --- |
+| C1 | Tighten documentary-finding action and priority calibration. | A stale restatement links to a correct canonical rule or cannot name a forbidden wrong action stays advisory and at most P2. | [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md), [aggregate C1 analysis](../../docs/research/prototype-runs-aggregate-tests-1-4-v2a-v5a.md) |
+| C5 | Deduplicate pooled observations against each other and confirmed findings before the cap; report cap overflow to the caller. | One fact publishes once, and every accurate observation dropped by the cap remains visible in the run report without changing status. | [test 2 Fable run](../../docs/research/prototype-runs-2026-09-01-test-2-fable/v2a-run.md), [test 4 run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md) |
+| C10 | Run permitted suites once before finder fan-out and share their results. | Both finders and the verifier receive the same suite result without either finder re-running the suite; focused candidate tests remain allowed. | [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
+| C11 | Send every candidate-related acquittal through the existing fresh-context verifier dispatch. | A related row receives a cited `holds` or `re-open` ruling; `re-open` becomes caller-visible uncertainty, never a verifier-created finding. | [test 3 v2a run](../../docs/research/prototype-runs-2026-09-01-test-3/v2a-run.md), [verifier addendum](../../docs/research/prototype-runs-2026-09-01-test-3/addendum-2026-09-03.md) |
+| C12 | Compare a generated artifact's changed hunks with its source before ignoring it. | A same-diff source/artifact contradiction becomes a candidate even when CI would ordinarily catch it. | [test 4 v2 run](../../docs/research/prototype-runs-2026-09-01-test-4/v2-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
+| C13 | Forward explicit review-record deferrals to the Requirements finder. | An unresolved design, naming, or API-shape deferral on unreleased public surface produces a question and prevents `Passed`. | [test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
+| C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Every expressible file coordinate resolves at the reviewed full head SHA while `LEFT` and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
+| C15 | Build shared finder input and verifier prompts with scripts, and keep the caller report compact. | Mechanical orchestration is reproducible without moving review judgment or exposing finder `support` to the verifier. | [shared-block builder](scripts/build_shared_block.py), [verifier-prompt builder](scripts/build_verifier_prompt.py) |
+| C16 | Validate finder ledger, manifest, and counts shape before verification. | A malformed finder report gets one shape-only retry, then makes its axis incomplete instead of entering verification unaudited. | [finder-report validator](scripts/validate_finder_report.py), [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
 
 ## The changes, mapped to evidence
 
@@ -194,8 +216,8 @@ collapse by rule rather than by analogy, three publish as before, and rows 27 an
 run report as `observation (unpublished, cap)` with their pointers instead of vanishing, row 27 no
 longer folded into Finding 1. Expected cost is ≈0: the comparison is one the verifier already makes
 for candidates, and the record is a few hundred output tokens on a run that overflows the cap.
-Specified by [issue #58](https://github.com/kamui/skills/issues/58). The workflow identifier stays
-`v2a-1` until #59.
+Specified by [issue #58](https://github.com/kamui/skills/issues/58). The workflow identifier stayed
+`v2a-1` pending #59.
 
 ### C6. Closed-PR rule and trailer parity
 
@@ -226,7 +248,7 @@ evidence supports a verdict. Both finder ledgers keep every hypothesis while lim
 four compact fields on one line. The two full-diff analyses and verification of every candidate
 remain mandatory.
 
-C14 supersedes the cache-reuse claim above: the measured harness did not reuse that prefix.
+C15 supersedes the cache-reuse claim above: the measured harness did not reuse that prefix.
 
 ### C8. Paired peer-contract sweep before a requirement passes
 
@@ -334,8 +356,8 @@ that decides a candidate, which is where executed evidence actually changes a ve
 under C9 reached the `validate-completion.py` drift with an executed reproduction, and nothing here
 touches that. Estimated saving: −5–10k tokens and −1–3 minutes of wall clock per run on a repository
 with suites, and none on one without. Quality risk is none: the suite result reaches both finders
-exactly as before, by a cheaper route. The workflow identifier stays `v2a-1`; issue #59 bumps it once
-after all v2b behavior changes land (tracking epic #62).
+exactly as before, by a cheaper route. The workflow identifier stayed `v2a-1` pending the single
+bump in #59 after all v2b behavior changes landed (tracking epic #62).
 
 ### C11. Acquittals related to a candidate are verified
 
@@ -396,8 +418,8 @@ name, domain or path has not been passed"; under the manifest rule the file is `
 contradiction is a candidate. Expected cost is ≈0 to +3k tokens per run: comparing a generated
 file's hunks against its source is a read the finder usually makes anyway, and the rule adds one
 read on pull requests that touch generated files. Specified by
-[issue #56](https://github.com/kamui/skills/issues/56). The workflow identifier stays `v2a-1`
-until #59.
+[issue #56](https://github.com/kamui/skills/issues/56). The workflow identifier stayed `v2a-1`
+pending #59.
 
 ### C13. Review-record deferrals reach the Requirements axis
 
@@ -454,9 +476,25 @@ grows to eight entries, the counts read `met=7 not-met=0 unverifiable=1`, the ax
 information` rather than `Passed`, and the question publishes without passing through the verifier.
 Expected cost is ≈0: the extraction is a few hundred tokens, and an open deferral yields one
 question in place of `Passed`. Specified by [issue #57](https://github.com/kamui/skills/issues/57).
-The workflow identifier stays `v2a-1` until #59.
+The workflow identifier stayed `v2a-1` pending #59.
 
-### C14. Orchestration is script-driven
+### C14. Review file coordinates are commit-pinned links
+
+The Panel line's summaries and caller handoffs named review coordinates as bare code spans, leaving
+the reader to navigate to a file and recover the reviewed revision. `publishing.md` now renders each
+expressible coordinate through [`link_coordinate.py`](scripts/link_coordinate.py) as a link to the
+base repository at the reviewed full head SHA. The visible coordinate is unchanged; line and range
+links carry GitHub's `?plain=1` fragment, a distinct fix site gets its own link, and every assembled
+fragment is checked against the script before publication. `LEFT` anchors and observation pointers
+remain code spans because the current record does not carry enough revision provenance to link them
+honestly.
+
+The checkable intent is that every linked coordinate resolves to the exact code the review read and
+stays stable across later branch movement, while a coordinate without sufficient provenance is not
+made falsely clickable. The script's self-test covers line, range, file, encoding, revision, and
+Markdown-injection cases. Specified by [issue #83](https://github.com/kamui/skills/issues/83).
+
+### C15. Orchestration is script-driven
 
 The Panel runs made the orchestrator 30–45% of total token use even though it made no review
 judgment beyond status derivation. Most of that work was mechanical: reading and reproducing the
@@ -474,7 +512,7 @@ falsification, verification, deduplication, status derivation, and publication d
 where the process already assigns them. This is the script-driven boundary specified by
 [issue #65](https://github.com/kamui/skills/issues/65).
 
-### C15. Ledger shape is enforced mechanically
+### C16. Ledger shape is enforced mechanically
 
 C3 made the disposition ledger a required return, and six of the seven corpus runs complied. The
 model-matched test-1 run did not: the Requirements finder returned a prose changed-contract sweep in
@@ -496,15 +534,15 @@ disposition set, the evidence pointer form, manifest coverage, and the three int
 never reads the repository, runs git, or judges a row.
 
 This is an enforcement of C3, not a rule change: the ledger means what it meant, the dispositions
-are the ones C3 and C4 defined, and the rows the verifier-prompt builder (C14) already parses are
+are the ones C3 and C4 defined, and the rows the verifier-prompt builder (C15) already parses are
 the rows the validator admits. Reformatting the test-4 Code finder's verbatim ledger into the
 blocks showed where the grammar bites: six of its fifteen rows carried a sentence in the evidence
 field where the brief asked for one pointer, and each needed a location supplied — which is the
 row shape the briefs now spell out for acquittals that rest on an absence. Expected cost is
 +5–7k tokens per run, because the retry fired once in seven corpus runs. Specified by
 [issue #53](https://github.com/kamui/skills/issues/53), which named this section C10; that number
-went to the suite-once change and C11–C13 are held by #64, #56, and #57. The workflow identifier
-stays `v2a-1` until #59.
+went to the suite-once change, C11–C14 to #64, #56, #57, and #83, and C15 to script-driven
+orchestration. The workflow identifier stayed `v2a-1` pending #59.
 
 ### Subtractions
 
