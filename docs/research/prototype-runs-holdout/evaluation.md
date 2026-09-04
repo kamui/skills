@@ -71,14 +71,23 @@ them for lack of a verifier, ending `Incomplete` with one `consider` published.
 
 ### (d) `astral-sh/uv#4424` — GT-d1, the deferred naming
 
-_Pending the Panel seed and the scorer; interim:_ all three `v5b` seeds and the ablation recorded the
-deferral as **open** ("I'm fine adjusting this later… since it's in preview" quoted in each ledger),
-declined to treat approval as closure, and then published nothing on it: no question, no finding.
-Each reasoned that a naming preference the maintainers themselves deferred is not statically
-unsettleable in a way a reviewer could add to. GT-d1 is therefore `raised` in four of four, `found`
-in none. No verifier fired on this target in any cell (no must-fix survivor, no risk surface). Statuses
-`Approved` throughout, with one `consider` (docs versus behavior of two commands) and observations on
-T-d2 and on the missing `value_enum` attribute.
+| Cell | GT-d1 | T-d2 | Other items | False items | Status | Band |
+| --- | --- | --- | --- | --- | --- | --- |
+| v5b seed 1 | raised (ledger row 9: "explicit deferral in the review record, nothing new to add") | dropped: traced `git show e783a799` and read it as the fix of a self-described incomplete revert | P3 consider (docs claim a download two commands never perform); 1 observation | 0 | Approved | under |
+| v5b seed 2 | raised (checklist: "fired, resolved as non-issue") | observation | — | 0 | Approved | under |
+| v5b seed 3 | raised (C9 dropped: "a subjective naming preference (gate 7)") | observation | 2 more observations | 0 | Approved | under |
+| v5b-noverify seed 1 | raised ("would not meet the 'worth the author's time' bar") | dropped as deliberate | 1 observation (`value_enum` attribute) | 0 | Approved | under |
+| Panel seed 1 | **found**: `[Question]` "Is `--toolchain-preference`'s name and value vocabulary settled, or still open per the review record?" | **published** `consider` P2, verified `confirmed` | 3 observations | 0 | Incomplete (Requirements finder failed the shape validator twice) | in band |
+
+Every cell located the same deferral and quoted the same two comments. The four Skeptic-line cells
+then reasoned, in near-identical words, that restating a question the maintainers had already
+deferred adds nothing a reviewer can settle, and published nothing; the Panel line's Requirements
+finder, which #57 tells to carry every deferral to the axis, published it as a question. The
+playwright GT-2 pattern recurred with the reasoning written out: gate 6 was applied correctly (the
+deferral is open, not accepted) and the question rule's "outcome-changing fact" bar then blocked
+publication. No verifier fired on this target on the Skeptic line in any cell. The Panel cell's
+`Incomplete` is a mechanical artifact: two Requirements-ledger rows carried bare file paths as
+evidence and the one authorized re-dispatch did not fix them.
 
 ### (e) `pola-rs/polars#24771` — GT-e1, the benchmark question
 
