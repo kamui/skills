@@ -2,8 +2,8 @@
 
 **Status: template; no run has been recorded.** The layout follows
 [test 4's `comparison-data.md`](../prototype-runs-2026-09-01-test-4/comparison-data.md); #60 fills
-every section as cells complete. The cost section is fixed now by #67 so that every run is recorded
-the same way and the arms are ranked on the same column.
+every section as cells complete. The cost section is fixed by #67 and #89 so that every run is
+recorded the same way and the arms are ranked on billed production-shaped cost.
 
 ## Comparison boundaries
 
@@ -17,40 +17,52 @@ and its cell re-run clean; record the discard here.
 
 ## Cost
 
-One row per run, pasted verbatim from `python3 docs/research/tools/cost_split.py --row "<arm> seed <n>"`
+### Per run — billed usage
+
+One row per run, pasted verbatim from
+`python3 docs/research/tools/transcript_usage.py <paths> --prices 2,10 --report <run.md> --row "<arm> seed <n>"`
 (see [`README.md`](README.md#metering-per-run) for the inputs); the header below is the script's
-`--header` output. Token cells are the harness-reported figures where the harness meters them and
-self-reported estimates elsewhere; the payload and report cells carry their byte sizes and whether
-the token count is `metered` or `est.` at 4 bytes per token. **Production-shaped** is the harness
-total minus the research report.
+`--header` output. **Billed cost** prices every API request. **Production-shaped** subtracts the
+research report's estimated output cost and is the field used for ranking.
 
-### Per run
-
-| Run | Harness total | Instruction load | Repository reads | Private records | Review payload | Research report | Production-shaped |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| _(target a) v5b seed 1_ | | | | | | | |
+| Run / agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Billed cost ($) | Report output (est.) | Production-shaped ($) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| _(target a) v5b seed 1_ | | | | | | | | | | | | | |
 
 Group rows by target, arms in the order v5b, v2a, v5b-without-verifier, then `v5b-effort-medium`
 on targets (b) and (c) only (see [`README.md`](README.md#lower-effort-primary-arm)), then the Fable
 tier-split runs.
-Where a run's primary was not metered, pass `--harness-note "primary not metered"` so the harness-total
-cell says so, and treat the row as a lower bound in the ranking.
 
-### Per arm — ranked on production-shaped
+### Per arm — ranked on billed production-shaped cost
 
-Arms are ranked on the median **production-shaped** figure across their runs, not on the raw harness
-total. The raw column stays for continuity with the corpus, whose figures are all raw and therefore
-upper bounds for production.
+Arms are ranked on the median **production-shaped billed cost** across their runs, not on raw billed
+cost or the legacy harness context-size figure.
 
-| Rank | Arm | Runs | Median production-shaped | Median harness total | Median research-report share |
+| Rank | Arm | Runs | Median production-shaped billed cost | Median billed cost | Median research-report cost share |
 | --- | --- | --- | --- | --- | --- |
 | 1 | | | | | |
 | 2 | | | | | |
 | 3 | | | | | |
 
-Report the research-report share (report tokens over harness total) per arm as well: it is the
-correction factor the aggregate analysis's §7 conclusion 8 waits on, and it is expected to differ by
-arm.
+Report the research-report cost share (estimated report output cost over billed cost) per arm as
+well: it is the correction factor the aggregate analysis's §7 conclusion 8 waits on, and it is
+expected to differ by arm.
+
+### Legacy context-size companion
+
+One row per run, pasted verbatim from
+`python3 docs/research/tools/cost_split.py --row "<arm> seed <n>"`. The header below is that script's
+`--header` output. Token cells are harness-reported where the harness meters them and self-reported
+estimates elsewhere; payload and report cells carry their byte sizes and whether the token count is
+`metered` or `est.` at 4 bytes per token. This table preserves the historical split and does not
+determine the ranking.
+
+| Run | Harness total | Instruction load | Repository reads | Private records | Review payload | Research report | Production-shaped |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| _(target a) v5b seed 1_ | | | | | | | |
+
+Where a run's primary was not metered, pass `--harness-note "primary not metered"` so the legacy
+harness-total cell says so; treat that companion row as a lower bound.
 
 ## Output
 

@@ -387,6 +387,19 @@ The prior analysis's nine, with the new corpus.
    [`prototype-runs-holdout/README.md`](prototype-runs-holdout/README.md); the correction factor it
    measures replaces the estimate here once it exists.
 
+   **Billed cost is not context size (#89).** Every token figure in this analysis is a
+   context-size figure. Summing per-request usage from the test-4 transcripts, the v5a primary
+   billed 3.45M cache-read tokens, 164k cache-write tokens, and 90k output tokens (48k of them
+   thinking) across 41 API requests: about $2.00 at Sonnet 5 list, $2.32 with its verifier,
+   against the $0.6–0.8 the corpus's method (final context size at an 80/20 input/output split)
+   gives for the same run. Cache reads are the largest token component, because the context is
+   re-sent on every request, but output is the largest dollar one; the number of requests is a
+   lever this analysis never weighed. Figures elsewhere in this document are context tokens unless
+   marked billed, and the levers rank differently on billed figures. #89's own table summed
+   transcript lines rather than requests and so overstated cache reads about 2.3×; the corrected
+   per-agent figures for all four test-4 arms are in
+   [`prototype-runs-2026-09-01-test-4/comparison-data.md`](prototype-runs-2026-09-01-test-4/comparison-data.md#billed-usage-added-2026-09-89).
+
 9. **Methodology debts — two paid, three new.** Mirror truncation and the closed-PR rule are done
    and worked (test 3's contamination is closed; retrospective mode ran on three targets). Model is now
    passed explicitly and verified from transcripts. New debts: rate limits destroyed unsaved phases in
