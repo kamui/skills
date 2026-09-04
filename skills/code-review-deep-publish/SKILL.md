@@ -44,9 +44,9 @@ Pin `base`, `head`, and `merge-base` together as the run identity, and record th
 
 Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
-Run `python3 scripts/build_shared_block.py` with the pinned identity; its output is the shared block. Do not re-read the diff or guidance files to build it by hand. On a non-zero exit, report the script's output and stop the step — hand-building the block is not the fallback.
+When the run conditions permit test execution, run the repository's permitted test suites **once** here and write the one-line result summary per suite to a UTF-8 file. Finders and the verifier may run a single focused test that decides a candidate; they do not re-run a suite.
 
-When the run conditions permit test execution, run the repository's permitted test suites **once** here and put the one-line result summary per suite in the shared block. Finders and the verifier may run a single focused test that decides a candidate; they do not re-run a suite.
+Run `python3 scripts/build_shared_block.py` with the pinned identity, passing the result-summary file with `--suite-results` when suites ran; its output is the shared block. Do not re-read the diff or guidance files to build it by hand. On a non-zero exit, report the script's output and stop the step — hand-building the block is not the fallback.
 
 An earlier review at a different head makes this a re-review. Keep the original comparison base; use the earlier head only to locate what changed since.
 
@@ -89,7 +89,7 @@ Re-reviewing, the prior findings and disposition ledger let each finder avoid re
 
 ### 3. Verify
 
-Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Run `python3 scripts/build_verifier_prompt.py` on the two finder reports and use its output as the prompt; it withholds every `support` field mechanically. On a non-zero exit, report the script's output and stop the step; the fix is to the finder report or to the script, never to the prompt by hand. Read each finder's `ledger`, `counts`, and `manifest` blocks for coverage and status; do not re-read the finders' prose to build the verifier prompt.
+Spawn **one sub-agent with a fresh context** and the brief in [`references/verify.md`](references/verify.md). Run `python3 scripts/build_verifier_prompt.py` on the two finder reports, passing the same result-summary file with `--suite-results` when suites ran, and use its output as the prompt; it withholds every `support` field mechanically. On a non-zero exit, report the script's output and stop the step; the fix is to the finder report or to the script, never to the prompt by hand. Read each finder's `ledger`, `counts`, and `manifest` blocks for coverage and status; do not re-read the finders' prose to build the verifier prompt.
 
 One class of item never goes to the verifier: the Requirements axis's **"cannot tell from the code"** bucket. Those resolve to questions at the finder — a question is not a defect claim, and `confirmed`/`refuted` presupposes something the code either does or does not do. Route them straight to publication as questions, each carrying why no static evidence can settle it and what measurement or answer would.
 

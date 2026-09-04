@@ -81,7 +81,18 @@ def main() -> int:
         git(repo, "commit", "-q", "-m", "Change app")
         head_sha = git(repo, "rev-parse", "HEAD")
 
-        result = invoke(repo, base_sha, head_sha)
+        suite_results = Path(directory) / "suite-results.txt"
+        suite_results.write_text(
+            "python: 290 tests passed\nnode: 60 tests passed\n",
+            encoding="utf-8",
+        )
+        result = invoke(
+            repo,
+            base_sha,
+            head_sha,
+            "--suite-results",
+            str(suite_results),
+        )
         if result.returncode != 0:
             failures.append(f"normal invocation exited {result.returncode}: {result.stderr.strip()}")
         else:
@@ -91,6 +102,7 @@ def main() -> int:
                 "## Commit list",
                 "## Full diff",
                 "## Applicable base-branch guidance",
+                "## Test suite results",
                 "## Finding format",
             )
             positions = [result.stdout.find(heading) for heading in expected]
@@ -106,6 +118,8 @@ def main() -> int:
                 f"### `src/AGENTS.md` (base blob `{scoped_blob}`)",
                 "root guidance",
                 "scoped guidance",
+                "python: 290 tests passed",
+                "node: 60 tests passed",
                 "/tmp/finding-format.md",
             ):
                 if fragment not in result.stdout:
@@ -147,6 +161,16 @@ def main() -> int:
             failures.append(f"git failure exited {failure.returncode}, expected 2")
         if "git command failed:" not in failure.stderr or "not-a-commit" not in failure.stderr:
             failures.append("git failure does not identify the failing command")
+
+        missing_results = invoke(
+            repo,
+            base_sha,
+            head_sha,
+            "--suite-results",
+            str(Path(directory) / "missing-results.txt"),
+        )
+        if missing_results.returncode != 2 or "cannot read suite results" not in missing_results.stderr:
+            failures.append("an unreadable suite-results input did not exit 2 naming the input")
 
     for failure in failures:
         print(failure)

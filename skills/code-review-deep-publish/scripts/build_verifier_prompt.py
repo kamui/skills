@@ -2,14 +2,14 @@
 """Build a verifier prompt from machine-readable finder report blocks.
 
 Purpose: render the fresh-context verifier's prompt from the two finder
-reports, carrying every candidate field except `support` and only those
-acquitted ledger rows that relate to a candidate, so the verifier never sees
-the finder's own demonstrations.
+reports and optional test-suite result summaries, carrying every candidate
+field except `support` and only those acquitted ledger rows that relate to a
+candidate, so the verifier never sees the finder's own demonstrations.
 
 Usage:
     python3 scripts/build_verifier_prompt.py --brief <absolute path>
         --repo <path> --base-sha <sha> --head-sha <sha> --merge-base <sha>
-        --code <report> --requirements <report>
+        --code <report> --requirements <report> [--suite-results <path>]
 
 The prompt is written to stdout; violations are written to stdout too, one per
 line, and the reason for an unreadable input to stderr.
@@ -27,6 +27,8 @@ that order, every field line at column zero, and a fenced ```ledger block of
 that begins with one of those labels is indented. `anchor`, `fix`, and a
 row's evidence are whole `path:line` coordinates or file paths, which may
 contain spaces.
+When supplied, suite-results is a UTF-8 file containing one result-summary
+line per suite.
 """
 
 from __future__ import annotations
@@ -342,6 +344,15 @@ def build(args: argparse.Namespace) -> str:
         except OSError as error:
             raise InputError(f"cannot read {axis_label} report {path}: {error}") from error
 
+    suite_results = None
+    if args.suite_results:
+        try:
+            suite_results = Path(args.suite_results).read_text(encoding="utf-8")
+        except OSError as error:
+            raise InputError(
+                f"cannot read suite results {args.suite_results}: {error}"
+            ) from error
+
     candidates: list[Candidate] = []
     ledger_rows: list[LedgerRow] = []
     for axis_label, report in reports:
@@ -355,6 +366,8 @@ def build(args: argparse.Namespace) -> str:
         f"- head SHA: `{args.head_sha}`\n"
         f"- merge-base: `{args.merge_base}`",
     ]
+    if suite_results is not None:
+        sections.append("## Test suite results\n\n" + suite_results.rstrip())
     if candidates:
         sections.append(
             "## Candidates\n\n"
@@ -395,6 +408,10 @@ def main() -> int:
     parser.add_argument("--merge-base", required=True, help="pinned comparison merge-base")
     parser.add_argument("--code", required=True, help="Code finder report")
     parser.add_argument("--requirements", required=True, help="Requirements finder report")
+    parser.add_argument(
+        "--suite-results",
+        help="UTF-8 file containing one result-summary line per test suite",
+    )
     args = parser.parse_args()
 
     if not Path(args.brief).is_absolute():
