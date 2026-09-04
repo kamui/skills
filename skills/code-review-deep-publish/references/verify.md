@@ -26,6 +26,18 @@ Read the cited `anchor` and `fix` sites, then only enough surrounding context to
 - pre-existing — **Code candidates only** — the defect is real but this change did not introduce it. Cite the prior state. Never refute a Requirements candidate this way: a requirements gap is measured against the issue, not the diff, and the issue made it this change's job whether or not the code predates it.
 - no observable effect — pure style, with no behavior consequence and no documented rule requiring it.
 
+## Related acquittals
+
+For every related finder ledger row supplied after the candidates, follow this procedure:
+
+1. Restate the row's decisive premise in one sentence — the fact the acquittal depends on, such as "`sender->slaveof` is always non-NULL when `updateShardId()` runs."
+2. State the concrete condition under which that premise would be false.
+3. Trace the *opposite* branch of every conditional the premise depends on — a failed lookup, a NULL pointer, an error return, an empty list, a timeout, a counter already decremented — through the current code, citing `path:line` for each step.
+4. Either construct the complete failing state transition from trigger to observable consequence, or cite the specific step that is impossible.
+5. Re-reading the ledger's own reasoning and agreeing with it is not a verdict. A `holds` ruling on a fully attacked row must cite at least one line the ledger row did not cite.
+
+Rule `holds` or `re-open` on each related row. An incidental fact that contradicts the decisive premise of any related row the verifier was given is **not** an observation. Return it as `re-open` on that row, citing the contradicted premise and the decisive `path:line`. Use an observation only for facts that contradict no related row.
+
 ## The asymmetry
 
 **Default to `plausible`.** It is the honest verdict for anything you cannot settle either way, and it is safe: a plausible candidate publishes as a question, which asks rather than asserts.
@@ -72,6 +84,8 @@ Declined findings do not reach you. Whether a decline's reasoning holds is not a
 ## What to return
 
 Per candidate: its `id`, the verdict, one sentence of justification, the quoted line that supports the verdict for `confirmed` and `refuted`, the corrected trigger where you changed it, and the priority and action, each with a note if you moved it.
+
+Per related acquitted row: its compact four-field row, the `holds` or `re-open` ruling, and the cited evidence that supports the ruling.
 
 Then the merge list — which ids you collapsed into which — the counts by verdict, and any observations.
 
