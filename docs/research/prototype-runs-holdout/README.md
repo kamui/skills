@@ -166,7 +166,7 @@ directories that existed when the session began, so a definition written into a 
 mid-session is not loaded until restart, and a dispatch naming it fails or falls back to the
 session effort. The definition is committed at
 [`.claude/agents/v5b-primary-effort-medium.md`](../../../.claude/agents/v5b-primary-effort-medium.md)
-(#60's pull request) so every grid session starts with it loaded; #60 removes it after the grid. Before the first cell, dispatch a trivial probe through the
+(#60's first pull request) so every grid session started with it loaded; both grid-only definitions were removed once the arm's six cells had run, so they exist only in the history of that branch. Before the first cell, dispatch a trivial probe through the
 definition and read `effort` from the probe's transcript as described under item 4 below; the grid
 does not start until the probe shows `medium`. Record the probe's transcript path in
 `comparison-data.md` under Effort verification.
@@ -1125,5 +1125,5 @@ commit the run records.
 - [`../tools/cost_split.py`](../tools/cost_split.py) and
   [`../tools/transcript_usage.py`](../tools/transcript_usage.py) — the metering scripts;
   `--self-test` checks each
-- [`../../../.claude/agents/v5b-primary-effort-medium.md`](../../../.claude/agents/v5b-primary-effort-medium.md)
-  — the lower-effort arm's agent definition; removed after the grid
+- the two grid-only agent definitions (`v5b-primary-effort-medium`, `v5b-verifier-effort-high`) lived under
+  `.claude/agents/` during the grid and were removed afterwards; their frontmatter is quoted above

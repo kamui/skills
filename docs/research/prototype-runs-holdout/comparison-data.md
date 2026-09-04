@@ -171,7 +171,12 @@ are absent. Target (b) has no recall rows; its acquittal checks are in the next 
 
 ### (c) `python/typeshed#9458`
 
-_Filled from the (c) scorer; see `evaluation.md`._
+| | v5b s1 | v5b s2 | v5b s3 | effort s2 | effort s3 | effort s4 | noverify s1 | Panel s1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-c1** — `__init__.pyi` missing `CredentialProvider`, `UsernamePasswordCredentialProvider` | not raised | not raised | **found** | not raised | **found** | not raised | not raised | **found** |
+| T-c2 — `default_backoff` missing from both `__init__.pyi` and `backoff.pyi` | not raised | not raised | **found** | not raised | not raised | not raised | raised (withheld) | **found** |
+| T-c3 — `MaxConnectionsError` missing from `exceptions.pyi` | not raised | not raised | not raised | not raised | not raised | not raised | not raised | **found** |
+| `can_read_destructive` missing on the async parser/connection classes (adjudicated true) | found | found | not raised | found | found | found | raised (withheld) | found |
 
 ### (d) `astral-sh/uv#4424`
 
