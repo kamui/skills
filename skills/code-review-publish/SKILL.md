@@ -1,6 +1,7 @@
 ---
 name: code-review-publish
 description: "Review an issue-linked pull request and publish one forge-native review of concise, agent-actionable findings. One integrated reviewer with a private evidence rubric, consequence-triggered fresh-context verification, explicit question and observation channels, and a mechanically validated output contract replace the legacy two-axis Code/Requirements protocol of code-review-publish-legacy, which is kept only for historical purposes. Use when the caller wants a review posted to the pull request, not just reported back."
+compatibility: Requires git and Python 3.9+ on macOS or Linux
 ---
 
 # Publish code review — calibrated hybrid
