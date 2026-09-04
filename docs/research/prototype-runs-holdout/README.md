@@ -203,11 +203,12 @@ Otherwise the result is recorded in `evaluation.md` and the default stays. Meeti
 authorises a ticket proposing the tiering, not a change to skill text or harness defaults on the
 strength of this arm alone.
 
-Whether or not the rule is met, `evaluation.md` reports the arm's cost effect per target as the
-median of the six figures in items 1–3 against the v5b cells on the same target and seeds: thinking
-tokens, output tokens, turns, tool calls, per-sub-agent wall, elapsed time, and billed and
-production-shaped cost. The quality result (dimensions 1–4) and the cost result are stated
-separately, so a saving that fails the rule is still on record for a later ticket.
+Whether or not the rule is met, `evaluation.md` reports the arm's cost effect per target as each
+figure's median over the arm's three seeds against the same median for the v5b cells on that
+target, for the eight figures items 1–3 record: thinking tokens, output tokens, turns, tool calls,
+per-sub-agent wall, elapsed time, and billed and production-shaped cost. The quality result
+(dimensions 1–4) and the cost result are stated separately, so a saving that fails the rule is
+still on record for a later ticket.
 
 **If the harness cannot pass effort per sub-agent** at the pinned commit — the `effort` field is
 ignored, or the probe's and the primaries' transcripts show the default with the definition

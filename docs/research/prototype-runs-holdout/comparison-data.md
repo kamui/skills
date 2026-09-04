@@ -94,10 +94,12 @@ read from the same lines as `message.model`, per sub-agent: the primary and each
 `v5b-effort-medium` rows show `medium` on the primary and the default on every verifier; every other
 row shows the default throughout. A row whose verified value differs from the value passed is a
 discarded run and is recorded under Run continuity, not here. Alongside it, per sub-agent: turns,
-tool calls, thinking tokens, and wall clock, copied from that sub-agent's row in the
-[billed-usage table](#per-run--billed-usage) above (`transcript_usage.py` on the same transcript),
-the figures #68 compares across the arm. The `Thinking` column is the one the arm exists to move;
-the rest show whether lower effort also consolidated the primary's turns and tool calls.
+tool calls, thinking tokens, and wall clock, copied from that sub-agent's block in the run document
+(the `transcript_usage.py` output pasted there under item 1 of the
+[metering rule](README.md#metering-per-run); the [billed-usage table](#per-run--billed-usage) above
+carries only each run's total row), the figures #68 compares across the arm. The `Thinking` column
+is the one the arm exists to move; the rest show whether lower effort also consolidated the
+primary's turns and tool calls.
 
 | Run | Sub-agent | Effort passed | Effort verified | Turns | Tool calls | Thinking | Wall clock |
 | --- | --- | --- | --- | --- | --- | --- | --- |
