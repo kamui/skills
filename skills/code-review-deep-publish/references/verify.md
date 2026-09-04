@@ -57,6 +57,8 @@ Remember what `P0` means: it holds under any input, with no assumptions. A defec
 
 Action is a separate ruling from priority, and correcting it is equally in scope. `must-fix` is licensed by a **demonstrated merge consequence** — what provably goes wrong if this merges unfixed — never by the severity label. The verdict shape "fact confirmed, merge consequence disproved" is legal and useful: confirm the candidate, downgrade its action to `consider`, and say what disproved the consequence. Do not move priority to communicate the action change; the two fields exist so you do not have to.
 
+Before confirming `must-fix` on a documentary or restatement candidate, quote the wrong action the stale text would cause and the canonical line that forbids it; without both, rule `consider`. Before confirming `P1` on any documentary candidate, state which non-documentary consequence makes it urgent; restatement drift is capped at `P2`.
+
 ## Prior findings, on a re-review
 
 A re-review adds the earlier round's findings to your list wherever their fate turns on the code: anything replied `implemented` or `already-addressed`, and anything never answered. Treat each as a claim about the **current** code at its recorded `fix` site. You are deliberately not given the replies — a reply's word is evidence of intent, not of outcome, and the outcome is what you check.

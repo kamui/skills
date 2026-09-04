@@ -84,7 +84,7 @@ The restated requirement list, then per candidate:
 - `support` — what you ran, what you read, and what you remain unsure of. The verifier never sees this, so do not put anything load-bearing in it.
 - `trigger` — the observable consequence: what a user or caller gets that the issue said they should not, or does not get that the issue said they should.
 - `change` — what would satisfy the requirement.
-- `priority` — `P0` a core requirement of the issue is absent or wrong; `P1` a stated requirement partially met; `P2` a secondary requirement, or scope creep; `P3` a nice-to-have the issue mentioned without requiring.
+- `priority` — `P0` a core requirement of the issue is absent or wrong; `P1` a stated requirement partially met; `P2` a secondary requirement, or scope creep; `P3` a nice-to-have the issue mentioned without requiring. A requirement that is met at its canonical implementation and fails only because a sibling document still carries old wording is `P2` or `P3` per `finding-format.md`, not `P1`.
 - `action` — `must-fix` or `consider`, judged independently of priority by the calibration in `finding-format.md` § Vocabularies: blocking needs a demonstrated merge consequence, not a severity label. A question carries no action judgment beyond `question` itself.
 
 Then end the candidate material with the fenced `candidates` block defined by
