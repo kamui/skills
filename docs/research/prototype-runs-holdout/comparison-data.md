@@ -1,14 +1,43 @@
 # Comparison data — holdout evaluation
 
-**Status: template; no run has been recorded.** The layout follows
+**Status: boundaries and ground-truth rows written; no run has been recorded.** The layout follows
 [test 4's `comparison-data.md`](../prototype-runs-2026-09-01-test-4/comparison-data.md); #60 fills
 every section as cells complete. The cost section is fixed by #67 and #89 so that every run is
 recorded the same way and the arms are ranked on billed production-shaped cost.
 
 ## Comparison boundaries
 
-Written by #60 before the first cell: what is comparable across arms (same cohort, same packet,
-same model), and what is not.
+Written before the first cell.
+
+**Comparable across arms and seeds on one target:** the packet (byte-identical; SHA-256 recorded
+below), the mirror and clone construction, the model (`claude-sonnet-5` on every agent), the
+harness session shape (each run's orchestrator a background sub-agent, verifiers its children),
+the conditions list in the README, and the scoring rubric. Within a target, every run is one
+cohort and its billed figures rank against each other.
+
+**Comparable across targets:** dimension scores only, as counts per target; billed cost is not,
+because the targets differ in diff size, repository size, and language.
+
+**Not comparable:** anything against tests 1–4. Those cohorts ran earlier skill versions
+(`v5a-1`, `v2a-1`), one seed, and, before test 4, un-truncated mirrors or inherited models. The
+holdout grid is the first data on `v5b-1`.
+
+**Arm-specific caveats.** `v5b-noverify` withholds every candidate that needed mandatory
+verification, so its recall is the primary's recall before verification and its status is always
+`Incomplete` or `Changes Requested`; compare its ledger, not only its payload, to `v5b`'s. The
+Panel arm's row label records whether it ran as `v2a` (with merged fixes) or `v2b` (after #59).
+`v5b-effort-medium` differs from `v5b` in the primary's effort and nothing else, on targets (b)
+and (c) only. Target (f) is the only publishing target; its runs are one seed at a time and have
+network access to the fork.
+
+| Target | Packet SHA-256 | Snapshot commits (`v5b` / Panel) |
+| --- | --- | --- |
+| (a) | _pending_ | _pending_ |
+| (b) | _pending_ | _pending_ |
+| (c) | _pending_ | _pending_ |
+| (d) | _pending_ | _pending_ |
+| (e) | _pending_ | _pending_ |
+| (f) first / re-review | _pending_ | _pending_ |
 
 ## Run continuity
 
@@ -71,8 +100,57 @@ Per run: status, finding count by priority, questions, observations, verifier di
 
 ## Ground-truth matrix
 
-Per target: one row per ground-truth item, one column per run. Written by #60 after each target's
-ground truth is committed and before any of its cells run.
+Items are defined per target in [`README.md`](README.md#targets). Cells take `found`, `raised`,
+`acquitted`, or `not raised` per the scoring rule; one column per run, filled after each cell
+completes. Target (b)'s matrix has no recall rows; its false-finding and false-acquittal counts
+are in the next section.
+
+### (a) `hyperium/hyper#3952`
+
+| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-a1** — flush readiness taken as write readiness; hot loop on unbuffered writers | | | | | | | | | |
+| **GT-a1 fix** (dimension 4: `invariant` / `branch` / `none`) | | | | | | | | | |
+
+### (c) `python/typeshed#9458`
+
+| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 | effort s1 | effort s2 | effort s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-c1** — `__init__.pyi` missing `CredentialProvider`, `UsernamePasswordCredentialProvider` | | | | | | | | | | | | |
+| T-c2 — `default_backoff` missing from both `__init__.pyi` | | | | | | | | | | | | |
+| T-c3 — `MaxConnectionsError` missing from `exceptions.pyi` | | | | | | | | | | | | |
+
+### (d) `astral-sh/uv#4424`
+
+| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-d1** — `prefer-*` value naming, deferred in review, reshaped by #4602 | | | | | | | | | |
+| T-d2 — `EnvironmentPreference::Any → OnlySystem` undescribed | | | | | | | | | |
+
+### (e) `pola-rs/polars#24771`
+
+| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-e1** — question published on the benchmark claim | | | | | | | | | |
+| T-e1 — unchecked integer accumulation | | | | | | | | | |
+
+### (f) `spf13/cobra#1938` — first review at `R1`
+
+| | v5b s1 | v5b s2 | v5b s3 | Panel s1 | Panel s2 | Panel s3 | noverify s1 | noverify s2 | noverify s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-f1** — test unsets env vars at `defer` time | | | | | | | | | |
+| **GT-f2** — exported `GetEnvConfig` with unexported suffixes | | | | | | | | | |
+| GT-f3 — `off` sentinel vs `ACTIVE_HELP=0` convention | | | | | | | | | |
+
+### (f) re-review at `R2`
+
+One row per prior item the run published, with the adjudicated classification from the README
+and the classification the run gave; plus the stale-head probe's outcome (`no write` /
+`wrote`).
+
+| Run | Prior item | Adjudicated | Run's classification | Reply posted on thread | Delta named `97b7001..1107319` | Stale probe |
+| --- | --- | --- | --- | --- | --- | --- |
+| _(f) v5b seed 1_ | | | | | | |
 
 ## False findings and false acquittals
 
