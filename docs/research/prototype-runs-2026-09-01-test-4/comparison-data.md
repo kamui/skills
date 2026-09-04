@@ -218,30 +218,30 @@ that agent; the per-request figures are 3.45M and $2.00. The `Turns` column coun
 the same transcript. Every agent reports `claude-sonnet-5` on every request, which is the model
 verification above done again from the same lines.
 
-| Agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Cost ($) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| v2 orchestrator, attempt 1 (Find) | claude-sonnet-5 | 30 | 45 | 3 | 60 | 183,300 | 1,999,010 | 32,206 | 16,896 | 0:16:22 | 1.18 |
-| v2 Code finder | claude-sonnet-5 | 39 | 48 | 2 | 78 | 104,245 | 2,191,765 | 48,653 | 29,878 | 0:10:54 | 1.19 |
-| v2 Requirements finder | claude-sonnet-5 | 13 | 17 | 2 | 26 | 96,662 | 373,613 | 31,775 | 20,437 | 0:10:24 | 0.63 |
-| v2 orchestrator, attempt 2 (Verify + Publish) | claude-sonnet-5 | 16 | 25 | 1 | 32 | 226,978 | 970,867 | 61,198 | 16,690 | 0:14:47 | 1.37 |
-| v2 verifier | claude-sonnet-5 | 25 | 24 | 1 | 50 | 36,998 | 638,932 | 17,116 | 9,998 | 0:03:40 | 0.39 |
-| **v2 run** | claude-sonnet-5 | 123 | 159 | 9 | 246 | 648,183 | 6,174,187 | 190,948 | 93,899 | 0:56:08 | 4.77 |
-| v2a orchestrator, attempt 1 (Find) | claude-sonnet-5 | 23 | 42 | 1 | 46 | 97,737 | 1,508,869 | 23,289 | 12,641 | 0:05:16 | 0.78 |
-| v2a Code finder | claude-sonnet-5 | 35 | 54 | 1 | 70 | 99,582 | 2,252,486 | 48,244 | 34,686 | 0:10:15 | 1.18 |
-| v2a Requirements finder | claude-sonnet-5 | 15 | 24 | 1 | 30 | 66,399 | 715,463 | 31,092 | 20,886 | 0:06:04 | 0.62 |
-| v2a orchestrator, attempt 2 (Verify + Publish) | claude-sonnet-5 | 18 | 28 | 1 | 36 | 156,508 | 1,397,495 | 84,111 | 26,696 | 0:14:59 | 1.51 |
-| v2a verifier | claude-sonnet-5 | 12 | 16 | 1 | 24 | 25,259 | 272,653 | 9,508 | 5,067 | 0:01:56 | 0.21 |
-| **v2a run** | claude-sonnet-5 | 103 | 164 | 5 | 206 | 445,485 | 6,146,966 | 196,244 | 99,976 | 0:38:31 | 4.31 |
-| v5 primary | claude-sonnet-5 | 33 | 50 | 1 | 66 | 144,912 | 2,429,084 | 78,374 | 37,564 | 0:18:27 | 1.63 |
-| v5 verifier | claude-sonnet-5 | 11 | 19 | 1 | 22 | 27,028 | 245,826 | 7,497 | 3,799 | 0:01:57 | 0.19 |
-| **v5 run** | claude-sonnet-5 | 44 | 69 | 2 | 88 | 171,940 | 2,674,910 | 85,871 | 41,363 | 0:20:24 | 1.82 |
-| v5a primary | claude-sonnet-5 | 41 | 61 | 1 | 82 | 163,871 | 3,448,613 | 89,900 | 48,085 | 0:19:35 | 2.00 |
-| v5a verifier | claude-sonnet-5 | 24 | 23 | 1 | 48 | 32,177 | 638,957 | 11,659 | 6,938 | 0:02:44 | 0.32 |
-| **v5a run** | claude-sonnet-5 | 65 | 84 | 2 | 130 | 196,048 | 4,087,570 | 101,559 | 55,023 | 0:22:20 | 2.32 |
-| v5 primary, attempt 1 (discarded) | claude-sonnet-5 | 35 | 56 | 0 | 70 | 102,522 | 2,122,794 | 46,550 | 34,249 | 0:16:49 | 1.15 |
-| v5 verifier, attempt 1 (discarded) | claude-sonnet-5 | 20 | 34 | 1 | 40 | 41,022 | 546,243 | 10,373 | 6,328 | 0:03:03 | 0.32 |
-| v5a primary, attempt 1 (discarded) | claude-sonnet-5 | 50 | 61 | 0 | 100 | 132,884 | 4,373,517 | 56,493 | 42,365 | 0:12:03 | 1.77 |
-| v5a verifier, attempt 1 (discarded) | claude-sonnet-5 | 23 | 31 | 0 | 46 | 38,039 | 693,713 | 13,301 | 8,516 | 0:02:58 | 0.37 |
+| Run / agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Billed cost ($) | Report output (est.) | Production-shaped ($) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| v2 orchestrator, attempt 1 (Find) | claude-sonnet-5 | 30 | 45 | 3 | 60 | 183,300 | 1,999,010 | 32,206 | 16,896 | 0:16:22 | 1.18 | — | — |
+| v2 Code finder | claude-sonnet-5 | 39 | 48 | 2 | 78 | 104,245 | 2,191,765 | 48,653 | 29,878 | 0:10:54 | 1.19 | — | — |
+| v2 Requirements finder | claude-sonnet-5 | 13 | 17 | 2 | 26 | 96,662 | 373,613 | 31,775 | 20,437 | 0:10:24 | 0.63 | — | — |
+| v2 orchestrator, attempt 2 (Verify + Publish) | claude-sonnet-5 | 16 | 25 | 1 | 32 | 226,978 | 970,867 | 61,198 | 16,690 | 0:14:47 | 1.37 | — | — |
+| v2 verifier | claude-sonnet-5 | 25 | 24 | 1 | 50 | 36,998 | 638,932 | 17,116 | 9,998 | 0:03:40 | 0.39 | — | — |
+| **v2 run** | claude-sonnet-5 | 123 | 159 | 9 | 246 | 648,183 | 6,174,187 | 190,948 | 93,899 | 0:56:08 | 4.77 | — | — |
+| v2a orchestrator, attempt 1 (Find) | claude-sonnet-5 | 23 | 42 | 1 | 46 | 97,737 | 1,508,869 | 23,289 | 12,641 | 0:05:16 | 0.78 | — | — |
+| v2a Code finder | claude-sonnet-5 | 35 | 54 | 1 | 70 | 99,582 | 2,252,486 | 48,244 | 34,686 | 0:10:15 | 1.18 | — | — |
+| v2a Requirements finder | claude-sonnet-5 | 15 | 24 | 1 | 30 | 66,399 | 715,463 | 31,092 | 20,886 | 0:06:04 | 0.62 | — | — |
+| v2a orchestrator, attempt 2 (Verify + Publish) | claude-sonnet-5 | 18 | 28 | 1 | 36 | 156,508 | 1,397,495 | 84,111 | 26,696 | 0:14:59 | 1.51 | — | — |
+| v2a verifier | claude-sonnet-5 | 12 | 16 | 1 | 24 | 25,259 | 272,653 | 9,508 | 5,067 | 0:01:56 | 0.21 | — | — |
+| **v2a run** | claude-sonnet-5 | 103 | 164 | 5 | 206 | 445,485 | 6,146,966 | 196,244 | 99,976 | 0:38:31 | 4.31 | — | — |
+| v5 primary | claude-sonnet-5 | 33 | 50 | 1 | 66 | 144,912 | 2,429,084 | 78,374 | 37,564 | 0:18:27 | 1.63 | — | — |
+| v5 verifier | claude-sonnet-5 | 11 | 19 | 1 | 22 | 27,028 | 245,826 | 7,497 | 3,799 | 0:01:57 | 0.19 | — | — |
+| **v5 run** | claude-sonnet-5 | 44 | 69 | 2 | 88 | 171,940 | 2,674,910 | 85,871 | 41,363 | 0:20:24 | 1.82 | — | — |
+| v5a primary | claude-sonnet-5 | 41 | 61 | 1 | 82 | 163,871 | 3,448,613 | 89,900 | 48,085 | 0:19:35 | 2.00 | — | — |
+| v5a verifier | claude-sonnet-5 | 24 | 23 | 1 | 48 | 32,177 | 638,957 | 11,659 | 6,938 | 0:02:44 | 0.32 | — | — |
+| **v5a run** | claude-sonnet-5 | 65 | 84 | 2 | 130 | 196,048 | 4,087,570 | 101,559 | 55,023 | 0:22:20 | 2.32 | — | — |
+| v5 primary, attempt 1 (discarded) | claude-sonnet-5 | 35 | 56 | 0 | 70 | 102,522 | 2,122,794 | 46,550 | 34,249 | 0:16:49 | 1.15 | — | — |
+| v5 verifier, attempt 1 (discarded) | claude-sonnet-5 | 20 | 34 | 1 | 40 | 41,022 | 546,243 | 10,373 | 6,328 | 0:03:03 | 0.32 | — | — |
+| v5a primary, attempt 1 (discarded) | claude-sonnet-5 | 50 | 61 | 0 | 100 | 132,884 | 4,373,517 | 56,493 | 42,365 | 0:12:03 | 1.77 | — | — |
+| v5a verifier, attempt 1 (discarded) | claude-sonnet-5 | 23 | 31 | 0 | 46 | 38,039 | 693,713 | 13,301 | 8,516 | 0:02:58 | 0.37 | — | — |
 
 The **run** rows sum the agents that make up the run as recorded in [Run continuity](#run-continuity):
 for v2 and v2a the attempt-1 orchestrator (whose Find phase was reused), both finders, the attempt-2
