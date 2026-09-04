@@ -342,6 +342,63 @@ read on pull requests that touch generated files. Specified by
 [issue #56](https://github.com/kamui/skills/issues/56). The workflow identifier stays `v2a-1`
 until #59.
 
+### C13. Review-record deferrals reach the Requirements axis
+
+On test 4 the Requirements axis returned `Passed` — 7/7 restated requirements met, 0 questions — on
+an API that upstream deleted twenty-four days later. Playwright `#30111`, authored by the maintainer
+who approved the pull request, removed `BrowserContext.removeCookies`, deleted its test file, and
+folded the `name`/`domain`/`path` filters into `clearCookies()` as options; `removeCookies` never
+shipped ([test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) §
+"GT-2"; [test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md) §
+Requirements axis). The seed was in the review record the orchestrator held: `pavelfeldman` had
+written "`filter` would probably be a better name, but we can fix it during the pre-release api
+review." The ancestor v2 Requirements finder had at least asked whether domain/path filters exceeded
+the issue's "remove a specific cookie" ([test 4 v2
+run](../../docs/research/prototype-runs-2026-09-01-test-4/v2-run.md) § Requirements axis, candidate
+2); v2a asked nothing. Two gaps produced that. On a first review the orchestrator withholds prior
+review threads from the finders — prior findings and ledgers are appended only on a re-review — so
+the deferral never reached the axis. And `Passed` had no rule for a design decision the record
+itself says is still open: every requirement can be met by a method whose shape its own reviewers
+have agreed to revisit. The aggregate analysis names the mechanism — what counts as terminal
+evidence is the calibration lever nobody tuned, and approval is not closure on unreleased public API
+([aggregate analysis](../../docs/research/prototype-runs-aggregate-tests-1-4-v2a-v5a.md) § 7
+conclusion 11 and § 8 item 4).
+
+Four edits. Step 1 of `SKILL.md` resolves, beside the earlier review, every explicit deferral of a
+design, naming, or API-shape decision in the pull request's review comments — any participant, any
+round — verbatim with its author and the surface it concerns, and step 2 appends those to the
+Requirements finder's axis block. Nothing else from prior review reaches a finder on a first review.
+That restriction is deliberate: the finder needs a deferral only as evidence that a question is
+open, and the rest of the record would anchor it to the earlier reviewers' conclusions, which is the
+approval-as-closure gate test 4 showed failing. `requirements-axis.md` Step 2 gains a fourth bucket
+rule, **Deferred by the review record**: a deferred decision on unreleased public surface lands in
+the "cannot tell" bucket as a question naming the deferral, its author, and the decision, unless a
+repository rule settles it, in which case it is a `requirements/unrequested/` candidate citing the
+rule. It is never `Met`, it joins the restated list as its own entry and counts there as
+unverifiable, and an axis with an open deferral question is `Waiting for information`, not `Passed`.
+Step 3's creep list adds the duplicate-capability case: a new public surface expressible by
+composing existing methods is creep worth raising when guidance discourages it or the issue asked
+for a capability rather than a method — the `removeCookies`- beside-`clearCookies()` shape, which
+playwright's `CONTRIBUTING.md` "avoid adding sugar API" rule covers. `publishing.md` § Status says
+an unresolved deferral on the axis's subject keeps the Requirements axis at `Waiting for
+information`, and `SKILL.md` step 3's outcome derivation carries the same exception.
+
+The rule needs an explicit postponement in a review comment. A suggestion the author declined, or a
+preference a reviewer stated once and dropped, is not a deferral, and a naming nit does not become
+one by being about a name.
+
+Checked on paper against test 4's pinned head (`cb02d5ba`, test 4 README): step 1 extracts the
+`pavelfeldman` sentence with `removeCookies(filter)` as its surface; the Requirements finder
+receives it after the issue text; `removeCookies` is absent from every released version, so the
+deferred naming and API-shape decision lands in the "cannot tell" bucket as a question naming
+`pavelfeldman`, the deferral, and the decision — whether the filter parameter, and a second
+cookie-removal method beside `clearCookies()`, keep their shape before release. The restated list
+grows to eight entries, the counts read `met=7 not-met=0 unverifiable=1`, the axis is `Waiting for
+information` rather than `Passed`, and the question publishes without passing through the verifier.
+Expected cost is ≈0: the extraction is a few hundred tokens, and an open deferral yields one
+question in place of `Passed`. Specified by [issue #57](https://github.com/kamui/skills/issues/57).
+The workflow identifier stays `v2a-1` until #59.
+
 ### C14. Orchestration is script-driven
 
 The Panel runs made the orchestrator 30–45% of total token use even though it made no review
