@@ -66,7 +66,7 @@ Before admitting a candidate, actively try to disprove it:
 2. Check whether unchanged surrounding code prevents the failure.
 3. Check relevant callers, tests, types, configuration, and CI evidence.
 4. For a Code candidate, confirm that the change introduced the behavior. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation.
-5. Confirm that the issue or pull-request description does not make it intentional.
+5. Confirm under gate 6 that the issue, pull-request description, rules, and review record do not make it intentional.
 6. Verify any rule or requirement citation and its scope.
 7. Search current review threads and CI output for the same issue.
 8. Confirm a valid, minimal changed-line or file anchor.
