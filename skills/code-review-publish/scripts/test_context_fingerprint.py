@@ -42,6 +42,7 @@ def run(payload: Any, *, dumps: Any = None) -> subprocess.CompletedProcess[str]:
         input=text,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
 
