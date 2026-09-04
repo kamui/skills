@@ -1,6 +1,6 @@
 # Comparison data — holdout evaluation
 
-**Status: boundaries and ground-truth rows written; no run has been recorded.** The layout follows
+**Status: the reduced grid's runs are recorded (see `evaluation.md` for what was cut).** The layout follows
 [test 4's `comparison-data.md`](../prototype-runs-2026-09-01-test-4/comparison-data.md); #60 fills
 every section as cells complete. The cost section is fixed by #67 and #89 so that every run is
 recorded the same way and the arms are ranked on billed production-shaped cost.
@@ -41,8 +41,17 @@ network access to the fork.
 
 ## Run continuity
 
-One row per run that was interrupted and re-run. Under #60's rules an interrupted run is discarded
-and its cell re-run clean; record the discard here.
+One row per discarded or stopped run. Under #60's rules an interrupted run is discarded and its cell
+re-run clean; a discarded seed number is retired.
+
+| Run | Why | Billed | Where |
+| --- | --- | --- | --- |
+| (b) v5b-effort-medium seed 1 | discarded: verifier batch (a472781e1d951ee69) ran at effort `medium` (inherited from the primary), README rule "verified effort differs from passed"; root a9b5e1373c8572231 delegated the review to abb0bc7c39caba7f3 | $2.43 billed (wrapper $0.08) | reports/b/discarded/ |
+| (c) v5b-effort-medium seed 1 | discarded: verifier batch (a07ff12905fc98f0d) ran at effort `medium`; root a424123345d73ce6e delegated the review to aa52c42a418dab3ee | $3.64 billed | reports/c/discarded/ |
+| (b) v5b-effort-medium seed 2 (first dispatch, ad7fc47c349cfe251) | stopped by the orchestrator after ~2 min, dispatched with the pre-fix note; seed number kept (no review output produced) | see discarded-agent row | — |
+
+No session-limit event occurred during the grid. Discarded-agent rows for the two seed-1 effort cells
+are the rows above; the stopped `ad7fc47c349cfe251` dispatch produced no review output.
 
 ## Cost
 
@@ -56,7 +65,31 @@ research report's estimated output cost and is the field used for ranking.
 
 | Run / agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Billed cost ($) | Report output (est.) | Production-shaped ($) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| _(target a) v5b seed 1_ | | | | | | | | | | | | | |
+| (a) v5b seed 1 | claude-sonnet-5 | 81 | 92 | 2 | 162 | 417,660 | 8,227,700 | 132,311 | 79,482 | 0:31:34 | 4.01 | 16,946 | **3.84** |
+| (a) v5b seed 2 | claude-sonnet-5 | 84 | 89 | 2 | 168 | 467,346 | 8,630,250 | 153,327 | 101,070 | 0:34:17 | 4.43 | 16,666 | **4.26** |
+| (a) v5b seed 3 | claude-sonnet-5 | 71 | 80 | 2 | 142 | 490,662 | 7,393,985 | 187,514 | 144,399 | 0:52:06 | 4.58 | 13,503 | **4.45** |
+| (a) v5b-noverify seed 1 | claude-sonnet-5 | 68 | 70 | 1 | 136 | 159,810 | 6,299,290 | 83,959 | 53,916 | 0:17:44 | 2.50 | 8,775 | **2.41** |
+| (b) v5b seed 1 | claude-sonnet-5 | 76 | 82 | 2 | 152 | 356,321 | 6,648,796 | 110,333 | 60,026 | 0:30:39 | 3.32 | 15,106 | **3.17** |
+| (b) v5b seed 2 | claude-sonnet-5 | 66 | 73 | 2 | 132 | 330,274 | 6,058,532 | 99,844 | 55,324 | 0:25:17 | 3.04 | 14,026 | **2.90** |
+| (b) v5b seed 3 | claude-sonnet-5 | 59 | 64 | 2 | 118 | 206,100 | 4,550,490 | 87,239 | 53,038 | 0:22:01 | 2.30 | 10,937 | **2.19** |
+| (b) v5b-noverify seed 1 | claude-sonnet-5 | 54 | 59 | 1 | 108 | 133,274 | 4,422,116 | 50,067 | 27,400 | 0:11:15 | 1.72 | 7,245 | **1.65** |
+| (b) v5b-effort-medium seed 2 | claude-sonnet-5 | 69 | 69 | 2 | 138 | 261,842 | 4,508,235 | 70,552 | 29,908 | 0:21:57 | 2.26 | 12,366 | **2.14** |
+| (b) v5b-effort-medium seed 3 | claude-sonnet-5 | 50 | 49 | 2 | 100 | 157,556 | 2,790,240 | 58,607 | 23,178 | 0:15:54 | 1.54 | 9,652 | **1.44** |
+| (b) v5b-effort-medium seed 4 | claude-sonnet-5 | 47 | 46 | 2 | 94 | 244,367 | 2,816,796 | 75,105 | 39,195 | 0:21:59 | 1.93 | 12,735 | **1.80** |
+| (c) v5b seed 1 | claude-sonnet-5 | 91 | 99 | 2 | 182 | 238,191 | 10,753,479 | 79,345 | 29,742 | 0:18:19 | 3.54 | 11,733 | **3.42** |
+| (c) v5b seed 2 | claude-sonnet-5 | 97 | 100 | 2 | 194 | 456,230 | 11,475,554 | 98,083 | 47,841 | 0:26:41 | 4.42 | 16,819 | **4.25** |
+| (c) v5b seed 3 | claude-sonnet-5 | 105 | 117 | 2 | 210 | 291,938 | 14,501,101 | 114,392 | 58,619 | 0:25:35 | 4.77 | 14,818 | **4.63** |
+| (c) v5b-noverify seed 1 | claude-sonnet-5 | 101 | 100 | 1 | 202 | 268,758 | 15,377,076 | 93,855 | 61,120 | 0:20:47 | 4.69 | 8,740 | **4.60** |
+| (c) v5b-effort-medium seed 2 | claude-sonnet-5 | 79 | 88 | 2 | 158 | 178,343 | 6,920,091 | 57,550 | 15,236 | 0:13:28 | 2.41 | 9,731 | **2.31** |
+| (c) v5b-effort-medium seed 3 | claude-sonnet-5 | 135 | 133 | 2 | 270 | 430,648 | 14,492,029 | 107,087 | 48,159 | 0:29:38 | 5.05 | 12,242 | **4.92** |
+| (c) v5b-effort-medium seed 4 | claude-sonnet-5 | 81 | 79 | 2 | 162 | 207,922 | 7,599,611 | 57,712 | 17,736 | 0:17:04 | 2.62 | 11,103 | **2.51** |
+| (d) v5b seed 1 | claude-sonnet-5 | 93 | 96 | 1 | 186 | 223,107 | 12,880,895 | 83,882 | 55,654 | 0:18:08 | 3.97 | 8,639 | **3.89** |
+| (d) v5b seed 2 | claude-sonnet-5 | 74 | 79 | 1 | 148 | 191,191 | 8,982,539 | 51,552 | 30,532 | 0:12:03 | 2.79 | 6,692 | **2.72** |
+| (d) v5b seed 3 | claude-sonnet-5 | 75 | 80 | 1 | 150 | 227,473 | 9,823,595 | 60,070 | 48,481 | 0:15:45 | 3.13 | 8,760 | **3.05** |
+| (d) v5b-noverify seed 1 | claude-sonnet-5 | 68 | 72 | 1 | 136 | 210,551 | 9,077,616 | 65,210 | 40,720 | 0:13:51 | 2.99 | 7,975 | **2.91** |
+| (e) v5b seed 1 | claude-sonnet-5 | 92 | 93 | 2 | 184 | 249,684 | 9,726,463 | 112,083 | 63,956 | 0:25:09 | 3.69 | 12,458 | **3.57** |
+| (e) v5b seed 2 | claude-sonnet-5 | 98 | 101 | 2 | 196 | 288,320 | 11,839,337 | 120,949 | 67,205 | 0:29:37 | 4.30 | 17,830 | **4.12** |
+| (e) v5b seed 3 | claude-sonnet-5 | 112 | 110 | 2 | 224 | 464,205 | 12,032,208 | 126,727 | 67,274 | 0:34:27 | 4.83 | 16,207 | **4.67** |
 
 Group rows by target, arms in the order v5b, v2a, v5b-without-verifier, then `v5b-effort-medium`
 on targets (b) and (c) only (see [`README.md`](README.md#lower-effort-primary-arm)), then the Fable
@@ -67,11 +100,27 @@ tier-split runs.
 Arms are ranked on the median **production-shaped billed cost** across their runs, not on raw billed
 cost or the legacy harness context-size figure.
 
-| Rank | Arm | Runs | Median production-shaped billed cost | Median billed cost | Median research-report cost share |
-| --- | --- | --- | --- | --- | --- |
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
+| Arm | Runs | Median production-shaped ($) | Median billed ($) | Median report share | Median thinking | Median turns |
+| --- | --- | --- | --- | --- | --- | --- |
+| v5b | 15 | 3.84 | 3.97 | 3.4% | 58,619 | 84 |
+| v5b-noverify | 4 | 2.66 | 2.75 | 3.1% | 47,318.0 | 68.0 |
+| v5b-effort-medium | 6 | 2.23 | 2.33 | 4.8% | 26,543.0 | 74.0 |
+
+### Per target
+
+| Target | Arm | Runs | Median production-shaped ($) | Median billed ($) | Median thinking | Median output | Median turns | Median tool calls |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| (a) | v5b | 3 | 4.26 | 4.43 | 101,070 | 153,327 | 81 | 89 |
+| (a) | v5b-noverify | 1 | 2.41 | 2.50 | 53,916 | 83,959 | 68 | 70 |
+| (b) | v5b | 3 | 2.90 | 3.04 | 55,324 | 99,844 | 66 | 73 |
+| (b) | v5b-noverify | 1 | 1.65 | 1.72 | 27,400 | 50,067 | 54 | 59 |
+| (b) | v5b-effort-medium | 3 | 1.80 | 1.93 | 29,908 | 70,552 | 50 | 49 |
+| (c) | v5b | 3 | 4.25 | 4.42 | 47,841 | 98,083 | 97 | 100 |
+| (c) | v5b-noverify | 1 | 4.60 | 4.69 | 61,120 | 93,855 | 101 | 100 |
+| (c) | v5b-effort-medium | 3 | 2.51 | 2.62 | 17,736 | 57,712 | 81 | 88 |
+| (d) | v5b | 3 | 3.05 | 3.13 | 48,481 | 60,070 | 75 | 80 |
+| (d) | v5b-noverify | 1 | 2.91 | 2.99 | 40,720 | 65,210 | 68 | 72 |
+| (e) | v5b | 3 | 4.12 | 4.30 | 67,205 | 120,949 | 98 | 101 |
 
 Report the research-report cost share (estimated report output cost over billed cost) per arm as
 well: it is the correction factor the aggregate analysis's §7 conclusion 8 waits on, and it is
@@ -162,8 +211,9 @@ Per run against the adjudicated band written before the runs. Written by #60.
 
 ## Model verification
 
-`message.model` from every transcript belonging to this evaluation, per run. Written by #60 before
-scoring.
+`message.model` from every transcript belonging to this evaluation, read from every assistant line by
+`finish_cell.py` at close-out and recorded in each run document's preamble. 43 transcripts across 25 runs; every assistant line reports `claude-sonnet-5`. The discarded seed-1 effort cells and the effort probes are listed under Run continuity and
+Effort verification.
 
 ## Effort verification
 
@@ -181,9 +231,35 @@ primary's turns and tool calls.
 
 | Run | Sub-agent | Effort passed | Effort verified | Turns | Tool calls | Thinking | Wall clock |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| _pre-grid probe (transcript path)_ | `v5b-primary-effort-medium` | `medium` | | | | | |
-| _(target b) v5b-effort-medium seed 1_ | primary | `medium` | | | | | |
-| _(target b) v5b-effort-medium seed 1_ | verifier batch 1 | default | | | | | |
+| pre-grid probe (definition alone) | agent-a831e533fc1365206.jsonl | `v5b-primary-effort-medium` | passed `medium` | verified `medium`, `claude-sonnet-5` |
+| default-effort reference (plain sonnet dispatch, target-(b) hunt) | agent-adfbfabe6c519acea.jsonl | none | default | verified `high` on 378 lines, `claude-sonnet-5` |
+| nested probe, primary | agent-a22696902ac02da05.jsonl | `v5b-primary-effort-medium` | `medium` | verified `medium` |
+| nested probe, verifier through `v5b-verifier-effort-high` | agent-a3a1cb298e2222f03.jsonl | `v5b-verifier-effort-high` | `high` | verified `high`, `claude-sonnet-5` |
+| first nested probe (definition not yet loaded) | agent-a4abbb7c4e6e230f7.jsonl | — | — | `Agent type 'v5b-verifier-effort-high' not found`; setup failure, not evidence |
+| (b) v5b-effort-medium seed 2 | primary `ac9a0fec564b65899` | `medium` | `medium` | 47 | 46 | 15,171 | 0:16:03 |
+| (b) v5b-effort-medium seed 2 | child `a44acc1c456ea0466` | `high` (definition) | `high` | 22 | 23 | 14,737 | 0:05:54 |
+| (b) v5b-effort-medium seed 3 | primary `a69f1c909185a5678` | `medium` | `medium` | 32 | 32 | 18,456 | 0:13:02 |
+| (b) v5b-effort-medium seed 3 | child `a4023da2f4c91a65d` | `high` (definition) | `high` | 18 | 17 | 4,722 | 0:02:52 |
+| (b) v5b-effort-medium seed 4 | primary `a197db3d8e16201b3` | `medium` | `medium` | 38 | 37 | 17,206 | 0:16:14 |
+| (b) v5b-effort-medium seed 4 | child `aa226a9fc5f73210a` | `high` (definition) | `high` | 9 | 9 | 21,989 | 0:05:45 |
+| (b) v5b seed 1 | primary `a5230ed13aca04d71` | default | `high` | 50 | 57 | 38,114 | 0:24:15 |
+| (b) v5b seed 1 | child `a86c8b7a1169ca54b` | default | `high` | 26 | 25 | 21,912 | 0:06:24 |
+| (b) v5b seed 2 | primary `a50c530936f2b2486` | default | `high` | 56 | 64 | 41,658 | 0:20:40 |
+| (b) v5b seed 2 | child `a70b009a771ea9a2c` | default | `high` | 10 | 9 | 13,666 | 0:04:37 |
+| (b) v5b seed 3 | primary `aa3c58f385021b794` | default | `high` | 47 | 46 | 46,828 | 0:18:39 |
+| (b) v5b seed 3 | child `a142b7cab98bb9b34` | default | `high` | 12 | 18 | 6,210 | 0:03:23 |
+| (c) v5b-effort-medium seed 2 | primary `a54cc9962f441e686` | `medium` | `medium` | 71 | 75 | 13,874 | 0:12:18 |
+| (c) v5b-effort-medium seed 2 | child `aafc129b2c74d2738` | `high` (definition) | `high` | 8 | 13 | 1,362 | 0:01:10 |
+| (c) v5b-effort-medium seed 3 | primary `a3048b835a5c910d4` | `medium` | `medium` | 104 | 103 | 41,356 | 0:25:11 |
+| (c) v5b-effort-medium seed 3 | child `af982b29c19a33d66` | `high` (definition) | `high` | 31 | 30 | 6,803 | 0:04:27 |
+| (c) v5b-effort-medium seed 4 | primary `a4cbce050dde55fb7` | `medium` | `medium` | 74 | 73 | 15,914 | 0:15:42 |
+| (c) v5b-effort-medium seed 4 | child `aee5c2423bc7b796f` | `high` (definition) | `high` | 7 | 6 | 1,822 | 0:01:23 |
+| (c) v5b seed 1 | primary `a95659cf3780c6630` | default | `high` | 83 | 87 | 28,397 | 0:17:00 |
+| (c) v5b seed 1 | child `aef1d09930a80d732` | default | `high` | 8 | 12 | 1,345 | 0:01:19 |
+| (c) v5b seed 2 | primary `ae667a557f210796a` | default | `high` | 80 | 84 | 37,549 | 0:22:22 |
+| (c) v5b seed 2 | child `a876f18ae79e06179` | default | `high` | 17 | 16 | 10,292 | 0:04:19 |
+| (c) v5b seed 3 | primary `a7b9b18bb6a21757a` | default | `high` | 94 | 99 | 54,587 | 0:23:31 |
+| (c) v5b seed 3 | child `af856f2a044aded9d` | default | `high` | 11 | 18 | 4,032 | 0:02:05 |
 
 The `v5b` rows on targets (b) and (c) are the arm's controls; fill their turns, tool calls,
 thinking, and wall here too, so the comparison reads off one table.
