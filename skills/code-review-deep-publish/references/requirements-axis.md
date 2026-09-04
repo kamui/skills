@@ -6,7 +6,7 @@ You return **candidates**, not published findings. A separate verifier re-checks
 
 ## Read first
 
-The diff, commit list, changed-file manifest, and base-branch guidance arrive in the prompt; do not re-fetch them. Read beyond them freely when enclosing functions, callers, or additional repository context bear on a claim.
+The diff, commit list, changed-file manifest, and base-branch guidance arrive in the prompt; do not re-fetch them. The suite results, when any, arrive in the prompt; do not re-run them. Read beyond them freely when enclosing functions, callers, or additional repository context bear on a claim.
 
 Read the issue supplied in the prompt as the spec. Read its comments too — a requirement negotiated in a comment thread is still a requirement, and a requirement withdrawn in one is no longer binding.
 
