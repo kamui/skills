@@ -63,6 +63,13 @@ One row per run, pasted verbatim from
 `--header` output. **Billed cost** prices every API request. **Production-shaped** subtracts the
 research report's estimated output cost and is the field used for ranking.
 
+**Timing correction — 2026-09-05 (#130).** The historical `Wall` values below are **agent span
+sums**: each transcript's last minus first assistant timestamp, added across the root and its
+children. Parent waits overlap child spans, so these totals are not end-to-end elapsed time.
+Original rows and billed arithmetic are retained. Exact elapsed-to-payload and
+elapsed-to-completion events were not recorded and remain unavailable; new runs use the
+[timing sidecar](README.md#metering-per-run).
+
 | Run / agent | Model | Turns | Tool calls | Text-only turns | Input | Cache write | Cache read | Output | Thinking | Wall | Billed cost ($) | Report output (est.) | Production-shaped ($) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | (a) v5b seed 1 | claude-sonnet-5 | 81 | 92 | 2 | 162 | 417,660 | 8,227,700 | 132,311 | 79,482 | 0:31:34 | 4.01 | 16,946 | **3.84** |
@@ -273,11 +280,11 @@ primary's turns and tool calls.
 | (c) v5b seed 3 | child `af856f2a044aded9d` | default | `high` | 11 | 18 | 4,032 | 0:02:05 |
 
 The `v5b` rows on targets (b) and (c) are the arm's controls, filled here so the comparison reads
-off one table. Each run's elapsed time is its primary's wall: in all twelve runs the verifier's
-span (first to last assistant timestamp) lies inside the primary's, because the primary dispatched
-it in the foreground and waited, so the summed `wall` in the billed-usage table over-counts by the
-verifier's span. `evaluation.md` reports the per-target medians of these columns and of elapsed
-time against the controls.
+off one table. **Timing correction — 2026-09-05 (#130):** the primary's first-to-last assistant
+span is a labelled proxy, previously called elapsed time. In all twelve runs the verifier's span
+lies inside the primary's; the billed-usage `Wall` therefore includes that wait twice. Neither
+span supplies the missing dispatch, validation, or completion events. `evaluation.md` retains
+the original per-target numbers with the elapsed rows labelled as historical proxies.
 
 ## Sandbox and hygiene disclosures
 

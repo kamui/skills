@@ -64,7 +64,7 @@ passed at the pinned commit. That is CI's job once this repository has CI. Meter
 with `cost_split.py`, including its `--self-test`, is the researcher's work outside the run and is
 unaffected.
 
-### Two files per run
+### Run artifacts
 
 Every run writes two files and keeps them apart:
 
@@ -80,13 +80,46 @@ The report links to the payload file instead of reproducing it. A report that mu
 says so in its metadata, because the arithmetic below then counts the payload twice (once as payload,
 once inside the report) and overstates the report by the payload's size.
 
+The orchestrator also maintains `<target>/<arm>-seed<n>-timing.json` as described below.
+
 ### Metering per run
+
+**Timing events (added 2026-09-05, #130).** The orchestrator writes one JSON sidecar per run
+as events happen. Use a timezone-aware clock (for example Python's
+`datetime.now(timezone.utc).isoformat()`), with the same clock source for all three events:
+
+1. Immediately before dispatching the root, create the sidecar with `completion_mode` and
+   `root_dispatched_at`; leave the other events null.
+2. When the final review payload passes validation, write `payload_validated_at`. If the payload
+   changes and is validated again, replace this event with that final successful validation time.
+3. After final publication succeeds, write `completed_at`. For production without publication,
+   use mode `result` and record delivery of the final result. This holdout uses `render-only`:
+   record the final rendered result's return, including the required research report, without a
+   publication event. Payload latency remains separately available.
+
+Example of a completed render-only sidecar (timestamps are illustrative):
+
+```json
+{
+  "completion_mode": "render-only",
+  "root_dispatched_at": "2026-09-05T12:00:00Z",
+  "payload_validated_at": "2026-09-05T12:01:40Z",
+  "completed_at": "2026-09-05T12:02:00Z"
+}
+```
+
+These are the complete schema's keys; modes are `publication`, `result`, and `render-only`.
+Missing events may be omitted or null; keep them unavailable when recording failed or a run
+stopped. Use observed events, never timestamps guessed afterwards from narrative. For a re-review,
+start a separate sidecar for that invocation. Pass `--timing <timing.json>` to the metering command;
+exit `2` names unreadable input, invalid timestamps or ordering on stderr. Correct the input from
+recorded evidence before pasting output; otherwise leave the event unavailable.
 
 Each run document's Metadata section records:
 
 1. **Billed usage from transcripts.** After the run, locate every transcript the run produced
    (the run's own sub-agent transcript plus one per sub-agent it spawned) and run
-   `python3 docs/research/tools/transcript_usage.py <paths> --prices 2,10 --report <run.md>`.
+   `python3 docs/research/tools/transcript_usage.py <paths> --prices 2,10 --report <run.md> --timing <timing.json>`.
    Paste its block into the run document. Read `message.model` from the same lines for the model
    verification #60 requires. Record the transcript paths. Keep the harness's `subagent_tokens`
    beside it as `legacy`, for continuity with the corpus; rank on the billed figure. Where the
@@ -102,10 +135,16 @@ Each run document's Metadata section records:
    the script prints. Only the report is subtracted. Instruction load, repository reads, and
    private records are costs a production run pays too (the ledger is required by the skill), so
    they stay in.
+5. **Run timing:** paste the `RUN TIMING` block and link its sidecar. Report elapsed-to-payload
+   and elapsed-to-completion seconds alongside the completion mode. The `TOTAL` block's **agent
+   span sum** adds every transcript's first-to-last assistant span, including overlapping waits;
+   it is not elapsed completion. Missing events print `unavailable` (JSON `null`).
 
-Items 1 and 4 come from `transcript_usage.py --report`. Re-run that command with
+Items 1, 4, and 5 come from the command above. Re-run that command with
 `--row "<arm> seed <n>"` and paste the line into the billed-usage table in
 [`comparison-data.md`](comparison-data.md), whose header is `transcript_usage.py --header` output.
+Its legacy `Wall` column remains the agent span sum. Save `--json` output beside the sidecar for
+elapsed comparisons; the legacy row deliberately carries no new timing columns.
 
 Compute items 2–3, and the same split of the legacy context-size figure, with the sibling script so
 every run document keeps the corpus's companion data in the same form:
@@ -211,9 +250,9 @@ the verifier is the mechanism the corpus shows is most reasoning-sensitive.
 2. Turn count and tool-call count, the primary's own and each verifier's, from the same script's
    `Turns` and `Tool calls` columns (requests and distinct `tool_use` ids, as the test-4 billed
    table defines them), not from the `Agent` result's usage block or self-report.
-3. Wall clock: each sub-agent's `Wall` from the same script, and the run's elapsed time from
-   dispatch to the final report, recorded separately because the sub-agents' walls sum to more
-   than the elapsed time when batches overlap.
+3. Timing: each sub-agent's assistant timestamp span, the agent span sum, and the explicit
+   elapsed-to-payload and elapsed-to-completion seconds with completion mode from the
+   [timing sidecar](#metering-per-run). Compare elapsed values only with the same completion mode.
 4. The effort **as passed** (the definition's `effort` field, or "none; default" for the verifiers)
    and **as verified from the transcript**: every assistant line of a sub-agent transcript carries a
    top-level `effort` beside `message.model`, so the model check #60 already requires reads both
@@ -266,11 +305,13 @@ No default changes on this arm's evidence: the restatement authorises
 verifier batch pinned at `high`), which gates any default change on three seeds of the arm on
 target (a). The cost effect is on record in
 [`evaluation.md`, The lower-effort arm](evaluation.md#the-lower-effort-arm-68): per-target medians
-of roughly −40% billed dollars, −46% to −63% thinking tokens, and −22% to −30% elapsed time against
-the `v5b` cells. One deviation from item 3 above: the run's elapsed time was not written into the
-preambles as a separate figure; it was taken at close-out from the transcripts' timestamps, and
-because every verifier batch ran nested in the foreground it equals the primary's wall in all
-twelve runs compared.
+of roughly −40% billed dollars, −46% to −63% thinking tokens, and −22% to −30% primary assistant
+timestamp spans against the `v5b` cells. **Timing correction, 2026-09-05 (#130):** those last
+figures were originally called elapsed time but were reconstructed at close-out from transcript
+timestamps. They are labelled proxies, not dispatch-to-payload or dispatch-to-completion
+measurements. Nested verifier spans explain why their sum over-counts waits; they do not establish
+the missing root boundaries. The original numbers remain historical data in the comparison and
+evaluation; exact elapsed metrics are unavailable for these runs.
 
 ## Targets
 
