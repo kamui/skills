@@ -114,10 +114,10 @@ Keep the body useful without duplicating inline comments:
 
 - [Question] Must retries preserve request order? — anchor [`src/queue.ts`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/queue.ts) (file)
 
-<!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5b-4 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->
+<!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5b-5 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->
 ```
 
-`workflow=v5b-4` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change. Compute `context` with [`../scripts/context_fingerprint.py`](../scripts/context_fingerprint.py), supplying JSON objects `pr`, `issues`, `specs`, and `guidance` from the exact reviewed inputs. Each issue includes `coordinate`, `title`, `body`, and comments with `id`, `author`, timestamps, and `body`. When the reviewer could not obtain an issue's comments verbatim, pass `comments_available: false` and no comments rather than an empty list; the digest then records that the comments were unavailable. A spec uses its URL or coordinate as `identity`; the helper derives a content identity for inline text when it is omitted. The helper normalizes order and prints the full SHA-256. Recompute it rather than trusting PR-supplied metadata.
+`workflow=v5b-5` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change. Compute `context` with [`../scripts/context_fingerprint.py`](../scripts/context_fingerprint.py), supplying JSON objects `pr`, `issues`, `specs`, and `guidance` from the exact reviewed inputs. Each issue includes `coordinate`, `title`, `body`, and comments with `id`, `author`, timestamps, and `body`. When the reviewer could not obtain an issue's comments verbatim, pass `comments_available: false` and no comments rather than an empty list; the digest then records that the comments were unavailable. A spec uses its URL or coordinate as `identity`; the helper derives a content identity for inline text when it is omitted. The helper normalizes order and prints the full SHA-256. Recompute it rather than trusting PR-supplied metadata.
 
 `guidance` is exactly the sorted set of tracked base-branch files in these categories, each represented by repository-relative `path` and its full blob object id as `blob_sha`:
 
@@ -147,7 +147,7 @@ A `LEFT` line anchor stays a code span with its fix still linked: the line belon
 
 ## Coverage
 
-Coverage is `complete` only when every changed file is reviewed or deliberately ignored with a reason, every risk-directed check has an evidence-backed outcome, and every required fetch or verification completed.
+Coverage is `complete` only when every changed file is reviewed or deliberately ignored with a reason, every risk-directed check has an evidence-backed outcome, and every required fetch or verification completed. The `Coverage` line names each focused check the rubric's Changed tests section executed, with its result in a few words, and says that execution was unavailable when that section found no usable command or environment; an unexecuted test is never implied to have passed.
 
 An incomplete review may publish verified findings already found, but its body must identify the uncovered files or checks and cannot claim the change is clean. For an input unavailable to the reviewer, `Coverage gaps` also states what the input could change, lists the candidate ids whose dispositions it gates, and addresses the recovery request to the orchestrator. When the orchestrator supplies it, re-run only those falsifications and remove the gap after they complete.
 
