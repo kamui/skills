@@ -80,6 +80,8 @@ research report's estimated output cost and is the field used for ranking.
 | (c) v5b seed 2 | claude-sonnet-5 | 97 | 100 | 2 | 194 | 456,230 | 11,475,554 | 98,083 | 47,841 | 0:26:41 | 4.42 | 16,819 | **4.25** |
 | (c) v5b seed 3 | claude-sonnet-5 | 105 | 117 | 2 | 210 | 291,938 | 14,501,101 | 114,392 | 58,619 | 0:25:35 | 4.77 | 14,818 | **4.63** |
 | (c) panel seed 1 | claude-sonnet-5 | 207 | 231 | 6 | 414 | 1,102,092 | 24,340,413 | 262,733 | 113,193 | 1:17:09 | 10.25 | 26,539 | **9.99** |
+| (c) panel seed 2 | claude-sonnet-5 | 192 | 209 | 6 | 384 | 1,060,460 | 17,037,523 | 253,948 | 104,718 | 1:17:44 | 8.60 | 17,607 | **8.42** |
+| (c) panel seed 3 | claude-sonnet-5 | 211 | 246 | 6 | 422 | 1,056,736 | 18,879,797 | 281,727 | 161,896 | 1:33:18 | 9.24 | 10,772 | **9.13** |
 | (c) v5b-noverify seed 1 | claude-sonnet-5 | 101 | 100 | 1 | 202 | 268,758 | 15,377,076 | 93,855 | 61,120 | 0:20:47 | 4.69 | 8,740 | **4.60** |
 | (c) v5b-effort-medium seed 2 | claude-sonnet-5 | 79 | 88 | 2 | 158 | 178,343 | 6,920,091 | 57,550 | 15,236 | 0:13:28 | 2.41 | 9,731 | **2.31** |
 | (c) v5b-effort-medium seed 3 | claude-sonnet-5 | 135 | 133 | 2 | 270 | 430,648 | 14,492,029 | 107,087 | 48,159 | 0:29:38 | 5.05 | 12,242 | **4.92** |
@@ -88,6 +90,8 @@ research report's estimated output cost and is the field used for ranking.
 | (d) v5b seed 2 | claude-sonnet-5 | 74 | 79 | 1 | 148 | 191,191 | 8,982,539 | 51,552 | 30,532 | 0:12:03 | 2.79 | 6,692 | **2.72** |
 | (d) v5b seed 3 | claude-sonnet-5 | 75 | 80 | 1 | 150 | 227,473 | 9,823,595 | 60,070 | 48,481 | 0:15:45 | 3.13 | 8,760 | **3.05** |
 | (d) panel seed 1 | claude-sonnet-5 | 156 | 175 | 6 | 312 | 739,951 | 16,595,974 | 231,254 | 90,602 | 1:01:18 | 7.48 | 61,208 | **6.87** |
+| (d) panel seed 2 | claude-sonnet-5 | 133 | 161 | 3 | 266 | 545,639 | 11,145,975 | 141,333 | 78,198 | 0:49:24 | 5.01 | 11,474 | **4.89** |
+| (d) panel seed 3 | claude-sonnet-5 | 179 | 198 | 8 | 358 | 1,101,584 | 21,799,460 | 205,511 | 69,509 | 1:14:47 | 9.17 | 15,776 | **9.01** |
 | (d) v5b-noverify seed 1 | claude-sonnet-5 | 68 | 72 | 1 | 136 | 210,551 | 9,077,616 | 65,210 | 40,720 | 0:13:51 | 2.99 | 7,975 | **2.91** |
 | (e) v5b seed 1 | claude-sonnet-5 | 92 | 93 | 2 | 184 | 249,684 | 9,726,463 | 112,083 | 63,956 | 0:25:09 | 3.69 | 12,458 | **3.57** |
 | (e) v5b seed 2 | claude-sonnet-5 | 98 | 101 | 2 | 196 | 288,320 | 11,839,337 | 120,949 | 67,205 | 0:29:37 | 4.30 | 17,830 | **4.12** |
@@ -108,7 +112,7 @@ cost or the legacy harness context-size figure.
 | Arm | Runs | Median production-shaped ($) | Median billed ($) | Median report share | Median thinking | Median turns |
 | --- | --- | --- | --- | --- | --- | --- |
 | v5b | 18 | 3.50 | 3.62 | 3.4% | 55,489.0 | 78.5 |
-| v2a (Panel, with merged fixes) | 2 | 8.43 | 8.87 | 5.3% | 101,897.5 | 181.5 |
+| v2a (Panel, with merged fixes) | 6 | 8.71 | 8.88 | 2.2% | 97,660.0 | 185.5 |
 | v5b-noverify | 4 | 2.66 | 2.75 | 3.1% | 47,318.0 | 68.0 |
 | v5b-effort-medium | 6 | 2.23 | 2.33 | 4.8% | 26,543.0 | 74.0 |
 
@@ -122,11 +126,11 @@ cost or the legacy harness context-size figure.
 | (b) | v5b-noverify | 1 | 1.65 | 1.72 | 27,400 | 50,067 | 54 | 59 |
 | (b) | v5b-effort-medium | 3 | 1.80 | 1.93 | 29,908 | 70,552 | 50 | 49 |
 | (c) | v5b | 3 | 4.25 | 4.42 | 47,841 | 98,083 | 97 | 100 |
-| (c) | v2a (Panel, with merged fixes) | 1 | 9.99 | 10.25 | 113,193 | 262,733 | 207 | 231 |
+| (c) | v2a (Panel, with merged fixes) | 3 | 9.13 | 9.24 | 113,193 | 262,733 | 207 | 231 |
 | (c) | v5b-noverify | 1 | 4.60 | 4.69 | 61,120 | 93,855 | 101 | 100 |
 | (c) | v5b-effort-medium | 3 | 2.51 | 2.62 | 17,736 | 57,712 | 81 | 88 |
 | (d) | v5b | 3 | 3.05 | 3.13 | 48,481 | 60,070 | 75 | 80 |
-| (d) | v2a (Panel, with merged fixes) | 1 | 6.87 | 7.48 | 90,602 | 231,254 | 156 | 175 |
+| (d) | v2a (Panel, with merged fixes) | 3 | 6.87 | 7.48 | 78,198 | 205,511 | 156 | 175 |
 | (d) | v5b-noverify | 1 | 2.91 | 2.99 | 40,720 | 65,210 | 68 | 72 |
 | (e) | v5b | 3 | 4.12 | 4.30 | 67,205 | 120,949 | 98 | 101 |
 | (f) | v5b | 3 | 1.71 | 1.77 | 38,444 | 62,776 | 45 | 49 |
@@ -171,19 +175,20 @@ are absent. Target (b) has no recall rows; its acquittal checks are in the next 
 
 ### (c) `python/typeshed#9458`
 
-| | v5b s1 | v5b s2 | v5b s3 | effort s2 | effort s3 | effort s4 | noverify s1 | Panel s1 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **GT-c1** — `__init__.pyi` missing `CredentialProvider`, `UsernamePasswordCredentialProvider` | not raised | not raised | **found** | not raised | **found** | not raised | not raised | **found** |
-| T-c2 — `default_backoff` missing from both `__init__.pyi` and `backoff.pyi` | not raised | not raised | **found** | not raised | not raised | not raised | raised (withheld) | **found** |
-| T-c3 — `MaxConnectionsError` missing from `exceptions.pyi` | not raised | not raised | not raised | not raised | not raised | not raised | not raised | **found** |
-| `can_read_destructive` missing on the async parser/connection classes (adjudicated true) | found | found | not raised | found | found | found | raised (withheld) | found |
+| | v5b s1 | v5b s2 | v5b s3 | effort s2 | effort s3 | effort s4 | noverify s1 | Panel s1 | Panel s2 | Panel s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-c1** — `__init__.pyi` missing `CredentialProvider`, `UsernamePasswordCredentialProvider` | not raised | not raised | **found** | not raised | **found** | not raised | not raised | **found** | **found** | **found** (consider; under) |
+| T-c2 — `default_backoff` missing from both `__init__.pyi` and `backoff.pyi` | not raised | not raised | **found** | not raised | not raised | not raised | raised (withheld) | **found** | **found** | **found** |
+| T-c3 — `MaxConnectionsError` missing from `exceptions.pyi` | not raised | not raised | not raised | not raised | not raised | not raised | not raised | **found** | **found** | **found** |
+| `can_read_destructive` missing on the async parser/connection classes (adjudicated true) | found | found | not raised | found | found | found | raised (withheld) | found | found | found |
+| `ExpiryT` still `float \| timedelta` (**not ground truth**: `CONTRIBUTING.md:454` asks for `float`) | — | — | — | — | — | — | — | P2 consider (in band) | **P1 must-fix (false)** | acquitted |
 
 ### (d) `astral-sh/uv#4424`
 
-| | v5b s1 | v5b s2 | v5b s3 | noverify s1 | Panel s1 |
-| --- | --- | --- | --- | --- | --- |
-| **GT-d1** — `prefer-*` value naming, deferred in review, reshaped by #4602 | raised | raised | raised | raised | **found** (question) |
-| T-d2 — `EnvironmentPreference::Any → OnlySystem` undescribed | dropped (traced to `e783a799`) | observation | observation | dropped | **found** (P2 consider, confirmed) |
+| | v5b s1 | v5b s2 | v5b s3 | noverify s1 | Panel s1 | Panel s2 | Panel s3 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **GT-d1** — `prefer-*` value naming, deferred in review, reshaped by #4602 | raised | raised | raised | raised | **found** (question) | **found** (question) | **found** (question) |
+| T-d2 — `EnvironmentPreference::Any → OnlySystem` undescribed | dropped (traced to `e783a799`) | observation | observation | dropped | **found** (P2 consider, confirmed) | observation | **found** (P2 consider, confirmed) |
 
 ### (e) `pola-rs/polars#24771`
 
@@ -218,7 +223,7 @@ Per run against the adjudicated band written before the runs. Written by #60.
 ## Model verification
 
 `message.model` from every transcript belonging to this evaluation, read from every assistant line by
-`finish_cell.py` at close-out and recorded in each run document's preamble. 58 transcripts across 30 runs; every assistant line reports `claude-sonnet-5`. The discarded seed-1 effort cells and the effort probes are listed under Run continuity and
+`finish_cell.py` at close-out and recorded in each run document's preamble. 77 transcripts across 34 runs; every assistant line reports `claude-sonnet-5`. The discarded seed-1 effort cells and the effort probes are listed under Run continuity and
 Effort verification.
 
 ## Effort verification
