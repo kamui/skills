@@ -106,7 +106,7 @@ status. A mandatory candidate reopened but still unpublishable contributes zero 
 research ledger's discovery, refutation, confirmation or reopen is diagnostic, not a substitute
 for a publishable finding. A harness-invalid attempt has zero admissible recovery in the
 attempt-level score and remains in its denominators and cost totals; retain its raw claims for
-auditing rather than treating them as valid skill evidence.
+adjudication and auditing, without giving them recovery credit.
 
 When a harness repair changes inputs or execution conditions, invalidate every affected pair,
 including its previously successful counterpart, and rerun under one frozen repair. Each rerun
@@ -156,7 +156,7 @@ unresolved. Absent/unresolved fixes stay in the denominator, with zero sufficien
 | --- | --- |
 | Per-attempt recovery and recall | Report `R_i` IDs/count and `R_i / D_t`. On adjudicated clean PRs (`D_t = 0`), recall is N/A, never 100%. |
 | Fix sufficiency | `S_i / R_i`, N/A if nothing recovered. Also report sufficient-outcome recall `S_i / D_t` for buggy targets so missing defects remain visible. |
-| False findings | Raw item count and unique false-claim count per attempt; sum raw counts over all attempts per arm for screening, with invalid-attempt claims identified separately. Optional false-item fraction = raw false items / all raw finding items, N/A for zero items; this is not material recall. |
+| False findings | Raw item count and unique false-claim count per attempt; sum adjudicated raw false counts over all attempts per arm for screening, including harness-invalid attempts. Also report the invalid-attempt subtotal separately; invalidation cannot erase a false finding from the screen. Optional false-item fraction = raw false items / all raw finding items, N/A for zero items; this is not material recall. |
 | False clean | An attempt on a buggy PR explicitly returns Approved/clean/no material defects. Record the flag even if it also declares operational incompleteness. An honest incomplete/unknown result alone is not false clean. Report count and rate over all attempts on buggy PRs, plus completed-only count/rate. Separately report zero-recovery attempts that did not claim clean. |
 | Completion | Valid completed attempts / all dispatched attempts per arm, including discarded/invalid attempts. Also report valid completed planned cells / planned cells, unattempted cells, and failure reasons. |
 | Target recall | Mean of per-attempt recalls for that arm/target, including incomplete, discarded and invalid attempts. Separately mean over valid completed attempts only. A target with no attempts (or no completed attempts in the latter view) is unavailable, not zero or silently excluded. |
@@ -227,8 +227,9 @@ There are six attempts and six planned cells, no replacements. Completion is 5/6
 5/6 cells. Target recall is A `(1/2 + 1/2)/2 = 50%`, B `(0 + 1)/2 = 50%`, C N/A; macro recall is
 `(50% + 50%)/2 = 50%` across two buggy targets. Completed-only A recall is 50% (one run), B 50%
 (two runs), so completed-only macro is also 50%, with the missing A completion explicit. False
-clean is 1/4 buggy attempts (25%), or 1/3 completed buggy attempts; all-attempt zero-recovery
-count on buggy targets is 1. False findings total zero; the duplicate count is one. Fix sufficiency
+clean is 1/4 buggy attempts (25%), or 1/3 completed buggy attempts. Total zero-recovery count on
+buggy targets is 1 (B/1); zero-recovery attempts on buggy targets that did not claim clean number
+0, since B/1 returned Approved. False findings total zero; the duplicate count is one. Fix sufficiency
 is 3/3 overall, while sufficient-outcome recall remains 50% macro: perfect fixes for reported
 bugs do not imply that all bugs were found.
 
