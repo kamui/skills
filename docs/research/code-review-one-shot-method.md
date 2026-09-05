@@ -14,8 +14,9 @@ planned cells, pilot order, replacement policy, thresholds below, and stopping c
 changes get a dated deviation with the original rule retained; they are never described as
 preregistered. Shared prerequisites are [#136](https://github.com/kamui/skills/issues/136)
 (repaired policy), [#130](https://github.com/kamui/skills/issues/130) (elapsed events),
-[#96](https://github.com/kamui/skills/issues/96) (attempt accounting), and
-[#97](https://github.com/kamui/skills/issues/97) (cache pricing). Check their completion before dispatch.
+[#96](https://github.com/kamui/skills/issues/96) (attempt accounting and reset-aware scheduling,
+§3 below) and [#97](https://github.com/kamui/skills/issues/97) (cache pricing). Check their
+completion before dispatch.
 
 | Experiment | Frozen comparison and size | Prospective screening rule |
 | --- | --- | --- |
@@ -40,9 +41,10 @@ spend for the full planned grid plus setup/probes and tool/repro charges. Write 
 assumptions and a maximum spend of `min(1.5 × projected spend, $150)` per ticket, including pilot,
 replacements, invalidated/discarded attempts and setup. Record equal per-pair execution and run
 budgets. Before each dispatch, check remaining spend against a conservative upper bound for the
-next work and observe available session/reset limits. Stop and report incomplete evidence if
-runtime, attempt or spend caps prevent completion. Model substitution or buying a paid service
-requires a new decision. This method itself does not spend that budget.
+next work and observe available session/reset limits; §3's dispatch record is where both are
+written down. Stop and report incomplete evidence if runtime, attempt or spend caps prevent
+completion. Model substitution or buying a paid service requires a new decision. This method
+itself does not spend that budget.
 
 Zero newly adjudicated false findings is a small-pilot screening constraint, not a precision
 guarantee; zero observed failures does not establish a population error rate. Failed or
@@ -115,6 +117,74 @@ A replacement never erases its predecessor. Count an invalid attempt as operatio
 separately identify harness failures and skill failures. All planned cells need valid completed
 outcomes before claiming a successful full-grid screen; otherwise report provisional comparisons
 and the missing evidence.
+
+### Dispatch record and session limits
+
+Before each root dispatch, write a dispatch record into the ticket's attempt ledger: the cell and
+the new attempt ID; the expected duration and its basis (observed elapsed-to-completion of matched
+prior attempts as min/median/max, or `no matched observation`); what is known about the session's
+quota and reset (the latest figures the harness or provider reported, with their timestamps, or
+`unknown`); the attempts and spend already used against the ticket's caps; and the cells in flight.
+A conservative upper bound for the attempt must fit inside the remaining spend cap and the
+remaining attempt cap, or the dispatch does not happen.
+
+Dispatch at most two cells concurrently until the ticket's own evidence supports more. This is a
+conservative starting heuristic, not a measured cost optimum: concurrency changes how many attempts
+one limit event stops, not what an attempt bills. Test 4 is the historical evidence. One
+session-limit event stopped all four first attempts in flight. The two Skeptic-line attempts had
+produced nothing usable; their four discarded transcripts billed $3.60 of that session's $16.82.
+The two Panel-line attempts had finished their Find phase, and that $5.58 of orchestrator and
+finder spend was reused, so it sits inside the $13.22 the four completed runs billed rather than
+in the discard figure
+([test-4 billed usage](prototype-runs-2026-09-01-test-4/comparison-data.md#billed-usage-added-2026-09-89)).
+Cite these as what one limit event cost once, not as a forecast of savings; nothing here says that
+halving concurrency halves spend.
+
+A known insufficient quota or window delays dispatch until the reported reset. A reset time alone
+says when a limit lifts, not how much quota is available now or afterwards; never infer quota from
+it, and record `unknown` where nothing was reported. When any request returns a session-limit
+notice: record the notice text, its arrival time and the reset it reports in the ledger; stop new
+dispatch; start nothing else until the reported reset has passed. Wait only within what the runtime
+supports (its longest single wait, no busy polling) and within what the user has said about their
+availability, and tell the user that dispatch is paused and until when. If the reset lies beyond
+those limits, stop and report the grid's state; a later session resumes from the ledger, and the
+ledger says the grid spanned sessions.
+
+### Attempt ledger
+
+Every attempt, however it ends, gets one ledger row: attempt ID; cell (target, arm, replicate);
+session identity and root transcript; the phase reached (`root dispatch` when nothing past the
+dispatch ran, `primary`, `verifier`, `validation`, `publication`/`result`); disposition and reason
+(`valid completed`, `stopped: session-limit notice`, `harness-invalid`, `skill failure`); whether
+it is the cell's first attempt, a replacement `k of 2` inside the cap, or a replacement the cap
+refuses (then nothing is dispatched and the row marks the cell incomplete); and its meter row from
+the existing metering CLI,
+`python3 docs/research/tools/transcript_usage.py <paths> --prices IN,OUT --row "<attempt ID>"`,
+run over every transcript the attempt produced, aborted verifiers included. The CLI skips the
+harness's synthetic notice lines, so a transcript with billed turns followed by a notice prices its
+billed turns. A transcript whose only assistant line is the notice makes the CLI exit `2` with
+`no billed assistant turns`; write that row by hand with zero turns and `$0.00`, the CLI's stderr
+line as evidence and the reason `notice, no billable request`. It is still an attempt: the root was
+dispatched, it stands in the completion denominator as a harness failure, and its retry is a
+replacement inside the cap like any other, which is what makes dispatching into an exhausted window
+expensive.
+
+Keep three cost views apart and label each. **Per-arm valid-run cost** sums the arm's valid
+completed attempts. **All-attempt cost**, per cell and per arm, adds every discarded, stopped or
+invalid attempt mapped to the cell; §4's matched cost uses this view, and the chosen arm's cost is
+never quoted with its discards subtracted. **Ticket total** adds setup, probes, tool/repro charges
+and notice-only rows; the spend cap governs it, and discarded spend is never dropped from it. The
+valid-run view alone, or the older practice of assigning discards to "the session, not to any run",
+does not replace the other two.
+
+Persist each completed expensive phase (the primary's ledger and payload draft, a finished verifier
+batch) to the attempt's files before the next phase starts, so a stopped attempt leaves evidence.
+Evidence is all it leaves. A run resumed in a fresh context from a persisted phase is a new attempt
+row marked `continuity: resumed from <attempt>`, never an uninterrupted replicate; it is a valid
+completed cell only where the preregistration allowed resumed continuity in advance, and otherwise
+it is diagnostic and the cell needs a clean replacement inside the cap. Test 4's Panel runs, whose
+Verify phase ran in fresh orchestrators over persisted finder reports, are the disclosed historical
+case ([run continuity](prototype-runs-2026-09-01-test-4/comparison-data.md#run-continuity)).
 
 ## 4. Adjudicate and score
 
@@ -250,6 +320,44 @@ Version B's register from one defect to two and rescore every arm: the shown B r
 0/2 and 1/2, so target B recall becomes 25% and this arm's macro becomes 37.5%. Report both
 `D_B: 1 -> 2` and `macro: 50% -> 37.5%`, preserving original raw rows and before/after scores
 for both arms. This is a truth-set revision, not changed reviewer performance.
+
+## Worked attempt ledger
+
+**Invented rows only; no reviewer was dispatched.** A hypothetical ticket has 24 planned cells, a
+two-replacement cap (26 attempts), a $120 spend cap and hypothetical billed dollars. Before this
+excerpt six attempts were valid, $19.40 was spent and nothing was in flight. Times are one evening
+in one session (PDT), quota was never reported (`unknown` throughout), and every dispatch record's
+expected duration was 25 minutes, the median of three matched prior attempts (20–32). Rows
+abbreviate §3's fields; `in flight a→b` is the count before and after the dispatch.
+
+| Attempt | Cell | Dispatch record | Phase reached | Disposition | Replacement | Meter row |
+| --- | --- | --- | --- | --- | --- | --- |
+| att-07 | B/1 | 22:14; attempt 7/26; $19.40 spent; in flight 0→1 | result | valid completed 22:41, sidecar complete | first | 2 transcripts, $3.10 |
+| att-08 | D/2 | 22:16; 8/26; $19.40; in flight 1→2 | verifier | stopped 22:52: session-limit notice in the verifier, `resets 23:00`; primary ledger persisted 22:38; no validated payload; stop event kept in the attempt record | first | primary $2.20 + verifier's 9 billed turns $0.35 = $2.55 |
+| att-09 | E/1 | 22:50; 9/26; $22.50; in flight 1→2 | root dispatch | notice, no billable request: only assistant line is the notice; CLI exit 2 `no billed assistant turns` | first | by hand: 0 turns, $0.00 |
+| — | — | 22:52: notice recorded; no new dispatch until 23:00; user told | — | — | — | — |
+| att-10 | D/2 | 23:05; 10/26; $25.05; reset passed, quota `unknown`; in flight 0→1 | result | valid completed 23:31 | replacement 1 of 2, predecessor att-08 | 2 transcripts, $3.25 |
+| att-11 | E/1 | 23:07; 11/26; $25.05; in flight 1→2 | result | valid completed 23:33 | replacement 2 of 2, predecessor att-09 | 2 transcripts, $2.90 |
+| att-12 | F/1 | 23:40; 12/26; $31.20; in flight 0→1 | primary | stopped 23:58: second notice, `resets 04:00`; nothing persisted yet | first | 1 transcript, $1.40 |
+| — | F/1 | 23:58: replacement would be 3 of 2 | — | refused: over cap; F/1 ends incomplete with att-12 as its only attempt | over cap, not dispatched | — |
+| — | — | 23:58: reset is beyond the runtime's longest wait and the user's stated availability; session closed, grid state reported | — | — | — | — |
+
+The replacement cap binds before the attempt count does: 24 planned first attempts are reserved,
+so a third replacement is refused at attempt 13 of 26. Fourteen planned cells remain with fourteen
+attempts, and the next session, resuming from the ledger, knows that any further failure ends its
+cell incomplete. The grid can no longer claim a successful full-grid screen; it reports provisional
+comparisons with F/1 missing.
+
+Cost views for the excerpt. Valid-run cost is $3.10 + $3.25 + $2.90 = $9.25 over three valid
+attempts. All-attempt cost adds $2.55 + $0.00 + $1.40 and is $13.20 over six dispatched attempts;
+the two limit events cost $3.95, reported as such and subtracted nowhere. Cell D/2's matched cost
+is $5.80, its two attempts, not the $3.25 of the attempt that completed. Spend after att-12 is
+$19.40 + $13.20 = $32.60 of $120. Completion in the excerpt is 3/6 attempts and 3/4 cells, with
+three session-limit failures (two billed, one notice-only), all harness failures. att-08's
+persisted primary ledger and att-12's transcript go to adjudication with zero recovery credit;
+both attempts are incomplete, not false clean. Had att-10 instead resumed att-08's persisted
+primary in a fresh verifier context, its row would read `continuity: resumed from att-08` and,
+absent a preregistered allowance, D/2 would still need a clean replacement.
 
 ## Deliver the evidence and decision
 
