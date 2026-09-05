@@ -192,16 +192,20 @@ cache tiers or missing usage get explicit uncertainty/bounds, never a silently a
 or zero charge. Use #97's supported accounting when available; no estimate establishes a billed
 cost threshold when the uncertainty could change the decision.
 
-Use #130's timing sidecar and implemented schema. Capture timezone-qualified ISO-8601 **root
-dispatch**, **final validated payload**, and **final publication/result** events as they occur,
-with completion mode (`publish` or `render-only`). Elapsed-to-payload is payload minus root;
+Use #130's [timing sidecar and recording steps](prototype-runs-holdout/README.md#metering-per-run).
+Create it immediately before root dispatch and update it on final validation and completion.
+Capture timezone-qualified ISO-8601 **root dispatch**, **final validated payload**, and **final
+publication/result** events as they occur, with completion mode (`publication`, `result` for
+production without publication, or `render-only`). Elapsed-to-payload is payload minus root;
 elapsed-to-completion is publication/result minus root. Missing events stay unavailable; invalid
 ordering is an input error. In render-only mode the final result is completion, with publication
 absent. For failed attempts retain stop events and observed duration as censored attempt time,
 not fabricated completion. Keep the historical sum of worker transcript spans as **agent span
 sum**, since parent waits overlap children. Root first/last assistant timestamps can be a labeled
-proxy only. Do not infer exact elapsed events from retrospective narrative. #130 owns the schema
-and CLI; this document does not claim that unfinished instrumentation already exists.
+proxy only. Do not infer exact elapsed events from retrospective narrative. Meter with
+`python3 docs/research/tools/transcript_usage.py <paths> --prices IN,OUT --timing <timing.json> --json`;
+the `timing` object carries elapsed seconds separately from `total.agent_span_sum_seconds`.
+Keep failed-attempt stop events in the attempt record, outside the completion sidecar schema.
 
 Report raw billed spend as the decision quantity. A production-shaped figure subtracting estimated
 research-report output cost is an **estimate**, not billed spend; show its subtraction and

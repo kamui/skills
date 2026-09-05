@@ -12,7 +12,7 @@ Usage::
 
     python3 docs/research/tools/transcript_usage.py <agent-*.jsonl>... \\
         --prices 2,10 [--cache-write-mult 1.25] [--cache-write-1h-mult 2.0] \\
-        [--cache-read-mult 0.1] [--report <run.md>] [--by-kind] \\
+        [--cache-read-mult 0.1] [--report <run.md>] [--timing <timing.json>] [--by-kind] \\
         [--row "<label>" | --json]
 
     python3 docs/research/tools/transcript_usage.py --header
@@ -75,7 +75,8 @@ sum to ``cache_write``; the unknown figure is broken down by cause, tokens
 and turns, under ``cache_write_unknown_by_cause``), ``cache_read``,
 ``output``, ``thinking``, ``models`` (distinct, ``<synthetic>`` dropped),
 ``wall`` (last minus first assistant timestamp, ``H:MM:SS``; the ``TOTAL``
-wall is the sum over transcripts, not the span), ``cost`` and its
+wall is the **agent span sum**, not elapsed time; ``agent_span_sum_seconds``
+in the JSON total explicitly names the same historical sum), ``cost`` and its
 ``cost_bounds`` (``low``, ``high``, ``unknown_tier_tokens``, ``tiers_known``
 and the ``assumption`` in words).
 Output: one labelled block per transcript and a ``TOTAL`` block; with
@@ -88,6 +89,31 @@ columns are the legacy ones: the ``Cache write`` cell names the tiers when
 any write is one-hour or unknown-tier, and the cost cells carry the fallback
 and the bounds when any write is unknown-tier, so a fully known
 all-five-minute row prints exactly as before.
+
+Timing sidecar (``--timing PATH``). One JSON object per run, with a required
+``completion_mode`` of ``publication`` (confirmed final publication), ``result``
+(production without publication), or ``render-only`` (evaluation's final
+rendered result). The only other keys are ``root_dispatched_at``,
+``payload_validated_at`` (final payload passed validation), and ``completed_at``
+(final publication/result for the chosen mode). Each event is an ISO-8601
+timestamp with date, time including seconds, and timezone, for example
+``2026-09-05T12:00:00.250Z`` or ``2026-09-05T08:00:00.250-04:00``. Fractions
+are padded or truncated to six digits before parsing, so all supported Python
+versions measure and check ordering at microsecond precision. Missing or
+null events stay unavailable. All available events must be in that order;
+equal instants are allowed. Unknown keys, invalid timestamps, a missing/invalid
+mode, or invalid ordering are input errors (exit 2, sidecar path on stderr).
+Record events as they happen, starting immediately before root dispatch.
+
+JSON adds a top-level ``timing`` object with the mode, events normalized to UTC,
+``elapsed_to_payload_seconds`` and ``elapsed_to_completion_seconds``. Each
+elapsed value is the corresponding event minus root dispatch, counted once
+regardless of child overlap. Without a sidecar these fields are null. Default
+report blocks append the same run timing with unavailable values labelled;
+``--report`` still only reads the report for cost estimation. ``--row`` and
+``--header`` retain their legacy columns and values, including ``Wall`` as the
+agent span sum; use JSON or blocks alongside them for elapsed metrics. No
+transcript timestamp or summed span substitutes for a missing timing event.
 
 ``--by-kind`` adds an ``output by kind`` block after each printed block and a
 ``by_kind`` object to each ``--json`` entry; it leaves the ``--row`` /
@@ -316,6 +342,65 @@ def wall_text(seconds: float) -> str:
     return f"{hours}:{minutes:02d}:{secs:02d}"
 
 
+TIMING_EVENTS = ("root_dispatched_at", "payload_validated_at", "completed_at")
+
+
+def read_timing(path: Optional[str]) -> dict:
+    """Read explicit run boundaries; never infer them from transcript spans."""
+    data: dict = {}
+    stamps: dict = {}
+    if path is not None:
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+            if not isinstance(data, dict):
+                raise ValueError("expected a JSON object")
+            unknown = set(data) - {"completion_mode", *TIMING_EVENTS}
+            if unknown:
+                raise ValueError(f"unknown timing keys: {', '.join(sorted(unknown))}")
+            if data.get("completion_mode") not in ("publication", "result", "render-only"):
+                raise ValueError("completion_mode must be publication, result, or render-only")
+            previous = None
+            previous_name = None
+            for name in TIMING_EVENTS:
+                value = data.get(name)
+                if value is None:
+                    continue
+                if not isinstance(value, str) or not re.fullmatch(
+                    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)", value
+                ):
+                    raise ValueError(f"{name} must be an ISO-8601 timestamp with timezone")
+                # Python 3.9/3.10 accept only three- or six-digit fractions.
+                normalized = re.sub(r"\.(\d+)", lambda match: "." + match[1][:6].ljust(6, "0"), value)
+                try:
+                    stamp = datetime.fromisoformat(normalized.replace("Z", "+00:00")).astimezone(timezone.utc)
+                except (ValueError, OverflowError) as exc:
+                    raise ValueError(f"invalid {name}: {value!r}") from exc
+                if previous is not None and stamp < previous:
+                    raise ValueError(f"{name} precedes {previous_name}")
+                stamps[name] = stamp
+                previous, previous_name = stamp, name
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"transcript_usage: cannot read timing {path}: {exc}") from exc
+
+    result = {"completion_mode": data.get("completion_mode")}
+    result.update({name: stamps[name].isoformat() if name in stamps else None for name in TIMING_EVENTS})
+    root = stamps.get("root_dispatched_at")
+    for metric, event in (("elapsed_to_payload_seconds", "payload_validated_at"),
+                          ("elapsed_to_completion_seconds", "completed_at")):
+        end = stamps.get(event)
+        result[metric] = (end - root).total_seconds() if root is not None and end is not None else None
+    return result
+
+
+def timing_lines(timing: dict) -> list[str]:
+    lines = ["RUN TIMING"]
+    for name, value in timing.items():
+        label = name.replace("_", " ")
+        lines.append(f"{label}: {value if value is not None else 'unavailable'}")
+    return lines
+
+
 class Rates:
     """Dollar prices per million tokens and the cache multipliers on the input price."""
 
@@ -375,7 +460,7 @@ class Usage:
             self.counts[field] += other.counts[field]
         for model in other.models:
             self.add_model(model)
-        self.wall_seconds += other.wall_seconds
+        self.wall_seconds += other.wall_seconds  # Agent span sum; overlapping waits count in each transcript.
         self.chars += other.chars
         for name, part in other.kinds.items():
             mine = self.kinds.setdefault(name, {"chars": 0, "tokens": 0})
@@ -662,8 +747,9 @@ def block_lines(usage: Usage, args: argparse.Namespace, shaped_tokens: Optional[
     lines.append(f"{'cache read':<{width}} {fmt(c['cache_read']):>12} tokens")
     lines.append(f"{'output':<{width}} {fmt(c['output']):>12} tokens (thinking {fmt(c['thinking'])})")
     lines.append(f"{'models':<{width}} {', '.join(usage.models) if usage.models else 'none recorded':>12}")
-    wall_note = " (summed over transcripts)" if usage.label == "TOTAL" else ""
-    lines.append(f"{'wall':<{width}} {wall_text(usage.wall_seconds):>12}{wall_note}")
+    wall_label = "agent span sum" if usage.label == "TOTAL" else "wall"
+    wall_note = " (summed over transcripts; not elapsed)" if usage.label == "TOTAL" else " (assistant timestamp span)"
+    lines.append(f"{wall_label:<{width}} {wall_text(usage.wall_seconds):>12}{wall_note}")
     rates = Rates.from_args(args)
     summary = usage.cost_summary(rates)
     tier_note = "all cache-write tiers known" if summary["tiers_known"] else "unknown-tier cache writes priced as 5m"
@@ -742,6 +828,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cache-write-1h-mult", type=non_negative_float, default=2.0, help="one-hour cache-write price as a multiple of the input price (default 2.0)")
     parser.add_argument("--cache-read-mult", type=non_negative_float, default=0.1, help="cache-read price as a multiple of the input price (default 0.1)")
     parser.add_argument("--report", metavar="PATH", help="research report file; its bytes ÷ 4 come off the output for the production-shaped cost")
+    parser.add_argument("--timing", metavar="PATH", help="run timing JSON sidecar with explicit dispatch, validated payload, and completion events")
     parser.add_argument("--by-kind", action="store_true", help="add an output-by-kind block splitting visible output across text, tool inputs and file writes")
     parser.add_argument("--row", metavar="LABEL", help="print one Markdown table row of the totals labelled LABEL instead of the blocks")
     parser.add_argument("--header", action="store_true", help="print the Markdown table header matching --row and exit")
@@ -765,6 +852,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         parser.error("--prices IN,OUT is required")
 
     try:
+        timing = read_timing(args.timing)
         usages = [read_transcript(path) for path in args.transcripts]
         shaped_tokens = report_tokens(args.report)
     except SystemExit as exc:
@@ -781,7 +869,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if args.json:
         rates = Rates.from_args(args)
-        data = {"prices": rates.as_dict(), "transcripts": []}
+        data = {"prices": rates.as_dict(), "transcripts": [], "timing": timing}
 
         def add_costs(entry: dict, usage: Usage) -> None:
             summary = usage.cost_summary(rates)
@@ -802,6 +890,7 @@ def main(argv: Optional[list[str]] = None) -> int:
                 entry["by_kind"] = usage.by_kind()
             data["transcripts"].append(entry)
         entry = total.as_dict()
+        entry["agent_span_sum_seconds"] = entry["wall_seconds"]
         add_costs(entry, total)
         if args.by_kind:
             entry["by_kind"] = total.by_kind()
@@ -825,6 +914,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(line)
     print()
     for line in block_lines(total, args, shaped_tokens):
+        print(line)
+    print()
+    for line in timing_lines(timing):
         print(line)
     return 0
 
