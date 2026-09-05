@@ -76,18 +76,23 @@ leading dashes, brackets, and wildcard characters in a filename are neither
 options nor globs.
 
 `--store FILE` persists the complete context to FILE before any output, as one
-private JSON object (mode 0600, written before bounded consumption), and turns
-on bounded output: one call prints at most `--chunk-bytes` bytes of diff text
-(default 24000; choose a value below the harness's tool-output limit). The
-store splits each diff section into per-file blocks and each block into
-line-aligned chunks of at most `--chunk-bytes` bytes, and adds a `## chunks`
-inventory: one line per chunk, `<section> <path>#<k>/<n> lines=<a>-<b>
-bytes=<len> consumed|missing`, plus one `<section> coverage:
-complete|incomplete` line per section. A chunk is `consumed` once a bounded
-call has printed it; nothing else marks it. When the diff fits the bound it is
-printed as usual and every chunk is consumed; otherwise the section reads
-`withheld: ...` and the diff is read from the store. A single line longer than
-the bound is its own chunk, marked `oversized`.
+private JSON object, and turns on bounded output: one call prints at most
+`--chunk-bytes` bytes of diff text (default 24000; choose a value below the
+harness's tool-output limit). FILE holds the pull request's whole diff, so it
+is opened without following symlinks, refused unless it is an unshared regular
+file this user owns, and set to mode 0600 before the first byte is written;
+give it a path only this user can reach (`mktemp -d`), never a predictable
+name in a shared directory. The store splits each diff section into per-file
+blocks and each block into `\n`-aligned chunks of at most `--chunk-bytes`
+bytes, and adds a `## chunks` inventory: one line per chunk, `<section>
+<path>#<k>/<n> lines=<a>-<b> bytes=<len> consumed|missing`, plus one
+`<section> coverage: complete|incomplete` line per section. A chunk is
+`consumed` once a bounded call has printed it; nothing else marks it. The build
+call charges its unbounded sections -- the manifest, ranges, history, and the
+inventory itself -- against the bound before any diff, so a diff is printed and
+consumed only when the whole call's output stayed inside it; otherwise the
+section reads `withheld: ...` and the diff is read from the store. A single
+line longer than the bound is its own chunk, marked `oversized`.
 
 `--from FILE` reads the store instead of git and never regenerates the diff.
 Alone it prints the manifest, ranges, history, the small delta sections, and
@@ -153,6 +158,10 @@ def start_git(
         "diff.noprefix=false",
         "-c",
         "diff.mnemonicPrefix=false",
+        "-c",
+        "diff.srcPrefix=a/",
+        "-c",
+        "diff.dstPrefix=b/",
         *arguments,
     ]
     printable = " ".join(command)
@@ -612,9 +621,11 @@ def chunk_lines(text: str, chunk_bytes: int) -> list[tuple[int, int, int, bool]]
 
     A line longer than the bound stands alone, flagged oversized; every other
     chunk holds as many whole lines as fit the bound. Line numbers are 1-based
-    within the text.
+    within the text. Lines are `\n`-terminated, the splitting `split_blocks` and
+    `identify_block` use: a form feed or a Unicode line break inside a diff line
+    is text, not a boundary.
     """
-    lines = text.splitlines(keepends=True)
+    lines = re.findall(r"[^\n]*\n|[^\n]+$", text)
     chunks: list[tuple[int, int, int, bool]] = []
     start, size, count = 1, 0, 0
     for number, line in enumerate(lines, 1):
@@ -936,15 +947,39 @@ def make_store(context: dict[str, Any], chunk_bytes: int) -> dict[str, Any]:
 
 
 def write_store(path: str, store: dict[str, Any]) -> None:
-    """Write the store privately: created 0600, and re-chmodded if it existed."""
+    """Write the store privately: created 0600, and vetted before any byte lands.
+
+    The store holds the pull request's complete diff, so a path another local
+    user can pre-create must never receive it. The open refuses a symlink
+    (`O_NOFOLLOW`), and the descriptor is checked to be an unshared regular file
+    this user owns and chmodded 0600 before the file is truncated and written.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = -1
     try:
-        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        descriptor = os.open(path, flags, 0o600)
+        info = os.fstat(descriptor)
+        owner = getattr(os, "geteuid", None)
+        if not stat.S_ISREG(info.st_mode):
+            raise InputError(f"cannot write store {path}: not a regular file")
+        if owner is not None and info.st_uid != owner():
+            raise InputError(
+                f"cannot write store {path}: owned by uid {info.st_uid}, not this user"
+            )
+        if info.st_nlink > 1:
+            raise InputError(f"cannot write store {path}: {info.st_nlink} hard links to it")
+        os.fchmod(descriptor, stat.S_IRUSR | stat.S_IWUSR)
+        os.ftruncate(descriptor, 0)
+        handle = os.fdopen(descriptor, "w", encoding="utf-8")
+        descriptor = -1
+        with handle:
             json.dump(store, handle, ensure_ascii=False)
             handle.write("\n")
-        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
     except OSError as error:
         raise InputError(f"cannot write store {path}: {error}") from error
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
 
 
 def load_store(path: str) -> dict[str, Any]:
@@ -1054,18 +1089,31 @@ def small_sections(context: dict[str, Any]) -> list[dict[str, Any]]:
     return sections
 
 
+def other_output_bytes(
+    sections: list[dict[str, Any]], as_json: bool, chunk_count: int
+) -> int:
+    """Bytes a bounded build call prints besides its diffs, charged against the bound.
+
+    The inventory is rendered here before the call consumes anything, so allow a
+    byte per chunk: `consumed` is one character longer than `missing`, while the
+    coverage lines only ever shrink as a section completes.
+    """
+    return len(render_view(sections, as_json).encode("utf-8")) + chunk_count
+
+
 def live_view(
     context: dict[str, Any],
     selections: list[str],
     store: Optional[dict[str, Any]],
     store_path: Optional[str],
+    as_json: bool = False,
 ) -> list[dict[str, Any]]:
     """Render a fresh build with selection and, when stored, the output bound."""
     small = {section["name"]: section for section in small_sections(context)}
     chunks = store["chunks"] if store is not None else []
-    budget = store["chunk_bytes"] if store is not None else None
     sections: list[dict[str, Any]] = [small["manifest"]]
     diffs: dict[str, dict[str, Any]] = {}
+    chosen_blocks: dict[str, list[dict[str, Any]]] = {}
     selected_paths: Optional[list[str]] = None
     for section in context_sections(context):
         text = section_text(context, section)
@@ -1079,20 +1127,33 @@ def live_view(
             if section == "diff":
                 selected_paths = paths
                 sections.append(selection_section(manifest, paths, len(manifest)))
-            chosen = [block for block in blocks if block["path"] in paths]
+            chosen_blocks[section] = [block for block in blocks if block["path"] in paths]
         else:
-            chosen = blocks
-        if store is None:
+            chosen_blocks[section] = blocks
+    if store is None:
+        for section, chosen in chosen_blocks.items():
             notes_source = context["notes"] if section == "diff" else context["delta"]["notes"]
             joined = "".join(block["text"] for block in chosen)
             notes = notes_for(notes_source, {block["path"] for block in chosen})
             diffs[section] = diff_section(section, joined, notes)
-            continue
-        assert store_path is not None and budget is not None
-        wanted = {block["path"] for block in chosen}
-        section_chunks = [c for c in chunks if c["section"] == section and c["path"] in wanted]
-        hint = "" if section == "diff" else f" --section {section}"
-        diffs[section], budget = emit_bounded(store, section, section_chunks, budget, store_path, hint)
+    else:
+        assert store_path is not None
+        # Charge the unbounded sections first: a diff printed under a bound the
+        # whole output then blows past would be marked consumed after the
+        # harness truncated it, which is the state the inventory exists to rule
+        # out. What the rest of the call costs is what the diff cannot have.
+        rest = [*sections, small["ranges"], small["history"]]
+        if context.get("delta") is not None:
+            rest += [small["delta-conditions"], small["delta-manifest"], small["delta-overlap"]]
+        rest.append(chunks_section(chunks, context_sections(context), selected_paths))
+        budget = max(0, store["chunk_bytes"] - other_output_bytes(rest, as_json, len(chunks)))
+        for section, chosen in chosen_blocks.items():
+            wanted = {block["path"] for block in chosen}
+            section_chunks = [c for c in chunks if c["section"] == section and c["path"] in wanted]
+            hint = "" if section == "diff" else f" --section {section}"
+            diffs[section], budget = emit_bounded(
+                store, section, section_chunks, budget, store_path, hint
+            )
     sections.append(diffs["diff"])
     sections.append(small["ranges"])
     sections.append(small["history"])
@@ -1187,6 +1248,13 @@ def self_test() -> int:
     third_file = "def f():\n    x = 1\n    return x\n\n\ndef g():\n    y = 3\n    return y + 1\n"
     odd_name = "-dash file [1]*?.txt"
     big_lines = 400
+
+    def big_text(fill: str) -> str:
+        """The chunking fixture, with a form-feed page break inside one line."""
+        lines = [f"line {n:04d} " + fill * 50 + "\n" for n in range(big_lines)]
+        lines[100] = "line 0100 \x0c" + fill * 50 + "\n"
+        return "".join(lines)
+
     failures: list[str] = []
     passed: list[str] = []
 
@@ -1224,13 +1292,17 @@ def self_test() -> int:
             git("init", "-q", "--template=")
             git("config", "diff.python.xfuncname", "^def ")
             git("config", "diff.renames", "false")
+            # A hostile prefix config the script must pin away: every assertion
+            # below reads `a/` and `b/` headers, so the whole run tests the pin.
+            git("config", "diff.srcPrefix", "src/")
+            git("config", "diff.dstPrefix", "dst/")
             write(".gitattributes", "*.py diff=python\n")
             write("a.py", base_file)
             write("old.txt", "alpha\nbeta\ngamma\n")
             write("c.txt", "1\n2\n3\n")
             write("gone.txt", "to be deleted\n")
             write(odd_name, "odd one\nodd two\n")
-            write("big.txt", "".join(f"line {n:04d} " + "x" * 50 + "\n" for n in range(big_lines)))
+            write("big.txt", big_text("x"))
             git("add", ".")
             git("commit", "-q", "-m", "Add the base files")
             git("branch", "-M", "trunk")
@@ -1243,7 +1315,7 @@ def self_test() -> int:
             os.remove(os.path.join(repository, "gone.txt"))
             write("c.txt", "1\n2\n4\n")
             write(odd_name, "odd one\nodd two changed\n")
-            write("big.txt", "".join(f"line {n:04d} " + "y" * 50 + "\n" for n in range(big_lines)))
+            write("big.txt", big_text("y"))
             write("long.txt", "z" * 5000 + "\n")
             git("add", "-A", ".")
             git("commit", "-q", "-m", "Change g, add b.py, rename old.txt, edit c.txt")
@@ -1380,6 +1452,35 @@ def self_test() -> int:
         if len(failures) == before:
             passed.append(case)
 
+        # The reviewer's diff.srcPrefix / diff.dstPrefix cannot rename the blocks.
+        case = "prefix config pinned (diff.srcPrefix / diff.dstPrefix)"
+        before = len(failures)
+        output = run("--head", head, "--path", "a.py")
+        if output is not None:
+            selected_diff = section_of(output, "diff")
+            if "diff --git a/a.py b/a.py" not in selected_diff:
+                failures.append(f"{case}: the block header is not `a/a.py b/a.py`")
+            if "src/a.py" in output or "dst/a.py" in output:
+                failures.append(f"{case}: the reviewer's prefixes reached the output")
+            if "def g():" not in selected_diff:
+                failures.append(f"{case}: --path a.py printed no diff under the prefix config")
+        if len(failures) == before:
+            passed.append(case)
+
+        # Chunking splits on `\n` alone; other Unicode line breaks are diff text.
+        case = "chunks split on newline only (form feed, U+2028)"
+        before = len(failures)
+        if chunk_lines("a\x0cb\nc\n", 4000) != [(1, 2, 6, False)]:
+            failures.append(f"{case}: a form feed inside a line was treated as a break")
+        if chunk_lines("x\u2028y\n", 4000) != [(1, 1, 6, False)]:
+            failures.append(f"{case}: U+2028 inside a line was treated as a break")
+        if chunk_lines("a\nb", 4000) != [(1, 2, 3, False)]:
+            failures.append(f"{case}: an unterminated last line is miscounted")
+        if chunk_lines("", 4000) != []:
+            failures.append(f"{case}: empty text produced chunks")
+        if len(failures) == before:
+            passed.append(case)
+
         # Store: complete context persisted privately; bounded output; exact chunk recovery.
         case = "store round trip (persisted diff, bounded reads, byte-exact recovery)"
         before = len(failures)
@@ -1417,6 +1518,29 @@ def self_test() -> int:
                 failures.append(f"{case}: chunk byte counts do not sum to the persisted diff size")
             if any(c["bytes"] > 4000 and not c["oversized"] for c in chunks):
                 failures.append(f"{case}: a non-oversized chunk exceeds the bound")
+            # big.txt carries a form feed inside a line: labels count `\n` lines,
+            # and no chunk boundary falls inside one.
+            big_block = next((b for b in split_blocks(full_diff) if b["path"] == "big.txt"), None)
+            big_chunks = [c for c in chunks if c["section"] == "diff" and c["path"] == "big.txt"]
+            if big_block is None or len(big_chunks) < 2:
+                failures.append(f"{case}: big.txt is not inventoried in several chunks")
+            elif "\x0c" not in big_block["text"]:
+                failures.append(f"{case}: the big.txt block carries no form feed to split on")
+            else:
+                text = big_block["text"]
+                expected = text.count("\n") + (0 if text.endswith("\n") else 1)
+                if big_chunks[-1]["end_line"] != expected:
+                    failures.append(
+                        f"{case}: big.txt's last chunk ends at line {big_chunks[-1]['end_line']}, "
+                        f"the block has {expected} newline-terminated lines"
+                    )
+                if [c["start_line"] for c in big_chunks[1:]] != [
+                    c["end_line"] + 1 for c in big_chunks[:-1]
+                ]:
+                    failures.append(f"{case}: big.txt's chunk line labels are not contiguous")
+                encoded = full_diff.encode("utf-8")
+                if not all(chunk_text(encoded, c).endswith("\n") for c in big_chunks[:-1]):
+                    failures.append(f"{case}: a big.txt chunk boundary fell inside a diff line")
             # Overview from the store: no diff text, everything else present.
             overview = invoke("--from", store_path)
             if overview.returncode != 0:
@@ -1486,6 +1610,54 @@ def self_test() -> int:
                     failures.append(f"{case}: a printed selection was not marked consumed")
                 if "diff coverage: incomplete" not in inventory:
                     failures.append(f"{case}: unselected chunks were not left missing")
+        if len(failures) == before:
+            passed.append(case)
+
+        # The store is opened privately: no symlink, no other user's file, mode 0600.
+        case = "store opened privately (symlink refused, pre-created file re-privatised)"
+        before = len(failures)
+        planted = tempfile.mkdtemp()
+        target = os.path.join(planted, "target.json")
+        link = os.path.join(planted, "link.json")
+        with open(target, "w", encoding="utf-8"):
+            pass
+        os.symlink(target, link)
+        expect_exit(
+            case, 2, "cannot write store",
+            "--merge-base", merge_base, "--head", head, "--path", "a.py", "--store", link,
+        )
+        if os.path.getsize(target) != 0:
+            failures.append(f"{case}: the symlink's target received the diff")
+        loose = os.path.join(planted, "loose.json")
+        with open(loose, "w", encoding="utf-8") as handle:
+            handle.write("pre-created\n")
+        os.chmod(loose, 0o666)
+        if run("--head", head, "--path", "a.py", "--store", loose) is not None:
+            mode = stat.S_IMODE(os.stat(loose).st_mode)
+            if mode != 0o600:
+                failures.append(f"{case}: a pre-created store kept mode {oct(mode)}")
+        shutil.rmtree(planted, ignore_errors=True)
+        if len(failures) == before:
+            passed.append(case)
+
+        # The bound covers the whole build call, not the diff alone.
+        case = "build call charges its other sections against the bound"
+        before = len(failures)
+        bounded_store = store_path + ".bounded"
+        output = run("--head", head, "--path", "a.py", "--store", bounded_store, "--chunk-bytes", "500")
+        if output is not None:
+            selected: list[dict[str, Any]] = []
+            try:
+                with open(bounded_store, encoding="utf-8") as handle:
+                    selected = [c for c in json.load(handle)["chunks"] if c["path"] == "a.py"]
+            except (OSError, ValueError, KeyError) as error:
+                failures.append(f"{case}: cannot read the bounded store: {error}")
+            if not selected or sum(c["bytes"] for c in selected) >= 500:
+                failures.append(f"{case}: a.py's diff is not under the 500-byte bound, so this proves nothing")
+            if "withheld:" not in section_of(output, "diff"):
+                failures.append(f"{case}: a diff under the bound was printed although the other sections exceed it")
+            if "consumed" in section_of(output, "chunks").replace("chunks consumed", ""):
+                failures.append(f"{case}: a chunk was consumed by a call whose whole output exceeds the bound")
         if len(failures) == before:
             passed.append(case)
 
@@ -1730,7 +1902,8 @@ def main() -> int:
         type=int,
         default=DEFAULT_CHUNK_BYTES,
         metavar="N",
-        help=f"most diff bytes one call prints when storing (default {DEFAULT_CHUNK_BYTES})",
+        help="the byte bound a stored call's output must fit; the build call charges "
+        f"its other sections against it first (default {DEFAULT_CHUNK_BYTES})",
     )
     parser.add_argument(
         "--from",
@@ -1809,7 +1982,7 @@ def main() -> int:
         if arguments.store:
             store = make_store(context, arguments.chunk_bytes)
             write_store(arguments.store, store)
-        view = live_view(context, arguments.path, store, arguments.store)
+        view = live_view(context, arguments.path, store, arguments.store, arguments.json)
         if store is not None:
             write_store(arguments.store, store)
         sys.stdout.write(render_view(view, arguments.json))
