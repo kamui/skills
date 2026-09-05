@@ -1,6 +1,6 @@
 # Holdout evaluation — method
 
-**Status: targets proposed; ground truth and calibration bands committed; no cell has run.**
+**Status: the grid ran on 2026-09-04, reduced at the maintainer's direction; results and verdicts are in [`evaluation.md`](evaluation.md), per-run metering in [`comparison-data.md`](comparison-data.md).**
 This directory was created ahead of the holdout evaluation (#60) by #67, which fixes how every
 run in it is metered, and #69, which fixes what a dispatch may ask a run to do; #68 adds one
 lower-effort arm with its adoption rule written before any run. #60 adds, below, the six targets
@@ -8,8 +8,10 @@ with their pinned run identities, ground truth, and calibration bands, the condi
 verification rule, the scoring rule, and the success criteria. The full experimental design is
 #60's body and
 [aggregate analysis §8 "The holdout demand"](../prototype-runs-aggregate-tests-1-4-v2a-v5a.md#the-holdout-demand).
-The six targets are a **proposal awaiting sign-off** ([Sign-off](#sign-off)); the run documents,
-`comparison-data.md`'s per-run sections, and `evaluation.md` follow once cells run.
+The six targets were signed off ([Sign-off](#sign-off)) and the run documents live in the
+per-target directories (`a-hyper-3952/` … `f-cobra-1938/`), one `-run.md` and one `-payload.md` per
+cell, each with an orchestrator preamble carrying the model and effort verification and the billed
+usage. What ran and what was cut is the first section of `evaluation.md`.
 
 The directory is undated because it predates the runs. #60 may rename it to
 `prototype-runs-<date>-holdout/` when the grid starts; the one link that points here by path, in
@@ -163,19 +165,25 @@ effort: medium
 directories that existed when the session began, so a definition written into a new directory
 mid-session is not loaded until restart, and a dispatch naming it fails or falls back to the
 session effort. The definition is committed at
-[`.claude/agents/v5b-primary-effort-medium.md`](../../../.claude/agents/v5b-primary-effort-medium.md)
-(#60's pull request) so every grid session starts with it loaded; #60 removes it after the grid. Before the first cell, dispatch a trivial probe through the
+`.claude/agents/v5b-primary-effort-medium.md` (committed in PR #114, removed after the grid)
+(#60's first pull request) so every grid session started with it loaded; both grid-only definitions were removed once the arm's six cells had run, so they exist only in the history of that branch. Before the first cell, dispatch a trivial probe through the
 definition and read `effort` from the probe's transcript as described under item 4 below; the grid
 does not start until the probe shows `medium`. Record the probe's transcript path in
 `comparison-data.md` under Effort verification.
 
 Claude Code's documented default for `claude-sonnet-5` is `high`, so one step below is `medium`.
-The default is confirmed at run time from the session header, which names the active effort beside
-the model, and recorded in the run document; if the observed default is not `high`, the arm runs one
-step below whatever is observed and the README's figure is corrected before the first cell. Verifier
-batches are dispatched exactly as the v5b arm dispatches them, with no definition and no effort
-override, so they inherit the default. **No verifier batch runs below the default, in this arm or any
-other**: the verifier is the mechanism the corpus shows is most reasoning-sensitive.
+The default was confirmed from a plain-dispatch transcript (378 assistant lines at `high`) before the
+grid, and the definition's probe showed `medium`. **Correction recorded on 2026-09-04, before any
+valid cell of this arm ran:** a child agent inherits its *parent's* effort, not the session default,
+so a verifier batch dispatched by a `medium` primary as a plain `Agent` call also runs at `medium`.
+The first two cells of this arm (seed 1 on (b) and (c)) did exactly that, were discarded under the
+rule below, and their seed numbers were retired. Verifier batches in this arm are therefore dispatched
+through a second definition, `.claude/agents/v5b-verifier-effort-high.md` (added during the grid, removed after it)
+(`model: sonnet`, `effort: high`), which pins them at the default; a nested probe (a `medium` primary
+spawning one such verifier) verified `high` on the child before the first valid cell. The `v5b` arm's
+verifiers are plain `Agent` calls, so the two arms' verifiers differ only in that definition's
+one-paragraph system prompt. **No verifier batch runs below the default, in this arm or any other**:
+the verifier is the mechanism the corpus shows is most reasoning-sensitive.
 
 **Recorded per run, beside the four scoring dimensions:**
 
@@ -463,7 +471,7 @@ outside every sandbox.
 [`python/typeshed#9458`](https://github.com/python/typeshed/pull/9458) "Bump redis to 4.4.0",
 author `juanamari94`, a first-time contributor. Opened 2023-01-04, **merged 2023-01-05** by
 maintainer `AlexWaygood`, who also pushed one commit to the branch (the `credentials.pyi` file).
-The originating issue is stubsabot's release ticket, whose specification is the linked upstream
+The originating reference is stubsabot's release pull request, whose specification is the linked upstream
 diff. The stub for the package's own `__init__` was not updated to match the runtime package's
 new public names, CI did not catch it, and a user reported it twelve weeks later.
 
@@ -474,7 +482,7 @@ new public names, CI did not catch it, and a user reported it twelve weeks later
 | base SHA | `70025c372346288675437fc0bd273db84cc0b3d5` (the PR's recorded base) |
 | merge-base | `8365b1aaefd46d506ca0dfe73e9721da2d03c566` — `main` moved before the merge, so the merge-base is not the recorded base; the packet pins the merge-base and states both |
 | diff | 10 files, +41 / −36, 19 commits (most are `pre-commit-ci` autofixes) |
-| originating issue | [`#9329`](https://github.com/python/typeshed/issues/9329) "[stubsabot] Bump redis to 4.4.0", linked by `Closes #9329`; its body lists the release, the changelog, `Diff: https://github.com/redis/redis-py/compare/v4.3.5...v4.4.0`, and stubsabot's summary ("5 public Python files have been added: `redis/credentials.py`, …; 31 files included in typeshed's stubs have been modified or renamed") |
+| originating reference | [`#9329`](https://github.com/python/typeshed/pull/9329) "[stubsabot] Bump redis to 4.4.0", linked by `Closes #9329`. It is stubsabot's own **pull request** (closed unmerged when #9458 merged), not an issue, so the forge's closing-issue resolution does not return it and the packet carries its body and two comments verbatim as the originating reference (`issues=python/typeshed#9329`). Its body lists the release, the changelog, `Diff: https://github.com/redis/redis-py/compare/v4.3.5...v4.4.0`, and stubsabot's summary ("5 public Python files have been added: `redis/credentials.py`, …; 31 files included in typeshed's stubs have been modified or renamed") |
 | prior review state | 2 reviews by `AlexWaygood` (COMMENTED with one inline `suggestion`, then APPROVED "Thanks, this is really helpful!"), 17 conversation comments (seven `mypy_primer` bot reports, the rest onboarding guidance about `METADATA.toml` and a stubtest error) |
 | merged | `true`; retrospective, non-publishing |
 
@@ -493,7 +501,7 @@ M	stubs/redis/redis/connection.pyi               (+3  −0)
 A	stubs/redis/redis/credentials.pyi              (+11 −0, new file)
 ```
 
-**What the issue requires.** A stubsabot bump's specification is the upstream diff it links:
+**What the reference requires.** A stubsabot bump's specification is the upstream diff it links:
 the stubs must follow the runtime package between the two tags. typeshed's `CONTRIBUTING.md` at
 the merge-base (lines 322–323) states what a stub must include: "All objects listed in the
 module's documentation. All objects included in `__all__` (if present)." The runtime diff
@@ -818,9 +826,18 @@ M	site/content/completions/_index.md (+3 −0)   documents `off`
 This is the only target that publishes. It uses a **fresh repository under the program's own
 account, `kamui/cobra-holdout`, not a GitHub fork**: a fork carries the whole upstream history
 including the merge commit and everything after it, so the truncation rule could not hold there.
-The repository is created empty, `main` is pushed at `3d8ac432…` (that commit's ancestry only), and
-per seed a branch `holdout-seed<n>` is pushed at `R1` and opened as a pull request whose title and
-body are #1938's verbatim. GitHub will not resolve the body's `Closes …/spf13/cobra/issues/1937`
+The repository was created empty on 2026-09-04, `main` pushed at `3d8ac432…` (that commit's ancestry
+only), and one branch per arm and seed (`holdout-seed<n>` for `v5b`, `holdout-noverify-seed<n>`,
+`holdout-panel-seed<n>`) pushed at `R1` and opened as a pull request whose title and body are
+#1938's verbatim, so no arm's run sees another arm's review on its pull request. Two operational
+facts belong in the record. The pushed tree carries cobra's `.github/workflows`, and the repository
+was created private, so every push and pull request ran cobra's CI matrix (ubuntu and macOS across
+five Go versions) on paid minutes: 68 workflow runs, about 2,690 minute-equivalents, before Actions
+were disabled on the repository; a replay repository must have Actions disabled **before** its first
+push. GitHub's dependabot also opened eight version-update pull requests within a minute of creation;
+they were closed and their branches deleted, and the packets' forge fetch is per pull request, so
+they do not enter any run. The repository was made public the same day (it holds only cobra's
+Apache-licensed source at the pinned commits, and no secrets). GitHub will not resolve the body's `Closes …/spf13/cobra/issues/1937`
 across repositories, so the run's forge fetch returns no closing issue; the packet supplies #1937
 and its comments verbatim as the user-supplied spec (`SKILL.md` step 1, order item 3), and
 `issues=spf13/cobra#1937` is the expected trailer value. The round-1 human comments are not
@@ -993,7 +1010,10 @@ complete candidate ledger) to the run's report file **before** dispatching any v
 update the file as the run goes. No session relays: a run is dispatched with enough budget to
 finish, and an interrupted run is discarded and its cell re-run clean. Dispatch at most two cells
 at a time; when any agent returns a session-limit notice, record the reset time, dispatch nothing
-further, and resume after it (#96, which lands its wording in "Dispatch hygiene" above). Every
+further, and resume after it (#96, which lands its wording in "Dispatch hygiene" above). **Deviation
+recorded:** at the maintainer's request after a session reset, concurrency was raised to four cells
+from 16:38 on 2026-09-04, mixed across targets so one limit event could not take out one target's
+seeds together; no limit event occurred during the grid. Every
 discarded attempt is priced and recorded under Run continuity.
 
 ### Order of work
@@ -1007,7 +1027,9 @@ discarded attempt is priced and recorded under Run continuity.
 4. Target (f): first review on the fork, then the head move and the re-review, one seed at a time
    because the fork's PR state is shared.
 5. Score the Sonnet grid; only then the six Fable tier-split runs on the target chosen from (b) or
-   (e), recorded in `comparison-data.md` so #88 can use the same target.
+   (e), recorded in `comparison-data.md` so #88 can use the same target. **Not run:** the maintainer
+   directed every sub-agent to stay on Sonnet 5 at the default effort for cost reasons (2026-09-04),
+   so the tier split is recorded as not measured and #88 has no Fable controls from this grid.
 
 ## Model verification
 
@@ -1103,5 +1125,5 @@ commit the run records.
 - [`../tools/cost_split.py`](../tools/cost_split.py) and
   [`../tools/transcript_usage.py`](../tools/transcript_usage.py) — the metering scripts;
   `--self-test` checks each
-- [`../../../.claude/agents/v5b-primary-effort-medium.md`](../../../.claude/agents/v5b-primary-effort-medium.md)
-  — the lower-effort arm's agent definition; removed after the grid
+- the two grid-only agent definitions (`v5b-primary-effort-medium`, `v5b-verifier-effort-high`) lived under
+  `.claude/agents/` during the grid and were removed afterwards; their frontmatter is quoted above
