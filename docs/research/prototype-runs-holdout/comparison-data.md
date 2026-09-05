@@ -272,8 +272,12 @@ primary's turns and tool calls.
 | (c) v5b seed 3 | primary `a7b9b18bb6a21757a` | default | `high` | 94 | 99 | 54,587 | 0:23:31 |
 | (c) v5b seed 3 | child `af856f2a044aded9d` | default | `high` | 11 | 18 | 4,032 | 0:02:05 |
 
-The `v5b` rows on targets (b) and (c) are the arm's controls; fill their turns, tool calls,
-thinking, and wall here too, so the comparison reads off one table.
+The `v5b` rows on targets (b) and (c) are the arm's controls, filled here so the comparison reads
+off one table. Each run's elapsed time is its primary's wall: in all twelve runs the verifier's
+span (first to last assistant timestamp) lies inside the primary's, because the primary dispatched
+it in the foreground and waited, so the summed `wall` in the billed-usage table over-counts by the
+verifier's span. `evaluation.md` reports the per-target medians of these columns and of elapsed
+time against the controls.
 
 ## Sandbox and hygiene disclosures
 
