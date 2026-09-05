@@ -62,18 +62,28 @@ Input schema (JSON object on stdin)::
           "markdown": "...", "trailer": "<!-- question id=... head=... action=question -->",
           "anchor": {"type": "file", "path": "src/queue.ts"}
         },
+        {
+          "type": "finding", ...,
+          "anchor": {"type": "file", "path": "src/legacy.ts", "side": "LEFT"}
+        },
         {"type": "observation", "markdown": "One sentence. Evidence: `redis.conf:1903`."}
       ]
     }
 
-A file anchor carries exactly ``type`` and ``path``; a line anchor also carries
-``start_line``, ``end_line``, and ``side``. ``summary.repository_url`` is the
-base repository's canonical web URL; when present, ``RIGHT`` line anchors, file
-anchors, and fix sites render as commit-pinned blob links at the run trailer's
-head, and a ``LEFT`` anchor stays a code span. When absent, every coordinate
-renders as a code span. There is no payload override for the summary's
-coordinates: the summary is checked by string equality against the fragments
-``--render`` produces, under the one rule ``summary-reference``.
+A file anchor carries ``type`` and ``path`` plus an optional ``side``: ``LEFT``
+for a file the change deletes, which exists only at the merge-base; ``RIGHT``,
+the default, for a file present at the head. A line anchor carries
+``start_line``, ``end_line``, and a required ``side``. ``summary.repository_url``
+is the base repository's canonical web URL; when present, ``RIGHT`` line
+anchors, ``RIGHT`` file anchors, and fix sites render as commit-pinned blob
+links at the run trailer's head, a ``LEFT`` file anchor renders as a blob link
+at the run trailer's merge-base (a deleted file's forge path is its merge-base
+path), and a ``LEFT`` line anchor stays a code span (a renamed file's forge
+path is not its merge-base path, so no revision is guessed for it). When
+absent, every coordinate renders as a code span. There is no payload override
+for the summary's coordinates: the summary is checked by string equality
+against the fragments ``--render`` produces, under the one rule
+``summary-reference``.
 
 Where a check could disagree with the reference text, the reference text wins
 and this script is the thing that must be fixed. Three deliberate reading notes:
@@ -96,7 +106,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-2"
+WORKFLOW = "v5b-3"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -306,32 +316,50 @@ def blob_url(repository_url: str, head: str, path: str, start: int | None = None
     return f"{url}?plain=1#L{start}-L{end}"
 
 
-def _render_coordinate(run: dict[str, Any], coordinate: str, path: str, start: int | None, end: int | None, linked: bool) -> str:
+def _render_coordinate(
+    run: dict[str, Any],
+    coordinate: str,
+    path: str,
+    start: int | None,
+    end: int | None,
+    linked: bool,
+    revision: str = "head",
+) -> str:
     repository_url = run.get("repository_url")
     if not linked or not isinstance(repository_url, str):
         return f"`{coordinate}`"
-    return f"[`{coordinate}`]({blob_url(repository_url, run['head'], path, start, end)})"
+    return f"[`{coordinate}`]({blob_url(repository_url, run[revision], path, start, end)})"
 
 
 def render_reference(item: dict[str, Any], run: dict[str, Any]) -> str | None:
     """Return the exact summary fragment for a finding or question item.
 
-    ``run`` carries ``head`` (the run trailer's full head SHA) and an optional
+    ``run`` carries ``head`` (the run trailer's full head SHA), ``merge_base``
+    (the trailer's full merge-base SHA, or ``None``), and an optional
     ``repository_url``. The fragment is ``anchor <coordinate>`` followed by
     ``; fix <coordinate>`` when ``item.fix`` is set. ``RIGHT`` line anchors,
-    file anchors, and fix sites link at ``head`` when ``repository_url`` is
-    present; a ``LEFT`` anchor renders as a code span with its fix still
-    linked; without ``repository_url`` everything is a code span. Returns
-    ``None`` when the anchor or fix is malformed, which the anchor-shape and
-    fix-coordinate rules report separately.
+    ``RIGHT`` file anchors, and fix sites link at ``head`` when
+    ``repository_url`` is present; a ``LEFT`` file anchor — a file the change
+    deletes — links at ``merge_base``, the revision the file exists at; a
+    ``LEFT`` line anchor renders as a code span with its fix still linked;
+    without ``repository_url`` everything is a code span. Returns ``None`` when
+    the anchor or fix is malformed, which the anchor-shape and fix-coordinate
+    rules report separately, or when a ``LEFT`` file anchor needs a merge-base
+    the run trailer does not supply, which the trailer rules report.
     """
     anchor = item.get("anchor")
     if not isinstance(anchor, dict) or not isinstance(anchor.get("path"), str) or not anchor["path"]:
         return None
     path = anchor["path"]
     if anchor.get("type") == "file":
+        side = anchor.get("side", "RIGHT")
+        if side not in SIDES:
+            return None
         if isinstance(run.get("repository_url"), str):
-            fragment = f"anchor {_render_coordinate(run, path, path, None, None, linked=True)} (file)"
+            revision = "merge_base" if side == "LEFT" else "head"
+            if run.get(revision) is None:
+                return None
+            fragment = f"anchor {_render_coordinate(run, path, path, None, None, linked=True, revision=revision)} (file)"
         else:
             fragment = f"anchor `{path} (file)`"
     elif anchor.get("type") == "line":
@@ -373,14 +401,21 @@ def referenced_items(items: Any) -> list[tuple[int, dict[str, Any]]]:
 
 
 def run_identity(summary: dict[str, Any], run_fields: dict[str, str]) -> dict[str, Any] | None:
-    """The head and repository URL fragments render against, or None when links cannot be built."""
+    """The head, merge-base, and repository URL fragments render against, or None when links cannot be built.
+
+    ``merge_base`` is ``None`` when the trailer lacks a full 40-hex merge-base;
+    only a ``LEFT`` file anchor needs it, and the trailer rules report the gap.
+    """
     repository_url = summary.get("repository_url")
     head = run_fields.get("head")
+    merge_base = run_fields.get("merge-base")
+    if not isinstance(merge_base, str) or not COMMIT_SHA_RE.match(merge_base):
+        merge_base = None
     if repository_url is None:
-        return {"head": head, "repository_url": None}
+        return {"head": head, "merge_base": merge_base, "repository_url": None}
     if not isinstance(head, str) or not COMMIT_SHA_RE.match(head):
         return None
-    return {"head": head, "repository_url": repository_url.rstrip("/")}
+    return {"head": head, "merge_base": merge_base, "repository_url": repository_url.rstrip("/")}
 
 
 def check_summary_references(report: Report, body: str, summary: dict[str, Any], run_fields: dict[str, str], items: Any) -> None:
@@ -390,33 +425,37 @@ def check_summary_references(report: Report, body: str, summary: dict[str, Any],
     the body renders exactly one ``anchor `` entry per such item and one
     ``; fix `` per item with a fix, where an entry is the word followed by a
     coordinate in backticks or a link (prose may use the word freely); and
-    when ``repository_url`` is present, every blob link in the body points at
-    the run head.
+    when ``repository_url`` is present, every blob link in the body outside
+    those generated fragments points at the run head — the fragments are the
+    only place a merge-base link (a ``LEFT`` file anchor) may appear.
     """
     run = run_identity(summary, run_fields)
     if run is None:
         return  # the trailer rules already reported the unusable head
     referenced = referenced_items(items)
     expected_fixes = 0
+    remainder = body
     for index, item in referenced:
         location = f"summary.body[items[{index}]]"
         fragment = render_reference(item, run)
         if fragment is None:
-            continue  # anchor-shape or fix-coordinate reports the malformed input
+            continue  # anchor-shape, fix-coordinate, or the trailer rules report the malformed input
         count = body.count(fragment)
         if count == 0:
             detail = f"expected the rendered fragment `{fragment}` exactly once; not found"
             if run["repository_url"] is not None:
-                plain = render_reference(item, {"head": run["head"], "repository_url": None})
+                plain = render_reference(item, {"head": run["head"], "merge_base": run["merge_base"], "repository_url": None})
                 if plain is not None and plain in body:
                     detail += "; the body carries its bare code-span form, so render the fragment with --render"
             report.add(location, SUMMARY_REFERENCE, detail)
         elif count > 1:
             report.add(location, SUMMARY_REFERENCE, f"the rendered fragment `{fragment}` appears {count} times; expected once")
-        elif item.get("fix") is None:
-            after = body[body.index(fragment) + len(fragment):]
-            if after.startswith("; fix "):
-                report.add(location, SUMMARY_REFERENCE, "the summary renders a fix but the item has none")
+        else:
+            remainder = remainder.replace(fragment, "", 1)
+            if item.get("fix") is None:
+                after = body[body.index(fragment) + len(fragment):]
+                if after.startswith("; fix "):
+                    report.add(location, SUMMARY_REFERENCE, "the summary renders a fix but the item has none")
         if item.get("fix") is not None:
             expected_fixes += 1
     anchors = len(SUMMARY_ANCHOR_ENTRY_RE.findall(body))
@@ -434,13 +473,14 @@ def check_summary_references(report: Report, body: str, summary: dict[str, Any],
             f"the body renders {fixes} `; fix ` entries for {expected_fixes} items with a fix",
         )
     if run["repository_url"] is not None:
-        for match in BLOB_LINK_RE.finditer(body):
+        for match in BLOB_LINK_RE.finditer(remainder):
             revision = match.group("revision")
             if revision != run["head"]:
                 report.add(
                     "summary.body",
                     SUMMARY_REFERENCE,
-                    f"blob link revision `{revision}` is not the run head `{run['head']}`; never link a branch or another commit",
+                    f"blob link revision `{revision}` is not the run head `{run['head']}`; "
+                    "outside a rendered fragment, never link a branch or another commit",
                 )
 
 
@@ -491,9 +531,16 @@ def check_anchor(report: Report, location: str, anchor: Any) -> None:
     if not isinstance(path, str) or not path:
         report.add(location, "anchor-shape", "anchor needs a non-empty `path`")
     if anchor_type == "file":
-        extra = sorted(set(anchor) - {"type", "path"})
+        extra = sorted(set(anchor) - {"type", "path", "side"})
         if extra:
-            report.add(location, "anchor-shape", f"a file anchor carries only `type` and `path`; found {extra}")
+            report.add(location, "anchor-shape", f"a file anchor carries only `type`, `path`, and an optional `side`; found {extra}")
+        side = anchor.get("side", "RIGHT")
+        if side not in SIDES:
+            report.add(
+                location,
+                "anchor-shape",
+                f"a file anchor's optional `side` is `LEFT` for a file the change deletes or `RIGHT` (the default), not `{side!r}`",
+            )
         return
     if anchor_type != "line":
         report.add(location, "anchor-shape", f"anchor `type` must be `line` or `file`, not `{anchor_type!r}`")
@@ -719,11 +766,27 @@ def render(payload: Any) -> tuple[list[str], list[str]]:
     violations: list[str] = []
     for index, item in referenced_items(payload.get("items", [])):
         fragment = render_reference(item, run)
-        if fragment is None:
-            violations.append(f"items[{index}]: anchor-shape: cannot render a fragment from a malformed anchor or fix")
-        else:
+        if fragment is not None:
             fragments.append(fragment)
+        elif _needs_missing_merge_base(item, run):
+            violations.append(
+                f"items[{index}]: trailer-sha: a `LEFT` file anchor links at the run trailer's `merge-base`, "
+                "which is missing or not a full 40-hex SHA"
+            )
+        else:
+            violations.append(f"items[{index}]: anchor-shape: cannot render a fragment from a malformed anchor or fix")
     return fragments, violations
+
+
+def _needs_missing_merge_base(item: dict[str, Any], run: dict[str, Any]) -> bool:
+    anchor = item.get("anchor")
+    return (
+        isinstance(anchor, dict)
+        and anchor.get("type") == "file"
+        and anchor.get("side") == "LEFT"
+        and run.get("repository_url") is not None
+        and run.get("merge_base") is None
+    )
 
 
 def emit_batch(payload: dict[str, Any], event: str = "COMMENT") -> dict[str, Any]:
@@ -763,6 +826,7 @@ OTHER_SHA = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 CONTEXT = "91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e"
 REPOSITORY_URL = "https://github.com/acme/payments"
 BLOB = f"{REPOSITORY_URL}/blob/{HEAD}"
+MERGE_BASE_BLOB = f"{REPOSITORY_URL}/blob/{MERGE_BASE}"
 
 RUN_TRAILER = (
     f"<!-- review-run head={HEAD} base-ref=main base-sha={BASE_SHA} "
@@ -779,6 +843,11 @@ FINDING_FRAGMENT = (
 QUESTION_FRAGMENT = f"anchor [`src/queue.ts`]({BLOB}/src/queue.ts) (file)"
 PLAIN_FINDING_FRAGMENT = "anchor `src/payments.ts:42`; fix `src/retry-policy.ts:18`"
 PLAIN_QUESTION_FRAGMENT = "anchor `src/queue.ts (file)`"
+# A file the change deletes exists only at the merge-base, so its anchor links there (issue #84).
+DELETED_PATH = "src/legacy-queue.ts"
+DELETED_ANCHOR = {"type": "file", "path": DELETED_PATH, "side": "LEFT"}
+DELETED_FRAGMENT = f"anchor [`{DELETED_PATH}`]({MERGE_BASE_BLOB}/{DELETED_PATH}) (file)"
+DELETED_AT_HEAD_FRAGMENT = f"anchor [`{DELETED_PATH}`]({BLOB}/{DELETED_PATH}) (file)"
 QUESTION_ENTRY = f"## Open questions\n\n- [Question] Must retries preserve request order? — {QUESTION_FRAGMENT}\n\n"
 
 SUMMARY_BODY = f"""**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.
@@ -871,6 +940,19 @@ def plain_payload() -> dict[str, Any]:
     payload["summary"]["body"] = SUMMARY_BODY.replace(FINDING_FRAGMENT, PLAIN_FINDING_FRAGMENT).replace(
         QUESTION_FRAGMENT, PLAIN_QUESTION_FRAGMENT
     )
+    return payload
+
+
+def deleted_file_payload() -> dict[str, Any]:
+    """The contract example with its question re-anchored on a file the change deletes.
+
+    The question's file anchor carries ``side: LEFT`` and links at the merge-base,
+    the only revision the file exists at; the finding's ordinary ``RIGHT`` anchor
+    and fix links are unchanged beside it.
+    """
+    payload = valid_payload()
+    payload["items"][1]["anchor"] = dict(DELETED_ANCHOR)
+    payload["summary"]["body"] = SUMMARY_BODY.replace(QUESTION_FRAGMENT, DELETED_FRAGMENT)
     return payload
 
 
@@ -1020,6 +1102,24 @@ def render_cases() -> list[tuple[str, dict[str, Any], str | None, str]]:
             QUESTION_FRAGMENT,
         ),
         (
+            "file anchor with an explicit RIGHT side links at the head",
+            {"type": "file", "path": "src/queue.ts", "side": "RIGHT"},
+            None,
+            QUESTION_FRAGMENT,
+        ),
+        (
+            "deleted file anchor (LEFT) links at the merge-base",
+            dict(DELETED_ANCHOR),
+            None,
+            DELETED_FRAGMENT,
+        ),
+        (
+            "deleted file anchor keeps its fix linked at the head",
+            dict(DELETED_ANCHOR),
+            fix,
+            f"{DELETED_FRAGMENT}; {fix_fragment}",
+        ),
+        (
             "range fix uses L<start>-L<end>",
             line_anchor("src/payments.ts", 42),
             "src/retry-policy.ts:18-20",
@@ -1151,6 +1251,22 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
             "**Coverage:**", f"**Coverage:** See [`AGENTS.md`]({REPOSITORY_URL}/blob/main/AGENTS.md).", 1
         )
 
+    def stray_merge_base_link(payload):
+        payload["summary"]["body"] = payload["summary"]["body"].replace(
+            "**Coverage:**", f"**Coverage:** See [`AGENTS.md`]({MERGE_BASE_BLOB}/AGENTS.md).", 1
+        )
+
+    def deleted_file_linked_at_head(payload):
+        payload["items"][1]["anchor"] = dict(DELETED_ANCHOR)
+        payload["summary"]["body"] = SUMMARY_BODY.replace(QUESTION_FRAGMENT, DELETED_AT_HEAD_FRAGMENT)
+
+    def deleted_file_as_code_span(payload):
+        payload["items"][1]["anchor"] = dict(DELETED_ANCHOR)
+        payload["summary"]["body"] = SUMMARY_BODY.replace(QUESTION_FRAGMENT, f"anchor `{DELETED_PATH} (file)`")
+
+    def file_anchor_with_unknown_side(payload):
+        payload["items"][1]["anchor"] = {"type": "file", "path": "src/queue.ts", "side": "BOTH"}
+
     def bad_repository_url(payload):
         payload["summary"]["repository_url"] = "github.com/acme/payments"
 
@@ -1244,7 +1360,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-1"
+            f"workflow={WORKFLOW}", "workflow=v5b-2"
         )
 
     def malformed_trailer(payload):
@@ -1256,8 +1372,8 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
     def reversed_anchor_range(payload):
         payload["items"][0]["anchor"]["start_line"] = 44
 
-    def file_anchor_with_side(payload):
-        payload["items"][1]["anchor"] = {"type": "file", "path": "src/queue.ts", "side": "RIGHT"}
+    def file_anchor_with_extra_field(payload):
+        payload["items"][1]["anchor"] = {"type": "file", "path": "src/queue.ts", "start_line": 1}
 
     def equal_fix_range(payload):
         payload["items"][0]["fix"] = "src/retry-policy.ts:18-18"
@@ -1309,6 +1425,9 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
         ("fix missing for an item with one", _mutate(fix_missing_for_item_with_fix), SUMMARY_REFERENCE),
         ("fragment rendered twice", _mutate(duplicate_fragment), SUMMARY_REFERENCE),
         ("stray branch link elsewhere in the body", _mutate(stray_branch_link), SUMMARY_REFERENCE),
+        ("stray merge-base link elsewhere in the body", _mutate(stray_merge_base_link), SUMMARY_REFERENCE),
+        ("deleted file anchor linked at the head", _mutate(deleted_file_linked_at_head), SUMMARY_REFERENCE),
+        ("deleted file anchor as a bare code span with repository_url", _mutate(deleted_file_as_code_span), SUMMARY_REFERENCE),
         ("repository_url is not a web URL", _mutate(bad_repository_url), "schema"),
         ("Source before Change", _mutate(source_before_change), "field-order"),
         ("consider without permission sentence", _mutate(consider_without_permission), "field-order"),
@@ -1329,7 +1448,8 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
         ("malformed trailer", _mutate(malformed_trailer), "trailer-grammar"),
         ("line anchor without side", _mutate(line_anchor_without_side), "anchor-shape"),
         ("reversed anchor range", _mutate(reversed_anchor_range), "anchor-shape"),
-        ("file anchor with extra field", _mutate(file_anchor_with_side), "anchor-shape"),
+        ("file anchor with extra field", _mutate(file_anchor_with_extra_field), "anchor-shape"),
+        ("file anchor with a side outside LEFT/RIGHT", _mutate(file_anchor_with_unknown_side), "anchor-shape"),
         ("equal fix range", _mutate(equal_fix_range), "fix-coordinate"),
         ("trailer priority disagreement", _mutate(trailer_disagreement), "trailer-agreement"),
         ("payload is not an object", [], "schema"),
@@ -1398,15 +1518,24 @@ def emit_batch_cases() -> list[str]:
     return failures
 
 
+# Checks ``self_test`` runs outside the ``passing``, ``failing_cases``, and emit-batch lists: the two
+# code-span renders without ``repository_url``, ``--render`` on the contract example and on the
+# deleted-file review, ``--render`` and ``validate`` with an abbreviated merge-base, and the bare
+# code-span hint.
+AD_HOC_CASES = 7
+
+
 def self_test() -> int:
     failures: list[str] = []
-    run = {"head": HEAD, "repository_url": REPOSITORY_URL}
+    run = {"head": HEAD, "merge_base": MERGE_BASE, "repository_url": REPOSITORY_URL}
+    plain_run = {"head": HEAD, "merge_base": MERGE_BASE, "repository_url": None}
     passing: list[tuple[str, dict[str, Any]]] = [
         ("contract example review", valid_payload()),
         ("code-span fallback without repository_url", plain_payload()),
         ("consider finding", consider_payload()),
         ("observation with abbreviation", abbreviation_payload()),
         ("file-anchored finding laid out in Unanchored findings", unanchored_payload()),
+        ("deleted file anchor at the merge-base beside an ordinary RIGHT link", deleted_file_payload()),
     ]
     for name, anchor, fix, fragment in render_cases():
         item: dict[str, Any] = {"type": "finding", "anchor": anchor}
@@ -1416,12 +1545,26 @@ def self_test() -> int:
         if rendered != fragment:
             failures.append(f"render {name}: got {rendered!r}, want {fragment!r}")
         passing.append((f"render {name}", reference_payload(anchor, fix, fragment)))
-    plain_left = render_reference({"type": "finding", "anchor": line_anchor("src/old.ts", 9, side="LEFT")}, {"head": HEAD, "repository_url": None})
+    plain_left = render_reference({"type": "finding", "anchor": line_anchor("src/old.ts", 9, side="LEFT")}, plain_run)
     if plain_left != "anchor `src/old.ts:9`":
         failures.append(f"render without repository_url: got {plain_left!r}")
+    plain_deleted = render_reference({"type": "finding", "anchor": dict(DELETED_ANCHOR)}, plain_run)
+    if plain_deleted != f"anchor `{DELETED_PATH} (file)`":
+        failures.append(f"render deleted file anchor without repository_url: got {plain_deleted!r}")
     fragments, violations = render(valid_payload())
     if violations or fragments != [FINDING_FRAGMENT, QUESTION_FRAGMENT]:
         failures.append(f"--render on the contract example: got {fragments!r}, violations {violations!r}")
+    fragments, violations = render(deleted_file_payload())
+    if violations or fragments != [FINDING_FRAGMENT, DELETED_FRAGMENT]:
+        failures.append(f"--render on the deleted-file review: got {fragments!r}, violations {violations!r}")
+    no_merge_base = deleted_file_payload()
+    no_merge_base["summary"]["trailer"] = no_merge_base["summary"]["trailer"].replace(MERGE_BASE, "d4e5f60")
+    no_merge_base["summary"]["body"] = no_merge_base["summary"]["body"].replace(MERGE_BASE, "d4e5f60")
+    fragments, violations = render(no_merge_base)
+    if fragments != [FINDING_FRAGMENT] or len(violations) != 1 or "trailer-sha" not in violations[0]:
+        failures.append(f"--render with an abbreviated merge-base: got {fragments!r}, violations {violations!r}")
+    if "trailer-sha" not in {line.split(": ", 2)[1] for line in validate(no_merge_base)}:
+        failures.append("validate with an abbreviated merge-base: expected a `trailer-sha` violation")
     for name, payload in passing:
         lines = validate(payload)
         if lines:
@@ -1441,7 +1584,7 @@ def self_test() -> int:
     if failures:
         print(f"validate_review: {len(failures)} self-test case(s) failed")
         return 1
-    print(f"validate_review: self-test passed ({len(passing) + len(failing_cases()) + 3 + EMIT_BATCH_CASES} cases, emit-batch included)")
+    print(f"validate_review: self-test passed ({len(passing) + len(failing_cases()) + AD_HOC_CASES + EMIT_BATCH_CASES} cases, emit-batch included)")
     return 0
 
 
