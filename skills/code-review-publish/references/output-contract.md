@@ -102,7 +102,7 @@ Keep the body useful without duplicating inline comments:
 
 **Issue fit:** Partial — retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open.
 
-**Coverage:** Complete merge-base diff reviewed; payment callers and focused tests inspected.
+**Coverage:** Complete merge-base diff reviewed; payment callers inspected; focused `retry-policy` test run once at the head: pass.
 
 **Reviewed:** `a1b2c3d` against merge-base `d4e5f6a`.
 
