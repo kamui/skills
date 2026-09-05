@@ -1103,6 +1103,13 @@ from 16:38 on 2026-09-04, mixed across targets so one limit event could not take
 seeds together; no limit event occurred during the grid. Every
 discarded attempt is priced and recorded under Run continuity.
 
+**Pointer (2026-09-05, #96).** The attempt ledger, the pre-dispatch record and the reset-aware
+scheduling rule live in
+[the one-shot method §3](../code-review-one-shot-method.md#3-preserve-every-attempt-and-its-output),
+not in "Dispatch hygiene" above as the previous paragraph anticipated. The two-cell rule, the
+recorded four-cell deviation and the Run continuity rows in `comparison-data.md` remain this
+grid's history.
+
 ### Order of work
 
 1. Commit ground truth and calibration bands for every target (this pull request) and obtain
