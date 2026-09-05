@@ -97,7 +97,9 @@ rendered result). The only other keys are ``root_dispatched_at``,
 ``payload_validated_at`` (final payload passed validation), and ``completed_at``
 (final publication/result for the chosen mode). Each event is an ISO-8601
 timestamp with date, time including seconds, and timezone, for example
-``2026-09-05T12:00:00.250Z`` or ``2026-09-05T08:00:00.250-04:00``. Missing or
+``2026-09-05T12:00:00.250Z`` or ``2026-09-05T08:00:00.250-04:00``. Fractions
+are padded or truncated to six digits before parsing, so all supported Python
+versions measure and check ordering at microsecond precision. Missing or
 null events stay unavailable. All available events must be in that order;
 equal instants are allowed. Unknown keys, invalid timestamps, a missing/invalid
 mode, or invalid ordering are input errors (exit 2, sidecar path on stderr).
@@ -368,8 +370,10 @@ def read_timing(path: Optional[str]) -> dict:
                     r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)", value
                 ):
                     raise ValueError(f"{name} must be an ISO-8601 timestamp with timezone")
+                # Python 3.9/3.10 accept only three- or six-digit fractions.
+                normalized = re.sub(r"\.(\d+)", lambda match: "." + match[1][:6].ljust(6, "0"), value)
                 try:
-                    stamp = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+                    stamp = datetime.fromisoformat(normalized.replace("Z", "+00:00")).astimezone(timezone.utc)
                 except (ValueError, OverflowError) as exc:
                     raise ValueError(f"invalid {name}: {value!r}") from exc
                 if previous is not None and stamp < previous:

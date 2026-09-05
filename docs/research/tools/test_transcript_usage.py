@@ -83,6 +83,21 @@ class TimingTests(unittest.TestCase):
         self.assertEqual(timing["elapsed_to_payload_seconds"], 100.25)
         self.assertEqual(timing["elapsed_to_completion_seconds"], 119.75)
 
+    def test_fraction_lengths_on_supported_python_versions(self) -> None:
+        for fraction, micros in (("1", "100000"), ("12", "120000"), ("123", "123000"),
+                                 ("1234", "123400"), ("12345", "123450"), ("123456", "123456"),
+                                 ("1234567", "123456"), ("12345678", "123456"), ("123456789", "123456")):
+            with self.subTest(fraction=fraction):
+                self.events.update(root_dispatched_at=f"2026-09-05T08:00:00.{fraction}-04:00",
+                                   payload_validated_at=f"2026-09-05T12:01:40.{fraction}Z",
+                                   completed_at=f"2026-09-05T14:02:00.{fraction}+02:00")
+                timing = self.read_json(events=self.events)["timing"]
+                for event, clock in (("root_dispatched_at", "12:00:00"),
+                                     ("payload_validated_at", "12:01:40"), ("completed_at", "12:02:00")):
+                    self.assertEqual(timing[event], f"2026-09-05T{clock}.{micros}+00:00")
+                self.assertEqual(timing["elapsed_to_payload_seconds"], 100)
+                self.assertEqual(timing["elapsed_to_completion_seconds"], 120)
+
     def test_completion_modes_without_publication(self) -> None:
         for mode in ("render-only", "result"):
             with self.subTest(mode=mode):
