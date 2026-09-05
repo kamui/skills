@@ -20,7 +20,7 @@ for the same logical charge.
 <!-- finding id=payments/retry-idempotency head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 priority=P1 action=must-fix blocking=true kind=requirement fix=src/retry-policy.ts:18 -->
 ```
 
-The title, trigger, impact, and change must make sense without the trailer. Omit `Source` unless an issue or repository rule materially supports the finding. The two action forms are:
+The title, trigger, impact, and change must make sense without the trailer. Omit `Source` unless an issue, a pull-request promise at its `pr-title` or `pr-body` ledger coordinate, or a repository rule materially supports the finding. The two action forms are:
 
 - `[must-fix]`, `action=must-fix`, and `blocking=true` for an outcome required before merge.
 - `[consider]`, `action=consider`, and `blocking=false` for optional feedback. When present, `Source` follows `Change`; the exact sentence `Closing this without action is a correct response.` is then the final paragraph before the trailer.
