@@ -11,30 +11,51 @@ prices the sum. It does mechanical arithmetic only.
 Usage::
 
     python3 docs/research/tools/transcript_usage.py <agent-*.jsonl>... \\
-        --prices 2,10 [--cache-write-mult 1.25] [--cache-read-mult 0.1] \\
-        [--report <run.md>] [--by-kind] [--row "<label>" | --json]
+        --prices 2,10 [--cache-write-mult 1.25] [--cache-write-1h-mult 2.0] \\
+        [--cache-read-mult 0.1] [--report <run.md>] [--by-kind] \\
+        [--row "<label>" | --json]
 
     python3 docs/research/tools/transcript_usage.py --header
     python3 docs/research/tools/transcript_usage.py --self-test
 
 ``--prices IN,OUT`` is dollars per million input and output tokens. Cache
-writes cost ``IN × --cache-write-mult`` and cache reads ``IN ×
---cache-read-mult``; the defaults are the standard 5-minute-cache
-multipliers. ``--report`` names the research report the run wrote; its size
-in bytes ÷ 4 is subtracted from the output column to give a production-shaped
-cost, the rule ``cost_split.py`` applies to the harness figure, here applied
-to billed output.
+reads cost ``IN × --cache-read-mult`` (default 0.1). Cache writes are priced
+by cache lifetime: five-minute writes cost ``IN × --cache-write-mult``
+(default 1.25) and one-hour writes ``IN × --cache-write-1h-mult`` (default
+2.0), the standard multipliers for the two tiers. ``--report`` names the
+research report the run wrote; its size in bytes ÷ 4 is subtracted from the
+output column to give a production-shaped cost, the rule ``cost_split.py``
+applies to the harness figure, here applied to billed output.
 
 Input schema. Each transcript line is one JSON object. Assistant lines have
 ``"type": "assistant"`` and, inside ``message``, a ``usage`` object with
 ``input_tokens``, ``cache_creation_input_tokens``, ``cache_read_input_tokens``,
-``output_tokens`` and, when present, ``output_tokens_details.thinking_tokens``;
+``output_tokens`` and, when present, ``output_tokens_details.thinking_tokens``
+and a ``cache_creation`` object splitting the cache writes by lifetime into
+``ephemeral_5m_input_tokens`` and ``ephemeral_1h_input_tokens``;
 ``message.model`` names the model; ``message.content`` is a list whose
 ``"type": "tool_use"`` items are tool calls; the top-level ``timestamp`` is
 ISO 8601. Lines that are not valid JSON are skipped, as are assistant lines
 the harness wrote itself rather than received from the API (``model`` of
 ``<synthetic>`` or ``isApiErrorMessage`` set, such as a session-limit notice);
 they carry a zero usage object and are not billed requests.
+
+Cache-write tiers. ``cache_creation_input_tokens`` is the authoritative
+cache-write total. The ``cache_creation`` split is read per turn under the
+same largest-recorded rule as the other cumulative fields and classified
+against that turn's total. A split that adds up to the total is fully known
+and priced per tier. A turn with no split at all (older transcripts) has its
+whole total counted as **unknown-tier**. A split short of the total has the
+shortfall counted as unknown-tier *residual*. A split that exceeds the total
+is *inconsistent usage*: the whole total is counted as unknown-tier rather
+than pricing a negative residual or counting the split twice. ``cost`` is a
+point estimate that prices unknown-tier tokens at the five-minute multiplier,
+the legacy assumption, so a transcript that carries no split prices exactly
+as it did before; the cost *bounds* re-price the unknown-tier tokens at the
+lower and at the higher of the two multipliers. Unknown-tier tokens are never
+priced at zero, and every output that carries the estimate says how many
+tokens it covers and why their tier is unknown: the estimate is a declared
+fallback, not a billing guarantee.
 
 One API request, one turn. The harness writes one line per content block of
 a response, and every line of the same response repeats that response's
@@ -48,16 +69,25 @@ block and overstates cache reads by the blocks-per-request ratio; the
 ``lines`` figure in the block is printed so a reader can see that ratio.
 
 Per transcript: ``turns``, ``lines``, ``tool_calls``, ``text_only_turns``
-(turns with no tool call), ``input``, ``cache_write``, ``cache_read``,
+(turns with no tool call), ``input``, ``cache_write`` with its tiers
+``cache_write_5m``, ``cache_write_1h`` and ``cache_write_unknown`` (the three
+sum to ``cache_write``; the unknown figure is broken down by cause, tokens
+and turns, under ``cache_write_unknown_by_cause``), ``cache_read``,
 ``output``, ``thinking``, ``models`` (distinct, ``<synthetic>`` dropped),
 ``wall`` (last minus first assistant timestamp, ``H:MM:SS``; the ``TOTAL``
-wall is the sum over transcripts, not the span), and ``cost``.
+wall is the sum over transcripts, not the span), ``cost`` and its
+``cost_bounds`` (``low``, ``high``, ``unknown_tier_tokens``, ``tiers_known``
+and the ``assumption`` in words).
 Output: one labelled block per transcript and a ``TOTAL`` block; with
 ``--row`` one Markdown table row of the totals, labelled; when ``--report``
 is also given, the row populates the report estimate and production-shaped
 cost. With ``--json`` it prints the same numbers as JSON. ``--header`` prints
 the table header from the same column list as ``--row``, so the two cannot
-diverge; production-shaped cells are ``—`` when no report was supplied.
+diverge; production-shaped cells are ``—`` when no report was supplied. The
+columns are the legacy ones: the ``Cache write`` cell names the tiers when
+any write is one-hour or unknown-tier, and the cost cells carry the fallback
+and the bounds when any write is unknown-tier, so a fully known
+all-five-minute row prints exactly as before.
 
 ``--by-kind`` adds an ``output by kind`` block after each printed block and a
 ``by_kind`` object to each ``--json`` entry; it leaves the ``--row`` /
@@ -117,9 +147,27 @@ COUNT_FIELDS = (
     "text_only_turns",
     "input",
     "cache_write",
+    "cache_write_5m",
+    "cache_write_1h",
+    "cache_write_unknown",
     "cache_read",
     "output",
     "thinking",
+    # Why a cache write's tier is unknown: tokens and turns per cause. The
+    # three token figures sum to cache_write_unknown.
+    "unknown_no_breakdown",
+    "unknown_residual",
+    "unknown_inconsistent",
+    "turns_no_breakdown",
+    "turns_residual",
+    "turns_inconsistent",
+)
+
+# The causes of an unknown cache-write tier, with how each reads in a block.
+UNKNOWN_CAUSES = (
+    ("no_breakdown", "without a tier breakdown"),
+    ("residual", "whose breakdown is short of the total"),
+    ("inconsistent", "whose breakdown exceeds the total (inconsistent usage)"),
 )
 
 
@@ -268,6 +316,40 @@ def wall_text(seconds: float) -> str:
     return f"{hours}:{minutes:02d}:{secs:02d}"
 
 
+class Rates:
+    """Dollar prices per million tokens and the cache multipliers on the input price."""
+
+    def __init__(self, prices: tuple[float, float], write_5m_mult: float, write_1h_mult: float, read_mult: float) -> None:
+        self.price_in, self.price_out = prices
+        self.write_5m_mult = write_5m_mult
+        self.write_1h_mult = write_1h_mult
+        self.read_mult = read_mult
+
+    @classmethod
+    def from_args(cls, args: argparse.Namespace) -> "Rates":
+        return cls(args.prices, args.cache_write_mult, args.cache_write_1h_mult, args.cache_read_mult)
+
+    # An unknown-tier cache write is one of the two tiers; these bracket it.
+    @property
+    def unknown_low_mult(self) -> float:
+        return min(self.write_5m_mult, self.write_1h_mult)
+
+    @property
+    def unknown_high_mult(self) -> float:
+        return max(self.write_5m_mult, self.write_1h_mult)
+
+    def as_dict(self) -> dict:
+        return {
+            "input": self.price_in,
+            "output": self.price_out,
+            "cache_write_mult": self.write_5m_mult,
+            "cache_write_1h_mult": self.write_1h_mult,
+            "cache_read_mult": self.read_mult,
+            "unknown_tier_fallback": "unknown-tier cache writes are priced at cache_write_mult (5m) in cost; "
+                                     "cost_bounds price them at the lower and the higher of the two multipliers",
+        }
+
+
 class Usage:
     """Summed usage for one transcript or for a set of them."""
 
@@ -305,15 +387,52 @@ class Usage:
             mine["chars"] += part["chars"]
             mine["tokens"] += part["tokens"]
 
-    def cost(self, prices: tuple[float, float], write_mult: float, read_mult: float, output: Optional[int] = None) -> float:
-        price_in, price_out = prices
-        out = self.counts["output"] if output is None else output
+    def cost(self, rates: Rates, output: Optional[int] = None, unknown_mult: Optional[float] = None) -> float:
+        """Dollars. Unknown-tier cache writes are priced at ``unknown_mult``, by default the 5m multiplier."""
+        c = self.counts
+        out = c["output"] if output is None else output
+        if unknown_mult is None:
+            unknown_mult = rates.write_5m_mult
         return (
-            self.counts["input"] * price_in
-            + self.counts["cache_write"] * price_in * write_mult
-            + self.counts["cache_read"] * price_in * read_mult
-            + out * price_out
+            c["input"] * rates.price_in
+            + c["cache_write_5m"] * rates.price_in * rates.write_5m_mult
+            + c["cache_write_1h"] * rates.price_in * rates.write_1h_mult
+            + c["cache_write_unknown"] * rates.price_in * unknown_mult
+            + c["cache_read"] * rates.price_in * rates.read_mult
+            + out * rates.price_out
         ) / 1_000_000
+
+    def cost_summary(self, rates: Rates, output: Optional[int] = None) -> dict:
+        """The point estimate, the bounds that bracket the unknown-tier writes, and the assumption in words."""
+        unknown = self.counts["cache_write_unknown"]
+        if unknown == 0:
+            assumption = "all cache-write tiers known"
+        else:
+            assumption = (
+                f"{fmt(unknown)} unknown-tier cache-write tokens priced at the 5m multiplier ×{rates.write_5m_mult:g} "
+                f"in the estimate and at ×{rates.unknown_low_mult:g} / ×{rates.unknown_high_mult:g} in the bounds"
+            )
+        return {
+            "estimate": self.cost(rates, output),
+            "low": self.cost(rates, output, rates.unknown_low_mult),
+            "high": self.cost(rates, output, rates.unknown_high_mult),
+            "unknown_tier_tokens": unknown,
+            "tiers_known": unknown == 0,
+            "assumption": assumption,
+        }
+
+    def unknown_causes(self) -> str:
+        """Why the unknown-tier tokens are unknown, one clause per cause that occurred."""
+        clauses = []
+        for cause, reading in UNKNOWN_CAUSES:
+            tokens = self.counts[f"unknown_{cause}"]
+            turns = self.counts[f"turns_{cause}"]
+            if tokens == 0 and turns == 0:
+                continue
+            noun = "turn" if turns == 1 else "turns"
+            what = f"{fmt(tokens)} residual" if cause == "residual" else fmt(tokens)
+            clauses.append(f"{what} in {fmt(turns)} {noun} {reading}")
+        return "; ".join(clauses)
 
     def by_kind(self) -> dict:
         """Thinking, and the visible output split by bucket and by written path.
@@ -334,7 +453,13 @@ class Usage:
 
     def as_dict(self) -> dict:
         data = {"label": self.label}
-        data.update(self.counts)
+        for field in COUNT_FIELDS:
+            if not field.startswith(("unknown_", "turns_")):
+                data[field] = self.counts[field]
+        data["cache_write_unknown_by_cause"] = {
+            cause: {"tokens": self.counts[f"unknown_{cause}"], "turns": self.counts[f"turns_{cause}"]}
+            for cause, _ in UNKNOWN_CAUSES
+        }
         data["models"] = list(self.models)
         data["wall"] = wall_text(self.wall_seconds)
         data["wall_seconds"] = round(self.wall_seconds, 3)
@@ -380,12 +505,21 @@ def read_transcript(path: str) -> Usage:
             key = ("line", anonymous)
         turn = turns.get(key)
         if turn is None:
-            turn = {"input": 0, "cache_write": 0, "cache_read": 0, "output": 0, "thinking": 0,
+            turn = {"input": 0, "cache_write": 0, "cache_write_5m": 0, "cache_write_1h": 0, "breakdown": False,
+                    "cache_read": 0, "output": 0, "thinking": 0,
                     "tool_ids": set(), "tool_uses": 0, "lines": 0, "stamps": []}
             turns[key] = turn
         turn["lines"] += 1
         turn["input"] = max(turn["input"], int(used.get("input_tokens") or 0))
         turn["cache_write"] = max(turn["cache_write"], int(used.get("cache_creation_input_tokens") or 0))
+        tiers = used.get("cache_creation")
+        if isinstance(tiers, dict):
+            five = tiers.get("ephemeral_5m_input_tokens")
+            hour = tiers.get("ephemeral_1h_input_tokens")
+            if five is not None or hour is not None:
+                turn["breakdown"] = True
+                turn["cache_write_5m"] = max(turn["cache_write_5m"], int(five or 0))
+                turn["cache_write_1h"] = max(turn["cache_write_1h"], int(hour or 0))
         turn["cache_read"] = max(turn["cache_read"], int(used.get("cache_read_input_tokens") or 0))
         turn["output"] = max(turn["output"], int(used.get("output_tokens") or 0))
         details = used.get("output_tokens_details")
@@ -427,6 +561,7 @@ def read_transcript(path: str) -> Usage:
             counts["text_only_turns"] += 1
         for field in ("input", "cache_write", "cache_read", "output", "thinking"):
             counts[field] += turn[field]
+        classify_cache_write(turn, counts)
         for stamp in turn["stamps"]:
             if usage.first is None or stamp < usage.first:
                 usage.first = stamp
@@ -434,6 +569,9 @@ def read_transcript(path: str) -> Usage:
                 usage.last = stamp
     if usage.first is not None and usage.last is not None:
         usage.wall_seconds = (usage.last - usage.first).total_seconds()
+    counts["cache_write_unknown"] = sum(counts[f"unknown_{cause}"] for cause, _ in UNKNOWN_CAUSES)
+    assert counts["cache_write"] == counts["cache_write_5m"] + counts["cache_write_1h"] + counts["cache_write_unknown"], \
+        "cache-write tiers do not sum to the total"
 
     # Thinking is billed but unreadable; the rest of the output is what the
     # characters above account for.
@@ -446,6 +584,34 @@ def read_transcript(path: str) -> Usage:
         for path, part in write_chars.items()
     }
     return usage
+
+
+def classify_cache_write(turn: dict, counts: dict) -> None:
+    """Sort one turn's cache writes into known tiers and unknown-tier tokens by cause.
+
+    The turn's ``cache_write`` total is authoritative. A split that adds up to it
+    is known per tier; a missing split leaves the whole total unknown-tier; a
+    short split leaves the shortfall unknown-tier as residual; a split larger
+    than the total is inconsistent usage and leaves the whole total unknown-tier,
+    so nothing is priced twice and no residual goes negative.
+    """
+    total = turn["cache_write"]
+    five, hour = turn["cache_write_5m"], turn["cache_write_1h"]
+    if not turn["breakdown"]:
+        if total > 0:
+            counts["unknown_no_breakdown"] += total
+            counts["turns_no_breakdown"] += 1
+        return
+    if five + hour > total:
+        counts["unknown_inconsistent"] += total
+        counts["turns_inconsistent"] += 1
+        return
+    counts["cache_write_5m"] += five
+    counts["cache_write_1h"] += hour
+    residual = total - five - hour
+    if residual > 0:
+        counts["unknown_residual"] += residual
+        counts["turns_residual"] += 1
 
 
 def report_tokens(path: Optional[str]) -> Optional[int]:
@@ -486,39 +652,64 @@ def block_lines(usage: Usage, args: argparse.Namespace, shaped_tokens: Optional[
     lines.append(f"{'tool calls':<{width}} {fmt(c['tool_calls']):>12}")
     lines.append(f"{'text-only turns':<{width}} {fmt(c['text_only_turns']):>12}")
     lines.append(f"{'input':<{width}} {fmt(c['input']):>12} tokens (uncached)")
-    lines.append(f"{'cache write':<{width}} {fmt(c['cache_write']):>12} tokens")
+    unknown = c["cache_write_unknown"]
+    tiers = f"5m {fmt(c['cache_write_5m'])}, 1h {fmt(c['cache_write_1h'])}"
+    if unknown:
+        tiers += f", unknown tier {fmt(unknown)}"
+    lines.append(f"{'cache write':<{width}} {fmt(c['cache_write']):>12} tokens ({tiers})")
+    if unknown:
+        lines.append(f"{'unknown tier':<{width}} {fmt(unknown):>12} tokens: {usage.unknown_causes()}")
     lines.append(f"{'cache read':<{width}} {fmt(c['cache_read']):>12} tokens")
     lines.append(f"{'output':<{width}} {fmt(c['output']):>12} tokens (thinking {fmt(c['thinking'])})")
     lines.append(f"{'models':<{width}} {', '.join(usage.models) if usage.models else 'none recorded':>12}")
     wall_note = " (summed over transcripts)" if usage.label == "TOTAL" else ""
     lines.append(f"{'wall':<{width}} {wall_text(usage.wall_seconds):>12}{wall_note}")
-    cost = usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult)
+    rates = Rates.from_args(args)
+    summary = usage.cost_summary(rates)
+    tier_note = "all cache-write tiers known" if summary["tiers_known"] else "unknown-tier cache writes priced as 5m"
     lines.append(
-        f"{'cost':<{width}} {cost:>12.2f} $ at {args.prices[0]:g}/{args.prices[1]:g} per M, "
-        f"cache write ×{args.cache_write_mult:g}, cache read ×{args.cache_read_mult:g}"
+        f"{'cost':<{width}} {summary['estimate']:>12.2f} $ at {rates.price_in:g}/{rates.price_out:g} per M, "
+        f"cache write ×{rates.write_5m_mult:g} (5m) ×{rates.write_1h_mult:g} (1h), cache read ×{rates.read_mult:g}; "
+        f"{tier_note}"
     )
+    if not summary["tiers_known"]:
+        lines.append(
+            f"{'cost bounds':<{width}} {summary['low']:>12.2f} – {summary['high']:.2f} $ ({summary['assumption']})"
+        )
     if shaped_tokens is not None:
         shaped_output = max(0, c["output"] - shaped_tokens)
-        shaped = usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult, output=shaped_output)
+        shaped = usage.cost_summary(rates, output=shaped_output)
+        bounds = "" if shaped["tiers_known"] else f"; bounds {shaped['low']:.2f} – {shaped['high']:.2f} $"
         lines.append(
-            f"{'production-shaped':<{width}} {shaped:>12.2f} $ (output {fmt(shaped_output)} after subtracting "
-            f"the report's {fmt(shaped_tokens)} est. tokens)"
+            f"{'production-shaped':<{width}} {shaped['estimate']:>12.2f} $ (output {fmt(shaped_output)} after subtracting "
+            f"the report's {fmt(shaped_tokens)} est. tokens){bounds}"
         )
     if getattr(args, "by_kind", False):
         lines.extend(by_kind_lines(usage, width))
     return lines
 
 
+def cost_cell(summary: dict, rates: Rates, bold: bool = False) -> str:
+    """A cost cell: the estimate, and when any write is unknown-tier, its fallback and bounds."""
+    cell = f"**{summary['estimate']:.2f}**" if bold else f"{summary['estimate']:.2f}"
+    if not summary["tiers_known"]:
+        cell += f" (unknown tier at ×{rates.write_5m_mult:g}; {summary['low']:.2f}–{summary['high']:.2f})"
+    return cell
+
+
 def row_line(usage: Usage, label: str, args: argparse.Namespace, shaped_tokens: Optional[int]) -> str:
     c = usage.counts
+    rates = Rates.from_args(args)
+    unknown = c["cache_write_unknown"]
+    cache_write = fmt(c["cache_write"])
+    if c["cache_write_1h"] or unknown:
+        cache_write += f" (5m {fmt(c['cache_write_5m'])}, 1h {fmt(c['cache_write_1h'])}"
+        cache_write += f", unknown {fmt(unknown)})" if unknown else ")"
     shaped_cost = "—"
     report_output = "—"
     if shaped_tokens is not None:
         shaped_output = max(0, c["output"] - shaped_tokens)
-        cost = usage.cost(
-            args.prices, args.cache_write_mult, args.cache_read_mult, output=shaped_output
-        )
-        shaped_cost = f"**{cost:.2f}**"
+        shaped_cost = cost_cell(usage.cost_summary(rates, output=shaped_output), rates, bold=True)
         report_output = fmt(shaped_tokens)
     by_column = {
         "Run / agent": label,
@@ -527,12 +718,12 @@ def row_line(usage: Usage, label: str, args: argparse.Namespace, shaped_tokens: 
         "Tool calls": fmt(c["tool_calls"]),
         "Text-only turns": fmt(c["text_only_turns"]),
         "Input": fmt(c["input"]),
-        "Cache write": fmt(c["cache_write"]),
+        "Cache write": cache_write,
         "Cache read": fmt(c["cache_read"]),
         "Output": fmt(c["output"]),
         "Thinking": fmt(c["thinking"]),
         "Wall": wall_text(usage.wall_seconds),
-        "Billed cost ($)": f"{usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult):.2f}",
+        "Billed cost ($)": cost_cell(usage.cost_summary(rates), rates),
         "Report output (est.)": report_output,
         "Production-shaped ($)": shaped_cost,
     }
@@ -547,7 +738,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("transcripts", nargs="*", help="one or more agent-*.jsonl transcript paths")
     parser.add_argument("--prices", type=prices_arg, metavar="IN,OUT", help="dollars per million input and output tokens, e.g. 2,10")
-    parser.add_argument("--cache-write-mult", type=non_negative_float, default=1.25, help="cache-write price as a multiple of the input price (default 1.25)")
+    parser.add_argument("--cache-write-mult", type=non_negative_float, default=1.25, help="five-minute cache-write price as a multiple of the input price (default 1.25); also the price assumed for cache writes whose tier is unknown")
+    parser.add_argument("--cache-write-1h-mult", type=non_negative_float, default=2.0, help="one-hour cache-write price as a multiple of the input price (default 2.0)")
     parser.add_argument("--cache-read-mult", type=non_negative_float, default=0.1, help="cache-read price as a multiple of the input price (default 0.1)")
     parser.add_argument("--report", metavar="PATH", help="research report file; its bytes ÷ 4 come off the output for the production-shaped cost")
     parser.add_argument("--by-kind", action="store_true", help="add an output-by-kind block splitting visible output across text, tool inputs and file writes")
@@ -588,29 +780,38 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     if args.json:
-        data = {
-            "prices": {"input": args.prices[0], "output": args.prices[1],
-                       "cache_write_mult": args.cache_write_mult, "cache_read_mult": args.cache_read_mult},
-            "transcripts": [],
-        }
+        rates = Rates.from_args(args)
+        data = {"prices": rates.as_dict(), "transcripts": []}
+
+        def add_costs(entry: dict, usage: Usage) -> None:
+            summary = usage.cost_summary(rates)
+            entry["cost"] = round(summary["estimate"], 6)
+            entry["cost_bounds"] = {
+                "low": round(summary["low"], 6),
+                "high": round(summary["high"], 6),
+                "unknown_tier_tokens": summary["unknown_tier_tokens"],
+                "tiers_known": summary["tiers_known"],
+                "assumption": summary["assumption"],
+            }
+
         for usage in usages:
             entry = usage.as_dict()
             entry["path"] = args.transcripts[usages.index(usage)]
-            entry["cost"] = round(usage.cost(args.prices, args.cache_write_mult, args.cache_read_mult), 6)
+            add_costs(entry, usage)
             if args.by_kind:
                 entry["by_kind"] = usage.by_kind()
             data["transcripts"].append(entry)
         entry = total.as_dict()
-        entry["cost"] = round(total.cost(args.prices, args.cache_write_mult, args.cache_read_mult), 6)
+        add_costs(entry, total)
         if args.by_kind:
             entry["by_kind"] = total.by_kind()
         if shaped_tokens is not None:
             shaped_output = max(0, total.counts["output"] - shaped_tokens)
+            shaped = total.cost_summary(rates, output=shaped_output)
             entry["report_tokens"] = shaped_tokens
             entry["production_shaped_output"] = shaped_output
-            entry["production_shaped_cost"] = round(
-                total.cost(args.prices, args.cache_write_mult, args.cache_read_mult, output=shaped_output), 6
-            )
+            entry["production_shaped_cost"] = round(shaped["estimate"], 6)
+            entry["production_shaped_cost_bounds"] = {"low": round(shaped["low"], 6), "high": round(shaped["high"], 6)}
         data["total"] = entry
         print(json.dumps(data, indent=2))
         return 0
@@ -654,12 +855,22 @@ def self_test() -> int:
             line["requestId"] = request
         return line
 
+    def split_of(five: int, hour: int) -> dict:
+        return {"ephemeral_5m_input_tokens": five, "ephemeral_1h_input_tokens": hour}
+
+    # The simple transcript is fully known all-5m usage: the historical shape.
     first_usage = {"input_tokens": 10, "cache_creation_input_tokens": 100, "cache_read_input_tokens": 1000,
-                   "output_tokens": 50, "output_tokens_details": {"thinking_tokens": 20}}
+                   "output_tokens": 50, "output_tokens_details": {"thinking_tokens": 20},
+                   "cache_creation": split_of(100, 0)}
     second_usage = {"input_tokens": 0, "cache_creation_input_tokens": 50, "cache_read_input_tokens": 1150,
-                    "output_tokens": 30, "output_tokens_details": {"thinking_tokens": 0}}
+                    "output_tokens": 30, "output_tokens_details": {"thinking_tokens": 0},
+                    "cache_creation": split_of(50, 0)}
     tool_use = {"type": "tool_use", "id": "toolu_1", "name": "Bash", "input": {"command": "true"}}
     expected_cost = (10 * 2 + 150 * 2 * 1.25 + 2150 * 2 * 0.1 + 80 * 10) / 1e6
+
+    def tiers_sum(total: dict) -> bool:
+        return total.get("cache_write") == (total.get("cache_write_5m", -1) + total.get("cache_write_1h", -1)
+                                            + total.get("cache_write_unknown", -1))
 
     with tempfile.TemporaryDirectory() as tmp:
         simple = os.path.join(tmp, "simple.jsonl")
@@ -681,13 +892,27 @@ def self_test() -> int:
             check(f"simple {field}", total.get(field) == want, f"got {total.get(field)!r}, want {want!r}")
         check("simple cost", abs(total.get("cost", -1) - expected_cost) < 1e-9, f"got {total.get('cost')!r}, want {expected_cost!r}")
         check("simple model", total.get("models") == ["claude-sonnet-5"], repr(total.get("models")))
+        check("all-5m tiers", (total.get("cache_write_5m"), total.get("cache_write_1h"), total.get("cache_write_unknown")) == (150, 0, 0),
+              repr({k: total.get(k) for k in ("cache_write_5m", "cache_write_1h", "cache_write_unknown")}))
+        check("all-5m tiers sum", tiers_sum(total), repr(total))
+        bounds = total.get("cost_bounds", {})
+        check("all-5m tiers known", bounds.get("tiers_known") is True and bounds.get("unknown_tier_tokens") == 0, repr(bounds))
+        check("all-5m bounds collapse", bounds.get("low") == bounds.get("high") == total.get("cost"), repr(bounds))
+        check("all-5m assumption", bounds.get("assumption") == "all cache-write tiers known", repr(bounds))
+        check("all-5m no unknown causes", all(part == {"tokens": 0, "turns": 0} for part in total.get("cache_write_unknown_by_cause", {}).values())
+              and set(total.get("cache_write_unknown_by_cause", {})) == {"no_breakdown", "residual", "inconsistent"},
+              repr(total.get("cache_write_unknown_by_cause")))
+        check("prices carry both multipliers", data.get("prices", {}).get("cache_write_mult") == 1.25
+              and data.get("prices", {}).get("cache_write_1h_mult") == 2.0, repr(data.get("prices")))
 
         r = run(simple, "--prices", "2,10")
         check("block exits 0", r.returncode == 0, r.stderr)
         check("block turns", "turns                         2 (API requests; 2 assistant lines)" in r.stdout, r.stdout)
         check("block output", "output                       80 tokens (thinking 20)" in r.stdout, r.stdout)
         check("block wall", "wall                    0:00:10" in r.stdout, r.stdout)
-        check("block cost", f"cost               {expected_cost:>12.2f} $ at 2/10 per M" in r.stdout, r.stdout)
+        check("block cost", f"cost               {expected_cost:>12.2f} $ at 2/10 per M, cache write ×1.25 (5m) ×2 (1h), cache read ×0.1; all cache-write tiers known" in r.stdout, r.stdout)
+        check("block cache write tiers", "cache write                 150 tokens (5m 150, 1h 0)" in r.stdout, r.stdout)
+        check("block no unknown-tier line", "unknown tier" not in r.stdout and "cost bounds" not in r.stdout, r.stdout)
         check("block total", "TOTAL" in r.stdout, r.stdout)
         check("block no production line", "production-shaped" not in r.stdout, r.stdout)
 
@@ -819,6 +1044,136 @@ def self_test() -> int:
         by_kind_row = run(kinds_file, "--prices", "2,10", "--by-kind", "--row", "x")
         check("row unchanged by the flag", plain_row.stdout == by_kind_row.stdout,
               f"{plain_row.stdout!r} vs {by_kind_row.stdout!r}")
+
+        # Cache-write tiers. One transcript per shape of ``cache_creation``; each is
+        # one request (repeated as ``repeat`` lines) with only cache writes billed.
+        def tier_file(name: str, total: int, split: Optional[dict], repeat: int = 1) -> str:
+            used = {"input_tokens": 0, "cache_creation_input_tokens": total, "cache_read_input_tokens": 0,
+                    "output_tokens": 0, "output_tokens_details": {"thinking_tokens": 0}}
+            if split is not None:
+                used["cache_creation"] = split
+            path = os.path.join(tmp, name)
+            with open(path, "w", encoding="utf-8") as fh:
+                for n in range(repeat):
+                    fh.write(json.dumps(assistant(used, [{"type": "text", "text": f"line {n}"}], f"2026-09-03T22:00:0{n}.000Z", "req_1")) + "\n")
+            return path
+
+        def tier_total(path: str, *extra: str) -> dict:
+            r = run(path, "--prices", "2,10", "--json", *extra)
+            check(f"{os.path.basename(path)} exits 0", r.returncode == 0, r.stderr)
+            try:
+                return json.loads(r.stdout)["total"]
+            except (ValueError, KeyError):
+                check(f"{os.path.basename(path)} json parses", False, r.stdout)
+                return {}
+
+        def tier_check(case: str, total: dict, five: int, hour: int, unknown: int, cost: float, low: float, high: float) -> None:
+            got = (total.get("cache_write_5m"), total.get("cache_write_1h"), total.get("cache_write_unknown"))
+            check(f"{case} tiers", got == (five, hour, unknown), f"got {got!r}, want {(five, hour, unknown)!r}")
+            check(f"{case} tiers sum", tiers_sum(total), repr(total))
+            check(f"{case} unknown never negative", (total.get("cache_write_unknown") or 0) >= 0, repr(total))
+            bounds = total.get("cost_bounds", {})
+            check(f"{case} cost", abs(total.get("cost", -1) - cost) < 1e-9, f"got {total.get('cost')!r}, want {cost!r}")
+            check(f"{case} low bound", abs(bounds.get("low", -1) - low) < 1e-9, f"got {bounds.get('low')!r}, want {low!r}")
+            check(f"{case} high bound", abs(bounds.get("high", -1) - high) < 1e-9, f"got {bounds.get('high')!r}, want {high!r}")
+            check(f"{case} tiers_known", bounds.get("tiers_known") is (unknown == 0) and bounds.get("unknown_tier_tokens") == unknown, repr(bounds))
+
+        def causes(total: dict) -> dict:
+            return {cause: (part.get("tokens"), part.get("turns")) for cause, part in total.get("cache_write_unknown_by_cause", {}).items()}
+
+        # All one-hour.
+        all_1h = tier_file("all-1h.jsonl", 300, split_of(0, 300))
+        total = tier_total(all_1h)
+        tier_check("all-1h", total, 0, 300, 0, 300 * 2 * 2 / 1e6, 300 * 2 * 2 / 1e6, 300 * 2 * 2 / 1e6)
+        r = run(all_1h, "--prices", "2,10", "--row", "x")
+        check("all-1h row names the tiers", "| 300 (5m 0, 1h 300) |" in r.stdout and f"| {300 * 2 * 2 / 1e6:.2f} | — | — |" in r.stdout, r.stdout)
+
+        # A 100/200 split that adds up to the 300 total: fully known, priced per tier.
+        mixed = tier_file("mixed.jsonl", 300, split_of(100, 200))
+        total = tier_total(mixed)
+        mixed_cost = (100 * 1.25 + 200 * 2) * 2 / 1e6
+        tier_check("mixed", total, 100, 200, 0, mixed_cost, mixed_cost, mixed_cost)
+        check("mixed no unknown causes", all(part == (0, 0) for part in causes(total).values()), repr(causes(total)))
+
+        # No breakdown at all: the legacy 5m estimate, marked assumed and bounded.
+        absent = tier_file("no-split.jsonl", 300, None)
+        total = tier_total(absent)
+        tier_check("absent", total, 0, 0, 300, 300 * 1.25 * 2 / 1e6, 300 * 1.25 * 2 / 1e6, 300 * 2 * 2 / 1e6)
+        check("absent cause", causes(total).get("no_breakdown") == (300, 1) and causes(total).get("residual") == (0, 0)
+              and causes(total).get("inconsistent") == (0, 0), repr(causes(total)))
+        check("absent assumption named", total.get("cost_bounds", {}).get("assumption") ==
+              "300 unknown-tier cache-write tokens priced at the 5m multiplier ×1.25 in the estimate and at ×1.25 / ×2 in the bounds",
+              repr(total.get("cost_bounds")))
+        r = run(absent, "--prices", "2,10")
+        check("absent block cache write", "cache write                 300 tokens (5m 0, 1h 0, unknown tier 300)" in r.stdout, r.stdout)
+        check("absent block unknown line", "unknown tier                300 tokens: 300 in 1 turn without a tier breakdown" in r.stdout, r.stdout)
+        check("absent block cost note", "; unknown-tier cache writes priced as 5m" in r.stdout, r.stdout)
+        check("absent block bounds", f"cost bounds        {300 * 1.25 * 2 / 1e6:>12.2f} – {300 * 2 * 2 / 1e6:.2f} $ (300 unknown-tier" in r.stdout, r.stdout)
+        r = run(absent, "--prices", "2,10", "--row", "x")
+        check("absent row states the fallback",
+              f"| 300 (5m 0, 1h 0, unknown 300) | 0 | 0 | 0 | 0:00:00 | {300 * 1.25 * 2 / 1e6:.2f} (unknown tier at ×1.25; "
+              f"{300 * 1.25 * 2 / 1e6:.2f}–{300 * 2 * 2 / 1e6:.2f}) | — | — |" in r.stdout, r.stdout)
+        # The legacy transcript shape prices as it always did: the same figures without a split.
+        legacy = os.path.join(tmp, "legacy.jsonl")
+        with open(legacy, "w", encoding="utf-8") as fh:
+            for used, stamp in ((first_usage, "2026-09-03T22:00:05.000Z"), (second_usage, "2026-09-03T22:00:15.000Z")):
+                stripped = {k: v for k, v in used.items() if k != "cache_creation"}
+                fh.write(json.dumps(assistant(stripped, [{"type": "text", "text": "x"}], stamp)) + "\n")
+        total = tier_total(legacy)
+        check("legacy estimate unchanged", abs(total.get("cost", -1) - expected_cost) < 1e-9, f"got {total.get('cost')!r}, want {expected_cost!r}")
+        check("legacy marked unknown-tier", total.get("cache_write_unknown") == 150 and causes(total).get("no_breakdown") == (150, 2), repr(total))
+
+        # A partial split, 100 of 300 known: the known part is priced, the residual bounded.
+        partial_file = tier_file("partial.jsonl", 300, split_of(100, 0))
+        total = tier_total(partial_file)
+        tier_check("partial", total, 100, 0, 200, (100 * 1.25 + 200 * 1.25) * 2 / 1e6,
+                   (100 * 1.25 + 200 * 1.25) * 2 / 1e6, (100 * 1.25 + 200 * 2) * 2 / 1e6)
+        check("partial cause", causes(total).get("residual") == (200, 1) and causes(total).get("no_breakdown") == (0, 0), repr(causes(total)))
+        r = run(partial_file, "--prices", "2,10")
+        check("partial block unknown line", "unknown tier                200 tokens: 200 residual in 1 turn whose breakdown is short of the total" in r.stdout, r.stdout)
+
+        # A split larger than the total: inconsistent usage, the whole total bounded, nothing negative or doubled.
+        over = tier_file("over.jsonl", 300, split_of(200, 200))
+        total = tier_total(over)
+        tier_check("inconsistent", total, 0, 0, 300, 300 * 1.25 * 2 / 1e6, 300 * 1.25 * 2 / 1e6, 300 * 2 * 2 / 1e6)
+        check("inconsistent cause", causes(total).get("inconsistent") == (300, 1), repr(causes(total)))
+        r = run(over, "--prices", "2,10")
+        check("inconsistent block names it", "300 in 1 turn whose breakdown exceeds the total (inconsistent usage)" in r.stdout, r.stdout)
+        r = run(over, "--prices", "2,10", "--row", "x")
+        check("inconsistent row bounded", "(5m 0, 1h 0, unknown 300)" in r.stdout and "(unknown tier at ×1.25;" in r.stdout, r.stdout)
+
+        # One request written as three lines repeating the same usage and split: counted once.
+        repeated = tier_file("repeated.jsonl", 300, split_of(100, 200), repeat=3)
+        total = tier_total(repeated)
+        check("repeated one turn", total.get("turns") == 1 and total.get("lines") == 3, repr(total))
+        check("repeated cache write once", total.get("cache_write") == 300, repr(total.get("cache_write")))
+        tier_check("repeated", total, 100, 200, 0, mixed_cost, mixed_cost, mixed_cost)
+
+        # Configurable multipliers reach both tiers and both bounds.
+        total = tier_total(mixed, "--cache-write-mult", "1.5", "--cache-write-1h-mult", "3")
+        configured = (100 * 1.5 + 200 * 3) * 2 / 1e6
+        tier_check("configured mixed", total, 100, 200, 0, configured, configured, configured)
+        total = tier_total(partial_file, "--cache-write-mult", "1.5", "--cache-write-1h-mult", "3")
+        tier_check("configured partial", total, 100, 0, 200, (100 * 1.5 + 200 * 1.5) * 2 / 1e6,
+                   (100 * 1.5 + 200 * 1.5) * 2 / 1e6, (100 * 1.5 + 200 * 3) * 2 / 1e6)
+        # With the 1h multiplier below the 5m one the bounds still bracket the estimate.
+        total = tier_total(partial_file, "--cache-write-mult", "2", "--cache-write-1h-mult", "1")
+        tier_check("inverted multipliers", total, 100, 0, 200, (100 * 2 + 200 * 2) * 2 / 1e6,
+                   (100 * 2 + 200 * 1) * 2 / 1e6, (100 * 2 + 200 * 2) * 2 / 1e6)
+        r = run(mixed, "--prices", "2,10", "--cache-write-1h-mult", "-1")
+        check("negative 1h multiplier exits 2", r.returncode == 2, f"rc={r.returncode}")
+
+        # A report against an unknown-tier transcript: the production-shaped figures carry bounds too.
+        r = run(absent, "--prices", "2,10", "--report", report, "--json")
+        check("absent report exits 0", r.returncode == 0, r.stderr)
+        try:
+            total = json.loads(r.stdout)["total"]
+        except (ValueError, KeyError):
+            total = {}
+        check("absent production-shaped bounds", total.get("production_shaped_cost_bounds", {}).get("high") == round(300 * 2 * 2 / 1e6, 6)
+              and total.get("production_shaped_cost") == round(300 * 1.25 * 2 / 1e6, 6), repr(total))
+        r = run(absent, "--prices", "2,10", "--report", report, "--row", "x")
+        check("absent report row bounds", f"| **{300 * 1.25 * 2 / 1e6:.2f}** (unknown tier at ×1.25; {300 * 1.25 * 2 / 1e6:.2f}–{300 * 2 * 2 / 1e6:.2f}) |" in r.stdout, r.stdout)
 
         r = run("--header")
         check("header exits 0", r.returncode == 0, r.stderr)
