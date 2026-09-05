@@ -21,6 +21,17 @@ It records a policy deviation, not a preregistered success or new measurements. 
 experiment follows [the one-shot method](../code-review-one-shot-method.md). Original observations,
 numbers, and both historical effort rulings remain below.
 
+## Timing correction — 2026-09-05 (#130)
+
+Historical `Wall` totals are **agent span sums**, adding each transcript's first-to-last
+assistant span. Parent waits can include child work, so these are not end-to-end claims. The
+old cost table's timing numbers remain historical agent spans; the lower-effort comparison's
+old elapsed figures are primary assistant timestamp proxies. Exact root dispatch, final
+validation, and final publication/result events were not recorded, so elapsed-to-payload and
+elapsed-to-completion are unavailable. Nesting does not establish those boundaries. Preserve
+the original numbers and billed rows; new measurements follow the
+[timing sidecar instructions](README.md#metering-per-run) and compare the same completion mode.
+
 ## What ran and what was cut
 
 | Arm | Planned | Ran | Note |
@@ -198,25 +209,25 @@ verified from the transcripts. Controls are the `v5b` cells on the same targets.
 | (c) | tool calls | 100 | 88 | −12% |
 | (b) | primary wall | 0:20:40 | 0:16:03 | −22% |
 | (b) | verifier wall | 0:04:37 | 0:05:45 | +25% |
-| (b) | elapsed | 0:20:40 | 0:16:03 | −22% |
+| (b) | elapsed (historical primary-span proxy) | 0:20:40 | 0:16:03 | −22% |
 | (c) | primary wall | 0:22:22 | 0:15:42 | −30% |
 | (c) | verifier wall | 0:02:05 | 0:01:23 | −34% |
-| (c) | elapsed | 0:22:22 | 0:15:42 | −30% |
+| (c) | elapsed (historical primary-span proxy) | 0:22:22 | 0:15:42 | −30% |
 
 The per-sub-agent walls are the `Wall` figures from each run document's `transcript_usage.py`
-block, also in `comparison-data.md`'s Effort verification table. Elapsed time was not written into
-the orchestrator preambles as a separate figure; it was taken at close-out from the transcripts'
-timestamps (first to last assistant line across the run's two transcripts). In all twelve runs the
-verifier batch's span lies inside the primary's, since every primary dispatched its verifier in the
-foreground and waited, so the elapsed time equals the primary's wall to the second and the summed
-`wall` in the `TOTAL` block over-counts by the verifier's span. The verifier walls are not an
+block, also in `comparison-data.md`'s Effort verification table. The historical elapsed proxy was
+taken at close-out from the transcripts' timestamps (first to last assistant line across the run's
+two transcripts). In all twelve runs the verifier batch's span lies inside the primary's, since
+every primary dispatched its verifier in the foreground and waited, so the proxy equals the
+primary's wall and the summed `wall` in the `TOTAL` block counts that wait twice. The proxy does
+not measure dispatch-to-completion. The verifier walls are not an
 effort effect — every verifier ran at `high` in both arms — and the (b) increase is one batch of
 21,989 thinking tokens on seed 4, the batch that re-opened the C2 acquittal.
 
 **Against #68's estimate.** The ticket guessed, for a low-risk run, −20–40% output tokens, −10–25%
 tool calls, and −2–5 minutes; and from the test-4 figures that a −50% thinking reduction would be
 about −12% of billed cost and −25% of wall clock before any tool-call reduction. Measured, per
-target median: output tokens −29% and −41%; tool calls −33% and −12%; elapsed −4:37 and −6:40;
+target median: output tokens −29% and −41%; tool calls −33% and −12%; primary-span proxy −4:37 and −6:40;
 thinking −46% and −63%; billed −37% and −41%. The billed saving is about three times the guess
 because the primary also made fewer requests (turns −24% and −16%), and each request it did not make
 was a replay of the whole context, which is where most of a run's dollars go.
@@ -300,7 +311,7 @@ true items no `v5b` seed produced on **both** targets, not merely one — T-c3, 
 retry accessors, and `replace_default_node` on (c), GT-d1 as a published question on (d). The
 condition's own wording ("v2a produces no unique true item on more than one target") is therefore
 violated twice over. The Panel paid for it: a median of $8.88 billed against `v5b`'s $3.62, 185
-turns against 78, and 49–93 minutes per run; and its verifier produced the grid's only false
+turns against 78, and 49–93 minutes of summed agent spans per run; and its verifier produced the grid's only false
 finding. Retirement is not warranted on this evidence, and the aggregate analysis's premise — that
 v2a keeps finding real things v5b misses — held on both targets.
 
@@ -316,7 +327,7 @@ v2a keeps finding real things v5b misses — held on both targets.
 `v5b` ran about 1.6–2× the #62 estimate and the Panel about 2×; over six runs the Panel cost 2.5×
 the `v5b` median and 185 turns against 78. Its cheapest run ($5.01, 24 minutes of agent time) is the
 one where both finders returned zero candidates so no verifier was needed; its dearest ($10.25) spent
-much of its hour on finder re-dispatches after the #53 shape validator rejected a first report. That
+much of its summed agent time on finder re-dispatches after the #53 shape validator rejected a first report. That
 validator fired on nine of the twelve finder reports across the six runs, and in two runs the one
 authorized re-dispatch did not clear it, leaving an axis `incomplete` on a technicality while its
 substantive candidates stood. The estimate was built from one test-4 run of a smaller
