@@ -131,10 +131,13 @@ remaining attempt cap, or the dispatch does not happen.
 Dispatch at most two cells concurrently until the ticket's own evidence supports more. This is a
 conservative starting heuristic, not a measured cost optimum: concurrency changes how many attempts
 one limit event stops, not what an attempt bills. Test 4 is the historical evidence. One
-session-limit event stopped four in-flight attempts whose transcripts billed $3.60 of that
-session's $16.82; the four completed runs billed $13.22
+session-limit event stopped all four first attempts in flight. The two Skeptic-line attempts had
+produced nothing usable; their four discarded transcripts billed $3.60 of that session's $16.82.
+The two Panel-line attempts had finished their Find phase, and that $5.58 of orchestrator and
+finder spend was reused, so it sits inside the $13.22 the four completed runs billed rather than
+in the discard figure
 ([test-4 billed usage](prototype-runs-2026-09-01-test-4/comparison-data.md#billed-usage-added-2026-09-89)).
-Cite it as what one limit event cost once, not as a forecast of savings; nothing here says that
+Cite these as what one limit event cost once, not as a forecast of savings; nothing here says that
 halving concurrency halves spend.
 
 A known insufficient quota or window delays dispatch until the reported reset. A reset time alone
@@ -150,11 +153,12 @@ ledger says the grid spanned sessions.
 ### Attempt ledger
 
 Every attempt, however it ends, gets one ledger row: attempt ID; cell (target, arm, replicate);
-session identity and root transcript; the phase reached (`primary`, `verifier`, `validation`,
-`publication`/`result`); disposition and reason (`valid completed`, `stopped: session-limit
-notice`, `harness-invalid`, `skill failure`); whether it is the cell's first attempt, a replacement
-`k of 2` inside the cap, or a replacement the cap refuses (then nothing is dispatched and the row
-marks the cell incomplete); and its meter row from the existing metering CLI,
+session identity and root transcript; the phase reached (`root dispatch` when nothing past the
+dispatch ran, `primary`, `verifier`, `validation`, `publication`/`result`); disposition and reason
+(`valid completed`, `stopped: session-limit notice`, `harness-invalid`, `skill failure`); whether
+it is the cell's first attempt, a replacement `k of 2` inside the cap, or a replacement the cap
+refuses (then nothing is dispatched and the row marks the cell incomplete); and its meter row from
+the existing metering CLI,
 `python3 docs/research/tools/transcript_usage.py <paths> --prices IN,OUT --row "<attempt ID>"`,
 run over every transcript the attempt produced, aborted verifiers included. The CLI skips the
 harness's synthetic notice lines, so a transcript with billed turns followed by a notice prices its
@@ -321,19 +325,20 @@ for both arms. This is a truth-set revision, not changed reviewer performance.
 
 **Invented rows only; no reviewer was dispatched.** A hypothetical ticket has 24 planned cells, a
 two-replacement cap (26 attempts), a $120 spend cap and hypothetical billed dollars. Before this
-excerpt six attempts were valid and $19.40 was spent. Times are one evening in one session (PDT),
-quota was never reported (`unknown` throughout), and every dispatch record's expected duration was
-25 minutes, the median of three matched prior attempts (20–32). Rows abbreviate §3's fields.
+excerpt six attempts were valid, $19.40 was spent and nothing was in flight. Times are one evening
+in one session (PDT), quota was never reported (`unknown` throughout), and every dispatch record's
+expected duration was 25 minutes, the median of three matched prior attempts (20–32). Rows
+abbreviate §3's fields; `in flight a→b` is the count before and after the dispatch.
 
 | Attempt | Cell | Dispatch record | Phase reached | Disposition | Replacement | Meter row |
 | --- | --- | --- | --- | --- | --- | --- |
-| att-07 | B/1 | 22:14; attempt 7/26; $19.40 spent; in flight 1→2 | result | valid completed 22:41, sidecar complete | first | 2 transcripts, $3.10 |
-| att-08 | D/2 | 22:16; 8/26; $19.40; in flight 2 | verifier | stopped 22:52: session-limit notice in the verifier, `resets 23:00`; primary ledger persisted 22:38; no validated payload; stop event kept in the attempt record | first | primary $2.20 + verifier's 9 billed turns $0.35 = $2.55 |
+| att-07 | B/1 | 22:14; attempt 7/26; $19.40 spent; in flight 0→1 | result | valid completed 22:41, sidecar complete | first | 2 transcripts, $3.10 |
+| att-08 | D/2 | 22:16; 8/26; $19.40; in flight 1→2 | verifier | stopped 22:52: session-limit notice in the verifier, `resets 23:00`; primary ledger persisted 22:38; no validated payload; stop event kept in the attempt record | first | primary $2.20 + verifier's 9 billed turns $0.35 = $2.55 |
 | att-09 | E/1 | 22:50; 9/26; $22.50; in flight 1→2 | root dispatch | notice, no billable request: only assistant line is the notice; CLI exit 2 `no billed assistant turns` | first | by hand: 0 turns, $0.00 |
 | — | — | 22:52: notice recorded; no new dispatch until 23:00; user told | — | — | — | — |
-| att-10 | D/2 | 23:05; 10/26; $25.05; reset passed, quota `unknown`; in flight 1 | result | valid completed 23:31 | replacement 1 of 2, predecessor att-08 | 2 transcripts, $3.25 |
-| att-11 | E/1 | 23:07; 11/26; $25.05; in flight 2 | result | valid completed 23:33 | replacement 2 of 2, predecessor att-09 | 2 transcripts, $2.90 |
-| att-12 | F/1 | 23:40; 12/26; $31.20; in flight 1 | primary | stopped 23:58: second notice, `resets 04:00`; nothing persisted yet | first | 1 transcript, $1.40 |
+| att-10 | D/2 | 23:05; 10/26; $25.05; reset passed, quota `unknown`; in flight 0→1 | result | valid completed 23:31 | replacement 1 of 2, predecessor att-08 | 2 transcripts, $3.25 |
+| att-11 | E/1 | 23:07; 11/26; $25.05; in flight 1→2 | result | valid completed 23:33 | replacement 2 of 2, predecessor att-09 | 2 transcripts, $2.90 |
+| att-12 | F/1 | 23:40; 12/26; $31.20; in flight 0→1 | primary | stopped 23:58: second notice, `resets 04:00`; nothing persisted yet | first | 1 transcript, $1.40 |
 | — | F/1 | 23:58: replacement would be 3 of 2 | — | refused: over cap; F/1 ends incomplete with att-12 as its only attempt | over cap, not dispatched | — |
 | — | — | 23:58: reset is beyond the runtime's longest wait and the user's stated availability; session closed, grid state reported | — | — | — | — |
 
