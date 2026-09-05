@@ -61,7 +61,7 @@ For each candidate id, return the verdict, a concise independent justification, 
 
 ## Clean-verdict task
 
-Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. This task runs in the two modes `SKILL.md` defines: a zero-survivor batch carrying the complete disposition ledger, and the related-acquittal rows that ride along with a candidate batch. Follow this procedure for every row you rule on, in either mode, to the depth the kind rule below sets:
+Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. This task runs in the two modes `SKILL.md` defines: a zero-survivor batch carrying the complete disposition ledger, and the related-acquittal rows supplied with a candidate batch — a follow-up batch may carry such rows with no candidate at all, and they are ruled on the same way. Follow this procedure for every row you rule on, in either mode, to the depth the kind rule below sets:
 
 1. Restate the row's decisive premise in one sentence — the fact the acquittal depends on, such as "`sender->slaveof` is always non-NULL when `updateShardId()` runs."
 2. State the concrete condition under which that premise would be false.
