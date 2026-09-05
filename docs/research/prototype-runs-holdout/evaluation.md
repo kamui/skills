@@ -7,6 +7,20 @@ Ground truth, bands, and scoring rules are the ones committed in [`README.md`](R
 first cell; where a run produced something the ground truth did not anticipate, the adjudication is
 stated here with its reasoning.
 
+## Interpretation correction — 2026-09-05 (#131)
+
+These results came from reviewers forbidden to execute target tests. `v5b-noverify` simulated
+unavailable verification and withheld mandatory findings; its outcomes do not establish the
+precision of a primary-only publication policy. Under the original [criterion 2](README.md#success-criteria),
+0/2 reopenings is **not decidable**, because fewer than three occurrences exist. The `FAIL` label
+below is preserved as the original interpretation; importing the effort arm's occurrence cannot
+decide the baseline arm's criterion. The observed misses are unchanged.
+
+The 2026-09-05 published-outcome restatement discussed under the lower-effort arm was post-result.
+It records a policy deviation, not a preregistered success or new measurements. #124's new matched
+experiment follows [the one-shot method](../code-review-one-shot-method.md). Original observations,
+numbers, and both historical effort rulings remain below.
+
 ## What ran and what was cut
 
 | Arm | Planned | Ran | Note |

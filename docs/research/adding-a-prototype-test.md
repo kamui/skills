@@ -1,5 +1,11 @@
 # Handoff — add a new prototype code-review comparison test
 
+**For the current-skill one-shot program (#137, #124, and any later #138 preregistration), use
+[the one-shot method](code-review-one-shot-method.md) before preparing or dispatching runs.**
+It governs scoring, execution, budgets, and collection plus synthesis for those tickets. The
+static-only defaults, prototype pins, and collection-only scope below remain the historical
+prototype procedure; they do not override that program's method.
+
 **Reusable runbook.** Reference this file (`docs/research/adding-a-prototype-test.md`), fill in the
 two blanks below, and hand it to a fresh agent. Everything else is procedure.
 
