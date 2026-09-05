@@ -21,15 +21,19 @@ the packet as one JSON object. Its exit is 0 even when a connection is
 incomplete: the packet then reports `"complete": false` and names every gap,
 because the reviewer still needs the pages that did arrive. A saved response
 that carries GraphQL errors, or is empty or not JSON because the call failed,
-is a named gap for the same reason. A file that cannot be opened, or a JSON
-page that matches no documented query shape, is exit 2.
+is a named gap for the same reason, as is a page carrying the forge's HTTP
+error body instead of a response. A file that cannot be opened, or a JSON page
+that matches no documented query shape, is exit 2.
 
 `later-state` answers the output contract's later-state question for the
 candidate review `--review ID` (its `fullDatabaseId`): it prints one line per
 pull-request, issue, review, comment, or reply created or edited after that
 review's submission time (or after `--after`), one line per packet gap, and one
-`thread-state` line per resolved thread whose resolution carries no timestamp
-and whose comments all predate the review. Exit 0 means the packet is complete
+`thread-state` line per thread whose undated resolved state cannot be ruled
+unchanged and that carries no later comment: every resolved thread, and every
+thread predating the review, since one resolved when the review ran can have
+been un-resolved since without leaving a timestamp. A thread the candidate
+review created and left unresolved is the one silent case. Exit 0 means the packet is complete
 and nothing later exists, so the deduplication rule may consider the candidate;
 exit 1 means the lines on stdout stand between the run and that shortcut.
 
@@ -48,7 +52,7 @@ Every bounded connection carries `totalCount`, `pageInfo{hasNextPage
 endCursor}`, and `nodes`. Nodes are merged across pages by stable id; a
 connection is complete only when every page agrees on `totalCount`, the
 distinct ids equal that count, some page reports `hasNextPage: false`, and no
-page carried a GraphQL error. Anything else is a named gap. The packet's
+page carried a GraphQL error or an HTTP failure. Anything else is a named gap. The packet's
 `fingerprint` object is the `pr` and `issues` input of
 `context_fingerprint.py`, so `context_fingerprint.py --packet packet.json`
 hashes the same normalized records the review and the re-review read.
@@ -354,6 +358,12 @@ class Packet:
                 text(error.get("message")) if isinstance(error, dict) else str(error) for error in errors
             )
             self.page_errors.append(f"{where}: GraphQL errors: {messages}")
+        elif "message" in payload and not any(key in payload for key in ("data", "repository", "node")):
+            # `gh api` writes the forge's JSON error body on an HTTP failure --
+            # a secondary rate limit or a 5xx -- so the page is a failed fetch,
+            # not an unrecognized shape.
+            self.page_errors.append(f"{where}: HTTP error: {text(payload.get('message'))}; the fetch failed")
+            return
         data = payload.get("data", payload)
         if not isinstance(data, dict):
             if self.page_errors and self.page_errors[-1].startswith(where):
@@ -717,6 +727,11 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
             lines.append(f"review id={review['id']} by {review['author'] or '?'} at {stamp}")
     for thread in packet["threads"]:
         thread_later = False
+        # A thread the candidate review created starts unresolved and carries
+        # only its own comments, so silence about its state is correct. Any
+        # other thread predates the review, and `is_resolved` carries no
+        # timestamp either way, so its current state has to be settled.
+        pre_existing = any(comment.get("review_id") != review_id for comment in thread["comments"])
         for comment in thread["comments"]:
             own = comment.get("review_id") == review_id and comment.get("reply_to") is None
             if own:
@@ -726,9 +741,10 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
                 kind = "reply" if comment.get("reply_to") else "thread-comment"
                 lines.append(f"{kind} thread={thread['id']} id={comment['id']} at {stamp}")
                 thread_later = True
-        if thread.get("is_resolved") and not thread_later:
+        if not thread_later and (thread.get("is_resolved") or pre_existing):
+            state = "resolved" if thread.get("is_resolved") else "unresolved"
             lines.append(
-                f"thread-state thread={thread['id']} path={thread['path'] or '?'} resolved: "
+                f"thread-state thread={thread['id']} path={thread['path'] or '?'} {state}: "
                 "no timestamp; settle against the candidate review's recorded prior-item "
                 "classification or treat as later state"
             )
@@ -870,6 +886,24 @@ def self_test() -> int:
 
     lines = later_state(normalize([("root", sample_root())]), "900", None)
     check("clean later-state", lines == [], str(lines))
+
+    reopened = copy.deepcopy(sample_root())
+    thread = reopened["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"][0]
+    thread["comments"]["nodes"][0]["pullRequestReview"]["fullDatabaseId"] = "800"
+    lines = later_state(normalize([("root", reopened)]), "900", None)
+    check(
+        "pre-existing unresolved thread",
+        any(line.startswith("thread-state thread=PRRT_1") and "unresolved" in line for line in lines),
+        str(lines),
+    )
+
+    http_error = normalize([("root", sample_root()), ("page2", {"message": "rate limited"})])
+    check("http error body is a gap", not http_error["complete"], str(http_error["gaps"]))
+    check(
+        "http error body is named",
+        any("HTTP error: rate limited" in gap for gap in http_error["gaps"]),
+        str(http_error["gaps"]),
+    )
     try:
         normalize([("root", {"data": {"repository": {}}})])
         check("unknown shape rejected", False)

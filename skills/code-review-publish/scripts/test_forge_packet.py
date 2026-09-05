@@ -17,7 +17,9 @@ GraphQL queries and pin what issue #132 requires of it:
   with the complete one;
 - a reply edited after a review without a code change is later state, while the
   candidate review's own original comments are not;
-- a resolved thread with no resolution timestamp is never silently unchanged.
+- an undated thread resolution is never silently unchanged, whether the thread
+  is resolved now or predates the review and may have been un-resolved since;
+- a page carrying the forge's HTTP error body is a named gap, not exit 2.
 
 Run with ``python3 scripts/test_forge_packet.py``. Exit 0 when every case
 passes; exit 1 after printing one line per failed case. Standard library only;
@@ -394,6 +396,15 @@ def case_missing_or_failed_continuation(directory: Path) -> None:
     packet = normalize(case, directory, {"root.json": first, "failed.json": failed})
     if packet is not None and not any("GraphQL errors" in gap and "failed.json" in gap for gap in packet["gaps"]):
         fail(case, f"failed page not named as a gap: {packet['gaps'] if packet else None}")
+    # `gh api` writes the forge's HTTP error body on a rate limit or a 5xx: a
+    # named gap for the pages that did arrive, not a shape error that stops step 1.
+    http = {"message": "You have exceeded a secondary rate limit", "documentation_url": "https://docs.github.com"}
+    packet = normalize(case, directory, {"root.json": first, "http-error.json": http})
+    if packet is not None and not any(
+        "HTTP error: You have exceeded a secondary rate limit" in gap and "http-error.json" in gap
+        for gap in packet["gaps"]
+    ):
+        fail(case, f"HTTP error body not named as a gap: {packet['gaps'] if packet else None}")
     # A truncated packet can neither pass later-state nor share the complete digest.
     truncated = normalize(case, directory, {"root.json": first})
     complete = normalize(
@@ -437,7 +448,7 @@ def case_missing_or_failed_continuation(directory: Path) -> None:
 
 
 def case_later_state(directory: Path) -> None:
-    """Edited replies are later state; the review's own comments are not; threads never silent."""
+    """Edited replies are later state; the review's own comments are not; undated thread state is never silent."""
     case = "later-state"
     threads = connection(
         [
@@ -445,17 +456,18 @@ def case_later_state(directory: Path) -> None:
                 "PRRT_1",
                 connection(
                     [
-                        thread_comment(5000, T0, "900"),
+                        thread_comment(5000, T0, "900", edited=AFTER),
                         thread_comment(5001, BEFORE, "900", reply_to="5000", author="author", edited=AFTER),
                     ],
                     2,
                     False,
                 ),
             ),
-            thread("PRRT_2", connection([thread_comment(6000, T0, "900")], 1, False), resolved=True),
+            thread("PRRT_2", connection([thread_comment(6000, T0, "900", edited=AFTER)], 1, False), resolved=True),
             thread("PRRT_3", connection([thread_comment(7000, BEFORE, "800")], 1, False), resolved=False),
+            thread("PRRT_4", connection([thread_comment(8000, T0, "900")], 1, False), resolved=False),
         ],
-        3,
+        4,
         False,
     )
     page = root(
@@ -473,38 +485,49 @@ def case_later_state(directory: Path) -> None:
         fail(case, f"expected exit 1 with later state, got {result.returncode}: {result.stdout!r} {result.stderr!r}")
     if not any(line.startswith("reply thread=PRRT_1 id=5001") and AFTER in line for line in lines):
         fail(case, f"a reply edited after the review was not reported: {lines}")
+    # 5000 and 6000 are the candidate review's own original comments, both edited
+    # after it, so only the `own` exclusion can keep them out of the report.
     if any("id=5000" in line or "id=6000" in line for line in lines):
         fail(case, f"the candidate review's own comments were reported as later state: {lines}")
     if any(line.startswith("review id=800") for line in lines):
         fail(case, f"an earlier review was reported as later state: {lines}")
-    if not any(line.startswith("thread-state thread=PRRT_2") for line in lines):
+    if not any(line.startswith("thread-state thread=PRRT_2") and "resolved:" in line for line in lines):
         fail(case, f"a resolved thread without a timestamp was silently treated as unchanged: {lines}")
-    if any(line.startswith("thread-state thread=PRRT_3") for line in lines):
-        fail(case, f"an unresolved thread drew a thread-state line: {lines}")
-    # With the edit undone and the resolved thread unresolved, nothing is later: exit 0.
+    if not any(line.startswith("thread-state thread=PRRT_3") and "unresolved:" in line for line in lines):
+        fail(case, f"a pre-existing thread that may have been un-resolved was silent: {lines}")
+    if any(line.startswith("thread-state thread=PRRT_4") for line in lines):
+        fail(case, f"a thread the candidate review created and left unresolved drew a line: {lines}")
+    # With the edits undone, the resolved thread unresolved, and no thread left
+    # from an earlier review, nothing is later: exit 0.
     clean = copy.deepcopy(page)
     pr = clean["data"]["repository"]["pullRequest"]
     reply = pr["reviewThreads"]["nodes"][0]["comments"]["nodes"][1]
     reply["lastEditedAt"] = None
     reply["updatedAt"] = BEFORE
     pr["reviewThreads"]["nodes"][1]["isResolved"] = False
-    packet = normalize(case, directory, {"clean.json": clean})
-    if packet is not None:
-        result = run("later-state", write(directory, "clean-packet.json", packet), "--review", "900")
+    threads = pr["reviewThreads"]
+    threads["nodes"] = [node for node in threads["nodes"] if node["id"] != "PRRT_3"]
+    threads["totalCount"] = 3
+    clean_packet = normalize(case, directory, {"clean.json": clean})
+    if clean_packet is not None:
+        clean_path = write(directory, "clean-packet.json", clean_packet)
+        result = run("later-state", clean_path, "--review", "900")
         if result.returncode != 0 or result.stdout.strip():
             fail(case, f"clean packet should exit 0 silently, got {result.returncode}: {result.stdout!r}")
         # Issue and pull-request body edits are later state as well.
         edited = copy.deepcopy(clean)
         edited["data"]["repository"]["pullRequest"]["lastEditedAt"] = AFTER
         edited["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]["lastEditedAt"] = AFTER
-        packet = normalize(case, directory, {"edited.json": edited})
-        if packet is not None:
-            result = run("later-state", write(directory, "edited-packet.json", packet), "--review", "900")
+        edited_packet = normalize(case, directory, {"edited.json": edited})
+        if edited_packet is not None:
+            result = run("later-state", write(directory, "edited-packet.json", edited_packet), "--review", "900")
             out = result.stdout
             if result.returncode != 1 or "pr edited" not in out or "issue acme/payments#123 edited" not in out:
                 fail(case, f"pr and issue body edits not reported: {out!r}")
-        # --after overrides the review's own submission time.
-        result = run("later-state", write(directory, "clean-packet.json", packet or {}), "--review", "900", "--after", "2026-01-01T00:00:00Z")
+        # --after overrides the review's own submission time: the clean packet is
+        # silent at the review's own cutoff, so an earlier cutoff is the only
+        # thing that can make this exit 1.
+        result = run("later-state", clean_path, "--review", "900", "--after", "2026-01-01T00:00:00Z")
         if result.returncode != 1:
             fail(case, "--after cutoff was ignored")
     result = run("later-state", path, "--review", "999")
