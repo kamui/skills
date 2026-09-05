@@ -106,7 +106,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-4"
+WORKFLOW = "v5b-5"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -856,7 +856,7 @@ SUMMARY_BODY = f"""**Changes Requested (advisory)** — 1 must-fix finding, 1 op
 
 **Issue fit:** Partial — retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open.
 
-**Coverage:** Complete merge-base diff reviewed; payment callers and focused tests inspected.
+**Coverage:** Complete merge-base diff reviewed; payment callers inspected; focused `retry-policy` test run once at the head: pass.
 
 **Reviewed:** `a1b2c3d` against merge-base `d4e5f6a`.
 
@@ -1360,7 +1360,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-3"
+            f"workflow={WORKFLOW}", "workflow=v5b-4"
         )
 
     def malformed_trailer(payload):
