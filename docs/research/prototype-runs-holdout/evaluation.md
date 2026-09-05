@@ -14,7 +14,7 @@ stated here with its reasoning.
 | `v5b` | 18 (six targets × 3) | 15 on (a)–(e); (f) one seed (first review, re-review, stale probe) | (f) seeds 2–3 cut |
 | `v5b-effort-medium` (#68) | 6 | 6 valid ((b), (c) seeds 2–4); seeds 1 discarded | discards under the effort rule, see README |
 | `v5b-noverify` (ablation) | 18 | 4 (seed 1 on (a)–(d)) | (e) and seeds 2–3 cut |
-| Panel (`v2a` with #53–#58) | 18 | 2 (seed 1 on (c), (d)) | the arm the issue names first to cut; kept only where criterion 5 needs it |
+| Panel (`v2a` with #53–#58) | 18 | 6 (seeds 1–3 on (c) and (d)) | the arm the issue names first to cut; run to n=3 only where criterion 5 and the retirement condition need it |
 | Fable tier split | 6 | 0 | maintainer directed Sonnet-only; not measured |
 
 Every run: `claude-sonnet-5` on every assistant line of every transcript, verified at close-out
@@ -70,19 +70,36 @@ and had them corrected by the verifier; none of those corrections changed a disp
 | v5b-effort-medium seed 3 | **found** (P2 must-fix) | not raised | not raised | `can_read_destructive`, `credential_provider` attribute, retry accessors on `RedisCluster` and on `Redis`/`ConnectionPool` | 0 | Changes Requested | in band |
 | v5b-effort-medium seed 4 | not raised | not raised | not raised | `can_read_destructive` | 0 | Changes Requested | in band |
 | v5b-noverify seed 1 | not raised | raised, withheld | not raised | `get_message` timeout (P3 consider); five must-fix omissions withheld | 0 | Incomplete | arm's rule followed |
-| Panel seed 1 | **found** (P1 must-fix) | **found** (P2 consider) | **found** (P2 consider) | `can_read_destructive` (raised to P1 by the verifier), retry accessors (P1), `bitfield_ro`, `ExpiryT`, `get_message` timeout; one question | 0 | Changes Requested | in band |
+| Panel seed 1 | **found** (P1 must-fix) | **found** (P2 consider) | **found** (P2 consider) | `can_read_destructive` (raised to P1 by the verifier), retry accessors (P1), `bitfield_ro`, `ExpiryT` (P2 consider), `get_message` timeout; one question | 0 | Changes Requested | in band |
+| Panel seed 2 | **found** (P2 must-fix) | **found** (P2 must-fix) | **found** (P2 must-fix) | `can_read_destructive` (P1), retry accessors, `replace_default_node`, `bitfield_ro` | **1** — `ExpiryT` at P1 must-fix | Changes Requested | in band but for that item |
+| Panel seed 3 | **found** (P2 consider; under for GT-c1) | **found** (P1 must-fix) | **found** (P2 consider) | `can_read_destructive`, `bitfield_ro`, retry accessors, `replace_default_node`, `deprecated_function`/`warn_deprecated` | 0 | Changes Requested | in band |
 
 Every published omission on this target is true against the upstream 4.4.0 tree and the stub at head
 (the scorer re-checked each name), and no acquittal on the ground-truth surface was false; the
-ablation cell's miss of GT-c1 is a miss, not an acquittal (no ledger row). Recall of GT-c1: `v5b`
-one of three, the lower-effort arm one of three, the ablation zero of one, the Panel one of one. The
+ablation cell's miss of GT-c1 is a miss, not an acquittal (no ledger row) — with one exception,
+below. Recall of GT-c1: `v5b` one of three, the lower-effort arm one of three, the ablation zero of
+one, the Panel **three of three, each seed individually recovering all three ground-truth items**. The
 un-anticipated `can_read_destructive` rename was the one omission every Skeptic-line seed but one
 found, because it is visible inside the diff's own hunks; the package-init omission the target was
 chosen for sits in a file the diff never touches, and the upstream trees in the packet did not change
 how often it was seen. The Panel cell's Requirements finder, restating twenty-one requirements from
 the stubsabot reference, is the only run that recovered all three ground-truth items; it also asked
 a question about five submodules the packet's diff and trees disagree on, a genuine inconsistency in
-the packet that no other run noticed.
+the packet that no other run noticed. Seeds 2 and 3 reproduced the same 3-of-3 recall, so it is the
+mandatory restatement of the reference's requirements doing the work, not one lucky seed.
+
+**The Panel line's one false finding in the grid.** Seed 2 published `ExpiryT` at P1 `must-fix`
+after its verifier raised it from P2 on the claim that the stale alias "already causes a runtime
+`DataError`". The factual half is true — `redis/commands/core.py:2201-2215` at 4.4.0 rejects a bare
+`float` expiry — but that code is **byte-identical at 4.3.5**, so the diff changed only the declared
+alias and nothing about runtime behavior; and typeshed's own `CONTRIBUTING.md` at the merge-base
+(line 454) instructs stub authors to "use `float` instead of `int | float`", which is exactly what
+the stub does. The README's not-ground-truth entry is therefore right, and under its rule a
+`must-fix` on a not-ground-truth item is over and false. Seed 1 published the same fact at P2
+`consider` (in band) and seed 3 acquitted it outright. The failure is the verifier's: mandatory
+verification, applied without the numeric-tower convention in view, escalated a documented-tolerable
+widening into a blocking finding. The Panel arm's false-finding count over six runs is one; the
+Skeptic line's over eighteen is zero.
 
 ### (d) `astral-sh/uv#4424` — GT-d1, the deferred naming
 
@@ -93,11 +110,14 @@ the packet that no other run noticed.
 | v5b seed 3 | raised (C9 dropped: "a subjective naming preference (gate 7)") | observation | 2 more observations | 0 | Approved | under |
 | v5b-noverify seed 1 | raised ("would not meet the 'worth the author's time' bar") | dropped as deliberate | 1 observation (`value_enum` attribute) | 0 | Approved | under |
 | Panel seed 1 | **found**: `[Question]` "Is `--toolchain-preference`'s name and value vocabulary settled, or still open per the review record?" | **published** `consider` P2, verified `confirmed` | 3 observations | 0 | Incomplete (Requirements finder failed the shape validator twice) | in band |
+| Panel seed 2 | **found**: two questions, one of them "Should `ToolchainPreference`'s `prefer-*` variants drop the `prefer-` prefix?" | observation only | 3 observations | 0 | Needs Information | in band |
+| Panel seed 3 | **found**: one question covering the name and the `prefer-*` vocabulary | **published** `consider` P2, verified `confirmed` | 3 observations | 0 | Needs Information | in band |
 
 Every cell located the same deferral and quoted the same two comments. The four Skeptic-line cells
 then reasoned, in near-identical words, that restating a question the maintainers had already
 deferred adds nothing a reviewer can settle, and published nothing; the Panel line's Requirements
-finder, which #57 tells to carry every deferral to the axis, published it as a question. The
+finder, which #57 tells to carry every deferral to the axis, published it as a question in all three
+seeds, quoting the same two comments each time. The
 playwright GT-2 pattern recurred with the reasoning written out: gate 6 was applied correctly (the
 deferral is open, not accepted) and the question rule's "outcome-changing fact" bar then blocked
 publication. No verifier fired on this target on the Skeptic line in any cell. The Panel cell's
@@ -203,15 +223,22 @@ trace, the miss a verifier had a chance to catch and, in `v5b` seed 3, did not.
 3. **The published fix names the re-land's invariant in at least two of three seeds on (a) — FAIL.**
    One of three (`invariant` by the progress-gate route); one `branch`; one none.
 4. **The question channel fires on (e) in every seed — FAIL.** Zero of three.
-5. **Recall on (c) and (d) at least matches the Panel arm's — FAIL** (Panel at n=1 per target).
-   (c): `v5b` union over three seeds found GT-c1 and T-c2; the Panel found GT-c1, T-c2, and T-c3 in
-   one run. (d): `v5b` found GT-d1 in no seed; the Panel published it as a question.
+5. **Recall on (c) and (d) at least matches the Panel arm's — FAIL**, now at Panel n=3 per target
+   rather than n=1. (c): `v5b`'s union over three seeds is GT-c1 and T-c2; each Panel seed
+   individually found GT-c1, T-c2, **and** T-c3, plus `bitfield_ro`, the retry accessors, and
+   `replace_default_node`, which no `v5b` seed produced. (d): `v5b` published GT-d1 in no seed; all
+   three Panel seeds published it as a question.
 
 **v2a retirement condition** (aggregate analysis §8) — **not met**, on the two targets where both
-arms ran, at Panel n=1. `v5b`'s union recall over adjudicated true items is below the Panel's on both
-(c) and (d), and the Panel produced a true item no `v5b` seed produced on more than one target:
-T-c3, `bitfield_ro`, and the retry accessors on (c); GT-d1 as a question and T-d2 as a verified
-finding on (d). The Panel paid 2.4× the cost and an hour or more per run for it.
+arms ran, now at three seeds per arm per target. Both halves of the condition fail. `v5b`'s union
+recall over adjudicated true items is below the Panel's on both (c) and (d); and the Panel produced
+true items no `v5b` seed produced on **both** targets, not merely one — T-c3, `bitfield_ro`, the
+retry accessors, and `replace_default_node` on (c), GT-d1 as a published question on (d). The
+condition's own wording ("v2a produces no unique true item on more than one target") is therefore
+violated twice over. The Panel paid for it: a median of $8.88 billed against `v5b`'s $3.62, 185
+turns against 78, and 49–93 minutes per run; and its verifier produced the grid's only false
+finding. Retirement is not warranted on this evidence, and the aggregate analysis's premise — that
+v2a keeps finding real things v5b misses — held on both targets.
 
 ## Cost
 
