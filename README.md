@@ -14,10 +14,13 @@ To install only one skill:
 
 ```sh
 npx skills@latest add kamui/skills --skill code-review-publish
+npx skills@latest add kamui/skills --skill code-review-deep-publish
 npx skills@latest add kamui/skills --skill code-review-address
 npx skills@latest add kamui/skills --skill implement-publish
 npx skills@latest add kamui/skills --skill code-review-publish-legacy  # legacy, kept for historical purposes
 ```
+
+Use `code-review-publish` for routine pull-request reviews. Use `code-review-deep-publish` for large or high-risk changes and review-skill evaluation runs, where the extra recall is worth roughly 1.5× the token cost.
 
 The installer asks which supported agents and installation scope to use.
 
@@ -47,13 +50,13 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-Three skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+Three skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name, and `code-review-deep-publish` is explicit-only. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
 Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
 ## Skills
 
-The skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff).
+The skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff). `code-review-deep-publish` replaces the routine reviewer for a high-risk escalation or an evaluation run; it is not another loop stage.
 
 ### `code-review-publish`
 
