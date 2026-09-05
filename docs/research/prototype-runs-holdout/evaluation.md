@@ -215,8 +215,23 @@ the v5b cells on the same target and seed do not also show": the C2 acquittal in
 counterpart in any control. The re-open resolved it, so the *published* output was unaffected; the
 rule as written counts the ledger, and the ledger differs. The cost effect stands on record: roughly
 −40% billed dollars and −50% thinking tokens with no change in published outcome on these two
-targets. A ticket proposing effort tiering would need the rule re-stated to count published outcomes,
-or one more replicate, before it can claim the rule.
+targets.
+
+**Restated rule (2026-09-05, deviation recorded in the README).** At the maintainer's direction the
+rule was restated after the runs to count published outcomes rather than ledger rows, and under that
+restatement it is **met**: no false finding in six cells, no false acquittal survived to publication,
+GT-c1 found once in each arm. The one ledger-level failure, quoted so the deviation is checkable:
+the seed 4 primary dropped C2 as "matches stated intent, not contradicted" with the falsification
+reason that the same error text "is the pre-existing convention used by the outer select's timeout
+branch (raft.go:680-684, unchanged by this diff)"; the clean-verdict batch ruled `disposition C2
+does not hold; re-open it`, because the merge-base's `doneCh`-success path (`raft.go:692-696` at
+base) "never routed through that string at all"; the primary re-falsified C2 and dropped it on
+impact and intent, publishing nothing. The pre-registered ruling stands beside this one. What the
+restatement authorises is [#124](https://github.com/kamui/skills/issues/124): the measured shape
+(primary at `medium`, every verifier at `high`, on every diff, not risk-surface tiering, which was
+never measured and would put lower effort where the zero-survivor batch does not fire), with any
+default change gated on three seeds of the arm on target (a), the reasoning-heavy target this arm
+never ran.
 
 **Disposition (#68).** Rule not met, so per its own terms the result is recorded here and the
 default stays: no skill text, agent definition, or harness default adopts lower effort on the

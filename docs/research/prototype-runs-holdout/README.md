@@ -213,6 +213,19 @@ Otherwise the result is recorded in `evaluation.md` and the default stays. Meeti
 authorises a ticket proposing the tiering, not a change to skill text or harness defaults on the
 strength of this arm alone.
 
+**Restated 2026-09-05, after the runs, at the maintainer's direction (deviation).** The rule above
+counts every ledger row. The arm's one failure under it was a ledger-level false acquittal that the
+zero-survivor batch re-opened and the run then re-falsified and dropped before publication
+((b) seed 4, C2; quoted in [`evaluation.md`](evaluation.md#the-lower-effort-arm-68)), so the
+published review was identical to the controls'. The restated rule counts **published outcomes**:
+no false finding, no false acquittal that survives to publication, and no more than one lost
+ground-truth item against the `v5b` cells on the same targets. The pre-registered ruling and the
+restated ruling are both reported in `evaluation.md`. Meeting the restated rule authorised
+[#124](https://github.com/kamui/skills/issues/124), which proposes the shape the arm measured
+(primary at `medium`, every verifier batch pinned at `high`, on every diff) rather than the
+risk-surface tiering this paragraph describes, and which gates any default change on three
+seeds of the arm on target (a).
+
 Whether or not the rule is met, `evaluation.md` reports the arm's cost effect per target as each
 figure's median over the arm's three seeds against the same median for the v5b cells on that
 target, for the eight figures items 1–3 record: thinking tokens, output tokens, turns, tool calls,
