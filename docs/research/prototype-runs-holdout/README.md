@@ -239,6 +239,22 @@ confirmed loaded — `evaluation.md` records that with the harness version and t
 evidence, no run counts toward the arm, and #68 is closed as not testable. A definition that was
 never loaded is a setup failure, not that evidence: fix the loading and probe again.
 
+**Result (recorded 2026-09-05, after the grid).** The harness passed effort per sub-agent and six
+valid cells ran. Under the pre-registered rule the arm was **not met** on its letter: one
+ledger-level false acquittal on (b) seed 4 that no control shares, re-opened and resolved before
+publication, so the published outcome was unchanged. Under the restated rule in the deviation
+paragraph above it is **met**, and the maintainer closed #68 on 2026-09-05 with both rulings.
+No default changes on this arm's evidence: the restatement authorises
+[#124](https://github.com/kamui/skills/issues/124), the measured shape (primary at `medium`, every
+verifier batch pinned at `high`), which gates any default change on three seeds of the arm on
+target (a). The cost effect is on record in
+[`evaluation.md`, The lower-effort arm](evaluation.md#the-lower-effort-arm-68): per-target medians
+of roughly −40% billed dollars, −46% to −63% thinking tokens, and −22% to −30% elapsed time against
+the `v5b` cells. One deviation from item 3 above: the run's elapsed time was not written into the
+preambles as a separate figure; it was taken at close-out from the transcripts' timestamps, and
+because every verifier batch ran nested in the foreground it equals the primary's wall in all
+twelve runs compared.
+
 ## Targets
 
 Six merged, public pull requests, none in a repository or of a shape any living prototype's design
