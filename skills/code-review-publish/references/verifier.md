@@ -11,7 +11,7 @@ If the runtime cannot provide that isolation, do not imitate independent verific
 For candidate mode, give the verifier only:
 
 - the repository and pinned base, head, and merge-base;
-- linked issue/spec coordinates and applicable base-branch rule coordinates;
+- linked issue/spec coordinates, the pull-request title and body when any candidate cites a `pr-title` or `pr-body` requirement coordinate, and applicable base-branch rule coordinates;
 - the following candidate record for each candidate;
 - the `ranges` lines from `scripts/review_context.py` for each candidate's anchor and fix, so the verifier reads them in one message;
 - when `SKILL.md`'s related-acquittal mode applies, the related non-survivor ledger rows, each in the compact form described for clean-verdict mode below; and
@@ -30,7 +30,7 @@ For each candidate, independently:
 1. Read the cited anchor and actual fix site as bounded ranges at head and at the merge-base (`git show <merge-base>:<path>` with a line range), then only enough surrounding context to decide the claim. Read a whole file only when a conditional the claim depends on cannot be located otherwise; say so.
 2. Reproduce or trace the stated trigger through the current code.
 3. Establish the observable impact and whether unchanged code prevents it.
-4. For a Code candidate, confirm that the change introduced the behavior, or that it removed the guarantee an unchanged path relied on; state which of the two applies and cite the base-branch guarantee (`git show <merge-base>:<path>`) and the head-branch code that no longer provides it. For `kind=requirement`, decide whether the explicit requirement made this change responsible for the outcome; never refute it merely because the missing implementation predates the diff or lives in an unchanged file.
+4. For a Code candidate, confirm that the change introduced the behavior, or that it removed the guarantee an unchanged path relied on; state which of the two applies and cite the base-branch guarantee (`git show <merge-base>:<path>`) and the head-branch code that no longer provides it. For `kind=requirement`, decide whether the explicit requirement — the issue or spec requirement, or the pull-request promise of a concrete outcome, at the source coordinate the candidate cites — made this change responsible for the outcome; never refute it merely because the missing implementation predates the diff or lives in an unchanged file, or because its source is the pull-request body rather than an issue.
 5. Confirm that the issue, pull-request description, rules, history, or review record do not make it intentional. A maintainer's approval, LGTM, or merge establishes intent only for what the review record explicitly addresses; it is provisional for public API surface that appears in no released version at the merge-base, and an explicit deferral in that record ("we can fix this during the API review") marks the deferred question open, not settled.
 6. Check whether another candidate requests the same underlying change.
 
