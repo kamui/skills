@@ -247,11 +247,15 @@ v2a keeps finding real things v5b misses — held on both targets.
 | `v5b` | 18 (15 retrospective + the three (f) rounds) | 3.62 | 3.50 | ~25 min | ~1.8–2.3 |
 | `v5b-effort-medium` | 6 | 2.33 | 2.23 | ~16 min | — |
 | `v5b-noverify` | 4 | 2.75 | 2.66 | ~16 min | ~1.6–2.0 |
-| Panel (`v2a` + #53–#58) | 2 | 8.87 | 8.43 | 61 and 77 min | ~4.3–4.8 |
+| Panel (`v2a` + #53–#58) | 6 | 8.88 | 8.71 | 49–93 min | ~4.3–4.8 |
 
-`v5b` ran about 1.6–2× the #62 estimate and the Panel about 2×; the Panel cells cost 2.4× the `v5b`
-median on the same targets ((c) $10.25 against $4.42, (d) $7.48 against $3.13) and took an hour or
-more each, most of it in finder re-dispatches after the #53 shape validator rejected a first report. The estimate was built from one test-4 run of a smaller
+`v5b` ran about 1.6–2× the #62 estimate and the Panel about 2×; over six runs the Panel cost 2.5×
+the `v5b` median and 185 turns against 78. Its cheapest run ($5.01, 24 minutes of agent time) is the
+one where both finders returned zero candidates so no verifier was needed; its dearest ($10.25) spent
+much of its hour on finder re-dispatches after the #53 shape validator rejected a first report. That
+validator fired on nine of the twelve finder reports across the six runs, and in two runs the one
+authorized re-dispatch did not clear it, leaving an axis `incomplete` on a technicality while its
+substantive candidates stood. The estimate was built from one test-4 run of a smaller
 diff; here the primaries read more (median 84 turns against 55) and thought more (median 59k
 thinking tokens against 48k). Discards: $6.07 (two effort seed-1 cells) plus a stopped dispatch,
 recorded under Run continuity; no session-limit event occurred.
