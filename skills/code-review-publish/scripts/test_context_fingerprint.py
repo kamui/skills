@@ -5,7 +5,8 @@
 `context` digest matches its run trailer. That short-circuit is only sound if
 two conforming runs over the same inputs compute byte-identical digests, so
 these cases pin the normalizations the script promises: key order, array order,
-comment-id type, and the sensitivity of the digest to every semantic field.
+comment-id type, the truncation and unavailability markers, the `--packet`
+input path, and the sensitivity of the digest to every semantic field.
 
 Run with ``python3 scripts/test_context_fingerprint.py``. Exit 0 when every
 case passes; exit 1 after printing one line per failed case. Standard library
@@ -298,6 +299,90 @@ def case_comments_available() -> None:
     expect_error("non-boolean comments_available", variant(non_boolean), "comments_available must be a boolean")
 
 
+def case_comments_complete() -> None:
+    """A truncated comment connection is hashed distinctly from a complete one.
+
+    Issue #132: when pagination of an issue's comments did not finish, the
+    reviewer passes `comments_complete: false` beside the comments it did
+    obtain. The digest must differ from a run that fetched every page and saw
+    the same visible comments, or a truncated run could deduplicate against a
+    complete one. `true` is the default, so existing digests are unchanged.
+    """
+
+    def truncated(payload):
+        payload["issues"][0]["comments_complete"] = False
+
+    def explicit_true(payload):
+        payload["issues"][0]["comments_complete"] = True
+
+    def truncated_and_unavailable(payload):
+        payload["issues"][1]["comments_available"] = False
+        payload["issues"][1]["comments_complete"] = False
+
+    def non_boolean(payload):
+        payload["issues"][0]["comments_complete"] = "no"
+
+    expect_different("truncated comments differ from complete comments", BASE, variant(truncated))
+    expect_equal("explicit comments_complete true equals omitted", BASE, variant(explicit_true))
+    expect_error(
+        "truncated and unavailable together",
+        variant(truncated_and_unavailable),
+        "comments_complete cannot be false when comments_available is false",
+    )
+    expect_error("non-boolean comments_complete", variant(non_boolean), "comments_complete must be a boolean")
+
+
+def case_packet_input() -> None:
+    """`--packet` hashes the packet's fingerprint section with stdin's specs and guidance.
+
+    `forge_packet.py normalize` writes `pr` and `issues` under `fingerprint`;
+    `--packet` takes them from there so the digest covers the same normalized
+    records the review read. The result must equal the digest of the same
+    fields supplied directly, and stdin must not carry its own `pr` or `issues`.
+    """
+    import tempfile
+
+    packet = {
+        "schema": "forge-packet/1",
+        "fingerprint": {"pr": BASE["pr"], "issues": BASE["issues"]},
+    }
+    extra = {"specs": BASE["specs"], "guidance": BASE["guidance"]}
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "packet.json"
+        path.write_text(json.dumps(packet), encoding="utf-8")
+
+        def run_packet(stdin: str) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                [sys.executable, str(SCRIPT), "--packet", str(path)],
+                input=stdin,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+        expected = digest("packet input baseline", BASE)
+        result = run_packet(json.dumps(extra))
+        if result.returncode != 0:
+            fail("packet input", f"exit {result.returncode}: {result.stderr.strip()}")
+        elif expected is not None and result.stdout.strip() != expected:
+            fail("packet input", "--packet digest differs from the same fields supplied directly")
+
+        result = run_packet("")
+        bare = digest("packet input without extras", {"pr": BASE["pr"], "issues": BASE["issues"]})
+        if result.returncode != 0 or (bare is not None and result.stdout.strip() != bare):
+            fail("packet input without extras", f"empty stdin must mean no specs or guidance: exit {result.returncode}")
+
+        result = run_packet(json.dumps({"pr": {"title": "x"}}))
+        if result.returncode != 2 or "must not carry pr" not in result.stderr:
+            fail("packet input conflict", f"stdin pr beside --packet must exit 2, got {result.returncode}")
+
+        path.write_text(json.dumps({"fingerprint": {}}), encoding="utf-8")
+        result = run_packet("")
+        if result.returncode != 2 or "forge-packet/1" not in result.stderr:
+            fail("packet input schema", f"unversioned packet must exit 2, got {result.returncode}")
+
+
 def case_errors() -> None:
     """Malformed payloads are rejected, never silently hashed."""
 
@@ -345,6 +430,8 @@ CASES = (
     case_sensitivity,
     case_guidance_membership,
     case_comments_available,
+    case_comments_complete,
+    case_packet_input,
     case_errors,
 )
 
