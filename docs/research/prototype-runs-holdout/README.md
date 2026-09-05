@@ -17,6 +17,23 @@ The directory is undated because it predates the runs. #60 may rename it to
 `prototype-runs-<date>-holdout/` when the grid starts; the one link that points here by path, in
 aggregate analysis §7 conclusion 8, moves with it.
 
+## Interpretation note — 2026-09-05 (#131)
+
+For new current-skill experiments, use [the one-shot method](../code-review-one-shot-method.md).
+The rules and observations below remain the historical record, with these interpretation limits:
+
+- Reviewers could not execute target tests; only the adjudicator could do so. The old grid does
+  not measure execution-enabled review.
+- `v5b-noverify` simulated unavailable verification, withholding mandatory candidates. It did
+  not test a primary-only policy that permits publishing those findings.
+- Criterion 2 requires at least three false-acquittal occurrences to decide. The reported 0/2
+  is formally **not decidable** under that rule; adding a lower-effort occurrence mixes arms.
+  The original evaluation's `FAIL` label is retained as historical interpretation, not the
+  preregistered verdict. The two misses remain observed misses.
+- The published-outcome restatement of the effort rule on 2026-09-05 was made after results.
+  It is a policy deviation, not preregistration or a new experiment; #124 requires fresh matched
+  evidence on the repaired policy before adoption.
+
 ## Method
 
 Replicate the test-4 method as written in
