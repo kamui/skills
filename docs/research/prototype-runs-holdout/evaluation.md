@@ -182,9 +182,30 @@ verified from the transcripts. Controls are the `v5b` cells on the same targets.
 | (c) | output tokens | 98,083 | 57,712 | −41% |
 | (c) | turns | 97 | 81 | −16% |
 | (c) | tool calls | 100 | 88 | −12% |
+| (b) | primary wall | 0:20:40 | 0:16:03 | −22% |
+| (b) | verifier wall | 0:04:37 | 0:05:45 | +25% |
+| (b) | elapsed | 0:20:40 | 0:16:03 | −22% |
+| (c) | primary wall | 0:22:22 | 0:15:42 | −30% |
+| (c) | verifier wall | 0:02:05 | 0:01:23 | −34% |
+| (c) | elapsed | 0:22:22 | 0:15:42 | −30% |
 
-Per-sub-agent walls and elapsed times are in each run document's preamble and in
-`comparison-data.md`'s Effort verification table.
+The per-sub-agent walls are the `Wall` figures from each run document's `transcript_usage.py`
+block, also in `comparison-data.md`'s Effort verification table. Elapsed time was not written into
+the orchestrator preambles as a separate figure; it was taken at close-out from the transcripts'
+timestamps (first to last assistant line across the run's two transcripts). In all twelve runs the
+verifier batch's span lies inside the primary's, since every primary dispatched its verifier in the
+foreground and waited, so the elapsed time equals the primary's wall to the second and the summed
+`wall` in the `TOTAL` block over-counts by the verifier's span. The verifier walls are not an
+effort effect — every verifier ran at `high` in both arms — and the (b) increase is one batch of
+21,989 thinking tokens on seed 4, the batch that re-opened the C2 acquittal.
+
+**Against #68's estimate.** The ticket guessed, for a low-risk run, −20–40% output tokens, −10–25%
+tool calls, and −2–5 minutes; and from the test-4 figures that a −50% thinking reduction would be
+about −12% of billed cost and −25% of wall clock before any tool-call reduction. Measured, per
+target median: output tokens −29% and −41%; tool calls −33% and −12%; elapsed −4:37 and −6:40;
+thinking −46% and −63%; billed −37% and −41%. The billed saving is about three times the guess
+because the primary also made fewer requests (turns −24% and −16%), and each request it did not make
+was a replay of the whole context, which is where most of a run's dollars go.
 
 **Quality.** Dimension 2: no false finding in either arm on either target; one false acquittal in the
 lower-effort arm ((b) seed 4, re-opened by the batch and resolved) against none in the controls.
@@ -211,6 +232,20 @@ restatement authorises is [#124](https://github.com/kamui/skills/issues/124): th
 never measured and would put lower effort where the zero-survivor batch does not fire), with any
 default change gated on three seeds of the arm on target (a), the reasoning-heavy target this arm
 never ran.
+
+**Disposition (#68).** Closed by the maintainer on 2026-09-05 with both rulings on record: under
+the pre-registered rule, **not met**, on the ledger row above; under the restated rule, which counts
+published outcomes (no false finding, no false acquittal surviving to publication, at most one lost
+ground-truth item against the controls), **met**, with the C2 row and its re-open quoted above as
+the deviation record. The harness passed effort per sub-agent as the README describes (the
+not-testable clause did not apply), the six valid cells ran with effort verified on every assistant
+line, and each run's record carries billed usage with thinking tokens, turns, tool calls, wall
+clock, and effort as passed and as verified. What the restatement authorises is
+[#124](https://github.com/kamui/skills/issues/124), the measured shape — primary at `medium` with
+every verifier batch pinned at `high`, on every diff — rather than the risk-surface tiering #68
+proposed, and not a default change: no skill text, agent definition, or harness default adopts lower
+effort on the strength of these six cells, and #124 gates any default change on three seeds of the
+arm on target (a). The cost table above is the evidence #124 cites.
 
 Two behaviors were not effort-specific: three Skeptic-line primaries at `medium` and two at `high`
 drafted a "verbatim verifier report" section before dispatching the verifier, caught it, and replaced
