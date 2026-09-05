@@ -233,13 +233,19 @@ never measured and would put lower effort where the zero-survivor batch does not
 default change gated on three seeds of the arm on target (a), the reasoning-heavy target this arm
 never ran.
 
-**Disposition (#68).** Rule not met, so per its own terms the result is recorded here and the
-default stays: no skill text, agent definition, or harness default adopts lower effort on the
-strength of this arm. The harness passed effort per sub-agent as the README describes (the
+**Disposition (#68).** Closed by the maintainer on 2026-09-05 with both rulings on record: under
+the pre-registered rule, **not met**, on the ledger row above; under the restated rule, which counts
+published outcomes (no false finding, no false acquittal surviving to publication, at most one lost
+ground-truth item against the controls), **met**, with the C2 row and its re-open quoted above as
+the deviation record. The harness passed effort per sub-agent as the README describes (the
 not-testable clause did not apply), the six valid cells ran with effort verified on every assistant
 line, and each run's record carries billed usage with thinking tokens, turns, tool calls, wall
-clock, and effort as passed and as verified. That closes the ticket as a measurement; the cost
-table above is what a later tiering proposal would cite.
+clock, and effort as passed and as verified. What the restatement authorises is
+[#124](https://github.com/kamui/skills/issues/124), the measured shape — primary at `medium` with
+every verifier batch pinned at `high`, on every diff — rather than the risk-surface tiering #68
+proposed, and not a default change: no skill text, agent definition, or harness default adopts lower
+effort on the strength of these six cells, and #124 gates any default change on three seeds of the
+arm on target (a). The cost table above is the evidence #124 cites.
 
 Two behaviors were not effort-specific: three Skeptic-line primaries at `medium` and two at `high`
 drafted a "verbatim verifier report" section before dispatching the verifier, caught it, and replaced
