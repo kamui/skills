@@ -80,6 +80,8 @@ Drop the candidate when decisive evidence contradicts it or the reviewer has not
 
 ## Observations
 
+Safety assertions about a supplied candidate are scoped acquittals inside its verdict, governed by [`verifier.md`](verifier.md)'s scoped-safety rules, rather than observations. Resolve cited disputes over a finding's rule-level scope in primary falsification before rendering its remedy; uncited safety prose cannot narrow it.
+
 Route an accurate fact to `Observations` when it fails finding admission specifically on meaningful or proven consequence, or when a verifier reports a relevant aside outside its candidate verdicts. The fact still needs a decisive repository evidence pointer. An observation is explicitly non-actionable: it has no priority, action, stable finding id, or anchor comment, and its sentence uses descriptive language without `should` or `must`. The output contract caps and renders this summary-only channel. A fact that might meet the finding gates with more available static work remains a candidate, not an observation. A fact that passes gates 1 and 4 at any priority is a finding, not an observation: admit it, or drop it on the gate it actually fails, rather than routing it to `Observations` to avoid publishing a low-priority `consider`. When a candidate fails only gate 4, its ledger row names which reason applies: `observation (consequence absent)` when the fact stands with no consequence to prove, or `dropped (consequence unproven)` when a consequence may exist and the available static work did not establish it.
 
 ## Priorities and blocking
