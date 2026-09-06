@@ -26,6 +26,8 @@ regression evidence, not controls.
 | Target | Packet SHA-256 | Mirror refs | Register version |
 | --- | --- | --- | --- |
 | (a) `hyperium/hyper#3952` | `c94a8d3ed431594d9acd0803bac2558d9227aa58733404f1a5fd416a6e3bf1f2` | `master`=`f9f8f440…`, `review-head`=`f2aa734e…` | holdout README v1 (GT-a1) |
+| (g) `tokio-rs/bytes#698` | `a16ca69e7238cb189bca9fff0edca89688b1ccbd377fb8ace545b7412fa4392e` | `master`=`ce09d7d3…`, `review-head`=`7052d245…` | `g-bytes-698/register.md` v1 (GT-g1) |
+| (h) `etcd-io/etcd#18749` | `3a797bb5dd9ada3a30c7e7b17961cbf61a2c74982dbd98655afe83b6cbec8b6a` | `main`=`bb381d47…`, `review-head`=`8a0fd66d…` | `h-etcd-18749/register.md` v1 (clean) |
 
 ## Model and effort verification
 
@@ -45,6 +47,10 @@ One row per transcript, every assistant line scanned (`agent_effort.py`).
 | att-05 | (a) `high` r3 | verifier | — | no verifier batch dispatched | — | — |
 | att-06 | (a) `medium` r3 | primary | `--effort medium` | `claude-sonnet-5`×94 | `medium`×94 | `7817f5bd-e6be-4d96-bcb9-e34c39e62008.jsonl` |
 | att-06 | (a) `medium` r3 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×36 | `high`×36 | `agent-ade0a6bb3fa325798.jsonl` |
+| att-07 | (g) `high` r1 | primary | `--effort high` | `claude-sonnet-5`×84 | `high`×84 | `8b096eb9-699b-4eca-b96a-49491c584173.jsonl` |
+| att-07 | (g) `high` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×28 | `high`×28 | `agent-aee44cfae02b8f6d5.jsonl` |
+| att-08 | (g) `medium` r1 | primary | `--effort medium` | `claude-sonnet-5`×115 | `medium`×115 | `8d2e0f62-97ca-4789-9a30-3917093548b6.jsonl` |
+| att-08 | (g) `medium` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×22 | `high`×22 | `agent-a1f48bc56104cf70b.jsonl` |
 
 ## Billed usage per attempt
 
@@ -59,6 +65,8 @@ the production-shaped figure.
 | (a) `high` r2 att-04 | claude-sonnet-5 | 60 | 67 | 1 | 120 | 181,724 (5m 0, 1h 181,724) | 7,486,990 | 86,299 | 55,695 | 0:17:27 | 3.09 | 9,636 | **2.99** |
 | (a) `high` r3 att-05 | claude-sonnet-5 | 45 | 57 | 1 | 90 | 184,698 (5m 0, 1h 184,698) | 5,423,021 | 89,683 | 57,943 | 0:16:37 | 2.72 | 9,326 | **2.63** |
 | (a) `medium` r3 att-06 | claude-sonnet-5 | 60 | 72 | 2 | 120 | 277,591 (5m 71,938, 1h 205,653) | 6,681,567 | 139,400 | 69,083 | 0:31:02 | 3.73 | 14,018 | **3.59** |
+| (g) `high` r1 att-07 | claude-sonnet-5 | 52 | 63 | 2 | 104 | 175,593 (5m 25,921, 1h 149,672) | 4,326,171 | 75,928 | 37,219 | 0:16:16 | 2.29 | 14,068 | **2.15** |
+| (g) `medium` r1 att-08 | claude-sonnet-5 | 68 | 80 | 2 | 136 | 182,828 (5m 37,437, 1h 145,391) | 6,624,649 | 66,630 | 25,368 | 0:14:41 | 2.67 | 11,348 | **2.55** |
 
 ## Timing per attempt
 
@@ -70,6 +78,8 @@ the production-shaped figure.
 | att-04 | (a) `high` r2 | render-only | 2026-09-06T08:29:34Z | 2026-09-06T08:42:32Z | 2026-09-06T08:47:05Z | 778 | 1051 | 1047 |
 | att-05 | (a) `high` r3 | render-only | 2026-09-06T08:47:32Z | 2026-09-06T09:00:43Z | 2026-09-06T09:04:12Z | 791 | 1000 | 997 |
 | att-06 | (a) `medium` r3 | render-only | 2026-09-06T08:47:35Z | 2026-09-06T09:10:58Z | 2026-09-06T09:11:38Z | 1403 | 1443 | 1862 |
+| att-07 | (g) `high` r1 | render-only | 2026-09-06T09:12:52Z | 2026-09-06T09:24:39Z | 2026-09-06T09:27:24Z | 707 | 872 | 976 |
+| att-08 | (g) `medium` r1 | render-only | 2026-09-06T09:13:13Z | 2026-09-06T09:24:42Z | 2026-09-06T09:25:38Z | 689 | 744 | 881 |
 
 ## Outcomes per attempt
 
@@ -85,6 +95,7 @@ All-attempt cell cost (every attempt mapped to the cell), candidate / control, m
 | (a) | 1 | 5.23 (att-01) | 3.38 (att-02) | 0.65 |
 | (a) | 2 | 3.09 (att-04) | 2.86 (att-03) | 0.93 |
 | (a) | 3 | 2.72 (att-05) | 3.73 (att-06) | 1.37 |
+| (g) | 1 | 2.29 (att-07) | 2.67 (att-08) | 1.17 |
 
 ## Sandbox and hygiene disclosures
 
