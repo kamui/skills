@@ -51,6 +51,10 @@ One row per transcript, every assistant line scanned (`agent_effort.py`).
 | att-07 | (g) `high` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×28 | `high`×28 | `agent-aee44cfae02b8f6d5.jsonl` |
 | att-08 | (g) `medium` r1 | primary | `--effort medium` | `claude-sonnet-5`×115 | `medium`×115 | `8d2e0f62-97ca-4789-9a30-3917093548b6.jsonl` |
 | att-08 | (g) `medium` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×22 | `high`×22 | `agent-a1f48bc56104cf70b.jsonl` |
+| att-09 | (g) `medium` r2 | primary | `--effort medium` | `claude-sonnet-5`×121 | `medium`×121 | `f72e6fb8-4333-460f-b30e-6c41f50d5e99.jsonl` |
+| att-09 | (g) `medium` r2 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×32 | `high`×32 | `agent-ab58befac7acc04e7.jsonl` |
+| att-10 | (g) `high` r2 | primary | `--effort high` | `claude-sonnet-5`×95 | `high`×95 | `3ed14c7c-2689-4e00-9409-2d3f68cf340d.jsonl` |
+| att-10 | (g) `high` r2 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×16 | `high`×16 | `agent-a9df430c26b2c7d15.jsonl` |
 
 ## Billed usage per attempt
 
@@ -67,6 +71,8 @@ the production-shaped figure.
 | (a) `medium` r3 att-06 | claude-sonnet-5 | 60 | 72 | 2 | 120 | 277,591 (5m 71,938, 1h 205,653) | 6,681,567 | 139,400 | 69,083 | 0:31:02 | 3.73 | 14,018 | **3.59** |
 | (g) `high` r1 att-07 | claude-sonnet-5 | 52 | 63 | 2 | 104 | 175,593 (5m 25,921, 1h 149,672) | 4,326,171 | 75,928 | 37,219 | 0:16:16 | 2.29 | 14,068 | **2.15** |
 | (g) `medium` r1 att-08 | claude-sonnet-5 | 68 | 80 | 2 | 136 | 182,828 (5m 37,437, 1h 145,391) | 6,624,649 | 66,630 | 25,368 | 0:14:41 | 2.67 | 11,348 | **2.55** |
+| (g) `medium` r2 att-09 | claude-sonnet-5 | 79 | 85 | 2 | 158 | 206,730 (5m 48,654, 1h 158,076) | 7,197,303 | 71,972 | 27,983 | 0:18:01 | 2.91 | 12,706 | **2.79** |
+| (g) `high` r2 att-10 | claude-sonnet-5 | 52 | 63 | 2 | 104 | 153,242 (5m 16,703, 1h 136,539) | 4,409,509 | 68,268 | 31,411 | 0:14:46 | 2.15 | 11,212 | **2.04** |
 
 ## Timing per attempt
 
@@ -80,6 +86,8 @@ the production-shaped figure.
 | att-06 | (a) `medium` r3 | render-only | 2026-09-06T08:47:35Z | 2026-09-06T09:10:58Z | 2026-09-06T09:11:38Z | 1403 | 1443 | 1862 |
 | att-07 | (g) `high` r1 | render-only | 2026-09-06T09:12:52Z | 2026-09-06T09:24:39Z | 2026-09-06T09:27:24Z | 707 | 872 | 976 |
 | att-08 | (g) `medium` r1 | render-only | 2026-09-06T09:13:13Z | 2026-09-06T09:24:42Z | 2026-09-06T09:25:38Z | 689 | 744 | 881 |
+| att-09 | (g) `medium` r2 | render-only | 2026-09-06T09:27:45Z | 2026-09-06T09:41:32Z | 2026-09-06T09:42:50Z | 827 | 905 | 1081 |
+| att-10 | (g) `high` r2 | render-only | 2026-09-06T09:28:07Z | 2026-09-06T09:40:37Z | 2026-09-06T09:41:11Z | 751 | 784 | 886 |
 
 ## Outcomes per attempt
 
@@ -96,6 +104,7 @@ All-attempt cell cost (every attempt mapped to the cell), candidate / control, m
 | (a) | 2 | 3.09 (att-04) | 2.86 (att-03) | 0.93 |
 | (a) | 3 | 2.72 (att-05) | 3.73 (att-06) | 1.37 |
 | (g) | 1 | 2.29 (att-07) | 2.67 (att-08) | 1.17 |
+| (g) | 2 | 2.15 (att-10) | 2.91 (att-09) | 1.35 |
 
 ## Sandbox and hygiene disclosures
 
