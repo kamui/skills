@@ -1217,9 +1217,14 @@ commit the run records.
 - `evaluation.md` — pass/fail against each #60 success criterion, plus the lower-effort arm's six
   runs and whether the #68 adoption rule was met; written by #60 after the grid
 - [`../tools/build_packet.py`](../tools/build_packet.py) — the phase-1 packet builder that renders
-  each `<target>/packet.md` from one forge query and the staging mirror. The packets above were built
-  by its `/tmp` predecessor; the shipped tool adds the merge-time cutoff #124 introduced and renders
-  the same packet byte for byte at that cutoff. `python3 ../tools/test_build_packet.py` checks it
+  a `<target>/packet.md` from one forge query and the staging mirror. It is the #124 builder quoted in
+  [`../one-shot-effort-2026-09-06/tooling.md`](../one-shot-effort-2026-09-06/tooling.md) shipped as a
+  tool, and renders that builder's packets byte for byte at the merge-time cutoff — so what it
+  regenerates is `../one-shot-effort-2026-09-06/g-bytes-698/packet.md` and its `h-etcd-18749` sibling.
+  It does **not** regenerate this bundle's packets, which came from the earlier cutoff-free builder:
+  that one titles a packet "holdout target (x)" and gives §6 no cutoff, as
+  `../one-shot-effort-2026-09-06/a-hyper-3952/packet.md` shows.
+  `python3 ../tools/test_build_packet.py` checks the shipped tool
 - [`../tools/cost_split.py`](../tools/cost_split.py) and
   [`../tools/transcript_usage.py`](../tools/transcript_usage.py) — the metering scripts;
   `--self-test` checks each
