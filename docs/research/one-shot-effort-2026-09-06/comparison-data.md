@@ -59,6 +59,10 @@ One row per transcript, every assistant line scanned (`agent_effort.py`).
 | att-11 | (h) `high` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×34 | `high`×34 | `agent-a297b8681a64e5ab6.jsonl` |
 | att-12 | (h) `medium` r1 | primary | `--effort medium` | `claude-sonnet-5`×106 | `medium`×106 | `bacf51e0-3caa-4daf-8959-646c3f011709.jsonl` |
 | att-12 | (h) `medium` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×45 | `high`×45 | `agent-a07ca0bcd290ecbcb.jsonl` |
+| att-13 | (h) `medium` r2 | primary | `--effort medium` | `claude-sonnet-5`×94 | `medium`×94 | `7a3199b2-2396-4944-8fca-64d88414de50.jsonl` |
+| att-13 | (h) `medium` r2 | verifier | — | no verifier batch dispatched | — | — |
+| att-14 | (h) `high` r2 | primary | `--effort high` | `claude-sonnet-5`×128 | `high`×128 | `9511a91a-895e-4b16-9648-c7b2fc0de03e.jsonl` |
+| att-14 | (h) `high` r2 | verifier | — | no verifier batch dispatched | — | — |
 
 ## Billed usage per attempt
 
@@ -79,6 +83,8 @@ the production-shaped figure.
 | (g) `high` r2 att-10 | claude-sonnet-5 | 52 | 63 | 2 | 104 | 153,242 (5m 16,703, 1h 136,539) | 4,409,509 | 68,268 | 31,411 | 0:14:46 | 2.15 | 11,212 | **2.04** |
 | (h) `high` r1 att-11 | claude-sonnet-5 | 75 | 95 | 2 | 150 | 234,918 (5m 67,578, 1h 167,340) | 7,485,493 | 82,575 | 36,305 | 0:20:37 | 3.16 | 13,883 | **3.02** |
 | (h) `medium` r1 att-12 | claude-sonnet-5 | 69 | 91 | 2 | 138 | 227,999 (5m 46,120, 1h 181,879) | 6,310,878 | 87,703 | 36,382 | 0:20:42 | 2.98 | 12,501 | **2.86** |
+| (h) `medium` r2 att-13 | claude-sonnet-5 | 52 | 54 | 1 | 104 | 152,843 (5m 0, 1h 152,843) | 5,466,845 | 52,991 | 26,682 | 0:09:57 | 2.23 | 8,409 | **2.15** |
+| (h) `high` r2 att-14 | claude-sonnet-5 | 60 | 75 | 1 | 120 | 179,381 (5m 0, 1h 179,381) | 6,891,267 | 78,225 | 47,631 | 0:16:14 | 2.88 | 9,291 | **2.79** |
 
 ## Timing per attempt
 
@@ -96,11 +102,27 @@ the production-shaped figure.
 | att-10 | (g) `high` r2 | render-only | 2026-09-06T09:28:07Z | 2026-09-06T09:40:37Z | 2026-09-06T09:41:11Z | 751 | 784 | 886 |
 | att-11 | (h) `high` r1 | render-only | 2026-09-06T09:43:11Z | 2026-09-06T09:57:19Z | 2026-09-06T10:00:04Z | 849 | 1013 | 1237 |
 | att-12 | (h) `medium` r1 | render-only | 2026-09-06T09:43:32Z | 2026-09-06T09:59:39Z | 2026-09-06T10:00:19Z | 967 | 1007 | 1242 |
+| att-13 | (h) `medium` r2 | render-only | 2026-09-06T10:00:43Z | 2026-09-06T10:07:43Z | 2026-09-06T10:10:42Z | 420 | 600 | 597 |
+| att-14 | (h) `high` r2 | render-only | 2026-09-06T10:01:04Z | 2026-09-06T10:13:04Z | 2026-09-06T10:17:23Z | 719 | 978 | 974 |
 
 ## Outcomes per attempt
 
 | Attempt | Cell | Complete | Status | Findings (priority/action) | Questions | Observations | Verifier batches | Recovered defect IDs | Recall | False items (raw / unique) | False clean | Fix sufficiency |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| att-01 | (a) `high` r1 | yes | Changes Requested | P1/must-fix; P2/consider | 0 | 1 | 1 | GT-a1 | 1/1 | 0 / 0 | no | sufficient |
+| att-02 | (a) `medium` r1 | yes | Changes Requested | P1/must-fix; P3/consider | 0 | 0 | 1 | GT-a1 | 1/1 | 0 / 0 | no | sufficient |
+| att-03 | (a) `medium` r2 | yes | Changes Requested | P1/must-fix; P2/consider | 0 | 1 | 1 | GT-a1 | 1/1 | 0 / 0 | no | sufficient |
+| att-04 | (a) `high` r2 | yes | Approved | P2/consider ×2 | 0 | 0 | 0 | — | 0/1 | 0 / 0 | **yes** | N/A |
+| att-05 | (a) `high` r3 | yes | Approved | P2/consider; P3/consider | 0 | 0 | 0 | — | 0/1 | 0 / 0 | **yes** | N/A |
+| att-06 | (a) `medium` r3 | yes | Changes Requested | P0/must-fix; P3/consider | 0 | 0 | 1 | GT-a1 | 1/1 | 0 / 0 | no | sufficient |
+| att-07 | (g) `high` r1 | yes | Approved | none | 0 | 0 | 1 | — | 0/1 | 0 / 0 | **yes** | N/A |
+| att-08 | (g) `medium` r1 | yes | Approved | none | 0 | 1 | 1 | — | 0/1 | 0 / 0 | **yes** | N/A |
+| att-09 | (g) `medium` r2 | yes | Approved | none | 0 | 0 | 1 | — | 0/1 | 0 / 0 | **yes** | N/A |
+| att-10 | (g) `high` r2 | yes | Approved | none | 0 | 1 | 1 | — | 0/1 | 0 / 0 | **yes** | N/A |
+| att-11 | (h) `high` r1 | yes | Approved | none | 0 | 0 | 1 | — | N/A | 0 / 0 | N/A | N/A |
+| att-12 | (h) `medium` r1 | yes | Approved | none | 0 | 1 | 1 | — | N/A | 0 / 0 | N/A | N/A |
+| att-13 | (h) `medium` r2 | yes | Approved | P3/consider | 0 | 0 | 0 | — | N/A | 0 / 0 | N/A | N/A |
+| att-14 | (h) `high` r2 | yes | Approved | P3/consider | 0 | 2 | 0 | — | N/A | 0 / 0 | N/A | N/A |
 
 ## Matched cost pairs
 
@@ -114,8 +136,12 @@ All-attempt cell cost (every attempt mapped to the cell), candidate / control, m
 | (g) | 1 | 2.29 (att-07) | 2.67 (att-08) | 1.17 |
 | (g) | 2 | 2.15 (att-10) | 2.91 (att-09) | 1.35 |
 | (h) | 1 | 3.16 (att-11) | 2.98 (att-12) | 0.94 |
+| (h) | 2 | 2.88 (att-14) | 2.23 (att-13) | 0.78 |
+
+**Median ratio over the seven complete pairs: 0.94** (gate `<= 0.80`: not met). Known-Hyper pairs only: 0.93 (n=3). Fresh pairs only: 1.05 (n=4). Every cell has exactly one attempt, so all-attempt and valid-run costs coincide; there are no unmatched cells and no unknown charges.
 
 ## Sandbox and hygiene disclosures
 
 | Attempt | Disclosure |
 | --- | --- |
+| all | No attempt reported a path read outside its sandbox or a clone mutation; the `context` digests differed between attempts on (g) (three values) and (h) (three values) although the packets were identical, and were identical on (a). |
