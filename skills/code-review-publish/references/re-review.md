@@ -8,6 +8,8 @@ Use the single context run from `SKILL.md` step 2. Review the **delta** when all
 
 ## Replies and prior state
 
+Read prior state from the packet `SKILL.md` step 1 persisted, never from a second fetch. Every review, thread comment, reply, issue comment, and pull-request comment there carries the forge's stable numeric `id`, `created_at` (or `submitted_at`), and `last_edited_at`, which is `null` until the object is edited; a thread carries `is_resolved`, which has no timestamp. A reply edited after the prior review, without any code change, is later state and is re-read as prose. `python3 scripts/forge_packet.py later-state packet.json --review <prior review id>` lists everything created or edited after a review, and its `thread-state` lines name each thread whose undated resolved state cannot be ruled unchanged — every resolved thread, and every thread predating that review, which may have been un-resolved since — so a thread is never assumed unchanged.
+
 Read replies as prose first. Recognize these visible dispositions when present:
 
 | Disposition | Meaning | Required evidence |
