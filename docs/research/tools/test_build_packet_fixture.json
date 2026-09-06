@@ -1,0 +1,96 @@
+{
+  "data": {
+    "repository": {
+      "url": "https://github.com/example/retry",
+      "pullRequest": {
+        "title": "Bound the reconnect retry loop",
+        "body": "Closes #3900.\n\nThe reconnect loop retried without a bound. This adds a ceiling and a test.",
+        "state": "MERGED",
+        "merged": true,
+        "mergedAt": "2026-03-10T12:00:00Z",
+        "isDraft": false,
+        "baseRefName": "main",
+        "baseRefOid": "0000000000000000000000000000000000000000",
+        "headRefOid": "PATCHED_BY_THE_TEST",
+        "createdAt": "2026-03-07T07:30:00Z",
+        "author": {"login": "bob"},
+        "authorAssociation": "CONTRIBUTOR",
+        "baseRepository": {"url": "https://github.com/example/retry"},
+        "commits": {
+          "totalCount": 2,
+          "nodes": [
+            {"commit": {"oid": "1111111111111111111111111111111111111111", "committedDate": "2026-03-07T07:00:00Z", "message": "Bound the reconnect retry loop", "author": {"name": "Bob", "user": {"login": "bob"}}}},
+            {"commit": {"oid": "2222222222222222222222222222222222222222", "committedDate": "2026-03-09T07:00:00Z", "message": "Add the ceiling test", "author": {"name": "Bob", "user": {"login": "bob"}}}}
+          ]
+        },
+        "files": {
+          "nodes": [
+            {"path": "src/retry.rs", "additions": 12, "deletions": 3, "changeType": "MODIFIED"},
+            {"path": "src/lib.rs", "additions": 4, "deletions": 0, "changeType": "ADDED"}
+          ]
+        },
+        "closingIssuesReferences": {
+          "nodes": [
+            {
+              "number": 3900,
+              "title": "Reconnect loop spins forever after a dropped socket",
+              "body": "On a dropped socket the client retries with no ceiling and pins a core.",
+              "createdAt": "2026-03-01T09:00:00Z",
+              "author": {"login": "carol"},
+              "url": "https://github.com/example/retry/issues/3900",
+              "repository": {"nameWithOwner": "example/retry"},
+              "comments": {
+                "totalCount": 2,
+                "nodes": [
+                  {"author": {"login": "carol"}, "createdAt": "2026-03-02T10:00:00Z", "updatedAt": "2026-03-02T10:00:00Z", "body": "Reproduced on 1.2.0 with a proxy that closes mid-handshake."},
+                  {"author": {"login": "dana"}, "createdAt": "2026-03-15T10:00:00Z", "updatedAt": "2026-03-15T10:00:00Z", "body": "Reopening: the shipped fix still hot-loops when the ceiling is zero."}
+                ]
+              }
+            }
+          ]
+        },
+        "reviews": {
+          "nodes": [
+            {"author": {"login": "alice"}, "state": "CHANGES_REQUESTED", "body": "The retry loop needs a bound, not a longer sleep.", "submittedAt": "2026-03-08T09:00:00Z", "commit": {"oid": "1111111111111111111111111111111111111111"}},
+            {"author": {"login": "alice"}, "state": "APPROVED", "body": "", "submittedAt": "2026-03-09T15:30:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}},
+            {"author": {"login": "dana"}, "state": "COMMENT", "body": "This regressed main; see the downstream breakage report.", "submittedAt": "2026-03-12T08:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}}
+          ]
+        },
+        "reviewThreads": {
+          "nodes": [
+            {
+              "isResolved": true,
+              "path": "src/retry.rs",
+              "line": 42,
+              "originalLine": 42,
+              "comments": {
+                "nodes": [
+                  {"author": {"login": "alice"}, "body": "Bound this loop.", "createdAt": "2026-03-08T09:01:00Z", "commit": {"oid": "1111111111111111111111111111111111111111"}, "originalCommit": {"oid": "1111111111111111111111111111111111111111"}},
+                  {"author": {"login": "bob"}, "body": "Bounded in the follow-up commit.", "createdAt": "2026-03-08T10:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "1111111111111111111111111111111111111111"}},
+                  {"author": {"login": "dana"}, "body": "Still spinning in production after the merge.", "createdAt": "2026-03-11T09:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "2222222222222222222222222222222222222222"}}
+                ]
+              }
+            },
+            {
+              "isResolved": false,
+              "path": "src/lib.rs",
+              "line": 7,
+              "originalLine": null,
+              "comments": {
+                "nodes": [
+                  {"author": {"login": "dana"}, "body": "Filed #4001 for the fallout.", "createdAt": "2026-03-13T09:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "2222222222222222222222222222222222222222"}}
+                ]
+              }
+            }
+          ]
+        },
+        "comments": {
+          "nodes": [
+            {"author": {"login": "bob"}, "body": "Opening for review; the ceiling is configurable.", "createdAt": "2026-03-07T08:00:00Z"},
+            {"author": {"login": "dana"}, "body": "Reverted in #4002.", "createdAt": "2026-03-14T10:00:00Z"}
+          ]
+        }
+      }
+    }
+  }
+}

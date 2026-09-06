@@ -1216,6 +1216,10 @@ commit the run records.
 - `comparison-data.md` — side-by-side metadata with the production-shaped cost column
 - `evaluation.md` — pass/fail against each #60 success criterion, plus the lower-effort arm's six
   runs and whether the #68 adoption rule was met; written by #60 after the grid
+- [`../tools/build_packet.py`](../tools/build_packet.py) — the phase-1 packet builder that renders
+  each `<target>/packet.md` from one forge query and the staging mirror. The packets above were built
+  by its `/tmp` predecessor; the shipped tool adds the merge-time cutoff #124 introduced and renders
+  the same packet byte for byte at that cutoff. `python3 ../tools/test_build_packet.py` checks it
 - [`../tools/cost_split.py`](../tools/cost_split.py) and
   [`../tools/transcript_usage.py`](../tools/transcript_usage.py) — the metering scripts;
   `--self-test` checks each
