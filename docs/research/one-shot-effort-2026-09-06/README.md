@@ -222,3 +222,48 @@ and the payload present (completion mode `render-only`). A non-zero exit or a mi
 stop record outside the sidecar. Close-out (`close_cell.py`) scans model and effort on every line of
 the root and every child transcript, refuses any child not dispatched through the definition, and
 meters with `transcript_usage.py --prices 2,10 --report <run.md> --timing <timing.json>`.
+
+## 3. What ran, deviations, and the decision
+
+**Ran (2026-09-06, 07:55–10:17Z):** all fourteen planned cells, all valid completed, no
+replacements, no session-limit notice. Stage-1 freeze `30c2f2f9c0e098df77ac2324c589f7a64d83dada`
+(07:55:02Z) preceded att-01 (07:55:17Z); stage-2 freeze `edfb4b38aaa5fcd11497f5191b5ddb81b4fc8ae1`
+(08:15:40Z) preceded att-07 (09:12:52Z). Order as frozen: Hyper pairs r1 (`high`,`medium`),
+r2 (`medium`,`high`), r3 (`high`,`medium`); bytes r1 (`high`,`medium`), r2 (`medium`,`high`);
+etcd r1 (`high`,`medium`), r2 (`medium`,`high`); two cells in flight at a time.
+
+**Deviations and corrections, all dated in [`ledger.md`](ledger.md):**
+
+1. Blinding on Hyper replicate 1 was broken for the control payload by its own header comment
+   (scoring/a.md); identifiers are redacted from replicate 2 onward.
+2. The first `run_cell.sh` calls for att-07/att-08 failed at clone preparation before any root
+   dispatch (S8); the runner was fixed and the same attempt IDs were dispatched; no attempt was
+   consumed.
+3. The adjudicator spend was first written into the ledger before the meter ran and corrected to
+   the metered figures (S7).
+4. Dispatch-record times were written to the minute and later replaced with the runner's logged
+   second-level times; no record was written after its dispatch.
+5. The maintainer asked mid-grid (10:00Z) for helper sub-agents to run on Opus 5 at high effort;
+   no helper was dispatched after that instruction, so every helper in this bundle ran on Sonnet 5
+   as recorded. The review cells were never affected: their model is the frozen condition.
+6. No deviation from the preregistered thresholds, cells, order, caps or scoring rule.
+
+**Decision:** the screen fails at the cost gate (matched median ratio 0.94 > 0.80) and the
+default effort is **retained**; see [`evaluation.md`](evaluation.md). The configuration that was
+validated — a `medium` primary with every verifier batch pinned at `high`, on Claude Code headless
+sessions with `claude-sonnet-5` — is documented in `DESIGN.md` for the configurations actually
+measured, with no recommendation to adopt it. The result changes no verification semantics, so the
+workflow identifier stays `v5b-10` (#136's per-release rule does not fire).
+
+## 4. Files
+
+- `README.md` — preregistration (stages 1 and 2), what ran, deviations, decision
+- `ledger.md` — caps, setup/probe entries, the attempt ledger with dispatch records and meter rows
+- `comparison-data.md` — per-attempt verification, billed usage, timing, outcomes, matched pairs
+- `evaluation.md` — results by target, the screening rule applied, cost, limitations
+- `scoring/{a,g,h}.md` — blind scoring records per target
+- `a-hyper-3952/`, `g-bytes-698/`, `h-etcd-18749/` — packet, register (fresh targets), per-attempt
+  payload, run report and timing sidecar
+- `hunts/` — the target-vetting reports (Sonnet helpers)
+- `tooling.md` — every experiment script, quoted
+- `../tools/agent_effort.py` — the observed-effort scanner shipped with this bundle

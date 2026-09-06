@@ -1,6 +1,6 @@
 # Experiment tooling (issue #124), quoted verbatim from `/tmp/effort124`
 
-These files ran the grid. They are experiment-local (absolute `/tmp` paths, one machine) and are quoted here so every dispatch is reproducible from the record; they are not skill scripts. `build_packet.py` is the holdout's builder with the merge-time cutoff added for this experiment. `run_cell.sh` is quoted in its final form (the detach-before-branch-move fix of ledger S8); `blind.py` in its final form (identifier redaction added after replicate 1).
+These files ran the grid. They are experiment-local (absolute `/tmp` paths, one machine) and are quoted here so every dispatch is reproducible from the record; they are not skill scripts. `build_packet.py` is the holdout's builder with the merge-time cutoff added for this experiment. `run_cell.sh` is quoted in its final form (the detach-before-branch-move fix of ledger S8); `blind.py` in its final form (identifier redaction added after replicate 1); `aggregate.py` produced the per-arm medians and matched ratios in the evaluation.
 
 ## `agents.json`
 
@@ -240,6 +240,41 @@ if mode == "seal":
     json.dump(m, open(mp, "w"), indent=2); print("sealed", len(sys.argv) - 3, "payloads;", len(m), "total")
 else:
     for k, v in sorted(json.load(open(mp)).items()): print(k, v)
+````
+
+## `aggregate.py`
+
+````python
+#!/usr/bin/env python3
+"""Aggregate cost/timing views over closed-out cells: per-arm medians, matched pair ratios, ticket totals."""
+import json, glob, os, statistics as st
+B="/tmp/effort124/reports"
+cells={}
+for mp in sorted(glob.glob(f"{B}/*/*-meta.json")):
+    m=json.load(open(mp)); cell=m["cell"]; att=m["attempt"]
+    t=cell.split("-")[0]; arm=cell.split("-")[1]; rep=int(cell[-1])
+    u=json.loads(m["usage_json"]); tot=u["total"]; tim=u.get("timing",{})
+    cells[(t,arm,rep)]={"att":att,"cost":tot["cost"],"prod":tot.get("production_shaped_cost"),"think":tot.get("thinking"),"out":tot.get("output"),"turns":tot.get("turns"),"tools":tot.get("tool_calls"),
+        "e2p":tim.get("elapsed_to_payload_seconds"),"e2c":tim.get("elapsed_to_completion_seconds"),"span":tot.get("agent_span_sum_seconds"),"n_agents":len(m["agents"])}
+def med(v): v=[x for x in v if x is not None]; return st.median(v) if v else None
+print("cell rows:")
+for k in sorted(cells): print(k, cells[k])
+print("\nper-arm medians (all targets):")
+for arm in ("high","medium"):
+    v=[c for k,c in cells.items() if k[1]==arm]
+    print(arm, "n",len(v), "cost",med([c["cost"] for c in v]), "prod",med([c["prod"] for c in v]), "think",med([c["think"] for c in v]), "out",med([c["out"] for c in v]), "turns",med([c["turns"] for c in v]), "tools",med([c["tools"] for c in v]), "e2c",med([c["e2c"] for c in v]))
+print("\nper-target medians:")
+for t in ("a","g","h"):
+    for arm in ("high","medium"):
+        v=[c for k,c in cells.items() if k[0]==t and k[1]==arm]
+        if v: print(t, arm, "n",len(v), "cost",med([c["cost"] for c in v]), "think",med([c["think"] for c in v]), "turns",med([c["turns"] for c in v]), "e2c",med([c["e2c"] for c in v]))
+print("\nmatched pairs (medium/high):")
+ratios=[]
+for (t,arm,rep),c in sorted(cells.items()):
+    if arm=="high" and (t,"medium",rep) in cells:
+        r=cells[(t,"medium",rep)]["cost"]/c["cost"]; ratios.append(r); print(t,rep, c["att"], cells[(t,"medium",rep)]["att"], round(c["cost"],2), round(cells[(t,"medium",rep)]["cost"],2), round(r,3))
+print("median ratio", round(st.median(ratios),3), "n", len(ratios), "fresh-only", round(st.median([r for (k,r) in zip([k for k in sorted(cells) if k[1]=='high' and (k[0],'medium',k[2]) in cells], ratios) if k[0]!='a']),3) if any(k[0]!='a' for k in cells) else None)
+tot=sum(c["cost"] for c in cells.values()); print("\ncells all-attempt total", round(tot,2), "per arm", {arm: round(sum(c["cost"] for k,c in cells.items() if k[1]==arm),2) for arm in ("high","medium")})
 ````
 
 ## `build_packet.py`
