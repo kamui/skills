@@ -6,9 +6,11 @@ conversation comments in ONE ``gh api graphql`` call (the same shape ``code-revi
 step 1 uses), and takes the changed-file manifest, the commit list and the guidance inventory
 from a local staging mirror. Everything created after the cutoff -- reviews, thread comments,
 conversation comments, issue comments -- is omitted, so a packet built after a pull request
-merged carries only what a reviewer could have seen at the merge instant. The rendered packet
-states the cutoff; the omitted counts go to stdout for the run bundle's record, not into the
-packet, which stays identical across arms and seeds.
+merged carries only what a reviewer could have seen at the merge instant. A thread comment is kept
+only when its own instant and its review's submission are both within the cutoff, since the forge
+stamps a pending review's comments when they are drafted rather than when they are published.
+The rendered packet states the cutoff; the omitted counts go to stdout for the run bundle's record,
+not into the packet, which stays identical across arms and seeds.
 
 Usage::
 
@@ -17,8 +19,9 @@ Usage::
         --staging /tmp/holdout-staging/hyper.git --target a \\
         --out /tmp/holdout/packets/a/packet.md \\
         [--cutoff 2024-05-01T12:00:00Z] [--execution-note "..."] [--extra-section FILE] \\
-        [--ref-pr N] [--spec-issue owner/repo#n] [--publish-to-fork] \\
-        [--truncation-newest SHA] [--replay DIR]
+        [--ref-pr N] [--spec-issue owner/repo#n] [--experiment-label "..."] \\
+        [--subagent-model sonnet] [--publish-to-fork [--upstream-repo owner/name] \\
+        [--original-author LOGIN]] [--truncation-newest SHA] [--replay DIR]
 
 Inputs: the forge response for ``--repo``/``--pr`` (fetched with ``gh``, or replayed from
 ``--replay``); a git clone at ``--staging`` holding ``--merge-base`` and ``--head``; optionally a
@@ -31,6 +34,11 @@ instant quoted inside a body that was kept trips it too, and the fix is to re-ch
 rather than to loosen the scan. The lines that state pinned identity instants -- the merge
 instant, and the closure instant of an originating reference -- are exempt, since they are
 identity rather than review material and are stated even under an earlier cutoff.
+
+The strings that name the program rather than the target -- ``--experiment-label`` in the title,
+``--subagent-model`` in the run conditions, and ``--upstream-repo`` and ``--original-author`` under
+``--publish-to-fork`` -- default to the #124 effort experiment's values, so a default invocation
+renders the same bytes it always did and another program states its own.
 
 ``--replay DIR`` reads saved forge responses instead of calling ``gh``: ``graphql.json``, plus
 ``ref-pr.json`` and ``ref-pr-comments.json`` under ``--ref-pr``, and ``spec-issue.json`` and
@@ -67,7 +75,8 @@ query($owner:String!,$name:String!,$number:Int!){
         comments(first:100){ totalCount nodes{ author{login} createdAt updatedAt body } } } }
       reviews(first:100){ nodes{ author{login} state body submittedAt commit{oid} } }
       reviewThreads(first:100){ nodes{ isResolved path line originalLine
-        comments(first:50){ nodes{ author{login} body createdAt commit{oid} originalCommit{oid} } } } }
+        comments(first:50){ nodes{ author{login} body createdAt commit{oid} originalCommit{oid}
+          pullRequestReview{ submittedAt } } } } }
       comments(first:100){ nodes{ author{login} body createdAt } } } } }
 '''
 
@@ -83,6 +92,11 @@ def parse_instant(text: str) -> datetime:
     raw = text.strip()
     if raw.endswith(("Z", "z")):
         raw = raw[:-1] + "+00:00"
+    basic = re.match(r"^(.*T.*)([+-]\d{2})(\d{2})$", raw)
+    if basic:
+        # datetime.fromisoformat before 3.11 takes only the extended offset form +HH:MM, while
+        # the packet scan's regex accepts basic-format +HHMM: normalise so the scan sees it
+        raw = basic.group(1) + basic.group(2) + ":" + basic.group(3)
     match = re.match(r"^(.*T\d{2}:\d{2}:\d{2})(\.\d+)?(.*)$", raw)
     if match and match.group(2):
         # datetime.fromisoformat on Python 3.9 takes 3 or 6 fractional digits and nothing else
@@ -206,7 +220,11 @@ def parse_args(argv) -> argparse.Namespace:
     ap.add_argument("--truncation-newest", default=None)
     ap.add_argument("--ref-pr", type=int, default=None, help="a pull request the body closes (GraphQL closingIssuesReferences omits PRs); fetched by REST and rendered as the originating reference")
     ap.add_argument("--spec-issue", default=None, help="owner/repo#n: an issue from another repository supplied as the user-supplied spec, fetched by REST with comments")
+    ap.add_argument("--experiment-label", default="issue #124 effort experiment", help="the program this packet belongs to, named in the packet title")
+    ap.add_argument("--subagent-model", default="sonnet", help="the model the run conditions bind every sub-agent call to")
     ap.add_argument("--publish-to-fork", action="store_true", help="target (f): open PR on a repository we control; publication enabled; network permitted for gh against that repository only")
+    ap.add_argument("--upstream-repo", default="spf13/cobra", help="--publish-to-fork: the upstream the replay repository forks, named as off limits in the run conditions")
+    ap.add_argument("--original-author", default="scop", help="--publish-to-fork: who wrote the change upstream, distinguished from the posting identity")
     ap.add_argument("--cutoff", default=None, help="ISO-8601 instant; every review, thread comment, conversation comment and issue comment created after it is omitted (default: the merge time)")
     ap.add_argument("--replay", default=None, help="directory of saved forge responses to read instead of calling gh")
     ap.add_argument("--out", required=True)
@@ -241,23 +259,39 @@ def build(a: argparse.Namespace) -> int:
 
     omitted = {"reviews": 0, "thread_comments": 0, "conversation": 0, "issue_comments": 0}
 
-    def keep(nodes, key, bucket):
+    def after_cutoff(stamp) -> bool:
+        """True when a timestamp is present, parses, and is later than the cutoff."""
+        if not stamp:
+            return False
+        try:
+            return parse_instant(stamp) > cutoff_at
+        except ValueError:
+            return False
+
+    def keep(nodes, key, bucket, also=None):
+        """Drop every node stamped after the cutoff.
+
+        ``also`` reads a second instant off the node that must be within the cutoff too, so a
+        node is kept only when every instant that made it visible is.
+        """
         kept = []
         for node in nodes:
-            stamp = node.get(key)
-            if stamp:
-                try:
-                    if parse_instant(stamp) > cutoff_at:
-                        omitted[bucket] += 1
-                        continue
-                except ValueError:
-                    pass
+            if after_cutoff(node.get(key)) or (also is not None and after_cutoff(also(node))):
+                omitted[bucket] += 1
+                continue
             kept.append(node)
         return kept
 
+    def review_submitted_at(comment):
+        """When a thread comment was published: its review's submission, or nothing if it stands alone."""
+        return (comment.get("pullRequestReview") or {}).get("submittedAt")
+
     P["reviews"]["nodes"] = keep(P["reviews"]["nodes"], "submittedAt", "reviews")
     for t in P["reviewThreads"]["nodes"]:
-        t["comments"]["nodes"] = keep(t["comments"]["nodes"], "createdAt", "thread_comments")
+        # createdAt is stamped when the comment is drafted, so a pending review's comments
+        # predate the cutoff their review was submitted after; both instants have to be within it
+        t["comments"]["nodes"] = keep(t["comments"]["nodes"], "createdAt", "thread_comments",
+                                      also=review_submitted_at)
     P["reviewThreads"]["nodes"] = [t for t in P["reviewThreads"]["nodes"] if t["comments"]["nodes"]]
     P["comments"]["nodes"] = keep(P["comments"]["nodes"], "createdAt", "conversation")
     for i in P["closingIssuesReferences"]["nodes"]:
@@ -265,8 +299,12 @@ def build(a: argparse.Namespace) -> int:
         i["comments"]["totalCount"] = len(i["comments"]["nodes"])
 
     # manifest from the mirror, verified against the pinned SHAs
-    numstat = git(a.staging, "diff", "--numstat", a.merge_base, a.head).strip().splitlines()
-    status = git(a.staging, "diff", "--name-status", a.merge_base, a.head).strip().splitlines()
+    # --no-renames on both: with rename detection --numstat prints the combined "old => new"
+    # form while --name-status prints the two paths separately, so the status lookup misses and
+    # the arrow string reaches both the manifest row and the guidance scope. Without it a rename
+    # is a delete plus an add, and every row names a path that exists.
+    numstat = git(a.staging, "diff", "--no-renames", "--numstat", a.merge_base, a.head).strip().splitlines()
+    status = git(a.staging, "diff", "--no-renames", "--name-status", a.merge_base, a.head).strip().splitlines()
     st = {}
     for line in status:
         parts = line.split("\t")
@@ -306,7 +344,10 @@ def build(a: argparse.Namespace) -> int:
     for c in candidates + sorted(scoped):
         blob = git_optional(a.staging, "rev-parse", "--verify", "-q", f"{a.merge_base}:{c}").strip()
         if c in candidates or blob:
-            guidance_rows.append(f"| `{c}` | {'**yes**' if blob else 'no'} | {('`' + blob + '`') if blob else '\u2014'} |")
+            # the blob cell is built outside the f-string: a backslash escape inside a
+            # replacement field is a SyntaxError before Python 3.12
+            blob_cell = f"`{blob}`" if blob else "\u2014"
+            guidance_rows.append(f"| `{c}` | {'**yes**' if blob else 'no'} | {blob_cell} |")
 
     issues = P["closingIssuesReferences"]["nodes"]
     ref_pr = None
@@ -329,7 +370,7 @@ def build(a: argparse.Namespace) -> int:
 
     packet = Packet()
     w = packet.w
-    w(f"# Review packet \u2014 `{a.repo}#{a.pr}` (target ({a.target}), issue #124 effort experiment)\n")
+    w(f"# Review packet \u2014 `{a.repo}#{a.pr}` (target ({a.target}), {a.experiment_label})\n")
     w(textwrap.dedent("""\
         Phase 1 (target resolution) has already been performed by the orchestrator and is reproduced here in
         full. **Do not attempt to re-resolve the target over the network \u2014 you have no network access.**
@@ -356,7 +397,7 @@ def build(a: argparse.Namespace) -> int:
     else:
         w("| Originating issue(s) | none \u2014 the PR body carries no closing reference; `issues=none` unless the dispatch supplies a spec |")
     if a.publish_to_fork:
-        w("| Posting identity | `kamui` (also the repository owner and the PR opener on this replay repository; the original author is `scop`). Treat this as an ordinary first review by a third party, event `COMMENT`: this is a **live, open pull request on a repository this program controls, and publication is ENABLED** |")
+        w(f"| Posting identity | `kamui` (also the repository owner and the PR opener on this replay repository; the original author is `{a.original_author}`). Treat this as an ordinary first review by a third party, event `COMMENT`: this is a **live, open pull request on a repository this program controls, and publication is ENABLED** |")
     else:
         w("| Posting identity | `kamui`, who did NOT author the PR and has no prior comments or reviews on it \u2192 an ordinary first review by a third party, event `COMMENT`; the target is merged, so this is a **retrospective review with publication disabled** |")
     w("")
@@ -455,11 +496,11 @@ def build(a: argparse.Namespace) -> int:
     w("## 8. Run conditions \u2014 binding on this run and on every sub-agent you spawn\n")
     if a.publish_to_fork:
         w(textwrap.dedent(f"""\
-        1. **Network: forge access to this one repository only.** `gh` may be used against `{a.repo}` (read the pull request, its reviews, threads, and comments; post the review; reply on threads). No other network call of any kind: no `git fetch`/`pull` from anywhere but your clone's `origin`, no access to `spf13/cobra` or any other repository, no `curl`, no web fetch. Your clone's `origin` is the replay repository.
+        1. **Network: forge access to this one repository only.** `gh` may be used against `{a.repo}` (read the pull request, its reviews, threads, and comments; post the review; reply on threads). No other network call of any kind: no `git fetch`/`pull` from anywhere but your clone's `origin`, no access to `{a.upstream_repo}` or any other repository, no `curl`, no web fetch. Your clone's `origin` is the replay repository.
         2. **No execution.** {a.execution_note} **The review is entirely static** \u2014 reason from the source, and say so where a claim would ordinarily be settled by running something. Your own skill's helper scripts are exempt.
         3. **History is truncated at the pinned head on purpose.** The newest object reachable in your clone and in the replay repository is `{newest}`. Nothing that happened after this head exists there. Do not try to work around this.
         4. **Publication is ENABLED**, to this pull request on `{a.repo}`, exactly as your skill specifies: one forge-native review with the summary and every finding, event `COMMENT`, after the validator and the stale-head re-fetch. This is the only target in the evaluation that publishes. Do not edit the pull request, the branch, or the repository in any other way.
-        5. **Follow your own skill as written** \u2014 its phase structure, its fan-out policy, its verification triggers, its output contract. Where the skill tells you to spawn sub-agents, spawn them with the `Agent` tool and **pass `model: "sonnet"` explicitly on every call**.
+        5. **Follow your own skill as written** \u2014 its phase structure, its fan-out policy, its verification triggers, its output contract. Where the skill tells you to spawn sub-agents, spawn them with the `Agent` tool and **pass `model: "{a.subagent_model}"` explicitly on every call**.
         6. **Persist before you verify.** Write the expensive phase to your report file before dispatching any verifier or finder, and update the file as you go.
         7. **Stay in your own sandbox.** Your clone, your skill snapshot, this packet directory, and your own report and payload paths only.
         """))
@@ -481,7 +522,7 @@ def build(a: argparse.Namespace) -> int:
            contract requires for a merged target), per-finding comments, and any trailers, and stop.
         5. **Follow your own skill as written** \u2014 its phase structure, its fan-out policy, its verification
            triggers, its output contract. Do not borrow behavior from any other review skill. Where the skill
-           tells you to spawn sub-agents, spawn them with the `Agent` tool and **pass `model: "sonnet"`
+           tells you to spawn sub-agents, spawn them with the `Agent` tool and **pass `model: "{a.subagent_model}"`
            explicitly on every call**.
         6. **Persist before you verify.** Write the expensive phase to your report file before dispatching
            any verifier or finder: the manifest and requirement ledger when they are complete, then the

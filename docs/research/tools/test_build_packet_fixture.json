@@ -65,9 +65,9 @@
               "originalLine": 42,
               "comments": {
                 "nodes": [
-                  {"author": {"login": "alice"}, "body": "Bound this loop.", "createdAt": "2026-03-08T09:01:00Z", "commit": {"oid": "1111111111111111111111111111111111111111"}, "originalCommit": {"oid": "1111111111111111111111111111111111111111"}},
-                  {"author": {"login": "bob"}, "body": "Bounded in the follow-up commit.", "createdAt": "2026-03-08T10:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "1111111111111111111111111111111111111111"}},
-                  {"author": {"login": "dana"}, "body": "Still spinning in production after the merge.", "createdAt": "2026-03-11T09:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "2222222222222222222222222222222222222222"}}
+                  {"author": {"login": "alice"}, "body": "Bound this loop.", "createdAt": "2026-03-08T09:01:00Z", "pullRequestReview": {"submittedAt": "2026-03-08T09:00:00Z"}, "commit": {"oid": "1111111111111111111111111111111111111111"}, "originalCommit": {"oid": "1111111111111111111111111111111111111111"}},
+                  {"author": {"login": "bob"}, "body": "Bounded in the follow-up commit.", "createdAt": "2026-03-08T10:00:00Z", "pullRequestReview": null, "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "1111111111111111111111111111111111111111"}},
+                  {"author": {"login": "dana"}, "body": "Still spinning in production after the merge.", "createdAt": "2026-03-11T09:00:00Z", "pullRequestReview": {"submittedAt": "2026-03-12T08:00:00Z"}, "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "2222222222222222222222222222222222222222"}}
                 ]
               }
             },
@@ -78,7 +78,7 @@
               "originalLine": null,
               "comments": {
                 "nodes": [
-                  {"author": {"login": "dana"}, "body": "Filed #4001 for the fallout.", "createdAt": "2026-03-13T09:00:00Z", "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "2222222222222222222222222222222222222222"}}
+                  {"author": {"login": "dana"}, "body": "Filed #4001 for the fallout.", "createdAt": "2026-03-13T09:00:00Z", "pullRequestReview": {"submittedAt": "2026-03-12T08:00:00Z"}, "commit": {"oid": "2222222222222222222222222222222222222222"}, "originalCommit": {"oid": "2222222222222222222222222222222222222222"}}
                 ]
               }
             }

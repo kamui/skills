@@ -84,6 +84,7 @@ class BuildPacketTests(unittest.TestCase):
         self.write(self.mirror / "src" / "AGENTS.md", "Scoped guidance for src/.\n")
         self.write(self.mirror / "src" / "retry.rs", "fn retry() { loop {} }\n")
         self.write(self.mirror / "docs" / "notes.md", "Notes.\n")
+        self.write(self.mirror / "guide" / "AGENTS.md", "Scoped guidance for guide/.\n")
         self.git("add", "-A")
         self.git("commit", "-q", "-m", "Base of the reviewed change")
         base = self.git("rev-parse", "HEAD")
@@ -93,6 +94,14 @@ class BuildPacketTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "Bound the reconnect retry loop", when="2026-03-09T07:00:00+00:00")
         head = self.git("rev-parse", "HEAD")
         return base, head
+
+    def rename_into_guide(self) -> None:
+        """Add a commit renaming docs/notes.md into guide/, and repin the head to it."""
+        self.git("mv", "docs/notes.md", "guide/notes.md")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Move the notes under guide/", when="2026-03-09T08:00:00+00:00")
+        self.head = self.git("rev-parse", "HEAD")
+        self.fixture["data"]["repository"]["pullRequest"]["headRefOid"] = self.head
 
     @staticmethod
     def write(path: Path, text: str) -> None:
@@ -174,6 +183,18 @@ class BuildPacketTests(unittest.TestCase):
         packet = self.build_ok("--cutoff", "2026-03-08T09:30:00Z")
         self.assertIn("| `merged` | **`true`** (merged 2026-03-10T12:00:00Z) |", packet)
 
+    def test_a_comment_whose_review_was_submitted_after_the_cutoff_is_omitted(self) -> None:
+        thread = self.fixture["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"][0]
+        thread["comments"]["nodes"][1]["pullRequestReview"] = {"submittedAt": "2026-03-11T09:00:00Z"}
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("'thread_comments': 3", result.stdout)
+        self.assertNotIn("Bounded in the follow-up commit.", self.out.read_text(encoding="utf-8"))
+
+    def test_a_standalone_thread_comment_within_the_cutoff_is_kept(self) -> None:
+        packet = self.build_ok()
+        self.assertIn("Bounded in the follow-up commit.", packet)
+
     def test_a_quoted_post_cutoff_instant_fails_the_scan(self) -> None:
         issue = self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]
         issue["comments"]["nodes"][0]["body"] = "Reproduced; the failing run is at 2026-03-20T09:00:00Z."
@@ -181,6 +202,14 @@ class BuildPacketTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn(f"2026-03-20T09:00:00Z is later than the cutoff {CUTOFF}", result.stdout)
         self.assertIn("not written: 1 instant(s) after the cutoff", result.stdout)
+        self.assertFalse(self.out.exists())
+
+    def test_a_quoted_basic_format_offset_fails_the_scan(self) -> None:
+        issue = self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]
+        issue["comments"]["nodes"][0]["body"] = "Reproduced; the failing run is at 2026-03-20T09:00:00+0530."
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(f"2026-03-20T09:00:00+0530 is later than the cutoff {CUTOFF}", result.stdout)
         self.assertFalse(self.out.exists())
 
     # --- the mirror -----------------------------------------------------
@@ -191,6 +220,14 @@ class BuildPacketTests(unittest.TestCase):
         self.assertIn("M  src/retry.rs", packet)
         self.assertIn("| Diff | 2 files, +2 / −1, 1 commits |", packet)
         self.assertIn(f"| 1 | `{self.head[:9]}` | 2026-03-09 | Bob | Bound the reconnect retry loop |", packet)
+
+    def test_a_rename_names_real_paths_in_the_manifest_and_the_guidance_scope(self) -> None:
+        self.rename_into_guide()
+        packet = self.build_ok()
+        self.assertIn("D  docs/notes.md", packet)
+        self.assertIn("A  guide/notes.md", packet)
+        self.assertNotIn("=>", packet)
+        self.assertIn("| `guide/AGENTS.md` | **yes** |", packet)
 
     def test_guidance_at_the_merge_base_covers_root_and_scoped_files(self) -> None:
         packet = self.build_ok()
@@ -234,6 +271,26 @@ class BuildPacketTests(unittest.TestCase):
         self.assertIn("**Publication is ENABLED**", packet)
         self.assertNotIn("**Publication is disabled.**", packet)
         self.assertIn("publication is ENABLED**", packet)
+
+    def test_the_program_strings_default_to_the_124_experiment(self) -> None:
+        packet = self.build_ok("--publish-to-fork")
+        self.assertIn("(target (a), issue #124 effort experiment)", packet)
+        self.assertIn("the original author is `scop`", packet)
+        self.assertIn("no access to `spf13/cobra`", packet)
+        self.assertIn('**pass `model: "sonnet"` explicitly on every call**', packet)
+
+    def test_another_program_states_its_own_label_and_identities(self) -> None:
+        packet = self.build_ok("--publish-to-fork",
+                               "--experiment-label", "issue #137 recall grid",
+                               "--subagent-model", "opus",
+                               "--upstream-repo", "example/upstream",
+                               "--original-author", "frank")
+        self.assertIn("(target (a), issue #137 recall grid)", packet)
+        self.assertIn("the original author is `frank`", packet)
+        self.assertIn("no access to `example/upstream`", packet)
+        self.assertIn('**pass `model: "opus"` explicitly on every call**', packet)
+        for stale in ["issue #124 effort experiment", "`scop`", "spf13/cobra", 'model: "sonnet"']:
+            self.assertNotIn(stale, packet)
 
     def test_the_execution_note_reaches_the_run_conditions(self) -> None:
         packet = self.build_ok("--execution-note", "Focused tests only, five minutes each.")
