@@ -1,6 +1,6 @@
 # Experiment tooling (issue #124), quoted verbatim from `/tmp/effort124`
 
-These files ran the grid. They are experiment-local (absolute `/tmp` paths, one machine) and are quoted here so every dispatch is reproducible from the record; they are not skill scripts. `build_packet.py` is the holdout's builder with the merge-time cutoff added for this experiment.
+These files ran the grid. They are experiment-local (absolute `/tmp` paths, one machine) and are quoted here so every dispatch is reproducible from the record; they are not skill scripts. `build_packet.py` is the holdout's builder with the merge-time cutoff added for this experiment. `run_cell.sh` is quoted in its final form (the detach-before-branch-move fix of ledger S8); `blind.py` in its final form (identifier redaction added after replicate 1).
 
 ## `agents.json`
 
@@ -32,6 +32,7 @@ SKILL_DIR="$B/skill/skills/code-review-publish"
 mkdir -p "$B/runs" "$WORK" "$B/reports/$T" "$B/dispatch/$T" "$B/logs" "$B/sessions"
 git clone -q "$B/mirrors/$T.git" "$CLONE"
 git -C "$CLONE" remote set-url origin "$B/mirrors/$T.git"
+git -C "$CLONE" checkout -q --detach "$HEAD_SHA"
 git -C "$CLONE" branch -q -f "$BASE_BRANCH" "$MERGE_BASE"
 git -C "$CLONE" checkout -q -B review-head "$HEAD_SHA"
 [ "$(git -C "$CLONE" rev-parse HEAD)" = "$HEAD_SHA" ] || { echo "head mismatch" >&2; exit 1; }
@@ -230,7 +231,12 @@ if mode == "seal":
     for p in sys.argv[3:]:
         tok = "blind-" + secrets.token_hex(3)
         while tok in m: tok = "blind-" + secrets.token_hex(3)
-        shutil.copy(p, os.path.join(out, tok + ".md")); m[tok] = os.path.abspath(p)
+        import re
+        txt = open(p, encoding="utf-8").read()
+        txt = re.sub(r"[agh]-(high|medium)-seed\d-att-\d\d", "CELL", txt)
+        txt = re.sub(r"\batt-\d\d\b", "ATT", txt)
+        txt = re.sub(r"(?i)\b(effort|arm)\b[^\n]*", "[redacted line]", txt) if False else txt
+        open(os.path.join(out, tok + ".md"), "w", encoding="utf-8").write(txt); m[tok] = os.path.abspath(p)
     json.dump(m, open(mp, "w"), indent=2); print("sealed", len(sys.argv) - 3, "payloads;", len(m), "total")
 else:
     for k, v in sorted(json.load(open(mp)).items()): print(k, v)
