@@ -88,11 +88,13 @@ bytes, and adds a `## chunks` inventory: one line per chunk, `<section>
 <path>#<k>/<n> lines=<a>-<b> bytes=<len> consumed|missing`, plus one
 `<section> coverage: complete|incomplete` line per section. A chunk is
 `consumed` once a bounded call has printed it; nothing else marks it. The build
-call charges its unbounded sections -- the manifest, ranges, history, and the
-inventory itself -- against the bound before any diff, so a diff is printed and
-consumed only when the whole call's output stayed inside it; otherwise the
-section reads `withheld: ...` and the diff is read from the store. A single
-line longer than the bound is its own chunk, marked `oversized`.
+call charges its unbounded sections -- the manifest, ranges, history, the
+inventory itself, and on a re-review build `delta-conditions`,
+`delta-manifest`, and `delta-overlap` too -- against the bound before any diff,
+so a diff is printed and consumed only when the whole call's output stayed
+inside it; otherwise the section reads `withheld: ...` and the diff is read
+from the store. A single line longer than the bound is its own chunk, marked
+`oversized`.
 
 `--from FILE` reads the store instead of git and never regenerates the diff.
 Alone it prints the manifest, ranges, history, the small delta sections, and
@@ -1855,7 +1857,7 @@ def self_test() -> int:
         # the chunk offsets were fixed when the store was written, so a read
         # that quietly printed a whole chunk past the reviewer's limit would
         # mark it consumed anyway.
-        case = "--chunk-bytes is build-only"
+        case = "--chunk-bytes is only used with --store"
         before = len(failures)
         expect_exit(
             case, 2, "cannot be combined with --from",
@@ -1929,7 +1931,7 @@ def main() -> int:
         type=int,
         default=None,
         metavar="N",
-        help="the byte bound a stored call's output must fit; the build call charges "
+        help="the byte bound a stored call's diff text must fit; the build call charges "
         f"its other sections against it first (default {DEFAULT_CHUNK_BYTES}). "
         "Only used with --store: the bound is fixed when the store is written",
     )
