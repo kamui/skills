@@ -32,3 +32,22 @@ Replicate-2 note: att-04 is the holdout's seed-3 pattern in a new form — a pri
 the concurrency candidate on the ground-truth surface, unchecked because two hygiene survivors
 suppressed zero-survivor mode and none met a mandatory trigger. It is a skill outcome, not a
 harness failure, so it stands as a valid completed attempt with a false clean.
+
+## Replicate 3 (scored blind from redacted copies, mapping revealed afterwards)
+
+| Attempt | Cell | Complete | Status | GT-a1 | Finding items (priority/action/kind) | False items | False clean | Band | Fix | Other items |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| att-05 | `high` r3 | yes (same shape as att-04: no mandatory trigger, two `consider` survivors, no verifier required) | **Approved (advisory)** | **missed** — concurrency candidate (CAND-004) dropped in primary falsification | P2/consider/maintainability (CI gap; accurate); P3/consider/maintainability (no byte assertion; accurate) | 0 | **yes** | **under** | none | 1 ambiguity item (deferral reading); no verifier batch |
+| att-06 | `medium` r3 | yes | Changes Requested (advisory) | **recovered** — steady-state busy spin (`can_write_again` = `body_rx.is_some()`, `poll_flush` `Ready` with nothing buffered, `yield_now` self-wake) plus the `is_closing` livelock projection as a second trigger | **P0**/must-fix/concurrency (GT-a1; P0 is inside the register's band); P3/consider/maintainability (no assertion; accurate) | 0 | no | in band | **sufficient, invariant-level**: per-iteration progress signal mirroring `notify_read`, "including on the `is_closing` short-circuit path" | 0 observations |
+
+## Hyper summary (six valid completed attempts, `D_a = 1`)
+
+| Arm | Attempts | GT-a1 recovered | Target recall (attempt-level = completed-only) | False findings (raw) | False clean (count / rate) | Verifier batches | Fix: invariant / branch / none |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `high` (control) | att-01, att-04, att-05 | 1 of 3 | 1/3 = 33% | 0 | 2 / 67% | 1 (att-01) | 1 / 0 / 2 |
+| `medium` (candidate) | att-02, att-03, att-06 | 3 of 3 | 3/3 = 100% | 0 | 0 / 0% | 3 | 3 / 0 / 0 |
+
+Every published `consider` item in both arms concerns the new test's CI wiring, assertions, or
+watchdog; all are accurate and inside the register's "not ground truth" allowance. No attempt
+asserted the sixteen-iteration bound, the dev-dependency, or the `Future`-contract doubt as a
+defect. Union recall (diagnostic): `high` 1/1, `medium` 1/1.
