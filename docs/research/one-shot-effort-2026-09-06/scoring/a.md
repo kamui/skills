@@ -20,3 +20,15 @@ Recall: att-01 1/1, att-02 1/1. Fix sufficiency 1/1 each. No question items. Nei
 proposes a branch-level workaround (lower bound, backoff, type detection, `body_rx` emptiness),
 so both are `invariant` under the register's dimension-4 rule. Neither asserts any "not ground
 truth" item as a defect.
+
+## Replicate 2 (scored blind from redacted copies, mapping revealed afterwards)
+
+| Attempt | Cell | Complete | Status | GT-a1 | Finding items (priority/action/kind) | False items | False clean | Band | Fix | Other items |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| att-03 | `medium` r2 | yes | Changes Requested (advisory) | **recovered** — steady-state (body `poll_frame` pending, write buffer empty so `Buffered::poll_flush` resolves `Ready`), `yield_now` self-wake, "busy-spinning at full CPU until the body next produces data" | P1/must-fix/concurrency (GT-a1); P2/consider/maintainability (CI never runs `ready_stream`; accurate) | 0 | no | in band | **sufficient, invariant-level**: edge-triggered progress bit like `notify_read`, not `body_rx` presence | 1 observation (test asserts no byte count; accurate, evidence cited) |
+| att-04 | `high` r2 | yes (under the skill's own rules: no mandatory trigger fired, two `consider` survivors made zero-survivor mode inapplicable, so no verifier was required) | **Approved (advisory)** | **missed** — ledger row `dispatch/poll-loop-write-retry-gap` (kind `concurrency`) dropped as "consequence unproven"; the reviewer traced the test's mock alternation but never the always-ready `poll_flush` case | P2/consider/maintainability ×2 (CI never runs the test; test cannot fail — both accurate) | 0 | **yes** | **under** | none | no verifier batch; no observations |
+
+Replicate-2 note: att-04 is the holdout's seed-3 pattern in a new form — a primary-only acquittal of
+the concurrency candidate on the ground-truth surface, unchecked because two hygiene survivors
+suppressed zero-survivor mode and none met a mandatory trigger. It is a skill outcome, not a
+harness failure, so it stands as a valid completed attempt with a false clean.
