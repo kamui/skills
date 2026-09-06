@@ -1848,9 +1848,28 @@ def self_test() -> int:
                 failures.append(f"{case}: --help does not mention {option}")
         expect_exit(case, 2, "--chunk requires exactly one --path", "--from", store_path, "--chunk", "1")
         expect_exit(case, 2, "--from cannot be combined", "--from", store_path, "--head", head)
-        shutil.rmtree(store_directory, ignore_errors=True)
         if len(failures) == before:
             passed.append(case)
+
+        # A bound a --from read cannot honour is refused rather than ignored:
+        # the chunk offsets were fixed when the store was written, so a read
+        # that quietly printed a whole chunk past the reviewer's limit would
+        # mark it consumed anyway.
+        case = "--chunk-bytes is build-only"
+        before = len(failures)
+        expect_exit(
+            case, 2, "cannot be combined with --from",
+            "--from", store_path, "--path", "big.txt", "--chunk", "1", "--chunk-bytes", "100",
+        )
+        expect_exit(case, 2, "--self-test takes no other arguments", "--self-test", "--chunk-bytes", "100")
+        default_store = store_path + ".default"
+        if run("--head", head, "--path", "a.py", "--store", default_store) is not None:
+            with open(default_store, encoding="utf-8") as handle:
+                if json.load(handle)["chunk_bytes"] != DEFAULT_CHUNK_BYTES:
+                    failures.append(f"{case}: a build without --chunk-bytes did not use the default")
+        if len(failures) == before:
+            passed.append(case)
+        shutil.rmtree(store_directory, ignore_errors=True)
 
     for case in passed:
         print(f"self-test passed: {case}")
@@ -1900,10 +1919,11 @@ def main() -> int:
     parser.add_argument(
         "--chunk-bytes",
         type=int,
-        default=DEFAULT_CHUNK_BYTES,
+        default=None,
         metavar="N",
         help="the byte bound a stored call's output must fit; the build call charges "
-        f"its other sections against it first (default {DEFAULT_CHUNK_BYTES})",
+        f"its other sections against it first (default {DEFAULT_CHUNK_BYTES}). "
+        "Build-only: the bound is fixed when the store is written",
     )
     parser.add_argument(
         "--from",
@@ -1935,10 +1955,11 @@ def main() -> int:
         if (
             arguments.merge_base or arguments.head or arguments.prior_head or arguments.base_ref
             or arguments.path or arguments.store or arguments.store_from or arguments.chunk
+            or arguments.chunk_bytes is not None
         ):
             parser.error("--self-test takes no other arguments")
         return self_test()
-    if arguments.chunk_bytes < 1:
+    if arguments.chunk_bytes is not None and arguments.chunk_bytes < 1:
         parser.error("--chunk-bytes must be at least 1")
     if arguments.chunk is not None and (len(arguments.path) != 1 or not arguments.store_from):
         parser.error("--chunk requires exactly one --path and --from")
@@ -1948,6 +1969,12 @@ def main() -> int:
             or arguments.store
         ):
             parser.error("--from cannot be combined with --merge-base, --head, --prior-head, --base-ref, or --store")
+        if arguments.chunk_bytes is not None:
+            parser.error(
+                "--chunk-bytes cannot be combined with --from: the bound and the chunk "
+                "offsets were fixed when the store was written, so a smaller bound needs "
+                "a rebuild with --store --chunk-bytes N"
+            )
     else:
         if not arguments.merge_base or not arguments.head:
             parser.error("--merge-base and --head are both required")
@@ -1980,7 +2007,10 @@ def main() -> int:
             return 0
         store = None
         if arguments.store:
-            store = make_store(context, arguments.chunk_bytes)
+            store = make_store(
+                context,
+                DEFAULT_CHUNK_BYTES if arguments.chunk_bytes is None else arguments.chunk_bytes,
+            )
             write_store(arguments.store, store)
         view = live_view(context, arguments.path, store, arguments.store, arguments.json)
         if store is not None:
