@@ -136,7 +136,65 @@ priced at ×2.0 where the transcripts report it. Assumptions: fresh targets are 
 
 ### 1.2 Stage 2 — fresh targets
 
-_Written and committed before the first fresh-target dispatch; see §3._
+**Committed before the first fresh-target dispatch** (commit recorded in the ledger). No Hyper
+payload or report had been read when this stage was written: the orchestrator only checked the
+Hyper cells' process state, transcript line counts, and running spend, which carry no review
+content. The fresh targets were chosen from two Sonnet vetting hunts (ledger S5; reports quoted
+in [`hunts/`](hunts/)) and each register was written by an independent Sonnet adjudicator
+(ledger S7) and checked against the orchestrator's own reading of the code before sealing.
+Neither target overlaps the holdout or any earlier test; #137 must avoid both.
+
+| Target | Slot | Pull request | Head / merge-base | Diff | Language, execution |
+| --- | --- | --- | --- | --- | --- |
+| (g) | buggy, reasoning-heavy | [`tokio-rs/bytes#698`](https://github.com/tokio-rs/bytes/pull/698) "Reuse capacity when possible in `<BytesMut as Buf>::advance` impl", merged 2024-04-25, squash-merged (head only under `refs/pull/698/head`) | `7052d2454a2370ab9583f63711df89f3bd7bec83` / `ce09d7d358ab1d1d31ed9d0b52a747c0a21ea401` (= base) | 1 file, +8/−0, 1 commit | Rust; focused tests permitted offline (`cargo test --offline`, pre-fetched `CARGO_HOME`, `CARGO_TARGET_DIR` in the work dir; 5 min per command) |
+| (h) | clean, high-risk | [`etcd-io/etcd#18749`](https://github.com/etcd-io/etcd/pull/18749) "Fix risk of a partial write txn being applied", merged 2024-10-24, originating issue #18679 | `8a0fd66db3291bd6397a1341dc07ad41294a3caf` / `bb381d473c24ff2cd771f109c63443e03ac459c2` (= base) | 2 files, +34/−7, 1 commit | Go; focused tests permitted offline (`go test ./etcdserver/txn/...` from `server/`, pre-downloaded `GOMODCACHE`, shared pre-warmed `GOCACHE`, `GOPROXY=off`; 5 min per command) |
+
+**Why these two.** (g) is an eight-line "optimization" whose defect is a contract change visible
+from the diff plus two neighbouring methods, confirmed by a downstream production report, a full
+revert and a regression test three months later; every human reviewer discussed placement, none
+discussed semantics. (h) removes a lock-releasing call before a panic on a data-integrity path;
+the tempting objection ("this leaks the lock and deadlocks") was raised for real twenty months
+later, a fix was built, and both were withdrawn after the maintainers showed no recovery point
+exists on the apply path. Alternates considered and not chosen: `libuv/libuv#4400` (no confirmed
+defect of its own), `psf/requests#6667` and `cockroachdb/pebble#5743` (buggy backups),
+`etcd-io/bbolt#1179` (merged five months ago), `golang-jwt/jwt#456` (mechanical),
+`quic-go/quic-go#5220` (clean backup).
+
+**Ground truth.** Sealed registers, committed here before dispatch and versioned thereafter:
+[`g-bytes-698/register.md`](g-bytes-698/register.md) — one material defect, **GT-g1** (the new
+`cnt == remaining()` fast path leaves `capacity()` and the cursor unchanged, breaking the
+capacity-consumption behavior downstream relies on; reproduced at the head with #728's test,
+passing at the merge-base) with its calibration addendum;
+[`h-etcd-18749/register.md`](h-etcd-18749/register.md) — adjudicated **clean** (`D_h = 0`), with
+the ground-truth surface a correct review must not assert as a defect. The registers were written
+from primary sources with execution; the reviewers' packets carry none of the post-merge material.
+
+**Packets.** Built by the holdout's packet builder with one addition made for this experiment: a
+**merge-time cutoff** on reviews, thread comments, conversation comments and issue comments. The
+first build carried post-merge comments (for (g), the downstream breakage report itself); the
+rebuilt packets omit 3 conversation comments on (g) and 2 conversation plus 2 issue comments on (h),
+all later than the merge instant, and state the cutoff without counting the omissions. SHA-256:
+(g) `a16ca69e7238cb189bca9fff0edca89688b1ccbd377fb8ace545b7412fa4392e`,
+(h) `3a797bb5dd9ada3a30c7e7b17961cbf61a2c74982dbd98655afe83b6cbec8b6a`; copies in each target
+directory. The Hyper packet was re-checked the same way and carries no post-merge timestamp.
+
+**Mirrors and leakage checks.** One bare mirror per target holding only the head and merge-base
+(`review-head`, `master`/`main`). Negative `git cat-file -e` checks on the mirror and on every
+clone: (g) `baa5053572ed…` (squash merge of #698), `f488be48d07d…` (revert #726),
+`ed7d5ff39e39…` (regression test #728), `f400b119…` and `f50c007d…` (their heads); (h)
+`38c27a4f8d5e…` (merge of #18749). Newest reachable commit dates equal the head dates. The
+dependency caches were populated from the pinned heads only; the Go build cache was pre-warmed by
+one test run at the head and holds compiled objects, not answers.
+
+**Execution allowances** are in each packet's section 8 and are identical for both arms: offline
+focused tests with the pinned caches, five minutes per command, a suite at most once per flag set,
+scratch crates or modules only under the cell's work directory, no file added to or changed in the
+clone. Hyper stays static, as in the holdout.
+
+**Budget refinement.** Both fresh diffs are far smaller than the holdout median, so the stage-1
+projection ($73) is not raised; the cap stays **$110**. Spend at stage 2: probes $0.22, vetting
+$5.44, adjudication (see ledger S7), provisioning $0; the two Hyper cells in flight were at $2.33
+and $2.37 by the metering CLI when this stage was written.
 
 ## 2. Preparation
 
