@@ -49,3 +49,15 @@ Dispatch records are written before each root dispatch (method §3). Stage-1 fre
 | att-10 | (g) `high` r2 | 09:28:07Z; attempt 10/16; $33.09; quota `unknown`; expected ~15 min (1 matched: 14.5); in flight 1→2 | `3ed14c7c-2689-4e00-9409-2d3f68cf340d` (+1 verifier `a9df430c26b2c7d15`) | result | valid completed 09:41:11Z; sidecar complete (payload 751 s, completion 784 s); effort `high`×95 primary, `high`×16 verifier | first | 2 transcripts, $2.15 (harness $2.153) |
 | att-08 | (g) `medium` r1 | 09:13:13Z (after S8); attempt 8/16; $28.13; quota `unknown`; expected `no matched observation` on (g) (Hyper `medium` 17.3–24.0 min); in flight 1→2 | `8d2e0f62-97ca-4789-9a30-3917093548b6` (+1 verifier `a1f48bc56104cf70b`) | result | valid completed 09:25:38Z; sidecar complete (payload 689 s, completion 744 s); effort `medium`×115 primary, `high`×22 verifier | first | 2 transcripts, $2.67 (harness $2.671) |
 | att-02 | (a) `medium` r1 | 07:55:18Z; attempt 2/16; $0.22 + vetting pending; quota `unknown`; expected `no matched observation` (~16 min by analogy); in flight 1→2 | `ff59299b-9185-43ba-94f6-5c1347da6a6d` (+1 verifier `abe188378d59cf75c`) | result | valid completed 08:15:53Z; sidecar complete (payload 1016 s, completion 1234 s); effort `medium`×105 primary, `high`×25 verifier | first | 2 transcripts, $3.38 (harness self-report $3.385) |
+
+## Close-out totals (10:20Z)
+
+| View | Amount |
+| --- | --- |
+| Setup and probes (S1–S8) | $7.12 |
+| Cells, all-attempt (14 attempts, 14 cells) | $42.30 (`high` $21.52, `medium` $20.78) |
+| Discards, notice-only rows, replacements | none |
+| Grading/closeout adjudication | $0.00 (no unexpected finding required blinded adjudication) |
+| **Ticket total** | **$49.42** of the $110 cap |
+
+Note (10:00Z): the maintainer asked that helper sub-agents use Opus 5 at high effort from then on. No helper was dispatched after that time; every helper row above ran on `claude-sonnet-5` as recorded.
