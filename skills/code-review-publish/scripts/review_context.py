@@ -1862,6 +1862,14 @@ def self_test() -> int:
             "--from", store_path, "--path", "big.txt", "--chunk", "1", "--chunk-bytes", "100",
         )
         expect_exit(case, 2, "--self-test takes no other arguments", "--self-test", "--chunk-bytes", "100")
+        expect_exit(
+            case, 2, "only used with --store",
+            "--merge-base", merge_base, "--head", head, "--chunk-bytes", "100",
+        )
+        expect_exit(
+            case, 2, "only used with --store",
+            "--merge-base", merge_base, "--head", head, "--path", "a.py", "--chunk-bytes", "100",
+        )
         default_store = store_path + ".default"
         if run("--head", head, "--path", "a.py", "--store", default_store) is not None:
             with open(default_store, encoding="utf-8") as handle:
@@ -1923,7 +1931,7 @@ def main() -> int:
         metavar="N",
         help="the byte bound a stored call's output must fit; the build call charges "
         f"its other sections against it first (default {DEFAULT_CHUNK_BYTES}). "
-        "Build-only: the bound is fixed when the store is written",
+        "Only used with --store: the bound is fixed when the store is written",
     )
     parser.add_argument(
         "--from",
@@ -1982,6 +1990,12 @@ def main() -> int:
             parser.error("--base-ref is only used with --prior-head")
         if arguments.section != "diff":
             parser.error("--section is only used with --from")
+        if arguments.chunk_bytes is not None and not arguments.store:
+            parser.error(
+                "--chunk-bytes is only used with --store: the bound applies to the diff "
+                "text a store build prints, so a build without --store prints its whole "
+                "output unbounded"
+            )
 
     try:
         if arguments.store_from:
