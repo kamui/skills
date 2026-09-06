@@ -86,14 +86,20 @@ against the fragments ``--render`` produces, under the one rule
 ``summary-reference``.
 
 Where a check could disagree with the reference text, the reference text wins
-and this script is the thing that must be fixed. Three deliberate reading notes:
+and this script is the thing that must be fixed. Four deliberate reading notes:
 the observation evidence check requires an ``Evidence:`` pointer rather than
 exactly one coordinate, because the output contract's own example pairs two
 coordinates for a single drift pointer; ``context`` is a SHA-256 digest
 rather than a commit SHA, so the 40-hex commit rule does not apply to it; and
 the one-sentence observation check masks the abbreviations ``e.g.``, ``i.e.``,
 ``etc.``, ``vs.``, ``cf.``, and ``et al.`` so they do not count as sentence
-breaks.
+breaks; and finding field labels are read with fenced code blocks and
+inline code spans blanked out, so a ``**Impact:**`` quoted inside a suggestion
+block or a code span is example text rather than a second field, while the
+text between two labels — a suggestion block included — is what the field says,
+so a ``Change`` made of one suggestion block is non-empty. Whether a field's
+text is sufficient, whether its consequence matters, and whether the requested
+remedy is the right one remain reviewer judgments.
 """
 
 from __future__ import annotations
@@ -106,7 +112,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-7"
+WORKFLOW = "v5b-8"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -123,6 +129,10 @@ SIDES = ("LEFT", "RIGHT")
 MAX_OBSERVATIONS = 3
 PERMISSION_SENTENCE = "Closing this without action is a correct response."
 QUESTION_FRAMING = "Change no code for this"
+# An ordinary finding's prose fields, in the order the output contract states them;
+# the first three are required and `Source` is optional.
+FIELD_LABELS = ("Triggers when", "Impact", "Change", "Source")
+FIELD_REQUIRED = ("Triggers when", "Impact", "Change")
 
 COMMIT_SHA_KEYS = ("head", "base-sha", "merge-base")
 RUN_REQUIRED = (
@@ -159,6 +169,10 @@ BLOB_LINK_RE = re.compile(r"https?://[^\s()<>]+?/blob/(?P<revision>[^/\s()]+)/")
 REPOSITORY_URL_RE = re.compile(r"\Ahttps?://[^\s/]+(?:/[^\s]*)?\Z")
 SUMMARY_REFERENCE = "summary-reference"
 WORD_SHOULD_MUST_RE = re.compile(r"\b(should|must)\b", re.IGNORECASE)
+FIELD_LABEL_RE = re.compile(r"\*\*(?P<label>Triggers when|Impact|Change|Source):\*\*")
+# A code span opens with a backtick run and closes with a run of the same length;
+# it never crosses a blank line.
+INLINE_CODE_RE = re.compile(r"(?<!`)(`+)(?!`)(?:(?!\n\n)[\s\S])+?(?<!`)\1(?!`)")
 ABBREVIATION_RE = re.compile(r"\b(?:e\.g|i\.e|etc|vs|cf|et al)\.(?=\s)", re.IGNORECASE)
 
 
@@ -559,6 +573,93 @@ def check_anchor(report: Report, location: str, anchor: Any) -> None:
         report.add(location, "anchor-shape", f"a line anchor needs `side` in {list(SIDES)}, not `{side!r}`")
 
 
+def mask_code(markdown: str) -> str:
+    """Return ``markdown`` with fenced code blocks and inline code spans blanked to spaces.
+
+    The result has the same length as the input, so an offset found in the
+    masked text addresses the same character in the original. A fenced block
+    opens on a line whose first non-space character (indented at most three
+    spaces) starts a run of at least three backticks or tildes and closes on a
+    line carrying only a run of that character at least as long; an unclosed
+    block runs to the end. The fence lines are blanked with the block.
+    """
+    lines = markdown.split("\n")
+    fence: tuple[str, int] | None = None
+    for index, line in enumerate(lines):
+        stripped = line.lstrip(" ")
+        indent = len(line) - len(stripped)
+        if fence is None:
+            if indent <= 3 and (stripped.startswith("```") or stripped.startswith("~~~")):
+                char = stripped[0]
+                run = len(stripped) - len(stripped.lstrip(char))
+                if char == "`" and "`" in stripped[run:]:
+                    continue  # a backtick fence's info string may not contain a backtick
+                fence = (char, run)
+                lines[index] = " " * len(line)
+        else:
+            char, run = fence
+            lines[index] = " " * len(line)
+            if indent <= 3 and stripped.startswith(char * run) and not stripped.rstrip().strip(char):
+                fence = None
+    masked = "\n".join(lines)
+    return INLINE_CODE_RE.sub(lambda match: " " * len(match.group(0)), masked)
+
+
+def finding_fields(markdown: str) -> list[tuple[str, str]]:
+    """The finding's labelled prose fields as ``(label, text)`` pairs in document order.
+
+    Labels are located in the code-masked text, so a label quoted inside a code
+    block or code span is not a field; each field's text is the original text
+    from its label to the next label or the end, with a trailing permission
+    sentence removed from the last field, so a suggestion block inside ``Change``
+    is that field's text.
+    """
+    masked = mask_code(markdown)
+    labels = [(match.group("label"), match.start(), match.end()) for match in FIELD_LABEL_RE.finditer(masked)]
+    fields: list[tuple[str, str]] = []
+    for index, (label, _start, end) in enumerate(labels):
+        next_start = labels[index + 1][1] if index + 1 < len(labels) else len(markdown)
+        text = markdown[end:next_start]
+        if index + 1 == len(labels):
+            trailing = text.rstrip()
+            if trailing.endswith(PERMISSION_SENTENCE):
+                text = trailing[: -len(PERMISSION_SENTENCE)]
+        fields.append((label, text))
+    return fields
+
+
+def check_finding_fields(report: Report, location: str, markdown: str) -> None:
+    """Exactly one non-empty ``Triggers when``, ``Impact``, and ``Change``, in that order, then optional ``Source``."""
+    fields = finding_fields(markdown)
+    counts = {label: sum(1 for name, _text in fields if name == label) for label in FIELD_LABELS}
+    for label in FIELD_REQUIRED:
+        if counts[label] == 0:
+            report.add(
+                location,
+                "finding-fields",
+                f"a finding states `**{label}:**` once; it is missing "
+                "(a label inside a code block or code span is example text and does not count)",
+            )
+    for label in FIELD_LABELS:
+        if counts[label] > 1:
+            report.add(location, "finding-fields", f"`**{label}:**` appears {counts[label]} times; a finding states it once")
+    for label, text in fields:
+        if not text.strip():
+            report.add(location, "finding-fields", f"`**{label}:**` is empty; a field carries its text after the label")
+    first_seen: list[str] = []
+    for label, _text in fields:
+        if label not in first_seen:
+            first_seen.append(label)
+    expected = [label for label in FIELD_LABELS if label in first_seen]
+    if first_seen != expected:
+        actual = ", ".join(f"`{label}`" for label in first_seen)
+        report.add(
+            location,
+            "field-order",
+            f"fields appear as {actual}; the order is `Triggers when`, `Impact`, `Change`, then optional `Source`",
+        )
+
+
 def check_finding(report: Report, location: str, item: dict[str, Any]) -> None:
     markdown = item.get("markdown")
     if not isinstance(markdown, str) or not markdown.strip():
@@ -585,12 +686,7 @@ def check_finding(report: Report, location: str, item: dict[str, Any]) -> None:
     if action == "consider" and blocking is not False:
         report.add(location, "priority-action", "`consider` requires `blocking=false`")
 
-    change_at = markdown.find("**Change:**")
-    source_at = markdown.find("**Source:**")
-    if change_at < 0:
-        report.add(location, "field-order", "a finding states `Change`")
-    if source_at >= 0 and change_at >= 0 and source_at < change_at:
-        report.add(location, "field-order", "optional `Source` follows `Change`")
+    check_finding_fields(report, location, markdown)
     trailing = markdown.rstrip()
     if action == "consider":
         if not trailing.endswith(PERMISSION_SENTENCE):
@@ -1042,6 +1138,83 @@ def abbreviation_payload() -> dict[str, Any]:
     return payload
 
 
+def reproduced_payload() -> dict[str, Any]:
+    """Issue #134's reproduction: the contract finding with its `Triggers when` and `Impact` labels removed."""
+    payload = valid_payload()
+    payload["items"][0]["markdown"] = FINDING_MARKDOWN.replace("**Triggers when:** ", "").replace("**Impact:** ", "")
+    return payload
+
+
+def _paragraphs(markdown: str) -> list[str]:
+    return markdown.split("\n\n")
+
+
+def _field_paragraph(markdown: str, label: str) -> int:
+    return next(index for index, paragraph in enumerate(_paragraphs(markdown)) if paragraph.startswith(f"**{label}:**"))
+
+
+def without_field(markdown: str, label: str) -> str:
+    """The finding prose with the labelled paragraph removed."""
+    paragraphs = _paragraphs(markdown)
+    del paragraphs[_field_paragraph(markdown, label)]
+    return "\n\n".join(paragraphs)
+
+
+def with_empty_field(markdown: str, label: str) -> str:
+    """The finding prose with the labelled paragraph reduced to its bare label."""
+    paragraphs = _paragraphs(markdown)
+    paragraphs[_field_paragraph(markdown, label)] = f"**{label}:**"
+    return "\n\n".join(paragraphs)
+
+
+def with_swapped_fields(markdown: str, first: str, second: str) -> str:
+    """The finding prose with two labelled paragraphs exchanged."""
+    paragraphs = _paragraphs(markdown)
+    one, two = _field_paragraph(markdown, first), _field_paragraph(markdown, second)
+    paragraphs[one], paragraphs[two] = paragraphs[two], paragraphs[one]
+    return "\n\n".join(paragraphs)
+
+
+def with_duplicated_field(markdown: str, label: str) -> str:
+    """The finding prose with the labelled paragraph stated twice in a row."""
+    paragraphs = _paragraphs(markdown)
+    index = _field_paragraph(markdown, label)
+    paragraphs.insert(index, paragraphs[index])
+    return "\n\n".join(paragraphs)
+
+
+SUGGESTION_BLOCK = """```suggestion
+const key = attempt.idempotencyKey; // **Impact:** and **Change:** here are code, not fields
+```"""
+
+# The contract finding whose `Change` carries a suggestion block quoting field labels.
+SUGGESTION_MARKDOWN = without_field(FINDING_MARKDOWN, "Source").replace(
+    "for the same logical charge.", f"for the same logical charge.\n\n{SUGGESTION_BLOCK}"
+)
+
+
+def finding_payload(markdown: str) -> dict[str, Any]:
+    """The contract review with its finding's prose replaced; the anchor, trailer, and summary are unchanged."""
+    payload = valid_payload()
+    payload["items"][0]["markdown"] = markdown
+    return payload
+
+
+def consider_finding_payload(markdown: str) -> dict[str, Any]:
+    """The `consider` review with its finding's prose replaced; the title is retagged and the permission sentence appended."""
+    payload = consider_payload()
+    payload["items"][0]["markdown"] = f"{markdown.replace('[P1] [must-fix]', '[P3] [consider]')}\n\n{PERMISSION_SENTENCE}"
+    return payload
+
+
+def unanchored_finding_payload(markdown: str) -> dict[str, Any]:
+    """The `Unanchored findings` review with its body-rendered finding's prose replaced in both places."""
+    payload = unanchored_payload()
+    payload["items"][0]["markdown"] = markdown
+    payload["summary"]["body"] = payload["summary"]["body"].replace(UNANCHORED_FINDING_MARKDOWN, markdown)
+    return payload
+
+
 def reference_payload(
     anchor: dict[str, Any],
     fix: str | None,
@@ -1360,7 +1533,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-6"
+            f"workflow={WORKFLOW}", "workflow=v5b-7"
         )
 
     def malformed_trailer(payload):
@@ -1383,6 +1556,48 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def trailer_disagreement(payload):
         payload["items"][0]["trailer"] = payload["items"][0]["trailer"].replace("priority=P1", "priority=P2")
+
+    # Issue #134: every finding carries exactly one non-empty `Triggers when`, `Impact`, and `Change`, in order.
+    field_cases: list[tuple[str, dict[str, Any], str]] = [
+        ("issue #134 reproduction: Triggers when and Impact labels removed", reproduced_payload(), "finding-fields"),
+    ]
+    for label in FIELD_REQUIRED:
+        field_cases.append((f"missing {label}", finding_payload(without_field(FINDING_MARKDOWN, label)), "finding-fields"))
+    for label in FIELD_LABELS:
+        field_cases.append((f"empty {label}", finding_payload(with_empty_field(FINDING_MARKDOWN, label)), "finding-fields"))
+    field_cases.extend(
+        [
+            ("Impact before Triggers when", finding_payload(with_swapped_fields(FINDING_MARKDOWN, "Triggers when", "Impact")), "field-order"),
+            ("Change before Impact", finding_payload(with_swapped_fields(FINDING_MARKDOWN, "Impact", "Change")), "field-order"),
+            ("Impact stated twice", finding_payload(with_duplicated_field(FINDING_MARKDOWN, "Impact")), "finding-fields"),
+            ("Change stated twice", finding_payload(with_duplicated_field(FINDING_MARKDOWN, "Change")), "finding-fields"),
+            (
+                "Impact only inside a suggestion block",
+                finding_payload(without_field(SUGGESTION_MARKDOWN, "Impact")),
+                "finding-fields",
+            ),
+            (
+                "Impact only inside a code span",
+                finding_payload(without_field(FINDING_MARKDOWN, "Impact").replace("**Change:** In", "**Change:** See `**Impact:**` above. In")),
+                "finding-fields",
+            ),
+            (
+                "consider finding whose Change is only the permission sentence",
+                consider_finding_payload(with_empty_field(without_field(FINDING_MARKDOWN, "Source"), "Change")),
+                "finding-fields",
+            ),
+            (
+                "unanchored finding without Impact",
+                unanchored_finding_payload(without_field(UNANCHORED_FINDING_MARKDOWN, "Impact")),
+                "finding-fields",
+            ),
+            (
+                "unanchored finding with Change before Triggers when",
+                unanchored_finding_payload(with_swapped_fields(UNANCHORED_FINDING_MARKDOWN, "Triggers when", "Change")),
+                "field-order",
+            ),
+        ]
+    )
 
     percent_anchor = line_anchor("docs/100%.md", 7)
     injection_path = "src/a](https://evil.example)b.ts"
@@ -1453,14 +1668,16 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
         ("equal fix range", _mutate(equal_fix_range), "fix-coordinate"),
         ("trailer priority disagreement", _mutate(trailer_disagreement), "trailer-agreement"),
         ("payload is not an object", [], "schema"),
+        *field_cases,
     ]
 
 
-EMIT_BATCH_CASES = 3
+EMIT_BATCH_CASES = 4
 
 
 def emit_batch_cases() -> list[str]:
-    """Failures from the ``--emit-batch`` cases: the projection, the CLI on a valid payload, the CLI on an invalid one."""
+    """Failures from the ``--emit-batch`` cases: the projection, the CLI on a valid payload, the CLI on an invalid
+    one, and the CLI on issue #134's reproduction, whose two missing fields are refused before any batch prints."""
     failures: list[str] = []
     payload = valid_payload()
     finding, question = payload["items"][0], payload["items"][1]
@@ -1515,6 +1732,14 @@ def emit_batch_cases() -> list[str]:
     invalid = subprocess.run(command, input=json.dumps(invalid_payload), capture_output=True, text=True, encoding="utf-8")
     if invalid.returncode != 1 or invalid.stdout != "".join(f"{line}\n" for line in violations):
         failures.append(f"--emit-batch on one violation: exit {invalid.returncode}, stdout {invalid.stdout!r}")
+    reproduced = reproduced_payload()
+    violations = validate(reproduced)
+    missing = [line for line in violations if ": finding-fields: " in line and "is missing" in line]
+    if len(violations) != 2 or len(missing) != 2 or "Triggers when" not in missing[0] or "Impact" not in missing[1]:
+        failures.append(f"issue #134 reproduction: expected two field-specific `finding-fields` violations, got: {'; '.join(violations)}")
+    refused = subprocess.run(command, input=json.dumps(reproduced), capture_output=True, text=True, encoding="utf-8")
+    if refused.returncode != 1 or refused.stdout != "".join(f"{line}\n" for line in violations) or "commit_id" in refused.stdout:
+        failures.append(f"--emit-batch on the issue #134 reproduction: exit {refused.returncode}, stdout {refused.stdout!r}")
     return failures
 
 
@@ -1536,6 +1761,17 @@ def self_test() -> int:
         ("observation with abbreviation", abbreviation_payload()),
         ("file-anchored finding laid out in Unanchored findings", unanchored_payload()),
         ("deleted file anchor at the merge-base beside an ordinary RIGHT link", deleted_file_payload()),
+        ("finding without the optional Source", finding_payload(without_field(FINDING_MARKDOWN, "Source"))),
+        ("Change carrying a suggestion block that quotes field labels", finding_payload(SUGGESTION_MARKDOWN)),
+        (
+            "Change that is one suggestion block",
+            finding_payload(with_empty_field(without_field(FINDING_MARKDOWN, "Source"), "Change") + f"\n\n{SUGGESTION_BLOCK}"),
+        ),
+        (
+            "Change quoting a field label in a code span",
+            finding_payload(FINDING_MARKDOWN.replace("**Change:** In", "**Change:** Keep the `**Impact:**` label. In")),
+        ),
+        ("consider finding with a suggestion block before the permission sentence", consider_finding_payload(SUGGESTION_MARKDOWN)),
     ]
     for name, anchor, fix, fragment in render_cases():
         item: dict[str, Any] = {"type": "finding", "anchor": anchor}
