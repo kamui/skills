@@ -33,6 +33,10 @@ One row per transcript, every assistant line scanned (`agent_effort.py`).
 
 | Attempt | Cell | Agent | Definition | `message.model` | `effort` | Transcript |
 | --- | --- | --- | --- | --- | --- | --- |
+| att-01 | (a) `high` r1 | primary | `--effort high` | `claude-sonnet-5`×141 | `high`×141 | `ef808bef-5d11-4b8d-a67f-237f06217494.jsonl` |
+| att-01 | (a) `high` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×42 | `high`×42 | `agent-aec115b5b6c51557d.jsonl` |
+| att-02 | (a) `medium` r1 | primary | `--effort medium` | `claude-sonnet-5`×105 | `medium`×105 | `ff59299b-9185-43ba-94f6-5c1347da6a6d.jsonl` |
+| att-02 | (a) `medium` r1 | verifier | `v5b-verifier-effort-high` | `claude-sonnet-5`×25 | `high`×25 | `agent-abe188378d59cf75c.jsonl` |
 
 ## Billed usage per attempt
 
@@ -41,11 +45,15 @@ the production-shaped figure.
 
 | Run | Model | Turns | Tool calls | Text-only | Input | Cache write | Cache read | Output | Thinking | Wall | Cost $ | Report est. tokens | Production-shaped $ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| (a) `high` r1 att-01 | claude-sonnet-5 | 88 | 101 | 2 | 176 | 338,323 (5m 79,525, 1h 258,798) | 11,337,925 | 173,160 | 114,714 | 0:45:07 | 5.23 | 15,660 | **5.08** |
+| (a) `medium` r1 att-02 | claude-sonnet-5 | 59 | 77 | 2 | 118 | 250,536 (5m 49,176, 1h 201,360) | 6,644,248 | 112,540 | 50,346 | 0:24:26 | 3.38 | 13,690 | **3.25** |
 
 ## Timing per attempt
 
 | Attempt | Cell | Mode | Root dispatched | Payload validated | Completed | Elapsed to payload (s) | Elapsed to completion (s) | Agent span sum (s) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| att-01 | (a) `high` r1 | render-only | 2026-09-06T07:55:17Z | 2026-09-06T08:26:55Z | 2026-09-06T08:29:05Z | 1898 | 2027 | 2707 |
+| att-02 | (a) `medium` r1 | render-only | 2026-09-06T07:55:18Z | 2026-09-06T08:12:15Z | 2026-09-06T08:15:53Z | 1016 | 1234 | 1466 |
 
 ## Outcomes per attempt
 
