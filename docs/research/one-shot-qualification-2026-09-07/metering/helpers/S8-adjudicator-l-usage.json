@@ -1,0 +1,106 @@
+{
+  "prices": {
+    "input": 2.0,
+    "output": 10.0,
+    "cache_write_mult": 1.25,
+    "cache_write_1h_mult": 2.0,
+    "cache_read_mult": 0.1,
+    "unknown_tier_fallback": "unknown-tier cache writes are priced at cache_write_mult (5m) in cost; cost_bounds price them at the lower and the higher of the two multipliers"
+  },
+  "transcripts": [
+    {
+      "label": "20df790b-d49c-45aa-8e5a-cf86e7e7de54.jsonl",
+      "turns": 41,
+      "lines": 70,
+      "tool_calls": 40,
+      "text_only_turns": 1,
+      "input": 82,
+      "cache_write": 68364,
+      "cache_write_5m": 0,
+      "cache_write_1h": 68364,
+      "cache_write_unknown": 0,
+      "cache_read": 1746095,
+      "output": 38136,
+      "thinking": 22169,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:08:01",
+      "wall_seconds": 481.254,
+      "path": "/Users/jack/.claude/projects/-private-tmp-qual137-helper-sessions/20df790b-d49c-45aa-8e5a-cf86e7e7de54.jsonl",
+      "cost": 1.004199,
+      "cost_bounds": {
+        "low": 1.004199,
+        "high": 1.004199,
+        "unknown_tier_tokens": 0,
+        "tiers_known": true,
+        "assumption": "all cache-write tiers known"
+      }
+    }
+  ],
+  "timing": {
+    "completion_mode": null,
+    "root_dispatched_at": null,
+    "payload_validated_at": null,
+    "completed_at": null,
+    "elapsed_to_payload_seconds": null,
+    "elapsed_to_completion_seconds": null
+  },
+  "total": {
+    "label": "TOTAL",
+    "turns": 41,
+    "lines": 70,
+    "tool_calls": 40,
+    "text_only_turns": 1,
+    "input": 82,
+    "cache_write": 68364,
+    "cache_write_5m": 0,
+    "cache_write_1h": 68364,
+    "cache_write_unknown": 0,
+    "cache_read": 1746095,
+    "output": 38136,
+    "thinking": 22169,
+    "cache_write_unknown_by_cause": {
+      "no_breakdown": {
+        "tokens": 0,
+        "turns": 0
+      },
+      "residual": {
+        "tokens": 0,
+        "turns": 0
+      },
+      "inconsistent": {
+        "tokens": 0,
+        "turns": 0
+      }
+    },
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "wall": "0:08:01",
+    "wall_seconds": 481.254,
+    "agent_span_sum_seconds": 481.254,
+    "cost": 1.004199,
+    "cost_bounds": {
+      "low": 1.004199,
+      "high": 1.004199,
+      "unknown_tier_tokens": 0,
+      "tiers_known": true,
+      "assumption": "all cache-write tiers known"
+    }
+  }
+}
