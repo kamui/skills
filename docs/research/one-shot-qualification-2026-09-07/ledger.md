@@ -31,14 +31,14 @@ This ledger row is written before any chargeable experimental preparation or cap
 | S5 | 03:58–05:24 | **Vetting hunt: cross-file obligation.** Chose **`trpc/trpc#5017`** (j); alternates `scrapy/scrapy#6993` and `clap-rs/clap#6212` recorded. Reproduced the regression offline with `tsc` at the head and its absence at the merge-base. The most expensive helper in this bundle. Report: [`hunts/hunt-crossfile.md`](hunts/hunt-crossfile.md). | `e14b2f8d-8cf5-4f16-8f0f-cbc93a8b601e` + children | **$8.82** (harness $9.088) |
 | S6 | 04:02–04:18 | **Vetting hunt: clean high-risk control.** Chose **`grpc/grpc-go#7390`** (m), with a full programmatic edit-provenance table proving no record was edited after the merge instant. Report: [`hunts/hunt-clean-highrisk.md`](hunts/hunt-clean-highrisk.md). | `e21d69bf-5baa-486e-9613-5a1c8539b346` | $1.90 (harness $1.901) |
 | S7 | 04:17–04:33 | **Vetting hunt: changed-test correctness, re-run single-threaded** after S3. Chose **`graphql/graphql-js#1582`** (k), confirmed by `graphql/graphql-js#4774` (2026-06-02), which names #1582 and says the test "no longer exercised the no-stack fallback path". Report: [`hunts/hunt-changed-test.md`](hunts/hunt-changed-test.md). | `a595dda5-1567-4c80-8e45-b9d0e582eb08` | $2.66 (harness $2.663) |
-| S8 | 04:37–04:49 | **Independent ground-truth adjudication, six sessions**, one per target, each told to treat the hunt's proposal as an unproven hypothesis and to rule against it if the evidence did not hold. Results: (i) **2** material defects (the adjudicator split the shared-context defect from the import-time CA-loading move and deduplicated a third proposed candidate away), (j) 1, (k) 1, (l) 1, (m) **clean**, (n) **clean**. Every defect was ruled an unintended error rather than the pull request's promised change. Registers sealed in each target directory before the freeze. | `b5b2fb38…` $1.09, `9239cfa1…` $1.59, `39cf420e…` $0.64, `20df790b…` $1.00, `744a2959…` $1.22, `2bc57433…` $1.17 | $6.71 |
+| S8 | 04:37–04:49 | **Independent ground-truth adjudication, six sessions**, one per target, each told to treat the hunt's proposal as an unproven hypothesis and to rule against it if the evidence did not hold. Results: (i) **2** material defects (the adjudicator split the shared-context defect from the import-time CA-loading move and deduplicated a third proposed candidate away), (j) 1, (k) 1, (l) 1, (m) **clean**, (n) **clean**. Every defect was ruled an unintended error rather than the pull request's promised change. Registers sealed in each target directory before the freeze. | `b5b2fb38…` $1.09, `9239cfa1…` $1.59, `39cf420e…` $0.64, `20df790b…` $1.00, `744a2959…` $1.22, `2bc57433…` $1.22 | $6.76 (the `2bc57433…` row was first written as $1.17 from a meter run at 04:49, before that session's final turns had flushed; the committed metering file gives $1.22 and this row now matches it) |
 | S9 | 03:49–04:38 | **Provisioning (no model cost).** Staging clones of `psf/requests`, `trpc/trpc`, `graphql/graphql-js`, `bokeh/bokeh`, `grpc/grpc-go`, `BurntSushi/ripgrep` (and of `cockroachdb/pebble` and `quic-go/quic-go`, both later rejected); truncated mirrors with negative checks; offline caches — Python virtualenv, pnpm store (1.1 GB), npm cache (87 MB), Go module cache (250 MB) and build cache (309 MB). Packets built and hashed; the context-build size and arm-identity check run on all six targets. | — | $0.00 |
 
-**Pre-freeze subtotal (S1–S9): $26.38** against the $15.00 allowance — an overrun of $11.38,
+**Pre-freeze subtotal (S1–S9): $26.43** against the $15.00 allowance — an overrun of $11.43,
 recorded as a dated deviation in the README's §3 rather than absorbed silently. Its two causes are
 in the rows above: the discarded S3 hunt ($3.29 for no report) and the S5 cross-file hunt ($8.82,
 4.6× the median of the other three). The overrun does not move the ticket's $150 cap: the projection
-becomes $26.38 pre-freeze + $74.16 cells + $6.20 replacements + $5.00 grading reserve ≈ **$111.74**,
+becomes $26.43 pre-freeze + $74.16 cells + $6.20 replacements + $5.00 grading reserve ≈ **$111.79**,
 still inside it. Metering-CLI figures are authoritative per method §5; the harness self-reports are
 shown beside them and sum $0.44 higher across the five hunts, a residual noted rather than merged.
 
@@ -83,16 +83,18 @@ Grading and closeout ran after the last cell and are in the close-out totals bel
 
 | View | Amount |
 | --- | --- |
-| Setup, probes, vetting, provisioning and pre-dispatch adjudication (S1–S9) | $26.38 (of which $3.29 is the discarded S3 hunt) |
-| Cells, all-attempt (24 attempts, 24 cells) | **$79.00** (`repaired` $41.04, `historical` $37.96) |
+| Setup, probes, vetting, provisioning and pre-dispatch adjudication (S1–S9) | $26.43 (of which $3.29 is the discarded S3 hunt) |
+| Cells, all-attempt (24 attempts, 24 cells) | **$78.99** (`repaired` $41.04, `historical` $37.96) |
 | Discards, notice-only rows, replacements | none in the grid; the only discard in this ticket is S3, above |
-| Blind scoring, six sessions | $3.66 |
-| Post-grid blinded adjudication of GT-n1 | $0.44 |
-| **Ticket total** | **$109.48** of the $150 cap |
+| Blind scoring, six sessions | $3.67 |
+| Post-grid blinded adjudication of GT-n1 | $0.39 |
+| **Ticket total** | **$109.47** of the $150 cap |
+
+Every figure in this table recomputes from the committed metering evidence in [`metering/`](metering/): the 24 attempt `meta.json` files carry the CLI's full output and per-agent model/effort scan, the helper `usage.json` files carry the same for every setup, adjudication and scoring session (the discarded S3 hunt included), and each has a per-request `requests.jsonl` whose sum reproduces its CLI cost to the cent (`metering/README.md`).
 
 Three cost views, kept apart as method §3 requires. **Per-arm valid-run cost** equals per-arm
 all-attempt cost here, $41.04 and $37.96, because every attempt was valid and completed. **All-attempt
-cost** per cell equals attempt cost, since no cell has a predecessor. **Ticket total** is $109.48
+cost** per cell equals attempt cost, since no cell has a predecessor. **Ticket total** is $109.47
 and includes the discarded $3.29; nothing is subtracted from any arm. Against the stage-1 projection
-of ≈$100, the grid came in $9.48 high, entirely inside the cap, and the pre-freeze overrun of $11.38
+of ≈$100, the grid came in $9.47 high, entirely inside the cap, and the pre-freeze overrun of $11.43
 was the largest single source of that.

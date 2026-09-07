@@ -213,7 +213,7 @@ re-fetches the head and writes only when publication is authorized, and none of 
   comparison separately and does not wait for #137. **Measured 2026-09-07 (#137,
   [bundle](one-shot-qualification-2026-09-07/README.md)): it does not.** Across 24 cells on six
   fresh targets the pinned snapshot recovered fewer material defects per completed review than
-  this control (macro 55.0% against 70.0%) and returned more false cleans (4 against 3), with
+  this control (macro 55.0% against 70.0%) and returned more false cleans (6 against 5), with
   zero false findings in either arm, equal completion, and matched median billed cost 1.057.
   The screen fails and the baseline is retained; this is a recall result and says nothing about
   the mechanical guarantees recorded above, which the control does not carry.

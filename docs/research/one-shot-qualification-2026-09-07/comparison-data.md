@@ -43,10 +43,10 @@ status.
 | att-12 | (j) | repaired | 2 | 1 | — | 0/1 | N/A | 0 | **yes** | no | Approved | $2.22 | 12.5 min |
 | att-10 | (j) | historical | 1 | 1 | — | 0/1 | N/A | 0 | **yes** | no | Approved | $2.34 | 13.9 min |
 | att-11 | (j) | historical | 2 | 1 | — | 0/1 | N/A | 0 | **yes** | no | Approved | $2.20 | 12.6 min |
-| att-17 | (k) | repaired | 1 | 1 | GT-k1 | 1/1 | sufficient | 0 | no | no | Approved + 1 consider | $2.21 | 12.5 min |
-| att-20 | (k) | repaired | 2 | 1 | GT-k1 | 1/1 | sufficient | 0 | no | no | Approved + 2 consider | $2.21 | 13.4 min |
-| att-18 | (k) | historical | 1 | 1 | GT-k1 | 1/1 | sufficient | 0 | no | no | Approved + 2 consider | $1.97 | 11.2 min |
-| att-19 | (k) | historical | 2 | 1 | GT-k1 | 1/1 | sufficient | 0 | no | no | Approved + 1 consider | $2.16 | 12.1 min |
+| att-17 | (k) | repaired | 1 | 1 | GT-k1 | 1/1 | sufficient | 0 | **yes** (recovered, Approved) | no | Approved + 1 consider | $2.21 | 12.5 min |
+| att-20 | (k) | repaired | 2 | 1 | GT-k1 | 1/1 | sufficient | 0 | **yes** (recovered, Approved) | no | Approved + 2 consider | $2.21 | 13.4 min |
+| att-18 | (k) | historical | 1 | 1 | GT-k1 | 1/1 | sufficient | 0 | **yes** (recovered, Approved) | no | Approved + 2 consider | $1.97 | 11.2 min |
+| att-19 | (k) | historical | 2 | 1 | GT-k1 | 1/1 | sufficient | 0 | **yes** (recovered, Approved) | no | Approved + 1 consider | $2.16 | 12.1 min |
 | att-13 | (l) | repaired | 1 | 1 | GT-l1 | 1/1 | partial | 0 | no | yes | Changes Requested | $2.98 | 18.2 min |
 | att-16 | (l) | repaired | 2 | 1 | GT-l1 | 1/1 | sufficient | 0 | no | yes | Changes Requested | $4.31 | 22.0 min |
 | att-14 | (l) | historical | 1 | 1 | GT-l1 | 1/1 | sufficient | 0 | no | yes | Changes Requested | $2.54 | 14.8 min |
@@ -88,14 +88,22 @@ revision widens the gap; it does not create it.
 ## 4. False cleans, false findings, completion
 
 False clean is counted over attempts on buggy targets — five targets, ten attempts per arm after
-the revision.
+the revision — under the method's frozen definition (§4, and the scoring prompt's): *an attempt on
+a buggy PR explicitly returns Approved / clean / no material defects*. The flag is independent of
+recovery credit. That matters on (k), where all four cells recovered GT-k1 with a sufficient fix and
+still derived `Approved` with the finding at `consider`: the scorer exempted them because the defect
+was reported, but the frozen definition does not — a review that tells the author to merge a buggy
+change has returned it clean, whatever it says below the status line. The (k) scorecard's original
+rulings are retained and the correction is appended to it, dated (README §3, deviation 7).
 
 | Quantity | repaired | historical |
 | --- | --- | --- |
-| False cleans (count / rate over buggy attempts) | **4 / 10 = 40%** | **3 / 10 = 30%** |
-| — on (j) | 2 | 2 |
-| — on (n) | 2 | 1 |
-| Completed-only false cleans | 4 / 10 | 3 / 10 |
+| False cleans (count / rate over buggy attempts) | **6 / 10 = 60%** | **5 / 10 = 50%** |
+| — on (j), zero recovery | 2 | 2 |
+| — on (k), defect recovered but `Approved` | 2 | 2 |
+| — on (n), zero recovery | 2 | 1 |
+| Completed-only false cleans | 6 / 10 | 5 / 10 |
+| False cleans under register version 1 (four buggy targets, eight attempts per arm) | 4 / 8 = 50% | 4 / 8 = 50% |
 | Raw false findings, all 24 attempts | **0** | **0** |
 | Unique false claims | 0 | 0 |
 | Action / severity errors | 0 | 0 |
@@ -104,8 +112,10 @@ the revision.
 | Valid completed / dispatched | 12/12 = 100% | 12/12 = 100% |
 | Valid completed planned cells | 12/12 | 12/12 |
 
-Every zero-recovery attempt on a buggy target returned Approved, so the false-clean count and the
-zero-recovery count coincide in both arms.
+Every zero-recovery attempt on a buggy target returned Approved, so the zero-recovery count (4 and
+3) is the part of the false-clean count that carries no finding at all; the other two per arm are
+(k)'s recovered-but-Approved cells. The one-cell difference between the arms is entirely (n)'s
+`att-23`, the historical cell that found GT-n1 and derived `Changes Requested`.
 
 ## 5. Truth-set revision
 
@@ -120,6 +130,8 @@ zero-recovery count coincide in both arms.
 | Buggy / clean target mix | 4 / 2 | **5 / 1** |
 | Macro recall, repaired | 68.75% | **55.0%** |
 | Macro recall, historical | 75.0% | **70.0%** |
+| False cleans, repaired | 4 / 8 | **6 / 10** |
+| False cleans, historical | 4 / 8 | **5 / 10** |
 
 One new candidate was escalated across the whole grid: GT-n1, raised by exactly one cell (att-23).
 It went to an independent adjudicator with the arm, replicate and cost labels removed
@@ -234,14 +246,25 @@ release was expected to improve:
    ruled on. The repaired arm ran a clean-verdict batch in both of its (m) cells. This is the
    failure shape #124 recorded on Hyper, and here it lands on the historical arm. It cost nothing
    in correctness — the target is clean and `att-07` was right — but the verdict was unverified.
-2. **On (j) neither arm verified anything, in any cell, and all four returned Approved.** The
-   surface is a widely-fanned-out `@internal` type primitive whose call sites live in untouched
-   files. Neither arm's zero-survivor trigger fires there: neither rules a TypeScript type-inference
-   surface a concurrency, failover, data-integrity, security or authorization boundary, so
-   zero-survivor mode is simply inapplicable, and with no survivor there is no candidate batch and
-   no related-acquittal set. Both arms are **faithful to their own rules**; this is a policy gap
-   shared by both, not a dispatch failure in either, and not something the repaired release
-   narrowed.
+2. **On (j) neither arm verified anything, in any cell, and all four returned Approved — after
+   every cell had traced the call sites.** All four run reports record a batched grep for every
+   `Overwrite<` use in `packages/server/src` and bounded reads of `middleware.ts` and
+   `procedureBuilder.ts`. Each then acquitted the compatibility / behaviour-change candidates on the
+   same two observations — `_ctx_out` originates from an object literal in `deriveParamsFromConfig`,
+   and the `_input_in`/`_input_out` sites sit behind an `UnsetMarker` guard — and concluded that
+   every operand reaching `Overwrite` is a resolved object type (`att-12`'s ledger says so in
+   terms). None asked what an *unresolved* type parameter at a generic middleware factory does to
+   the new distributive conditional, which is GT-j1's trigger. Those acquittals then never reached a
+   verifier for three rule-faithful reasons: they were dropped or refuted in the primary pass, so
+   they were non-survivors; each cell's one or two survivors were ordinary `consider` hygiene items
+   (an unreferenced test fixture, a dead conditional arm) that meet no mandatory trigger and needed
+   no cross-module trace, so no candidate batch ran for them to ride as related rows — the exact
+   shape #124 flagged, where an accurate hygiene survivor makes zero-survivor mode inapplicable; and
+   a type-inference surface is not a concurrency, failover, data-integrity, security or
+   authorization boundary under either arm's wording, so zero-survivor mode would not have fired
+   even with no survivor. Both arms are **faithful to their own rules**; this is an inspected-but-
+   misreasoned miss on a policy surface both share, not a dispatch failure in either, and not
+   something the repaired release narrowed.
 
 Early dispatch (#70/PR #125) exists only in the repaired arm. It never changed an outcome here: no
 attempt in either arm ran more than one batch, so there were no late mandatory candidates, no
