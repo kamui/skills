@@ -10,6 +10,7 @@ Exit codes: 0 all checks pass; 1 a test fails.
 
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 import subprocess
@@ -32,25 +33,29 @@ REF_PR = {
     "title": "Retry ceiling, first attempt",
     "body": "Superseded by the reviewed pull request.",
     "created_at": "2026-02-20T09:00:00Z",
+    "updated_at": "2026-02-20T09:00:00Z",
+    "comments": 2,
     "user": {"login": "carol"},
     "state": "closed",
     "merged": False,
     "closed_at": "2026-03-10T12:00:05Z",
 }
 REF_PR_COMMENTS = [
-    {"user": {"login": "alice"}, "created_at": "2026-02-21T09:00:00Z", "body": "Closing in favour of the bounded loop."},
-    {"user": {"login": "dana"}, "created_at": "2026-03-16T09:00:00Z", "body": "Post-merge note that must not reach the packet."},
+    {"user": {"login": "alice"}, "created_at": "2026-02-21T09:00:00Z", "updated_at": "2026-02-21T09:00:00Z", "body": "Closing in favour of the bounded loop."},
+    {"user": {"login": "dana"}, "created_at": "2026-03-16T09:00:00Z", "updated_at": "2026-03-16T09:00:00Z", "body": "Post-merge note that must not reach the packet."},
 ]
 SPEC_ISSUE = {
     "html_url": "https://github.com/other/spec/issues/12",
     "title": "Reconnect must give up",
     "body": "The client must stop retrying after a bounded number of attempts.",
     "created_at": "2026-02-10T09:00:00Z",
+    "updated_at": "2026-02-10T09:00:00Z",
+    "comments": 2,
     "user": {"login": "erin"},
 }
 SPEC_ISSUE_COMMENTS = [
-    {"user": {"login": "erin"}, "created_at": "2026-02-11T09:00:00Z", "body": "A ceiling of five attempts is enough."},
-    {"user": {"login": "dana"}, "created_at": "2026-03-17T09:00:00Z", "body": "Post-merge note that must not reach the packet."},
+    {"user": {"login": "erin"}, "created_at": "2026-02-11T09:00:00Z", "updated_at": "2026-02-11T09:00:00Z", "body": "A ceiling of five attempts is enough."},
+    {"user": {"login": "dana"}, "created_at": "2026-03-17T09:00:00Z", "updated_at": "2026-03-17T09:00:00Z", "body": "Post-merge note that must not reach the packet."},
 ]
 
 
@@ -215,54 +220,149 @@ class BuildPacketTests(unittest.TestCase):
         packet = self.build_ok()
         self.assertIn("Bounded in the follow-up commit.", packet)
 
-    def test_material_edited_after_the_cutoff_is_omitted(self) -> None:
+    def required_graphql_sources(self):
         pull = self.fixture["data"]["repository"]["pullRequest"]
-        pull["reviews"]["nodes"][0]["lastEditedAt"] = "2026-03-11T09:00:00Z"
-        pull["reviewThreads"]["nodes"][0]["comments"]["nodes"][1]["lastEditedAt"] = "2026-03-11T09:00:00Z"
-        pull["comments"]["nodes"][0]["lastEditedAt"] = "2026-03-11T09:00:00Z"
-        pull["closingIssuesReferences"]["nodes"][0]["comments"]["nodes"][0]["lastEditedAt"] = "2026-03-11T09:00:00Z"
-        result = self.run_cli()
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("omitted after cutoff: "
-                      "{'reviews': 2, 'thread_comments': 3, 'conversation': 2, 'issue_comments': 2}",
-                      result.stdout)
-        packet = self.out.read_text(encoding="utf-8")
-        for edited in ["The retry loop needs a bound, not a longer sleep.",
-                       "Bounded in the follow-up commit.",
-                       "Opening for review; the ceiling is configurable.",
-                       "Reproduced on 1.2.0 with a proxy that closes mid-handshake."]:
-            self.assertNotIn(edited, packet)
+        issue = pull["closingIssuesReferences"]["nodes"][0]
+        return [
+            ("pull request body", pull, "createdAt"),
+            ("issue #3900 body", issue, "createdAt"),
+            ("reviews", pull["reviews"]["nodes"][0], "submittedAt"),
+            ("thread_comments", pull["reviewThreads"]["nodes"][0]["comments"]["nodes"][0], "createdAt"),
+            ("conversation", pull["comments"]["nodes"][0], "createdAt"),
+            ("issue_comments", issue["comments"]["nodes"][0], "createdAt"),
+        ]
 
-    def test_material_edited_before_the_cutoff_is_kept(self) -> None:
-        pull = self.fixture["data"]["repository"]["pullRequest"]
-        pull["reviews"]["nodes"][0]["lastEditedAt"] = "2026-03-08T09:30:00Z"
+    def assert_unavailable(self, result, *messages):
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("required input unavailable", result.stdout)
+        for message in messages:
+            self.assertIn(message, result.stdout)
+        self.assertFalse(self.out.exists())
+
+    def test_required_graphql_timestamps_must_be_aware_and_valid(self) -> None:
+        for label, node, key in self.required_graphql_sources():
+            original = node[key]
+            for stamp in [None, "invalid", "2026-03-08", "2026-03-08T09:00:00",
+                          "2026-03-08T09:00:00+1260", "2026-03-10T12:00:00.0000001Z", 123]:
+                with self.subTest(source=label, stamp=stamp):
+                    node[key] = stamp
+                    self.assert_unavailable(self.run_cli(), label, key)
+            del node[key]
+            self.assert_unavailable(self.run_cli(), label, key)
+            node[key] = original
+
+    def test_required_review_submission_cannot_be_absent(self) -> None:
+        node = self.required_graphql_sources()[3][1]
+        for stamp in [None, "invalid", "2026-03-08T09:00:00"]:
+            node["pullRequestReview"] = {"submittedAt": stamp}
+            self.assert_unavailable(self.run_cli(), "submittedAt")
+        del node["pullRequestReview"]
+        self.assert_unavailable(self.run_cli(), "pullRequestReview")
+
+    def test_edited_or_unknown_graphql_text_refuses_the_packet(self) -> None:
+        for label, node, _ in self.required_graphql_sources():
+            for stamp in ["2026-03-11T09:00:00Z", "invalid", "2026-03-08T09:00:00"]:
+                with self.subTest(source=label, stamp=stamp):
+                    node["lastEditedAt"] = stamp
+                    self.assert_unavailable(self.run_cli(), label, "lastEditedAt")
+            del node["lastEditedAt"]
+            self.assert_unavailable(self.run_cli(), label, "lastEditedAt")
+            node["lastEditedAt"] = None
+
+    def test_material_edited_before_or_at_the_cutoff_is_kept(self) -> None:
+        for _, node, _ in self.required_graphql_sources():
+            node["lastEditedAt"] = CUTOFF
         packet = self.build_ok()
         self.assertIn("The retry loop needs a bound, not a longer sleep.", packet)
 
-    def test_a_rest_comment_updated_after_the_cutoff_is_omitted(self) -> None:
+    def test_graphql_sources_keep_equivalent_cutoff_instants(self) -> None:
+        for stamp in [CUTOFF, "2026-03-10T17:30:00+05:30", "2026-03-10T17:30:00+0530"]:
+            with self.subTest(stamp=stamp):
+                for _, node, key in self.required_graphql_sources():
+                    node[key] = stamp
+                self.build_ok("--cutoff", stamp)
+                self.out.unlink()
+
+    def test_required_bodies_created_after_cutoff_are_unavailable(self) -> None:
+        for label, node, key in self.required_graphql_sources()[:2]:
+            original = node[key]
+            node[key] = "2026-03-11T09:00:00Z"
+            self.assert_unavailable(self.run_cli(), label)
+            node[key] = original
+
+    def test_late_history_is_omitted_even_if_edited_later(self) -> None:
+        pull = self.fixture["data"]["repository"]["pullRequest"]
+        pull["comments"]["nodes"][1]["lastEditedAt"] = "2026-03-20T09:00:00Z"
+        self.assertNotIn("Reverted in #4002.", self.build_ok())
+
+    def test_future_dates_in_prose_are_preserved(self) -> None:
+        for stamp in ["2026-03-20T09:00:00Z", "2026-03-20T09:00:00+0530"]:
+            for _, node, _ in self.required_graphql_sources():
+                node["body"] = "Planned deadline: " + stamp
+            packet = self.build_ok()
+            self.assertEqual(packet.count("Planned deadline: " + stamp), 6)
+            self.out.unlink()
+
+    def test_rest_source_provenance_on_both_routes(self) -> None:
         self.drop_the_closing_reference()
-        comments = [dict(REF_PR_COMMENTS[0], updated_at="2026-03-16T09:00:00Z")]
-        self.save_replay(ref_pr=REF_PR, ref_pr_comments=comments)
-        packet = self.build_ok("--ref-pr", "3899", save=False)
-        self.assertNotIn("Closing in favour of the bounded loop.", packet)
-        self.assertIn("(0 total; `comments_available: true`)", packet)
+        for option, name, source, comments in [
+            ("--ref-pr", "ref_pr", REF_PR, REF_PR_COMMENTS),
+            ("--spec-issue", "spec_issue", SPEC_ISSUE, SPEC_ISSUE_COMMENTS),
+        ]:
+            value = "3899" if option == "--ref-pr" else "other/spec#12"
+            for target in ["body", "comment"]:
+                for key in ["created_at", "updated_at"]:
+                    for stamp in ["missing", None, "invalid", "2026-03-08T09:00:00", "2026-03-11T09:00:00Z"]:
+                        # A newly published comment is omitted; an unavailable older body is not.
+                        if target == "comment" and key == "created_at" and stamp == "2026-03-11T09:00:00Z":
+                            continue
+                        with self.subTest(route=option, target=target, key=key, stamp=stamp):
+                            body, cs = copy.deepcopy(source), copy.deepcopy(comments)
+                            node = body if target == "body" else cs[0]
+                            if stamp == "missing":
+                                del node[key]
+                            else:
+                                node[key] = stamp
+                            self.save_replay(**{name: body, name + "_comments": cs})
+                            self.assert_unavailable(self.run_cli(option, value, save=False), option, key)
 
-    def test_a_quoted_post_cutoff_instant_fails_the_scan(self) -> None:
-        issue = self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]
-        issue["comments"]["nodes"][0]["body"] = "Reproduced; the failing run is at 2026-03-20T09:00:00Z."
-        result = self.run_cli()
-        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn(f"2026-03-20T09:00:00Z is later than the cutoff {CUTOFF}", result.stdout)
-        self.assertIn("not written: 1 instant(s) after the cutoff", result.stdout)
-        self.assertFalse(self.out.exists())
+    def test_rest_comments_at_cutoff_and_before_are_kept(self) -> None:
+        self.drop_the_closing_reference()
+        for option, name, source, comments in [
+            ("--ref-pr", "ref_pr", REF_PR, REF_PR_COMMENTS),
+            ("--spec-issue", "spec_issue", SPEC_ISSUE, SPEC_ISSUE_COMMENTS),
+        ]:
+            cs = copy.deepcopy(comments)
+            cs[0]["created_at"] = "2026-03-10T17:30:00+0530"
+            cs[0]["updated_at"] = CUTOFF
+            self.save_replay(**{name: source, name + "_comments": cs})
+            value = "3899" if option == "--ref-pr" else "other/spec#12"
+            packet = self.build_ok(option, value, save=False)
+            self.assertIn(cs[0]["body"], packet)
+            self.assertNotIn(cs[1]["body"], packet)
+            self.out.unlink()
 
-    def test_a_quoted_basic_format_offset_fails_the_scan(self) -> None:
-        issue = self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]
-        issue["comments"]["nodes"][0]["body"] = "Reproduced; the failing run is at 2026-03-20T09:00:00+0530."
-        result = self.run_cli()
-        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn(f"2026-03-20T09:00:00+0530 is later than the cutoff {CUTOFF}", result.stdout)
-        self.assertFalse(self.out.exists())
+    def test_rest_truncation_on_both_routes_refuses_the_packet(self) -> None:
+        self.drop_the_closing_reference()
+        for option, name, source, comments in [
+            ("--ref-pr", "ref_pr", REF_PR, REF_PR_COMMENTS),
+            ("--spec-issue", "spec_issue", SPEC_ISSUE, SPEC_ISSUE_COMMENTS),
+        ]:
+            value = "3899" if option == "--ref-pr" else "other/spec#12"
+            self.save_replay(**{name: dict(source, comments=101), name + "_comments": [comments[0]] * 100})
+            self.assert_unavailable(self.run_cli(option, value, save=False), option, "100 of 101")
+            body = dict(source)
+            del body["comments"]
+            self.save_replay(**{name: body, name + "_comments": comments})
+            self.assert_unavailable(self.run_cli(option, value, save=False), option, "count")
+
+    def test_unused_rest_options_do_not_require_history(self) -> None:
+        # GraphQL closing references already supply section 4; neither REST source is required.
+        self.build_ok("--ref-pr", "3899", "--spec-issue", "other/spec#12")
+
+    def test_a_fractional_cutoff_is_stated_without_losing_precision(self) -> None:
+        packet = self.build_ok("--cutoff", "2026-03-10T12:00:00.123456Z")
+        self.assertIn("2026-03-10T12:00:00.123456Z", packet)
 
     # --- the mirror -----------------------------------------------------
 
@@ -287,6 +387,22 @@ class BuildPacketTests(unittest.TestCase):
         self.assertIn(f"M  {QUOTED_DIRECTORY}/a.md", packet)
         self.assertIn(f"| `{QUOTED_DIRECTORY}/AGENTS.md` | **yes** |", packet)
         self.assertNotIn('\\"', packet)
+
+    def test_a_tab_in_a_path_reaches_manifest_and_scoped_guidance(self) -> None:
+        path = 'docs/tab\tdir/a\tb.md'
+        self.write(self.mirror / path, "Tab-bearing filename.\n")
+        self.write(self.mirror / 'docs/tab\tdir/AGENTS.md', "Scoped guidance.\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Add guidance")
+        self.merge_base = self.git("rev-parse", "HEAD")
+        self.write(self.mirror / path, "Changed tab-bearing filename.\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Change tab-bearing path")
+        self.head = self.git("rev-parse", "HEAD")
+        self.fixture["data"]["repository"]["pullRequest"]["headRefOid"] = self.head
+        packet = self.build_ok()
+        self.assertIn("M  " + path, packet)
+        self.assertIn('| `docs/tab\tdir/AGENTS.md` | **yes** |', packet)
 
     def test_guidance_at_the_merge_base_covers_root_and_scoped_files(self) -> None:
         packet = self.build_ok()
@@ -387,17 +503,27 @@ class BuildPacketTests(unittest.TestCase):
         self.assertNotIn("The target is merged; this is a retrospective review.", packet)
         self.assertIn(f"## 6. Prior review state through the frozen cutoff `{CUTOFF}`, reproduced verbatim", packet)
 
-    def test_a_truncated_connection_exits_two(self) -> None:
+    def test_a_truncated_connection_exits_one(self) -> None:
         pull = self.fixture["data"]["repository"]["pullRequest"]
         pull["reviews"]["totalCount"] = 101
         pull["reviewThreads"]["nodes"][0]["comments"]["totalCount"] = 50
         result = self.run_cli()
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("the single forge query truncated reviews (3 of 101); "
-                      "comments on the src/retry.rs:42 thread (3 of 50)", result.stderr)
+        self.assert_unavailable(result, "reviews (3 of 101)", "comments on the src/retry.rs:42 thread (3 of 50)")
         self.assertFalse(self.out.exists())
 
-    def test_a_complete_connection_does_not_exit_two(self) -> None:
+    def test_every_graphql_collection_requires_complete_counts(self) -> None:
+        pull = self.fixture["data"]["repository"]["pullRequest"]
+        connections = [pull[key] for key in ["reviews", "reviewThreads", "comments", "closingIssuesReferences"]]
+        connections += [pull["reviewThreads"]["nodes"][0]["comments"],
+                        pull["closingIssuesReferences"]["nodes"][0]["comments"]]
+        for connection in connections:
+            total = connection.pop("totalCount")
+            self.assert_unavailable(self.run_cli(), "count")
+            connection["totalCount"] = total + 1
+            self.assert_unavailable(self.run_cli(), "incomplete collection")
+            connection["totalCount"] = total
+
+    def test_complete_connections_build(self) -> None:
         packet = self.build_ok()
         self.assertIn("### Review submissions (2)", packet)
 

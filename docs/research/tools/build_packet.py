@@ -4,15 +4,11 @@
 Reads the pull request, its closing issues with comments, its reviews, review threads and
 conversation comments in ONE ``gh api graphql`` call (the same shape ``code-review-publish``
 step 1 uses), and takes the changed-file manifest, the commit list and the guidance inventory
-from a local staging mirror. Everything created after the cutoff -- reviews, thread comments,
-conversation comments, issue comments -- is omitted, so a packet built after a pull request
-merged carries only what a reviewer could have seen at the merge instant. A node is kept only when
-every instant that made its current text visible is within the cutoff: a thread comment needs its
-review's submission too, since the forge stamps a pending review's comments when they are drafted
-rather than when they are published, and anything edited after the cutoff is dropped, since the
-forge returns only the current body. Every rendered connection is bounded by the single query, so a
-connection holding more than it returned refuses the run rather than writing a packet that states
-it reproduces the prior review state while silently missing part of it.
+from a local staging mirror. Records first published after the cutoff are omitted. Required
+pre-cutoff text must have valid creation/submission and edit provenance: an edit after the cutoff
+or unknown provenance makes that input unavailable and refuses the packet. Thread comments also
+require their review's submission instant, since they can be drafted before being published.
+Required GraphQL and REST collections must be complete; a first page cannot stand in for history.
 The rendered packet states the cutoff; the omitted counts go to stdout for the run bundle's record,
 not into the packet, which stays identical across arms and seeds.
 
@@ -32,12 +28,20 @@ Inputs: the forge response for ``--repo``/``--pr`` (fetched with ``gh``, or repl
 Markdown file at ``--extra-section``, appended before the run conditions. Output: Markdown at
 ``--out``, and two report lines on stdout.
 
-``--cutoff`` defaults to the pull request's ``mergedAt``. After rendering, the packet is scanned
-for ISO-8601 instants later than the cutoff; the scan reads the rendered text, so a post-cutoff
-instant quoted inside a body that was kept trips it too, and the fix is to re-check that material
-rather than to loosen the scan. The lines that state pinned identity instants -- the merge
-instant, and the closure instant of an originating reference -- are exempt, since they are
-identity rather than review material and are stated even under an earlier cutoff.
+``--cutoff`` defaults to the pull request's ``mergedAt`` and requires a timezone-aware instant.
+Source metadata is validated before rendering. Dates quoted in prose are left alone: a future
+specification deadline is not publication metadata. GraphQL ``lastEditedAt: null`` establishes
+that text has not been edited; an absent field does not. REST supplies only ``updated_at``, which
+can reflect non-text changes, so a later update conservatively makes the historical body unavailable.
+This tool does not reconstruct edit history or accept an unverified replacement body. Supply a
+provenance-backed saved response from at/before the cutoff or obtain the missing complete input
+before retrying. Replay files are trusted source captures, not a way to relabel today's text.
+
+Validation cannot prove that answers are absent elsewhere in the reviewer's environment. The
+orchestrator must keep evaluator-only exclusions, later text and adjudicator material outside that
+environment. ``--extra-section`` is caller-supplied permitted material without forge provenance;
+the caller must establish its provenance before including it. Pinned merge/closure identity facts
+may be later than an explicit cutoff and are not content publication timestamps.
 
 The strings that name the program rather than the target -- ``--experiment-label`` in the title,
 ``--subagent-model`` in the run conditions, and ``--upstream-repo`` and ``--original-author`` under
@@ -49,9 +53,10 @@ renders the same bytes it always did and another program states its own.
 ``spec-issue-comments.json`` under ``--spec-issue``. Each file holds the body ``gh`` printed.
 ``test_build_packet.py`` drives the script through it, so the tests touch no network.
 
-Exit codes: ``0`` the packet was written; ``1`` the cutoff scan found a post-cutoff instant, one
-line per violation on stdout and no packet written; ``2`` an input could not be read, a pinned SHA
-does not match, or a subprocess failed, with the reason and the failing command on stderr.
+Exit codes: ``0`` the packet was written; ``1`` required source metadata or history is
+contaminated, incomplete or unavailable, one line per violation on stdout and no packet written;
+``2`` an input could not be read, a pinned SHA does not match, or a subprocess failed, with the
+reason and the failing command on stderr.
 """
 
 from __future__ import annotations
@@ -69,13 +74,13 @@ QUERY = r'''
 query($owner:String!,$name:String!,$number:Int!){
   repository(owner:$owner,name:$name){ url
     pullRequest(number:$number){
-      title body state merged mergedAt isDraft baseRefName baseRefOid headRefOid createdAt
+      title body state merged mergedAt isDraft baseRefName baseRefOid headRefOid createdAt lastEditedAt
       author{login} authorAssociation
       baseRepository{ url }
       commits(first:100){ totalCount nodes{ commit{ oid committedDate message
         author{ name user{login} } } } }
       files(first:100){ nodes{ path additions deletions changeType } }
-      closingIssuesReferences(first:10){ totalCount nodes{ number title body createdAt author{login} url repository{ nameWithOwner }
+      closingIssuesReferences(first:10){ totalCount nodes{ number title body createdAt lastEditedAt author{login} url repository{ nameWithOwner }
         comments(first:100){ totalCount nodes{ author{login} createdAt lastEditedAt body } } } }
       reviews(first:100){ totalCount nodes{ author{login} state body submittedAt lastEditedAt commit{oid} } }
       reviewThreads(first:100){ totalCount nodes{ isResolved path line originalLine
@@ -84,7 +89,7 @@ query($owner:String!,$name:String!,$number:Int!){
       comments(first:100){ totalCount nodes{ author{login} body createdAt lastEditedAt } } } } }
 '''
 
-INSTANT = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|z|[+-]\d{2}:?\d{2})")
+INSTANT = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|z|[+-](?:[01]\d|2[0-3]):?[0-5]\d)")
 
 
 class InputError(Exception):
@@ -92,27 +97,32 @@ class InputError(Exception):
 
 
 def parse_instant(text: str) -> datetime:
-    """Parse an ISO-8601 instant (or a bare date) as an aware UTC datetime."""
+    """Parse a timezone-aware ISO-8601 instant as UTC, including basic offsets on Python 3.9."""
+    if not isinstance(text, str) or not INSTANT.fullmatch(text.strip()):
+        raise ValueError("expected a timezone-aware ISO-8601 instant")
     raw = text.strip()
     if raw.endswith(("Z", "z")):
         raw = raw[:-1] + "+00:00"
     basic = re.match(r"^(.*T.*)([+-]\d{2})(\d{2})$", raw)
     if basic:
         # datetime.fromisoformat before 3.11 takes only the extended offset form +HH:MM, while
-        # the packet scan's regex accepts basic-format +HHMM: normalise so the scan sees it
+        # our input accepts basic-format +HHMM: normalise it before parsing
         raw = basic.group(1) + basic.group(2) + ":" + basic.group(3)
     match = re.match(r"^(.*T\d{2}:\d{2}:\d{2})(\.\d+)?(.*)$", raw)
     if match and match.group(2):
+        # Refuse precision datetime cannot preserve rather than rounding across the cutoff.
+        if any(digit != "0" for digit in match.group(2)[7:]):
+            raise ValueError("sub-microsecond precision is unsupported")
         # datetime.fromisoformat on Python 3.9 takes 3 or 6 fractional digits and nothing else
         raw = match.group(1) + "." + (match.group(2)[1:] + "000000")[:6] + match.group(3)
     moment = datetime.fromisoformat(raw)
     if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=timezone.utc)
+        raise ValueError("timezone required")
     return moment.astimezone(timezone.utc)
 
 
 def render_instant(moment: datetime) -> str:
-    return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return moment.isoformat().replace("+00:00", "Z")
 
 
 def run(command: list) -> str:
@@ -173,16 +183,75 @@ def fence(text) -> str:
     return f"{ticks}\n{text}\n{ticks}"
 
 
+class UnavailableInput(Exception):
+    """Required historical content is not established. Exit code 1."""
+
+
+class Provenance:
+    """Accumulate source metadata violations before any packet is rendered."""
+
+    def __init__(self, cutoff: datetime) -> None:
+        self.cutoff = cutoff
+        self.violations: list = []
+
+    def stamp(self, node, key, where, optional=False):
+        if optional and key in node and node[key] is None:
+            return None
+        try:
+            return parse_instant(node.get(key))
+        except ValueError:
+            self.violations.append(f"{where}: {key} missing or malformed (timezone-aware instant required)")
+            return None
+
+    def complete(self, nodes, total, where) -> None:
+        if not isinstance(nodes, list) or type(total) is not int or total != len(nodes):
+            got = len(nodes) if isinstance(nodes, list) else "unknown"
+            self.violations.append(f"{where} ({got} of {total}): incomplete collection or unavailable count")
+            if not isinstance(nodes, list):
+                self.require_available()
+
+    def connection(self, connection, where) -> None:
+        if not isinstance(connection, dict):
+            self.violations.append(f"{where}: required collection missing or malformed")
+            self.require_available()
+        self.complete(connection.get("nodes"), connection.get("totalCount"), where)
+
+    def text_available(self, node, where, key="createdAt", rest=False, thread=False):
+        published = self.stamp(node, key, where)
+        instants = [published]
+        if thread:
+            if "pullRequestReview" not in node:
+                self.violations.append(f"{where}: pullRequestReview provenance missing")
+            elif node["pullRequestReview"] is not None:
+                instants.append(self.stamp(node["pullRequestReview"], "submittedAt", where))
+        # First publication after the cutoff is an ordinary omission, not missing historical text.
+        if any(instant is not None and instant > self.cutoff for instant in instants):
+            return False
+        edit_key = "updated_at" if rest else "lastEditedAt"
+        edited = self.stamp(node, edit_key, where, optional=not rest)
+        if edited is not None and edited > self.cutoff:
+            self.violations.append(f"{where}: {edit_key} is after the cutoff; historical text unavailable")
+        if "body" not in node or not isinstance(node["body"], (str, type(None))):
+            self.violations.append(f"{where}: body unavailable")
+        return True
+
+    def body(self, node, where, rest=False) -> None:
+        key = "created_at" if rest else "createdAt"
+        if not self.text_available(node, where, key=key, rest=rest):
+            self.violations.append(f"{where}: {key} is after the cutoff; required body unavailable")
+
+    def require_available(self) -> None:
+        if self.violations:
+            raise UnavailableInput("\n".join("required input unavailable: " + v for v in self.violations))
+
+
 class Packet:
-    """The rendered packet, remembering which blocks the cutoff scan must skip."""
+    """The rendered packet; source provenance has already been validated."""
 
     def __init__(self) -> None:
         self.blocks: list = []
-        self.exempt: set = set()
 
-    def w(self, text: str, exempt: bool = False) -> None:
-        if exempt:
-            self.exempt.add(len(self.blocks))
+    def w(self, text: str) -> None:
         self.blocks.append(text)
 
     def extend(self, texts) -> None:
@@ -190,27 +259,6 @@ class Packet:
 
     def text(self) -> str:
         return "\n".join(self.blocks)
-
-    def late_instants(self, cutoff: datetime) -> list:
-        """Every instant in the rendered text later than the cutoff, as (line, instant, excerpt)."""
-        found = []
-        line_number = 1
-        for index, block in enumerate(self.blocks):
-            lines = block.split("\n")
-            if index not in self.exempt:
-                for offset, line in enumerate(lines):
-                    for match in INSTANT.finditer(line):
-                        try:
-                            when = parse_instant(match.group(0))
-                        except ValueError:
-                            continue
-                        if when > cutoff:
-                            excerpt = line.strip()
-                            if len(excerpt) > 120:
-                                excerpt = excerpt[:117] + "..."
-                            found.append((line_number + offset, match.group(0), excerpt))
-            line_number += len(lines)
-        return found
 
 
 def parse_args(argv) -> argparse.Namespace:
@@ -232,7 +280,7 @@ def parse_args(argv) -> argparse.Namespace:
     ap.add_argument("--publish-to-fork", action="store_true", help="target (f): open PR on a repository we control; publication enabled; network permitted for gh against that repository only")
     ap.add_argument("--upstream-repo", default="spf13/cobra", help="--publish-to-fork: the upstream the replay repository forks, named as off limits in the run conditions")
     ap.add_argument("--original-author", default="scop", help="--publish-to-fork: who wrote the change upstream, distinguished from the posting identity")
-    ap.add_argument("--cutoff", default=None, help="ISO-8601 instant; every review, thread comment, conversation comment and issue comment created, published or last edited after it is omitted (default: the merge time)")
+    ap.add_argument("--cutoff", default=None, help="timezone-aware ISO-8601 instant; omit later publications and refuse unavailable historical text (default: the merge time)")
     ap.add_argument("--replay", default=None, help="directory of saved forge responses to read instead of calling gh")
     ap.add_argument("--out", required=True)
     return ap.parse_args(argv)
@@ -255,31 +303,6 @@ def build(a: argparse.Namespace) -> int:
     if P["headRefOid"] != a.head:
         raise InputError(f"head mismatch: the pull request head is {P['headRefOid']}, --head is {a.head}")
 
-    # Every connection the packet renders is bounded by the one query issue #184 pins, so a target
-    # holding more than a bound returns is the first page and nothing says so. Refuse instead:
-    # a packet that claims to reproduce the prior review state has to carry all of it. The
-    # unrendered connections (files, commits) are not checked -- the mirror supplies both.
-    truncated = []
-
-    def check_complete(connection, what) -> None:
-        total = (connection or {}).get("totalCount")
-        got = len((connection or {}).get("nodes") or [])
-        if total is not None and total > got:
-            truncated.append(f"{what} ({got} of {total})")
-
-    check_complete(P["reviews"], "reviews")
-    check_complete(P["reviewThreads"], "review threads")
-    for t in P["reviewThreads"]["nodes"]:
-        check_complete(t["comments"], f"comments on the {t['path']}:{t['originalLine'] or t['line']} thread")
-    check_complete(P["comments"], "conversation comments")
-    check_complete(P["closingIssuesReferences"], "closing issue references")
-    for i in P["closingIssuesReferences"]["nodes"]:
-        check_complete(i["comments"], f"comments on issue #{i['number']}")
-    if truncated:
-        raise InputError("the single forge query truncated " + "; ".join(truncated)
-                         + ": raise that connection's first: bound and rebuild, since the packet"
-                           " would otherwise omit pre-cutoff review material without saying so")
-
     raw_cutoff = a.cutoff or P["mergedAt"]
     if not raw_cutoff:
         raise InputError("no --cutoff and the pull request is not merged: give --cutoff explicitly")
@@ -291,54 +314,65 @@ def build(a: argparse.Namespace) -> int:
 
     omitted = {"reviews": 0, "thread_comments": 0, "conversation": 0, "issue_comments": 0}
 
-    def after_cutoff(stamp) -> bool:
-        """True when a timestamp is present, parses, and is later than the cutoff."""
-        if not stamp:
-            return False
-        try:
-            return parse_instant(stamp) > cutoff_at
-        except ValueError:
-            return False
+    provenance = Provenance(cutoff_at)
+    provenance.body(P, "pull request body")
+    provenance.connection(P.get("reviews"), "reviews")
+    provenance.connection(P.get("reviewThreads"), "review threads")
+    provenance.connection(P.get("comments"), "conversation comments")
+    provenance.connection(P.get("closingIssuesReferences"), "closing issue references")
+    for t in P["reviewThreads"]["nodes"]:
+        provenance.connection(t.get("comments"), f"comments on the {t['path']}:{t['originalLine'] or t['line']} thread")
+    for i in P["closingIssuesReferences"]["nodes"]:
+        provenance.body(i, f"issue #{i['number']} body")
+        provenance.connection(i.get("comments"), f"comments on issue #{i['number']}")
 
-    def keep(nodes, key, bucket, also=None):
-        """Drop every node stamped after the cutoff.
-
-        A node is kept only when every instant that made its current text visible is within the
-        cutoff: the stamp at ``key``, its ``lastEditedAt``, and any second instant ``also`` reads
-        off it. The forge returns only a node's current body, so one edited after the cutoff
-        carries words no reviewer could have read at it and is dropped rather than rendered.
-        """
+    def keep(nodes, key, bucket, where=None, rest=False, thread=False):
         kept = []
-        for node in nodes:
-            instants = [node.get(key), node.get("lastEditedAt")]
-            if also is not None:
-                instants.append(also(node))
-            if any(after_cutoff(instant) for instant in instants):
+        for index, node in enumerate(nodes, 1):
+            if provenance.text_available(node, f"{where or bucket} #{index}", key, rest, thread):
+                kept.append(node)
+            else:
                 omitted[bucket] += 1
-                continue
-            kept.append(node)
         return kept
-
-    def rest_edited_at(comment):
-        """REST carries no lastEditedAt: an updated_at later than the creation is the edit signal."""
-        edited = comment.get("updated_at")
-        return edited if edited and edited != comment.get("created_at") else None
-
-    def review_submitted_at(comment):
-        """When a thread comment was published: its review's submission, or nothing if it stands alone."""
-        return (comment.get("pullRequestReview") or {}).get("submittedAt")
 
     P["reviews"]["nodes"] = keep(P["reviews"]["nodes"], "submittedAt", "reviews")
     for t in P["reviewThreads"]["nodes"]:
-        # createdAt is stamped when the comment is drafted, so a pending review's comments
-        # predate the cutoff their review was submitted after; both instants have to be within it
-        t["comments"]["nodes"] = keep(t["comments"]["nodes"], "createdAt", "thread_comments",
-                                      also=review_submitted_at)
+        t["comments"]["nodes"] = keep(t["comments"]["nodes"], "createdAt", "thread_comments", thread=True)
     P["reviewThreads"]["nodes"] = [t for t in P["reviewThreads"]["nodes"] if t["comments"]["nodes"]]
     P["comments"]["nodes"] = keep(P["comments"]["nodes"], "createdAt", "conversation")
     for i in P["closingIssuesReferences"]["nodes"]:
-        i["comments"]["nodes"] = keep(i["comments"]["nodes"], "createdAt", "issue_comments")
+        i["comments"]["nodes"] = keep(i["comments"]["nodes"], "createdAt", "issue_comments",
+                                       where=f"issue_comments on #{i['number']}")
         i["comments"]["totalCount"] = len(i["comments"]["nodes"])
+
+    # Only the source selected by section 4's existing precedence is required. Preserve the
+    # bounded REST fetches, checking their unfiltered lengths against the source comment count.
+    issues = P["closingIssuesReferences"]["nodes"]
+    ref_pr = spec = None
+    if not issues and a.ref_pr:
+        rp = forge(a.replay, "ref-pr.json", ["gh", "api", f"repos/{a.repo}/pulls/{a.ref_pr}"])
+        rc = forge(a.replay, "ref-pr-comments.json", ["gh", "api", f"repos/{a.repo}/issues/{a.ref_pr}/comments?per_page=100"])
+        where = f"--ref-pr #{a.ref_pr}"
+        provenance.body(rp, where + " body", rest=True)
+        provenance.complete(rc, rp.get("comments"), where + " comments")
+        rc = keep(rc, "created_at", "issue_comments", where=where + " comments", rest=True)
+        provenance.require_available()
+        ref_pr = {"number": a.ref_pr, "title": rp["title"], "body": rp["body"], "createdAt": rp["created_at"], "author": {"login": rp["user"]["login"]}, "state": rp["state"], "merged": rp["merged"], "closedAt": rp["closed_at"],
+                  "comments": {"totalCount": len(rc), "nodes": [{"author": {"login": c["user"]["login"]}, "createdAt": c["created_at"], "body": c["body"]} for c in rc]}}
+    elif not issues and a.spec_issue:
+        if a.spec_issue.count("#") != 1:
+            raise InputError(f"--spec-issue must be owner/repo#n: {a.spec_issue!r}")
+        srepo, snum = a.spec_issue.split("#")
+        si = forge(a.replay, "spec-issue.json", ["gh", "api", f"repos/{srepo}/issues/{snum}"])
+        sc = forge(a.replay, "spec-issue-comments.json", ["gh", "api", f"repos/{srepo}/issues/{snum}/comments?per_page=100"])
+        where = f"--spec-issue {a.spec_issue}"
+        provenance.body(si, where + " body", rest=True)
+        provenance.complete(sc, si.get("comments"), where + " comments")
+        sc = keep(sc, "created_at", "issue_comments", where=where + " comments", rest=True)
+        provenance.require_available()
+        spec = {"coord": a.spec_issue, "url": si["html_url"], "title": si["title"], "body": si["body"], "createdAt": si["created_at"], "author": si["user"]["login"],
+                "comments": [{"author": c["user"]["login"], "createdAt": c["created_at"], "body": c["body"]} for c in sc]}
+    provenance.require_available()
 
     # manifest from the mirror, verified against the pinned SHAs
     # --no-renames on both: with rename detection --numstat prints the combined "old => new"
@@ -359,7 +393,7 @@ def build(a: argparse.Namespace) -> int:
     changed_paths = []
     adds = dels = 0
     for record in numstat:
-        ad, de, path = record.split("\t")
+        ad, de, path = record.split("\t", 2)
         adds += int(ad) if ad != "-" else 0
         dels += int(de) if de != "-" else 0
         changed_paths.append(path)
@@ -395,25 +429,6 @@ def build(a: argparse.Namespace) -> int:
             blob_cell = f"`{blob}`" if blob else "\u2014"
             guidance_rows.append(f"| `{c}` | {'**yes**' if blob else 'no'} | {blob_cell} |")
 
-    issues = P["closingIssuesReferences"]["nodes"]
-    ref_pr = None
-    if a.ref_pr:
-        rp = forge(a.replay, "ref-pr.json", ["gh", "api", f"repos/{a.repo}/pulls/{a.ref_pr}"])
-        rc = forge(a.replay, "ref-pr-comments.json", ["gh", "api", f"repos/{a.repo}/issues/{a.ref_pr}/comments?per_page=100"])
-        ref_pr = {"number": a.ref_pr, "title": rp["title"], "body": rp["body"], "createdAt": rp["created_at"], "author": {"login": rp["user"]["login"]}, "state": rp["state"], "merged": rp["merged"], "closedAt": rp["closed_at"],
-                  "comments": {"totalCount": len(rc), "nodes": [{"author": {"login": c["user"]["login"]}, "createdAt": c["created_at"], "lastEditedAt": rest_edited_at(c), "body": c["body"]} for c in rc]}}
-        ref_pr["comments"]["nodes"] = keep(ref_pr["comments"]["nodes"], "createdAt", "issue_comments")
-        ref_pr["comments"]["totalCount"] = len(ref_pr["comments"]["nodes"])
-    spec = None
-    if a.spec_issue:
-        if a.spec_issue.count("#") != 1:
-            raise InputError(f"--spec-issue must be owner/repo#n: {a.spec_issue!r}")
-        srepo, snum = a.spec_issue.split("#")
-        si = forge(a.replay, "spec-issue.json", ["gh", "api", f"repos/{srepo}/issues/{snum}"])
-        sc = forge(a.replay, "spec-issue-comments.json", ["gh", "api", f"repos/{srepo}/issues/{snum}/comments?per_page=100"])
-        spec = {"coord": a.spec_issue, "url": si["html_url"], "title": si["title"], "body": si["body"], "createdAt": si["created_at"], "author": si["user"]["login"],
-                "comments": keep([{"author": c["user"]["login"], "createdAt": c["created_at"], "lastEditedAt": rest_edited_at(c), "body": c["body"]} for c in sc], "createdAt", "issue_comments")}
-
     packet = Packet()
     w = packet.w
     w(f"# Review packet \u2014 `{a.repo}#{a.pr}` (target ({a.target}), {a.experiment_label})\n")
@@ -444,12 +459,12 @@ def build(a: argparse.Namespace) -> int:
     merged_note = ("The target is merged; this is a retrospective review."
                    if P["merged"] else
                    "The target is not merged; this review is frozen at the cutoff.")
-    w(f"| `merged` | {merged_cell} |", exempt=True)
+    w(f"| `merged` | {merged_cell} |")
     w(f"| `isDraft` | `{'true' if P['isDraft'] else 'false'}` |")
     if issues:
         w("| Originating issue(s) | " + "; ".join(f"[`{i['repository']['nameWithOwner']}#{i['number']}`]({i['url']}) \u2014 \"{i['title']}\" (closing reference in the PR body{'; the issue lives in another repository, which the forge resolved for reading; record `issues=' + i['repository']['nameWithOwner'] + '#' + str(i['number']) + '`' if i['repository']['nameWithOwner'] != a.repo else ''})" for i in issues) + " |")
     elif ref_pr:
-        w(f"| Originating reference | [`{a.repo}#{ref_pr['number']}`]({R['url']}/pull/{ref_pr['number']}) \u2014 \"{ref_pr['title']}\", a **pull request** (state `{ref_pr['state']}`, merged `{'true' if ref_pr['merged'] else 'false'}`, closed {ref_pr['closedAt']}) that the PR body closes with `Closes #{ref_pr['number']}`. It is the spec source: treat its body and comments as the originating issue text and record `issues={a.repo}#{ref_pr['number']}` |", exempt=True)
+        w(f"| Originating reference | [`{a.repo}#{ref_pr['number']}`]({R['url']}/pull/{ref_pr['number']}) \u2014 \"{ref_pr['title']}\", a **pull request** (state `{ref_pr['state']}`, merged `{'true' if ref_pr['merged'] else 'false'}`, closed {ref_pr['closedAt']}) that the PR body closes with `Closes #{ref_pr['number']}`. It is the spec source: treat its body and comments as the originating issue text and record `issues={a.repo}#{ref_pr['number']}` |")
     else:
         w("| Originating issue(s) | none \u2014 the PR body carries no closing reference; `issues=none` unless the dispatch supplies a spec |")
     if a.publish_to_fork:
@@ -477,7 +492,7 @@ def build(a: argparse.Namespace) -> int:
     elif ref_pr:
         i = ref_pr
         w(f"## 4. Originating reference `#{i['number']}` (a pull request, closed unmerged), verbatim\n")
-        w(f"Title: **{i['title']}**  \nOpened {i['createdAt'][:10]} by `{i['author']['login']}`; state `{i['state']}`, not merged; closed {i['closedAt']} when the reviewed pull request merged.\n", exempt=True)
+        w(f"Title: **{i['title']}**  \nOpened {i['createdAt'][:10]} by `{i['author']['login']}`; state `{i['state']}`, not merged; closed {i['closedAt']} when the reviewed pull request merged.\n")
         w(fence(i["body"]) + "\n")
         cs = i["comments"]["nodes"]
         w(f"### Comments on `#{i['number']}` through the frozen cutoff `{cutoff}`, verbatim, in order ({i['comments']['totalCount']} total; `comments_available: true`)\n")
@@ -589,13 +604,6 @@ def build(a: argparse.Namespace) -> int:
            it if you read one anyway.
         """))
 
-    violations = packet.late_instants(cutoff_at)
-    if violations:
-        for line_number, stamp, excerpt in violations:
-            print(f"packet line {line_number}: {stamp} is later than the cutoff {cutoff}: {excerpt}")
-        print(f"{a.out} not written: {len(violations)} instant(s) after the cutoff")
-        return 1
-
     directory = os.path.dirname(a.out)
     if directory:
         try:
@@ -616,6 +624,9 @@ def main(argv=None) -> int:
     a = parse_args(argv)
     try:
         return build(a)
+    except UnavailableInput as exc:
+        print(exc)
+        return 1
     except InputError as exc:
         print(f"build_packet: {exc}", file=sys.stderr)
         return 2
