@@ -16,7 +16,7 @@ The rule was frozen in stage 1 before any reviewer ran. Candidate is the repaire
 | # | Gate | Threshold | Measured | Verdict |
 | --- | --- | --- | --- | --- |
 | 1 | Raw false findings, candidate arm, all attempts | zero | **0** | **pass** |
-| 2 | False-clean outcomes | no increase | **4 (40%) vs 3 (30%)** | **fail** |
+| 2 | False-clean outcomes | no increase | **6 (60%) vs 5 (50%)** | **fail** |
 | 3 | Completion rate | not worse | 12/12 vs 12/12 | pass |
 | 4 | Macro material recall, attempt-level | ≥ +10 pp | **55.0% vs 70.0% — 15 pp lower** | **fail** |
 | 4b | Macro material recall, completed-only | ≥ +10 pp | 55.0% vs 70.0% — identical to 4 | **fail** |
@@ -54,26 +54,41 @@ answers.
 
 ## 3. What both arms miss, identically
 
-**The cross-file shape defeats both.** On (j) all four cells missed GT-j1 and all four returned
-Approved. The change gates the `@internal` `Overwrite` type on `extends object`; the obligation it
-breaks lives at call sites in two files the diff never touches, where naked generic type parameters
-flow in. Every cell read the diff, judged it locally sound — which it is — and stopped. Neither
-arm's rules require following an `@internal` type primitive out to its call sites before changing
-its distribution semantics, and neither arm's zero-survivor trigger covers a type-inference surface,
-so no verifier ever attacked the acquittals. **Both arms are faithful to their own rules here.**
-This is the clearest actionable finding in the grid and it is a gap in the *current* skill, not a
-regression: it belongs to #129 as a policy question, not to this comparison.
+**The cross-file shape defeats both — and not for want of looking.** On (j) all four cells missed
+GT-j1 and all four returned Approved. The change gates the `@internal` `Overwrite` type on
+`extends object`; the obligation it breaks lives at call sites in two files the diff never touches,
+where naked generic type parameters flow in. Every one of the four run reports records tracing
+those call sites: a batched grep for every `Overwrite<` use and bounded reads of `middleware.ts` and
+`procedureBuilder.ts`. The failure stage is the reasoning about what those reads showed, not
+whether they happened. All four acquitted on the same two facts — `_ctx_out` originates from an
+object literal in `deriveParamsFromConfig`, and the input sites sit behind an `UnsetMarker` guard —
+and concluded that every operand reaching `Overwrite` is a resolved object type; `att-12` writes
+"`_ctx_out` is always derived from an object type" in the very row that drops the compatibility
+risk. None asked what an *unresolved* type parameter at a generic middleware factory does to a
+distributive conditional, which is exactly GT-j1's trigger — and three of the four had correctly
+reasoned about distributive collapse on `never` in the same ledger, so the mechanism class was
+known and applied to the wrong edge. Because those acquittals were dropped in the primary pass,
+because each cell's survivors were hygiene `consider` items that trigger no batch, and because a
+type-inference surface is not in either arm's zero-survivor vocabulary, no verifier ever attacked
+them (`comparison-data.md` §8). **Both arms are faithful to their own rules here.** This is the
+clearest actionable finding in the grid and it is a gap in the *current* skill, not a regression:
+it belongs to #129 as a question about how generic-parameter instantiation is reasoned about at
+call sites, and about which acquittals earn a verifier, not to this comparison.
 
 **GT-i1 was never fully recovered by anyone.** All seven GT-i1 recoveries across both arms found the
 shared-`SSLContext` hazard through its client-certificate manifestation and none found the silent
 discard of a custom adapter's own `ssl_context` — the manifestation that actually generated the
 upstream bug reports. Every GT-i1 fix in the grid is therefore `partial`.
 
-**Both arms approve while reporting the defect.** On (k), all four cells recovered GT-k1 with a
-sufficient fix and all four still derived `Approved` with the finding at `consider`. That is not
-false clean — the defect was reported — but a reviewer that finds a test which cannot fail and does
-not ask for it to be fixed is making a severity call worth questioning. It is identical in both
-arms.
+**Both arms approve while reporting the defect — which is false clean under the frozen rule.** On
+(k), all four cells recovered GT-k1 with a sufficient fix and all four still derived `Approved` with
+the finding at `consider`. The blind scorer exempted them because the defect was reported; the
+method's definition does not, since it flags any attempt that *explicitly returns Approved* on a
+buggy target, and the scoring prompt carried the same wording. The corrected count in
+`comparison-data.md` §4 applies the frozen definition. A reviewer that finds a test which cannot
+fail and tells the author to merge anyway has passed the change as clean, whatever it says below the
+status line. It is identical in both arms — two cells each — so it moves both counts and neither
+gate's direction.
 
 ## 4. Precision, verification and cost
 
@@ -115,10 +130,14 @@ considered; an independent adjudicator, blind to arm and replicate, ruled it mat
 cannot silently satisfy the frozen design, so no full positive screen was available from the moment
 that ruling landed — regardless of the numbers.
 
-That does not weaken the negative result. The screen fails on gates 2 and 4 under **both** truth
-sets: on the original four buggy targets the macro was 68.75% repaired against 75.0% historical,
-already 6 points the wrong way against a +10-point gate. The revision widened an existing gap; it
-did not create one.
+That does not weaken the negative result, but it does change which gates carry it. Gate 4 fails
+under **both** truth sets: on the original four buggy targets the macro was 68.75% repaired against
+75.0% historical, already 6 points the wrong way against a +10-point gate. Gate 2 is different:
+under version 1 the false-clean counts are **equal**, 4/8 against 4/8 — (j)'s two zero-recovery
+approvals and (k)'s two recovered-but-Approved cells in each arm — so gate 2 *passes* there and
+fails only once (n)'s revision adds two repaired approvals against one historical. The revision
+widened the recall gap and created the false-clean gap; the verdict does not depend on it, because
+gate 4 fails either way.
 
 Also worth stating plainly: GT-n1 is, by the adjudicator's own ruling, **the pull request's promised
 change failing** — the class #124 identified and this ticket capped at one of four buggy targets.
@@ -166,8 +185,14 @@ the recall ceiling is set by gaps both versions share.
 
 Two of those gaps are worth filing against #129 rather than re-testing here:
 
-1. **No rule requires tracing a widely-used internal primitive to its call sites before changing its
-   semantics.** Target (j): four of four cells missed it, in both arms, faithfully.
+1. **Caller tracing happened and still missed: acquittals at generic call sites reasoned only about
+   resolved types.** Target (j): all four cells traced every `Overwrite` call site and acquitted on
+   the assumption that every operand is a concrete object or is guarded, never asking what an
+   unconstrained type parameter at a generic middleware factory does to a distributive conditional.
+   The fix is not "trace callers" — they did — but a rule that a change to a generic type's
+   conditional structure is checked against an unresolved type-parameter operand, and that such an
+   acquittal on an `@internal` primitive with wide fan-out is presented to a verifier rather than
+   dropped silently.
 2. **Zero-survivor verification does not reach surfaces that are high-risk in consequence but not in
    vocabulary.** A type-inference primitive that every context composition depends on is not a
    "concurrency, failover, data-integrity, security or authorization" surface under either arm's

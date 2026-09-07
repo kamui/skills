@@ -149,3 +149,16 @@ Raised (in some form) by all of `blind-06e57d`, `blind-7744c2`, `blind-a8ddd0`, 
 - **Ruling: not material.** It is a real, verifiable inconsistency but has no demonstrated consequence and matches a tolerated pattern elsewhere in the same codebase. Confidence: high. What would change this ruling: evidence that some other call site or downstream Flow check actually fails or produces an unsound type inference because of this specific gap (I did not find any in `flow check` at head, per the register, nor in a manual read of the function body, which treats `null` and `undefined` identically at runtime regardless of the declared type).
 
 No other new candidates were raised by any of the four reviews.
+
+---
+
+## Correction appended 2026-09-07T17:48Z — false-clean flag (orchestrator, after pull-request review)
+
+The rulings above are the blind scorer's and are retained unedited. One column is overridden for
+scoring: **False clean is `Yes` for all four reviews.** The scorer read the flag as "claims no
+material defects" and exempted reviews that reported GT-k1 before approving. The frozen definition
+in the method (§4) and in this scorer's own brief is broader — *the review explicitly returns
+Approved / no material defects on a target that has at least one material defect* — and every one
+of the four derives `Approved (advisory)`. Recovery credit, fix sufficiency and every other column
+are unchanged. The corrected counts are in `comparison-data.md` §4, and the deviation is recorded in
+the README's §3, item 7.

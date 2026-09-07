@@ -297,7 +297,7 @@ the change; (j) `pnpm install --offline` 19 s, `tsc --noEmit` 5 s; (k) `npm inst
 (n) none beyond `zsh`.
 
 **Budget refinement.** All six diffs are small and the stage-1 projection is unchanged; the cap
-stays **$150**. Pre-freeze spend is $26.38 against the $15 allowance — see the deviation in §3.
+stays **$150**. Pre-freeze spend is $26.43 against the $15 allowance — see the deviation in §3.
 
 ## 2. Preparation
 
@@ -340,12 +340,12 @@ then (j), (l), (k), (n) the same way, two cells in flight throughout.
    after their dispatch, not before it**, contrary to method §3. The freeze commit itself preceded
    both dispatches, and every subsequent dispatch record (att-03 onward) was written before its
    dispatch by `dispatch_record.sh`. The two rows say so on their face.
-2. **04:52Z — the pre-freeze allowance was overrun by $11.38** ($26.38 spent against $15.00). Causes,
+2. **04:52Z — the pre-freeze allowance was overrun by $11.43** ($26.43 spent against $15.00). Causes,
    both in the ledger: the S3 vetting hunt fanned out to background sub-agents, hit GitHub's
    30-per-minute code-search limit, stalled, and was killed by the runtime's 600-second
    background-wait ceiling, costing $3.29 for no report; and the S5 cross-file hunt cost $8.82, 4.6×
    the median of the other three. The ticket's $150 cap was not moved and was not exceeded — the
-   grid closed at $109.48. The overrun is recorded, not absorbed.
+   grid closed at $109.47. The overrun is recorded, not absorbed.
 3. **10:03Z — the frozen target mix changed from four buggy / two clean to five buggy / one clean.**
    One cell published a finding on the clean control (n) that the sealed register had not
    considered. Under method §4 it went to an independent adjudicator with the arm, replicate and
@@ -367,11 +367,32 @@ then (j), (l), (k), (n) the same way, two cells in flight throughout.
 6. **The orchestrator inspected the structure of two payloads** (`att-01`, `att-02` headers and
    section headings) as a validity check before scoring began. Scoring was done throughout by
    independent blind scorers on redacted copies; the orchestrator scored nothing.
-7. No deviation from the preregistered thresholds, arms, pins, cells, replacement policy, scoring
-   rule or caps.
+7. **17:48Z — post-review scoring correction on target (k), false-clean flag.** The pull-request
+   review found that the blind scorer had exempted the four (k) cells from the false-clean flag
+   because each reported GT-k1 as a `consider` finding before deriving `Approved`. The method's
+   frozen definition flags any attempt that explicitly returns Approved on a buggy target,
+   independent of recovery credit, and the scoring prompt carried the same wording; the scorer's
+   exemption was an unfrozen reading. The flag is applied in `comparison-data.md` and the
+   scorecard's original rulings are retained with a dated correction appended
+   ([`scoring/k-scorecard.md`](scoring/k-scorecard.md)). False cleans move from 4 against 3 to
+   **6 against 5** under register version 2, and are **equal at 4 against 4** under version 1, so
+   gate 2 fails only under the revised truth set; gate 4 fails under both and the verdict stands.
+8. **17:48Z — post-review correction of the cross-file diagnosis.** `evaluation.md` had said the
+   (j) reviewers stopped at the diff. Their run reports show every cell traced the `Overwrite`
+   call sites and acquitted on the assumption that every operand is a resolved object type; the
+   miss is in reasoning about unresolved generic parameters, not in whether callers were read. The
+   diagnosis, the #129 recommendation and `comparison-data.md` §8 are corrected accordingly.
+9. **17:48Z — per-attempt metering evidence committed.** The review noted that the meter outputs
+   behind the cost tables existed only in local files. They are now in [`metering/`](metering/):
+   every attempt's full metering JSON and a per-request usage record, plus the same for every
+   helper session including the discarded S3 hunt, so every dollar in this bundle recomputes from
+   committed inputs (`metering/README.md`).
+10. No deviation from the preregistered thresholds, arms, pins, cells, replacement policy or caps.
 
-**Decision.** The screen **fails** at gate 2 (false cleans 4 against 3) and gate 4 (macro material
-recall 55.0% against 70.0%, fifteen points the wrong way against a +10-point threshold), while
+**Decision.** The screen **fails** at gate 4 (macro material recall 55.0% against 70.0%, fifteen
+points the wrong way against a +10-point threshold, and 68.75% against 75.0% before the register
+revision) and, under the revised truth set, at gate 2 (false cleans 6 against 5; equal at 4 against
+4 before the revision), while
 passing gate 1 (zero false findings), gate 3 (12/12 completion in both arms) and gate 5 (matched
 median billed cost ratio 1.057 against ≤ 1.25). **The measured baseline is retained**; see
 [`evaluation.md`](evaluation.md). Nothing here argues for reverting to `v5b-1`: the historical arm's
@@ -379,7 +400,8 @@ advantage is two cells wide, and the repaired release carries mechanical guarant
 not. What the grid establishes is that the accumulated policy changes between `v5b-1` and `v5b-10`
 did not move measured material recall on fresh targets, and that the ceiling is set by gaps both
 versions share — most visibly the cross-file target (j), which all four cells of both arms missed
-while faithfully following their own rules. This result changes no verification semantics, so the
+after tracing its call sites, each acquitting on the assumption that every operand is a resolved
+object type, while faithfully following their own rules. This result changes no verification semantics, so the
 workflow identifier stays `v5b-10`.
 
 ## 4. Files
@@ -394,7 +416,10 @@ workflow identifier stays `v5b-10`.
 - `i-requests-6667/`, `j-trpc-5017/`, `k-graphql-js-1582/`, `l-bokeh-9232/`, `m-grpc-go-7390/`,
   `n-ripgrep-2957/` — per target: the packet both arms received, the sealed register (version 2 for
   (n)), and every attempt's payload, run report and timing sidecar
-- `scoring/` — the six blind scorecards and their sealed token→attempt mappings
+- `scoring/` — the six blind scorecards and their sealed token→attempt mappings; (k)'s carries a
+  dated correction appended after review
+- `metering/` — every attempt's metering JSON and per-request usage records, the same for every
+  helper session, and a README that reproduces every cost table from them
 - `adjudication/nc1-ruling.md` — the post-grid blinded ruling that versioned (n)'s register
 - `hunts/` — the four target-vetting reports
 - `prompts/` — the cell dispatch template, the blind-scoring template, the ground-truth

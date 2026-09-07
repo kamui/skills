@@ -319,6 +319,53 @@ print("\ncells all-attempt total", round(tot, 2),
       "per arm", {a: round(sum(c["cost"] for k, c in cells.items() if k[1] == a), 2) for a in ARMS})
 ````
 
+## `extract_requests.py`
+
+Added after the pull-request review to make the metering evidence durable; see [`metering/README.md`](metering/README.md). Run once per attempt and once per helper session over the session root and every sub-agent transcript.
+
+````python
+#!/usr/bin/env python3
+"""extract_requests.py <out.jsonl> <transcript.jsonl>...
+One record per unique API request across the given transcripts: request id, message id, model,
+effort, first/last timestamp, and the usage fields the billing arithmetic uses. A streamed request
+appears on several assistant lines with identical usage; the per-request record keeps the maximum
+of every counter, the same rule transcript_usage.py applies, so summing this file reproduces its
+totals. Lines that are not assistant turns, or carry no usage, are skipped and counted."""
+import json, os, sys
+out, paths = sys.argv[1], sys.argv[2:]
+reqs, order, skipped = {}, [], 0
+for p in paths:
+    label = os.path.basename(p)
+    for line in open(p, encoding="utf-8"):
+        try: o = json.loads(line)
+        except Exception: skipped += 1; continue
+        if o.get("type") != "assistant": continue
+        m = o.get("message") or {}; u = m.get("usage")
+        rid = o.get("requestId")
+        if not u or not rid: skipped += 1; continue
+        cc = u.get("cache_creation") or {}
+        rec = {"request_id": rid, "message_id": m.get("id"), "transcript": label, "model": m.get("model"),
+               "effort": o.get("effort"), "first_seen": o.get("timestamp"), "last_seen": o.get("timestamp"),
+               "input_tokens": u.get("input_tokens", 0), "cache_creation_input_tokens": u.get("cache_creation_input_tokens", 0),
+               "cache_write_5m": cc.get("ephemeral_5m_input_tokens"), "cache_write_1h": cc.get("ephemeral_1h_input_tokens"),
+               "cache_read_input_tokens": u.get("cache_read_input_tokens", 0), "output_tokens": u.get("output_tokens", 0),
+               "thinking_tokens": (u.get("output_tokens_details") or {}).get("thinking_tokens"), "service_tier": u.get("service_tier")}
+        if rid not in reqs:
+            reqs[rid] = rec; order.append(rid)
+        else:
+            r = reqs[rid]
+            for k in ("input_tokens", "cache_creation_input_tokens", "cache_write_5m", "cache_write_1h",
+                      "cache_read_input_tokens", "output_tokens", "thinking_tokens"):
+                a, b = r.get(k), rec.get(k)
+                r[k] = max(x for x in (a, b) if x is not None) if (a is not None or b is not None) else None
+            r["last_seen"] = rec["last_seen"]
+            if r["model"] != rec["model"] or r["effort"] != rec["effort"]:
+                r.setdefault("inconsistent", []).append({"model": rec["model"], "effort": rec["effort"]})
+with open(out, "w", encoding="utf-8") as f:
+    for rid in order: f.write(json.dumps(reqs[rid]) + "\n")
+print(f"{out}: {len(order)} requests from {len(paths)} transcript(s); {skipped} non-usage lines skipped")
+````
+
 ## `provision.sh`
 
 ````sh
