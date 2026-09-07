@@ -23,6 +23,11 @@ FIXTURE = Path(__file__).with_name("test_build_packet_fixture.json")
 
 CUTOFF = "2026-03-10T12:00:00Z"
 
+# a double quote forces git to quote the path whatever core.quotePath is set to, and is ASCII, so
+# the fixture does not depend on how the filesystem normalises non-ASCII names
+QUOTED_DIRECTORY = 'docs/q"dir'
+
+
 REF_PR = {
     "title": "Retry ceiling, first attempt",
     "body": "Superseded by the reviewed pull request.",
@@ -84,6 +89,8 @@ class BuildPacketTests(unittest.TestCase):
         self.write(self.mirror / "src" / "AGENTS.md", "Scoped guidance for src/.\n")
         self.write(self.mirror / "src" / "retry.rs", "fn retry() { loop {} }\n")
         self.write(self.mirror / "docs" / "notes.md", "Notes.\n")
+        self.write(self.mirror / QUOTED_DIRECTORY / "AGENTS.md", "Scoped guidance for a quoted path.\n")
+        self.write(self.mirror / QUOTED_DIRECTORY / "a.md", "A file git prints quoted.\n")
         self.write(self.mirror / "guide" / "AGENTS.md", "Scoped guidance for guide/.\n")
         self.git("add", "-A")
         self.git("commit", "-q", "-m", "Base of the reviewed change")
@@ -94,6 +101,14 @@ class BuildPacketTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "Bound the reconnect retry loop", when="2026-03-09T07:00:00+00:00")
         head = self.git("rev-parse", "HEAD")
         return base, head
+
+    def touch_the_quoted_path(self) -> None:
+        """Add a commit changing the file under the quoted directory, and repin the head to it."""
+        self.write(self.mirror / QUOTED_DIRECTORY / "a.md", "A file git prints quoted, changed.\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Touch the quoted path", when="2026-03-09T08:00:00+00:00")
+        self.head = self.git("rev-parse", "HEAD")
+        self.fixture["data"]["repository"]["pullRequest"]["headRefOid"] = self.head
 
     def rename_into_guide(self) -> None:
         """Add a commit renaming docs/notes.md into guide/, and repin the head to it."""
@@ -107,6 +122,11 @@ class BuildPacketTests(unittest.TestCase):
     def write(path: Path, text: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
+
+    def drop_the_closing_reference(self) -> None:
+        """Leave the pull request with no closing issue, connection count included."""
+        references = self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]
+        references["nodes"], references["totalCount"] = [], 0
 
     def save_replay(self, **bodies) -> None:
         """Save the forge responses this run replays; the GraphQL body defaults to the fixture."""
@@ -195,6 +215,38 @@ class BuildPacketTests(unittest.TestCase):
         packet = self.build_ok()
         self.assertIn("Bounded in the follow-up commit.", packet)
 
+    def test_material_edited_after_the_cutoff_is_omitted(self) -> None:
+        pull = self.fixture["data"]["repository"]["pullRequest"]
+        pull["reviews"]["nodes"][0]["lastEditedAt"] = "2026-03-11T09:00:00Z"
+        pull["reviewThreads"]["nodes"][0]["comments"]["nodes"][1]["lastEditedAt"] = "2026-03-11T09:00:00Z"
+        pull["comments"]["nodes"][0]["lastEditedAt"] = "2026-03-11T09:00:00Z"
+        pull["closingIssuesReferences"]["nodes"][0]["comments"]["nodes"][0]["lastEditedAt"] = "2026-03-11T09:00:00Z"
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("omitted after cutoff: "
+                      "{'reviews': 2, 'thread_comments': 3, 'conversation': 2, 'issue_comments': 2}",
+                      result.stdout)
+        packet = self.out.read_text(encoding="utf-8")
+        for edited in ["The retry loop needs a bound, not a longer sleep.",
+                       "Bounded in the follow-up commit.",
+                       "Opening for review; the ceiling is configurable.",
+                       "Reproduced on 1.2.0 with a proxy that closes mid-handshake."]:
+            self.assertNotIn(edited, packet)
+
+    def test_material_edited_before_the_cutoff_is_kept(self) -> None:
+        pull = self.fixture["data"]["repository"]["pullRequest"]
+        pull["reviews"]["nodes"][0]["lastEditedAt"] = "2026-03-08T09:30:00Z"
+        packet = self.build_ok()
+        self.assertIn("The retry loop needs a bound, not a longer sleep.", packet)
+
+    def test_a_rest_comment_updated_after_the_cutoff_is_omitted(self) -> None:
+        self.drop_the_closing_reference()
+        comments = [dict(REF_PR_COMMENTS[0], updated_at="2026-03-16T09:00:00Z")]
+        self.save_replay(ref_pr=REF_PR, ref_pr_comments=comments)
+        packet = self.build_ok("--ref-pr", "3899", save=False)
+        self.assertNotIn("Closing in favour of the bounded loop.", packet)
+        self.assertIn("(0 total; `comments_available: true`)", packet)
+
     def test_a_quoted_post_cutoff_instant_fails_the_scan(self) -> None:
         issue = self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]
         issue["comments"]["nodes"][0]["body"] = "Reproduced; the failing run is at 2026-03-20T09:00:00Z."
@@ -229,6 +281,13 @@ class BuildPacketTests(unittest.TestCase):
         self.assertNotIn("=>", packet)
         self.assertIn("| `guide/AGENTS.md` | **yes** |", packet)
 
+    def test_a_path_git_would_quote_reaches_the_manifest_and_the_guidance_scope_raw(self) -> None:
+        self.touch_the_quoted_path()
+        packet = self.build_ok()
+        self.assertIn(f"M  {QUOTED_DIRECTORY}/a.md", packet)
+        self.assertIn(f"| `{QUOTED_DIRECTORY}/AGENTS.md` | **yes** |", packet)
+        self.assertNotIn('\\"', packet)
+
     def test_guidance_at_the_merge_base_covers_root_and_scoped_files(self) -> None:
         packet = self.build_ok()
         self.assertIn("| `AGENTS.md` | **yes** |", packet)
@@ -239,7 +298,7 @@ class BuildPacketTests(unittest.TestCase):
     # --- the optional sections -----------------------------------------
 
     def test_an_originating_pull_request_reference_renders_as_the_spec(self) -> None:
-        self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"] = []
+        self.drop_the_closing_reference()
         self.save_replay(ref_pr=REF_PR, ref_pr_comments=REF_PR_COMMENTS)
         packet = self.build_ok("--ref-pr", "3899", save=False)
         self.assertIn("## 4. Originating reference `#3899` (a pull request, closed unmerged), verbatim", packet)
@@ -248,7 +307,7 @@ class BuildPacketTests(unittest.TestCase):
         self.assertIn("closed 2026-03-10T12:00:05Z when the reviewed pull request merged.", packet)
 
     def test_a_cross_repository_spec_issue_renders_as_the_spec(self) -> None:
-        self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"] = []
+        self.drop_the_closing_reference()
         self.save_replay(spec_issue=SPEC_ISSUE, spec_issue_comments=SPEC_ISSUE_COMMENTS)
         packet = self.build_ok("--spec-issue", "other/spec#12", save=False)
         self.assertIn("## 4. User-supplied spec: `other/spec#12`, verbatim", packet)
@@ -256,7 +315,7 @@ class BuildPacketTests(unittest.TestCase):
         self.assertNotIn("Post-merge note that must not reach the packet.", packet)
 
     def test_a_pull_request_with_no_reference_says_so(self) -> None:
-        self.fixture["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"] = []
+        self.drop_the_closing_reference()
         packet = self.build_ok()
         self.assertIn("## 4. Originating issue\n\nNone.", packet)
 
@@ -321,8 +380,26 @@ class BuildPacketTests(unittest.TestCase):
         pull = self.fixture["data"]["repository"]["pullRequest"]
         pull["merged"], pull["mergedAt"], pull["state"] = False, None, "OPEN"
         packet = self.build_ok("--cutoff", CUTOFF)
-        self.assertIn("| `merged` | **`false`** (merged None) |", packet)
+        self.assertIn("| `merged` | **`false`** (not merged) |", packet)
+        self.assertNotIn("merged None", packet)
+        self.assertIn("the target is not merged and this run does not publish", packet)
+        self.assertIn("The target is not merged; this review is frozen at the cutoff.", packet)
+        self.assertNotIn("The target is merged; this is a retrospective review.", packet)
         self.assertIn(f"## 6. Prior review state through the frozen cutoff `{CUTOFF}`, reproduced verbatim", packet)
+
+    def test_a_truncated_connection_exits_two(self) -> None:
+        pull = self.fixture["data"]["repository"]["pullRequest"]
+        pull["reviews"]["totalCount"] = 101
+        pull["reviewThreads"]["nodes"][0]["comments"]["totalCount"] = 50
+        result = self.run_cli()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("the single forge query truncated reviews (3 of 101); "
+                      "comments on the src/retry.rs:42 thread (3 of 50)", result.stderr)
+        self.assertFalse(self.out.exists())
+
+    def test_a_complete_connection_does_not_exit_two(self) -> None:
+        packet = self.build_ok()
+        self.assertIn("### Review submissions (2)", packet)
 
     def test_a_malformed_cutoff_exits_two(self) -> None:
         result = self.run_cli("--cutoff", "last tuesday")

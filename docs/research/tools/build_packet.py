@@ -6,9 +6,13 @@ conversation comments in ONE ``gh api graphql`` call (the same shape ``code-revi
 step 1 uses), and takes the changed-file manifest, the commit list and the guidance inventory
 from a local staging mirror. Everything created after the cutoff -- reviews, thread comments,
 conversation comments, issue comments -- is omitted, so a packet built after a pull request
-merged carries only what a reviewer could have seen at the merge instant. A thread comment is kept
-only when its own instant and its review's submission are both within the cutoff, since the forge
-stamps a pending review's comments when they are drafted rather than when they are published.
+merged carries only what a reviewer could have seen at the merge instant. A node is kept only when
+every instant that made its current text visible is within the cutoff: a thread comment needs its
+review's submission too, since the forge stamps a pending review's comments when they are drafted
+rather than when they are published, and anything edited after the cutoff is dropped, since the
+forge returns only the current body. Every rendered connection is bounded by the single query, so a
+connection holding more than it returned refuses the run rather than writing a packet that states
+it reproduces the prior review state while silently missing part of it.
 The rendered packet states the cutoff; the omitted counts go to stdout for the run bundle's record,
 not into the packet, which stays identical across arms and seeds.
 
@@ -71,13 +75,13 @@ query($owner:String!,$name:String!,$number:Int!){
       commits(first:100){ totalCount nodes{ commit{ oid committedDate message
         author{ name user{login} } } } }
       files(first:100){ nodes{ path additions deletions changeType } }
-      closingIssuesReferences(first:10){ nodes{ number title body createdAt author{login} url repository{ nameWithOwner }
-        comments(first:100){ totalCount nodes{ author{login} createdAt updatedAt body } } } }
-      reviews(first:100){ nodes{ author{login} state body submittedAt commit{oid} } }
-      reviewThreads(first:100){ nodes{ isResolved path line originalLine
-        comments(first:50){ nodes{ author{login} body createdAt commit{oid} originalCommit{oid}
+      closingIssuesReferences(first:10){ totalCount nodes{ number title body createdAt author{login} url repository{ nameWithOwner }
+        comments(first:100){ totalCount nodes{ author{login} createdAt lastEditedAt body } } } }
+      reviews(first:100){ totalCount nodes{ author{login} state body submittedAt lastEditedAt commit{oid} } }
+      reviewThreads(first:100){ totalCount nodes{ isResolved path line originalLine
+        comments(first:50){ totalCount nodes{ author{login} body createdAt lastEditedAt commit{oid} originalCommit{oid}
           pullRequestReview{ submittedAt } } } } }
-      comments(first:100){ nodes{ author{login} body createdAt } } } } }
+      comments(first:100){ totalCount nodes{ author{login} body createdAt lastEditedAt } } } } }
 '''
 
 INSTANT = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|z|[+-]\d{2}:?\d{2})")
@@ -118,6 +122,9 @@ def run(command: list) -> str:
         raise InputError(f"cannot run {command[0]!r}: {exc}") from exc
     except subprocess.CalledProcessError as exc:
         raise InputError(f"command failed: {' '.join(command)}\n{(exc.stderr or '').strip()}") from exc
+    except UnicodeDecodeError as exc:
+        # -z hands paths over raw, so a path that is not UTF-8 arrives here rather than quoted
+        raise InputError(f"output of {' '.join(command)} is not UTF-8: {exc}") from exc
     return done.stdout
 
 
@@ -225,7 +232,7 @@ def parse_args(argv) -> argparse.Namespace:
     ap.add_argument("--publish-to-fork", action="store_true", help="target (f): open PR on a repository we control; publication enabled; network permitted for gh against that repository only")
     ap.add_argument("--upstream-repo", default="spf13/cobra", help="--publish-to-fork: the upstream the replay repository forks, named as off limits in the run conditions")
     ap.add_argument("--original-author", default="scop", help="--publish-to-fork: who wrote the change upstream, distinguished from the posting identity")
-    ap.add_argument("--cutoff", default=None, help="ISO-8601 instant; every review, thread comment, conversation comment and issue comment created after it is omitted (default: the merge time)")
+    ap.add_argument("--cutoff", default=None, help="ISO-8601 instant; every review, thread comment, conversation comment and issue comment created, published or last edited after it is omitted (default: the merge time)")
     ap.add_argument("--replay", default=None, help="directory of saved forge responses to read instead of calling gh")
     ap.add_argument("--out", required=True)
     return ap.parse_args(argv)
@@ -247,6 +254,31 @@ def build(a: argparse.Namespace) -> int:
         raise InputError(f"forge response has no repository.pullRequest: {exc}") from exc
     if P["headRefOid"] != a.head:
         raise InputError(f"head mismatch: the pull request head is {P['headRefOid']}, --head is {a.head}")
+
+    # Every connection the packet renders is bounded by the one query issue #184 pins, so a target
+    # holding more than a bound returns is the first page and nothing says so. Refuse instead:
+    # a packet that claims to reproduce the prior review state has to carry all of it. The
+    # unrendered connections (files, commits) are not checked -- the mirror supplies both.
+    truncated = []
+
+    def check_complete(connection, what) -> None:
+        total = (connection or {}).get("totalCount")
+        got = len((connection or {}).get("nodes") or [])
+        if total is not None and total > got:
+            truncated.append(f"{what} ({got} of {total})")
+
+    check_complete(P["reviews"], "reviews")
+    check_complete(P["reviewThreads"], "review threads")
+    for t in P["reviewThreads"]["nodes"]:
+        check_complete(t["comments"], f"comments on the {t['path']}:{t['originalLine'] or t['line']} thread")
+    check_complete(P["comments"], "conversation comments")
+    check_complete(P["closingIssuesReferences"], "closing issue references")
+    for i in P["closingIssuesReferences"]["nodes"]:
+        check_complete(i["comments"], f"comments on issue #{i['number']}")
+    if truncated:
+        raise InputError("the single forge query truncated " + "; ".join(truncated)
+                         + ": raise that connection's first: bound and rebuild, since the packet"
+                           " would otherwise omit pre-cutoff review material without saying so")
 
     raw_cutoff = a.cutoff or P["mergedAt"]
     if not raw_cutoff:
@@ -271,16 +303,26 @@ def build(a: argparse.Namespace) -> int:
     def keep(nodes, key, bucket, also=None):
         """Drop every node stamped after the cutoff.
 
-        ``also`` reads a second instant off the node that must be within the cutoff too, so a
-        node is kept only when every instant that made it visible is.
+        A node is kept only when every instant that made its current text visible is within the
+        cutoff: the stamp at ``key``, its ``lastEditedAt``, and any second instant ``also`` reads
+        off it. The forge returns only a node's current body, so one edited after the cutoff
+        carries words no reviewer could have read at it and is dropped rather than rendered.
         """
         kept = []
         for node in nodes:
-            if after_cutoff(node.get(key)) or (also is not None and after_cutoff(also(node))):
+            instants = [node.get(key), node.get("lastEditedAt")]
+            if also is not None:
+                instants.append(also(node))
+            if any(after_cutoff(instant) for instant in instants):
                 omitted[bucket] += 1
                 continue
             kept.append(node)
         return kept
+
+    def rest_edited_at(comment):
+        """REST carries no lastEditedAt: an updated_at later than the creation is the edit signal."""
+        edited = comment.get("updated_at")
+        return edited if edited and edited != comment.get("created_at") else None
 
     def review_submitted_at(comment):
         """When a thread comment was published: its review's submission, or nothing if it stands alone."""
@@ -303,17 +345,21 @@ def build(a: argparse.Namespace) -> int:
     # form while --name-status prints the two paths separately, so the status lookup misses and
     # the arrow string reaches both the manifest row and the guidance scope. Without it a rename
     # is a delete plus an add, and every row names a path that exists.
-    numstat = git(a.staging, "diff", "--no-renames", "--numstat", a.merge_base, a.head).strip().splitlines()
-    status = git(a.staging, "diff", "--no-renames", "--name-status", a.merge_base, a.head).strip().splitlines()
+    # -z on both: without it git quotes a path holding a non-ASCII byte, a quote, a backslash or a
+    # control character ("docs/\303\274ber/a.md"), and that escaped string becomes the manifest row
+    # and the guidance scope, where every rev-parse on it misses. With -z paths arrive raw and
+    # NUL-terminated: --numstat records are "adds TAB dels TAB path", --name-status alternates
+    # status and path as separate fields.
+    numstat = [r for r in git(a.staging, "diff", "--no-renames", "--numstat", "-z", a.merge_base, a.head).split("\0") if r]
+    status = [f for f in git(a.staging, "diff", "--no-renames", "--name-status", "-z", a.merge_base, a.head).split("\0") if f]
     st = {}
-    for line in status:
-        parts = line.split("\t")
-        st[parts[-1]] = parts[0][0]
+    for code, path in zip(status[0::2], status[1::2]):
+        st[path] = code[0]
     rows = []
     changed_paths = []
     adds = dels = 0
-    for line in numstat:
-        ad, de, path = line.split("\t")
+    for record in numstat:
+        ad, de, path = record.split("\t")
         adds += int(ad) if ad != "-" else 0
         dels += int(de) if de != "-" else 0
         changed_paths.append(path)
@@ -355,7 +401,7 @@ def build(a: argparse.Namespace) -> int:
         rp = forge(a.replay, "ref-pr.json", ["gh", "api", f"repos/{a.repo}/pulls/{a.ref_pr}"])
         rc = forge(a.replay, "ref-pr-comments.json", ["gh", "api", f"repos/{a.repo}/issues/{a.ref_pr}/comments?per_page=100"])
         ref_pr = {"number": a.ref_pr, "title": rp["title"], "body": rp["body"], "createdAt": rp["created_at"], "author": {"login": rp["user"]["login"]}, "state": rp["state"], "merged": rp["merged"], "closedAt": rp["closed_at"],
-                  "comments": {"totalCount": len(rc), "nodes": [{"author": {"login": c["user"]["login"]}, "createdAt": c["created_at"], "body": c["body"]} for c in rc]}}
+                  "comments": {"totalCount": len(rc), "nodes": [{"author": {"login": c["user"]["login"]}, "createdAt": c["created_at"], "lastEditedAt": rest_edited_at(c), "body": c["body"]} for c in rc]}}
         ref_pr["comments"]["nodes"] = keep(ref_pr["comments"]["nodes"], "createdAt", "issue_comments")
         ref_pr["comments"]["totalCount"] = len(ref_pr["comments"]["nodes"])
     spec = None
@@ -366,7 +412,7 @@ def build(a: argparse.Namespace) -> int:
         si = forge(a.replay, "spec-issue.json", ["gh", "api", f"repos/{srepo}/issues/{snum}"])
         sc = forge(a.replay, "spec-issue-comments.json", ["gh", "api", f"repos/{srepo}/issues/{snum}/comments?per_page=100"])
         spec = {"coord": a.spec_issue, "url": si["html_url"], "title": si["title"], "body": si["body"], "createdAt": si["created_at"], "author": si["user"]["login"],
-                "comments": keep([{"author": c["user"]["login"], "createdAt": c["created_at"], "body": c["body"]} for c in sc], "createdAt", "issue_comments")}
+                "comments": keep([{"author": c["user"]["login"], "createdAt": c["created_at"], "lastEditedAt": rest_edited_at(c), "body": c["body"]} for c in sc], "createdAt", "issue_comments")}
 
     packet = Packet()
     w = packet.w
@@ -388,7 +434,17 @@ def build(a: argparse.Namespace) -> int:
     w(f"| Merge-base | `{a.merge_base}`{' (identical to the base SHA)' if a.merge_base == a.base_sha else ' (**differs from the base SHA**: the base branch moved before the merge; review against the merge-base)'} |")
     w(f"| Diff | {len(rows)} files, +{adds} / \u2212{dels}, {len(commits)} commits |")
     w(f"| `state` | `{P['state']}` |")
-    w(f"| `merged` | **`{'true' if P['merged'] else 'false'}`** (merged {P['mergedAt']}) |", exempt=True)
+    # the merge instant is a pinned identity fact, stated even under an earlier cutoff; an
+    # unmerged target has none, so these three say so rather than rendering "(merged None)" and
+    # then calling an open target merged twice over
+    merged_cell = f"**`true`** (merged {P['mergedAt']})" if P["merged"] else "**`false`** (not merged)"
+    stance = ("the target is merged, so this is a **retrospective review with publication disabled**"
+              if P["merged"] else
+              "the target is not merged and this run does not publish, so this is a **review frozen at the cutoff with publication disabled**")
+    merged_note = ("The target is merged; this is a retrospective review."
+                   if P["merged"] else
+                   "The target is not merged; this review is frozen at the cutoff.")
+    w(f"| `merged` | {merged_cell} |", exempt=True)
     w(f"| `isDraft` | `{'true' if P['isDraft'] else 'false'}` |")
     if issues:
         w("| Originating issue(s) | " + "; ".join(f"[`{i['repository']['nameWithOwner']}#{i['number']}`]({i['url']}) \u2014 \"{i['title']}\" (closing reference in the PR body{'; the issue lives in another repository, which the forge resolved for reading; record `issues=' + i['repository']['nameWithOwner'] + '#' + str(i['number']) + '`' if i['repository']['nameWithOwner'] != a.repo else ''})" for i in issues) + " |")
@@ -399,7 +455,7 @@ def build(a: argparse.Namespace) -> int:
     if a.publish_to_fork:
         w(f"| Posting identity | `kamui` (also the repository owner and the PR opener on this replay repository; the original author is `{a.original_author}`). Treat this as an ordinary first review by a third party, event `COMMENT`: this is a **live, open pull request on a repository this program controls, and publication is ENABLED** |")
     else:
-        w("| Posting identity | `kamui`, who did NOT author the PR and has no prior comments or reviews on it \u2192 an ordinary first review by a third party, event `COMMENT`; the target is merged, so this is a **retrospective review with publication disabled** |")
+        w(f"| Posting identity | `kamui`, who did NOT author the PR and has no prior comments or reviews on it \u2192 an ordinary first review by a third party, event `COMMENT`; {stance} |")
     w("")
     w(f"Compute the diff as `git diff {P['baseRefName']} review-head` (the `{P['baseRefName']}` branch is pinned to the merge-base, so two-dot and three-dot are identical here).\n")
     w("## 2. Changed-file manifest (verified against the pinned SHAs from the mirror)\n")
@@ -516,7 +572,7 @@ def build(a: argparse.Namespace) -> int:
            is `{newest}`. Nothing that happened after this pull request exists locally. Do not try to work
            around this. At the end, report explicitly whether you read any history beyond the pinned head and
            which history commands you ran.
-        4. **Publication is disabled.** The target is merged; this is a retrospective review. Do not post
+        4. **Publication is disabled.** {merged_note} Do not post
            anything anywhere. Follow your skill through to the point where it would publish, then render the
            review **exactly as it would be posted**, including summary body (with the `Mode` line your
            contract requires for a merged target), per-finding comments, and any trailers, and stop.
