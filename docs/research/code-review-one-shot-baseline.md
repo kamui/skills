@@ -210,7 +210,13 @@ re-fetches the head and writes only when publication is authorized, and none of 
 - **`v5b-1` is ambiguous** across the #70 window (§3). Identify runs by tree hash.
 - **Mechanical acceptance is not recall.** Nothing here says the pinned skill finds more
   material defects than the control. #137 measures that; #138 evaluates its frozen prototype
-  comparison separately and does not wait for #137.
+  comparison separately and does not wait for #137. **Measured 2026-09-07 (#137,
+  [bundle](one-shot-qualification-2026-09-07/README.md)): it does not.** Across 24 cells on six
+  fresh targets the pinned snapshot recovered fewer material defects per completed review than
+  this control (macro 55.0% against 70.0%) and returned more false cleans (4 against 3), with
+  zero false findings in either arm, equal completion, and matched median billed cost 1.057.
+  The screen fails and the baseline is retained; this is a recall result and says nothing about
+  the mechanical guarantees recorded above, which the control does not carry.
 - **The forge write is untested.** Coverage stops at batch emission. No test exercises the
   actual review submission, the stale-head guard, or the malformed-comment repair path in
   `references/output-contract.md`'s publication invariants; those are observed only in live runs.
