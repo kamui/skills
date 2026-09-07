@@ -1216,6 +1216,17 @@ commit the run records.
 - `comparison-data.md` — side-by-side metadata with the production-shaped cost column
 - `evaluation.md` — pass/fail against each #60 success criterion, plus the lower-effort arm's six
   runs and whether the #68 adoption rule was met; written by #60 after the grid
+- [`../tools/build_packet.py`](../tools/build_packet.py) — the phase-1 packet builder that renders
+  a `<target>/packet.md` from one forge query and the staging mirror. It is the #124 builder quoted in
+  [`../one-shot-effort-2026-09-06/tooling.md`](../one-shot-effort-2026-09-06/tooling.md) shipped as a
+  tool, preserving that builder's packet layout at the merge-time cutoff. Its stricter metadata
+  validation now requires established historical text and complete source collections before
+  rendering; old captures missing provenance must be replaced with established inputs. The format
+  is the one used by `../one-shot-effort-2026-09-06/g-bytes-698/packet.md` and its `h-etcd-18749` sibling.
+  It does **not** regenerate this bundle's packets, which came from the earlier cutoff-free builder:
+  that one titles a packet "holdout target (x)" and gives §6 no cutoff, as
+  `../one-shot-effort-2026-09-06/a-hyper-3952/packet.md` shows.
+  `python3 ../tools/test_build_packet.py` checks the shipped tool
 - [`../tools/cost_split.py`](../tools/cost_split.py) and
   [`../tools/transcript_usage.py`](../tools/transcript_usage.py) — the metering scripts;
   `--self-test` checks each

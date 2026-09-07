@@ -70,7 +70,17 @@ answers and adjudicator notes outside reviewer-accessible directories, packets, 
 network paths. Build truncated mirrors containing only permitted history; record negative object
 checks for known future fixes in each clone. Check any preinstalled dependency material for
 answer leakage. Packets include the same legitimate specification, prior review state through
-the frozen cutoff, guidance and evidence for every arm/seed; disclose preexisting hints.
+the frozen cutoff, guidance and evidence for every arm/seed; disclose preexisting hints. Build them
+with [`tools/build_packet.py`](tools/build_packet.py), the packet source for this method: it renders
+that content from one forge query and the staging mirror, omits every review, thread comment,
+conversation comment and issue comment first published after the cutoff — the merge instant by
+default — and reports what it omitted to stdout rather than into the packet. Before rendering, it
+validates timezone-aware source metadata, historical body/edit provenance, and completeness on
+every required GraphQL or REST history route. Unavailable pre-cutoff text or incomplete history
+exits `1` without writing a packet; a future date quoted in specification prose remains permitted.
+This validation does not prove the absence of answers elsewhere in the reviewer’s environment;
+the isolation and evaluator-material exclusions above still apply. Caller-supplied extra sections
+need their own established provenance before inclusion.
 
 Allow safe focused tests and repros in isolated disposable target clones. Preinstall/pin
 dependencies where practical, with network setup completed before dispatch; reviewers run offline.
