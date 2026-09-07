@@ -126,3 +126,63 @@ High confidence. Every load-bearing claim in the hypothesis was independently re
 - The one genuine-looking edge case found during adversarial testing (`no_unset` + bare top-level `$funcstack[1]` reference) was chased down to the byte and shown not to trigger on any invocation path the PR/FAQ actually recommends.
 
 Remaining minor uncertainty (does not affect the verdict): I did not get a fully scripted interactive TAB-completion capture working end-to-end via `zpty` (terminal-control-code noise made the transcript hard to parse cleanly), so the very last mile — an actual keystroke-driven completion firing `_arguments` inside genuine completion-widget context after `compdef`-based dynamic registration — is inferred from the `_comps[rg]=_rg` state match with the compinit-native registration rather than watched live end-to-end. I judge this `unresolved`-but-immaterial: `_comps[cmd]=_funcname` is the sole piece of state `_main_complete` consults to dispatch completion, and it is the same registration compinit itself produces, so a difference in downstream behavior would require zsh's own completion dispatcher to treat identically-shaped registrations differently depending on how they were created, which is not documented or plausible.
+
+---
+
+## Register version 2 — 2026-09-07T10:03Z (post-grid revision)
+
+**`D_n` changes from 0 to 1. This target is no longer a clean control.**
+
+Version 1 above adjudicated this pull request clean before any reviewer ran, and it is retained
+verbatim as the sealed pre-dispatch record. One cell of the grid then published a finding that
+version 1 had not considered. Under the method's §4 rule, that finding went to an **independent
+adjudicator with the arm, replicate and cost labels removed**; the adjudicator's brief and full
+ruling are in [`../adjudication/nc1-ruling.md`](../adjudication/nc1-ruling.md). It ruled the claim
+**material**.
+
+### GT-n1 — the `.zshrc` snippet the pull request adds cannot be pasted as instructed
+
+**Location (at head `855bfa6c`):** `FAQ.md` line 135, inside the block the pull request adds.
+
+The prose immediately above it says: *"Or if you'd prefer to load and generate completions at the
+same time, you can add the following to your `$HOME/.zshrc` file"*. The block it introduces reads
+
+```zsh
+$ source <(rg --generate complete-zsh)
+```
+
+with a leading `$ ` shell-prompt prefix.
+
+**Trigger.** A reader follows the instruction literally and pastes that line into `.zshrc`.
+
+**Demonstrated consequence.** Every interactive zsh startup emits `command not found: $` (reproduced
+by the adjudicator with `zsh -i` against a `.zshrc` holding the block; exit 127 on direct sourcing),
+and `source` is never reached, so the completions this pull request exists to make loadable are
+never loaded. The adjudicator isolated the cause with a control run: the identical line without the
+stray `$ ` sources cleanly. The line is introduced by this pull request and does not exist at the
+merge-base.
+
+**The file's own convention supports the reading.** Blocks that are content for a config file —
+the adjacent `fpath=($HOME/.zsh-complete $fpath)` block, the PowerShell profile-function block —
+carry no prompt prefix; the `$ ` prefix in this document marks one-time terminal commands. This
+block is introduced as config-file content and prefixed as a terminal command.
+
+**Required corrective outcome.** Any sufficient fix removes the stray `$ ` from the `.zshrc`-paste
+block, so a reader who copies the documented snippet gets a working `source` call rather than an
+error at every shell startup. The specific patch shape does not matter.
+
+**Class.** This defect **is the pull request's own promised change failing** — the pull request
+exists to document sourcing zsh completions dynamically, and the line documenting it does not work.
+It is therefore the one target in this grid of the class #124 identified, and stage 1's criterion 8
+capped that class at one of the four *buggy* targets. It arrived here by register revision on a
+target that was frozen as **clean**, which is a different and stronger deviation: see the README's
+§3, deviation 3.
+
+### Consequences for the grid, applied uniformly
+
+- The frozen target mix becomes **five buggy and one clean**, not four and two. Under method §4 that
+  alone prevents a full positive screen and makes this qualification **incomplete**.
+- Every attempt on this target is rescored against version 2: three attempts that returned Approved
+  are **false clean**, and one recovered GT-n1 with a sufficient fix.
+- No other target's register changed. No other new candidate survived adjudication anywhere in the
+  grid.

@@ -301,6 +301,107 @@ stays **$150**. Pre-freeze spend is $26.38 against the $15 allowance — see the
 
 ## 2. Preparation
 
+**Per-cell mechanics.** `run_cell.sh <target> <bea6be14|867cf3ff> <replicate> <attempt>`
+(experiment tooling, quoted in [`tooling.md`](tooling.md)): a fresh clone from the target's mirror
+with the base branch forced to the merge-base and `review-head` checked out at the head; the
+negative leak checks re-run on that clone, aborting before dispatch on a hit; optional post-clone
+dependency provisioning from an offline store, followed by a check that the tracked tree is still
+clean; the dispatch prompt rendered from one template with the cell's paths; the timing sidecar
+created with `root_dispatched_at` immediately before the `claude -p` call; `payload_validated_at`
+written by the reviewer itself right after its final successful `validate_review.py` run via
+`mark_event.py`; `completed_at` written by the runner when the session returns with both the report
+and the payload present (completion mode `render-only`). A non-zero exit or a missing file writes a
+stop record outside the sidecar. `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` is exported for the cell
+session, and the dispatch template requires `run_in_background: false` on every sub-agent, after the
+S3 helper was killed by the runtime's 600-second background-wait ceiling.
+
+Close-out (`close_cell.py`) scans `message.model` and the top-level `effort` on every line of the
+root and of every child transcript, and meters with
+`transcript_usage.py --prices 2,10 --report <run.md> --timing <timing.json>`. It reported zero
+problems on all 24 attempts.
+
+**Blind scoring.** After each target's four cells closed, `blind.py seal` copied their payloads
+under random tokens with the mapping sealed, redacting the cell id, the attempt id, the snapshot
+hash and the `workflow` trailer. An independent scorer, told to score each review on its own merits
+and not to compare or identify them, produced the target's scorecard against the sealed register;
+the mapping was revealed only afterwards. Scorecards and mappings are in [`scoring/`](scoring/).
+
 ## 3. What ran, deviations, and the decision
 
+**Ran (2026-09-07, 04:52–09:54Z):** all twenty-four planned cells, all valid completed, **zero
+replacements** of the two available, no session-limit notice, no stopped or discarded attempt. The
+stage-1 and stage-2 freeze commit `588edce` (04:52:01Z) preceded att-01 (04:52:17Z). Order: the
+paired pilot on (i) and (m), replicate 1 `repaired` then `historical` and replicate 2 the other way,
+then (j), (l), (k), (n) the same way, two cells in flight throughout.
+
+**Deviations, dated:**
+
+1. **04:53Z — dispatch records for `att-01` and `att-02` were written to the ledger about a minute
+   after their dispatch, not before it**, contrary to method §3. The freeze commit itself preceded
+   both dispatches, and every subsequent dispatch record (att-03 onward) was written before its
+   dispatch by `dispatch_record.sh`. The two rows say so on their face.
+2. **04:52Z — the pre-freeze allowance was overrun by $11.38** ($26.38 spent against $15.00). Causes,
+   both in the ledger: the S3 vetting hunt fanned out to background sub-agents, hit GitHub's
+   30-per-minute code-search limit, stalled, and was killed by the runtime's 600-second
+   background-wait ceiling, costing $3.29 for no report; and the S5 cross-file hunt cost $8.82, 4.6×
+   the median of the other three. The ticket's $150 cap was not moved and was not exceeded — the
+   grid closed at $109.48. The overrun is recorded, not absorbed.
+3. **10:03Z — the frozen target mix changed from four buggy / two clean to five buggy / one clean.**
+   One cell published a finding on the clean control (n) that the sealed register had not
+   considered. Under method §4 it went to an independent adjudicator with the arm, replicate and
+   cost labels removed, which ruled it **material**; `D_n` moved 0 → 1 and the register was versioned
+   ([`n-ripgrep-2957/register.md`](n-ripgrep-2957/register.md) §"Register version 2",
+   [`adjudication/nc1-ruling.md`](adjudication/nc1-ruling.md)). Every arm and attempt was rescored
+   against version 2, and both the version-1 and version-2 scores are reported. Method §4 makes a
+   changed target mix incompatible with a full positive screen, so this qualification is
+   **incomplete** regardless of the numbers. The screen fails on quality gates under both truth
+   sets, so the revision changes the margin, not the verdict.
+4. **10:03Z — GT-n1 is of the "promised behaviour change" class** #124 identified. Criterion 8
+   capped that class at one of the four *buggy* targets and it arrived instead by revision on a
+   target frozen as clean, which the preregistration did not contemplate. It is reported separately
+   in `evaluation.md` §5, including the screen recomputed with (n) excluded entirely.
+5. **06:40Z — the order of the four non-pilot targets was chosen after the pilot**, on projected
+   cost and shape coverage only, and recorded in the ledger before any of them was dispatched. Stage
+   1 froze the pilot and the pairing rule but left this order open. No output from (j), (k), (l) or
+   (n) existed when it was chosen.
+6. **The orchestrator inspected the structure of two payloads** (`att-01`, `att-02` headers and
+   section headings) as a validity check before scoring began. Scoring was done throughout by
+   independent blind scorers on redacted copies; the orchestrator scored nothing.
+7. No deviation from the preregistered thresholds, arms, pins, cells, replacement policy, scoring
+   rule or caps.
+
+**Decision.** The screen **fails** at gate 2 (false cleans 4 against 3) and gate 4 (macro material
+recall 55.0% against 70.0%, fifteen points the wrong way against a +10-point threshold), while
+passing gate 1 (zero false findings), gate 3 (12/12 completion in both arms) and gate 5 (matched
+median billed cost ratio 1.057 against ≤ 1.25). **The measured baseline is retained**; see
+[`evaluation.md`](evaluation.md). Nothing here argues for reverting to `v5b-1`: the historical arm's
+advantage is two cells wide, and the repaired release carries mechanical guarantees the control does
+not. What the grid establishes is that the accumulated policy changes between `v5b-1` and `v5b-10`
+did not move measured material recall on fresh targets, and that the ceiling is set by gaps both
+versions share — most visibly the cross-file target (j), which all four cells of both arms missed
+while faithfully following their own rules. This result changes no verification semantics, so the
+workflow identifier stays `v5b-10`.
+
 ## 4. Files
+
+- `README.md` — preregistration (stages 1 and 2), preparation, what ran, deviations, decision
+- `ledger.md` — caps, setup and probe entries, the attempt ledger with dispatch records and meter
+  rows, close-out totals
+- `comparison-data.md` — per-attempt verification, outcomes, recall by target, false cleans, billed
+  usage, timing, matched pairs, verifier-batch presence
+- `evaluation.md` — the screening rule applied, where the difference comes from, what both arms
+  miss, limitations, decision
+- `i-requests-6667/`, `j-trpc-5017/`, `k-graphql-js-1582/`, `l-bokeh-9232/`, `m-grpc-go-7390/`,
+  `n-ripgrep-2957/` — per target: the packet both arms received, the sealed register (version 2 for
+  (n)), and every attempt's payload, run report and timing sidecar
+- `scoring/` — the six blind scorecards and their sealed token→attempt mappings
+- `adjudication/nc1-ruling.md` — the post-grid blinded ruling that versioned (n)'s register
+- `hunts/` — the four target-vetting reports
+- `prompts/` — the cell dispatch template, the blind-scoring template, the ground-truth
+  adjudicator template, the GT-n1 adjudication brief, and the four vetting-hunt prompts
+- `tooling.md` — every experiment script, the packet-build invocations, and the context-build
+  size and arm-identity check, quoted
+
+The per-attempt run reports are the reviewers' own raw output and are committed unedited. A few of
+them link to their `/tmp` working paths, which do not exist in the repository; those links are left
+as the reviewers wrote them rather than rewritten, since the reports are evidence.
