@@ -190,6 +190,7 @@ class Cell:
         self.events, self.workers, self.freezes, self.batches, self.stages = [], {}, {}, [], []
         self.lock = threading.Lock()
         self.cancel = threading.Event()
+        self.failure = None
         self.requests = self.commands = 0
         self.token_reserved = self.tokens = 0
         self.finder_reserved = self.finder_tokens = 0
@@ -237,8 +238,24 @@ class Cell:
         return result.stdout
 
     def work(self, role, phase, packet):
+        try:
+            return self.run_worker(role, phase, packet)
+        except Exception as exc:
+            with self.lock:
+                if self.failure is None:
+                    self.failure = (role, exc)
+                    self.cancel.set()
+            raise
+
+    def peer_stop(self):
+        role, cause = self.failure
+        disposition = cause.disposition if isinstance(cause, Stop) else (
+            "stopped-invalid" if isinstance(cause, (ValueError, KeyError, TypeError)) else "stopped-runtime")
+        return Stop(disposition, "peer failure in " + role + ": " + str(cause))
+
+    def run_worker(self, role, phase, packet):
         if self.cancel.is_set():
-            raise Stop("stopped-runtime", "peer worker failed; dispatch cancelled")
+            raise self.peer_stop()
         context = self.c["contexts"][role]
         with self.lock:
             previous = self.workers.get(role)
@@ -262,7 +279,7 @@ class Cell:
         phase_started = time.monotonic()
         for index, item in enumerate(responses):
             if self.cancel.is_set():
-                raise Stop("stopped-runtime", "peer failure cancelled continuation")
+                raise self.peer_stop()
             with self.lock:
                 self.requests += 1
                 self.commands += len(item.get("tools", []))
@@ -307,13 +324,18 @@ class Cell:
                             if self.cancel.is_set() or time.monotonic() >= deadline:
                                 process.kill()
                                 stdout, error = process.communicate()
+                                if self.cancel.is_set():
+                                    stop = self.peer_stop()
+                                    write(self.out / context / (request_id + ".jsonl"), stdout.encode("utf-8"), "coordinator-only")
+                                    self.event("worker-cancelled", context_id=context, request_id=request_id,
+                                               reason=str(stop) + "; process killed and reaped")
+                                    raise stop
                                 raise subprocess.TimeoutExpired(process.args, timeout, stdout.encode("utf-8"), error.encode("utf-8"))
                     raw = stdout.encode("utf-8")
                     require(process.returncode == 0, "fake worker failed: " + error + stdout)
             except subprocess.TimeoutExpired as exc:
                 write(self.out / context / (request_id + ".jsonl"), exc.stdout or b"", "coordinator-only")
                 self.event("worker-cancelled", context_id=context, request_id=request_id, reason="timeout; process killed and reaped")
-                self.cancel.set()
                 raise Stop("stopped-budget", "worker/root time limit; usage unavailable, reservation retained") from exc
             transcript = write(self.out / context / (request_id + ".jsonl"), raw, "coordinator-only")
             worker["requests"].append(dict(request_id=request_id, input=request_ref, transcript=transcript))
@@ -358,10 +380,8 @@ class Cell:
                 # Every continuation output is retained, even though only the final one freezes.
                 write(self.out / context / (request_id + "-report.json"), report)
             except Stop:
-                self.cancel.set()
                 raise
             except (ValueError, KeyError, TypeError) as exc:
-                self.cancel.set()
                 raise Stop("stopped-invalid", "incomplete/invalid stream: " + str(exc)) from exc
         require(report.get("complete") is True, "report did not declare a complete record")
         if phase == "discovery":
@@ -507,10 +527,9 @@ class Cell:
                     try:
                         results.append(future.result())
                     except Exception as exc:
-                        self.cancel.set()
                         errors.append(exc)
                 if errors:
-                    raise errors[0]
+                    raise self.failure[1]
             self.event("cross-feed", source_context=self.c["contexts"]["finder"], destination_context=self.c["contexts"]["primary"],
                        primary_freeze=self.freezes[("primary", "discovery")]["event_id"],
                        finder_freeze=self.freezes[("finder", "discovery")]["event_id"],
