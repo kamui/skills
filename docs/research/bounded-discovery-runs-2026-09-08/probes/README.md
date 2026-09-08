@@ -1,14 +1,14 @@
 # Capability probes for the #149 freeze
 
-Twelve headless sessions on 2026-09-08 (UTC), the only model work this ticket charged. **$0.958401
-settled and $0.082158 retained as uncertainty**, inside #146's $15.00 pre-freeze subtotal, which had
+Thirteen headless sessions on 2026-09-08 (UTC), the only model work this ticket charged.
+**$1.0418428 settled and $0.082158 retained as uncertainty**, inside #146's $15.00 pre-freeze subtotal, which had
 $5.104002 left after #148. None of them reviewed a target, and none is evidence about any arm.
 
 Each directory holds the prompt as sent, the runtime's result envelope, `usage.json` and `row.md`
 from `transcript_usage.py`, `requests.jsonl` from `extract_requests.py`, `effort.txt` from
 `agent_effort.py`, `transcripts.txt` naming every transcript with its digest, and — where the session
 mixed models — `usage-split.json` from `meter_split.py`. [freshness.json](freshness.json) records,
-for all twelve, that the transcript opens with exactly one user message and carries no summary or
+for all thirteen, that the transcript opens with exactly one user message and carries no summary or
 resume record.
 
 | Probe | Question | Observed | Charged |
@@ -24,6 +24,7 @@ resume record.
 | [p7-shell-escape](p7-shell-escape/) | does the shell guard cover an interpreter? | no: an allow-listed `cat` outside the roots was denied by the harness, but `python3 -c "print(open(...).read())"` and a `python3` `subprocess` call both read canaries outside every permitted root | $0.046391 |
 | [p8-writes](p8-writes/) | can the cell write its payload and report? | not as configured: `Write` was denied outright with no approval surface, and a shell redirect was blocked — while an allow-listed `python3` wrote a file without trouble | $0.027082 |
 | [p9-writes-allowed](p9-writes-allowed/) | does naming the write tools fix it? | yes: with `Write` and `Edit` in `--allowedTools`, a write inside the roots succeeded and one outside them was still refused. This is why the frozen configuration names them. | $0.031153 |
+| [p10-background](p10-background/) | does the frozen configuration support background verification? | yes: dispatched with `run_in_background: true`, the primary ran a shell command while the verifier was still going and collected its result from the completion notification. Run after the review asked; the frozen rule stays foreground for the reasons in the preregistration's interpretation limits | $0.083442 |
 
 ## The two limitations these leave
 
@@ -36,11 +37,11 @@ transcript. Neither is described as enforced anywhere in this bundle.
 `meter_split.py` prices each transcript at its own model's frozen rate and sums the groups, because
 `transcript_usage.py` applies one price pair to everything it is given and a C cell mixes models.
 [reconciliation.json](reconciliation.json) has the recomputed figure, the runtime's own figure and
-their difference for all twelve sessions; each probe's `usage-split.json` has the per-model and
+their difference for all thirteen sessions; each probe's `usage-split.json` has the per-model and
 per-transcript breakdown.
 
-Of the eleven sessions that produced a runtime figure, five reconcile to within $0.0000005 and six
-— p2a, p5, p6, p7, p8 and p9 — come in about **$0.0013 below** it. The shortfall is not mysterious:
+Of the twelve sessions that produced a runtime figure, five reconcile to within $0.0000005 and seven
+— p2a, p5, p6, p7, p8, p9 and p10 — come in about **$0.0013 below** it. The shortfall is not mysterious:
 each of those six result envelopes carries a `claude-haiku-4-5-20251001` entry in `modelUsage` whose
 `costUSD` equals the gap to the last digit ($0.001342, $0.001348, $0.001380, $0.001332, $0.001276,
 $0.001281 against gaps of $0.001342, $0.00134845, $0.0013802, $0.0013318, $0.0012756, $0.0012814).
@@ -64,8 +65,8 @@ these probes reached, the standard rate card reproduces the billed total exactly
 long-context threshold would need that assumption rechecked before its cost is claimed.
 
 The cancelled session p3b produced no runtime figure at all and was settled from its six retained
-request records, which is the rule for any attempt that stops without one. The twelve recomputed
-figures sum to $0.950441. The amounts actually **charged** — the larger of the two per probe, which
-is the settlement rule — sum to $0.9584009, and the ledger's two settlements for this ticket total
-$0.958401, that figure rounded at settlement time. The recomputed sum is not the settled sum, and
+request records, which is the rule for any attempt that stops without one. The thirteen recomputed
+figures sum to $1.032632. The amounts actually **charged** — the larger of the two per probe, which
+is the settlement rule — sum to $1.0418426, and the ledger's three settlements for this ticket total
+$1.0418428, that figure rounded at settlement time. The recomputed sum is not the settled sum, and
 saying so is the point of the rule.

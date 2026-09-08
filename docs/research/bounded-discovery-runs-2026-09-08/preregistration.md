@@ -4,7 +4,7 @@
 the [#138](https://github.com/kamui/skills/issues/138) epic.** This document and its
 [manifest](manifest.json) fix everything the grid is allowed to vary, before any reviewer, finder or
 verifier has run. Nothing here reports a result: the only model sessions charged to this ticket are
-the twelve capability probes in [`probes/`](probes/), none of which reviewed a target.
+the thirteen capability probes in [`probes/`](probes/), none of which reviewed a target.
 
 Disposition: **ready**, recorded in [handoff.json](handoff.json). [#150](https://github.com/kamui/skills/issues/150)
 runs the six-cell pilot and [#151](https://github.com/kamui/skills/issues/151) the remaining
@@ -102,6 +102,13 @@ before each dispatch.
   base OID, merge-base OID, head OID and cutoff are pinned per slot.
 - **Repository state read for this freeze:** `cfde565d8b27237b7c378a474e8008d27ac25bfe`.
 
+The ledger is the one input deliberately **not** pinned by file digest. Every cell appends a
+reservation and a settlement to it, so a digest pin would fail the next cell's own gate on ordinary
+progress. What is pinned is its event **prefix** — the chain through the `cap-freeze` event, which is
+the history the freeze rests on. Everything after it is checked as behaviour: unbroken chain,
+snapshot reconciling to the events, the frozen cap and protected reserve unchanged, the closed
+pre-freeze subtotal unmoved, and room still left under the cap.
+
 ### The scope-to-packet binding
 
 #148 handed over each `scope.json` with `source_hash` set to the bare digest of that slot's
@@ -116,7 +123,7 @@ config["source"]["sha256"]`) is the same equality, so no dispatch can proceed wi
 
 ## 4. Runtime capability: what the probes established
 
-Twelve headless sessions, $0.958401 charged and $0.082158 retained as uncertainty, all inside
+Thirteen headless sessions, $1.0418428 charged and $0.082158 retained as uncertainty, all inside
 #146's $15.00 pre-freeze subtotal. Every one is metered, model-and-effort verified and committed under
 [`probes/`](probes/); [`probes/README.md`](probes/README.md) has the detail. Freshness was checked
 mechanically rather than asked of the model: each session's transcript opens with exactly one user
@@ -136,6 +143,7 @@ message — the probe prompt — and carries no summary or resume record
 | atomic budget contention | **enforced** | probe 3: of two operations against the same remaining capacity, one was admitted and the second exited 1 with no event written |
 | billed totals from retained usage | **enforced** | `meter_split.py` reproduces the runtime self-report from the per-request records for every session that produced one: five to within $0.0000005, and six about $0.0013 low each — an untranscripted `claude-haiku-4-5-20251001` request whose cost matches each gap exactly ([`probes/reconciliation.json`](probes/reconciliation.json)) |
 | the cell can write its payload, report and script output | **enforced, and it needs the allow list** | probes 8 and 9: under `--restricted` with `--permission-prompts none` the write tools are denied outright unless `--allowedTools` names them — while an allow-listed `python3` writes freely — and naming `Write` and `Edit` restores writes inside the roots while still refusing one outside |
+| background verification | **supported, and deliberately not used** | probe 10: the primary dispatched a verifier with `run_in_background: true`, ran a shell command while it was still going, and collected its result from the completion notification. The frozen rule is foreground anyway; section 10 says why |
 | **shell filesystem reach** | **audited, not enforced** | probe 7: with `Bash(python3:*)` allow-listed, `python3 -c "print(open(...).read())"` read a canary outside every permitted root, and so did a `subprocess` call. An allow-listed `cat` was blocked; an interpreter is not. |
 | **raw-socket egress** | **audited, not enforced** | probes 2c and 6: a direct TCP connection to an IP address on port 443 succeeds through an allow-listed `python3` |
 
@@ -151,9 +159,16 @@ attempt's store, the evaluator truth directory and another target's mirror direc
 list does not close the interpreter path. The control that actually holds is that **the material is
 not on the machine while a cell runs**.
 
-**Mandatory before every dispatch, and again after the cell stops.**
-[`scripts/check_cell_isolation.py`](scripts/check_cell_isolation.py) writes a dated record and exits
-non-zero unless all of the following hold:
+**Two phases, because one moment cannot satisfy both controls.** The leak-set check has to read the
+sealed leak set, and the absence gate requires that same evaluator storage to be gone — so
+[`scripts/check_cell_isolation.py`](scripts/check_cell_isolation.py) runs first in a `preparation`
+phase, while the evaluator material is still present, and emits an **attestation**: the clone head,
+base and merge-base, the mirror's refs, the digest of the leak-set file, and how many objects it
+examined and how many hit. The attestation carries no SHA from the leak set, so it crosses into the
+dispatch window without carrying truth with it.
+
+**Mandatory before every dispatch, and again after the cell stops**, once the evaluator material is
+removed. The script writes a dated record and exits non-zero unless all of the following hold:
 
 1. every forbidden path is absent: `~/.config/bounded-discovery/` (the key, the plaintext registers,
    the leak sets and the decrypted schedule), every other slot's mirror, clone and staging clone,
@@ -164,8 +179,9 @@ non-zero unless all of the following hold:
 2. the permitted roots exist and contain no forbidden path;
 3. the clone is at the pinned head, its base branch at the pinned merge-base, and its tracked tree is
    clean;
-4. no SHA in that slot's sealed leak set resolves in the clone or in its origin mirror — the leak set
-   is read from evaluator-only storage and only the count is printed;
+4. the preparation attestation covers this exact clone and mirror — same head, same refs — and
+   records a non-empty leak set with zero hits. No evaluator file is read in this phase, and none
+   needs to be;
 5. the egress proxy is listening and refuses a host that is not on its allow list.
 
 #148's sealed README made moving the key off the machine an alternative. Here it is mandatory. The
@@ -216,9 +232,9 @@ and close out the partial experiment.
 ## 7. One enforceable budget
 
 Sunk spend is reconciled first, not written off. #146 and #147 charged nothing; #148 charged
-$9.895998 for six selectors and six adjudicators; this ticket's probes charged $0.958401 and retain
+$9.895998 for six selectors and six adjudicators; this ticket's probes charged $1.0418428 and retain
 $0.082158 of uncertainty for one request the cancelled probe may never have recorded. Pre-freeze
-actual is **$10.8543989** of the $15.00 subtotal. The cap was frozen against a $135.99 projection
+actual is **$10.9378407** of the $15.00 subtotal. The cap was frozen against a $135.99 projection
 before probes 8 and 9 ran; deviation 5 records why the recomputed $136.0527 leaves it unchanged.
 
 Every figure is shown to four decimal places and computed from the unrounded inputs, so the column
@@ -229,14 +245,14 @@ cent changes nothing here, and the gate uses the unrounded numbers throughout.
 
 | Line | Amount | Basis |
 | --- | --- | --- |
-| Sunk pre-freeze, including probes | $10.8544 | the ledger |
+| Sunk pre-freeze, including probes | $10.9378 | the ledger |
 | Retained uncertainty | $0.0822 | the cancelled probe's largest observed request |
 | 24 cells | $102.3254 | 8 × ($3.4200 A + $3.7413 B + $5.6294 C) |
 | Three-replacement allowance | $12.7907 | 3 × the $4.2636 mean cell |
 | Grading and closeout reserve | $10.0000 | #152's blind adjudication and per-target scoring plus #153's synthesis |
-| **Projected full experimental cost** | **$136.0527** | |
-| **Frozen cap** | **$150.00** | `min(1.5 × 136.0527, 150)` |
-| Headroom | $13.9473 | 9.3% of the cap |
+| **Projected full experimental cost** | **$136.1361** | |
+| **Frozen cap** | **$150.00** | `min(1.5 × 136.1361, 150)` |
+| Headroom | $13.8639 | 9.2% of the cap |
 
 The per-cell figures come from measured runs at the dated rates in [`rates.json`](rates.json), not
 from a guess. A is the mean attempt cost of the twelve `bea6be14` cells in
@@ -263,7 +279,7 @@ prospectively, not a design that shrinks if money runs short.
 | whole-review dollars per attempt | $9.00 | `--max-budget-usd`, plus a ledger reservation of the remaining allowance before every dispatch |
 | one-call headroom | $1.00 | added to every reservation, because probe 4 shows the allowance is checked after a call completes |
 | whole-review billed tokens per attempt | 30,000,000 | audited against the retained per-request records |
-| root wall clock per attempt | 5400 s | `timeout` |
+| root wall clock per attempt | 5400 s | `timeout`, counted **once from the root dispatch instant** — in arm C the resumed phase gets only what is left, and the barrier wait and the finder's run fall inside the same window |
 | model requests per attempt | 400 | audited |
 | shell commands per attempt | 120 | audited |
 | per focused command | 300 s | the per-target execution note |
@@ -314,13 +330,24 @@ Screen B against A, and C against A, separately. Every criterion must hold:
 
 Reported alongside, as decision evidence rather than gates: sufficient-outcome recall `S/D`,
 aggregate fix sufficiency `S/R`, unjustified action errors, priority errors, and zero-recovery
-attempts that did not claim clean. Unresolved material truth, a planned cell with no attempt, or a
-changed clean/buggy target mix forces `inconclusive` however the numbers fall.
+attempts that did not claim clean.
+
+Unresolved material truth, a planned cell without a **valid completed** outcome — attempted but
+invalid or unfinished counts as missing, not as present — or a changed clean/buggy target mix blocks
+a positive screen and forces `inconclusive`. One thing outranks those blockers: a supported raw false
+finding **rejects** the arm outright, even when unrelated cells are unavailable, because a false
+finding is decisive on its own evidence and does not need the rest of the grid to be interpretable.
+The blockers are still reported in that case; the verdict is `fail`, not `inconclusive`. A partial
+run reports what it measured rather than collapsing into a global inconclusive.
 
 **False clean is frozen independently of recovery credit, reviewer priority or action, and fix
 sufficiency.** An attempt on an adjudicated buggy target that explicitly returns Approved / clean /
 no material defects is false clean — even if it recovered the defect, even if it reported it as a
-`consider`, even if it also declared operational incompleteness. The first frozen scoring check is
+`consider`, even if it also declared operational incompleteness. Both recorded signals carry it: a
+published `status` of `Approved` *is* an explicit clean return, so it counts whatever the
+`clean_claim` field says, and an attempt recorded with one and not the other is refused as
+contradictory input rather than scored. Status is validated against the output contract's four
+values, so a typo cannot quietly become "not Approved". The first frozen scoring check is
 exactly that case, a synthetic attempt that recovers `D1` with a sufficient fix and publishes
 Approved: it scores recall 0.5 **and** false clean 1. Eleven checks in
 [`scripts/scoring-fixtures.json`](scripts/scoring-fixtures.json) run under
@@ -373,6 +400,13 @@ a partial run is reported as what it measured rather than forced into a global i
   `<the model your dispatch names for that worker>`, deliberately, so that every arm receives
   byte-identical packets. [`dispatch-template.md`](dispatch-template.md) names the model for each
   worker and says that this packet line means the dispatch's value.
+- **Verification runs in the foreground in every arm, by choice.** Probe 10 established that this
+  runtime does support background sub-agents, so the constraint is the experiment's, not the
+  harness's. Token cost is unaffected and every arm carries it equally, so no gate moves. Elapsed
+  time does move: an A or B attempt serialises its verifier where the pinned policy's #70 early
+  dispatch would have let it overlap the primary's remaining low-risk work. Read the arms' elapsed
+  distributions as this harness's timing, not as the policy's production timing, and do not read C's
+  relative wall clock as evidence that deferring verification is cheaper in time.
 - **Nothing here establishes that `claude-opus-5` verifies better than `claude-sonnet-5`.** That is
   the hypothesis under test.
 
@@ -398,9 +432,10 @@ a partial run is reported as what it measured rather than forced into a global i
 5. **Probes 8 and 9 ran after the `cap-freeze` event (2026-09-08).** The gate was recorded against a
    $135.99 projection; then probes 8 and 9 found that the cell configuration as written could not
    write its own payload, and fixed it. They are pre-freeze spend inside the same $15.00 subtotal and
-   they raise the projection to $136.0527, which still fits the $150.00 cap with $13.9473 of headroom.
+   they raise the projection to $136.1361, together with probe 10, which answered the review's open
+   question about background verification. It still fits the $150.00 cap, with $13.8639 of headroom.
    The `cap-freeze` event is left exactly as written — it was true when it was recorded, and the
-   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.0527`
+   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.1361`
    still exceeds $150.00. Section 7's table carries the recomputed figures.
 6. **Two earlier stage records now quote stale digests (2026-09-08).** #147's
    `implementation-handoff.json` records `ADAPTER.md` and `ledger.json` as they were when it

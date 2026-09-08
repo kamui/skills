@@ -9,8 +9,17 @@ rechecks the three things the manifest asserts rather than stores:
 * each slot's ``scope.json`` ``source_hash`` still equals the digest of that
   slot's ``packet.md`` — the SourcePacket binding #148 handed to #149;
 * the pinned policy commit and skill tree still resolve in this repository;
-* the ledger reconciles, its cap and grading reserve are frozen, and the
-  pre-freeze spend the manifest quotes is the spend the ledger records.
+* the ledger still carries the frozen history and obeys the frozen limits.
+
+The ledger is deliberately **not** pinned by file digest. It is a living artifact:
+every cell appends a reservation and a settlement to it, so a digest pin would
+fail this check on ordinary progress and block the next dispatch. What is pinned
+instead is its **prefix** — the event chain up to and including the ``cap-freeze``
+event, which is the history the freeze rests on and which nothing may rewrite.
+Everything after that prefix is checked as behaviour rather than as bytes: the
+chain is unbroken, the snapshot reconciles to the events, the cap and the
+protected reserve are the frozen ones, the closed pre-freeze subtotal has not
+moved, and incurred spend plus the protected reserve still fits the cap.
 
 Usage::
 
@@ -99,6 +108,18 @@ def check_git_pins(manifest, repo):
     return problems
 
 
+def prefix_digest(events, through_event_id):
+    """Digest the event chain up to and including the named event, canonically."""
+    prefix = []
+    for event in events:
+        prefix.append(event)
+        if event["event_id"] == through_event_id:
+            return hashlib.sha256(
+                json.dumps(prefix, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            ).hexdigest(), len(prefix)
+    return None, 0
+
+
 def check_ledger(manifest, repo):
     problems = []
     path = repo / manifest["pins"]["ledger"]["uri"]
@@ -106,26 +127,59 @@ def check_ledger(manifest, repo):
         return ["ledger missing: " + manifest["pins"]["ledger"]["uri"]]
     ledger = json.loads(path.read_text(encoding="utf-8"))
     budget = manifest["budget"]
+    events = ledger["events"]
+
+    # The frozen history: nothing before and including the cap-freeze may be rewritten.
+    pin = manifest["pins"].get("ledger_event_prefix") or {}
+    prefix_sha, length = prefix_digest(events, pin.get("through_event_id"))
+    if prefix_sha is None:
+        problems.append("the pinned cap-freeze event %r is no longer in the ledger"
+                        % pin.get("through_event_id"))
+    elif prefix_sha != pin.get("events_sha256"):
+        problems.append("the frozen ledger history changed: %d events now digest to %s, "
+                        "the manifest pins %s" % (length, prefix_sha, pin.get("events_sha256")))
+
+    # The chain itself, and the snapshot it claims to summarise.
+    previous, seen = None, set()
+    actual = reserved = uncertain = pre_actual = Decimal(0)
+    for event in events:
+        if event["event_id"] in seen or event["previous_event_id"] != previous:
+            problems.append("the ledger event chain breaks at " + event["event_id"])
+            break
+        seen.add(event["event_id"])
+        previous = event["event_id"]
+        actual += Decimal(event["actual_delta_usd"])
+        reserved += Decimal(event["reservation_delta_usd"])
+        uncertain += Decimal(event["uncertainty_usd"])
+        if event["phase"] == "pre-freeze":
+            pre_actual += Decimal(event["actual_delta_usd"])
+    for field, computed in (("actual_usd", actual), ("reserved_usd", reserved),
+                            ("uncertainty_usd", uncertain),
+                            ("pre_freeze_actual_usd", pre_actual)):
+        if Decimal(ledger[field]) != computed:
+            problems.append("the ledger snapshot does not reconcile to its events: %s is %s, "
+                            "the events sum to %s" % (field, ledger[field], computed))
+
+    # The frozen limits, and the closed pre-freeze subtotal.
     for field in ("frozen_total_cap_usd", "grading_closeout_reserve_usd"):
         if ledger[field] is None:
             problems.append("the ledger's %s is not frozen" % field)
         elif Decimal(ledger[field]) != Decimal(budget[field]):
             problems.append("the ledger's %s is %s, the manifest says %s"
                             % (field, ledger[field], budget[field]))
-    if Decimal(ledger["pre_freeze_actual_usd"]) != Decimal(budget["pre_freeze_actual_usd"]):
-        problems.append("pre-freeze spend is %s in the ledger and %s in the manifest"
-                        % (ledger["pre_freeze_actual_usd"], budget["pre_freeze_actual_usd"]))
-    if Decimal(ledger["uncertainty_usd"]) != Decimal(budget["retained_uncertainty_usd"]):
-        problems.append("retained uncertainty is %s in the ledger and %s in the manifest"
-                        % (ledger["uncertainty_usd"], budget["retained_uncertainty_usd"]))
-    actual = sum((Decimal(event["actual_delta_usd"]) for event in ledger["events"]), Decimal(0))
-    if actual != Decimal(ledger["actual_usd"]):
-        problems.append("the ledger snapshot does not reconcile to its events")
-    if not any(event["operation"] == "cap-freeze" for event in ledger["events"]):
+    if pre_actual != Decimal(budget["pre_freeze_actual_usd"]):
+        problems.append("the closed pre-freeze subtotal moved: %s in the ledger, %s in the manifest"
+                        % (pre_actual, budget["pre_freeze_actual_usd"]))
+    if not any(event["operation"] == "cap-freeze" for event in events):
         problems.append("the ledger has no cap-freeze event")
-    occupied = actual + Decimal(ledger["reserved_usd"]) + Decimal(ledger["uncertainty_usd"])
-    if occupied + Decimal(ledger["grading_closeout_reserve_usd"] or 0) > Decimal(ledger["frozen_total_cap_usd"] or 0):
-        problems.append("incurred spend plus the protected reserve no longer fits the frozen cap")
+
+    # Room left, which is the question the next dispatch actually asks.
+    cap = Decimal(ledger["frozen_total_cap_usd"] or 0)
+    protected = Decimal(ledger["grading_closeout_reserve_usd"] or 0)
+    occupied = actual + reserved + uncertain
+    if occupied + protected > cap:
+        problems.append("incurred spend, reservations and uncertainty (%s) plus the protected "
+                        "reserve (%s) no longer fit the frozen cap (%s)" % (occupied, protected, cap))
     return problems
 
 
@@ -181,6 +235,61 @@ def self_test():
                                                                          "access": "r"}]})
     checks.append(("walks nested references", len(found) == 2))
     checks.append(("ignores objects that are not references", not refs({"uri": "x"})))
+
+    # The ledger is a living artifact: a cell's reservation and settlement must pass, and a
+    # rewrite of the frozen history must not.
+    import copy
+    import tempfile
+
+    def event(eid, previous, phase, operation, actual="0", reservation="0", uncertainty="0"):
+        return {"event_id": eid, "previous_event_id": previous, "observed_at": "2026-09-08T00:00:00Z",
+                "ticket": 149, "actor": "kamui", "phase": phase, "operation": operation,
+                "attempt_id": None, "helper_id": None, "request_refs": [], "reservation_id": eid,
+                "actual_delta_usd": actual, "reservation_delta_usd": reservation,
+                "uncertainty_usd": uncertainty, "rate_usage_evidence": [], "reason": "synthetic"}
+
+    frozen = [event("e1", None, "pre-freeze", "open"),
+              event("e2", "e1", "pre-freeze", "reserve", reservation="2"),
+              event("e3", "e2", "pre-freeze", "settle", actual="1", reservation="-2"),
+              event("e4", "e3", "pre-freeze", "cap-freeze")]
+    pinned_sha, _ = prefix_digest(frozen, "e4")
+    base = {"events": list(frozen), "actual_usd": "1", "reserved_usd": "0", "uncertainty_usd": "0",
+            "pre_freeze_actual_usd": "1", "frozen_total_cap_usd": "150.00",
+            "grading_closeout_reserve_usd": "10.00"}
+    manifest = {"pins": {"ledger": {"uri": "ledger.json", "access": "coordinator-only"},
+                         "ledger_event_prefix": {"through_event_id": "e4",
+                                                 "events_sha256": pinned_sha}},
+                "budget": {"frozen_total_cap_usd": "150.00", "grading_closeout_reserve_usd": "10.00",
+                           "pre_freeze_actual_usd": "1"}}
+    root = Path(tempfile.mkdtemp())
+
+    def run_ledger(ledger):
+        (root / "ledger.json").write_text(json.dumps(ledger), encoding="utf-8")
+        return check_ledger(manifest, root)
+
+    checks.append(("a frozen ledger passes", not run_ledger(base)))
+    live = copy.deepcopy(base)
+    live["events"] += [event("e5", "e4", "review", "reserve", reservation="9"),
+                       event("e6", "e5", "review", "settle", actual="4", reservation="-9")]
+    live.update(actual_usd="5", pre_freeze_actual_usd="1")
+    checks.append(("a cell's reservation and settlement pass", not run_ledger(live)))
+    rewritten = copy.deepcopy(live)
+    rewritten["events"][2]["actual_delta_usd"] = "0.50"
+    rewritten.update(actual_usd="4.50", pre_freeze_actual_usd="0.50")
+    checks.append(("a rewritten frozen history fails",
+                   any("frozen ledger history changed" in p for p in run_ledger(rewritten))))
+    broken = copy.deepcopy(live)
+    broken["events"][5]["previous_event_id"] = "e4"
+    checks.append(("a broken chain fails", any("chain breaks" in p for p in run_ledger(broken))))
+    unreconciled = copy.deepcopy(live)
+    unreconciled["actual_usd"] = "99"
+    checks.append(("a snapshot that does not reconcile fails",
+                   any("does not reconcile" in p for p in run_ledger(unreconciled))))
+    overspent = copy.deepcopy(live)
+    overspent["events"].append(event("e7", "e6", "review", "reserve", reservation="140"))
+    overspent["reserved_usd"] = "140"
+    checks.append(("spend past the cap fails",
+                   any("no longer fit the frozen cap" in p for p in run_ledger(overspent))))
     for name, ok in checks:
         print(("ok   " if ok else "FAIL ") + name)
     return 0 if all(ok for _, ok in checks) else 1

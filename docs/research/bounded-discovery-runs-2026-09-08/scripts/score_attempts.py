@@ -16,7 +16,10 @@ section 4). Two of them are worth restating because they decide the screen:
   adjudicated buggy target that explicitly returns Approved / clean / no material
   defects is false clean even when it also recovered the defect, reported it as a
   ``consider``, or declared operational incompleteness. Recovery credit never
-  cancels it — the fixture set carries exactly that case.
+  cancels it — the fixture set carries exactly that case. Both signals count: a
+  ``status`` of ``Approved`` *is* an explicit clean return, so it is false clean on
+  a buggy target whatever ``clean_claim`` says, and an attempt that carries one
+  without the other is refused as contradictory input rather than scored.
 * **Macro material recall** is the equal-weight mean over buggy targets of the
   arm's mean per-attempt recall on that target. It is computed twice: over every
   dispatched attempt, and over valid completed attempts only. A buggy target with
@@ -45,8 +48,12 @@ Input schema (UTF-8 JSON)::
 
 Output: a scorecard as Markdown blocks, or JSON with ``--json``. The screen for
 each candidate arm reports ``pass``, ``fail`` or ``inconclusive`` with the reason
-for every criterion; unresolved truth, a missing planned cell or a changed
-clean/buggy mix forces ``inconclusive`` however the numbers fall.
+for every criterion. Unresolved truth, a planned cell without a valid completed
+outcome, or a changed clean/buggy mix blocks a positive screen and forces
+``inconclusive`` — except against a supported false finding, which rejects the arm
+outright, because the frozen rule lets one reject an arm even when unrelated cells
+are unavailable. A partial run reports what it measured rather than collapsing
+into a global inconclusive.
 
 Exit: 0 when the input scores, 1 on a content violation (unknown defect ID,
 unknown arm, attempt on an unknown target, duplicate attempt ID) with one line
@@ -65,8 +72,16 @@ DEFAULT_THRESHOLDS = {"relative_recall_gain": 0.20, "zero_baseline_absolute_gain
                       "matched_cost_ratio": 1.25}
 
 
+STATUSES = ("Approved", "Changes Requested", "Needs Information", "Incomplete")
+
+
 class Violation(ValueError):
     pass
+
+
+def claims_clean(attempt):
+    """An explicit clean return, by either signal the contract exposes."""
+    return bool(attempt["clean_claim"]) or attempt["status"] == "Approved"
 
 
 def validate(document):
@@ -93,6 +108,12 @@ def validate(document):
             violations.append("attempt %s credits a sufficient fix for unrecovered %s" % (aid, defect))
         if attempt["arm"] not in [document["control_arm"]] + list(document["candidate_arms"]):
             violations.append("attempt %s names unknown arm %s" % (aid, attempt["arm"]))
+        if attempt["status"] not in STATUSES:
+            violations.append("attempt %s has status %r, not one of %s"
+                              % (aid, attempt["status"], ", ".join(STATUSES)))
+        if attempt["status"] == "Approved" and not attempt["clean_claim"]:
+            violations.append("attempt %s returns Approved with clean_claim false; an explicit "
+                              "Approved is a clean claim, so the pair is contradictory" % aid)
     for slot, target in targets.items():
         if target["status"] not in ("buggy", "clean"):
             violations.append("target %s has status %r" % (slot, target["status"]))
@@ -130,8 +151,8 @@ def arm_scorecard(document, arm):
     on_buggy_completed = [a for a in completed if targets[a["target_slot"]]["status"] == "buggy"]
     macro_all, per_target_all = macro(attempts, targets, buggy)
     macro_done, per_target_done = macro(completed, targets, buggy)
-    false_clean = [a for a in on_buggy if a["clean_claim"]]
-    false_clean_done = [a for a in on_buggy_completed if a["clean_claim"]]
+    false_clean = [a for a in on_buggy if claims_clean(a)]
+    false_clean_done = [a for a in on_buggy_completed if claims_clean(a)]
     recovered = sum(len(set(a["recovered_defect_ids"])) for a in attempts)
     sufficient = sum(len(set(a["sufficient_fix_defect_ids"])) for a in attempts)
     denominator = sum(len(targets[a["target_slot"]]["defect_ids"]) for a in on_buggy)
@@ -155,7 +176,7 @@ def arm_scorecard(document, arm):
                                            if on_buggy_completed else None,
         "false_clean_attempt_ids": [a["attempt_id"] for a in false_clean],
         "zero_recovery_not_claiming_clean": len([a for a in on_buggy
-                                                 if not a["recovered_defect_ids"] and not a["clean_claim"]]),
+                                                 if not a["recovered_defect_ids"] and not claims_clean(a)]),
         "raw_false_finding_items": sum(a["raw_false_finding_items"] for a in attempts),
         "raw_false_finding_items_invalid_subtotal": sum(a["raw_false_finding_items"] for a in attempts
                                                         if not (a["valid"] and a["completed"])),
@@ -251,17 +272,29 @@ def screen(document, candidate, control, cards):
                         % (a["unresolved_adjudications"], b["unresolved_adjudications"]))
     planned = set(document.get("planned_cells", []))
     attempted = {attempt["cell_id"] for attempt in document["attempts"]}
-    missing = sorted(planned - attempted)
-    if missing:
-        blockers.append("planned cells with no attempt: " + ", ".join(missing))
+    finished = {attempt["cell_id"] for attempt in document["attempts"]
+                if attempt["valid"] and attempt["completed"]}
+    unattempted = sorted(planned - attempted)
+    unfinished = sorted(planned - finished - set(unattempted))
+    if unattempted:
+        blockers.append("planned cells with no attempt: " + ", ".join(unattempted))
+    if unfinished:
+        blockers.append("planned cells attempted but with no valid completed outcome: "
+                        + ", ".join(unfinished))
     expected_clean = document.get("expected_clean_targets")
     actual_clean = sorted(slot for slot, t in document["targets"].items() if t["status"] == "clean")
     if expected_clean is not None and sorted(expected_clean) != actual_clean:
         blockers.append("the clean/buggy target mix changed: frozen %s, now %s"
                         % (sorted(expected_clean), actual_clean))
 
+    # A supported false finding is decisive on its own: the frozen rule lets it reject an arm
+    # even when unrelated cells are unavailable, so it outranks the blockers rather than being
+    # swallowed by them. Blockers still prevent a positive screen and are still reported.
     verdicts = [criterion["verdict"] for criterion in criteria]
-    if blockers or "inconclusive" in verdicts:
+    false_findings = [c for c in criteria if c["criterion"].startswith("zero candidate-arm")]
+    if false_findings and false_findings[0]["verdict"] == "fail":
+        overall = "fail"
+    elif blockers or "inconclusive" in verdicts:
         overall = "inconclusive"
     elif "fail" in verdicts:
         overall = "fail"

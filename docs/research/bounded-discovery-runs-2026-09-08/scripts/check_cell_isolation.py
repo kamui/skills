@@ -12,22 +12,30 @@ documentation must not be on the local filesystem while a cell runs.
 This script is that check, run before dispatch and again after the cell stops. It
 refuses to report success on anything it could not establish.
 
-Checks, in order:
+The leak-set check and the absence gate cannot run at the same moment, and
+pretending otherwise was this script's first mistake: the leak set lives in the
+evaluator-only storage that the absence gate requires to be gone. So the check
+runs in two phases against the same cell.
 
-1. every forbidden path is absent (``os.lstat`` fails), including the evaluator
-   key directory, the other slots' mirrors and clones, and the repository
-   checkouts holding this bundle;
-2. every permitted root exists, and no permitted root contains a forbidden one;
-3. the clone is at the pinned head, its base branch at the pinned merge-base, and
-   its tracked tree is clean;
-4. no SHA in the slot's sealed leak set resolves in the clone or its origin
-   mirror (the leak set is read from evaluator-only storage and never printed);
-5. the egress proxy is listening and refuses a host that is not on its allow list.
+**preparation** — evaluator material still present, before it is removed. Pins the
+clone and its mirror, reads the sealed leak set, confirms that none of its objects
+resolves in either, and writes an **attestation**: the clone head, the base and
+merge-base, the mirror's refs, the digest of the leak-set file, and how many
+objects were examined and hit. The attestation carries no SHA from the leak set,
+so it survives into the dispatch window without carrying truth with it.
+
+**pre-dispatch** and **post-dispatch** — evaluator material gone. Verify absence,
+the permitted roots, the clone and mirror still in exactly the state the
+attestation pinned, that the attestation reports a non-empty leak set with zero
+hits, and that the egress proxy refuses a host outside its allow list. No
+evaluator file is read in these phases, and none needs to be.
 
 Usage::
 
     python3 scripts/check_cell_isolation.py --spec cell-env.json \\
-        --phase pre-dispatch|post-dispatch --out record.json
+        --phase preparation --out attestation.json
+    python3 scripts/check_cell_isolation.py --spec cell-env.json --phase pre-dispatch \\
+        --attestation attestation.json --out record.json
     python3 scripts/check_cell_isolation.py --self-test
 
 Spec schema (UTF-8 JSON)::
@@ -36,10 +44,11 @@ Spec schema (UTF-8 JSON)::
      "permitted_roots": [path, ...],
      "forbidden_paths": [path, ...],
      "clone": {"path": path, "head_oid": str, "base_branch": str, "merge_base_oid": str},
-     "leak_set": path,          # evaluator-only JSON with a "shas" list; optional
+     "leak_set": path,          # evaluator-only JSON with a "shas" list; preparation only
      "egress_proxy": {"host": str, "port": int, "probe_host": str}}
 
-Output: a JSON record with one entry per check and an overall ``ready`` flag.
+Output: a JSON record with one entry per check and an overall ``ready`` flag; in
+the preparation phase that record is the attestation the later phases consume.
 
 Exit: 0 when every check passes, 1 when any check fails, with one line per
 failure on stdout, 2 when the spec cannot be read or a git call fails.
@@ -108,6 +117,20 @@ def check_clone(clone):
             "passed": head == clone["head_oid"] and base == clone["merge_base_oid"] and not dirty}
 
 
+def mirror_state(clone):
+    """The origin mirror's path and refs, as the clone sees them."""
+    path = os.path.expanduser(clone["path"])
+    _, origin, _ = git(path, "remote", "get-url", "origin")
+    refs = {}
+    if origin:
+        code, listing, _ = git(origin, "show-ref")
+        if code == 0:
+            for line in listing.splitlines():
+                oid, _, name = line.partition(" ")
+                refs[name.strip()] = oid
+    return {"origin": origin, "refs": refs}
+
+
 def check_leak_set(clone, leak_set_path):
     """Resolve nothing to stdout: report only how many SHAs were checked and how many hit."""
     try:
@@ -144,18 +167,54 @@ def check_egress(proxy):
             "probe": probe, "status": status, "passed": status == 403}
 
 
-def run(spec, phase):
-    checks = [check_absence(spec["forbidden_paths"]),
-              check_roots(spec["permitted_roots"], spec["forbidden_paths"]),
-              check_clone(spec["clone"])]
-    if spec.get("leak_set"):
-        checks.append(check_leak_set(spec["clone"], spec["leak_set"]))
+def check_attestation(spec, attestation, mirror):
+    """The dispatch-window stand-in for the leak-set check, bound to this exact clone."""
+    problems = []
+    if not attestation:
+        problems.append("no attestation supplied; run --phase preparation first")
     else:
-        checks.append({"check": "no sealed leak-set object resolves in the clone or its mirror",
-                       "passed": False, "note": "no leak set was supplied, so this is unestablished"})
-    checks.append(check_egress(spec["egress_proxy"]))
+        if attestation.get("phase") != "preparation":
+            problems.append("the attestation was not produced by the preparation phase")
+        if attestation.get("cell_id") != spec["cell_id"]:
+            problems.append("the attestation names cell %r, this is %r"
+                            % (attestation.get("cell_id"), spec["cell_id"]))
+        leak = next((c for c in attestation.get("checks", [])
+                     if c["check"].startswith("no sealed leak-set object")), None)
+        if not leak or not leak.get("passed"):
+            problems.append("the attestation does not record a passing leak-set check")
+        elif not leak.get("examined"):
+            problems.append("the attestation's leak set was empty, so it establishes nothing")
+        pinned = attestation.get("mirror") or {}
+        if pinned.get("refs") != mirror["refs"]:
+            problems.append("the mirror's refs changed since the attestation: %s then, %s now"
+                            % (pinned.get("refs"), mirror["refs"]))
+        clone = next((c for c in attestation.get("checks", [])
+                      if c["check"].startswith("clone is at the pinned head")), None)
+        if not clone or clone.get("head_oid") != spec["clone"]["head_oid"]:
+            problems.append("the attestation pinned a different clone head")
+    return {"check": "the preparation attestation covers this clone and mirror, with no leak-set hit",
+            "attestation_observed_at": (attestation or {}).get("observed_at"),
+            "problems": problems, "passed": not problems}
+
+
+def run(spec, phase, attestation=None):
+    clone = check_clone(spec["clone"])
+    mirror = mirror_state(spec["clone"])
+    if phase == "preparation":
+        # Evaluator material is still present here, and this is the only phase that reads it.
+        checks = [clone, check_leak_set(spec["clone"], spec["leak_set"])
+                  if spec.get("leak_set") else
+                  {"check": "no sealed leak-set object resolves in the clone or its mirror",
+                   "passed": False, "examined": 0,
+                   "note": "no leak set was supplied, so this is unestablished"}]
+    else:
+        checks = [check_absence(spec["forbidden_paths"]),
+                  check_roots(spec["permitted_roots"], spec["forbidden_paths"]),
+                  clone,
+                  check_attestation(spec, attestation, mirror),
+                  check_egress(spec["egress_proxy"])]
     return {"schema_version": "bounded-discovery-v1", "cell_id": spec["cell_id"],
-            "target_slot": spec["target_slot"], "phase": phase,
+            "target_slot": spec["target_slot"], "phase": phase, "mirror": mirror,
             "observed_at": datetime.now(timezone.utc).isoformat(),
             "checks": checks, "ready": all(check["passed"] for check in checks)}
 
@@ -206,6 +265,49 @@ def self_test():
     checks.append(("an empty leak set establishes nothing", empty["passed"] is False))
     checks.append(("a proxy that is not listening fails",
                    check_egress({"host": "127.0.0.1", "port": 1, "probe_host": "example.invalid"})["passed"] is False))
+
+    # The two phases, end to end: preparation reads the leak set, dispatch reads only the
+    # attestation it left behind, and the evaluator file is gone by then.
+    (clone / "a.txt").write_text("a\n", encoding="utf-8")     # undo the dirtying above
+    mirror = root / "mirror.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(mirror)], check=True,
+                   capture_output=True, text=True, encoding="utf-8")
+    git(clone, "remote", "add", "origin", str(mirror))
+    git(clone, "push", "-q", "origin", "main")
+    evaluator = root / "evaluator"
+    evaluator.mkdir()
+    (evaluator / "leak.json").write_text(json.dumps({"shas": ["0" * 40]}), encoding="utf-8")
+    spec = {"cell_id": "slot-1-A-replicate-1", "target_slot": "slot-1",
+            "permitted_roots": [str(clone)], "forbidden_paths": [str(evaluator)],
+            "clone": {"path": str(clone), "head_oid": head, "base_branch": "main",
+                      "merge_base_oid": head},
+            "leak_set": str(evaluator / "leak.json"),
+            "egress_proxy": {"host": "127.0.0.1", "port": 1, "probe_host": "example.invalid"}}
+    prepared = run(spec, "preparation")
+    checks.append(("preparation passes with evaluator material present", prepared["ready"]))
+    checks.append(("preparation does not gate on absence",
+                   not any(c["check"].startswith("forbidden paths") for c in prepared["checks"])))
+    checks.append(("the attestation carries no leak-set SHA",
+                   "0" * 40 not in json.dumps(prepared)))
+    import shutil
+    shutil.rmtree(evaluator)                                   # the dispatch window begins
+    gate = run(spec, "pre-dispatch", prepared)
+    attested = next(c for c in gate["checks"] if c["check"].startswith("the preparation attestation"))
+    checks.append(("the attestation stands in for the leak set once it is gone", attested["passed"]))
+    checks.append(("absence passes once evaluator material is removed",
+                   next(c for c in gate["checks"] if c["check"].startswith("forbidden paths"))["passed"]))
+    checks.append(("a dispatch phase with no attestation fails",
+                   not run(spec, "pre-dispatch", None)["checks"][3]["passed"]))
+    empty = json.loads(json.dumps(prepared))
+    for c in empty["checks"]:
+        if c["check"].startswith("no sealed leak-set object"):
+            c["examined"] = 0
+    checks.append(("an attestation over an empty leak set fails",
+                   not run(spec, "pre-dispatch", empty)["checks"][3]["passed"]))
+    swapped = json.loads(json.dumps(prepared))
+    swapped["mirror"]["refs"] = {"refs/heads/main": "1" * 40}
+    checks.append(("a swapped mirror fails",
+                   not run(spec, "pre-dispatch", swapped)["checks"][3]["passed"]))
     for name, ok in checks:
         print(("ok   " if ok else "FAIL ") + name)
     return 0 if all(ok for _, ok in checks) else 1
@@ -214,7 +316,9 @@ def self_test():
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--spec")
-    parser.add_argument("--phase", choices=("pre-dispatch", "post-dispatch"), default="pre-dispatch")
+    parser.add_argument("--phase", choices=("preparation", "pre-dispatch", "post-dispatch"),
+                        default="pre-dispatch")
+    parser.add_argument("--attestation", help="the preparation record, required outside preparation")
     parser.add_argument("--out")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
@@ -222,9 +326,13 @@ def main(argv=None):
         return self_test()
     if not args.spec:
         parser.error("--spec is required")
+    if args.phase != "preparation" and not args.attestation:
+        parser.error("--attestation is required outside the preparation phase")
     try:
         spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
-        record = run(spec, args.phase)
+        attestation = (json.loads(Path(args.attestation).read_text(encoding="utf-8"))
+                       if args.attestation else None)
+        record = run(spec, args.phase, attestation)
     except (OSError, ValueError, KeyError) as exc:
         print(str(exc), file=sys.stderr)
         return 2

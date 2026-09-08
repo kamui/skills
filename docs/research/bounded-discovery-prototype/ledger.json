@@ -7,10 +7,10 @@
   "pre_freeze_ceiling_usd": "15.00",
   "frozen_total_cap_usd": "150.00",
   "grading_closeout_reserve_usd": "10.00",
-  "actual_usd": "10.8543989",
+  "actual_usd": "10.9378407",
   "reserved_usd": "0.00",
   "uncertainty_usd": "0.082158",
-  "pre_freeze_actual_usd": "10.8543989",
+  "pre_freeze_actual_usd": "10.9378407",
   "pre_freeze_reserved_usd": "0.00",
   "planned_cells": 24,
   "attempts_dispatched": 0,
@@ -892,6 +892,50 @@
       "uncertainty_usd": "0",
       "rate_usage_evidence": [
         "probes/p8-writes/ and probes/p9-writes-allowed/: under --restricted with --permission-prompts none the Write tool is denied outright unless --allowedTools names it, while an allow-listed python3 writes freely; naming Write and Edit restores writes inside the permitted roots and still denies one outside them. A compound shell command is denied unless it matches an allow-listed prefix. Charged at the two runtime self-reports 0.0270816 + 0.0311534"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "01c33752-f672-43c4-a575-9138255c0968",
+      "previous_event_id": "f45114c7-47f7-44bd-8a8e-84da0a29168e",
+      "observed_at": "2026-09-08T18:05:06.616017+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 10 (background verification): one headless session in the frozen cell configuration told to dispatch the bd-verifier agent with run_in_background true, continue working while it runs, then collect its result; answers the review's open question bounded-discovery/baseline-early-dispatch. Reserved before launch"
+      ],
+      "reservation_id": "issue-149-probe-10-background",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 10 (background verification): one headless session in the frozen cell configuration told to dispatch the bd-verifier agent with run_in_background true, continue working while it runs, then collect its result; answers the review's open question bounded-discovery/baseline-early-dispatch. Reserved before launch"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "584227ac-c550-4d71-87b5-a7ae9a8112dd",
+      "previous_event_id": "01c33752-f672-43c4-a575-9138255c0968",
+      "observed_at": "2026-09-08T18:14:38.160985+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p10-background/: session a995295e dispatched bd-verifier with run_in_background true, ran a git command while it was still running, and collected its result from the harness's completion notification (module google.golang.org/grpc). Background verification is supported in the frozen configuration; the answer to the review's open question bounded-discovery/baseline-early-dispatch"
+      ],
+      "reservation_id": "issue-149-probe-10-background",
+      "actual_delta_usd": "0.0834418",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p10-background/: session a995295e dispatched bd-verifier with run_in_background true, ran a git command while it was still running, and collected its result from the harness's completion notification (module google.golang.org/grpc). Background verification is supported in the frozen configuration; the answer to the review's open question bounded-discovery/baseline-early-dispatch"
       ],
       "reason": "Usage settlement"
     }

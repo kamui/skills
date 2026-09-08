@@ -1,0 +1,3 @@
+session a995295e-0dd6-4ca3-958e-1614065449b2 transcripts: 2
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p10-work/a995295e-0dd6-4ca3-958e-1614065449b2.jsonl sha256 be0f07a21a20f18758a09bd22597c090b349bc1eb1d332e5be9431faedd3e197
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p10-work/a995295e-0dd6-4ca3-958e-1614065449b2/subagents/agent-a153a0322ab0fc2fd.jsonl sha256 ac16cc5aaac4352f5303560df471137f63303de64784f1ba0d049d2b49310d4a
