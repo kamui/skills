@@ -33,7 +33,9 @@ addition to the reservation list in criteria §7.
 - **Selector** (one fresh headless `claude-sonnet-5` / `high` session per target, tools `Read`,
   `Grep`, `Glob` only, no shell): received only `packet.md`, `diff.patch` and exported `head/` and
   `base/` trees, ran once, and its output is frozen as delivered. Every tool call is audited in
-  `metering/selector-<label>/read-audit.txt`; none read outside its working directory. The selectors
+  `metering/selector-<label>/read-audit.txt`; none read outside its working directory. One frontier
+  citation in slot-3's output characterizes a lock as a hazard, drawing on the pull request's own body
+  text; it is frozen as delivered, and #149 should judge whether that sentence over-cues the finder. The selectors
   ran **before** the adjudicators, so no register existed anywhere on the machine during selection,
   and every plaintext of hidden truth (inventory, and for the two replacement runs the registers and
   hypotheses that already existed) was removed from disk for the duration (ciphertext and key
@@ -69,6 +71,20 @@ Model and effort were verified on every assistant line of every helper transcrip
    (`opening_state`). The full adapter suite passes; see the pull request.
 6. **Two replacements for one slot (06:28Z and 06:41Z).** For one of the four slots the independent adjudicators ruled the first two candidates in the sealed inventory order outside the shape that slot requires (criteria §3 E11), so the third candidate in that order fills it. Which slot, which shape and what each ruling found are hidden truth: the two excluded registers are sealed for audit (`sealed/excluded-*.enc`), the selector runs on the two excluded candidates are retained as discarded pre-freeze spend, and `exclusions.md` records the replacements without naming the slot or the reasons. The replacements followed the frozen order; no candidate was chosen after the fact.
 7. **Internal spend target exceeded (06:52Z).** Criteria §8 aimed this ticket at $9.00 of the $15.00 pre-freeze subtotal; the two replacements brought the metered total to $9.90. The $15.00 subtotal was never at risk: every helper was reserved before launch and settled from its transcript, and the largest single session cost $1.41.
+8. **Packet worker-model line (06:08Z, recorded after review).** Criteria §9.3 named
+   `--subagent-model sonnet`. The packets were built with the literal value
+   `<the model your dispatch names for that worker>` instead, so that the line the builder renders
+   ("pass `model: "…"` explicitly on every call") does not pre-empt #149's choice: design §2 gives arms
+   B and C a worker configuration different from A while every arm must receive byte-identical
+   packets. The string is deliberate, not an unfilled placeholder; each manifest records it under
+   `packet.subagent_model_line`. #149's dispatch template must name the model for each worker and
+   state that this packet line means the dispatch's value. The packets are not rebuilt: the selectors
+   ran on these bytes and the frozen scope hashes bind to them.
+9. **Staging clone reuse for slot-2 (recorded after review).** The full bare clone of `grpc/grpc-go`
+   used as the staging source for slot-2's mirror and packet manifest is the one made for the #137
+   preparation on 2026-09-07 (`/tmp/qual137/staging/grpc-go.git`), refreshed with `git fetch` on
+   2026-09-08. A staging clone is only a source of upstream objects; the truncated mirror holds two
+   refs and passed its negative checks. The other three targets use clones made for this ticket.
 
 ## Cross-target hazard
 
