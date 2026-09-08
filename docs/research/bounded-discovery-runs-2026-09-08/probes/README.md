@@ -36,7 +36,7 @@ transcript. Neither is described as enforced anywhere in this bundle.
 `meter_split.py` prices each transcript at its own model's frozen rate and sums the groups, because
 `transcript_usage.py` applies one price pair to everything it is given and a C cell mixes models.
 [reconciliation.json](reconciliation.json) has the recomputed figure, the runtime's own figure and
-their difference for all ten sessions; each probe's `usage-split.json` has the per-model and
+their difference for all twelve sessions; each probe's `usage-split.json` has the per-model and
 per-transcript breakdown.
 
 Of the eleven sessions that produced a runtime figure, five reconcile to within $0.0000005 and six

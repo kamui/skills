@@ -23,7 +23,7 @@ Runtime readiness and benchmark dispatch remain #149's gate.
 
 The experiment itself is frozen in
 [bounded-discovery-runs-2026-09-08/](../bounded-discovery-runs-2026-09-08/README.md) for #149:
-the preregistration and machine-readable manifest, the ten metered capability probes that
+the preregistration and machine-readable manifest, the twelve metered capability probes that
 established the runtime controls, the sealed cell order, the frozen ceilings and screening rules, and
 the `ready` handoff #150 reads. Every value this directory left open is fixed there.
 
