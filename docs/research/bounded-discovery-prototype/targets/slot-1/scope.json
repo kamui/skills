@@ -1,7 +1,7 @@
 {
   "schema_version": "bounded-discovery-v1",
   "scope_id": "issue-148-scope-clap-6212",
-  "source_hash": "2f7ac7056dd43de27889c9d7552d6cd628861db0e5d93de5afe5aa4ee905df88",
+  "source_hash": "9d5eb7c8f343ac457be007744027578d2cba46c5f7bc7424bfc53aeaaddb32c3",
   "source_hash_binding": "SHA-256 of the common packet.md; #149 re-binds source_hash to its SourcePacket ArtifactRef without changing the content below",
   "packet_revision_note": "selected against packet revision v1 (sha256 6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb, kept as packet.selector-input.md); source_hash binds to revision v2, which appends the provenance-checked spec issue clap-rs/clap#5040 and changes nothing else; the selection is frozen as delivered under criteria section 5",
   "selection_mode": "model-assisted",
@@ -182,5 +182,5 @@
   "unavailable_under_bound": [],
   "no_supported_surface": false,
   "selector_notes": "Only two hunks exist in the whole diff (one per changed file), so enumeration was exhaustive by construction; no ambiguity in path/symbol/line tiebreaking was needed since each kind had at most one member. I did not find any S1 (concurrency/progress) surface anywhere in this diff \u2014 clap's parser is single-threaded with no lock/atomic/channel/thread/timeout/retry/cancellation primitives, so S1 is simply absent here rather than passed over for being 'less interesting'. I treated Arg::num_args's doc-comment line about `Arg::value_terminator` and Arg::value_terminator's own doc as the S2 obligation source rather than the PR's referenced issue #5040, because the packet records issues=none and I have no network access to read #5040's text; if the dispatch later supplies that issue's body, it might state the obligation more precisely (e.g. 'first argument' phrasing) than the doc comments I could cite. I did not read any file outside /tmp/bd148/selector/clap-6212; nothing outside it appeared necessary. I did not read any git history beyond the pinned head (no git commands were run at all \u2014 I have no shell).",
-  "frozen_at": "2026-09-08T08:37:44.181257+00:00"
+  "frozen_at": "2026-09-08T08:45:54.217371+00:00"
 }
