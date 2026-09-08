@@ -20,8 +20,11 @@ runs in two phases against the same cell.
 **preparation** — evaluator material still present, before it is removed. Pins the
 clone and its mirror, reads the sealed leak set, confirms that none of its objects
 resolves in either, and writes an **attestation**: the clone head, the base and
-merge-base, the mirror's refs, the SHA-256 of the leak-set *file*, and how many
-objects were examined and hit. It carries no SHA *from* the set, so it survives
+merge-base, the mirror's refs, a digest of **every object each repository holds**
+(referenced or not, alternates followed), the SHA-256 of the leak-set *file*, and
+how many objects were examined and hit. HEAD and refs alone would not do: an
+object can arrive in a store without moving either, and that is exactly the leaked
+evidence the leak-set check rules absent. It carries no SHA *from* the set, so it survives
 into the dispatch window without carrying truth with it. The file digest names
 which set was checked. Nothing during the dispatch window can compare it — the
 file is deliberately gone by then — but #152 and #153 can, once the sealed
@@ -29,9 +32,10 @@ material comes back, which is what makes the attestation auditable rather than
 merely asserted.
 
 **pre-dispatch** and **post-dispatch** — evaluator material gone. Verify absence,
-the permitted roots, the clone and mirror still in exactly the state the
-attestation pinned, that the attestation reports a non-empty leak set with zero
-hits, and that the egress proxy refuses a host outside its allow list. No
+the permitted roots, the clone and mirror still holding exactly the object sets the
+attestation pinned with no alternate store, that the attestation reports a
+non-empty leak set with zero hits, and that the egress proxy refuses a host
+outside its allow list. No
 evaluator file is read in these phases, and none needs to be.
 
 Usage::
@@ -115,25 +119,59 @@ def check_clone(clone):
         raise Unreadable("git rev-parse HEAD in " + path + ": " + error)
     _, base, _ = git(path, "rev-parse", clone["base_branch"])
     _, dirty, _ = git(path, "status", "--short")
+    objects = object_state(path)
     return {"check": "clone is at the pinned head with a clean tree",
             "head_oid": head, "expected_head_oid": clone["head_oid"],
             "base_oid": base, "expected_merge_base_oid": clone["merge_base_oid"],
             "dirty_entries": [line for line in dirty.splitlines() if line],
-            "passed": head == clone["head_oid"] and base == clone["merge_base_oid"] and not dirty}
+            "objects": objects["objects"], "objects_sha256": objects["objects_sha256"],
+            "alternates": objects["alternates"],
+            "passed": (head == clone["head_oid"] and base == clone["merge_base_oid"] and not dirty
+                       and not objects["alternates"])}
+
+
+def object_state(repository):
+    """Digest of every object a repository can reach, referenced or not, alternates included.
+
+    HEAD and refs describe what a repository points at; they say nothing about what it holds.
+    An object added to the store without a ref — a future fix fetched but never checked out, a
+    blob written with hash-object — is exactly the leaked evidence the leak-set check rules
+    absent, and it is invisible to a ref comparison. ``cat-file --batch-all-objects`` enumerates
+    the whole store, loose and packed, and follows ``objects/info/alternates``; the digest of
+    that sorted list changes when any object is added or removed. Alternates are also listed
+    on their own, because an alternate is a link to another repository's objects and no cell
+    repository may have one.
+    """
+    code, listing, error = git(repository, "cat-file", "--batch-all-objects", "--unordered",
+                               "--batch-check=%(objectname) %(objecttype)")
+    if code:
+        raise Unreadable("git cat-file --batch-all-objects in " + repository + ": " + error)
+    lines = sorted(line for line in listing.splitlines() if line)
+    code, git_dir, _ = git(repository, "rev-parse", "--git-path", "objects/info/alternates")
+    alternates_path = Path(repository, git_dir) if not Path(git_dir).is_absolute() else Path(git_dir)
+    alternates = []
+    if alternates_path.is_file():
+        alternates = [line for line in alternates_path.read_text(encoding="utf-8").splitlines()
+                      if line.strip()]
+    return {"objects": len(lines),
+            "objects_sha256": hashlib.sha256("\n".join(lines).encode("utf-8")).hexdigest(),
+            "alternates": alternates}
 
 
 def mirror_state(clone):
-    """The origin mirror's path and refs, as the clone sees them."""
+    """The origin mirror's path, refs and object state, as the clone sees them."""
     path = os.path.expanduser(clone["path"])
     _, origin, _ = git(path, "remote", "get-url", "origin")
     refs = {}
+    state = {"origin": origin, "refs": refs}
     if origin:
         code, listing, _ = git(origin, "show-ref")
         if code == 0:
             for line in listing.splitlines():
                 oid, _, name = line.partition(" ")
                 refs[name.strip()] = oid
-    return {"origin": origin, "refs": refs}
+        state.update(object_state(origin))
+    return state
 
 
 def check_leak_set(clone, leak_set_path):
@@ -178,8 +216,8 @@ def check_egress(proxy):
             "probe": probe, "status": status, "passed": status == 403}
 
 
-def check_attestation(spec, attestation, mirror):
-    """The dispatch-window stand-in for the leak-set check, bound to this exact clone."""
+def check_attestation(spec, attestation, mirror, clone_now):
+    """The dispatch-window stand-in for the leak-set check, bound to these exact object stores."""
     problems = []
     if not attestation:
         problems.append("no attestation supplied; run --phase preparation first")
@@ -202,11 +240,21 @@ def check_attestation(spec, attestation, mirror):
         if pinned.get("refs") != mirror["refs"]:
             problems.append("the mirror's refs changed since the attestation: %s then, %s now"
                             % (pinned.get("refs"), mirror["refs"]))
-        clone = next((c for c in attestation.get("checks", [])
-                      if c["check"].startswith("clone is at the pinned head")), None)
-        if not clone or clone.get("head_oid") != spec["clone"]["head_oid"]:
+        if pinned.get("objects_sha256") != mirror.get("objects_sha256"):
+            problems.append("the mirror's object store changed since the attestation: %s objects "
+                            "then, %s now" % (pinned.get("objects"), mirror.get("objects")))
+        if mirror.get("alternates"):
+            problems.append("the mirror has alternate object stores: %s" % mirror["alternates"])
+        attested_clone = next((c for c in attestation.get("checks", [])
+                               if c["check"].startswith("clone is at the pinned head")), None)
+        if not attested_clone or attested_clone.get("head_oid") != spec["clone"]["head_oid"]:
             problems.append("the attestation pinned a different clone head")
-    return {"check": "the preparation attestation covers this clone and mirror, with no leak-set hit",
+        elif attested_clone.get("objects_sha256") != clone_now.get("objects_sha256"):
+            problems.append("the clone's object store changed since the attestation: %s objects "
+                            "then, %s now" % (attested_clone.get("objects"), clone_now.get("objects")))
+        elif not attested_clone.get("objects_sha256"):
+            problems.append("the attestation carries no clone object-state digest")
+    return {"check": "the preparation attestation covers these exact object stores, with no leak-set hit",
             "attestation_observed_at": (attestation or {}).get("observed_at"),
             "problems": problems, "passed": not problems}
 
@@ -225,7 +273,7 @@ def run(spec, phase, attestation=None):
         checks = [check_absence(spec["forbidden_paths"]),
                   check_roots(spec["permitted_roots"], spec["forbidden_paths"]),
                   clone,
-                  check_attestation(spec, attestation, mirror),
+                  check_attestation(spec, attestation, mirror, clone),
                   check_egress(spec["egress_proxy"])]
     return {"schema_version": "bounded-discovery-v1", "cell_id": spec["cell_id"],
             "target_slot": spec["target_slot"], "phase": phase, "mirror": mirror,
@@ -336,6 +384,35 @@ def self_test():
     swapped["mirror"]["refs"] = {"refs/heads/main": "1" * 40}
     checks.append(("a swapped mirror fails",
                    not run(spec, "pre-dispatch", swapped)["checks"][3]["passed"]))
+
+    # The binding the review asked for: an object that arrives without moving any ref.
+    def gate(): return run(spec, "pre-dispatch", prepared)["checks"][3]
+    checks.append(("an unchanged object store passes the gate", gate()["passed"]))
+    leaked = subprocess.run(["git", "-C", str(clone), "hash-object", "-w", "--stdin"],
+                            input="a future fix nobody checked out\n", capture_output=True,
+                            text=True, encoding="utf-8").stdout.strip()
+    _, head_after, _ = git(clone, "rev-parse", "HEAD")
+    checks.append(("planting an unreferenced object leaves HEAD and refs untouched",
+                   head_after == head and mirror_state(spec["clone"])["refs"] == prepared["mirror"]["refs"]))
+    result = gate()
+    checks.append(("an unreferenced object added to the clone fails the gate",
+                   not result["passed"] and any("clone's object store changed" in p for p in result["problems"])))
+    os.remove(Path(clone, ".git", "objects", leaked[:2], leaked[2:]))
+    checks.append(("removing it restores the gate", gate()["passed"]))
+    leaked_mirror = subprocess.run(["git", "-C", str(mirror), "hash-object", "-w", "--stdin"],
+                                   input="the same fix in the mirror\n", capture_output=True,
+                                   text=True, encoding="utf-8").stdout.strip()
+    result = gate()
+    checks.append(("an unreferenced object added to the mirror fails the gate",
+                   not result["passed"] and any("mirror's object store changed" in p for p in result["problems"])))
+    os.remove(Path(mirror, "objects", leaked_mirror[:2], leaked_mirror[2:]))
+    alternates = Path(clone, ".git", "objects", "info", "alternates")
+    alternates.parent.mkdir(parents=True, exist_ok=True)
+    alternates.write_text(str(root / "somewhere-else") + "\n", encoding="utf-8")
+    checks.append(("an alternate object store fails the clone check",
+                   not check_clone(spec["clone"])["passed"]))
+    alternates.unlink()
+    checks.append(("removing the alternate restores the clone check", check_clone(spec["clone"])["passed"]))
     for name, ok in checks:
         print(("ok   " if ok else "FAIL ") + name)
     return 0 if all(ok for _, ok in checks) else 1
