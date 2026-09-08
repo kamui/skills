@@ -228,7 +228,7 @@ A batched review creates its body and its comments in one call, so the comment U
 
 ## Addressing summary
 
-Before closing the round, reconcile the pull request title and description against the resulting diff and originating spec. Edit either field when it no longer describes the change accurately or completely; preserve issue links and still-valid context, and describe the resulting behavior rather than the review chronology. An already-accurate field stays unchanged.
+Before closing the round, reconcile the pull request title and description against the resulting diff and originating spec. Edit either field when it no longer describes the change accurately or completely; preserve issue links and still-valid context, and describe the resulting behavior rather than the review chronology. An already-accurate field stays unchanged. In the summary comment, mention only fields actually edited during the round; omit unchanged fields even when the other field changed.
 
 Resolving every thread leaves a pull request looking untouched. The forge collapses resolved threads, so a round that answered everything and a round that did nothing render the same, and the reviewer has to expand each one to find out which. `code-review-address` closes a round with one general pull-request comment:
 
