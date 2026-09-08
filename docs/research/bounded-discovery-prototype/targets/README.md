@@ -71,6 +71,25 @@ Model and effort were verified on every assistant line of every helper transcrip
    (`opening_state`). The full adapter suite passes; see the pull request.
 6. **Two replacements for one slot (06:28Z and 06:41Z).** For one of the four slots the independent adjudicators ruled the first two candidates in the sealed inventory order outside the shape that slot requires (criteria §3 E11), so the third candidate in that order fills it. Which slot, which shape and what each ruling found are hidden truth: the two excluded registers are sealed for audit (`sealed/excluded-*.enc`), the selector runs on the two excluded candidates are retained as discarded pre-freeze spend, and `exclusions.md` records the replacements without naming the slot or the reasons. The replacements followed the frozen order; no candidate was chosen after the fact.
 7. **Internal spend target exceeded (06:52Z).** Criteria §8 aimed this ticket at $9.00 of the $15.00 pre-freeze subtotal; the two replacements brought the metered total to $9.90. The $15.00 subtotal was never at risk: every helper was reserved before launch and settled from its transcript, and the largest single session cost $1.41.
+10. **Slot-1 packet revised to carry its referenced issue (recorded after review, 2026-09-08).** The
+    pull-request body and its second commit say `Fixes #5040` without a closing keyword, so the forge's
+    closing-reference query returned nothing and the builder rendered "no originating issue". The
+    builder's `--spec-issue` route then refused the issue because its `updated_at` had moved after the
+    cutoff (post-merge comments). Provenance was established through the forge's edit metadata
+    instead: the issue body was last edited 2024-06-26, before the cutoff, and the one pre-cutoff
+    comment was never edited; the five post-cutoff comments are omitted and are counted only in the
+    manifest, not in the packet. The packet was rebuilt with that rendering appended as section 4a
+    (`--extra-section`), and nothing else changed. The selector had run on the earlier packet, which
+    is kept as `slot-1/packet.selector-input.md` with its hash in the manifest and in
+    `scope.json`'s `selector_context`; the selection is not re-run (criteria §5), and `scope.json`'s
+    `source_hash` binds to the delivered packet with a `packet_revision_note`.
+11. **Slot-2 scope normalized for the adapter (recorded after review, 2026-09-08).** The selector
+    supplied one frontier destination with no line range (`0`–`0`), which the adapter rejects as an
+    invalid scope range. `scope.json` now lists that edge under `unavailable_under_bound` with the
+    reason "unverified coordinates"; `selection.json` and `selector-output.md` are unchanged, nothing
+    was reselected, and every delivered scope now passes the adapter's own configuration checks
+    (run through a disposable synthetic fixture with the scope swapped in).
+
 8. **Packet worker-model line (06:08Z, recorded after review).** Criteria §9.3 named
    `--subagent-model sonnet`. The packets were built with the literal value
    `<the model your dispatch names for that worker>` instead, so that the line the builder renders
@@ -115,7 +134,7 @@ All helper sessions were headless and wrote the one-hour cache tier, priced ×2.
 - `sealed/` — ciphertext of the inventory, the four slot registers and leak sets, the two excluded
   candidates' registers and the slot map; `SHA256SUMS` of the plaintexts; the reveal procedure
 - `slot-1/` … `slot-4/` — `manifest.json`, `packet.md`, `scope.json`, `selection.json`,
-  `selector-output.md`
+  `selector-output.md`; slot-1 also keeps `packet.selector-input.md`, the packet its selector saw
 - `prompts/` — the selector and adjudicator templates (public; no truth)
 - `metering/` — per-helper `usage.json`, `row.md`, `requests.jsonl`, `effort.txt`, `transcripts.txt`
   and, for selectors, `read-audit.txt`

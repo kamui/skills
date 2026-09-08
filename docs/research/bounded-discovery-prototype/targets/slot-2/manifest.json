@@ -33,7 +33,7 @@
   "packet": {
     "path": "packet.md",
     "sha256": "ac6fd2087178a7cd81297b32f14852cbc47504ee8adffbbdb9467d6a3077cad1",
-    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 74554c65b53a9bd9facf77e417ad3b848273dd44",
+    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 630bc445dfc90b6c1509d1a85468048ce55aed15",
     "arguments": "--repo grpc/grpc-go --pr 7417 --head 040de9b120b65c76f668858fc2dc118e948ac36e --merge-base bdd707e642e40cf75db5ac3f0f6af48077f48368 --base-sha d27ddb5eb5940c949f88bc2cb21eed9254f8be75 --staging /tmp/qual137/staging/grpc-go.git --target grpc-go-7417 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
     "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted",
     "subagent_model_line": "deliberate: the run-conditions line reads model: \"<the model your dispatch names for that worker>\" because DESIGN section 2 gives arms B and C a worker configuration different from A while every arm must receive byte-identical packets; #149's dispatch template names the model per worker and states that this line means the dispatch's value (targets/README.md deviation 8)",
@@ -41,7 +41,7 @@
   },
   "scope": {
     "path": "scope.json",
-    "sha256": "32cfa894a0387fc1eca27e42cc3612e170e9a5ed858f1103ad0c86029916ce55",
+    "sha256": "41c924a02a955077615405c82b95ae90c398f87cdc68aaf9659db58191783c0f",
     "selected_kind": "S1",
     "selection_mode": "model-assisted",
     "roots": [
@@ -52,8 +52,8 @@
         "end": 289
       }
     ],
-    "frontier_edges": 8,
-    "edges_beyond_bound": 1,
+    "frontier_edges": 7,
+    "edges_beyond_bound": 2,
     "alternatives": 1,
     "selector": {
       "session_id": "6eb9a941-139f-4d61-8fc1-842f257ec769",
@@ -127,5 +127,5 @@
     "reveal": "sealed/README.md, after every reviewer run has stopped"
   },
   "reservation": "grpc/grpc-go#7417 is reserved for every later grid (criteria section 7)",
-  "written_at": "2026-09-08T07:07:52.677399+00:00"
+  "written_at": "2026-09-08T08:37:44.478477+00:00"
 }

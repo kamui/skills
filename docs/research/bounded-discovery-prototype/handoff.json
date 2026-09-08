@@ -3,21 +3,21 @@
   "artifact_id": "issue-148-target-preparation-handoff",
   "stage": "target-preparation",
   "disposition": "ready",
-  "created_at": "2026-09-08T07:07:53.056383+00:00",
+  "created_at": "2026-09-08T08:37:44.589061+00:00",
   "evidence": [
     {
       "uri": "targets/slot-1/manifest.json",
-      "sha256": "ef749c624af2487b9c5fffc8a4ecda373c54197fda6b326519c80131804d7caa",
+      "sha256": "100bac7267df71606dbb62b73457ea113c5cdd328a0f32c5670c2fb6faac364f",
       "access": "coordinator-only"
     },
     {
       "uri": "targets/slot-1/packet.md",
-      "sha256": "6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb",
+      "sha256": "2f7ac7056dd43de27889c9d7552d6cd628861db0e5d93de5afe5aa4ee905df88",
       "access": "reviewer-common"
     },
     {
       "uri": "targets/slot-1/scope.json",
-      "sha256": "146bab38610079e3fb77d2ebe5d0aeb8e272066c81af950dee53e535eae849e4",
+      "sha256": "9da6fd105a7231279f9f7ff6a6d87b03b4343ac97d99f81c2a48b6fadd25ab4b",
       "access": "reviewer-common"
     },
     {
@@ -27,7 +27,7 @@
     },
     {
       "uri": "targets/slot-2/manifest.json",
-      "sha256": "9aa82af908c90ddd2be47839043ac932a7eaf5f0e4368715674ecacad353fe9f",
+      "sha256": "a459d19a531ff3dfa52f12d3e36e036c992cf1648d0929eb5042ba4983e80f6e",
       "access": "coordinator-only"
     },
     {
@@ -37,7 +37,7 @@
     },
     {
       "uri": "targets/slot-2/scope.json",
-      "sha256": "32cfa894a0387fc1eca27e42cc3612e170e9a5ed858f1103ad0c86029916ce55",
+      "sha256": "41c924a02a955077615405c82b95ae90c398f87cdc68aaf9659db58191783c0f",
       "access": "reviewer-common"
     },
     {
@@ -97,12 +97,12 @@
     },
     {
       "uri": "targets/README.md",
-      "sha256": "55a9448d327d9a2e9d0c20eb75295f5cc2c030ff9cb7a974d2f0ac34a0ce40a1",
+      "sha256": "d233c0dea80ae85c2f71ea1c94a79f4fcf17ed3c395e316c5575aac49e085f35",
       "access": "coordinator-only"
     },
     {
       "uri": "targets/sealed/SHA256SUMS",
-      "sha256": "55399539c833381a935a16490df99def95d1de4ee80b7bf3d187653e393fe238",
+      "sha256": "32019ccc33d697aafdbbab7a25045144daccdc257b0087a081e0b761ac84a69a",
       "access": "coordinator-only"
     },
     {
