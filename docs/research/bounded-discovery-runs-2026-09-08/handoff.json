@@ -8,12 +8,12 @@
   "evidence": [
     {
       "access": "coordinator-only",
-      "sha256": "4bfd4546b6b08773b15949d73a5e5bbf7c18c841bcf3e22cd55af7bfb2aaad87",
+      "sha256": "6e65e3aceaf603cb67129bb260439cac8509003c793145e263eec4873f320791",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
     },
     {
       "access": "coordinator-only",
-      "sha256": "38be72ba0052acf16bb4239056854ade2a77c1901f9d495780f90c9aa39ff511",
+      "sha256": "ca9bd8071c35894625c27f63d3cb20d0bdecabca817e57535215f940f9dbdd0b",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json"
     },
     {
@@ -112,7 +112,7 @@
     "work": "Decrypt sealed/schedule.json.enc; #150 runs its six pilot cells in order and #151 the remaining eighteen. Per cell: verify_freeze.py, prepare the environment and check_cell_isolation.py --phase pre-dispatch, reserve on the ledger, dispatch per dispatch-template.md, re-check isolation, meter with meter_split.py, verify model and effort with agent_effort.py, settle, and archive. Stop on any non-zero exit and read the handoff rather than dispatching again. Keep pilot outcomes sealed until every reviewer run has stopped."
   },
   "pre_freeze_actual_usd": "10.8543989",
-  "reason": "Configuration, stronger-worker choice, isolation controls, numeric ceilings, cell order, replacement policy, screening rules and artifact schema are frozen and committed before any reviewer output exists. The twelve metered probes established distinct child settings, context freshness, file-tool confinement, name-based egress control, cancellation and provider termination, an enforceable dollar allowance with one call of overshoot, atomic reservation contention, and reproduction of billed totals from retained usage. Probes 8 and 9 also caught the cell configuration refusing its own writes and corrected it before the freeze. Two controls are recorded as audited rather than enforced -- an allow-listed interpreter reads any path that exists, and a raw socket to an IP address bypasses the proxy -- and are answered by physical absence of the forbidden material plus a post-dispatch transcript and egress audit that invalidates any attempt which crossed either boundary. The cap is min(1.5 x 136.06, 150) = 150.00 with a 10.00 protected grading/closeout reserve; the projection fits with 13.94 of headroom, and that headroom is thin.",
+  "reason": "Configuration, stronger-worker choice, isolation controls, numeric ceilings, cell order, replacement policy, screening rules and artifact schema are frozen and committed before any reviewer output exists. The twelve metered probes established distinct child settings, context freshness, file-tool confinement, name-based egress control, cancellation and provider termination, an enforceable dollar allowance with one call of overshoot, atomic reservation contention, and reproduction of billed totals from retained usage. Probes 8 and 9 also caught the cell configuration refusing its own writes and corrected it before the freeze. Two controls are recorded as audited rather than enforced -- an allow-listed interpreter reads any path that exists, and a raw socket to an IP address bypasses the proxy -- and are answered by physical absence of the forbidden material plus a post-dispatch transcript and egress audit that invalidates any attempt which crossed either boundary. The cap is min(1.5 x 136.0520, 150) = 150.00 with a 10.00 protected grading/closeout reserve; the projection fits with 13.9480 of headroom, and that headroom is thin.",
   "reserved_usd": "0.00",
   "schema_version": "bounded-discovery-v1",
   "stage": "freeze",

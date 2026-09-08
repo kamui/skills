@@ -47,6 +47,13 @@ verifier alone, without adding false findings and without exceeding a 1.25 match
 | B | identical | identical policy and triggers, workers at `claude-opus-5` / `high` | none |
 | C | identical | identical to B, deferred until the discovery barrier | one bounded finder at `claude-opus-5` / `high` |
 
+"Same configuration" for the workers means the same model and the same effort: B's and C's verifiers
+are byte-identical definitions apart from nothing at all, and C's finder names the same model and
+effort. The finder's *tools* are deliberately narrower — `Read`, `Grep` and `Glob`, no shell and no
+sub-agent — because a bounded discovery pass over a selected scope is the treatment, and because it
+must never verify. A verifier keeps the shell so it can check evidence outside the finder's frontier,
+in every arm alike.
+
 Every arm receives the byte-identical source packet, the same primary policy, prompt, model, effort,
 execution permissions, session shape, cache accounting and whole-review ceiling. Coordinator
 instructions differ only where C's finder, barrier and admission sequence require it. C's primary
@@ -212,18 +219,21 @@ Sunk spend is reconciled first, not written off. #146 and #147 charged nothing; 
 $9.895998 for six selectors and six adjudicators; this ticket's probes charged $0.958401 and retain
 $0.082158 of uncertainty for one request the cancelled probe may never have recorded. Pre-freeze
 actual is **$10.8543989** of the $15.00 subtotal. The cap was frozen against a $135.99 projection
-before probes 8 and 9 ran; deviation 5 records why the recomputed $136.06 leaves it unchanged.
+before probes 8 and 9 ran; deviation 5 records why the recomputed $136.0520 leaves it unchanged.
+
+Rows are shown to four decimal places so the column adds up exactly; the cap and the gate use the
+same unrounded values.
 
 | Line | Amount | Basis |
 | --- | --- | --- |
-| Sunk pre-freeze, including probes | $10.854 | the ledger |
-| Retained uncertainty | $0.082 | the cancelled probe's largest observed request |
-| 24 cells | $102.33 | 8 × ($3.4200 A + $3.7412 B + $5.6294 C) |
-| Three-replacement allowance | $12.79 | 3 × the $4.2636 mean cell |
-| Grading and closeout reserve | $10.00 | #152's blind adjudication and per-target scoring plus #153's synthesis |
-| **Projected full experimental cost** | **$136.06** | |
-| **Frozen cap** | **$150.00** | `min(1.5 × 136.06, 150)` |
-| Headroom | $13.94 | 9.3% of the cap |
+| Sunk pre-freeze, including probes | $10.8544 | the ledger |
+| Retained uncertainty | $0.0822 | the cancelled probe's largest observed request |
+| 24 cells | $102.3248 | 8 × ($3.4200 A + $3.7412 B + $5.6294 C) |
+| Three-replacement allowance | $12.7906 | 3 × the $4.2635 mean cell |
+| Grading and closeout reserve | $10.0000 | #152's blind adjudication and per-target scoring plus #153's synthesis |
+| **Projected full experimental cost** | **$136.0520** | |
+| **Frozen cap** | **$150.00** | `min(1.5 × 136.0520, 150)` |
+| Headroom | $13.9480 | 9.3% of the cap |
 
 The per-cell figures come from measured runs at the dated rates in [`rates.json`](rates.json), not
 from a guess. A is the mean attempt cost of the twelve `bea6be14` cells in
@@ -382,9 +392,9 @@ a partial run is reported as what it measured rather than forced into a global i
 5. **Probes 8 and 9 ran after the `cap-freeze` event (2026-09-08).** The gate was recorded against a
    $135.99 projection; then probes 8 and 9 found that the cell configuration as written could not
    write its own payload, and fixed it. They are pre-freeze spend inside the same $15.00 subtotal and
-   they raise the projection to $136.06, which still fits the $150.00 cap with $13.94 of headroom.
+   they raise the projection to $136.0520, which still fits the $150.00 cap with $13.9480 of headroom.
    The `cap-freeze` event is left exactly as written — it was true when it was recorded, and the
-   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.06`
+   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.0520`
    still exceeds $150.00. Section 7's table carries the recomputed figures.
 6. **Two earlier stage records now quote stale digests (2026-09-08).** #147's
    `implementation-handoff.json` records `ADAPTER.md` and `ledger.json` as they were when it
