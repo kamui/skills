@@ -1,0 +1,39 @@
+session 48265fd6-3fe8-4b97-bd1f-c085c28561ce
+tool calls by name: {'Read': 21, 'Grep': 10, 'ToolSearch': 4}
+paths outside /tmp/bd148/selector/nats-server-6593: none
+
+Read	/tmp/bd148/selector/nats-server-6593/packet.md	
+Read	/tmp/bd148/selector/nats-server-6593/diff.patch	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	func \(sm \*RCOBStateMachine\) createSnapshot
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_test.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server/raft_test.go	func TestNRGTermDoesntRollBackToPtermOnCatchup
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_test.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server	applyEntry
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_helpers_test.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	func \(sm \*RCOBStateMachine\) applyBlock|func \(sm \*RCOBStateMachine\) loadSnapshot
+Grep	/tmp/bd148/selector/nats-server-6593/head/server	Applied\(index uint64\)|Applied\(uint64\)
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	func \(sm \*RCOBStateMachine\) logDebug
+Grep	/tmp/bd148/selector/nats-server-6593/head/server	\.Applied\(
+Grep	/tmp/bd148/selector/nats-server-6593/head/server	func \(rg smGroup\) lockAll|func.*lockAll
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_helpers_test.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server/raft_test.go	lockAll\(\)
+Read	/tmp/bd148/selector/nats-server-6593/diff.patch	
+Read	/tmp/bd148/selector/nats-server-6593/diff.patch	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/jetstream_cluster.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft_chain_of_blocks_helpers_test.go	
+Read	/tmp/bd148/selector/nats-server-6593/head/server/raft.go	
+Grep	/tmp/bd148/selector/nats-server-6593/head/server/jetstream_cluster.go	^func \(js \*jetStream\)|^func.*monitorCluster
+Read	/tmp/bd148/selector/nats-server-6593/output	
+ToolSearch		
+ToolSearch		
+ToolSearch		
+ToolSearch		

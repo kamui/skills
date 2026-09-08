@@ -1,0 +1,2 @@
+session 1fcd9ba2-72f7-4e1f-b5fe-8bca1d367040 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-selector-jwt-456/1fcd9ba2-72f7-4e1f-b5fe-8bca1d367040.jsonl sha256 5daf84eaf2b59cb7add3fe395d6a4e72bbb735e6c2bde5689531463f1f928721

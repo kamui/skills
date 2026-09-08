@@ -1,0 +1,172 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "scope_id": "issue-148-scope-grpc-go-7417",
+  "source_hash": "ac6fd2087178a7cd81297b32f14852cbc47504ee8adffbbdb9467d6a3077cad1",
+  "source_hash_binding": "SHA-256 of the common packet.md; #149 re-binds source_hash to its SourcePacket ArtifactRef without changing the content below",
+  "selection_mode": "model-assisted",
+  "selector_context": {
+    "session_id": "6eb9a941-139f-4d61-8fc1-842f257ec769",
+    "model_requested": "claude-sonnet-5",
+    "effort_requested": "high",
+    "tools": [
+      "Read",
+      "Grep",
+      "Glob"
+    ],
+    "prompt_sha256": "f7c3181f6841fd0502c1288f27c786571d6a5f42b7f72d6f392160a9fa957db3\n",
+    "template_sha256": "0ffbeb12e4f367560d26fbff49421065e802770009549094f6fa87950bd71f49\n",
+    "packet_sha256": "ac6fd2087178a7cd81297b32f14852cbc47504ee8adffbbdb9467d6a3077cad1\n",
+    "diff_sha256": "06d354bb0f55ae51c156a2dc19c97a8adabea9c0ea92ad514a5efe5b895d99b2\n",
+    "output_sha256": "bc1c9c771a9def1968d7b08eec65d262d3fe27847f9a3d9b8a7a8135b2f8af4f",
+    "selection_sha256": "ded4aba6cefc3db029c0c541f1df9ac0a8ab84840a6eee86577bb0f82bf5f5db",
+    "result_cost_usd_self_report": 0.48648959999999997,
+    "num_turns": 20,
+    "duration_ms": 134817
+  },
+  "selected_kind": "S1",
+  "alternatives": [
+    {
+      "kind": "S1",
+      "path": "xds/internal/balancer/priority/balancer.go",
+      "symbol": "run",
+      "start": 260,
+      "end": 289,
+      "why_this_kind": "Only hunk in the diff; adds b.mu.Unlock() in a goroutine loop guarded by a mutex and a done-event, directly matching S1's lock/goroutine/state-machine criteria.",
+      "citations": [
+        "diff.patch:5-11",
+        "head/xds/internal/balancer/priority/balancer.go:271-275"
+      ],
+      "rank_under_rule": 1
+    }
+  ],
+  "rationale": "The sole hunk in this diff adds b.mu.Unlock() inside priorityBalancer.run(), a goroutine loop (started via 'go b.run()') that guards its state machine with a sync.Mutex (b.mu) and consults a one-time grpcsync.Event (b.done) to decide whether to exit. Before the fix, the early return taken when b.done.HasFired() left b.mu held, so this is a lock/goroutine/progress-obligation hunk squarely matching S1 (concurrency/progress: touches a lock, a goroutine, and a state machine with a progress obligation \u2014 UpdateClientConnState at balancer.go:205 blocks on a channel that only a lock-free run() iteration can close). It is the only supported surface anywhere in the diff (the diff touches exactly one file and one hunk, contains no test changes, and cites no external doc/interface obligation the diff itself doesn't touch), so under the priority order S1 > S2 > S3 it is selected without needing to compare against sibling candidates of the same kind.",
+  "citations": [
+    "diff.patch:5-11",
+    "diff.patch:9",
+    "head/xds/internal/balancer/priority/balancer.go:271-275",
+    "head/xds/internal/balancer/priority/balancer.go:260-289"
+  ],
+  "roots": [
+    {
+      "path": "xds/internal/balancer/priority/balancer.go",
+      "symbol": "run",
+      "start": 260,
+      "end": 289
+    }
+  ],
+  "frontier": [
+    {
+      "from": "run",
+      "kind": "caller",
+      "citation": "head/xds/internal/balancer/priority/balancer.go:75",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer.go",
+        "symbol": "bb.Build",
+        "start": 58,
+        "end": 78
+      }
+    },
+    {
+      "from": "run",
+      "kind": "callee",
+      "citation": "head/xds/internal/balancer/priority/balancer.go:278",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer_priority.go",
+        "symbol": "handleChildStateUpdate",
+        "start": 177,
+        "end": 210
+      }
+    },
+    {
+      "from": "run",
+      "kind": "callee",
+      "citation": "head/xds/internal/balancer/priority/balancer.go:281",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer_priority.go",
+        "symbol": "syncPriority",
+        "start": 84,
+        "end": 118
+      }
+    },
+    {
+      "from": "run",
+      "kind": "contract",
+      "citation": "head/internal/grpcsync/event.go:53-56",
+      "to": {
+        "path": "internal/grpcsync/event.go",
+        "symbol": "Event.HasFired",
+        "start": 53,
+        "end": 56
+      }
+    },
+    {
+      "from": "run",
+      "kind": "caller",
+      "citation": "head/xds/internal/balancer/priority/balancer.go:199-205",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer.go",
+        "symbol": "UpdateClientConnState",
+        "start": 117,
+        "end": 208
+      }
+    },
+    {
+      "from": "run",
+      "kind": "caller",
+      "citation": "head/xds/internal/balancer/priority/balancer.go:222-224",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer.go",
+        "symbol": "Close",
+        "start": 218,
+        "end": 233
+      }
+    },
+    {
+      "from": "syncPriority",
+      "kind": "callee",
+      "citation": "head/xds/internal/balancer/priority/balancer_priority.go:109",
+      "to": {
+        "path": "balancer/balancer.go",
+        "symbol": "ClientConn.UpdateState",
+        "start": 0,
+        "end": 0
+      }
+    },
+    {
+      "from": "Close",
+      "kind": "callee",
+      "citation": "head/xds/internal/balancer/priority/balancer.go:231",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer_child.go",
+        "symbol": "childBalancer.stop",
+        "start": 127,
+        "end": 141
+      }
+    }
+  ],
+  "max_hops": 2,
+  "exclusions": [
+    "head/xds/internal/balancer/priority/balancer_priority.go:1-211 \u2014 surrounding sync-priority/child-update logic is unchanged by the diff; included only as frontier callees, not as roots",
+    "head/xds/internal/balancer/priority/balancer_child.go:1-141 \u2014 childBalancer helpers are unchanged by the diff; included only as a hop-2 frontier callee"
+  ],
+  "unavailable_edges": [
+    "balancer.ClientConn.UpdateState contract source: searched xds/internal/balancer/priority/balancer_priority.go:109 for the call, but the interface definition itself lives in package balancer (google.golang.org/grpc/balancer), which is outside this working directory's head/ tree scope for the priority package's own source (head/balancer/balancer.go was not located under the priority package search path used); listed the call site instead of the interface definition line"
+  ],
+  "unavailable_under_bound": [
+    {
+      "from": "handleChildStateUpdate",
+      "kind": "callee",
+      "citation": "head/xds/internal/balancer/priority/balancer_priority.go:209",
+      "to": {
+        "path": "xds/internal/balancer/priority/balancer_priority.go",
+        "symbol": "syncPriority",
+        "start": 84,
+        "end": 118
+      },
+      "reason": "duplicate symbol"
+    }
+  ],
+  "no_supported_surface": false,
+  "selector_notes": "The diff contains exactly one hunk in exactly one file, so the selection rule's tie-breaking machinery (path/symbol/line ordering across multiple same-kind candidates) never actually engages here \u2014 there was nothing to rank against. No S2 candidate was found: the PR body states the intent informally ('Release the mutex that is locked a couple of lines above') but does not point at a doc comment, interface contract, sibling implementation, or schema that the diff itself leaves untouched, so it doesn't qualify as a citable S2 obligation source distinct from the S1 reading of the same hunk. No S3 candidate exists because the diff has no test changes. I could not write output/selection.json or output/report.md to disk: this session's tool set (Read, Grep, Glob, plus a small set of unrelated deferred tools discovered via ToolSearch \u2014 Monitor, DesignSync, TaskStop, ExitWorktree, CronCreate, PushNotification, SendMessage, EnterWorktree, RemoteTrigger, TaskOutput) contains no file-write capability, confirming the prompt's own statement that only file-reading tools are available. Both outputs are rendered in full in the chat response instead.",
+  "frozen_at": "2026-09-08T06:45:27.334391+00:00"
+}

@@ -1,0 +1,129 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "artifact_id": "issue-148-target-slot-3",
+  "slot": "slot-3",
+  "label": "nats-server-6593",
+  "slot_rule": "slots are numbered by case-sensitive lexical order of owner/repo#number and carry no category, status or defect information",
+  "target": {
+    "repository": "nats-io/nats-server",
+    "pr": 6593,
+    "url": "https://github.com/nats-io/nats-server/pull/6593",
+    "title": "De-flake TestNRGTermDoesntRollBackToPtermOnCatchup",
+    "base_ref": "main",
+    "base_oid_recorded": "4791216cdc896f127a9a2420edd42dcaf7e3b428",
+    "merge_base_oid": "4791216cdc896f127a9a2420edd42dcaf7e3b428",
+    "head_oid": "282d01c5466d7694a098112a012097aa3a5dfaf1",
+    "merged_at": "2025-02-27T17:07:22Z",
+    "head_tree": "71901ba041ba66499bc7035faf2416be1bde6d26",
+    "base_tree": "7b1c7b5d4e0a5ff3e75e00b55a4965e957b18142",
+    "diff": "3 files, +34/-13",
+    "language": "Go"
+  },
+  "identity": {
+    "state": "MERGED",
+    "merged": true,
+    "posting_identity": "kamui",
+    "review_identity": "kamui",
+    "event": "COMMENT",
+    "mode": "retrospective review of a merged pull request by a third party; publication disabled; render-only"
+  },
+  "cutoff": "2025-02-27T17:07:22Z",
+  "cutoff_basis": "merge instant (default)",
+  "omitted_after_cutoff": "none",
+  "packet": {
+    "path": "packet.md",
+    "sha256": "5d74b9a9e8d0c7e19f24cb0a205c1a15bdec941cd557ff2ba9631ed77d360a6a",
+    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 1d41afd0081dca331abc8c49712ee9e1bd2e6053",
+    "arguments": "--repo nats-io/nats-server --pr 6593 --head 282d01c5466d7694a098112a012097aa3a5dfaf1 --merge-base 4791216cdc896f127a9a2420edd42dcaf7e3b428 --base-sha 4791216cdc896f127a9a2420edd42dcaf7e3b428 --staging /tmp/bd148/staging/nats-server.git --target nats-server-6593 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
+    "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted"
+  },
+  "scope": {
+    "path": "scope.json",
+    "sha256": "c27dd8834c058f84eb2981cc985768d7002c19fd7ece126aa0903a4785407799",
+    "selected_kind": "S1",
+    "selection_mode": "model-assisted",
+    "roots": [
+      {
+        "path": "server/raft_chain_of_blocks_helpers_test.go",
+        "symbol": "RCOBStateMachine.applyEntry",
+        "start": 116,
+        "end": 140
+      }
+    ],
+    "frontier_edges": 9,
+    "edges_beyond_bound": 0,
+    "alternatives": 7,
+    "selector": {
+      "session_id": "48265fd6-3fe8-4b97-bd1f-c085c28561ce",
+      "model_requested": "claude-sonnet-5",
+      "effort_requested": "high",
+      "tools": [
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "prompt_sha256": "a644df76fb224456be9e4fbbac176c0f1c8e8efabeb18b83015a97bfd6444be4\n",
+      "template_sha256": "0ffbeb12e4f367560d26fbff49421065e802770009549094f6fa87950bd71f49\n",
+      "packet_sha256": "5d74b9a9e8d0c7e19f24cb0a205c1a15bdec941cd557ff2ba9631ed77d360a6a\n",
+      "diff_sha256": "c699149ac5b666b94559078edf414739e5ebf6181c8ac8e9b9a98f6722e85c80\n",
+      "output_sha256": "e499341b5721179687e5576b9e76128f118a905edc2276df26221bcc9902bccd",
+      "selection_sha256": "6548acdc3bab852ebf6d6f2085dc5f05c93204324f3d11177ff8fdcec25df604",
+      "result_cost_usd_self_report": 0.9158947999999999,
+      "num_turns": 36,
+      "duration_ms": 311867
+    },
+    "raw_output": {
+      "path": "selector-output.md",
+      "sha256": "e499341b5721179687e5576b9e76128f118a905edc2276df26221bcc9902bccd"
+    },
+    "selection": {
+      "path": "selection.json",
+      "sha256": "6548acdc3bab852ebf6d6f2085dc5f05c93204324f3d11177ff8fdcec25df604"
+    },
+    "run_once": "the selector ran exactly once on this target and its output is frozen as delivered; it is kept whatever it selected"
+  },
+  "mirror": {
+    "path": "/tmp/bd148/mirrors/nats-server-6593.git",
+    "refs": {
+      "refs/heads/main": "4791216cdc896f127a9a2420edd42dcaf7e3b428",
+      "refs/heads/review-head": "282d01c5466d7694a098112a012097aa3a5dfaf1"
+    },
+    "newest_reachable_commit_date": "2025-02-27T17:33:54+01:00",
+    "head_commit_date": "2025-02-27T17:33:54+01:00",
+    "recipe": "git init --bare <mirror>; git -C /tmp/bd148/staging/nats-server.git push <mirror> 282d01c5466d7694a098112a012097aa3a5dfaf1:refs/heads/review-head 4791216cdc896f127a9a2420edd42dcaf7e3b428:refs/heads/main; git -C <mirror> symbolic-ref HEAD refs/heads/main",
+    "negative_object_checks": {
+      "checked_at": "2026-09-08T06:33:24.779991+00:00",
+      "sealed_leak_set_sha256": "33f2e23d73900751c0fb7625d3f54cbc74445ac663389fd5da63c1cabd11fb98",
+      "count": 3,
+      "mirror_absent": 3,
+      "clone_absent": 3,
+      "staging_present": 3,
+      "all_absent": true,
+      "hits": [],
+      "note": "every listed SHA resolves in the full staging clone (so the list names real objects) and none resolves in the mirror or in a fresh clone; the SHAs themselves stay in the sealed leak set"
+    }
+  },
+  "clone_recipe": "git clone <mirror> <clone>; git -C <clone> remote set-url origin <mirror>; git -C <clone> checkout --detach 282d01c5466d7694a098112a012097aa3a5dfaf1; git -C <clone> branch -f main 4791216cdc896f127a9a2420edd42dcaf7e3b428; git -C <clone> checkout -B review-head 282d01c5466d7694a098112a012097aa3a5dfaf1; re-run every negative object check on the clone and abort on a hit; provision offline caches; verify the tracked tree is clean",
+  "execution": {
+    "note": "Focused test execution IS permitted on this target, offline, exactly as the packet's section 8 item 2 states: run go commands from the clone root with GOMODCACHE=/tmp/bd148/gomodcache GOCACHE=/tmp/bd148/gocache-nats-server-6593 GOFLAGS=-mod=mod GOPROXY=off, for example `go test -count=1 -run '<test name regex>' ./server/` (about 15 seconds to compile the server test binary, then the named tests); the race detector (`-race`) is permitted; always pass -run with a specific name and never run the server package's whole suite (it takes hours); `go vet ./server/` reports pre-existing IPv6 address-format findings in unrelated test files at both the head and the merge-base; five minutes per command; a name regex at most once per flag set; scratch modules only under your work directory; nothing added to or changed in the clone. The module cache is already populated and no network call of any kind is available.",
+    "provisioning": "go mod download 2 s into the shared GOMODCACHE; GOCACHE=/tmp/bd148/gocache-nats-server-6593; go vet ./server/ exits 1 at head and at merge-base with the same pre-existing IPv6 address-format findings in unrelated test files (recorded, not a defect signal); go test -count=1 -run 'TestNRGSimple$' ./server/ at head: exit 0, 15 s; at merge-base: exit 0, 12 s; tracked tree clean",
+    "limits": "five minutes per focused command, ten minutes provisioning per target (method section 2); identical for every arm"
+  },
+  "access_checks": {
+    "selector": "headless session with only Read, Grep and Glob; every tool call audited from the transcript (metering/selector-<label>/read-audit.txt): no path outside its working directory was read; the working directory held only packet.md, diff.patch, head/ and base/ tree exports without git history; no plaintext truth existed on the machine during the run (the sealed inventory plaintext was removed; registers did not exist yet)",
+    "adjudicator": "headless session that worked from the full staging clone and the network, never from the mirror; its output is sealed",
+    "mirror": "only two refs; newest reachable commit date equals the head commit date; every SHA in the sealed leak set is absent (negative_object_checks)",
+    "dependency_caches": "GOMODCACHE holds third-party modules only; per-target GOCACHE and CARGO_TARGET_DIR; the registry/module caches contain no version of the target's own package",
+    "limits": "these are audited checks and a truncated mirror, not an OS sandbox; #149 must establish reviewer-tool isolation (files, processes, history, network, other checkouts, the evaluator-only key directory) before dispatch"
+  },
+  "truth": {
+    "version": "v1",
+    "status_at_freeze": "sealed",
+    "sealed_register": "sealed/slot-3-register.md.enc",
+    "register_plaintext_sha256": "361801531f10227c95bb84b63791dc6e37f586abfe0b73d2b79169084047ce90",
+    "later_revisions": [],
+    "reveal": "sealed/README.md, after every reviewer run has stopped"
+  },
+  "reservation": "nats-io/nats-server#6593 is reserved for every later grid (criteria section 7)",
+  "written_at": "2026-09-08T06:34:22.477624+00:00"
+}

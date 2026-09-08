@@ -1,0 +1,32 @@
+session 7e3f8257-03da-43f8-9c64-a27bf1fe737f
+tool calls by name: {'Read': 14, 'Grep': 10, 'Write': 1, 'ToolSearch': 2}
+note: the one Write call was refused by the session's tool policy (Write disallowed); the output directory stayed empty and the outputs were taken from the final message
+paths outside /tmp/bd148/selector/nats-server-7395: [('Write', 'non-read tool')]
+
+Read	/tmp/bd148/selector/nats-server-7395/packet.md	
+Read	/tmp/bd148/selector/nats-server-7395/diff.patch	
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Grep	/tmp/bd148/selector/nats-server-7395/head/server	type sourceInfo struct
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	mirror = nil|mset\.mirror =|cancelSourceInfo
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Read	/tmp/bd148/selector/nats-server-7395/base/server/stream.go	
+Read	/tmp/bd148/selector/nats-server-7395/base/server/stream.go	
+Grep	/tmp/bd148/selector/nats-server-7395/head/server	setupMirrorConsumer\(\)
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	retryMirrorConsumer\(\)|func \(mset \*stream\) processMirrorMsgs|\.wg\.(Done|Add|Wait)
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	func \(mset \*stream\) scheduleSetupMirrorConsumerRetry
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	func \(mset \*stream\) setupSourceConsumer|si\.wg|siWg
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	func \(mset \*stream\) trySetupSourceConsumer
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	\.wg\.(Wait|Add|Done)
+Grep	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	scheduleSetupMirrorConsumerRetry\(\)
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Grep	/tmp/bd148/selector/nats-server-7395/head/server	func \(s \*Server\) startGoRoutine
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Read	/tmp/bd148/selector/nats-server-7395/head/server/stream.go	
+Write	/tmp/bd148/selector/nats-server-7395/output/selection.json	
+ToolSearch		
+ToolSearch		
