@@ -1,0 +1,2 @@
+session 6eb9a941-139f-4d61-8fc1-842f257ec769 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-selector-grpc-go-7417/6eb9a941-139f-4d61-8fc1-842f257ec769.jsonl sha256 e65dbf40119113b392bf7d289ce602c71bfde907e386366d5a31dd21905800c0

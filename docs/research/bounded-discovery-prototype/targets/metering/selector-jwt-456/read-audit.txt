@@ -1,0 +1,21 @@
+session 1fcd9ba2-72f7-4e1f-b5fe-8bca1d367040
+tool calls by name: {'Read': 7, 'Grep': 6, 'Glob': 1, 'ToolSearch': 3}
+paths outside /tmp/bd148/selector/jwt-456: none
+
+Read	/tmp/bd148/selector/jwt-456/packet.md	
+Read	/tmp/bd148/selector/jwt-456/diff.patch	
+Read	/tmp/bd148/selector/jwt-456/head/validator.go	
+Read	/tmp/bd148/selector/jwt-456/head/parser_option.go	
+Read	/tmp/bd148/selector/jwt-456/head/validator_test.go	
+Grep	/tmp/bd148/selector/jwt-456/head	type Parser struct|func NewParser|validator \*Validator|p\.validator =
+Grep	/tmp/bd148/selector/jwt-456/head	WithNotBeforeRequired|WithExpirationRequired
+Read	/tmp/bd148/selector/jwt-456/head/parser.go	
+Grep	/tmp/bd148/selector/jwt-456/head	WithExpirationRequired|ParserOption
+Glob	/tmp/bd148/selector/jwt-456/head	*.md
+Grep	/tmp/bd148/selector/jwt-456/head/MIGRATION_GUIDE.md	WithExpirationRequired
+Grep	/tmp/bd148/selector/jwt-456/head/MIGRATION_GUIDE.md	ParserOption
+Grep	/tmp/bd148/selector/jwt-456/head/README.md	WithExpirationRequired|RequireNbf|NotBefore
+Read	/tmp/bd148/selector/jwt-456/output	
+ToolSearch		
+ToolSearch		
+ToolSearch		

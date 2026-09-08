@@ -20,3 +20,8 @@ The executable #147 adapter is documented in [ADAPTER.md](ADAPTER.md). It suppli
 fake-worker CLI checks and an explicit no-cell stop for an unprobed Claude runtime.
 [Evidence](evidence/README.md) records the implementation checks and retained examples.
 Runtime readiness and benchmark dispatch remain #149's gate.
+
+Target preparation for #148 lives in [targets/](targets/README.md): the frozen selection criteria,
+the sealed candidate inventory and registers, four per-slot manifests with packets, selected scopes,
+mirror and setup recipes, access checks and metering. Hidden truth is committed only as ciphertext;
+see [targets/sealed/README.md](targets/sealed/README.md).

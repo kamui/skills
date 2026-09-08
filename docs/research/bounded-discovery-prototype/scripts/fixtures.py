@@ -42,6 +42,19 @@ def batch(mode, candidates, rows):
                 trigger_evidence="Explicit synthetic primary eligibility decision")
 
 
+def opening_state(ledger):
+    """Return a ledger copy in its opened state: schema and caps kept, only the opening event, zero totals.
+
+    Synthetic fixtures and CLI checks must not depend on the live ledger's later events, which the
+    experiment appends as real reservations and settlements accumulate."""
+    data = dict(ledger)
+    data["events"] = list(ledger["events"][:1])
+    for key in ("actual_usd", "reserved_usd", "uncertainty_usd", "pre_freeze_actual_usd", "pre_freeze_reserved_usd"):
+        data[key] = "0.00"
+    data["attempts_dispatched"] = 0
+    return data
+
+
 def make(root, case, arm="C"):
     root = Path(root).resolve()
     root.mkdir(parents=True, exist_ok=False)
@@ -76,7 +89,7 @@ def make(root, case, arm="C"):
     helpers["validate_review"] = write(common / "helpers" / "validate_review.py", result.stdout)
     for name in ("transcript_usage", "agent_effort"):
         helpers[name] = artifact(HERE.parents[1] / "tools" / (name + ".py"))
-    ledger = json.loads((HERE.parent / "ledger.json").read_text(encoding="utf-8"))
+    ledger = opening_state(json.loads((HERE.parent / "ledger.json").read_text(encoding="utf-8")))
     ledger.update(synthetic=True, frozen_total_cap_usd="100", grading_closeout_reserve_usd="10")
     write(root / "ledger.json", ledger)
     task = write(common / "verifier-task.txt", b"Synthetic verifier task. Rule on supplied IDs from raw evidence.\n")

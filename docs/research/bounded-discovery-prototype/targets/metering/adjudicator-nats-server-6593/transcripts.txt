@@ -1,0 +1,2 @@
+session 6a41761d-5340-4008-b892-acc708c2dfdf transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-adjudication-nats-server-6593/6a41761d-5340-4008-b892-acc708c2dfdf.jsonl sha256 14e40700e0b696258288241c59e0e0781657f49b83ddcded8d60087c7ff109d3

@@ -7,10 +7,10 @@
   "pre_freeze_ceiling_usd": "15.00",
   "frozen_total_cap_usd": null,
   "grading_closeout_reserve_usd": null,
-  "actual_usd": "0.00",
+  "actual_usd": "9.895998",
   "reserved_usd": "0.00",
   "uncertainty_usd": "0.00",
-  "pre_freeze_actual_usd": "0.00",
+  "pre_freeze_actual_usd": "9.895998",
   "pre_freeze_reserved_usd": "0.00",
   "planned_cells": 24,
   "attempts_dispatched": 0,
@@ -34,6 +34,534 @@
       "uncertainty_usd": "0.00",
       "rate_usage_evidence": [],
       "reason": "Opened before any chargeable experiment operation. This handoff performed document implementation only; no selector, target setup, reviewer or paid probe ran. Final cap and grading reserve remain for #149."
+    },
+    {
+      "event_id": "c7c482f4-ed21-4fd1-bd28-605bf3a782d0",
+      "previous_event_id": "issue-138-budget-0001",
+      "observed_at": "2026-09-08T06:08:18.726340+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "selector run for target clap-6212: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-selector-clap-6212",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "selector run for target clap-6212: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "8b2fe052-82c1-4ea0-97c3-0fcc6c8b54f1",
+      "previous_event_id": "c7c482f4-ed21-4fd1-bd28-605bf3a782d0",
+      "observed_at": "2026-09-08T06:08:18.772192+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "selector run for target grpc-go-8519: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-selector-grpc-go-8519",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "selector run for target grpc-go-8519: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "e351614e-5b9c-4a62-90a1-c5c2b7b2f650",
+      "previous_event_id": "8b2fe052-82c1-4ea0-97c3-0fcc6c8b54f1",
+      "observed_at": "2026-09-08T06:08:18.821118+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "selector run for target nats-server-6593: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-selector-nats-server-6593",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "selector run for target nats-server-6593: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "91533161-5025-4657-af5d-352df2a586e0",
+      "previous_event_id": "e351614e-5b9c-4a62-90a1-c5c2b7b2f650",
+      "observed_at": "2026-09-08T06:08:18.868729+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "selector run for target nats-server-7395: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-selector-nats-server-7395",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "selector run for target nats-server-7395: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "770d9fb4-1316-4188-9fcc-5ab6ea3c8319",
+      "previous_event_id": "91533161-5025-4657-af5d-352df2a586e0",
+      "observed_at": "2026-09-08T06:13:49.104391+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/selector-grpc-go-8519/usage.json: transcript_usage.py --prices 2,10 over session bf565dcd-52dd-41be-be86-3a5b828444b5 (1 transcript, 20 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on 44/44 assistant lines"
+      ],
+      "reservation_id": "issue-148-selector-grpc-go-8519",
+      "actual_delta_usd": "0.563755",
+      "reservation_delta_usd": "-1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/selector-grpc-go-8519/usage.json: transcript_usage.py --prices 2,10 over session bf565dcd-52dd-41be-be86-3a5b828444b5 (1 transcript, 20 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on 44/44 assistant lines"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "c65395be-7d2a-4aa6-85e5-0ee9359078e3",
+      "previous_event_id": "770d9fb4-1316-4188-9fcc-5ab6ea3c8319",
+      "observed_at": "2026-09-08T06:15:18.181961+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/selector-clap-6212/usage.json: transcript_usage.py --prices 2,10 over session 169926cd-40fd-4d73-8827-6bdcc8a82434 (1 transcript, 27 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-selector-clap-6212",
+      "actual_delta_usd": "0.679796",
+      "reservation_delta_usd": "-1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/selector-clap-6212/usage.json: transcript_usage.py --prices 2,10 over session 169926cd-40fd-4d73-8827-6bdcc8a82434 (1 transcript, 27 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "11301d1b-2d6e-4b3c-9d6c-97a6c38da7cc",
+      "previous_event_id": "c65395be-7d2a-4aa6-85e5-0ee9359078e3",
+      "observed_at": "2026-09-08T06:15:18.232641+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/selector-nats-server-6593/usage.json: transcript_usage.py --prices 2,10 over session 48265fd6-3fe8-4b97-bd1f-c085c28561ce (1 transcript, 36 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-selector-nats-server-6593",
+      "actual_delta_usd": "0.915895",
+      "reservation_delta_usd": "-1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/selector-nats-server-6593/usage.json: transcript_usage.py --prices 2,10 over session 48265fd6-3fe8-4b97-bd1f-c085c28561ce (1 transcript, 36 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "1687c875-6d5b-492b-8fd5-2b790669f5da",
+      "previous_event_id": "11301d1b-2d6e-4b3c-9d6c-97a6c38da7cc",
+      "observed_at": "2026-09-08T06:15:18.286490+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/selector-nats-server-7395/usage.json: transcript_usage.py --prices 2,10 over session 7e3f8257-03da-43f8-9c64-a27bf1fe737f (1 transcript, 28 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-selector-nats-server-7395",
+      "actual_delta_usd": "0.695965",
+      "reservation_delta_usd": "-1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/selector-nats-server-7395/usage.json: transcript_usage.py --prices 2,10 over session 7e3f8257-03da-43f8-9c64-a27bf1fe737f (1 transcript, 28 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "27140022-f69f-4205-9adb-d8f1b7675212",
+      "previous_event_id": "1687c875-6d5b-492b-8fd5-2b790669f5da",
+      "observed_at": "2026-09-08T06:15:48.104650+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "adjudicator run for target clap-6212: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-adjudicator-clap-6212",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "adjudicator run for target clap-6212: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "095a777f-a55c-4d4e-bf2b-64dd0e9a9d61",
+      "previous_event_id": "27140022-f69f-4205-9adb-d8f1b7675212",
+      "observed_at": "2026-09-08T06:15:48.157411+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "adjudicator run for target grpc-go-8519: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-adjudicator-grpc-go-8519",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "adjudicator run for target grpc-go-8519: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "a95595e4-fafe-4097-9c90-6ca3b39a6a28",
+      "previous_event_id": "095a777f-a55c-4d4e-bf2b-64dd0e9a9d61",
+      "observed_at": "2026-09-08T06:15:48.212705+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "adjudicator run for target nats-server-6593: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-adjudicator-nats-server-6593",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "adjudicator run for target nats-server-6593: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "c4d79b7e-2699-46cc-9fa0-c0219e512267",
+      "previous_event_id": "a95595e4-fafe-4097-9c90-6ca3b39a6a28",
+      "observed_at": "2026-09-08T06:15:48.266107+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "adjudicator run for target nats-server-7395: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reservation_id": "issue-148-adjudicator-nats-server-7395",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "adjudicator run for target nats-server-7395: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded; reserved before launch under criteria.md section 8"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "443fa6c0-3504-4bd4-b026-fa651708486d",
+      "previous_event_id": "c4d79b7e-2699-46cc-9fa0-c0219e512267",
+      "observed_at": "2026-09-08T06:28:38.282587+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/adjudicator-clap-6212/usage.json: transcript_usage.py --prices 2,10 over session 3b43ece6-dd64-4eb7-921d-c523eb471b3d (1 transcript, 61 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-adjudicator-clap-6212",
+      "actual_delta_usd": "1.411678",
+      "reservation_delta_usd": "-2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/adjudicator-clap-6212/usage.json: transcript_usage.py --prices 2,10 over session 3b43ece6-dd64-4eb7-921d-c523eb471b3d (1 transcript, 61 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "0c9e6879-c884-4b6c-8f3c-79e9c914e8d3",
+      "previous_event_id": "443fa6c0-3504-4bd4-b026-fa651708486d",
+      "observed_at": "2026-09-08T06:28:38.333524+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/adjudicator-grpc-go-8519/usage.json: transcript_usage.py --prices 2,10 over session 0b4e85c7-155f-4d4b-9f42-844e99cac54d (1 transcript, 62 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-adjudicator-grpc-go-8519",
+      "actual_delta_usd": "1.381169",
+      "reservation_delta_usd": "-2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/adjudicator-grpc-go-8519/usage.json: transcript_usage.py --prices 2,10 over session 0b4e85c7-155f-4d4b-9f42-844e99cac54d (1 transcript, 62 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "330b109e-447e-432e-8c3f-3bc434b8cded",
+      "previous_event_id": "0c9e6879-c884-4b6c-8f3c-79e9c914e8d3",
+      "observed_at": "2026-09-08T06:28:38.382765+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/adjudicator-nats-server-6593/usage.json: transcript_usage.py --prices 2,10 over session 6a41761d-5340-4008-b892-acc708c2dfdf (1 transcript, 34 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-adjudicator-nats-server-6593",
+      "actual_delta_usd": "0.838049",
+      "reservation_delta_usd": "-2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/adjudicator-nats-server-6593/usage.json: transcript_usage.py --prices 2,10 over session 6a41761d-5340-4008-b892-acc708c2dfdf (1 transcript, 34 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "e131583e-db9f-49f4-921c-55b29518d162",
+      "previous_event_id": "330b109e-447e-432e-8c3f-3bc434b8cded",
+      "observed_at": "2026-09-08T06:28:38.432920+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/adjudicator-nats-server-7395/usage.json: transcript_usage.py --prices 2,10 over session da088475-0cfa-4621-8b71-f7315cdb970e (1 transcript, 37 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-adjudicator-nats-server-7395",
+      "actual_delta_usd": "0.9293",
+      "reservation_delta_usd": "-2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/adjudicator-nats-server-7395/usage.json: transcript_usage.py --prices 2,10 over session da088475-0cfa-4621-8b71-f7315cdb970e (1 transcript, 37 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "5164a009-5822-44ea-88ed-54ba9f87ffda",
+      "previous_event_id": "e131583e-db9f-49f4-921c-55b29518d162",
+      "observed_at": "2026-09-08T06:29:44.981830+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "selector run for replacement target jwt-456 after grpc-go-8519 failed E11: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools"
+      ],
+      "reservation_id": "issue-148-selector-jwt-456",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "selector run for replacement target jwt-456 after grpc-go-8519 failed E11: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "d3b6b6c2-a4d1-4b40-9163-194493b4c89c",
+      "previous_event_id": "5164a009-5822-44ea-88ed-54ba9f87ffda",
+      "observed_at": "2026-09-08T06:33:14.598203+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/selector-jwt-456/usage.json: transcript_usage.py --prices 2,10 over session 1fcd9ba2-72f7-4e1f-b5fe-8bca1d367040 (1 transcript, 13 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-selector-jwt-456",
+      "actual_delta_usd": "0.420331",
+      "reservation_delta_usd": "-1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/selector-jwt-456/usage.json: transcript_usage.py --prices 2,10 over session 1fcd9ba2-72f7-4e1f-b5fe-8bca1d367040 (1 transcript, 13 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "033c011d-cd73-476c-bbe8-5f0d2d7e3c27",
+      "previous_event_id": "d3b6b6c2-a4d1-4b40-9163-194493b4c89c",
+      "observed_at": "2026-09-08T06:33:14.650251+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "adjudicator run for replacement target jwt-456: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded"
+      ],
+      "reservation_id": "issue-148-adjudicator-jwt-456",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "adjudicator run for replacement target jwt-456: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "3d2c6fbb-68fe-43a7-8c60-feb47f43d43e",
+      "previous_event_id": "033c011d-cd73-476c-bbe8-5f0d2d7e3c27",
+      "observed_at": "2026-09-08T06:41:34.526232+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/adjudicator-jwt-456/usage.json: transcript_usage.py --prices 2,10 over session 781cc525-d16b-48d6-84bf-63e176e832e8 (1 transcript, 44 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-adjudicator-jwt-456",
+      "actual_delta_usd": "1.07151",
+      "reservation_delta_usd": "-2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/adjudicator-jwt-456/usage.json: transcript_usage.py --prices 2,10 over session 781cc525-d16b-48d6-84bf-63e176e832e8 (1 transcript, 44 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "b1a6812c-e305-452d-9186-d80aa404e0d5",
+      "previous_event_id": "3d2c6fbb-68fe-43a7-8c60-feb47f43d43e",
+      "observed_at": "2026-09-08T06:42:48.223717+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "selector run for replacement target grpc-go-7417 after jwt-456 failed E11: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools"
+      ],
+      "reservation_id": "issue-148-selector-grpc-go-7417",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "selector run for replacement target grpc-go-7417 after jwt-456 failed E11: headless claude -p --model sonnet --effort high, --max-budget-usd 1.50, read-only tools"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "b69b7cab-c4e5-4a51-90dc-ed5efab110a1",
+      "previous_event_id": "b1a6812c-e305-452d-9186-d80aa404e0d5",
+      "observed_at": "2026-09-08T06:45:27.430086+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/selector-grpc-go-7417/usage.json: transcript_usage.py --prices 2,10 over session 6eb9a941-139f-4d61-8fc1-842f257ec769 (1 transcript, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-selector-grpc-go-7417",
+      "actual_delta_usd": "0.48649",
+      "reservation_delta_usd": "-1.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/selector-grpc-go-7417/usage.json: transcript_usage.py --prices 2,10 over session 6eb9a941-139f-4d61-8fc1-842f257ec769 (1 transcript, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "ed606a3d-4605-4cb7-b342-1636718a341e",
+      "previous_event_id": "b69b7cab-c4e5-4a51-90dc-ed5efab110a1",
+      "observed_at": "2026-09-08T06:45:27.481715+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "adjudicator run for replacement target grpc-go-7417: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded"
+      ],
+      "reservation_id": "issue-148-adjudicator-grpc-go-7417",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "adjudicator run for replacement target grpc-go-7417: headless claude -p --model sonnet --effort high, --max-budget-usd 2.50, single-threaded"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "eebc40fc-d16a-466d-9c31-24711adb8c01",
+      "previous_event_id": "ed606a3d-4605-4cb7-b342-1636718a341e",
+      "observed_at": "2026-09-08T06:50:16.919458+00:00",
+      "ticket": 148,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "metering/adjudicator-grpc-go-7417/usage.json: transcript_usage.py --prices 2,10 over session a0727fa7-5195-4389-a062-fc914629c1bc (1 transcript, 28 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reservation_id": "issue-148-adjudicator-grpc-go-7417",
+      "actual_delta_usd": "0.50206",
+      "reservation_delta_usd": "-2.50",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "metering/adjudicator-grpc-go-7417/usage.json: transcript_usage.py --prices 2,10 over session a0727fa7-5195-4389-a062-fc914629c1bc (1 transcript, 28 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
     }
   ]
 }

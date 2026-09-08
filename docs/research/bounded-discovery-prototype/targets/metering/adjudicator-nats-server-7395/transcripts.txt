@@ -1,0 +1,2 @@
+session da088475-0cfa-4621-8b71-f7315cdb970e transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-adjudication-nats-server-7395/da088475-0cfa-4621-8b71-f7315cdb970e.jsonl sha256 7a899a089b7a0043fcd1ddbd763f87252ca9d94293ec3399f71ec3cc67fec3a3

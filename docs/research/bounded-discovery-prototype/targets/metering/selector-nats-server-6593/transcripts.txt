@@ -1,0 +1,2 @@
+session 48265fd6-3fe8-4b97-bd1f-c085c28561ce transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-selector-nats-server-6593/48265fd6-3fe8-4b97-bd1f-c085c28561ce.jsonl sha256 6ddb97f51767d678adab622a8a9123d38414621be5aba4b42674d93d64bbc769

@@ -17,7 +17,7 @@ import sys
 import tempfile
 import unittest
 
-from fixtures import CASES
+from fixtures import CASES, opening_state
 from adapter import HERE, artifact
 from budget import attempt_event
 
@@ -146,7 +146,7 @@ sys.exit(adapter.main())
 
     def test_pre_freeze_unfrozen_ledger(self):
         ledger = self.root / "ledger.json"
-        original = read(HERE.parent / "ledger.json")
+        original = opening_state(read(HERE.parent / "ledger.json"))
         save(ledger, original)
         def reserve(rid, amount, phase="pre-freeze"):
             return cli("budget.py", ledger, "reserve", "--id", rid, "--amount", amount,

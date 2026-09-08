@@ -9,6 +9,8 @@ selected targets are named in `README.md` and are reserved for every later grid.
 | Candidate | Failed criterion | Evidence |
 | --- | --- | --- |
 | `scrapy/scrapy#6993` | E4 packet provenance | a bot conversation comment created 2025-08-07T10:04:38Z was edited 2026-02-06T20:18:53Z, 57 s after the merge; all three review submissions postdate that comment, so no earlier cutoff can drop it without dropping a review |
+| `grpc/grpc-go#8519` | E11 adjudication | the independent adjudicator's ruling did not match the shape its slot required (sealed register `sealed/excluded-grpc-go-8519-register.md.enc`); reserved rather than reused |
+| `golang-jwt/jwt#456` | E11 adjudication | the independent adjudicator's ruling did not match the shape its slot required (sealed register `sealed/excluded-jwt-456-register.md.enc`); reserved rather than reused |
 | `grpc/grpc-go#8369` | E3 size | 6 files, +268/−21 |
 | `grpc/grpc-go#8342` | E3 size | 4 files, +335/−278 |
 | `nats-io/nats-server#7387` | E3 size | 3 files, +336/−17 |
@@ -41,4 +43,12 @@ triggered them.
 
 ## Replacements
 
-None yet.
+Two E11 exclusions above triggered replacements inside one slot; each time the next candidate in the
+sealed inventory order for that slot was taken, after its packet passed E4. The slot is not named here,
+because the trail of which candidates were rejected would otherwise hint at that slot's shape; the
+sealed inventory records the full sequence with timestamps.
+
+| When (UTC) | Replaced candidate | Criterion | Disposition of the replacement |
+| --- | --- | --- | --- |
+| 2026-09-08T06:28Z | `grpc/grpc-go#8519` | E11 | next candidate in order taken; its adjudication concluded 06:41Z |
+| 2026-09-08T06:41Z | `golang-jwt/jwt#456` | E11 | next candidate in order taken; its packet passed E4 at the merge cutoff and its adjudication concluded 06:52Z |
