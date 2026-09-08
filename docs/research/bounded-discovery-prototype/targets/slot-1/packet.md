@@ -340,7 +340,7 @@ opts = ["ls", "-l"], cmdline = []
 </details>
 ````
 
-### Issue comments through the frozen cutoff, verbatim, in order (1 of 6 total; `comments_available: true`)
+### Issue comments through the frozen cutoff, verbatim, in order (1 total; `comments_available: true`)
 
 **1.** 2023-07-24T19:31:59Z · `epage`
 

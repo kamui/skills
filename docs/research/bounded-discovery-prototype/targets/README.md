@@ -77,8 +77,8 @@ Model and effort were verified on every assistant line of every helper transcrip
     builder's `--spec-issue` route then refused the issue because its `updated_at` had moved after the
     cutoff (post-merge comments). Provenance was established through the forge's edit metadata
     instead: the issue body was last edited 2024-06-26, before the cutoff, and the one pre-cutoff
-    comment was never edited; the five post-cutoff comments are omitted and are counted only in the
-    manifest, not in the packet. The packet was rebuilt with that rendering appended as section 4a
+    comment was never edited; the five post-cutoff comments are omitted; the packet does not count them (its
+    section 4a lists included records only, as the builder does) and the manifest records the omission. The packet was rebuilt with that rendering appended as section 4a
     (`--extra-section`), and nothing else changed. The selector had run on the earlier packet, which
     is kept as `slot-1/packet.selector-input.md` with its hash in the manifest and in
     `scope.json`'s `selector_context`; the selection is not re-run (criteria §5), and `scope.json`'s

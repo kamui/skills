@@ -32,8 +32,8 @@
   "omitted_after_cutoff": "none",
   "packet": {
     "path": "packet.md",
-    "sha256": "2f7ac7056dd43de27889c9d7552d6cd628861db0e5d93de5afe5aa4ee905df88",
-    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 630bc445dfc90b6c1509d1a85468048ce55aed15",
+    "sha256": "9d5eb7c8f343ac457be007744027578d2cba46c5f7bc7424bfc53aeaaddb32c3",
+    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 92e11ce6551b607052a2108aa98f1376ffb59a0a",
     "arguments": "--extra-section <provenance-checked rendering of clap-rs/clap#5040> --repo clap-rs/clap --pr 6212 --head 3604b13117cbb652c10bb44b228b300d543dcc80 --merge-base 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac --base-sha b9009a76d1f2d62ba6af168bcef12ad7272626ca --staging /tmp/bd148/staging/clap.git --target clap-6212 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
     "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted",
     "revision": "v2 (2026-09-08, after review): identical to the selector's input packet plus one appended section 4a carrying the user-supplied spec clap-rs/clap#5040; no other byte changed",
@@ -53,7 +53,7 @@
   },
   "scope": {
     "path": "scope.json",
-    "sha256": "9da6fd105a7231279f9f7ff6a6d87b03b4343ac97d99f81c2a48b6fadd25ab4b",
+    "sha256": "7bacf30a254fa1f33e2b7bf256388bd9b1306af2e8bb4b0374889ca2abd4bc4e",
     "selected_kind": "S2",
     "selection_mode": "model-assisted",
     "roots": [
@@ -139,5 +139,5 @@
     "reveal": "sealed/README.md, after every reviewer run has stopped"
   },
   "reservation": "clap-rs/clap#6212 is reserved for every later grid (criteria section 7)",
-  "written_at": "2026-09-08T08:37:44.351934+00:00"
+  "written_at": "2026-09-08T08:45:54.335627+00:00"
 }
