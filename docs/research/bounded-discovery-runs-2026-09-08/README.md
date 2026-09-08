@@ -9,7 +9,8 @@ establish the runtime controls the design depends on.
 **Disposition: `ready`** ([handoff.json](handoff.json)).
 [#150](https://github.com/kamui/skills/issues/150) runs the six-cell pilot,
 [#151](https://github.com/kamui/skills/issues/151) the remaining eighteen. No benchmark cell has been
-dispatched. The only model sessions charged here are the ten probes; none of them reviewed a target.
+dispatched. The only model sessions charged here are the twelve probes; none of them reviewed a
+target.
 
 ## Read in this order
 
@@ -38,6 +39,7 @@ dispatched. The only model sessions charged here are the ten probes; none of the
 | the dollar allowance stops a session, overshooting by at most one call | that any hard token control exists |
 | two reservations against the same capacity admit exactly one | |
 | the retained per-request records reproduce the runtime's own billed total | |
+| the cell can write its payload and report — once `--allowedTools` names `Write` and `Edit` | |
 
 The two "not established" rows are why the frozen isolation control is **absence** — the evaluator
 key, the other slots' clones and mirrors, the other attempts' stores and every checkout of this
