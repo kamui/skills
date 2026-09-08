@@ -1,0 +1,2 @@
+session a0727fa7-5195-4389-a062-fc914629c1bc transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-adjudication-grpc-go-7417/a0727fa7-5195-4389-a062-fc914629c1bc.jsonl sha256 4770ad0e2d89b1729cc5cd354b6c957cee22eaf90663c11d4db07a3510d7a52b

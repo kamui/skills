@@ -1,225 +1,334 @@
 {
   "schema_version": "bounded-discovery-v1",
-  "artifact_id": "issue-146-design-handoff",
-  "stage": "design",
+  "artifact_id": "issue-148-target-preparation-handoff",
+  "stage": "target-preparation",
   "disposition": "ready",
-  "created_at": "2026-09-08T02:34:19.823207+00:00",
+  "created_at": "2026-09-08T08:46:30.330065+00:00",
   "evidence": [
     {
-      "uri": "DESIGN.md",
-      "sha256": "497d1a091b2ef40f1e37df32cc4ff4a643e14c8fb29f8032c474332f5622dd8e",
+      "uri": "targets/slot-1/manifest.json",
+      "sha256": "e0241dd72fae5982e06068e845b0ee669ba70298641984eb7ac2168801387f13",
       "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/slot-1/packet.md",
+      "sha256": "9d5eb7c8f343ac457be007744027578d2cba46c5f7bc7424bfc53aeaaddb32c3",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/slot-1/scope.json",
+      "sha256": "7bacf30a254fa1f33e2b7bf256388bd9b1306af2e8bb4b0374889ca2abd4bc4e",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/sealed/slot-1-register.md.enc",
+      "sha256": "b967890f4d3d3321a9418e068fc46d7f34c07ab4fe26756ca1d2077b124fe428",
+      "access": "evaluator-only"
+    },
+    {
+      "uri": "targets/slot-2/manifest.json",
+      "sha256": "a459d19a531ff3dfa52f12d3e36e036c992cf1648d0929eb5042ba4983e80f6e",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/slot-2/packet.md",
+      "sha256": "ac6fd2087178a7cd81297b32f14852cbc47504ee8adffbbdb9467d6a3077cad1",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/slot-2/scope.json",
+      "sha256": "41c924a02a955077615405c82b95ae90c398f87cdc68aaf9659db58191783c0f",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/sealed/slot-2-register.md.enc",
+      "sha256": "29b65225ea34dad442499eeed1341aed873d5cbdf0a076f5fddc0bae04f15af4",
+      "access": "evaluator-only"
+    },
+    {
+      "uri": "targets/slot-3/manifest.json",
+      "sha256": "cdf54bbabbd2cf0ae0a9e59283081ae9e5b98989c60a35806f86fccecd436df4",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/slot-3/packet.md",
+      "sha256": "5d74b9a9e8d0c7e19f24cb0a205c1a15bdec941cd557ff2ba9631ed77d360a6a",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/slot-3/scope.json",
+      "sha256": "c27dd8834c058f84eb2981cc985768d7002c19fd7ece126aa0903a4785407799",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/sealed/slot-3-register.md.enc",
+      "sha256": "893369081e29f9fe0ee9d4658e79b9816302bfed006763f462a809c2859c2349",
+      "access": "evaluator-only"
+    },
+    {
+      "uri": "targets/slot-4/manifest.json",
+      "sha256": "e1f261c74caed25e04668cfb1b42afdb2abdf90eb30b6c559eeddb460a30fd47",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/slot-4/packet.md",
+      "sha256": "88a990218fb77ab9d6d1cf12dd9dd8cb51b9d9a34fbef519ee99e9a5d7025922",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/slot-4/scope.json",
+      "sha256": "60400e21f364b6cb31242c64b6e656f15d5e3ee656286c5ffd214d917737da86",
+      "access": "reviewer-common"
+    },
+    {
+      "uri": "targets/sealed/slot-4-register.md.enc",
+      "sha256": "d089065994805e652d82829931f14096d63b40779940afbb119b85e874422b77",
+      "access": "evaluator-only"
+    },
+    {
+      "uri": "targets/criteria.md",
+      "sha256": "5cf56f151da7e78261ac98e8b5a909fe1139d5f4d627129011d9afc227665f27",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/exclusions.md",
+      "sha256": "4127b83a0e98c6dceaa75acb9c27ed95f6b65e7ff9d8e1ae863a45d8a6f15951",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/README.md",
+      "sha256": "e2fc8fc70aa8f732890275b7ee9466507c38b7bb2069c3412971c5443fa7d5cf",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/sealed/SHA256SUMS",
+      "sha256": "64eb260b4e33273f039d8c318ada585dfb6f6a6d5d4711b4ae7510c4cb68028d",
+      "access": "coordinator-only"
+    },
+    {
+      "uri": "targets/sealed/inventory.md.enc",
+      "sha256": "087c262cec8d98030003afb6d420dcdca4df79b2dc108cb948518a2fbf737044",
+      "access": "evaluator-only"
     }
   ],
   "ledger_ref": {
     "uri": "ledger.json",
-    "sha256": "1dab56fc3f4ce78a2870d557b0be01f5c46ed4624d8a872103be8cade1ca9971",
+    "sha256": "2e3a711527a3fbdb2bfc36865fff42a6c1a4d9a268d29a062866bdaa06e8ad4f",
     "access": "coordinator-only"
   },
-  "actual_usd": "0.00",
+  "actual_usd": "9.895998",
   "reserved_usd": "0.00",
   "uncertainty_usd": "0.00",
+  "pre_freeze_actual_usd": "9.895998",
   "available_claims": [],
   "unattempted_cells": [
     {
       "cell_id": "slot-1-A-replicate-1",
-      "target": null,
+      "target": "clap-rs/clap#6212",
       "target_slot": "slot-1",
       "arm": "A",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-1-A-replicate-2",
-      "target": null,
+      "target": "clap-rs/clap#6212",
       "target_slot": "slot-1",
       "arm": "A",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-1-B-replicate-1",
-      "target": null,
+      "target": "clap-rs/clap#6212",
       "target_slot": "slot-1",
       "arm": "B",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-1-B-replicate-2",
-      "target": null,
+      "target": "clap-rs/clap#6212",
       "target_slot": "slot-1",
       "arm": "B",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-1-C-replicate-1",
-      "target": null,
+      "target": "clap-rs/clap#6212",
       "target_slot": "slot-1",
       "arm": "C",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-1-C-replicate-2",
-      "target": null,
+      "target": "clap-rs/clap#6212",
       "target_slot": "slot-1",
       "arm": "C",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-2-A-replicate-1",
-      "target": null,
+      "target": "grpc/grpc-go#7417",
       "target_slot": "slot-2",
       "arm": "A",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-2-A-replicate-2",
-      "target": null,
+      "target": "grpc/grpc-go#7417",
       "target_slot": "slot-2",
       "arm": "A",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-2-B-replicate-1",
-      "target": null,
+      "target": "grpc/grpc-go#7417",
       "target_slot": "slot-2",
       "arm": "B",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-2-B-replicate-2",
-      "target": null,
+      "target": "grpc/grpc-go#7417",
       "target_slot": "slot-2",
       "arm": "B",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-2-C-replicate-1",
-      "target": null,
+      "target": "grpc/grpc-go#7417",
       "target_slot": "slot-2",
       "arm": "C",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-2-C-replicate-2",
-      "target": null,
+      "target": "grpc/grpc-go#7417",
       "target_slot": "slot-2",
       "arm": "C",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-3-A-replicate-1",
-      "target": null,
+      "target": "nats-io/nats-server#6593",
       "target_slot": "slot-3",
       "arm": "A",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-3-A-replicate-2",
-      "target": null,
+      "target": "nats-io/nats-server#6593",
       "target_slot": "slot-3",
       "arm": "A",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-3-B-replicate-1",
-      "target": null,
+      "target": "nats-io/nats-server#6593",
       "target_slot": "slot-3",
       "arm": "B",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-3-B-replicate-2",
-      "target": null,
+      "target": "nats-io/nats-server#6593",
       "target_slot": "slot-3",
       "arm": "B",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-3-C-replicate-1",
-      "target": null,
+      "target": "nats-io/nats-server#6593",
       "target_slot": "slot-3",
       "arm": "C",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-3-C-replicate-2",
-      "target": null,
+      "target": "nats-io/nats-server#6593",
       "target_slot": "slot-3",
       "arm": "C",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-4-A-replicate-1",
-      "target": null,
+      "target": "nats-io/nats-server#7395",
       "target_slot": "slot-4",
       "arm": "A",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-4-A-replicate-2",
-      "target": null,
+      "target": "nats-io/nats-server#7395",
       "target_slot": "slot-4",
       "arm": "A",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-4-B-replicate-1",
-      "target": null,
+      "target": "nats-io/nats-server#7395",
       "target_slot": "slot-4",
       "arm": "B",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-4-B-replicate-2",
-      "target": null,
+      "target": "nats-io/nats-server#7395",
       "target_slot": "slot-4",
       "arm": "B",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-4-C-replicate-1",
-      "target": null,
+      "target": "nats-io/nats-server#7395",
       "target_slot": "slot-4",
       "arm": "C",
       "replicate": 1,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     },
     {
       "cell_id": "slot-4-C-replicate-2",
-      "target": null,
+      "target": "nats-io/nats-server#7395",
       "target_slot": "slot-4",
       "arm": "C",
       "replicate": 2,
-      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+      "reason": "Targets prepared; #149 has not frozen configuration, budgets or isolation controls; no reviewer dispatch authorized."
     }
   ],
   "dispatch_authorized": false,
+  "slots": {
+    "slot-1": "clap-rs/clap#6212",
+    "slot-3": "nats-io/nats-server#6593",
+    "slot-4": "nats-io/nats-server#7395",
+    "slot-2": "grpc/grpc-go#7417"
+  },
+  "truth_version": "v1",
+  "sealed_truth": "targets/sealed/ (ciphertext; plaintext hashes in SHA256SUMS; key in evaluator-only storage)",
+  "reason": "Four targets prepared with sealed truth; two E11 replacements inside one slot (targets/README.md deviations 6 and 7); no reviewer dispatch authorized until #149 freezes configuration, budgets and isolation controls.",
   "next_stage": {
     "tickets": [
-      147,
-      148
+      149
     ],
-    "work": "Implement adapter and prepare targets under the shared ledger; #149 owns the benchmark readiness gate."
+    "work": "Freeze configuration, numeric limits, stronger-worker choice and the complete cap; run the metered capability probes inside the remaining pre-freeze allowance; establish reviewer-tool isolation (including the evaluator-only key directory and the two nats-server targets' mutual unreadability); re-bind each scope.json source_hash to the SourcePacket ArtifactRef; then either preregister or deliver a stop."
   }
 }

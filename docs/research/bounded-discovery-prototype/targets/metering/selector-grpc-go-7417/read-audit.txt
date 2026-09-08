@@ -1,0 +1,23 @@
+session 6eb9a941-139f-4d61-8fc1-842f257ec769
+tool calls by name: {'Read': 12, 'Grep': 4, 'ToolSearch': 3}
+paths outside /tmp/bd148/selector/grpc-go-7417: none
+
+Read	/tmp/bd148/selector/grpc-go-7417/packet.md
+Read	/tmp/bd148/selector/grpc-go-7417/diff.patch
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer.go
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer.go
+Grep	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority	func \(b \*priorityBalancer\) (handleChildStateUpdate|syncPriority)
+Grep	/tmp/bd148/selector/grpc-go-7417/head/internal/grpcsync	func NewEvent|func \(e \*Event\)|HasFired|Fire\(\)
+Read	/tmp/bd148/selector/grpc-go-7417/head/internal/grpcsync/event.go
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer_priority.go
+Grep	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer_priority.go	func \(b \*priorityBalancer\) handleChildStateUpdate
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer_priority.go
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer_priority.go
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer.go
+Read	/tmp/bd148/selector/grpc-go-7417/base/CONTRIBUTING.md
+Grep	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority	func \(cb \*childBalancer\) stop
+Read	/tmp/bd148/selector/grpc-go-7417/head/xds/internal/balancer/priority/balancer_child.go
+Read	/tmp/bd148/selector/grpc-go-7417/output
+ToolSearch
+ToolSearch
+ToolSearch

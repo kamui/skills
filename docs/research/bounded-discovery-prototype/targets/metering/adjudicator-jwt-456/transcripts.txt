@@ -1,0 +1,2 @@
+session 781cc525-d16b-48d6-84bf-63e176e832e8 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-adjudication-jwt-456/781cc525-d16b-48d6-84bf-63e176e832e8.jsonl sha256 90eef6182fc8f4d91a021403c3f1cf6cead547dcd28f7e1e8575ea4dd07d3950

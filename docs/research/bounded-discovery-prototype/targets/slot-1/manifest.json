@@ -1,0 +1,143 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "artifact_id": "issue-148-target-slot-1",
+  "slot": "slot-1",
+  "label": "clap-6212",
+  "slot_rule": "slots are numbered by case-sensitive lexical order of owner/repo#number and carry no category, status or defect information",
+  "target": {
+    "repository": "clap-rs/clap",
+    "pr": 6212,
+    "url": "https://github.com/clap-rs/clap/pull/6212",
+    "title": "Fix value_terminator has no effect when it is the first argument",
+    "base_ref": "master",
+    "base_oid_recorded": "b9009a76d1f2d62ba6af168bcef12ad7272626ca",
+    "merge_base_oid": "4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac",
+    "head_oid": "3604b13117cbb652c10bb44b228b300d543dcc80",
+    "merged_at": "2026-01-27T20:18:05Z",
+    "head_tree": "746187fe813125103117f94ffc13376a47ff6ccd",
+    "base_tree": "fd101244d236802b5849f89486ddd1832dcb37f8",
+    "diff": "2 files, +46/-0",
+    "language": "Rust"
+  },
+  "identity": {
+    "state": "MERGED",
+    "merged": true,
+    "posting_identity": "kamui",
+    "review_identity": "kamui",
+    "event": "COMMENT",
+    "mode": "retrospective review of a merged pull request by a third party; publication disabled; render-only"
+  },
+  "cutoff": "2026-01-27T20:18:05Z",
+  "cutoff_basis": "merge instant (default)",
+  "omitted_after_cutoff": "none",
+  "packet": {
+    "path": "packet.md",
+    "sha256": "9d5eb7c8f343ac457be007744027578d2cba46c5f7bc7424bfc53aeaaddb32c3",
+    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 92e11ce6551b607052a2108aa98f1376ffb59a0a",
+    "arguments": "--extra-section <provenance-checked rendering of clap-rs/clap#5040> --repo clap-rs/clap --pr 6212 --head 3604b13117cbb652c10bb44b228b300d543dcc80 --merge-base 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac --base-sha b9009a76d1f2d62ba6af168bcef12ad7272626ca --staging /tmp/bd148/staging/clap.git --target clap-6212 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
+    "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted",
+    "revision": "v2 (2026-09-08, after review): identical to the selector's input packet plus one appended section 4a carrying the user-supplied spec clap-rs/clap#5040; no other byte changed",
+    "selector_input": {
+      "path": "packet.selector-input.md",
+      "sha256": "6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb"
+    },
+    "spec_issue": {
+      "coordinate": "clap-rs/clap#5040",
+      "why": "the pull-request body and its second commit say 'Fixes #5040' without a closing keyword, so the forge's closing-reference query returned nothing and the builder recorded no originating issue; the REST route the builder uses for --spec-issue refused the body because the issue's updated_at (2026-02-02T22:39:29Z, moved by post-merge comments) is after the cutoff",
+      "provenance": "GraphQL edit metadata: issue body lastEditedAt 2024-06-26T21:17:26Z (before the cutoff 2026-01-27T20:18:05Z), 3 edits all before it; the one comment created before the cutoff (2023-07-24T19:31:59Z) was never edited; the five comments created after the cutoff (2026-01-28 to 2026-02-02) are omitted and are recorded here, not in the packet, as the builder does for every other history route",
+      "route": "--extra-section with the provenance-checked rendering (criteria section 3 E4 and #184: caller-supplied material needs its own established provenance)",
+      "omitted_after_cutoff": "5 issue comments"
+    },
+    "subagent_model_line": "deliberate: the run-conditions line reads model: \"<the model your dispatch names for that worker>\" because DESIGN section 2 gives arms B and C a worker configuration different from A while every arm must receive byte-identical packets; #149's dispatch template names the model per worker and states that this line means the dispatch's value (targets/README.md deviation 8)",
+    "staging_clone": "/tmp/bd148/staging/clap.git (full bare clone made for this ticket)"
+  },
+  "scope": {
+    "path": "scope.json",
+    "sha256": "7bacf30a254fa1f33e2b7bf256388bd9b1306af2e8bb4b0374889ca2abd4bc4e",
+    "selected_kind": "S2",
+    "selection_mode": "model-assisted",
+    "roots": [
+      {
+        "path": "clap_builder/src/parser/parser.rs",
+        "symbol": "Parser::parse",
+        "start": 130,
+        "end": 144
+      }
+    ],
+    "frontier_edges": 9,
+    "edges_beyond_bound": 0,
+    "alternatives": 2,
+    "selector": {
+      "session_id": "169926cd-40fd-4d73-8827-6bdcc8a82434",
+      "model_requested": "claude-sonnet-5",
+      "effort_requested": "high",
+      "tools": [
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "prompt_sha256": "2390904580a33c19d9f2673c2c3583f0faff13258d17c00752c2661f15345feb\n",
+      "template_sha256": "0ffbeb12e4f367560d26fbff49421065e802770009549094f6fa87950bd71f49\n",
+      "packet_sha256": "6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb\n",
+      "diff_sha256": "f1d813ea0afb9725881190a9f10e60ddc8e0d06d57aa2b74572fed1fa582845e\n",
+      "output_sha256": "9d2d2208193631fd5ae58cc7e3a5392a8647f280f89bdbd74ebd861254f7bec8",
+      "selection_sha256": "81e823827fdb3c755eb2fc6a58b1ae44d6c7e7421b8cb4fb6f78e454185a16ed",
+      "result_cost_usd_self_report": 0.6797958000000001,
+      "num_turns": 28,
+      "duration_ms": 259396
+    },
+    "raw_output": {
+      "path": "selector-output.md",
+      "sha256": "9d2d2208193631fd5ae58cc7e3a5392a8647f280f89bdbd74ebd861254f7bec8"
+    },
+    "selection": {
+      "path": "selection.json",
+      "sha256": "81e823827fdb3c755eb2fc6a58b1ae44d6c7e7421b8cb4fb6f78e454185a16ed"
+    },
+    "run_once": "the selector ran exactly once on this target and its output is frozen as delivered; it is kept whatever it selected"
+  },
+  "mirror": {
+    "path": "/tmp/bd148/mirrors/clap-6212.git",
+    "refs": {
+      "refs/heads/master": "4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac",
+      "refs/heads/review-head": "3604b13117cbb652c10bb44b228b300d543dcc80"
+    },
+    "newest_reachable_commit_date": "2026-01-26T20:56:04-08:00",
+    "head_commit_date": "2026-01-26T20:56:04-08:00",
+    "recipe": "git init --bare <mirror>; git -C /tmp/bd148/staging/clap.git push <mirror> 3604b13117cbb652c10bb44b228b300d543dcc80:refs/heads/review-head 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac:refs/heads/master; git -C <mirror> symbolic-ref HEAD refs/heads/master",
+    "negative_object_checks": {
+      "checked_at": "2026-09-08T06:29:33.572182+00:00",
+      "sealed_leak_set_sha256": "b79d3c43d7a3bf2494e66b0217f7290aaa6c7244f0c184bc4c1f08a8708e1a94",
+      "count": 9,
+      "mirror_absent": 9,
+      "clone_absent": 9,
+      "staging_present": 9,
+      "all_absent": true,
+      "hits": [],
+      "note": "every listed SHA resolves in the full staging clone (so the list names real objects) and none resolves in the mirror or in a fresh clone; the SHAs themselves stay in the sealed leak set"
+    }
+  },
+  "clone_recipe": "git clone <mirror> <clone>; git -C <clone> remote set-url origin <mirror>; git -C <clone> checkout --detach 3604b13117cbb652c10bb44b228b300d543dcc80; git -C <clone> branch -f master 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac; git -C <clone> checkout -B review-head 3604b13117cbb652c10bb44b228b300d543dcc80; re-run every negative object check on the clone and abort on a hit; provision offline caches; verify the tracked tree is clean",
+  "execution": {
+    "note": "Focused test execution IS permitted on this target, offline, exactly as the packet's section 8 item 2 states: run cargo from the clone root with CARGO_HOME=/tmp/bd148/cargo-home CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=<your work dir>/target, for example `cargo test --offline --locked --test builder <name filter>` (about 30 seconds to build the test binary, then the filtered tests run in under a second); five minutes per command; a filter at most once per flag set; scratch crates only under your work directory; nothing added to or changed in the clone. The registry cache is already populated and no network call of any kind is available.",
+    "provisioning": "cargo fetch --locked 8 s into CARGO_HOME=/tmp/bd148/cargo-home (716 MB); cargo test --offline --locked --test builder --list at head: exit 0, 26 s build, 908 tests listed; cargo test --offline --locked --test builder multiple_values at head: exit 0, 74 passed; at merge-base: exit 0, 6 s, 73 passed; tracked tree clean after provisioning",
+    "limits": "five minutes per focused command, ten minutes provisioning per target (method section 2); identical for every arm"
+  },
+  "access_checks": {
+    "selector": "headless session with only Read, Grep and Glob; every tool call audited from the transcript (metering/selector-<label>/read-audit.txt): no path outside its working directory was read; the working directory held only packet.md, diff.patch, head/ and base/ tree exports without git history; no plaintext truth existed on the machine during the run (the sealed inventory plaintext was removed; registers did not exist yet)",
+    "adjudicator": "headless session that worked from the full staging clone and the network, never from the mirror; its output is sealed",
+    "mirror": "only two refs; newest reachable commit date equals the head commit date; every SHA in the sealed leak set is absent (negative_object_checks)",
+    "dependency_caches": "GOMODCACHE holds third-party modules only; per-target GOCACHE and CARGO_TARGET_DIR; the registry/module caches contain no version of the target's own package",
+    "limits": "these are audited checks and a truncated mirror, not an OS sandbox; #149 must establish reviewer-tool isolation (files, processes, history, network, other checkouts, the evaluator-only key directory) before dispatch"
+  },
+  "truth": {
+    "version": "v1",
+    "status_at_freeze": "sealed",
+    "sealed_register": "sealed/slot-1-register.md.enc",
+    "register_plaintext_sha256": "ac64e1d2deb8e298faaca784bd87a9b02ae3e4986fa13590bceaac6d4caf47cd",
+    "later_revisions": [],
+    "reveal": "sealed/README.md, after every reviewer run has stopped"
+  },
+  "reservation": "clap-rs/clap#6212 is reserved for every later grid (criteria section 7)",
+  "written_at": "2026-09-08T08:45:54.335627+00:00"
+}
