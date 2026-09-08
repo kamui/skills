@@ -54,11 +54,18 @@ class Violation(ValueError):
     pass
 
 
-def run(command):
+def run(command, as_json=False):
+    """Run a pinned helper. A helper that fails is an input error, not a finding."""
     result = subprocess.run([sys.executable, *command], capture_output=True, text=True, encoding="utf-8")
-    if result.returncode == 2 or (result.returncode and not result.stdout):
+    failed = result.returncode != 0
+    if not failed and as_json:
+        try:
+            return json.loads(result.stdout)
+        except ValueError:
+            failed = True
+    if failed:
         print(" ".join(str(part) for part in command), file=sys.stderr)
-        print(result.stderr.strip(), file=sys.stderr)
+        print((result.stderr or result.stdout).strip(), file=sys.stderr)
         raise SystemExit(2)
     return result.stdout
 
@@ -94,7 +101,7 @@ def price_group(transcripts, rate):
                                ("--cache-write-1h-mult", "cache_write_1h_mult", "2.0"),
                                ("--cache-read-mult", "cache_read_mult", "0.1")):
         command += [flag, str(rate.get(key, default))]
-    return json.loads(run(command))
+    return run(command, as_json=True)
 
 
 def split(transcripts, rates, roles, label, self_report, tolerance):
@@ -148,6 +155,11 @@ def self_test():
     checks.append(("scan parses two models", mixed is not None and
                    [p.rsplit("×", 1)[0] for p in mixed.group("models").split(",")] == ["a", "b"]))
     checks.append(("helpers resolve", EFFORT.is_file() and USAGE.is_file()))
+    try:
+        run([USAGE, "--prices", "not,numbers", "/nonexistent-transcript.jsonl"], as_json=True)
+        checks.append(("a failing helper exits 2", False))
+    except SystemExit as exit_code:
+        checks.append(("a failing helper exits 2", exit_code.code == 2))
     for name, ok in checks:
         print(("ok   " if ok else "FAIL ") + name)
     return 0 if all(ok for _, ok in checks) else 1

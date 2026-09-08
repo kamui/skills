@@ -109,13 +109,14 @@
       "b_cell_usd": "3.7412",
       "basis": "the twelve #136-policy cells in docs/research/one-shot-qualification-2026-09-07/metering/cells/ (mean $3.4200 an attempt, verifier children $0.2142 of it) and the six #148 selector sessions (mean $0.6270), repriced for the stronger worker at the 2.5x ratio in rates.json; C adds one finder and ten per cent of the primary for admission",
       "c_cell_usd": "5.6294",
-      "cap_formula": "min(1.5 x 136.06, 150) = 150.00",
-      "cap_freeze_note": "the cap-freeze event was recorded against the $135.99 projection that held before probes 8 and 9; those two probes are pre-freeze spend in the same subtotal and raise the projection to $136.06, which leaves the $150.00 cap unchanged. The event is not rewritten; see preregistration deviation 5.",
-      "headroom_usd": "13.94",
-      "projected_full_cost_usd": "136.06",
-      "replacement_allowance_usd": "12.79",
+      "cap_formula": "min(1.5 x 136.0520, 150) = 150.00",
+      "cap_freeze_note": "the cap-freeze event was recorded against the $135.99 projection that held before probes 8 and 9; those two probes are pre-freeze spend in the same subtotal and raise the projection to $136.0520, which leaves the $150.00 cap unchanged. The event is not rewritten; see preregistration deviation 5.",
+      "headroom_usd": "13.9480",
+      "mean_cell_usd": "4.2635",
+      "projected_full_cost_usd": "136.0520",
+      "replacement_allowance_usd": "12.7906",
       "sensitivity": "measured cells under this policy ranged $2.02 to $6.78, a 3.3x spread. At the observed maximum for every cell the grid would exceed the cap; the ledger's atomic reservation is what stops that, and a stopped-budget mid-grid leaves whole triples because of the frozen order.",
-      "twenty_four_cells_usd": "102.33"
+      "twenty_four_cells_usd": "102.3248"
     },
     "retained_uncertainty_usd": "0.082158",
     "separation": "review consumption, one-off setup and selection, and charged grading are reported separately; shared setup is charged once to the epic, never once per arm",
@@ -297,7 +298,7 @@
       },
       "meter_split.py": {
         "access": "coordinator-only",
-        "sha256": "382bbd35babe32c57f57eb2fa405d6938f17378bb12b93c3c79bd47a64614ae7",
+        "sha256": "72170b831fb7b334f6ec1ab3d4f79c4d4972b6e6ae726491afaf37a88aef5028",
         "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/meter_split.py"
       },
       "score_attempts.py": {
@@ -387,7 +388,7 @@
   },
   "preregistration": {
     "access": "coordinator-only",
-    "sha256": "4bfd4546b6b08773b15949d73a5e5bbf7c18c841bcf3e22cd55af7bfb2aaad87",
+    "sha256": "6e65e3aceaf603cb67129bb260439cac8509003c793145e263eec4873f320791",
     "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
   },
   "probes": {
