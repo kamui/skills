@@ -122,17 +122,6 @@
       }
     },
     {
-      "from": "syncPriority",
-      "kind": "callee",
-      "citation": "head/xds/internal/balancer/priority/balancer_priority.go:109",
-      "to": {
-        "path": "balancer/balancer.go",
-        "symbol": "ClientConn.UpdateState",
-        "start": 0,
-        "end": 0
-      }
-    },
-    {
       "from": "Close",
       "kind": "callee",
       "citation": "head/xds/internal/balancer/priority/balancer.go:231",
@@ -154,6 +143,18 @@
   ],
   "unavailable_under_bound": [
     {
+      "from": "syncPriority",
+      "kind": "callee",
+      "citation": "head/xds/internal/balancer/priority/balancer_priority.go:109",
+      "to": {
+        "path": "balancer/balancer.go",
+        "symbol": "ClientConn.UpdateState",
+        "start": 0,
+        "end": 0
+      },
+      "reason": "unverified coordinates: the selector supplied no positive line range for this destination"
+    },
+    {
       "from": "handleChildStateUpdate",
       "kind": "callee",
       "citation": "head/xds/internal/balancer/priority/balancer_priority.go:209",
@@ -168,5 +169,5 @@
   ],
   "no_supported_surface": false,
   "selector_notes": "The diff contains exactly one hunk in exactly one file, so the selection rule's tie-breaking machinery (path/symbol/line ordering across multiple same-kind candidates) never actually engages here \u2014 there was nothing to rank against. No S2 candidate was found: the PR body states the intent informally ('Release the mutex that is locked a couple of lines above') but does not point at a doc comment, interface contract, sibling implementation, or schema that the diff itself leaves untouched, so it doesn't qualify as a citable S2 obligation source distinct from the S1 reading of the same hunk. No S3 candidate exists because the diff has no test changes. I could not write output/selection.json or output/report.md to disk: this session's tool set (Read, Grep, Glob, plus a small set of unrelated deferred tools discovered via ToolSearch \u2014 Monitor, DesignSync, TaskStop, ExitWorktree, CronCreate, PushNotification, SendMessage, EnterWorktree, RemoteTrigger, TaskOutput) contains no file-write capability, confirming the prompt's own statement that only file-reading tools are available. Both outputs are rendered in full in the chat response instead.",
-  "frozen_at": "2026-09-08T06:45:27.334391+00:00"
+  "frozen_at": "2026-09-08T08:35:30.470971+00:00"
 }

@@ -32,16 +32,28 @@
   "omitted_after_cutoff": "none",
   "packet": {
     "path": "packet.md",
-    "sha256": "6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb",
-    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 74554c65b53a9bd9facf77e417ad3b848273dd44",
-    "arguments": "--repo clap-rs/clap --pr 6212 --head 3604b13117cbb652c10bb44b228b300d543dcc80 --merge-base 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac --base-sha b9009a76d1f2d62ba6af168bcef12ad7272626ca --staging /tmp/bd148/staging/clap.git --target clap-6212 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
+    "sha256": "2f7ac7056dd43de27889c9d7552d6cd628861db0e5d93de5afe5aa4ee905df88",
+    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 630bc445dfc90b6c1509d1a85468048ce55aed15",
+    "arguments": "--extra-section <provenance-checked rendering of clap-rs/clap#5040> --repo clap-rs/clap --pr 6212 --head 3604b13117cbb652c10bb44b228b300d543dcc80 --merge-base 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac --base-sha b9009a76d1f2d62ba6af168bcef12ad7272626ca --staging /tmp/bd148/staging/clap.git --target clap-6212 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
     "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted",
+    "revision": "v2 (2026-09-08, after review): identical to the selector's input packet plus one appended section 4a carrying the user-supplied spec clap-rs/clap#5040; no other byte changed",
+    "selector_input": {
+      "path": "packet.selector-input.md",
+      "sha256": "6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb"
+    },
+    "spec_issue": {
+      "coordinate": "clap-rs/clap#5040",
+      "why": "the pull-request body and its second commit say 'Fixes #5040' without a closing keyword, so the forge's closing-reference query returned nothing and the builder recorded no originating issue; the REST route the builder uses for --spec-issue refused the body because the issue's updated_at (2026-02-02T22:39:29Z, moved by post-merge comments) is after the cutoff",
+      "provenance": "GraphQL edit metadata: issue body lastEditedAt 2024-06-26T21:17:26Z (before the cutoff 2026-01-27T20:18:05Z), 3 edits all before it; the one comment created before the cutoff (2023-07-24T19:31:59Z) was never edited; the five comments created after the cutoff (2026-01-28 to 2026-02-02) are omitted and are recorded here, not in the packet, as the builder does for every other history route",
+      "route": "--extra-section with the provenance-checked rendering (criteria section 3 E4 and #184: caller-supplied material needs its own established provenance)",
+      "omitted_after_cutoff": "5 issue comments"
+    },
     "subagent_model_line": "deliberate: the run-conditions line reads model: \"<the model your dispatch names for that worker>\" because DESIGN section 2 gives arms B and C a worker configuration different from A while every arm must receive byte-identical packets; #149's dispatch template names the model per worker and states that this line means the dispatch's value (targets/README.md deviation 8)",
     "staging_clone": "/tmp/bd148/staging/clap.git (full bare clone made for this ticket)"
   },
   "scope": {
     "path": "scope.json",
-    "sha256": "146bab38610079e3fb77d2ebe5d0aeb8e272066c81af950dee53e535eae849e4",
+    "sha256": "9da6fd105a7231279f9f7ff6a6d87b03b4343ac97d99f81c2a48b6fadd25ab4b",
     "selected_kind": "S2",
     "selection_mode": "model-assisted",
     "roots": [
@@ -127,5 +139,5 @@
     "reveal": "sealed/README.md, after every reviewer run has stopped"
   },
   "reservation": "clap-rs/clap#6212 is reserved for every later grid (criteria section 7)",
-  "written_at": "2026-09-08T07:07:52.582699+00:00"
+  "written_at": "2026-09-08T08:37:44.351934+00:00"
 }
