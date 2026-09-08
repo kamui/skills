@@ -3,11 +3,11 @@
   "artifact_id": "issue-148-target-preparation-handoff",
   "stage": "target-preparation",
   "disposition": "ready",
-  "created_at": "2026-09-08T06:52:34.857112+00:00",
+  "created_at": "2026-09-08T07:07:53.056383+00:00",
   "evidence": [
     {
       "uri": "targets/slot-1/manifest.json",
-      "sha256": "f9184551714d58c9e80cb1a3e8480fc594d9cd0c434b38a2e38ba372a8b34b0a",
+      "sha256": "ef749c624af2487b9c5fffc8a4ecda373c54197fda6b326519c80131804d7caa",
       "access": "coordinator-only"
     },
     {
@@ -27,7 +27,7 @@
     },
     {
       "uri": "targets/slot-2/manifest.json",
-      "sha256": "b6abfd79735eb5fbc52c0013d33b104d58a412280ce9e9b3be8a1fb322372e10",
+      "sha256": "9aa82af908c90ddd2be47839043ac932a7eaf5f0e4368715674ecacad353fe9f",
       "access": "coordinator-only"
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "uri": "targets/slot-3/manifest.json",
-      "sha256": "1b102edbe3425cbcea92b5acc4762643446fe98e15e47eb415b4650898aabdd1",
+      "sha256": "cdf54bbabbd2cf0ae0a9e59283081ae9e5b98989c60a35806f86fccecd436df4",
       "access": "coordinator-only"
     },
     {
@@ -67,7 +67,7 @@
     },
     {
       "uri": "targets/slot-4/manifest.json",
-      "sha256": "bd6902db3fa2918b636302171e720cc7a1321e27ab0a41140072bba1a7891972",
+      "sha256": "e1f261c74caed25e04668cfb1b42afdb2abdf90eb30b6c559eeddb460a30fd47",
       "access": "coordinator-only"
     },
     {
@@ -97,12 +97,12 @@
     },
     {
       "uri": "targets/README.md",
-      "sha256": "719eed309938e42fbb3b2673f00dd97bb9ad60fd73432f99db358b89712cccf7",
+      "sha256": "55a9448d327d9a2e9d0c20eb75295f5cc2c030ff9cb7a974d2f0ac34a0ce40a1",
       "access": "coordinator-only"
     },
     {
       "uri": "targets/sealed/SHA256SUMS",
-      "sha256": "1d2cb67d7e0ae37c567681cbebfb3f075dfa50329466f5f4c4d9d058d9f4b76e",
+      "sha256": "55399539c833381a935a16490df99def95d1de4ee80b7bf3d187653e393fe238",
       "access": "coordinator-only"
     },
     {
@@ -324,7 +324,7 @@
   },
   "truth_version": "v1",
   "sealed_truth": "targets/sealed/ (ciphertext; plaintext hashes in SHA256SUMS; key in evaluator-only storage)",
-  "reason": "6. **Two replacements for one slot (06:28Z and 06:41Z).** For one of the four slots the independent adjudicators ruled the first two candidates in the sealed inventory order outside the shape that slot requires (criteria \u00a73 E11), so the third candidate in that order fills it. Which slot, which shape",
+  "reason": "Four targets prepared with sealed truth; two E11 replacements inside one slot (targets/README.md deviations 6 and 7); no reviewer dispatch authorized until #149 freezes configuration, budgets and isolation controls.",
   "next_stage": {
     "tickets": [
       149

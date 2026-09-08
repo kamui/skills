@@ -33,9 +33,11 @@
   "packet": {
     "path": "packet.md",
     "sha256": "6359128972fbb37a8e9c3a932e6358e1c30b68db643c93e30662b771d89a77bb",
-    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 1d41afd0081dca331abc8c49712ee9e1bd2e6053",
+    "builder": "docs/research/tools/build_packet.py (#184) at repository commit 74554c65b53a9bd9facf77e417ad3b848273dd44",
     "arguments": "--repo clap-rs/clap --pr 6212 --head 3604b13117cbb652c10bb44b228b300d543dcc80 --merge-base 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac --base-sha b9009a76d1f2d62ba6af168bcef12ad7272626ca --staging /tmp/bd148/staging/clap.git --target clap-6212 --experiment-label \"issue #138 bounded discovery\" --subagent-model \"<the model your dispatch names for that worker>\" --execution-note <note below>",
-    "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted"
+    "provenance": "exit 0 at the merge-instant cutoff; every included record validated by the builder; nothing omitted",
+    "subagent_model_line": "deliberate: the run-conditions line reads model: \"<the model your dispatch names for that worker>\" because DESIGN section 2 gives arms B and C a worker configuration different from A while every arm must receive byte-identical packets; #149's dispatch template names the model per worker and states that this line means the dispatch's value (targets/README.md deviation 8)",
+    "staging_clone": "/tmp/bd148/staging/clap.git (full bare clone made for this ticket)"
   },
   "scope": {
     "path": "scope.json",
@@ -125,5 +127,5 @@
     "reveal": "sealed/README.md, after every reviewer run has stopped"
   },
   "reservation": "clap-rs/clap#6212 is reserved for every later grid (criteria section 7)",
-  "written_at": "2026-09-08T06:34:22.321666+00:00"
+  "written_at": "2026-09-08T07:07:52.582699+00:00"
 }
