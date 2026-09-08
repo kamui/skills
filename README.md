@@ -86,6 +86,8 @@ $code-review-publish-legacy
 
 Addresses every review comment on a pull request, makes warranted changes, replies directly even when the answer is pushback, and resolves each thread as it finishes it. Re-addressing a pull request, it can reopen a thread that was resolved too early. Each round closes with one summary comment and an ask for a re-review, so a pull request whose threads are all resolved does not read as one where nothing happened.
 
+Before pushing fixes or posting disposition replies, a fresh-context subagent reviews the addressing round for incomplete fixes and regressions, then checks the proposed replies against the code. It receives the original feedback and repository evidence without the implementation conversation. Unresolved feedback keeps its protocol disposition and remains open for the original reviewer.
+
 The skill is deliberately independent of a particular code-review or implementation skill. Normal skill routing can select another installed skill when useful; if none applies, the model handles the work directly.
 
 It activates when review feedback on a pull request needs working through, including as the fix step of a review loop. You can also invoke it directly:
@@ -100,7 +102,7 @@ The host agent needs write access to the pull request to post replies and resolv
 
 Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the best matching installed skill, creates a suitable branch when the current one is not pull-request ready, and links the spec source in the pull-request body.
 
-It stops at the pull request. `code-review-publish` reviews it from there.
+Before pushing or opening the pull request, it runs an internal review in a fresh-context subagent, addresses blocking findings, and verifies the final committed head. The reviewer receives the spec and repository evidence without inheriting the implementation conversation. `code-review-publish` handles the published review afterward.
 
 It activates when a caller asks to implement work from a spec or issue and publish the result as a pull request. You can also invoke it directly:
 
