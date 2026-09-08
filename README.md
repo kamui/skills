@@ -100,7 +100,7 @@ The host agent needs write access to the pull request to post replies and resolv
 
 Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the best matching installed skill, creates a suitable branch when the current one is not pull-request ready, and links the spec source in the pull-request body.
 
-It stops at the pull request. `code-review-publish` reviews it from there.
+Before pushing or opening the pull request, it runs an internal review in a fresh-context subagent, addresses blocking findings, and verifies the final committed head. The reviewer receives the spec and repository evidence without inheriting the implementation conversation. `code-review-publish` handles the published review afterward.
 
 It activates when a caller asks to implement work from a spec or issue and publish the result as a pull request. You can also invoke it directly:
 
