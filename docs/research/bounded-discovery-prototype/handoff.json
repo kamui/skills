@@ -1,0 +1,225 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "artifact_id": "issue-146-design-handoff",
+  "stage": "design",
+  "disposition": "ready",
+  "created_at": "2026-09-08T02:34:19.823207+00:00",
+  "evidence": [
+    {
+      "uri": "DESIGN.md",
+      "sha256": "497d1a091b2ef40f1e37df32cc4ff4a643e14c8fb29f8032c474332f5622dd8e",
+      "access": "coordinator-only"
+    }
+  ],
+  "ledger_ref": {
+    "uri": "ledger.json",
+    "sha256": "1dab56fc3f4ce78a2870d557b0be01f5c46ed4624d8a872103be8cade1ca9971",
+    "access": "coordinator-only"
+  },
+  "actual_usd": "0.00",
+  "reserved_usd": "0.00",
+  "uncertainty_usd": "0.00",
+  "available_claims": [],
+  "unattempted_cells": [
+    {
+      "cell_id": "slot-1-A-replicate-1",
+      "target": null,
+      "target_slot": "slot-1",
+      "arm": "A",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-1-A-replicate-2",
+      "target": null,
+      "target_slot": "slot-1",
+      "arm": "A",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-1-B-replicate-1",
+      "target": null,
+      "target_slot": "slot-1",
+      "arm": "B",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-1-B-replicate-2",
+      "target": null,
+      "target_slot": "slot-1",
+      "arm": "B",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-1-C-replicate-1",
+      "target": null,
+      "target_slot": "slot-1",
+      "arm": "C",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-1-C-replicate-2",
+      "target": null,
+      "target_slot": "slot-1",
+      "arm": "C",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-2-A-replicate-1",
+      "target": null,
+      "target_slot": "slot-2",
+      "arm": "A",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-2-A-replicate-2",
+      "target": null,
+      "target_slot": "slot-2",
+      "arm": "A",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-2-B-replicate-1",
+      "target": null,
+      "target_slot": "slot-2",
+      "arm": "B",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-2-B-replicate-2",
+      "target": null,
+      "target_slot": "slot-2",
+      "arm": "B",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-2-C-replicate-1",
+      "target": null,
+      "target_slot": "slot-2",
+      "arm": "C",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-2-C-replicate-2",
+      "target": null,
+      "target_slot": "slot-2",
+      "arm": "C",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-3-A-replicate-1",
+      "target": null,
+      "target_slot": "slot-3",
+      "arm": "A",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-3-A-replicate-2",
+      "target": null,
+      "target_slot": "slot-3",
+      "arm": "A",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-3-B-replicate-1",
+      "target": null,
+      "target_slot": "slot-3",
+      "arm": "B",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-3-B-replicate-2",
+      "target": null,
+      "target_slot": "slot-3",
+      "arm": "B",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-3-C-replicate-1",
+      "target": null,
+      "target_slot": "slot-3",
+      "arm": "C",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-3-C-replicate-2",
+      "target": null,
+      "target_slot": "slot-3",
+      "arm": "C",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-4-A-replicate-1",
+      "target": null,
+      "target_slot": "slot-4",
+      "arm": "A",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-4-A-replicate-2",
+      "target": null,
+      "target_slot": "slot-4",
+      "arm": "A",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-4-B-replicate-1",
+      "target": null,
+      "target_slot": "slot-4",
+      "arm": "B",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-4-B-replicate-2",
+      "target": null,
+      "target_slot": "slot-4",
+      "arm": "B",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-4-C-replicate-1",
+      "target": null,
+      "target_slot": "slot-4",
+      "arm": "C",
+      "replicate": 1,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    },
+    {
+      "cell_id": "slot-4-C-replicate-2",
+      "target": null,
+      "target_slot": "slot-4",
+      "arm": "C",
+      "replicate": 2,
+      "reason": "Targets and preregistration not yet frozen; no reviewer dispatch authorized."
+    }
+  ],
+  "dispatch_authorized": false,
+  "next_stage": {
+    "tickets": [
+      147,
+      148
+    ],
+    "work": "Implement adapter and prepare targets under the shared ledger; #149 owns the benchmark readiness gate."
+  }
+}
