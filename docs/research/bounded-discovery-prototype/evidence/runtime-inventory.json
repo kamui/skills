@@ -1,0 +1,35 @@
+{
+  "observed_at": "2026-09-08T03:40:40.045835+00:00",
+  "platform": "Darwin",
+  "commands": [
+    {
+      "command": [
+        "claude",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "claude-version.txt",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "claude",
+        "--help"
+      ],
+      "exit_code": 0,
+      "stdout": "claude-help.txt",
+      "stderr": ""
+    }
+  ],
+  "paid_requests": 0,
+  "experimental_charge_usd": "0.00",
+  "capabilities": {
+    "startup_agent_definitions": "advertised by local help; effective child settings unprobed",
+    "effort": "advertised by local help; effective worker effort unprobed",
+    "fresh_context": "unprobed",
+    "filesystem_process_history_network_isolation": "unprobed for Claude; fake read-tool boundary tested separately",
+    "hard_token_bound": "unavailable in this adapter",
+    "cancellation_and_metering": "unprobed for Claude"
+  },
+  "runtime_disposition": "stopped-runtime"
+}

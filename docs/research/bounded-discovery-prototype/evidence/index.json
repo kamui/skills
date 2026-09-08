@@ -1,0 +1,75 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "archive": "fake-artifacts.tar.gz",
+  "sha256": "983e5641913f70c06b73ca72c2d1e85571521dc5111bfdccf0ab7b8e83f94585",
+  "recorded_fixture_root": "/var/folders/tj/sr3wvlgs0v9608r9tjwmtnk40000gn/T/issue147-delivery-1bsr0uya",
+  "archive_root": "artifacts",
+  "runs": [
+    {
+      "case": "duplicate",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "duplicate/run/handoff.json"
+    },
+    {
+      "case": "hygiene",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "hygiene/run/handoff.json"
+    },
+    {
+      "case": "hygiene-required",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "hygiene-required/run/handoff.json"
+    },
+    {
+      "case": "missing-ruling",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; incomplete\n",
+      "handoff": "missing-ruling/run/handoff.json"
+    },
+    {
+      "case": "generic",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "generic/run/handoff.json"
+    },
+    {
+      "case": "concrete",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "concrete/run/handoff.json"
+    },
+    {
+      "case": "unavailable",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "unavailable/run/handoff.json"
+    },
+    {
+      "case": "unknown",
+      "arm": "C",
+      "exit_code": 0,
+      "stdout": "Fake cell delivered; complete\n",
+      "handoff": "unknown/run/handoff.json"
+    },
+    {
+      "case": "no-cell",
+      "arm": "C",
+      "exit_code": 1,
+      "stdout": "Claude worker settings, file/process/network isolation, cancellation and conservative token bounds remain unprobed; no paid dispatch\n",
+      "handoff": "no-cell/run/handoff.json"
+    }
+  ],
+  "paid_requests": 0,
+  "experimental_charge_usd": "0.00",
+  "note": "ArtifactRefs retain original paths. Map the recorded fixture-root prefix to the extracted artifacts directory. Research helper/history refs point to tracked repository files."
+}

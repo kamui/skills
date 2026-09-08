@@ -1,0 +1,34 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "access": "evaluator-only",
+  "source": "../DESIGN.md section 5, fixture R; corrected #137 comparison section 6",
+  "not_benchmark_cells": true,
+  "outcomes": [
+    {
+      "attempt_id": "historical-requests-example",
+      "payload_item_id": "client-certificate-finding",
+      "defect_id": "GT-i1",
+      "truth_version": "corrected-137-bdd1c4a",
+      "ruling_ref": "../../one-shot-qualification-2026-09-07/comparison-data.md",
+      "recovered": true,
+      "sufficient_outcome": "partial",
+      "action_errors": [],
+      "priority_errors": [],
+      "false_clean": false,
+      "evidence": "The remedy omits the adapter-owned ssl_context manifestation."
+    },
+    {
+      "attempt_id": "synthetic-consider-example",
+      "payload_item_id": "optional-material-finding",
+      "defect_id": "synthetic-material-defect",
+      "truth_version": "stipulated-fixture",
+      "ruling_ref": "../DESIGN.md section 5, fixture R",
+      "recovered": true,
+      "sufficient_outcome": "sufficient",
+      "action_errors": ["material defect classified consider"],
+      "priority_errors": [],
+      "false_clean": true,
+      "evidence": "The stipulated buggy target received Approved despite a sufficient suggested fix."
+    }
+  ]
+}
