@@ -121,7 +121,7 @@
     },
     "retained_uncertainty_usd": "0.082158",
     "separation": "review consumption, one-off setup and selection, and charged grading are reported separately; shared setup is charged once to the epic, never once per arm",
-    "settlement_rule": "settle from the runtime self-report and the retained per-request records; when they differ, charge the larger and record the difference as a reconciliation residual. A cancelled or crashed attempt with no self-report settles from its retained transcript and retains one further request at the largest observed per-request cost as uncertainty.",
+    "settlement_rule": "settle from the runtime self-report and the retained per-request records; when they differ, charge the larger and record the difference as a reconciliation residual. A cancelled or crashed attempt with no self-report settles from its retained transcript and retains one further request at the largest observed per-request cost as uncertainty. The difference is attributable, not noise: it is an untranscripted claude-haiku-4-5-20251001 request that appears only in the result envelope's modelUsage.",
     "total_ceiling_usd": "150.00"
   },
   "cells": {
@@ -389,7 +389,7 @@
   },
   "preregistration": {
     "access": "coordinator-only",
-    "sha256": "220a23c7436a8d7b85d55aad0554af18b2423cf8ecfd9df2ab078752896db7d5",
+    "sha256": "c1f8c1b4c78a5397ea2d34ee69dbb91bf6ae20856d68582b30664b83c35aba6d",
     "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
   },
   "probes": {
@@ -442,7 +442,7 @@
         "verdict": "supported, with the interpreter escape recorded as an audited limitation"
       },
       {
-        "establishes": "meter_split.py prices each transcript at its own model's frozen rates and reproduces the runtime self-report: five of the eleven that produced a runtime figure to within $0.0000005, and the six launched with --restricted about $0.0013 low each, a fixed amount billed without appearing in the transcript. The larger figure is charged and the difference recorded; see probes/reconciliation.json.",
+        "establishes": "meter_split.py prices each transcript at its own model's frozen rates and reproduces the runtime self-report: five of the eleven that produced a runtime figure to within $0.0000005, and six about $0.0013 low each. Each of those six result envelopes carries a claude-haiku-4-5-20251001 modelUsage entry whose cost equals the gap to the last digit: the runtime bills a small Haiku request it never writes to the transcript. Charge the larger figure and meter a cell from the transcripts and the result envelope both; see probes/reconciliation.json.",
         "probe": "accounting",
         "verdict": "supported"
       },
@@ -523,6 +523,7 @@
       "--permission-prompts none",
       "--max-budget-usd 2.00"
     ],
+    "model_identifier_note": "the Opus child reports as claude-opus-5[1m] in the result envelope while agent_effort.py sees claude-opus-5 on its assistant lines; at the context sizes the probes reached the standard rate card reproduces the billed total exactly, so rates.json prices it as claude-opus-5. A cell whose context passes the long-context threshold needs that assumption rechecked before any cost claim.",
     "primary_flags": [
       "--model claude-sonnet-5",
       "--effort high",

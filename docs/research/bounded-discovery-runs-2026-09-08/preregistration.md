@@ -134,7 +134,7 @@ message — the probe prompt — and carries no summary or resume record
 | cancellation and provider termination | **enforced** | probe 3: SIGTERM at 25 s, exit 124, no payload, no surviving process, transcript unchanged 25 s later |
 | bounded request allowance | **enforced, with one call of overshoot** | probe 4: `--max-budget-usd 0.05` stopped the session with `subtype: error_max_budget_usd` after spending $0.067136 |
 | atomic budget contention | **enforced** | probe 3: of two operations against the same remaining capacity, one was admitted and the second exited 1 with no event written |
-| billed totals from retained usage | **enforced** | `meter_split.py` reproduces the runtime self-report from the per-request records for every session that produced one: five to within $0.0000005, and the six launched with `--restricted` about $0.0013 low each — a fixed amount billed without appearing in the transcript ([`probes/reconciliation.json`](probes/reconciliation.json)) |
+| billed totals from retained usage | **enforced** | `meter_split.py` reproduces the runtime self-report from the per-request records for every session that produced one: five to within $0.0000005, and six about $0.0013 low each — an untranscripted `claude-haiku-4-5-20251001` request whose cost matches each gap exactly ([`probes/reconciliation.json`](probes/reconciliation.json)) |
 | the cell can write its payload, report and script output | **enforced, and it needs the allow list** | probes 8 and 9: under `--restricted` with `--permission-prompts none` the write tools are denied outright unless `--allowedTools` names them — while an allow-listed `python3` writes freely — and naming `Write` and `Edit` restores writes inside the roots while still refusing one outside |
 | **shell filesystem reach** | **audited, not enforced** | probe 7: with `Bash(python3:*)` allow-listed, `python3 -c "print(open(...).read())"` read a canary outside every permitted root, and so did a `subprocess` call. An allow-listed `cat` was blocked; an interpreter is not. |
 | **raw-socket egress** | **audited, not enforced** | probes 2c and 6: a direct TCP connection to an IP address on port 443 succeeds through an allow-listed `python3` |
@@ -280,9 +280,12 @@ records of a single request by taking the maximum of each counter. There are no 
 
 **Settlement.** Settle from the runtime self-report and from the retained per-request records; when
 they differ, charge the larger and record the difference as a reconciliation residual. Every cell
-will have one: the four probes launched with `--restricted` — the flag the frozen configuration uses
-— and the two that followed them, all six billing about $0.0013 more than their transcripts account
-for: a fixed amount, roughly 0.03% of a $4 cell. An attempt
+will have one, and it has a name: six of the probes billed about $0.0013 more than their transcripts
+account for, and in each case the result envelope's `modelUsage` carries a
+`claude-haiku-4-5-20251001` entry whose cost equals that gap to the last digit. The runtime bills a
+small Haiku request it never writes to the transcript. Meter a cell from both sources — the
+transcripts for the per-role split, the result envelope for what they never saw — rather than
+treating the difference as noise. An attempt
 that produced no self-report settles from its transcript and retains one further request at the
 largest observed per-request cost as uncertainty — exactly what probe 3 did. Review consumption,
 one-off setup and selection, and charged grading are reported in separate columns; shared setup is
