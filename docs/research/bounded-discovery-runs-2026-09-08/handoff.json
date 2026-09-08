@@ -1,5 +1,5 @@
 {
-  "actual_usd": "10.7961639",
+  "actual_usd": "10.8543989",
   "artifact_id": "issue-149-experiment-freeze-handoff",
   "available_claims": [],
   "created_at": "2026-09-08T09:45:00+00:00",
@@ -8,17 +8,17 @@
   "evidence": [
     {
       "access": "coordinator-only",
-      "sha256": "dd7543db242811cecec132ccc3de293d0da85324ed36e5ea7f62de0b251be17d",
+      "sha256": "4bfd4546b6b08773b15949d73a5e5bbf7c18c841bcf3e22cd55af7bfb2aaad87",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
     },
     {
       "access": "coordinator-only",
-      "sha256": "a9cf962d2b9d2effe04599bbd82737e1c92d3aef269b42faeffd08ae54b92b9d",
+      "sha256": "38be72ba0052acf16bb4239056854ade2a77c1901f9d495780f90c9aa39ff511",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json"
     },
     {
       "access": "coordinator-only",
-      "sha256": "01ae11f21a9e494f9f3d57607be33f5f373f63143641c9e07bb66fa4be7cdc6d",
+      "sha256": "a93b4dbd82298242f518f5638705f0bb986827820f610e4ea9e3f88f9034d4f3",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/dispatch-template.md"
     },
     {
@@ -33,7 +33,7 @@
     },
     {
       "access": "coordinator-only",
-      "sha256": "810bf37acfd2b0d38d7c1e1a7913536a1eb70fc456734fc9eb001000fc167d39",
+      "sha256": "d643a8ec727b2dfc5900aea5cf90c1b2d52061f26ed06e1dff5926fa94b83eca",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/freshness.json"
     },
     {
@@ -90,13 +90,18 @@
       "access": "coordinator-only",
       "sha256": "911ce8f66276153b0f42ae91daa1fb181076ad8f668d63e0e71b96fb0620a7ee",
       "uri": "docs/research/bounded-discovery-prototype/handoff.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "0fd1a990b624c84e643245970a8ef9d788914ad1d951f9fa50575d6d6d035e33",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p9-writes-allowed/result.json"
     }
   ],
   "frozen_total_cap_usd": "150.00",
   "grading_closeout_reserve_usd": "10.00",
   "ledger_ref": {
     "access": "coordinator-only",
-    "sha256": "8796129331d1e8aafa4468341bdf1e60af24e85f9067d15ce69e1ec0e565b0e7",
+    "sha256": "7ac98dfd71449cc7ecb2d50c10f71c9978c6061539d57824403fcff8ae588cc2",
     "uri": "docs/research/bounded-discovery-prototype/ledger.json"
   },
   "next_stage": {
@@ -106,8 +111,8 @@
     ],
     "work": "Decrypt sealed/schedule.json.enc; #150 runs its six pilot cells in order and #151 the remaining eighteen. Per cell: verify_freeze.py, prepare the environment and check_cell_isolation.py --phase pre-dispatch, reserve on the ledger, dispatch per dispatch-template.md, re-check isolation, meter with meter_split.py, verify model and effort with agent_effort.py, settle, and archive. Stop on any non-zero exit and read the handoff rather than dispatching again. Keep pilot outcomes sealed until every reviewer run has stopped."
   },
-  "pre_freeze_actual_usd": "10.7961639",
-  "reason": "Configuration, stronger-worker choice, isolation controls, numeric ceilings, cell order, replacement policy, screening rules and artifact schema are frozen and committed before any reviewer output exists. The ten metered probes established distinct child settings, context freshness, file-tool confinement, name-based egress control, cancellation and provider termination, an enforceable dollar allowance with one call of overshoot, atomic reservation contention, and reproduction of billed totals from retained usage. Two controls are recorded as audited rather than enforced -- an allow-listed interpreter reads any path that exists, and a raw socket to an IP address bypasses the proxy -- and are answered by physical absence of the forbidden material plus a post-dispatch transcript and egress audit that invalidates any attempt which crossed either boundary. The cap is min(1.5 x 135.99, 150) = 150.00 with a 10.00 protected grading/closeout reserve; the projection fits with 14.01 of headroom, and that headroom is thin.",
+  "pre_freeze_actual_usd": "10.8543989",
+  "reason": "Configuration, stronger-worker choice, isolation controls, numeric ceilings, cell order, replacement policy, screening rules and artifact schema are frozen and committed before any reviewer output exists. The twelve metered probes established distinct child settings, context freshness, file-tool confinement, name-based egress control, cancellation and provider termination, an enforceable dollar allowance with one call of overshoot, atomic reservation contention, and reproduction of billed totals from retained usage. Probes 8 and 9 also caught the cell configuration refusing its own writes and corrected it before the freeze. Two controls are recorded as audited rather than enforced -- an allow-listed interpreter reads any path that exists, and a raw socket to an IP address bypasses the proxy -- and are answered by physical absence of the forbidden material plus a post-dispatch transcript and egress audit that invalidates any attempt which crossed either boundary. The cap is min(1.5 x 136.06, 150) = 150.00 with a 10.00 protected grading/closeout reserve; the projection fits with 13.94 of headroom, and that headroom is thin.",
   "reserved_usd": "0.00",
   "schema_version": "bounded-discovery-v1",
   "stage": "freeze",

@@ -102,16 +102,17 @@
     "atomic_reservation": "before each dispatch: existing actual + all in-flight upper bounds + the protected grading/closeout reserve + the new allowance must fit the cap. Probe 3 exercised it against the real ledger: of two operations against the same remaining capacity exactly one was admitted and the second exited 1 with no event written.",
     "frozen_total_cap_usd": "150.00",
     "grading_closeout_reserve_usd": "10.00",
-    "pre_freeze_actual_usd": "10.7961639",
+    "pre_freeze_actual_usd": "10.8543989",
     "pre_freeze_ceiling_usd": "15.00",
     "projection": {
       "a_cell_usd": "3.4200",
       "b_cell_usd": "3.7412",
       "basis": "the twelve #136-policy cells in docs/research/one-shot-qualification-2026-09-07/metering/cells/ (mean $3.4200 an attempt, verifier children $0.2142 of it) and the six #148 selector sessions (mean $0.6270), repriced for the stronger worker at the 2.5x ratio in rates.json; C adds one finder and ten per cent of the primary for admission",
       "c_cell_usd": "5.6294",
-      "cap_formula": "min(1.5 x 135.99, 150) = 150.00",
-      "headroom_usd": "14.01",
-      "projected_full_cost_usd": "135.99",
+      "cap_formula": "min(1.5 x 136.06, 150) = 150.00",
+      "cap_freeze_note": "the cap-freeze event was recorded against the $135.99 projection that held before probes 8 and 9; those two probes are pre-freeze spend in the same subtotal and raise the projection to $136.06, which leaves the $150.00 cap unchanged. The event is not rewritten; see preregistration deviation 5.",
+      "headroom_usd": "13.94",
+      "projected_full_cost_usd": "136.06",
       "replacement_allowance_usd": "12.79",
       "sensitivity": "measured cells under this policy ranged $2.02 to $6.78, a 3.3x spread. At the observed maximum for every cell the grid would exceed the cap; the ledger's atomic reservation is what stops that, and a stopped-budget mid-grid leaves whole triples because of the frozen order.",
       "twenty_four_cells_usd": "102.33"
@@ -280,7 +281,7 @@
     },
     "dispatch_template": {
       "access": "coordinator-only",
-      "sha256": "01ae11f21a9e494f9f3d57607be33f5f373f63143641c9e07bb66fa4be7cdc6d",
+      "sha256": "a93b4dbd82298242f518f5638705f0bb986827820f610e4ea9e3f88f9034d4f3",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/dispatch-template.md"
     },
     "freeze_tools": {
@@ -334,7 +335,7 @@
     },
     "ledger": {
       "access": "coordinator-only",
-      "sha256": "8796129331d1e8aafa4468341bdf1e60af24e85f9067d15ce69e1ec0e565b0e7",
+      "sha256": "7ac98dfd71449cc7ecb2d50c10f71c9978c6061539d57824403fcff8ae588cc2",
       "uri": "docs/research/bounded-discovery-prototype/ledger.json"
     },
     "method": {
@@ -386,20 +387,20 @@
   },
   "preregistration": {
     "access": "coordinator-only",
-    "sha256": "dd7543db242811cecec132ccc3de293d0da85324ed36e5ea7f62de0b251be17d",
+    "sha256": "4bfd4546b6b08773b15949d73a5e5bbf7c18c841bcf3e22cd55af7bfb2aaad87",
     "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
   },
   "probes": {
-    "allowance": "inside #146's $15.00 pre-freeze subtotal; $9.895998 was already spent by #147/#148",
-    "charged_usd": "0.900166",
+    "allowance": "inside #146's $15.00 pre-freeze subtotal; $9.895998 was already spent by #147/#148, leaving $5.104002",
+    "charged_usd": "0.958401",
     "freshness": {
       "access": "coordinator-only",
-      "sha256": "810bf37acfd2b0d38d7c1e1a7913536a1eb70fc456734fc9eb001000fc167d39",
+      "sha256": "d643a8ec727b2dfc5900aea5cf90c1b2d52061f26ed06e1dff5926fa94b83eca",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/freshness.json"
     },
     "reconciliation": {
       "access": "coordinator-only",
-      "sha256": "75633d863fe6b4aeba90e4c859549ffaf56d7276682f569388bf941f51c8b56a",
+      "sha256": "dda34e285228fcda0bf0142d88c0ba57da91fe83b0564b50744ca20e76ebc5c7",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/reconciliation.json"
     },
     "results": [
@@ -442,6 +443,11 @@
         "establishes": "meter_split.py prices each transcript at its own model's frozen rates and reproduces the runtime self-report: five sessions to within $0.0000005, and the four launched with --restricted about $0.00134 low each, a fixed amount billed without appearing in the transcript. The larger figure is charged and the difference recorded; see probes/reconciliation.json.",
         "probe": "accounting",
         "verdict": "supported"
+      },
+      {
+        "establishes": "the cell can write its payload, report and script output only when --allowedTools names Write and Edit; without them the write tools are denied outright under --restricted with no approval surface, while an allow-listed interpreter writes freely. The frozen configuration names them.",
+        "probe": "p8/p9-writes",
+        "verdict": "supported after the configuration was corrected"
       }
     ],
     "retained_uncertainty_usd": "0.082158"
@@ -519,13 +525,14 @@
       "--effort high",
       "--restricted",
       "--tools Bash,Read,Write,Edit,Glob,Grep,Agent,Task",
-      "--allowedTools Bash(git:*) Bash(go:*) Bash(cargo:*) Bash(python3:*) Bash(cat:*) Bash(ls:*) Bash(head:*) Bash(tail:*) Bash(wc:*) Bash(sed:*) Bash(grep:*)",
+      "--allowedTools Write Edit Bash(git:*) Bash(go:*) Bash(cargo:*) Bash(python3:*) Bash(cat:*) Bash(ls:*) Bash(head:*) Bash(tail:*) Bash(wc:*) Bash(sed:*) Bash(grep:*)",
       "--add-dir <clone> --add-dir <skill snapshot> --add-dir <packet dir>",
       "--permission-prompts none",
       "--agents <the arm's worker definition>",
       "--max-budget-usd <the attempt's remaining whole-review allowance>"
     ],
-    "runtime": "Claude Code 2.1.263 (probes/\u2026/result.json and evidence/claude-version.txt)"
+    "runtime": "Claude Code 2.1.263 (probes/\u2026/result.json and evidence/claude-version.txt)",
+    "write_tools": "Write and Edit must be named in --allowedTools: under --restricted with --permission-prompts none they are denied outright otherwise, even inside the permitted roots (probe 8), while naming them restores writes inside the roots and still refuses one outside (probe 9). A shell command is admitted only when it matches an allow-listed prefix, so a compound `a && b && c` is refused even when each part would be allowed alone."
   },
   "stage": "freeze",
   "stronger_worker_selection": {

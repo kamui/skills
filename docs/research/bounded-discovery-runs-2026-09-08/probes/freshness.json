@@ -1,51 +1,86 @@
 {
   "p1-settings": {
-    "session_id": "819a42e7-a268-4bee-af41-a01206cd002b",
     "first_user_message_prefix": "This is a capability probe. Do exactly these two steps and n",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "819a42e7-a268-4bee-af41-a01206cd002b",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
   },
   "p2a-isolation-finder": {
-    "session_id": "3a05c7cf-07b2-453a-aade-cbb5e3a5b1b6",
     "first_user_message_prefix": "This is a read-isolation capability probe, not a review. You",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "3a05c7cf-07b2-453a-aade-cbb5e3a5b1b6",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
   },
   "p2b-isolation-primary": {
-    "session_id": "6efcf900-a2af-46d1-ad1f-db912d4b15b4",
     "first_user_message_prefix": "This is a read-isolation capability probe, not a review. You",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "6efcf900-a2af-46d1-ad1f-db912d4b15b4",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
   },
   "p2c-egress": {
-    "session_id": "43d6403a-2623-44c9-b1b2-7e7579cd7d76",
     "first_user_message_prefix": "This is a network-isolation capability probe, not a review. ",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "43d6403a-2623-44c9-b1b2-7e7579cd7d76",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
   },
   "p3a-cancellation-precheck": {
-    "session_id": "d20a4f67-5c2d-4b4a-8ff3-b5077b5eda78",
     "first_user_message_prefix": "This is a cancellation probe, not a review. Work in /tmp/bd1",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "d20a4f67-5c2d-4b4a-8ff3-b5077b5eda78",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
   },
   "p3b-cancelled": {
-    "session_id": "b18af76d-b4a2-410c-9210-3afb087ea195",
     "first_user_message_prefix": "This is a cancellation probe, not a review. Work in /tmp/bd1",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "b18af76d-b4a2-410c-9210-3afb087ea195",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
   },
   "p4-allowance": {
-    "session_id": "5c168712-73c6-4c4e-a8d7-c55985710ff2",
     "first_user_message_prefix": "This is a cancellation probe, not a review. Work in /tmp/bd1",
-    "user_text_messages": 1,
+    "resumed_or_forked": false,
+    "session_id": "5c168712-73c6-4c4e-a8d7-c55985710ff2",
     "summary_records": 0,
-    "resumed_or_forked": false
+    "user_text_messages": 1
+  },
+  "p5-cell-config": {
+    "first_user_message_prefix": "This is a configuration rehearsal, not a review. Your workin",
+    "resumed_or_forked": false,
+    "session_id": "8423b77a-4062-4883-90b5-06c179581a62",
+    "summary_records": 0,
+    "user_text_messages": 1
+  },
+  "p6-shell-allowlist": {
+    "first_user_message_prefix": "This is a configuration rehearsal, not a review. Your workin",
+    "resumed_or_forked": false,
+    "session_id": "c75cab68-a6a8-46e1-ab40-1d81966af2ef",
+    "summary_records": 0,
+    "user_text_messages": 1
+  },
+  "p7-shell-escape": {
+    "first_user_message_prefix": "You are running a sanctioned security-control test on a rese",
+    "resumed_or_forked": false,
+    "session_id": "979452b2-3b0b-4d57-a93b-4dced1c3b9ce",
+    "summary_records": 0,
+    "user_text_messages": 1
+  },
+  "p8-writes": {
+    "first_user_message_prefix": "This is a configuration rehearsal, not a review. Your workin",
+    "resumed_or_forked": false,
+    "session_id": "52ee1bfb-6cdd-42db-9a6a-4d2abdf43a82",
+    "summary_records": 0,
+    "user_text_messages": 1
+  },
+  "p9-writes-allowed": {
+    "first_user_message_prefix": "This is a configuration rehearsal, not a review. Your workin",
+    "resumed_or_forked": false,
+    "session_id": "510747fd-4ec9-4c98-aa49-537d7d084169",
+    "summary_records": 0,
+    "user_text_messages": 1
   }
 }

@@ -102,6 +102,26 @@
       "runtime_self_report_usd": "0.0477228",
       "session_id": "979452b2-3b0b-4d57-a93b-4dced1c3b9ce",
       "transcripts": 1
+    },
+    "p8-writes": {
+      "difference_usd": "-0.001275599999999997",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.025806",
+      "runtime_self_report_usd": "0.027081599999999997",
+      "session_id": "52ee1bfb-6cdd-42db-9a6a-4d2abdf43a82",
+      "transcripts": 1
+    },
+    "p9-writes-allowed": {
+      "difference_usd": "-0.0012814",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.029872",
+      "runtime_self_report_usd": "0.0311534",
+      "session_id": "510747fd-4ec9-4c98-aa49-537d7d084169",
+      "transcripts": 1
     }
   },
   "schema_version": "bounded-discovery-v1"

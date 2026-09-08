@@ -4,7 +4,7 @@
 the [#138](https://github.com/kamui/skills/issues/138) epic.** This document and its
 [manifest](manifest.json) fix everything the grid is allowed to vary, before any reviewer, finder or
 verifier has run. Nothing here reports a result: the only model sessions charged to this ticket are
-the ten capability probes in [`probes/`](probes/), none of which reviewed a target.
+the twelve capability probes in [`probes/`](probes/), none of which reviewed a target.
 
 Disposition: **ready**, recorded in [handoff.json](handoff.json). [#150](https://github.com/kamui/skills/issues/150)
 runs the six-cell pilot and [#151](https://github.com/kamui/skills/issues/151) the remaining
@@ -109,8 +109,8 @@ config["source"]["sha256"]`) is the same equality, so no dispatch can proceed wi
 
 ## 4. Runtime capability: what the probes established
 
-Ten headless sessions, $0.900166 charged and $0.082158 retained as uncertainty, all inside #146's
-$15.00 pre-freeze subtotal. Every one is metered, model-and-effort verified and committed under
+Twelve headless sessions, $0.958401 charged and $0.082158 retained as uncertainty, all inside
+#146's $15.00 pre-freeze subtotal. Every one is metered, model-and-effort verified and committed under
 [`probes/`](probes/); [`probes/README.md`](probes/README.md) has the detail. Freshness was checked
 mechanically rather than asked of the model: each session's transcript opens with exactly one user
 message — the probe prompt — and carries no summary or resume record
@@ -127,7 +127,8 @@ message — the probe prompt — and carries no summary or resume record
 | cancellation and provider termination | **enforced** | probe 3: SIGTERM at 25 s, exit 124, no payload, no surviving process, transcript unchanged 25 s later |
 | bounded request allowance | **enforced, with one call of overshoot** | probe 4: `--max-budget-usd 0.05` stopped the session with `subtype: error_max_budget_usd` after spending $0.067136 |
 | atomic budget contention | **enforced** | probe 3: of two operations against the same remaining capacity, one was admitted and the second exited 1 with no event written |
-| billed totals from retained usage | **enforced** | `meter_split.py` reproduces the runtime self-report from the per-request records for all ten sessions: five to within $0.0000005, and the four launched with `--restricted` about $0.00134 low each — a fixed amount billed without appearing in the transcript ([`probes/reconciliation.json`](probes/reconciliation.json)) |
+| billed totals from retained usage | **enforced** | `meter_split.py` reproduces the runtime self-report from the per-request records for every session that produced one: five to within $0.0000005, and the six launched with `--restricted` about $0.0013 low each — a fixed amount billed without appearing in the transcript ([`probes/reconciliation.json`](probes/reconciliation.json)) |
+| the cell can write its payload, report and script output | **enforced, and it needs the allow list** | probes 8 and 9: under `--restricted` with `--permission-prompts none` the write tools are denied outright unless `--allowedTools` names them — while an allow-listed `python3` writes freely — and naming `Write` and `Edit` restores writes inside the roots while still refusing one outside |
 | **shell filesystem reach** | **audited, not enforced** | probe 7: with `Bash(python3:*)` allow-listed, `python3 -c "print(open(...).read())"` read a canary outside every permitted root, and so did a `subprocess` call. An allow-listed `cat` was blocked; an interpreter is not. |
 | **raw-socket egress** | **audited, not enforced** | probes 2c and 6: a direct TCP connection to an IP address on port 443 succeeds through an allow-listed `python3` |
 
@@ -208,20 +209,21 @@ and close out the partial experiment.
 ## 7. One enforceable budget
 
 Sunk spend is reconciled first, not written off. #146 and #147 charged nothing; #148 charged
-$9.895998 for six selectors and six adjudicators; this ticket's probes charged $0.900166 and retain
+$9.895998 for six selectors and six adjudicators; this ticket's probes charged $0.958401 and retain
 $0.082158 of uncertainty for one request the cancelled probe may never have recorded. Pre-freeze
-actual is **$10.7961639** of the $15.00 subtotal.
+actual is **$10.8543989** of the $15.00 subtotal. The cap was frozen against a $135.99 projection
+before probes 8 and 9 ran; deviation 5 records why the recomputed $136.06 leaves it unchanged.
 
 | Line | Amount | Basis |
 | --- | --- | --- |
-| Sunk pre-freeze, including probes | $10.796 | the ledger |
+| Sunk pre-freeze, including probes | $10.854 | the ledger |
 | Retained uncertainty | $0.082 | the cancelled probe's largest observed request |
 | 24 cells | $102.33 | 8 × ($3.4200 A + $3.7412 B + $5.6294 C) |
 | Three-replacement allowance | $12.79 | 3 × the $4.2636 mean cell |
 | Grading and closeout reserve | $10.00 | #152's blind adjudication and per-target scoring plus #153's synthesis |
-| **Projected full experimental cost** | **$135.99** | |
-| **Frozen cap** | **$150.00** | `min(1.5 × 135.99, 150)` |
-| Headroom | $14.01 | 9.3% of the cap |
+| **Projected full experimental cost** | **$136.06** | |
+| **Frozen cap** | **$150.00** | `min(1.5 × 136.06, 150)` |
+| Headroom | $13.94 | 9.3% of the cap |
 
 The per-cell figures come from measured runs at the dated rates in [`rates.json`](rates.json), not
 from a guess. A is the mean attempt cost of the twelve `bea6be14` cells in
@@ -266,8 +268,8 @@ records of a single request by taking the maximum of each counter. There are no 
 **Settlement.** Settle from the runtime self-report and from the retained per-request records; when
 they differ, charge the larger and record the difference as a reconciliation residual. Every cell
 will have one: the four probes launched with `--restricted` — the flag the frozen configuration uses
-— each billed about $0.00134 more than their transcripts account for, a fixed amount and roughly
-0.03% of a $4 cell. An attempt
+— and the two that followed them, all six billing about $0.0013 more than their transcripts account
+for: a fixed amount, roughly 0.03% of a $4 cell. An attempt
 that produced no self-report settles from its transcript and retains one further request at the
 largest observed per-request cost as uncertainty — exactly what probe 3 did. Review consumption,
 one-off setup and selection, and charged grading are reported in separate columns; shared setup is
@@ -377,7 +379,14 @@ a partial run is reported as what it measured rather than forced into a global i
    verifies both freezes, terminates the finder, and resumes the same session with the compact
    claims. A and B run as one invocation. The extra process boundary is part of C's treatment.
 
-5. **Two earlier stage records now quote stale digests (2026-09-08).** #147's
+5. **Probes 8 and 9 ran after the `cap-freeze` event (2026-09-08).** The gate was recorded against a
+   $135.99 projection; then probes 8 and 9 found that the cell configuration as written could not
+   write its own payload, and fixed it. They are pre-freeze spend inside the same $15.00 subtotal and
+   they raise the projection to $136.06, which still fits the $150.00 cap with $13.94 of headroom.
+   The `cap-freeze` event is left exactly as written — it was true when it was recorded, and the
+   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.06`
+   still exceeds $150.00. Section 7's table carries the recomputed figures.
+6. **Two earlier stage records now quote stale digests (2026-09-08).** #147's
    `implementation-handoff.json` records `ADAPTER.md` and `ledger.json` as they were when it
    delivered, and #148's `handoff.json` records `ledger.json` as it was when *it* delivered. The
    ledger is a living shared artifact by design — every chargeable operation across the epic appends
