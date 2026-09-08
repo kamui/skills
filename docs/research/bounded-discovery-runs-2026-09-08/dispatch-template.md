@@ -36,7 +36,8 @@ ALL_PROXY=http://127.0.0.1:{PROXY_PORT} \
 timeout 5400 claude -p --session-id "{PRIMARY_SID}" \
   --model claude-sonnet-5 --effort high --restricted \
   --tools "Bash,Read,Write,Edit,Glob,Grep,Agent,Task" \
-  --allowedTools "Bash(git:*)" "Bash(go:*)" "Bash(cargo:*)" "Bash(python3:*)" "Bash(cat:*)" \
+  --allowedTools "Write" "Edit" \
+                 "Bash(git:*)" "Bash(go:*)" "Bash(cargo:*)" "Bash(python3:*)" "Bash(cat:*)" \
                  "Bash(ls:*)" "Bash(head:*)" "Bash(tail:*)" "Bash(wc:*)" "Bash(sed:*)" "Bash(grep:*)" \
   --add-dir "{CLONE}" --add-dir "{SKILL_DIR}" --add-dir "{PACKET_DIR}" \
   --permission-prompts none --agents "$(cat {AGENTS_JSON})" \
@@ -46,6 +47,13 @@ timeout 5400 claude -p --session-id "{PRIMARY_SID}" \
 The working directory is `{WORK}`. In arm C the same command runs twice: phase 1 as written, then
 `--resume "{PRIMARY_SID}"` with `{ADMISSION}` as the prompt and the allowance reduced by phase 1's
 settled cost.
+
+`Write` and `Edit` are named in `--allowedTools` because they have to be: under `--restricted` with
+`--permission-prompts none` the write tools are denied outright unless the allow list names them,
+even inside the permitted roots (probe 8), while naming them restores writes inside the roots and
+still refuses one outside (probe 9). A shell command is admitted only when it matches an
+allow-listed prefix, so the per-target execution note must use simple commands: a compound
+`a && b && c` is refused even when each part would be allowed on its own.
 
 ## Launch: the finder (arm C only, concurrently with the primary's phase 1)
 

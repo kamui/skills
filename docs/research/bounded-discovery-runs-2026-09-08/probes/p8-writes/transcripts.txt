@@ -1,0 +1,2 @@
+session 52ee1bfb-6cdd-42db-9a6a-4d2abdf43a82 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p8-work/52ee1bfb-6cdd-42db-9a6a-4d2abdf43a82.jsonl sha256 0bc108b0a9599563e7b33cc8a60d2479ed0a018e012c77f9e9784da42e27d4bf
