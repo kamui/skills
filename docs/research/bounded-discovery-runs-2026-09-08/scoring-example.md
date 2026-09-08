@@ -1,4 +1,6 @@
-<!-- Rendered by scripts/score_attempts.py from the third case in scripts/scoring-fixtures.json.
+<!-- Regenerate with:
+       python3 -c "import json;from pathlib import Path;d=json.loads(Path('scripts/scoring-fixtures.json').read_text());c=[x for x in d['cases'] if x['name']=='a candidate arm that gains recall inside the cost gate screens positive'][0];Path('/tmp/grid.json').write_text(json.dumps(c['input']))"
+       python3 scripts/score_attempts.py --input /tmp/grid.json --out scoring-example.md
      Every number is synthetic. It shows the shape of the scorecard #152 and #153 will read;
      it is not a result and describes no real attempt. -->
 

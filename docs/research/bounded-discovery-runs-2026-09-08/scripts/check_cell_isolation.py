@@ -20,9 +20,13 @@ runs in two phases against the same cell.
 **preparation** — evaluator material still present, before it is removed. Pins the
 clone and its mirror, reads the sealed leak set, confirms that none of its objects
 resolves in either, and writes an **attestation**: the clone head, the base and
-merge-base, the mirror's refs, the digest of the leak-set file, and how many
-objects were examined and hit. The attestation carries no SHA from the leak set,
-so it survives into the dispatch window without carrying truth with it.
+merge-base, the mirror's refs, the SHA-256 of the leak-set *file*, and how many
+objects were examined and hit. It carries no SHA *from* the set, so it survives
+into the dispatch window without carrying truth with it. The file digest names
+which set was checked. Nothing during the dispatch window can compare it — the
+file is deliberately gone by then — but #152 and #153 can, once the sealed
+material comes back, which is what makes the attestation auditable rather than
+merely asserted.
 
 **pre-dispatch** and **post-dispatch** — evaluator material gone. Verify absence,
 the permitted roots, the clone and mirror still in exactly the state the
@@ -56,6 +60,7 @@ failure on stdout, 2 when the spec cannot be read or a git call fails.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import http.client
 import json
 import os
@@ -134,7 +139,8 @@ def mirror_state(clone):
 def check_leak_set(clone, leak_set_path):
     """Resolve nothing to stdout: report only how many SHAs were checked and how many hit."""
     try:
-        document = json.loads(Path(os.path.expanduser(leak_set_path)).read_text(encoding="utf-8"))
+        raw = Path(os.path.expanduser(leak_set_path)).read_bytes()
+        document = json.loads(raw.decode("utf-8"))
     except (OSError, ValueError) as exc:
         raise Unreadable("leak set " + leak_set_path + ": " + str(exc))
     shas = [str(sha) for sha in document.get("shas", [])]
@@ -149,6 +155,11 @@ def check_leak_set(clone, leak_set_path):
                 break
     return {"check": "no sealed leak-set object resolves in the clone or its mirror",
             "examined": len(shas), "hits": hits, "passed": bool(shas) and hits == 0,
+            # Which leak set this was, without saying what is in it. Nothing during the dispatch
+            # window can compare it — the file is deliberately gone by then — but #152 and #153 can,
+            # once the sealed material comes back, and that is what makes the attestation auditable
+            # rather than merely asserted.
+            "leak_set_sha256": hashlib.sha256(raw).hexdigest(),
             "note": "" if shas else "the leak set is empty, so this check establishes nothing"}
 
 
@@ -184,6 +195,9 @@ def check_attestation(spec, attestation, mirror):
             problems.append("the attestation does not record a passing leak-set check")
         elif not leak.get("examined"):
             problems.append("the attestation's leak set was empty, so it establishes nothing")
+        elif not leak.get("leak_set_sha256"):
+            problems.append("the attestation names no leak-set digest, so which set it checked "
+                            "cannot be audited at reveal")
         pinned = attestation.get("mirror") or {}
         if pinned.get("refs") != mirror["refs"]:
             problems.append("the mirror's refs changed since the attestation: %s then, %s now"
@@ -289,6 +303,15 @@ def self_test():
                    not any(c["check"].startswith("forbidden paths") for c in prepared["checks"])))
     checks.append(("the attestation carries no leak-set SHA",
                    "0" * 40 not in json.dumps(prepared)))
+    leak_check = next(c for c in prepared["checks"] if c["check"].startswith("no sealed leak-set"))
+    checks.append(("the attestation names which leak-set file it read",
+                   leak_check["leak_set_sha256"] ==
+                   hashlib.sha256((evaluator / "leak.json").read_bytes()).hexdigest()))
+    other = root / "other-leak.json"
+    other.write_text(json.dumps({"shas": ["1" * 40]}), encoding="utf-8")
+    checks.append(("a different leak-set file gets a different digest",
+                   check_leak_set({"path": str(clone)}, str(other))["leak_set_sha256"]
+                   != leak_check["leak_set_sha256"]))
     import shutil
     shutil.rmtree(evaluator)                                   # the dispatch window begins
     gate = run(spec, "pre-dispatch", prepared)
@@ -304,6 +327,11 @@ def self_test():
             c["examined"] = 0
     checks.append(("an attestation over an empty leak set fails",
                    not run(spec, "pre-dispatch", empty)["checks"][3]["passed"]))
+    undigested = json.loads(json.dumps(prepared))
+    for c in undigested["checks"]:
+        c.pop("leak_set_sha256", None)
+    checks.append(("an attestation with no leak-set digest fails",
+                   not run(spec, "pre-dispatch", undigested)["checks"][3]["passed"]))
     swapped = json.loads(json.dumps(prepared))
     swapped["mirror"]["refs"] = {"refs/heads/main": "1" * 40}
     checks.append(("a swapped mirror fails",
