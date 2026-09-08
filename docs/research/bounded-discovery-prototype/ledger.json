@@ -1,0 +1,39 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "experiment_id": "issue-138",
+  "owner": "kamui",
+  "currency": "USD",
+  "total_ceiling_usd": "150.00",
+  "pre_freeze_ceiling_usd": "15.00",
+  "frozen_total_cap_usd": null,
+  "grading_closeout_reserve_usd": null,
+  "actual_usd": "0.00",
+  "reserved_usd": "0.00",
+  "uncertainty_usd": "0.00",
+  "pre_freeze_actual_usd": "0.00",
+  "pre_freeze_reserved_usd": "0.00",
+  "planned_cells": 24,
+  "attempts_dispatched": 0,
+  "replacement_limit": 3,
+  "attempt_limit": 27,
+  "events": [
+    {
+      "event_id": "issue-138-budget-0001",
+      "previous_event_id": null,
+      "observed_at": "2026-09-08T02:22:11Z",
+      "ticket": 146,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "open",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [],
+      "reservation_id": null,
+      "actual_delta_usd": "0.00",
+      "reservation_delta_usd": "0.00",
+      "uncertainty_usd": "0.00",
+      "rate_usage_evidence": [],
+      "reason": "Opened before any chargeable experiment operation. This handoff performed document implementation only; no selector, target setup, reviewer or paid probe ran. Final cap and grading reserve remain for #149."
+    }
+  ]
+}

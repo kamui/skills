@@ -1,10 +1,12 @@
 # One-shot code-review evaluation method
 
 **Defined 2026-09-05 for [#131](https://github.com/kamui/skills/issues/131).** This is the
-authoritative method for the next current-skill experiments. It defines a protocol and a
-synthetic scoring example; it reports no experiment execution or results and authorizes no
-paid dispatch. Each experiment must meet its ticket's prerequisites and freeze its own pins,
-targets, configuration, and spend before starting.
+authoritative method for the current-skill experiments. It defines a protocol and synthetic
+scoring examples; experiment bundles report their own results. This method authorizes no
+paid dispatch. The active #138 design/preparation work can begin independently of prior grids;
+its benchmark dispatch still requires the usable inputs and frozen controls described below.
+Each experiment must meet its ticket's prerequisites and freeze its own pins, targets,
+configuration, and spend before starting.
 
 ## 1. Freeze the experiment
 
@@ -22,7 +24,16 @@ completion before dispatch.
 | --- | --- | --- |
 | [#137](https://github.com/kamui/skills/issues/137) | Exact repaired #136 skill versus historical `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83`; same model, effort and verifier configuration. Six fresh PRs: four buggy, two adjudicated clean; two runs per arm/PR = 24 planned cells. Two-target paired pilot first, with its valid rows included. At most two replacement cells: 26 attempts total. | Zero candidate-arm false findings, no additional false-clean outcomes, no worse completion rate, at least +10 percentage points in macro material recall, and at most 25% higher matched median billed cost. |
 | [#124](https://github.com/kamui/skills/issues/124) | Same repaired skill, high/medium primaries with verifier effort fixed at high or the higher tested default. Three seeds per arm on known Hyper plus two per arm on each of two fresh reasoning-heavy PRs (including a clean high-risk case) = 14 cells. At most two replacement cells: 16 attempts total. | Zero candidate-arm false findings, no additional false-clean outcomes, no lower macro material recall or worse completion rate, and at least 20% lower matched median billed cost. Otherwise retain the default. |
-| [#138](https://github.com/kamui/skills/issues/138) | Later, separate preregistration after #137/#124 results and its residual-discovery-gap entry condition. Consult that ticket for its three-arm design and thresholds. | No extra arm is authorized inside either evaluation above. Freeze its own targets, thresholds, equal maximum per-run budgets and spend cap before dispatch. |
+| [#138](https://github.com/kamui/skills/issues/138) | Active separate experiment: A is the #136 integrated baseline; B changes only verifier configuration; C adds one bounded finder and defers initial verification until discovery admission, using B's separate fresh verifiers. Four fresh targets (three buggy, one clean), A/B/C, two replicates = 24 planned cells, including six pilot cells. **Three replacements maximum / 27 attempts across the epic.** [#146 design](bounded-discovery-prototype/DESIGN.md) owns schemas/transitions; #149 freezes exact pins, settings, scope and equal whole-review ceilings. | Screen B and C separately against A: zero false findings; no worse false-clean count/rate or completion; >=20% relative macro material-recall gain and positive absolute gain (A=0 requires +10 percentage points), in both attempt-level and completed-only views; median matched billed cell-cost ratio <=1.25. Report sufficient-outcome recall and action errors separately. C/B measures discovery plus timing with identical verifiers. A complete positive screen recommends fresh confirmation, not promotion. |
+
+For #138, preparation is active now; there is no residual-gap entry gate or requirement to
+wait for #137. #149 requires usable #147/#148 artifacts plus #136/#130/#96/#97 prerequisites.
+#124 is complete: its retained-default decision supplies the common primary configuration
+(high primary/high baseline verifier in the measured Claude/Sonnet runtime); PR #183 did not
+qualify medium for adoption. #137's corrected negative screen and changed truth/target mix inform
+interpretation, not a mandatory benchmark gate. Read prerequisite dispositions: a terminal stop
+requires no-dispatch closeout, even when the producing issue is closed. Keep #136 policy common
+to A/B/C, including permitted omissions; later #185/#186 repairs require a separate comparison.
 
 For #137, cover cross-file conformance outside the diff, changed-test correctness,
 concurrency/progress, and ordinary behavioral change. For #124, probe requested versus observed
@@ -38,10 +49,18 @@ Do not pool unlike target sets or change model/policy mid-comparison.
 
 **Budget gate:** using the actually available model and dated rate evidence, compute projected
 spend for the full planned grid plus setup/probes and tool/repro charges. Write the estimate's
-assumptions and a maximum spend of `min(1.5 × projected spend, $150)` per ticket, including pilot,
-replacements, invalidated/discarded attempts and setup. Record equal per-pair execution and run
-budgets. Before each dispatch, check remaining spend against a conservative upper bound for the
-next work and observe available session/reset limits; §3's dispatch record is where both are
+assumptions and a maximum spend of `min(1.5 × projected spend, $150)` per experiment, including
+pilot, replacements, invalidated/discarded attempts, setup, artifact processing, charged grading
+and synthesis. #124 and #137 retain their historical ticket budgets. **#138 has one shared epic
+budget**, not a fresh allowance per child: [its ledger](bounded-discovery-prototype/ledger.json)
+opens before chargeable setup/probes, with a $150 absolute ceiling and a $15 cumulative pre-freeze
+subtotal inside it. #149 reconciles sunk charges before freezing the total cap and a conservative
+grading/closeout reserve. Its cap may decrease but cannot discard sunk spend. Atomically reserve
+in-flight allowances plus the protected reserve before dispatch; missing usage retains an upper
+bound. Stop if the full scope and reserve cannot fit. Record equal per-pair execution and run
+budgets (equal across all three #138 arms); finder sublimits are inside C's whole-review ceiling.
+Before each dispatch, check remaining spend against a conservative upper bound for the next
+work and observe available session/reset limits; §3's dispatch record is where both are
 written down. Stop and report incomplete evidence if runtime, attempt or spend caps prevent
 completion. Model substitution or buying a paid service requires a new decision. This method
 itself does not spend that budget.
@@ -120,9 +139,14 @@ for a publishable finding. A harness-invalid attempt has zero admissible recover
 attempt-level score and remains in its denominators and cost totals; retain its raw claims for
 adjudication and auditing, without giving them recovery credit.
 
-When a harness repair changes inputs or execution conditions, invalidate every affected pair,
-including its previously successful counterpart, and rerun under one frozen repair. Each rerun
-consumes a replacement attempt; if this cannot fit the two-replacement cap, end incomplete.
+When a harness repair changes inputs or execution conditions, invalidate exactly the affected
+comparison cells, including previously successful counterparts, and rerun under one frozen
+repair. Each rerun consumes a replacement attempt. The default cap is two replacements; #138
+prospectively allows **three replacements / 27 total attempts across the epic**, sufficient for
+one affected A/B/C triplet. Unrelated faithful cells stand. If necessary reruns exceed the
+applicable cap, stop and close out the partial experiment. A valid substantive miss, false
+finding or skill timeout is not a rerun opportunity. This #138 exception leaves #124/#137 and
+the historical two-replacement examples below unchanged.
 A replacement never erases its predecessor. Count an invalid attempt as operationally incomplete;
 separately identify harness failures and skill failures. All planned cells need valid completed
 outcomes before claiming a successful full-grid screen; otherwise report provisional comparisons
@@ -166,8 +190,9 @@ Every attempt, however it ends, gets one ledger row: attempt ID; cell (target, a
 session identity and root transcript; the phase reached (`root dispatch` when nothing past the
 dispatch ran, `primary`, `verifier`, `validation`, `publication`/`result`); disposition and reason
 (`valid completed`, `stopped: session-limit notice`, `harness-invalid`, `skill failure`); whether
-it is the cell's first attempt, a replacement `k of 2` inside the cap, or a replacement the cap
-refuses (then nothing is dispatched and the row marks the cell incomplete); and its meter row from
+it is the cell's first attempt, a replacement `k of limit` inside the frozen cap (normally 2;
+#138 uses 3), or a replacement the cap refuses (then nothing is dispatched and the row marks
+the cell incomplete); and its meter row from
 the existing metering CLI,
 `python3 docs/research/tools/transcript_usage.py <paths> --prices IN,OUT --row "<attempt ID>"`,
 run over every transcript the attempt produced, aborted verifiers included. The CLI skips the
@@ -182,9 +207,12 @@ expensive.
 Keep three cost views apart and label each. **Per-arm valid-run cost** sums the arm's valid
 completed attempts. **All-attempt cost**, per cell and per arm, adds every discarded, stopped or
 invalid attempt mapped to the cell; §4's matched cost uses this view, and the chosen arm's cost is
-never quoted with its discards subtracted. **Ticket total** adds setup, probes, tool/repro charges
-and notice-only rows; the spend cap governs it, and discarded spend is never dropped from it. The
-valid-run view alone, or the older practice of assigning discards to "the session, not to any run",
+never quoted with its discards subtracted. **Experiment total** (ticket total for #124/#137;
+shared epic total for #138) adds setup, selector/probes, tool/repro charges, notice-only rows,
+artifact processing and charged grading/closeout; the spend cap governs it, and discarded spend
+is never dropped from it. Report review-attempt consumption separately from preparation and
+grading. Shared setup is charged once to the experiment, not repeated in every arm's cell cost.
+The valid-run view alone, or the older practice of assigning discards to "the session, not to any run",
 does not replace the other two.
 
 Persist each completed expensive phase (the primary's ledger and payload draft, a finished verifier
@@ -267,7 +295,7 @@ Compute billed cost as `(uncached input × input rate + sum(cache-write tokens b
 tier rate) + cache-read tokens × read rate + output tokens including thinking × output rate) /
 1,000,000`, for rates quoted per million tokens. Count thinking once if already included in output.
 Add actual tool/repro charges and account for setup, probes and discarded attempts separately in
-the ticket total. Record cache tier/TTL, currency and discounts actually applicable. Unknown
+the experiment total. Record cache tier/TTL, currency and discounts actually applicable. Unknown
 cache tiers or missing usage get explicit uncertainty/bounds, never a silently assumed cheap tier
 or zero charge. Use #97's supported accounting when available; no estimate establishes a billed
 cost threshold when the uncertainty could change the decision.
