@@ -1,0 +1,2 @@
+session 5c168712-73c6-4c4e-a8d7-c55985710ff2 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p4/5c168712-73c6-4c4e-a8d7-c55985710ff2.jsonl sha256 4a6a98850bfc06d5fdc5f6f0886bb298ad134262ab114c412440cac0cb9b90f8

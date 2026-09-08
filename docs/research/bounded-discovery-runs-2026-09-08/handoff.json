@@ -1,0 +1,290 @@
+{
+  "actual_usd": "10.9378407",
+  "artifact_id": "issue-149-experiment-freeze-handoff",
+  "available_claims": [],
+  "created_at": "2026-09-08T09:45:00+00:00",
+  "dispatch_authorized": true,
+  "disposition": "ready",
+  "evidence": [
+    {
+      "access": "coordinator-only",
+      "sha256": "110a7eb3030112a9585e78193e454af0eaa048737f4a69ac9e1ca5978a80f1d1",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "4373abf13279a588d624607b65c775bfe8de8a74f4ab1d7b58ef5010ea253ee0",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "a1c34371abe4819512db336543bfc6d160765addf4f1177e57b4b76ad8dd626c",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/dispatch-template.md"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "60d8a067c8ce7b1fcb9ceb3097e8d84756f2c37eef22eb55c7a89e4d3bf84c9c",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/rates.json"
+    },
+    {
+      "access": "evaluator-only",
+      "sha256": "368a89da5048e11fa1cd960b482538f638bb0194694f5595c72b1b6f7a5cc95e",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/sealed/schedule.json.enc"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "fccf13efad356fe640afd5d70ab82d48f633a7a084e94effd5e95a8775ab9f20",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/freshness.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "2071882fc3cce0b4adbc53a2930b337ec8177b306a98329044a27b6390a1d946",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p1-settings/effort.txt"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "ee739b0f369f16ea7deb592085fcda96f03c0b970652f98f5224079fec97caa9",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p2a-isolation-finder/result.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "017aaa934e3c5789320216c2f7821090886a9c06b8b459120c136de0881b9751",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p2b-isolation-primary/result.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "c5c41af71584568a74046cc97b5741581e93df87e43a27bb08dc3db6cd7ac9ba",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p2c-egress/egress.jsonl"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "a717af224da68e2cb47339201e38a2c2d6cabecb35eed766e4fa7358b2675c1e",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p3b-cancelled/requests.jsonl"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "a4e24b38eb2ebe299d5b328411382811424dff7bdcb12cdf48c3ebdc973e40f9",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p4-allowance/result.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "53c0f510da7c8da4c1be789b857070f4b33519f46a0a0707ff6b87e72fc275b7",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p7-shell-escape/result.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "edf318783707178402b543e39166a8e5c5a456a2492599535bb5a764498c30ad",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/verify_freeze.py"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "3bd5812450063e8ed2fc1fce45565f11919a9aef7671e800390c12c2887aa5b8",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "bd6e2dd547624068aafc09108e35ffd99890220ab54bf8838473b63fef5098f0",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/score_attempts.py"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "911ce8f66276153b0f42ae91daa1fb181076ad8f668d63e0e71b96fb0620a7ee",
+      "uri": "docs/research/bounded-discovery-prototype/handoff.json"
+    },
+    {
+      "access": "coordinator-only",
+      "sha256": "0fd1a990b624c84e643245970a8ef9d788914ad1d951f9fa50575d6d6d035e33",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/p9-writes-allowed/result.json"
+    }
+  ],
+  "frozen_total_cap_usd": "150.00",
+  "grading_closeout_reserve_usd": "10.00",
+  "ledger_ref": {
+    "access": "coordinator-only",
+    "sha256": "e0da628e2ec8c7ae6e25355f32af7c916c72797b57b4ffb001c195e0d3473695",
+    "uri": "docs/research/bounded-discovery-prototype/ledger.json"
+  },
+  "next_stage": {
+    "tickets": [
+      150,
+      151
+    ],
+    "work": "Decrypt sealed/schedule.json.enc; #150 runs its six pilot cells in order and #151 the remaining eighteen. Per cell: verify_freeze.py, prepare the environment and check_cell_isolation.py --phase pre-dispatch, reserve on the ledger, dispatch per dispatch-template.md, re-check isolation, meter with meter_split.py, verify model and effort with agent_effort.py, settle, and archive. Stop on any non-zero exit and read the handoff rather than dispatching again. Keep pilot outcomes sealed until every reviewer run has stopped."
+  },
+  "pre_freeze_actual_usd": "10.9378407",
+  "reason": "Configuration, stronger-worker choice, isolation controls, numeric ceilings, cell order, replacement policy, screening rules and artifact schema are frozen and committed before any reviewer output exists. The thirteen metered probes established distinct child settings, context freshness, file-tool confinement, name-based egress control, cancellation and provider termination, an enforceable dollar allowance with one call of overshoot, atomic reservation contention, and reproduction of billed totals from retained usage. Probes 8 and 9 also caught the cell configuration refusing its own writes and corrected it before the freeze. Two controls are recorded as audited rather than enforced -- an allow-listed interpreter reads any path that exists, and a raw socket to an IP address bypasses the proxy -- and are answered by physical absence of the forbidden material plus a post-dispatch transcript and egress audit that invalidates any attempt which crossed either boundary. The cap is min(1.5 x 136.1361, 150) = 150.00 with a 10.00 protected grading/closeout reserve; the projection fits with 13.8639 of headroom, and that headroom is thin.",
+  "reserved_usd": "0.00",
+  "schema_version": "bounded-discovery-v1",
+  "stage": "freeze",
+  "unattempted_cells": [
+    {
+      "arm": "A",
+      "cell_id": "slot-1-A-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-1"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-1-A-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-1"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-1-B-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-1"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-1-B-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-1"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-1-C-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-1"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-1-C-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-1"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-2-A-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-2"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-2-A-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-2"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-2-B-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-2"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-2-B-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-2"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-2-C-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-2"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-2-C-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-2"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-3-A-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-3"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-3-A-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-3"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-3-B-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-3"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-3-B-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-3"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-3-C-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-3"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-3-C-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-3"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-4-A-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-4"
+    },
+    {
+      "arm": "A",
+      "cell_id": "slot-4-A-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-4"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-4-B-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-4"
+    },
+    {
+      "arm": "B",
+      "cell_id": "slot-4-B-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-4"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-4-C-replicate-1",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 1,
+      "target_slot": "slot-4"
+    },
+    {
+      "arm": "C",
+      "cell_id": "slot-4-C-replicate-2",
+      "reason": "frozen and authorized; the order is sealed and #150 dispatches the pilot block first",
+      "replicate": 2,
+      "target_slot": "slot-4"
+    }
+  ],
+  "uncertainty_usd": "0.082158"
+}

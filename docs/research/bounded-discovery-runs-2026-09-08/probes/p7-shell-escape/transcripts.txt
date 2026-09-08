@@ -1,0 +1,2 @@
+session 979452b2-3b0b-4d57-a93b-4dced1c3b9ce transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p7-work/979452b2-3b0b-4d57-a93b-4dced1c3b9ce.jsonl sha256 c7abc018d7e4217da53cbfacee2fa6fab23ef80bd5cdc8140ddd82a2530f5235

@@ -1,0 +1,760 @@
+{
+  "arms": {
+    "A": {
+      "description": "the integrated #136 policy with its baseline conditional fresh verification",
+      "finder": null,
+      "primary": {
+        "effort": "high",
+        "model": "claude-sonnet-5",
+        "observed_by": "agent_effort.py --expect-model claude-sonnet-5 --expect-effort high over the root transcript and every continuation",
+        "requested_by": "--model claude-sonnet-5 --effort high on the cell session"
+      },
+      "worker": {
+        "effort": "high",
+        "model": "claude-sonnet-5",
+        "observed_by": "agent_effort.py --expect-model claude-sonnet-5 --expect-effort high over the root transcript and every continuation",
+        "requested_by": "--model claude-sonnet-5 --effort high on the cell session",
+        "role": "A's verifier: the baseline configuration, identical to the primary"
+      }
+    },
+    "B": {
+      "description": "A with only the verifier configuration changed to the stronger worker",
+      "finder": null,
+      "primary": {
+        "effort": "high",
+        "model": "claude-sonnet-5",
+        "observed_by": "agent_effort.py --expect-model claude-sonnet-5 --expect-effort high over the root transcript and every continuation",
+        "requested_by": "--model claude-sonnet-5 --effort high on the cell session"
+      },
+      "worker": {
+        "effort": "high",
+        "model": "claude-opus-5",
+        "observed_by": "agent_effort.py --expect-model claude-opus-5 --expect-effort high over every child transcript",
+        "requested_by": "a startup --agents definition naming model claude-opus-5 and effort high",
+        "role": "B and C's verifiers and C's finder: the prospectively selected stronger worker"
+      }
+    },
+    "C": {
+      "description": "B plus one bounded independent finder, with initial verification deferred until the discovery barrier has released the finder's claims to the primary",
+      "finder": {
+        "effort": "high",
+        "model": "claude-opus-5",
+        "observed_by": "agent_effort.py --expect-model claude-opus-5 --expect-effort high over every child transcript",
+        "requested_by": "a startup --agents definition naming model claude-opus-5 and effort high",
+        "role": "B and C's verifiers and C's finder: the prospectively selected stronger worker"
+      },
+      "primary": {
+        "effort": "high",
+        "model": "claude-sonnet-5",
+        "observed_by": "agent_effort.py --expect-model claude-sonnet-5 --expect-effort high over the root transcript and every continuation",
+        "requested_by": "--model claude-sonnet-5 --effort high on the cell session"
+      },
+      "worker": {
+        "effort": "high",
+        "model": "claude-opus-5",
+        "observed_by": "agent_effort.py --expect-model claude-opus-5 --expect-effort high over every child transcript",
+        "requested_by": "a startup --agents definition naming model claude-opus-5 and effort high",
+        "role": "B and C's verifiers and C's finder: the prospectively selected stronger worker"
+      }
+    }
+  },
+  "artifact_id": "issue-149-experiment-freeze",
+  "artifact_schema": {
+    "collection_requirements": [
+      "every numeric table and ratio in a later bundle links to these files, in the repository; a temporary local path alone is not delivery",
+      "per-request records must reproduce their session's billed total, as the probes demonstrate, and the same reconciliation is required for every experiment record at closeout",
+      "requested and observed model and effort are recorded for every worker and continuation, with explicit unavailable or mismatched states",
+      "setup, discarded, replacement, grading and closeout costs are retained, not netted away",
+      "missing evidence stays explicit and limits any cost or fidelity claim that depends on it"
+    ],
+    "per_attempt": [
+      "config and scenario as dispatched",
+      "the rendered dispatch prompt and its digest",
+      "every request input, transcript reference and per-request usage record",
+      "freeze records for the primary and, in C, the finder",
+      "cross-feed event",
+      "stage and coverage records",
+      "no-batch decisions",
+      "acquittal coverage rows",
+      "the Attempt record",
+      "the #130 timing sidecar",
+      "the ledger snapshot",
+      "the rendered payload",
+      "the Handoff",
+      "a SHA-256 manifest of all of it"
+    ],
+    "per_cell_isolation": [
+      "the pre-dispatch and post-dispatch check records",
+      "the cell's egress log",
+      "the transcript read audit"
+    ],
+    "per_helper": [
+      "usage.json from transcript_usage.py",
+      "usage-split.json from meter_split.py",
+      "requests.jsonl from extract_requests.py",
+      "effort.txt from agent_effort.py",
+      "transcripts.txt naming every transcript and its digest",
+      "row.md"
+    ],
+    "retention": "transcripts stay on the machine that ran the grid under the recorded session ids; the committed per-request records carry every field the arithmetic depends on"
+  },
+  "budget": {
+    "atomic_reservation": "before each dispatch: existing actual + all in-flight upper bounds + the protected grading/closeout reserve + the new allowance must fit the cap. Probe 3 exercised it against the real ledger: of two operations against the same remaining capacity exactly one was admitted and the second exited 1 with no event written.",
+    "frozen_total_cap_usd": "150.00",
+    "grading_closeout_reserve_usd": "10.00",
+    "pre_freeze_actual_usd": "10.9378407",
+    "pre_freeze_ceiling_usd": "15.00",
+    "projection": {
+      "a_cell_usd": "3.4200",
+      "b_cell_usd": "3.7413",
+      "basis": "the twelve #136-policy cells in docs/research/one-shot-qualification-2026-09-07/metering/cells/ (mean $3.4200 an attempt, verifier children $0.2142 of it) and the six #148 selector sessions (mean $0.6270), repriced for the stronger worker at the 2.5x ratio in rates.json; C adds one finder and ten per cent of the primary for admission",
+      "c_cell_usd": "5.6294",
+      "cap_formula": "min(1.5 x 136.1361, 150) = 150.00",
+      "cap_freeze_note": "the cap-freeze event was recorded against the $135.99 projection that held before probes 8 and 9; those two probes are pre-freeze spend in the same subtotal and raise the projection to $136.1361, which leaves the $150.00 cap unchanged. The event is not rewritten; see preregistration deviation 5.",
+      "headroom_usd": "13.8639",
+      "mean_cell_usd": "4.2636",
+      "projected_full_cost_usd": "136.1361",
+      "replacement_allowance_usd": "12.7907",
+      "rounding": "every total is computed from the unrounded inputs; the per-arm means are rounded for display, so recombining them by hand differs in the fourth decimal",
+      "sensitivity": "measured cells under this policy ranged $2.02 to $6.78, a 3.3x spread. At the observed maximum for every cell the grid would exceed the cap; the ledger's atomic reservation is what stops that, and a stopped-budget mid-grid leaves whole triples because of the frozen order.",
+      "twenty_four_cells_usd": "102.3254"
+    },
+    "retained_uncertainty_usd": "0.082158",
+    "separation": "review consumption, one-off setup and selection, and charged grading are reported separately; shared setup is charged once to the epic, never once per arm",
+    "settlement_rule": "settle from the runtime self-report and the retained per-request records; when they differ, charge the larger and record the difference as a reconciliation residual. A cancelled or crashed attempt with no self-report settles from its retained transcript and retains one further request at the largest observed per-request cost as uncertainty. The difference is attributable, not noise: it is an untranscripted claude-haiku-4-5-20251001 request that appears only in the result envelope's modelUsage.",
+    "total_ceiling_usd": "150.00"
+  },
+  "cells": {
+    "attempt_id_rule": "issue-138-<cell_id>-attempt-<n>, never recycled; the ledger refuses a reused one",
+    "cell_ids": [
+      "slot-1-A-replicate-1",
+      "slot-1-A-replicate-2",
+      "slot-1-B-replicate-1",
+      "slot-1-B-replicate-2",
+      "slot-1-C-replicate-1",
+      "slot-1-C-replicate-2",
+      "slot-2-A-replicate-1",
+      "slot-2-A-replicate-2",
+      "slot-2-B-replicate-1",
+      "slot-2-B-replicate-2",
+      "slot-2-C-replicate-1",
+      "slot-2-C-replicate-2",
+      "slot-3-A-replicate-1",
+      "slot-3-A-replicate-2",
+      "slot-3-B-replicate-1",
+      "slot-3-B-replicate-2",
+      "slot-3-C-replicate-1",
+      "slot-3-C-replicate-2",
+      "slot-4-A-replicate-1",
+      "slot-4-A-replicate-2",
+      "slot-4-B-replicate-1",
+      "slot-4-B-replicate-2",
+      "slot-4-C-replicate-1",
+      "slot-4-C-replicate-2"
+    ],
+    "design": "four target slots x arms A/B/C x two fresh replicates",
+    "order": {
+      "ciphertext": {
+        "access": "evaluator-only",
+        "sha256": "368a89da5048e11fa1cd960b482538f638bb0194694f5595c72b1b6f7a5cc95e",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/sealed/schedule.json.enc"
+      },
+      "plaintext_location": "~/.config/bounded-discovery/issue-149/schedule.json (evaluator-only; moved off the machine for every dispatch window)",
+      "plaintext_sha256": "598584e4976e52fbecd24fa3d92190b9d431337ed07a9adb2df8fd6f68dd6a1b",
+      "produced_by": "docs/research/bounded-discovery-runs-2026-09-08/scripts/seal_schedule.py",
+      "rule": "pilot = the adjudicated clean slot and the lowest-numbered buggy slot, replicate 1, arms A/B/C per slot, clean slot first; then replicate 1 of the remaining slots and all of replicate 2, slots in numeric order, arms A/B/C within a slot. Every A/B/C triple is contiguous, so a budget stop leaves whole triples, which is the unit the matched cost ratio and per-target recall need.",
+      "sealed": true,
+      "why_sealed": "naming the pilot pair in the clear would tell any reader which two slots hold the clean target, and so which two do not. The resolved order is committed as ciphertext under #148's key; #150 and #151 decrypt it."
+    },
+    "ownership": {
+      "150": "the six pilot cells, block `pilot` in the sealed schedule",
+      "151": "the remaining eighteen, block `grid`"
+    },
+    "planned": 24,
+    "replacements": {
+      "attempt_maximum": 27,
+      "earned_by": "documented infrastructure or input invalidity only; a valid substantive miss, a false finding or a skill timeout never earns a rerun. Invalidate exactly the comparison cells the change affected; unrelated faithful cells stand.",
+      "exhausted": "if required invalidation or reruns exceed the allowance, stop and close out the partial experiment",
+      "maximum": 3,
+      "prospective_override": "this replaces the general method's older two-replacement rule for #138 only; historical experiments keep theirs."
+    },
+    "seed": "replicate ordinal only; the runtime exposes no API seed, so a replicate is a fresh independent context and clone, not a reproducible sample"
+  },
+  "experiment_id": "issue-138",
+  "frozen_at": "2026-09-08T09:40:00+00:00",
+  "interpretation_limits": [
+    "#137's corrected comparison is a negative screen on a changed target mix: the repaired policy did not beat the historical baseline. It is carried here as an interpretation limit, not as a new experiment and not as a reason to alter the common #136 policy.",
+    "#185 and #186 repair the shipped skill after the #136 snapshot. Every arm here runs the snapshot, so the result speaks about that policy; a current-policy comparison needs its own frozen study.",
+    "PR #183 did not qualify medium effort for adoption (cost ratio 0.94 against <=0.80, recall advantage confined to known Hyper), which is why effort is high everywhere.",
+    "slot-3's frozen selector output characterises a lock as a hazard, drawing on the pull request's own body text. #148 flagged it for this freeze: it is kept as delivered because reselecting after seeing it would be worse, and it is recorded here as a possible over-cue of C's finder on that slot. Read slot-3's C cells with that in mind.",
+    "the packets carry the literal string `<the model your dispatch names for that worker>` on their run-conditions line, deliberately, so that every arm receives byte-identical packets. The frozen dispatch template names the model for each worker and states that this line means the dispatch's value.",
+    "no measurement here establishes that claude-opus-5 verifies better than claude-sonnet-5. That is the treatment hypothesis under test."
+  ],
+  "isolation": {
+    "audited_not_enforced": [
+      {
+        "consequence": "replacement-eligible under the three-replacement allowance",
+        "limitation": "an allow-listed interpreter reads any path that exists (probe 7). The cell prompt forbids it and every transcript is scanned afterwards; a read outside the permitted roots invalidates that attempt as protocol invalidity.",
+        "surface": "the shell's filesystem reach"
+      },
+      {
+        "consequence": "any network use not present in the cell's egress log invalidates the attempt",
+        "limitation": "a direct connection to an IP address on port 443 bypasses the proxy (probes 2c and 6). The proxy log plus the transcript scan is the detection.",
+        "surface": "raw-socket egress"
+      }
+    ],
+    "checker": {
+      "access": "coordinator-only",
+      "sha256": "3bd5812450063e8ed2fc1fce45565f11919a9aef7671e800390c12c2887aa5b8",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
+    },
+    "enforced": [
+      {
+        "control": "--restricted with only Read, Grep and Glob and the clone as the single added root",
+        "evidence": "probe 2a: every read above the working directory, through an absolute path, through a symlink resolving outside it, and a Grep rooted outside it was denied; WebFetch did not exist in the session",
+        "surface": "finder file access"
+      },
+      {
+        "control": "--restricted with --add-dir limited to the clone, the skill snapshot, the packet directory and the attempt's own work root",
+        "evidence": "probe 5 item 4: an out-of-root Read was denied naming the permitted roots",
+        "surface": "primary and verifier file tools"
+      },
+      {
+        "control": "egress_proxy.py allow-listing only .anthropic.com:443, with HTTPS_PROXY, HTTP_PROXY and ALL_PROXY set for the cell, plus no WebFetch or WebSearch tool and no curl in the Bash allow list",
+        "evidence": "probe 2c: api.github.com and raw.githubusercontent.com refused and logged, the provider allowed, the session unaffected; probe 6: an unlisted curl denied automatically because the session has no approval surface",
+        "surface": "network by name"
+      },
+      {
+        "control": "absence for the whole dispatch window, verified before and after every cell by check_cell_isolation.py: the evaluator key directory, every other slot's mirror, clone and staging clone, every other attempt's store, and the repository checkouts holding this bundle must not exist on the local filesystem. Because the sealed leak set lives in that same storage, the leak-set check runs in a separate preparation phase before the material is removed and leaves a non-revealing attestation bound to the clone head, the mirror's refs and a digest over every object each repository holds, referenced or not, alternates followed; the dispatch phases verify that attestation instead of reading any evaluator file.",
+        "evidence": "probe 2b and probe 7 are why: a reviewer-shaped session read every canary, and under --restricted an allow-listed python3 still read any path that existed. What is not on the machine cannot be read, which is the control that holds.",
+        "surface": "hidden truth, other targets and other attempts"
+      },
+      {
+        "control": "one cell in flight at a time",
+        "evidence": "the same probes; two live cells would each be readable by the other",
+        "surface": "cross-cell"
+      },
+      {
+        "control": "#148's truncated mirrors, checked against the slot's sealed leak set in the preparation phase and re-bound to the live clone and mirror at every dispatch phase by their complete object-store digests, not only their refs",
+        "evidence": "each slot manifest's negative_object_checks, re-run by check_cell_isolation.py",
+        "surface": "history"
+      }
+    ],
+    "key_handling": "#148's sealed README requires the evaluator key to be off the machine before dispatch. That is now mandatory, not optional: the key, the plaintext registers, the leak sets and the decrypted schedule move to detached storage for every dispatch window, and the pre-dispatch check fails while any of them is present. The committed ciphertext may stay; it is useless without the key."
+  },
+  "limits": {
+    "enforcement": {
+      "audited_not_enforced": "the token, request and command counts. The runtime exposes no hard token control, so these are checked against the retained per-request records after the attempt and an overrun is recorded, not prevented.",
+      "background_dispatch": "supported by the runtime (probe 10) and deliberately unused: every arm dispatches its verifier in the foreground, which leaves token cost untouched and moves only elapsed time, recorded as an interpretation limit",
+      "enforced": "the dollar allowance, through --max-budget-usd, and the wall ceiling through `timeout`. Probe 4 shows the allowance is checked after a call completes: a session given $0.05 stopped with subtype error_max_budget_usd having spent $0.067136, so every reservation carries one call of headroom."
+    },
+    "finder": {
+      "billed_tokens": 4000000,
+      "charged": "inside C's whole-review allowance, never in addition to it",
+      "requests": 80,
+      "usd": "2.00",
+      "wall_seconds": 1800
+    },
+    "model_requests_per_attempt": 400,
+    "one_call_headroom_usd": "1.00",
+    "per_command_seconds": 300,
+    "provisioning_seconds_per_target": 600,
+    "root_wall_seconds_per_attempt": 5400,
+    "root_wall_seconds_per_attempt_note": "counted once from the root dispatch instant in the #130 sidecar, not per invocation: in arm C the resumed phase receives only the remainder, and the barrier wait and the finder's own run fall inside the same window",
+    "shell_commands_per_attempt": 120,
+    "token_accounting": "billed tokens are uncached input + cache write by tier + cache read + output. Output already includes thinking and is counted once; transcript_usage.py deduplicates streamed records of one request by taking the maximum of each counter. There are no paid tool charges in this grid.",
+    "whole_review_billed_tokens_per_attempt": 30000000,
+    "whole_review_usd_equal_across_arms": true,
+    "whole_review_usd_per_attempt": "9.00"
+  },
+  "pins": {
+    "adapter_doc": {
+      "access": "coordinator-only",
+      "sha256": "80fb15124c4f832f70f498cd056725c11e34561e7d87929f60ee492851067546",
+      "uri": "docs/research/bounded-discovery-prototype/ADAPTER.md"
+    },
+    "baseline_snapshot_note": {
+      "access": "coordinator-only",
+      "sha256": "b9abe01d052f800c2b0fda5b991b66a618014142c921d123ec99033d0f307216",
+      "uri": "docs/research/code-review-one-shot-baseline.md"
+    },
+    "design": {
+      "access": "coordinator-only",
+      "sha256": "2dd4900dedd8dc369dbda320a6dba5962a297e7c1a34d53e86003c1da15cc3d6",
+      "uri": "docs/research/bounded-discovery-prototype/DESIGN.md"
+    },
+    "dispatch_template": {
+      "access": "coordinator-only",
+      "sha256": "a1c34371abe4819512db336543bfc6d160765addf4f1177e57b4b76ad8dd626c",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/dispatch-template.md"
+    },
+    "freeze_tools": {
+      "check_cell_isolation.py": {
+        "access": "coordinator-only",
+        "sha256": "3bd5812450063e8ed2fc1fce45565f11919a9aef7671e800390c12c2887aa5b8",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
+      },
+      "egress_proxy.py": {
+        "access": "coordinator-only",
+        "sha256": "dbbd8abaf5ac0ed92294447169454c1aaee54c91020b8d16444e47e9efd8214c",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/egress_proxy.py"
+      },
+      "meter_split.py": {
+        "access": "coordinator-only",
+        "sha256": "72170b831fb7b334f6ec1ab3d4f79c4d4972b6e6ae726491afaf37a88aef5028",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/meter_split.py"
+      },
+      "score_attempts.py": {
+        "access": "coordinator-only",
+        "sha256": "bd6e2dd547624068aafc09108e35ffd99890220ab54bf8838473b63fef5098f0",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/score_attempts.py"
+      },
+      "scoring-fixtures.json": {
+        "access": "coordinator-only",
+        "sha256": "c8a472ef5b27f39b00a5b9c43cc90fa8305b4c813cc23f848420a4ce54109122",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/scoring-fixtures.json"
+      },
+      "seal_schedule.py": {
+        "access": "coordinator-only",
+        "sha256": "faaf812ed63ae3332611de73d5d63d5e94eceb5ad11805cd1f411be4a4a3bf28",
+        "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/seal_schedule.py"
+      }
+    },
+    "helpers": {
+      "agent_effort.py": {
+        "access": "coordinator-only",
+        "sha256": "5197b343d5336de7fe8f8935c64a36a5a35a3bae461550a63cfb3bc2c615a4af",
+        "uri": "docs/research/tools/agent_effort.py"
+      },
+      "build_packet.py": {
+        "access": "coordinator-only",
+        "sha256": "b5add0603f4e0f19de875416eec841e461fa01e636e048846787614f9245e5df",
+        "uri": "docs/research/tools/build_packet.py"
+      },
+      "transcript_usage.py": {
+        "access": "coordinator-only",
+        "sha256": "9f1ca60d140e73d20c780165a24de86bf3d161cb739c89026c634e5a0d3d6c00",
+        "uri": "docs/research/tools/transcript_usage.py"
+      }
+    },
+    "ledger": {
+      "access": "coordinator-only",
+      "pinned_by": "its event prefix, not its file digest: the ledger is a living artifact that every cell appends to, so a digest pin would fail the next dispatch's own gate on ordinary progress",
+      "uri": "docs/research/bounded-discovery-prototype/ledger.json"
+    },
+    "ledger_event_prefix": {
+      "events": 38,
+      "events_sha256": "a17d19f2891a8d064d957506a2a3fa1b2cc61382f1ad22810593d7e43a383690",
+      "note": "SHA-256 of json.dumps(events[:through], sort_keys=True, separators=(',',':')) \u2014 the history the freeze rests on. verify_freeze.py rechecks it before every dispatch and checks everything after it as behaviour: unbroken chain, reconciled snapshot, frozen cap and reserve, closed pre-freeze subtotal, and room left under the cap.",
+      "through_event_id": "2a402d99-a1a9-4a5a-baee-6df231e9f187"
+    },
+    "method": {
+      "access": "coordinator-only",
+      "sha256": "8c94480a691768ae262df7e6e714df61542a8322ebbbd706f2983c60395a7bae",
+      "uri": "docs/research/code-review-one-shot-method.md"
+    },
+    "policy_commit": "83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6",
+    "prototype_files": {
+      "adapter.py": {
+        "access": "coordinator-only",
+        "sha256": "c4a9fd0781ea340aa8f039e8631394b18d875e7cce91fb84b6bea4645adb2db0",
+        "uri": "docs/research/bounded-discovery-prototype/scripts/adapter.py"
+      },
+      "budget.py": {
+        "access": "coordinator-only",
+        "sha256": "a1f75e997b47c64d46a7e695788c6c21eb6f5241dff3f55c00172a2b3ef7898e",
+        "uri": "docs/research/bounded-discovery-prototype/scripts/budget.py"
+      },
+      "fake_worker.py": {
+        "access": "coordinator-only",
+        "sha256": "f4d4efa269df91e1c3cb98ff5ee8024cf82c536db20c087d197ca015b536ae57",
+        "uri": "docs/research/bounded-discovery-prototype/scripts/fake_worker.py"
+      },
+      "fixtures.py": {
+        "access": "coordinator-only",
+        "sha256": "f05fb502c0953c79c04d5c72d3b26ed53a5a584774024769f85e1af9ac2d9c48",
+        "uri": "docs/research/bounded-discovery-prototype/scripts/fixtures.py"
+      },
+      "test_adapter.py": {
+        "access": "coordinator-only",
+        "sha256": "dc648279968779bd8bc7601df38acd3807800170628501790ebf0c67bc8ed210",
+        "uri": "docs/research/bounded-discovery-prototype/scripts/test_adapter.py"
+      }
+    },
+    "rates": {
+      "access": "coordinator-only",
+      "sha256": "60d8a067c8ce7b1fcb9ceb3097e8d84756f2c37eef22eb55c7a89e4d3bf84c9c",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/rates.json"
+    },
+    "skill_path_in_snapshot": "skills/code-review-publish",
+    "skill_tree": "bea6be143582e75bada966ee85964623ef31f167",
+    "target_handoff": {
+      "access": "coordinator-only",
+      "sha256": "911ce8f66276153b0f42ae91daa1fb181076ad8f668d63e0e71b96fb0620a7ee",
+      "uri": "docs/research/bounded-discovery-prototype/handoff.json"
+    },
+    "workflow": "v5b-10"
+  },
+  "preregistration": {
+    "access": "coordinator-only",
+    "sha256": "110a7eb3030112a9585e78193e454af0eaa048737f4a69ac9e1ca5978a80f1d1",
+    "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
+  },
+  "probes": {
+    "allowance": "inside #146's $15.00 pre-freeze subtotal; $9.895998 was already spent by #147/#148, leaving $5.104002",
+    "charged_usd": "1.0418428",
+    "freshness": {
+      "access": "coordinator-only",
+      "sha256": "fccf13efad356fe640afd5d70ab82d48f633a7a084e94effd5e95a8775ab9f20",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/freshness.json"
+    },
+    "reconciliation": {
+      "access": "coordinator-only",
+      "sha256": "f24a9249c3b57cd3ba0fdb734dc93c9f383a6693ee3abbd62de9c175f34d8f3c",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/probes/reconciliation.json"
+    },
+    "results": [
+      {
+        "establishes": "a startup --agents definition gives the child a different model and effort from the root: claude-opus-5/high on every child assistant line with claude-sonnet-5/high on every root line",
+        "probe": "p1-settings",
+        "verdict": "supported"
+      },
+      {
+        "establishes": "--restricted confines the file tools, including a symlink target and a Grep root, and removes the network tools",
+        "probe": "p2a-isolation-finder",
+        "verdict": "supported"
+      },
+      {
+        "establishes": "a session configured like the #137 runner reads every canary and reaches the public internet",
+        "probe": "p2b-isolation-primary",
+        "verdict": "limitation recorded"
+      },
+      {
+        "establishes": "the cell works through an allow-list proxy that refuses and logs every forge fetch",
+        "probe": "p2c-egress",
+        "verdict": "supported"
+      },
+      {
+        "establishes": "SIGTERM ends the session and its provider work: exit 124, no payload, no surviving process, and a transcript unchanged 25 seconds later; the cancelled work settles from its retained per-request records",
+        "probe": "p3a/p3b-cancellation",
+        "verdict": "supported"
+      },
+      {
+        "establishes": "--max-budget-usd stops the session (subtype error_max_budget_usd) after overshooting by one call, and the #130 sidecar records the timing",
+        "probe": "p4-allowance",
+        "verdict": "supported with one call of headroom"
+      },
+      {
+        "establishes": "the frozen cell configuration runs: allow-listed Bash prefixes work inside the roots, an unlisted command is denied, a child gets the stronger worker configuration; an allow-listed interpreter still reads any existing path",
+        "probe": "p5/p6/p7-cell-configuration",
+        "verdict": "supported, with the interpreter escape recorded as an audited limitation"
+      },
+      {
+        "establishes": "meter_split.py prices each transcript at its own model's frozen rates and reproduces the runtime self-report: five of the eleven that produced a runtime figure to within $0.0000005, and six about $0.0013 low each. Each of those six result envelopes carries a claude-haiku-4-5-20251001 modelUsage entry whose cost equals the gap to the last digit: the runtime bills a small Haiku request it never writes to the transcript. Charge the larger figure and meter a cell from the transcripts and the result envelope both; see probes/reconciliation.json.",
+        "probe": "accounting",
+        "verdict": "supported"
+      },
+      {
+        "establishes": "the cell can write its payload, report and script output only when --allowedTools names Write and Edit; without them the write tools are denied outright under --restricted with no approval surface, while an allow-listed interpreter writes freely. The frozen configuration names them.",
+        "probe": "p8/p9-writes",
+        "verdict": "supported after the configuration was corrected"
+      },
+      {
+        "establishes": "background verification is supported in the frozen configuration: the primary dispatched the bd-verifier agent with run_in_background true, ran a shell command while it was still going, and collected its result from the harness's completion notification. Run after review; the frozen rule stays foreground by choice, and the elapsed-time consequence is an interpretation limit.",
+        "probe": "p10-background",
+        "verdict": "supported, and deliberately not used"
+      }
+    ],
+    "retained_uncertainty_usd": "0.082158",
+    "settlement": "the thirteen recomputed figures sum to $1.032632; the amounts charged -- the larger of the recomputed figure and the runtime's own, per probe -- sum to $1.0418426, settled on the ledger as $1.0418428"
+  },
+  "repository_commit_read": "cfde565d8b27237b7c378a474e8008d27ac25bfe",
+  "schema_version": "bounded-discovery-v1",
+  "screening": {
+    "additional_evidence": [
+      "sufficient-outcome recall S/D",
+      "aggregate fix sufficiency S/R",
+      "unjustified action errors",
+      "priority errors",
+      "zero-recovery attempts that did not claim clean"
+    ],
+    "blockers": [
+      "unresolved material truth",
+      "a planned cell with no attempt",
+      "a changed clean/buggy target mix"
+    ],
+    "c_over_b": "C against B measures the discovery-and-timing treatment with identical verifiers; it is reported alongside the two screens and is not itself a gate",
+    "candidate_arms": [
+      "B",
+      "C"
+    ],
+    "control_arm": "A",
+    "false_clean_definition": "an attempt on an adjudicated buggy target that explicitly returns Approved / clean / no material defects, independent of recovery credit, reviewer priority or action, and fix sufficiency, and even when it reports the defect as a `consider` or declares incompleteness",
+    "fixtures": {
+      "access": "coordinator-only",
+      "note": "eleven frozen checks including the synthetic recovered-but-Approved case #149 requires, which carries forward to #152",
+      "sha256": "c8a472ef5b27f39b00a5b9c43cc90fa8305b4c813cc23f848420a4ce54109122",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/scoring-fixtures.json"
+    },
+    "interpretation": "four targets and two replicates cannot support an equivalence claim or a promotion. A complete positive screen recommends a fresh confirmation study against the then-current integrated policy. A supported false finding can reject an arm even when unrelated cells are unavailable, and a partial run is reported as what it measured rather than forced into a global inconclusive.",
+    "scorer": {
+      "access": "coordinator-only",
+      "sha256": "bd6e2dd547624068aafc09108e35ffd99890220ab54bf8838473b63fef5098f0",
+      "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/score_attempts.py"
+    },
+    "thresholds": {
+      "candidate_raw_false_findings": 0,
+      "matched_cost_ratio": 1.25,
+      "relative_recall_gain": 0.2,
+      "zero_baseline_absolute_gain": 0.1
+    },
+    "views": [
+      "all dispatched attempts",
+      "valid completed attempts only"
+    ]
+  },
+  "session_shape": {
+    "arm_c_barrier": "the primary's phase 1 ends when it writes and hashes its freeze artifact and the session exits; the finder, which has no write tool, returns its discovery JSON as its final message and the coordinator parses, validates, persists and hashes it as discovery.json; the coordinator then verifies both freeze records, terminates the finder, and resumes the same primary session (`claude -p --resume <sid>`) with the compact claims as the next user message, on the remainder of the attempt's single 5400-second wall allowance. A missing or unparsable finder block is a malformed finder under the design's transition table, never an empty discovery. A/B run as one invocation. This extra process boundary is part of the C treatment.",
+    "cache_accounting": "identical in every arm: the one-hour cache-write tier the headless runtime writes, priced x2.0, with the 5-minute tier x1.25 and reads x0.1; every arm's cells are metered the same way and only matched billed cells are compared",
+    "completion_mode": "render-only in every cell; publication is disabled",
+    "concurrency": {
+      "design_ceiling_cells": 2,
+      "frozen_operating_rule_cells": 1,
+      "reason": "probe 7 shows an allow-listed interpreter in one cell's shell reads any path that exists, so a second live cell's clone, stores and payload would be readable. The adapter keeps the two-cell hard ceiling; the frozen schedule never uses it."
+    },
+    "dispatch": "headless `claude -p --output-format json` with a fresh --session-id per context",
+    "environment": [
+      "CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0",
+      "HTTPS_PROXY / HTTP_PROXY / ALL_PROXY pointing at the cell's egress proxy"
+    ],
+    "finder_flags": [
+      "--model claude-opus-5",
+      "--effort high",
+      "--restricted",
+      "--tools Read,Grep,Glob",
+      "--add-dir <clone>",
+      "--permission-prompts none",
+      "--max-budget-usd 2.00"
+    ],
+    "model_identifier_note": "the Opus child reports as claude-opus-5[1m] in the result envelope while agent_effort.py sees claude-opus-5 on its assistant lines; at the context sizes the probes reached the standard rate card reproduces the billed total exactly, so rates.json prices it as claude-opus-5. A cell whose context passes the long-context threshold needs that assumption rechecked before any cost claim.",
+    "primary_flags": [
+      "--model claude-sonnet-5",
+      "--effort high",
+      "--restricted",
+      "--tools Bash,Read,Write,Edit,Glob,Grep,Agent,Task",
+      "--allowedTools Write Edit Bash(git:*) Bash(go:*) Bash(cargo:*) Bash(python3:*) Bash(cat:*) Bash(ls:*) Bash(head:*) Bash(tail:*) Bash(wc:*) Bash(sed:*) Bash(grep:*)",
+      "--add-dir <clone> --add-dir <skill snapshot> --add-dir <packet dir>",
+      "--permission-prompts none",
+      "--agents <the arm's worker definition>",
+      "--max-budget-usd <the attempt's remaining whole-review allowance>"
+    ],
+    "runtime": "Claude Code 2.1.263 (probes/\u2026/result.json and evidence/claude-version.txt)",
+    "write_tools": "Write and Edit must be named in --allowedTools: under --restricted with --permission-prompts none they are denied outright otherwise, even inside the permitted roots (probe 8), while naming them restores writes inside the roots and still refuses one outside (probe 9). A shell command is admitted only when it matches an allow-listed prefix, so a compound `a && b && c` is refused even when each part would be allowed alone."
+  },
+  "stage": "freeze",
+  "stronger_worker_selection": {
+    "capability_hypothesis_evidence": [
+      "docs/research/tier-split-evaluation-arm.md sections 1-3 treat Opus 5 as the higher tier and Sonnet 5 as the cheaper one, and price them at $5/$25 and $2/$10 per million tokens; its arm A is 'the configuration the current evidence describes' with Opus verification.",
+      "PR #183 measured effort within one model and did not qualify medium for adoption, which is why effort is held at high everywhere and the treatment changes the model tier instead."
+    ],
+    "caveat": "Stronger is a treatment hypothesis, not an established ranking. No measurement in this repository compares claude-opus-5 with claude-sonnet-5 as a review verifier on a common target set; that is part of what this grid measures.",
+    "chosen": "claude-opus-5 at effort high",
+    "control": "claude-sonnet-5 at effort high (the #124 retained default for this runtime)",
+    "distinctness_established_by": "probe 1 and probe 5: a startup --agents definition gave the child claude-opus-5/high on every assistant line while the root stayed claude-sonnet-5/high (probes/p1-settings/effort.txt, probes/p5-cell-config/effort.txt)",
+    "price_ratio_against_the_control": "2.5x input and output at the frozen rates"
+  },
+  "targets": {
+    "slot-1": {
+      "clone_recipe": "git clone <mirror> <clone>; git -C <clone> remote set-url origin <mirror>; git -C <clone> checkout --detach 3604b13117cbb652c10bb44b228b300d543dcc80; git -C <clone> branch -f master 4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac; git -C <clone> checkout -B review-head 3604b13117cbb652c10bb44b228b300d543dcc80; re-run every negative object check on the clone and abort on a hit; provision offline caches; verify the tracked tree is clean",
+      "execution_limits": "five minutes per focused command, ten minutes provisioning per target (method section 2); identical for every arm",
+      "execution_note": "Focused test execution IS permitted on this target, offline, exactly as the packet's section 8 item 2 states: run cargo from the clone root with CARGO_HOME=/tmp/bd148/cargo-home CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=<your work dir>/target, for example `cargo test --offline --locked --test builder <name filter>` (about 30 seconds to build the test binary, then the filtered tests run in under a second); five minutes per command; a filter at most once per flag set; scratch crates only under your work directory; nothing added to or changed in the clone. The registry cache is already populated and no network call of any kind is available.",
+      "mirror": "/tmp/bd148/mirrors/clap-6212.git",
+      "mirror_refs": {
+        "refs/heads/master": "4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac",
+        "refs/heads/review-head": "3604b13117cbb652c10bb44b228b300d543dcc80"
+      },
+      "scope_source_binding": {
+        "bound_to": "source_packet",
+        "note": "#148 left scope.json's source_hash as the bare packet digest for #149 to bind. The binding is recorded here rather than by editing scope.json, because that file's digest is itself pinned in the slot manifest and in #148's handoff; verify_freeze.py rechecks the equality on every run.",
+        "scope_source_hash": "9d5eb7c8f343ac457be007744027578d2cba46c5f7bc7424bfc53aeaaddb32c3",
+        "verified": true
+      },
+      "sealed_register": {
+        "access": "evaluator-only",
+        "sha256": "b967890f4d3d3321a9418e068fc46d7f34c07ab4fe26756ca1d2077b124fe428",
+        "uri": "docs/research/bounded-discovery-prototype/targets/sealed/slot-1-register.md.enc"
+      },
+      "selected_scope": {
+        "access": "reviewer-common",
+        "sha256": "7bacf30a254fa1f33e2b7bf256388bd9b1306af2e8bb4b0374889ca2abd4bc4e",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-1/scope.json"
+      },
+      "slot_manifest": {
+        "access": "coordinator-only",
+        "sha256": "e0241dd72fae5982e06068e845b0ee669ba70298641984eb7ac2168801387f13",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-1/manifest.json"
+      },
+      "source_packet": {
+        "access": "reviewer-common",
+        "sha256": "9d5eb7c8f343ac457be007744027578d2cba46c5f7bc7424bfc53aeaaddb32c3",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-1/packet.md"
+      },
+      "target": {
+        "base_oid_recorded": "b9009a76d1f2d62ba6af168bcef12ad7272626ca",
+        "base_ref": "master",
+        "cutoff": "2026-01-27T20:18:05Z",
+        "head_oid": "3604b13117cbb652c10bb44b228b300d543dcc80",
+        "language": "Rust",
+        "merge_base_oid": "4ecbf54ac314b6cd9a84d7e48350b71f6bd4c7ac",
+        "merged_at": "2026-01-27T20:18:05Z",
+        "pr": 6212,
+        "repository": "clap-rs/clap",
+        "url": "https://github.com/clap-rs/clap/pull/6212"
+      }
+    },
+    "slot-2": {
+      "clone_recipe": "git clone <mirror> <clone>; git -C <clone> remote set-url origin <mirror>; git -C <clone> checkout --detach 040de9b120b65c76f668858fc2dc118e948ac36e; git -C <clone> branch -f master bdd707e642e40cf75db5ac3f0f6af48077f48368; git -C <clone> checkout -B review-head 040de9b120b65c76f668858fc2dc118e948ac36e; re-run every negative object check on the clone and abort on a hit; provision offline caches; verify the tracked tree is clean",
+      "execution_limits": "five minutes per focused command, ten minutes provisioning per target (method section 2); identical for every arm",
+      "execution_note": "Focused test execution IS permitted on this target, offline, exactly as the packet's section 8 item 2 states: run go commands from the clone root with GOMODCACHE=/tmp/bd148/gomodcache GOCACHE=/tmp/bd148/gocache-grpc-go-7417 GOFLAGS=-mod=mod GOPROXY=off, for example `go test -count=1 -run 'Test/<subtest name regex>' ./xds/internal/balancer/priority/` (this repository registers its tests as subtests of `Test`, so the regex needs the `Test/` prefix; the package's tests run in a few seconds) or `go vet ./xds/internal/balancer/priority/`; the race detector (`-race`) is permitted; five minutes per command; a package's tests at most once per flag set; scratch modules only under your work directory; nothing added to or changed in the clone. The module cache is already populated and no network call of any kind is available.",
+      "mirror": "/tmp/bd148/mirrors/grpc-go-7417.git",
+      "mirror_refs": {
+        "refs/heads/master": "bdd707e642e40cf75db5ac3f0f6af48077f48368",
+        "refs/heads/review-head": "040de9b120b65c76f668858fc2dc118e948ac36e"
+      },
+      "scope_source_binding": {
+        "bound_to": "source_packet",
+        "note": "#148 left scope.json's source_hash as the bare packet digest for #149 to bind. The binding is recorded here rather than by editing scope.json, because that file's digest is itself pinned in the slot manifest and in #148's handoff; verify_freeze.py rechecks the equality on every run.",
+        "scope_source_hash": "ac6fd2087178a7cd81297b32f14852cbc47504ee8adffbbdb9467d6a3077cad1",
+        "verified": true
+      },
+      "sealed_register": {
+        "access": "evaluator-only",
+        "sha256": "29b65225ea34dad442499eeed1341aed873d5cbdf0a076f5fddc0bae04f15af4",
+        "uri": "docs/research/bounded-discovery-prototype/targets/sealed/slot-2-register.md.enc"
+      },
+      "selected_scope": {
+        "access": "reviewer-common",
+        "sha256": "41c924a02a955077615405c82b95ae90c398f87cdc68aaf9659db58191783c0f",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-2/scope.json"
+      },
+      "slot_manifest": {
+        "access": "coordinator-only",
+        "sha256": "a459d19a531ff3dfa52f12d3e36e036c992cf1648d0929eb5042ba4983e80f6e",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-2/manifest.json"
+      },
+      "source_packet": {
+        "access": "reviewer-common",
+        "sha256": "ac6fd2087178a7cd81297b32f14852cbc47504ee8adffbbdb9467d6a3077cad1",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-2/packet.md"
+      },
+      "target": {
+        "base_oid_recorded": "d27ddb5eb5940c949f88bc2cb21eed9254f8be75",
+        "base_ref": "master",
+        "cutoff": "2024-07-15T15:45:20Z",
+        "head_oid": "040de9b120b65c76f668858fc2dc118e948ac36e",
+        "language": "Go",
+        "merge_base_oid": "bdd707e642e40cf75db5ac3f0f6af48077f48368",
+        "merged_at": "2024-07-15T15:45:20Z",
+        "pr": 7417,
+        "repository": "grpc/grpc-go",
+        "url": "https://github.com/grpc/grpc-go/pull/7417"
+      }
+    },
+    "slot-3": {
+      "clone_recipe": "git clone <mirror> <clone>; git -C <clone> remote set-url origin <mirror>; git -C <clone> checkout --detach 282d01c5466d7694a098112a012097aa3a5dfaf1; git -C <clone> branch -f main 4791216cdc896f127a9a2420edd42dcaf7e3b428; git -C <clone> checkout -B review-head 282d01c5466d7694a098112a012097aa3a5dfaf1; re-run every negative object check on the clone and abort on a hit; provision offline caches; verify the tracked tree is clean",
+      "execution_limits": "five minutes per focused command, ten minutes provisioning per target (method section 2); identical for every arm",
+      "execution_note": "Focused test execution IS permitted on this target, offline, exactly as the packet's section 8 item 2 states: run go commands from the clone root with GOMODCACHE=/tmp/bd148/gomodcache GOCACHE=/tmp/bd148/gocache-nats-server-6593 GOFLAGS=-mod=mod GOPROXY=off, for example `go test -count=1 -run '<test name regex>' ./server/` (about 15 seconds to compile the server test binary, then the named tests); the race detector (`-race`) is permitted; always pass -run with a specific name and never run the server package's whole suite (it takes hours); `go vet ./server/` reports pre-existing IPv6 address-format findings in unrelated test files at both the head and the merge-base; five minutes per command; a name regex at most once per flag set; scratch modules only under your work directory; nothing added to or changed in the clone. The module cache is already populated and no network call of any kind is available.",
+      "mirror": "/tmp/bd148/mirrors/nats-server-6593.git",
+      "mirror_refs": {
+        "refs/heads/main": "4791216cdc896f127a9a2420edd42dcaf7e3b428",
+        "refs/heads/review-head": "282d01c5466d7694a098112a012097aa3a5dfaf1"
+      },
+      "scope_source_binding": {
+        "bound_to": "source_packet",
+        "note": "#148 left scope.json's source_hash as the bare packet digest for #149 to bind. The binding is recorded here rather than by editing scope.json, because that file's digest is itself pinned in the slot manifest and in #148's handoff; verify_freeze.py rechecks the equality on every run.",
+        "scope_source_hash": "5d74b9a9e8d0c7e19f24cb0a205c1a15bdec941cd557ff2ba9631ed77d360a6a",
+        "verified": true
+      },
+      "sealed_register": {
+        "access": "evaluator-only",
+        "sha256": "893369081e29f9fe0ee9d4658e79b9816302bfed006763f462a809c2859c2349",
+        "uri": "docs/research/bounded-discovery-prototype/targets/sealed/slot-3-register.md.enc"
+      },
+      "selected_scope": {
+        "access": "reviewer-common",
+        "sha256": "c27dd8834c058f84eb2981cc985768d7002c19fd7ece126aa0903a4785407799",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-3/scope.json"
+      },
+      "slot_manifest": {
+        "access": "coordinator-only",
+        "sha256": "cdf54bbabbd2cf0ae0a9e59283081ae9e5b98989c60a35806f86fccecd436df4",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-3/manifest.json"
+      },
+      "source_packet": {
+        "access": "reviewer-common",
+        "sha256": "5d74b9a9e8d0c7e19f24cb0a205c1a15bdec941cd557ff2ba9631ed77d360a6a",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-3/packet.md"
+      },
+      "target": {
+        "base_oid_recorded": "4791216cdc896f127a9a2420edd42dcaf7e3b428",
+        "base_ref": "main",
+        "cutoff": "2025-02-27T17:07:22Z",
+        "head_oid": "282d01c5466d7694a098112a012097aa3a5dfaf1",
+        "language": "Go",
+        "merge_base_oid": "4791216cdc896f127a9a2420edd42dcaf7e3b428",
+        "merged_at": "2025-02-27T17:07:22Z",
+        "pr": 6593,
+        "repository": "nats-io/nats-server",
+        "url": "https://github.com/nats-io/nats-server/pull/6593"
+      }
+    },
+    "slot-4": {
+      "clone_recipe": "git clone <mirror> <clone>; git -C <clone> remote set-url origin <mirror>; git -C <clone> checkout --detach b81b039c38afe724534ef6a1b9df490c5cdfaca4; git -C <clone> branch -f main 78e2dacea262180ba6e39974aedca59529c9d17b; git -C <clone> checkout -B review-head b81b039c38afe724534ef6a1b9df490c5cdfaca4; re-run every negative object check on the clone and abort on a hit; provision offline caches; verify the tracked tree is clean",
+      "execution_limits": "five minutes per focused command, ten minutes provisioning per target (method section 2); identical for every arm",
+      "execution_note": "Focused test execution IS permitted on this target, offline, exactly as the packet's section 8 item 2 states: run go commands from the clone root with GOMODCACHE=/tmp/bd148/gomodcache GOCACHE=/tmp/bd148/gocache-nats-server-7395 GOFLAGS=-mod=mod GOPROXY=off, for example `go test -count=1 -run '<test name regex>' ./server/` (about 15 seconds to compile the server test binary, then the named tests); the race detector (`-race`) is permitted; always pass -run with a specific name and never run the server package's whole suite (it takes hours); `go vet ./server/` reports pre-existing IPv6 address-format findings in unrelated test files at both the head and the merge-base; five minutes per command; a name regex at most once per flag set; scratch modules only under your work directory; nothing added to or changed in the clone. The module cache is already populated and no network call of any kind is available.",
+      "mirror": "/tmp/bd148/mirrors/nats-server-7395.git",
+      "mirror_refs": {
+        "refs/heads/main": "78e2dacea262180ba6e39974aedca59529c9d17b",
+        "refs/heads/review-head": "b81b039c38afe724534ef6a1b9df490c5cdfaca4"
+      },
+      "scope_source_binding": {
+        "bound_to": "source_packet",
+        "note": "#148 left scope.json's source_hash as the bare packet digest for #149 to bind. The binding is recorded here rather than by editing scope.json, because that file's digest is itself pinned in the slot manifest and in #148's handoff; verify_freeze.py rechecks the equality on every run.",
+        "scope_source_hash": "88a990218fb77ab9d6d1cf12dd9dd8cb51b9d9a34fbef519ee99e9a5d7025922",
+        "verified": true
+      },
+      "sealed_register": {
+        "access": "evaluator-only",
+        "sha256": "d089065994805e652d82829931f14096d63b40779940afbb119b85e874422b77",
+        "uri": "docs/research/bounded-discovery-prototype/targets/sealed/slot-4-register.md.enc"
+      },
+      "selected_scope": {
+        "access": "reviewer-common",
+        "sha256": "60400e21f364b6cb31242c64b6e656f15d5e3ee656286c5ffd214d917737da86",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-4/scope.json"
+      },
+      "slot_manifest": {
+        "access": "coordinator-only",
+        "sha256": "e1f261c74caed25e04668cfb1b42afdb2abdf90eb30b6c559eeddb460a30fd47",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-4/manifest.json"
+      },
+      "source_packet": {
+        "access": "reviewer-common",
+        "sha256": "88a990218fb77ab9d6d1cf12dd9dd8cb51b9d9a34fbef519ee99e9a5d7025922",
+        "uri": "docs/research/bounded-discovery-prototype/targets/slot-4/packet.md"
+      },
+      "target": {
+        "base_oid_recorded": "78e2dacea262180ba6e39974aedca59529c9d17b",
+        "base_ref": "main",
+        "cutoff": "2025-10-06T11:29:49Z",
+        "head_oid": "b81b039c38afe724534ef6a1b9df490c5cdfaca4",
+        "language": "Go",
+        "merge_base_oid": "78e2dacea262180ba6e39974aedca59529c9d17b",
+        "merged_at": "2025-10-06T11:29:49Z",
+        "pr": 7395,
+        "repository": "nats-io/nats-server",
+        "url": "https://github.com/nats-io/nats-server/pull/7395"
+      }
+    }
+  }
+}

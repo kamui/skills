@@ -5,12 +5,12 @@
   "currency": "USD",
   "total_ceiling_usd": "150.00",
   "pre_freeze_ceiling_usd": "15.00",
-  "frozen_total_cap_usd": null,
-  "grading_closeout_reserve_usd": null,
-  "actual_usd": "9.895998",
+  "frozen_total_cap_usd": "150.00",
+  "grading_closeout_reserve_usd": "10.00",
+  "actual_usd": "10.9378407",
   "reserved_usd": "0.00",
-  "uncertainty_usd": "0.00",
-  "pre_freeze_actual_usd": "9.895998",
+  "uncertainty_usd": "0.082158",
+  "pre_freeze_actual_usd": "10.9378407",
   "pre_freeze_reserved_usd": "0.00",
   "planned_cells": 24,
   "attempts_dispatched": 0,
@@ -560,6 +560,382 @@
       "uncertainty_usd": "0",
       "rate_usage_evidence": [
         "metering/adjudicator-grpc-go-7417/usage.json: transcript_usage.py --prices 2,10 over session a0727fa7-5195-4389-a062-fc914629c1bc (1 transcript, 28 requests, all 1h cache tier); agent_effort.py claude-sonnet-5/high on every assistant line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "106a9f57-55c2-44a2-9e47-0ce1dd5a07ae",
+      "previous_event_id": "eebc40fc-d16a-466d-9c31-24711adb8c01",
+      "observed_at": "2026-09-08T09:11:30.654725+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 1 (settings and freshness): headless claude -p --model claude-sonnet-5 --effort high with a startup --agents definition requesting claude-opus-5/high for the child; reserved before launch with one-call headroom under ADAPTER.md 'Minimal #149 capability probes' item 1"
+      ],
+      "reservation_id": "issue-149-probe-1-settings",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.20",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 1 (settings and freshness): headless claude -p --model claude-sonnet-5 --effort high with a startup --agents definition requesting claude-opus-5/high for the child; reserved before launch with one-call headroom under ADAPTER.md 'Minimal #149 capability probes' item 1"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "51de7ef6-546a-404a-b0df-099299bc8722",
+      "previous_event_id": "106a9f57-55c2-44a2-9e47-0ce1dd5a07ae",
+      "observed_at": "2026-09-08T09:13:52.387767+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p1-settings/usage-split.json: meter_split.py over session 819a42e7-a268-4bee-af41-a01206cd002b (root claude-sonnet-5 at 2/10, child claude-opus-5 at 5/25, all cache tiers known) reproduces the runtime self-report $0.0566329 to 1e-7; agent_effort.py records claude-sonnet-5/high on every root assistant line and claude-opus-5/high on every child line"
+      ],
+      "reservation_id": "issue-149-probe-1-settings",
+      "actual_delta_usd": "0.056633",
+      "reservation_delta_usd": "-1.20",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p1-settings/usage-split.json: meter_split.py over session 819a42e7-a268-4bee-af41-a01206cd002b (root claude-sonnet-5 at 2/10, child claude-opus-5 at 5/25, all cache tiers known) reproduces the runtime self-report $0.0566329 to 1e-7; agent_effort.py records claude-sonnet-5/high on every root assistant line and claude-opus-5/high on every child line"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "3f643c59-e883-46e0-a09e-c772bf9b6b6f",
+      "previous_event_id": "51de7ef6-546a-404a-b0df-099299bc8722",
+      "observed_at": "2026-09-08T09:14:53.229491+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 2 (read isolation): two headless sessions over a disposable clone of the slot-2 mirror with primary-store, other-attempt, evaluator-truth, symlink, absolute-path, history and network canaries; one finder-shaped (--restricted, Read/Grep/Glob) and one primary-shaped (Bash,Read,Write,Edit,Glob,Grep,Agent as in the #137 runner); reserved before launch under ADAPTER.md capability probe item 2"
+      ],
+      "reservation_id": "issue-149-probe-2-isolation",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.40",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 2 (read isolation): two headless sessions over a disposable clone of the slot-2 mirror with primary-store, other-attempt, evaluator-truth, symlink, absolute-path, history and network canaries; one finder-shaped (--restricted, Read/Grep/Glob) and one primary-shaped (Bash,Read,Write,Edit,Glob,Grep,Agent as in the #137 runner); reserved before launch under ADAPTER.md capability probe item 2"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "544f81dc-e3bf-4de3-a21e-32d5e5764913",
+      "previous_event_id": "3f643c59-e883-46e0-a09e-c772bf9b6b6f",
+      "observed_at": "2026-09-08T09:17:54.437250+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p2-isolation/: finder-shaped session 3a05c7cf (claude-opus-5/high on all 10 assistant lines) was denied every read outside its working directory including the symlink and the Grep root, and had no WebFetch tool; primary-shaped session 6efcf900 (claude-sonnet-5/high on all 10 lines) read every canary and reached api.github.com (HTTP 200). Charged at the runtime self-reports 0.091678 + 0.0587076; meter_split.py recomputes 0.090336 and 0.058708, a 0.001342 residual on the restricted session recorded in probes/README.md"
+      ],
+      "reservation_id": "issue-149-probe-2-isolation",
+      "actual_delta_usd": "0.150386",
+      "reservation_delta_usd": "-1.40",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p2-isolation/: finder-shaped session 3a05c7cf (claude-opus-5/high on all 10 assistant lines) was denied every read outside its working directory including the symlink and the Grep root, and had no WebFetch tool; primary-shaped session 6efcf900 (claude-sonnet-5/high on all 10 lines) read every canary and reached api.github.com (HTTP 200). Charged at the runtime self-reports 0.091678 + 0.0587076; meter_split.py recomputes 0.090336 and 0.058708, a 0.001342 residual on the restricted session recorded in probes/README.md"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "b7dfa0e1-fad5-485c-aadd-b8b76d23975b",
+      "previous_event_id": "544f81dc-e3bf-4de3-a21e-32d5e5764913",
+      "observed_at": "2026-09-08T09:19:11.545286+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 2c (network egress control): one headless primary-shaped session launched with HTTPS_PROXY/HTTP_PROXY/ALL_PROXY pointing at scripts/egress_proxy.py allowing only .anthropic.com:443, told to attempt a forge fetch; reserved before launch"
+      ],
+      "reservation_id": "issue-149-probe-2c-egress",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 2c (network egress control): one headless primary-shaped session launched with HTTPS_PROXY/HTTP_PROXY/ALL_PROXY pointing at scripts/egress_proxy.py allowing only .anthropic.com:443, told to attempt a forge fetch; reserved before launch"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "18632a6d-ed0e-4fd8-aa6b-292b13dc8b24",
+      "previous_event_id": "b7dfa0e1-fad5-485c-aadd-b8b76d23975b",
+      "observed_at": "2026-09-08T09:19:48.474505+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p2c-egress/: session 43d6403a through egress_proxy.py; every forge fetch refused and logged (api.github.com, raw.githubusercontent.com), provider traffic allowed, a raw socket to an IP address on port 443 still succeeded; charged at the runtime self-report 0.0498944"
+      ],
+      "reservation_id": "issue-149-probe-2c-egress",
+      "actual_delta_usd": "0.0498944",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p2c-egress/: session 43d6403a through egress_proxy.py; every forge fetch refused and logged (api.github.com, raw.githubusercontent.com), provider traffic allowed, a raw socket to an IP address on port 443 still succeeded; charged at the runtime self-report 0.0498944"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "c71e78da-6f31-4ec8-ae08-34b959d8492b",
+      "previous_event_id": "18632a6d-ed0e-4fd8-aa6b-292b13dc8b24",
+      "observed_at": "2026-09-08T09:20:07.721243+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 3 (contention and cancellation): conservative upper bound for one cancellable headless session plus one-call headroom, reserved before launch"
+      ],
+      "reservation_id": "issue-149-probe-3-cancellation",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "4.00",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 3 (contention and cancellation): conservative upper bound for one cancellable headless session plus one-call headroom, reserved before launch"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "c97d2b53-a221-4283-8ac1-0859ae5e01ac",
+      "previous_event_id": "c71e78da-6f31-4ec8-ae08-34b959d8492b",
+      "observed_at": "2026-09-08T09:22:58.745633+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p3-cancellation/: session d20a4f67 completed ($0.077244, reproducing its self-report $0.0772436) and session b18af76d was terminated by SIGTERM 25 s after dispatch (exit 124, no stdout payload, no surviving process, transcript frozen at 63 lines and unchanged 25 s later). The cancelled session has no runtime self-report, so its $0.299386 is settled from its six retained per-request records; the uncertainty retains one further request at the largest observed per-request cost ($0.082158) for an in-flight request whose usage line may never have been written"
+      ],
+      "reservation_id": "issue-149-probe-3-cancellation",
+      "actual_delta_usd": "0.376630",
+      "reservation_delta_usd": "-4.00",
+      "uncertainty_usd": "0.082158",
+      "rate_usage_evidence": [
+        "probes/p3-cancellation/: session d20a4f67 completed ($0.077244, reproducing its self-report $0.0772436) and session b18af76d was terminated by SIGTERM 25 s after dispatch (exit 124, no stdout payload, no surviving process, transcript frozen at 63 lines and unchanged 25 s later). The cancelled session has no runtime self-report, so its $0.299386 is settled from its six retained per-request records; the uncertainty retains one further request at the largest observed per-request cost ($0.082158) for an in-flight request whose usage line may never have been written"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "b292a243-fbe9-4c77-899c-7a7807a526bc",
+      "previous_event_id": "c97d2b53-a221-4283-8ac1-0859ae5e01ac",
+      "observed_at": "2026-09-08T09:23:15.636700+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 4 (bounded request allowance and timing): one headless session given --max-budget-usd 0.05 on a task that cannot finish inside it, with a #130 timing sidecar; reserved before launch with one-call headroom"
+      ],
+      "reservation_id": "issue-149-probe-4-allowance",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 4 (bounded request allowance and timing): one headless session given --max-budget-usd 0.05 on a task that cannot finish inside it, with a #130 timing sidecar; reserved before launch with one-call headroom"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "a62b15b7-827d-47f5-8cd9-b3fa99c93945",
+      "previous_event_id": "b292a243-fbe9-4c77-899c-7a7807a526bc",
+      "observed_at": "2026-09-08T09:23:43.915622+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p4-allowance/: session with --max-budget-usd 0.05 stopped itself with subtype error_max_budget_usd and exit 1 after spending 0.067136, overshooting the allowance by one call; metered with a #130 timing sidecar"
+      ],
+      "reservation_id": "issue-149-probe-4-allowance",
+      "actual_delta_usd": "0.067136",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p4-allowance/: session with --max-budget-usd 0.05 stopped itself with subtype error_max_budget_usd and exit 1 after spending 0.067136, overshooting the allowance by one call; metered with a #130 timing sidecar"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "189fec18-d1c6-4093-b953-6004a2ac06ce",
+      "previous_event_id": "a62b15b7-827d-47f5-8cd9-b3fa99c93945",
+      "observed_at": "2026-09-08T09:26:11.883220+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 5 (frozen cell configuration rehearsal): one headless session in the exact configuration the freeze names for a reviewer primary -- --restricted with Bash named in --tools, --add-dir for the clone and work roots, and startup --agents definitions for the arm B/C worker -- exercising Bash, a confined file read, an out-of-root read and one sub-agent dispatch; reserved before launch"
+      ],
+      "reservation_id": "issue-149-probe-5-cell-configuration",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 5 (frozen cell configuration rehearsal): one headless session in the exact configuration the freeze names for a reviewer primary -- --restricted with Bash named in --tools, --add-dir for the clone and work roots, and startup --agents definitions for the arm B/C worker -- exercising Bash, a confined file read, an out-of-root read and one sub-agent dispatch; reserved before launch"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "ee146410-d7e1-434a-876e-6951dc29daa9",
+      "previous_event_id": "189fec18-d1c6-4093-b953-6004a2ac06ce",
+      "observed_at": "2026-09-08T09:29:40.392893+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p5-p7-cell-configuration/: sessions 8423b77a, c75cab68 and 979452b2 rehearsed the frozen cell configuration. --restricted plus --add-dir confines the file tools (an out-of-root Read is denied); Bash needs an explicit allow list (unlisted curl is denied automatically with no approval surface); an allow-listed cat outside the roots is blocked by the harness; an allow-listed python3 reads any existing path and opens a raw socket to an IP address. Startup --agents gave the child claude-opus-5/high inside a --restricted session. Charged at the three runtime self-reports 0.09315445 + 0.0586092 + 0.0477228"
+      ],
+      "reservation_id": "issue-149-probe-5-cell-configuration",
+      "actual_delta_usd": "0.1994865",
+      "reservation_delta_usd": "-0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p5-p7-cell-configuration/: sessions 8423b77a, c75cab68 and 979452b2 rehearsed the frozen cell configuration. --restricted plus --add-dir confines the file tools (an out-of-root Read is denied); Bash needs an explicit allow list (unlisted curl is denied automatically with no approval surface); an allow-listed cat outside the roots is blocked by the harness; an allow-listed python3 reads any existing path and opens a raw socket to an IP address. Startup --agents gave the child claude-opus-5/high inside a --restricted session. Charged at the three runtime self-reports 0.09315445 + 0.0586092 + 0.0477228"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "2a402d99-a1a9-4a5a-baee-6df231e9f187",
+      "previous_event_id": "ee146410-d7e1-434a-876e-6951dc29daa9",
+      "observed_at": "2026-09-08T09:35:25.398264+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "cap-freeze",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md section 7 and budget-projection.json: projected full experimental cost $135.99 = $10.7962 sunk pre-freeze + $0.0822 retained uncertainty + $102.33 for 24 cells + $12.79 for the three-replacement allowance + $10.00 grading/closeout reserve, at the dated rates in rates.json and the measured per-cell costs of the twelve #136-policy cells in docs/research/one-shot-qualification-2026-09-07/metering/cells/. min(1.5 x 135.99, 150) = $150.00; the projection fits with $14.01 of headroom"
+      ],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md section 7 and budget-projection.json: projected full experimental cost $135.99 = $10.7962 sunk pre-freeze + $0.0822 retained uncertainty + $102.33 for 24 cells + $12.79 for the three-replacement allowance + $10.00 grading/closeout reserve, at the dated rates in rates.json and the measured per-cell costs of the twelve #136-policy cells in docs/research/one-shot-qualification-2026-09-07/metering/cells/. min(1.5 x 135.99, 150) = $150.00; the projection fits with $14.01 of headroom"
+      ],
+      "reason": "Freeze the total cap and the protected grading/closeout reserve",
+      "frozen_total_cap_usd": "150.00",
+      "grading_closeout_reserve_usd": "10.00"
+    },
+    {
+      "event_id": "49507c8a-9c98-47b4-a516-8b3d0b8d7d8e",
+      "previous_event_id": "2a402d99-a1a9-4a5a-baee-6df231e9f187",
+      "observed_at": "2026-09-08T09:57:58.697676+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 8 (writes and the validator under the frozen configuration): the cell must write its payload, report and script output, and run the pinned validator, inside --restricted with --permission-prompts none; probes 5 to 7 never exercised a write. Reserved before launch"
+      ],
+      "reservation_id": "issue-149-probe-8-writes",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.40",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 8 (writes and the validator under the frozen configuration): the cell must write its payload, report and script output, and run the pinned validator, inside --restricted with --permission-prompts none; probes 5 to 7 never exercised a write. Reserved before launch"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "f45114c7-47f7-44bd-8a8e-84da0a29168e",
+      "previous_event_id": "49507c8a-9c98-47b4-a516-8b3d0b8d7d8e",
+      "observed_at": "2026-09-08T09:58:54.570424+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p8-writes/ and probes/p9-writes-allowed/: under --restricted with --permission-prompts none the Write tool is denied outright unless --allowedTools names it, while an allow-listed python3 writes freely; naming Write and Edit restores writes inside the permitted roots and still denies one outside them. A compound shell command is denied unless it matches an allow-listed prefix. Charged at the two runtime self-reports 0.0270816 + 0.0311534"
+      ],
+      "reservation_id": "issue-149-probe-8-writes",
+      "actual_delta_usd": "0.058235",
+      "reservation_delta_usd": "-0.40",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p8-writes/ and probes/p9-writes-allowed/: under --restricted with --permission-prompts none the Write tool is denied outright unless --allowedTools names it, while an allow-listed python3 writes freely; naming Write and Edit restores writes inside the permitted roots and still denies one outside them. A compound shell command is denied unless it matches an allow-listed prefix. Charged at the two runtime self-reports 0.0270816 + 0.0311534"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "01c33752-f672-43c4-a575-9138255c0968",
+      "previous_event_id": "f45114c7-47f7-44bd-8a8e-84da0a29168e",
+      "observed_at": "2026-09-08T18:05:06.616017+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probe 10 (background verification): one headless session in the frozen cell configuration told to dispatch the bd-verifier agent with run_in_background true, continue working while it runs, then collect its result; answers the review's open question bounded-discovery/baseline-early-dispatch. Reserved before launch"
+      ],
+      "reservation_id": "issue-149-probe-10-background",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probe 10 (background verification): one headless session in the frozen cell configuration told to dispatch the bd-verifier agent with run_in_background true, continue working while it runs, then collect its result; answers the review's open question bounded-discovery/baseline-early-dispatch. Reserved before launch"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "584227ac-c550-4d71-87b5-a7ae9a8112dd",
+      "previous_event_id": "01c33752-f672-43c4-a575-9138255c0968",
+      "observed_at": "2026-09-08T18:14:38.160985+00:00",
+      "ticket": 149,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/p10-background/: session a995295e dispatched bd-verifier with run_in_background true, ran a git command while it was still running, and collected its result from the harness's completion notification (module google.golang.org/grpc). Background verification is supported in the frozen configuration; the answer to the review's open question bounded-discovery/baseline-early-dispatch"
+      ],
+      "reservation_id": "issue-149-probe-10-background",
+      "actual_delta_usd": "0.0834418",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/p10-background/: session a995295e dispatched bd-verifier with run_in_background true, ran a git command while it was still running, and collected its result from the harness's completion notification (module google.golang.org/grpc). Background verification is supported in the frozen configuration; the answer to the review's open question bounded-discovery/baseline-early-dispatch"
       ],
       "reason": "Usage settlement"
     }

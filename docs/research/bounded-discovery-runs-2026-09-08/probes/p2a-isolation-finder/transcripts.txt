@@ -1,0 +1,2 @@
+session 3a05c7cf-07b2-453a-aade-cbb5e3a5b1b6 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p2-work/3a05c7cf-07b2-453a-aade-cbb5e3a5b1b6.jsonl sha256 f0c4b2c89ea0b9d08f96d0ca49b73fc1d0ff46a10e25812cb708fb0aabdfca09

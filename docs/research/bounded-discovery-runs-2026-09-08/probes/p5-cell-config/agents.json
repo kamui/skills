@@ -1,0 +1,2 @@
+{"bd-verifier":{"description":"Fresh-context verification worker for arms B and C","prompt":"You are an independent verification worker with a fresh context. Answer only what you are asked, in one short line.","model":"claude-opus-5","effort":"high","tools":["Read","Grep","Glob","Bash"]},
+ "bd-finder":{"description":"Bounded independent discovery worker for arm C","prompt":"You are a bounded independent discovery worker with a fresh context. Answer only what you are asked, in one short line.","model":"claude-opus-5","effort":"high","tools":["Read","Grep","Glob"]}}

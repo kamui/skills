@@ -1,0 +1,2 @@
+session 6efcf900-a2af-46d1-ad1f-db912d4b15b4 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p2-work/6efcf900-a2af-46d1-ad1f-db912d4b15b4.jsonl sha256 4aaabb3f491de4b8a2b0a096b0769173eabc52b3f9aaf40fd07cd414d1c55ed5
