@@ -1,0 +1,21 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "observed_at": "2026-09-08",
+  "source": "First-party Anthropic list prices in dollars per million tokens, as used and recorded by the two dated experiment bundles this freeze builds on: Sonnet 5 $2/$10 in docs/research/one-shot-qualification-2026-09-07/ledger.md and in every #148 helper settlement, and Opus 5 $5/$25 in docs/research/tier-split-evaluation-arm.md section 3. Cache multipliers are transcript_usage.py's documented defaults and match #97's tier pricing: 5-minute cache write x1.25, 1-hour cache write x2.0, cache read x0.1.",
+  "models": {
+    "claude-sonnet-5": {
+      "input_usd_per_mtok": "2",
+      "output_usd_per_mtok": "10",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    },
+    "claude-opus-5": {
+      "input_usd_per_mtok": "5",
+      "output_usd_per_mtok": "25",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    }
+  }
+}

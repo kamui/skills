@@ -1,0 +1,2 @@
+session 43d6403a-2623-44c9-b1b2-7e7579cd7d76 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p2c/43d6403a-2623-44c9-b1b2-7e7579cd7d76.jsonl sha256 b0a9e37dc6d902f91e3085e2b573cb5ce0d8eaf4e6cfe8f9adaba3c0cdaeb583
