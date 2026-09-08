@@ -40,12 +40,28 @@ their difference for all twelve sessions; each probe's `usage-split.json` has th
 per-transcript breakdown.
 
 Of the eleven sessions that produced a runtime figure, five reconcile to within $0.0000005 and six
-— p2a, p5, p6, p7, p8 and p9 — come in about **$0.0013 below** it. Those six are exactly the
-sessions launched with `--restricted`. Something that flag adds is billed without appearing in the transcript. It is a fixed
+— p2a, p5, p6, p7, p8 and p9 — come in about **$0.0013 below** it. The shortfall is not mysterious:
+each of those six result envelopes carries a `claude-haiku-4-5-20251001` entry in `modelUsage` whose
+`costUSD` equals the gap to the last digit ($0.001342, $0.001348, $0.001380, $0.001332, $0.001276,
+$0.001281 against gaps of $0.001342, $0.00134845, $0.0013802, $0.0013318, $0.0012756, $0.0012814).
+The runtime bills a small Haiku request that it never writes to the session transcript, so a
+transcript-only meter cannot see it. All six were launched with `--restricted`, which is where the
+correlation comes from, but the charge is the Haiku call, not the flag. Something that flag adds is billed without appearing in the transcript. It is a fixed
 amount, not a proportional one: roughly 0.03% of a $4 cell. The frozen cell configuration uses
 `--restricted`, so every cell will carry it, and the settlement rule the preregistration freezes
 covers it — charge the larger of the two figures and record the difference as a reconciliation
 residual, never silently take the cheaper one.
+
+So a cell must be metered from **both** sources: `meter_split.py` over the transcripts for the
+per-role split, and the result envelope's `modelUsage` for anything the transcript never saw. The
+settlement rule — charge the larger — already covers it, and now the difference has a name to put
+in the record instead of an unexplained residual.
+
+One related identifier to carry forward: the Opus child reports as `claude-opus-5[1m]` in the result
+envelope while `agent_effort.py` sees `claude-opus-5` on its assistant lines. At the context sizes
+these probes reached, the standard rate card reproduces the billed total exactly, so
+[rates.json](../rates.json) prices it as `claude-opus-5`. A cell whose context grows past the
+long-context threshold would need that assumption rechecked before its cost is claimed.
 
 The cancelled session p3b produced no runtime figure at all and was settled from its six retained
 request records, which is the rule for any attempt that stops without one. The twelve recomputed
