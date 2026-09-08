@@ -1,6 +1,6 @@
 # Independent review verifier
 
-Read this reference only when `SKILL.md` requires independent verification. It owns the verifier's evidence procedure: what the verifier receives, how it decides, and what it returns. It defines a candidate mode and a clean-verdict mode. The verifier fact-checks supplied records; it is not a second reviewer, cannot search for unrelated findings, and cannot write to the pull request. Which batches run, what they carry, and what the primary does with their results are `SKILL.md` step 3's rules; the brief carries no publication syntax — no trailers, comment shapes, or summary sections — because the verifier renders nothing.
+Read this reference only when `SKILL.md` requires independent verification. It owns the verifier's evidence procedure: what the verifier receives, how it decides, and what it returns. It defines a candidate mode and a clean-verdict mode; one batch may carry both tasks, and their records stay separate. The verifier fact-checks supplied records; it is not a second reviewer, cannot search for unrelated findings, and cannot write to the pull request. Which batches run, what they carry, and what the primary does with their results are `SKILL.md` step 3's rules; the brief carries no publication syntax — no trailers, comment shapes, or summary sections — because the verifier renders nothing.
 
 ## Isolation
 
@@ -15,7 +15,7 @@ For candidate mode, give the verifier only:
 - the following candidate record for each candidate;
 - the `ranges` lines from `scripts/review_context.py` for each candidate's anchor and fix, so the verifier reads them in one message;
 - for a candidate whose claim rests on a focused check the primary ran, the recorded command, head, exit status, and decisive output lines, as an evidence citation without the primary's interpretation;
-- when `SKILL.md`'s related-acquittal mode applies, the related non-survivor ledger rows, each in the compact form described for clean-verdict mode below;
+- the ledger rows a batch carries beside its candidates, each in the compact form described for clean-verdict mode below: the related non-survivor rows under `SKILL.md`'s related-acquittal mode, or the complete disposition ledger when its no-material-survivor mode attaches the clean-verdict task to a candidate batch;
 - [`verifier-concurrency.md`](verifier-concurrency.md) when any candidate's `kind` is `concurrency` or `invariant`; and
 - permission to inspect the cited code and the narrow callers, tests, configuration, history, or issue text needed to decide it.
 
@@ -63,7 +63,7 @@ For each candidate id, return the verdict, its basis (the decisive justification
 
 ## Clean-verdict task
 
-Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. The rows arrive in one of the two modes `SKILL.md` step 3 defines: a zero-survivor batch carrying the complete disposition ledger, or related-acquittal rows beside a candidate batch — a batch may carry such rows with no candidate at all, and they are ruled on the same way. Follow this procedure for every row you rule on, in either mode, to the depth the kind rule below sets; scoped safety rulings always take all five steps:
+Attack each acquittal supplied to you, using its cited code and the narrow surrounding evidence needed to decide whether the disposition holds. The rows arrive in one of the two modes `SKILL.md` step 3 defines: the complete disposition ledger under its no-material-survivor mode, which arrives either alone or beside candidates whose own verdicts stay separate, or related-acquittal rows beside a candidate batch. A batch may carry either kind of row with no candidate at all, and the presence of candidates changes nothing about how a ledger row is ruled on. Follow this procedure for every row you rule on, in either mode, to the depth the kind rule below sets; scoped safety rulings always take all five steps:
 
 1. Restate the row's decisive premise in one sentence — the fact the acquittal depends on, such as "`sender->slaveof` is always non-NULL when `updateShardId()` runs."
 2. State the concrete condition under which that premise would be false.
@@ -75,12 +75,12 @@ Attack depth follows the row's `kind`. The five steps apply in full to every row
 
 An `unresolved` row asserts an evidence gap, not safety. Check whether its settling fact is truly unavailable; `holds` preserves that gap and its question/coverage routing. Return `re-open` if the claimed gap or a safety premise is contradicted or unsupported. Neither `holds` on an unresolved row nor `clean verdict stands` clears an outstanding question or incomplete coverage.
 
-Do not invent a new claim. Return `holds` or `re-open` for every supplied ledger id with its decisive evidence or named unresolved gap. In zero-survivor mode, also return exactly one batch conclusion:
+Do not invent a new claim. Return `holds` or `re-open` for every supplied ledger id with its decisive evidence or named unresolved gap. When the brief carries the complete disposition ledger under no-material-survivor mode, also return exactly one batch conclusion, covering those ledger rows and no candidate verdict in the same batch:
 
 - `clean verdict stands` when every disposition survives that procedure; or
 - `disposition <id> does not hold; re-open it` for each supplied ledger row whose stated acquittal is contradicted or unsupported.
 
-In related-acquittal mode, return `holds` or `re-open` for each related row alongside the candidate verdicts, on the same standard: `re-open` when the stated acquittal is contradicted or unsupported. A `re-open` carries the same wording as the zero-survivor conclusion, `disposition <id> does not hold; re-open it`.
+When the brief instead carries related-acquittal rows, return `holds` or `re-open` for each of them alongside the candidate verdicts, with no batch conclusion, on the same standard: `re-open` when the stated acquittal is contradicted or unsupported. A `re-open` carries the same wording in either mode, `disposition <id> does not hold; re-open it`.
 
 For every re-opened id, cite the failed disposition step and decisive evidence or the missing settling fact. `clean verdict stands` validates only the supplied dispositions, not global safety. The single non-actionable `observation` aside permitted by the verification task is available in both modes on the same terms. Safety rulings stay in their candidate verdict or ledger ruling; contradictions of supplied ledger premises return as `re-open`, never as observations.
 
