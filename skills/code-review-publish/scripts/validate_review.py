@@ -112,11 +112,12 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-11"
+WORKFLOW = "v5b-12"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
     "bug",
+    "compatibility",
     "concurrency",
     "invariant",
     "security",
@@ -1332,6 +1333,15 @@ def _mutate(mutation) -> dict[str, Any]:
     return payload
 
 
+def compatibility_payload() -> dict[str, Any]:
+    """A compatibility finding uses the same fields and publication path."""
+    payload = valid_payload()
+    finding = payload["items"][0]
+    finding["kind"] = "compatibility"
+    finding["trailer"] = finding["trailer"].replace("kind=requirement", "kind=compatibility")
+    return payload
+
+
 def _rewrite_fragment(payload: dict[str, Any], replacement: str) -> None:
     payload["summary"]["body"] = payload["summary"]["body"].replace(FINDING_FRAGMENT, replacement)
 
@@ -1533,7 +1543,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-10"
+            f"workflow={WORKFLOW}", "workflow=v5b-11"
         )
 
     def malformed_trailer(payload):
@@ -1672,12 +1682,12 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
     ]
 
 
-EMIT_BATCH_CASES = 4
+EMIT_BATCH_CASES = 5
 
 
 def emit_batch_cases() -> list[str]:
     """Failures from the ``--emit-batch`` cases: the projection, the CLI on a valid payload, the CLI on an invalid
-    one, and the CLI on issue #134's reproduction, whose two missing fields are refused before any batch prints."""
+    one, a compatibility finding, and the CLI on issue #134's reproduction, whose two missing fields are refused before any batch prints."""
     failures: list[str] = []
     payload = valid_payload()
     finding, question = payload["items"][0], payload["items"][1]
@@ -1725,6 +1735,18 @@ def emit_batch_cases() -> list[str]:
     if valid.returncode != 0 or printed != want or valid.stderr:
         failures.append(f"--emit-batch on the contract example: exit {valid.returncode}, stdout {valid.stdout!r}, stderr {valid.stderr!r}")
 
+    compatibility = compatibility_payload()
+    emitted = subprocess.run(command, input=json.dumps(compatibility), capture_output=True, text=True, encoding="utf-8")
+    try:
+        printed = json.loads(emitted.stdout)
+    except ValueError:
+        printed = None
+    expected = dict(want)
+    expected["comments"] = [dict(want["comments"][0])]
+    expected["comments"][0]["body"] = f"{FINDING_MARKDOWN}\n\n{compatibility['items'][0]['trailer']}"
+    if emitted.returncode != 0 or printed != expected or emitted.stderr:
+        failures.append(f"--emit-batch on a compatibility finding: exit {emitted.returncode}, stdout {emitted.stdout!r}, stderr {emitted.stderr!r}")
+
     invalid_payload = _mutate(lambda p: p["items"][2].__setitem__("markdown", OBSERVATION_MARKDOWN.replace("covers", "should cover", 1)))
     violations = validate(invalid_payload)
     if len(violations) != 1:
@@ -1756,6 +1778,7 @@ def self_test() -> int:
     plain_run = {"head": HEAD, "merge_base": MERGE_BASE, "repository_url": None}
     passing: list[tuple[str, dict[str, Any]]] = [
         ("contract example review", valid_payload()),
+        ("compatibility finding", compatibility_payload()),
         ("code-span fallback without repository_url", plain_payload()),
         ("consider finding", consider_payload()),
         ("observation with abbreviation", abbreviation_payload()),
