@@ -31,7 +31,7 @@ The reviewer inspects the diff and relevant surrounding code independently for c
 
 Evaluate every finding against the code and spec. Fix warranted defects, rerun affected checks, and commit the fixes. Return the updated head to the reviewer for verification and review of the new changes, keeping the implementation conversation excluded. Record an evidence-based reason for declining a finding; a disputed blocking defect remains unresolved.
 
-Proceed only when the reviewer has covered the final committed head and no blocking defects or material coverage gaps remain. If an isolated reviewer is unavailable or a blocker cannot be resolved, report the limitation and stop before publishing. Include the review outcome and any remaining optional findings in the final handoff.
+Proceed only when the reviewer has covered the final committed head and no blocking defects or material coverage gaps remain. If an isolated reviewer is unavailable or a blocker cannot be resolved, report the limitation and stop before publishing. Carry the review results into the final handoff in step 5.
 
 ### 5. Open the pull request
 
@@ -51,4 +51,4 @@ Leave issue status, labels, and assignees alone.
 
 Attempt each write once; on an ambiguous result read the target before a single retry, then report the failure rather than writing again.
 
-Finish with the pull request link, head SHA, branch, spec source, and anything that failed.
+Finish with the pull request link, head SHA, branch, spec source, review outcome, any remaining optional findings, and anything that failed.
