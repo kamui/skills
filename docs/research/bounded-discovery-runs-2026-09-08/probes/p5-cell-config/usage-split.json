@@ -1,0 +1,64 @@
+{
+  "difference_usd": "-0.00134845",
+  "label": "p5-cell-config",
+  "per_model": {
+    "claude-opus-5": {
+      "cost_usd": "0.027416",
+      "rates": {
+        "cache_read_mult": "0.1",
+        "cache_write_1h_mult": "2.0",
+        "cache_write_5m_mult": "1.25",
+        "input_usd_per_mtok": "5",
+        "output_usd_per_mtok": "25"
+      },
+      "transcripts": [
+        "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p5-work/8423b77a-4062-4883-90b5-06c179581a62/subagents/agent-a4ed3d60b5fab7ffe.jsonl"
+      ],
+      "turns": 1
+    },
+    "claude-sonnet-5": {
+      "cost_usd": "0.06439",
+      "rates": {
+        "cache_read_mult": "0.1",
+        "cache_write_1h_mult": "2.0",
+        "cache_write_5m_mult": "1.25",
+        "input_usd_per_mtok": "2",
+        "output_usd_per_mtok": "10"
+      },
+      "transcripts": [
+        "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p5-work/8423b77a-4062-4883-90b5-06c179581a62.jsonl"
+      ],
+      "turns": 6
+    }
+  },
+  "per_role": {
+    "unassigned": {
+      "cost_usd": "0.091806",
+      "transcripts": [
+        "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p5-work/8423b77a-4062-4883-90b5-06c179581a62/subagents/agent-a4ed3d60b5fab7ffe.jsonl",
+        "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p5-work/8423b77a-4062-4883-90b5-06c179581a62.jsonl"
+      ]
+    }
+  },
+  "per_transcript": {
+    "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p5-work/8423b77a-4062-4883-90b5-06c179581a62.jsonl": {
+      "cost_usd": "0.06439",
+      "model": "claude-sonnet-5",
+      "role": "unassigned",
+      "turns": 6
+    },
+    "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p5-work/8423b77a-4062-4883-90b5-06c179581a62/subagents/agent-a4ed3d60b5fab7ffe.jsonl": {
+      "cost_usd": "0.027416",
+      "model": "claude-opus-5",
+      "role": "unassigned",
+      "turns": 1
+    }
+  },
+  "rates_observed_at": "2026-09-08",
+  "rates_source": "First-party Anthropic list prices in dollars per million tokens, as used and recorded by the two dated experiment bundles this freeze builds on: Sonnet 5 $2/$10 in docs/research/one-shot-qualification-2026-09-07/ledger.md and in every #148 helper settlement, and Opus 5 $5/$25 in docs/research/tier-split-evaluation-arm.md section 3. Cache multipliers are transcript_usage.py's documented defaults and match #97's tier pricing: 5-minute cache write x1.25, 1-hour cache write x2.0, cache read x0.1.",
+  "schema_version": "bounded-discovery-v1",
+  "self_report_usd": "0.09315445",
+  "tolerance_usd": "0.01",
+  "total_cost_usd": "0.091806",
+  "within_tolerance": true
+}

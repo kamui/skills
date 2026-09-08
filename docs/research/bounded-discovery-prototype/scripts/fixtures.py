@@ -43,14 +43,18 @@ def batch(mode, candidates, rows):
 
 
 def opening_state(ledger):
-    """Return a ledger copy in its opened state: schema and caps kept, only the opening event, zero totals.
+    """Return a ledger copy in its opened state: ceilings kept, only the opening event, zero totals.
 
     Synthetic fixtures and CLI checks must not depend on the live ledger's later events, which the
-    experiment appends as real reservations and settlements accumulate."""
+    experiment appends as real reservations and settlements accumulate. The frozen cap and the
+    protected reserve are state too, not schema: #149 sets them with a `cap-freeze` event, and a
+    fixture that inherited them would silently start every synthetic check past that gate."""
     data = dict(ledger)
     data["events"] = list(ledger["events"][:1])
     for key in ("actual_usd", "reserved_usd", "uncertainty_usd", "pre_freeze_actual_usd", "pre_freeze_reserved_usd"):
         data[key] = "0.00"
+    for key in ("frozen_total_cap_usd", "grading_closeout_reserve_usd"):
+        data[key] = None
     data["attempts_dispatched"] = 0
     return data
 

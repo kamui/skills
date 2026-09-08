@@ -1,0 +1,3513 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "note": "Frozen prospective scoring checks for issue #149. Every case is synthetic: no target, defect ID or cost here comes from a real attempt, and none of it is evidence about the arms. Case 1 is the recovered-but-Approved case #149 requires, and it carries forward to #152.",
+  "cases": [
+    {
+      "name": "a recovered defect returned as Approved is still false clean",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": false,
+            "status": "Incomplete",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-B-replicate-1",
+          "slot-1-C-replicate-1"
+        ]
+      },
+      "expect": {
+        "arms": {
+          "A": {
+            "false_clean_count": 1,
+            "false_clean_rate": 1.0,
+            "macro_material_recall_all_attempts": 0.5,
+            "recovered_total": 1,
+            "sufficient_total": 1
+          },
+          "B": {
+            "false_clean_count": 0,
+            "macro_material_recall_all_attempts": 0.5
+          },
+          "C": {
+            "false_clean_count": 0,
+            "zero_recovery_not_claiming_clean": 1,
+            "completion_rate": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "an honest incomplete result is not false clean; an Approved one is",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Incomplete",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Needs Information",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-B-replicate-1",
+          "slot-1-C-replicate-1"
+        ]
+      },
+      "expect": {
+        "arms": {
+          "A": {
+            "false_clean_count": 0,
+            "zero_recovery_not_claiming_clean": 1
+          },
+          "C": {
+            "false_clean_count": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "a candidate arm that gains recall inside the cost gate screens positive",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "arms": {
+          "A": {
+            "macro_material_recall_all_attempts": 0.25
+          },
+          "B": {
+            "macro_material_recall_all_attempts": 1.0
+          }
+        },
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "pass"
+          },
+          {
+            "candidate_arm": "C",
+            "verdict": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a single raw false finding fails the candidate arm",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 1,
+            "unique_false_claims": 1,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "pass"
+          },
+          {
+            "candidate_arm": "C",
+            "verdict": "fail"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a planned cell with no attempt makes the screen inconclusive",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "inconclusive",
+            "blocker_contains": "slot-3-B-replicate-2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unresolved material truth makes the screen inconclusive",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 1,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "inconclusive",
+            "blocker_contains": "unresolved material truth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a candidate arm outside the matched cost gate fails",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "6.00"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "6.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.20"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.50"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.50"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "C",
+            "verdict": "fail"
+          }
+        ]
+      }
+    },
+    {
+      "name": "against a zero-recall control the gate is ten percentage points",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.20"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.20"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.40"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.40"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.20"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.20"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "arms": {
+          "A": {
+            "macro_material_recall_all_attempts": 0.0
+          },
+          "B": {
+            "macro_material_recall_all_attempts": 0.25
+          },
+          "C": {
+            "macro_material_recall_all_attempts": 0.0
+          }
+        },
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "pass"
+          },
+          {
+            "candidate_arm": "C",
+            "verdict": "fail"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a recovery outside the sealed register is refused",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D9"
+            ],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1"
+        ]
+      },
+      "expect": {
+        "violation": "not in slot-1's register"
+      }
+    },
+    {
+      "name": "a sufficient fix for an unrecovered defect is refused",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1"
+        ]
+      },
+      "expect": {
+        "violation": "credits a sufficient fix for unrecovered D2"
+      }
+    },
+    {
+      "name": "a clean target that becomes buggy blocks the screen",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "buggy",
+            "defect_ids": [
+              "D5"
+            ],
+            "truth_version": "v2"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "inconclusive",
+            "blocker_contains": "clean/buggy target mix changed"
+          }
+        ]
+      }
+    }
+  ]
+}

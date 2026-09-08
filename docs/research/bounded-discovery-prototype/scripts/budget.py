@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""Reserve and settle the shared bounded-discovery ledger under a POSIX lock.
+"""Reserve, settle and freeze the cap on the shared bounded-discovery ledger.
 
 Usage: python3 scripts/budget.py LEDGER reserve|settle --id ID --amount USD
        [--phase pre-freeze|review|grading|closeout] [--attempt ID]
        [--attempt-cap USD] [--uncertainty USD] [--evidence REF] [--ticket N]
+       python3 scripts/budget.py LEDGER cap-freeze --amount USD --reserve USD
+       --evidence REF [--ticket N]
 Input: DESIGN.md BudgetEvent ledger; pre-freeze permits an unset cap/reserve.
 Reserve amounts include request/cancellation headroom. Settlement amount is actual
 cost; uncertainty retains part of the reservation. Re-settlement is prohibited.
+cap-freeze is #149's gate: it sets the frozen total cap and the protected
+grading/closeout reserve once, and every later review-phase reservation is
+checked against them. All work is serialised by a POSIX lock.
 Exit: 0 success, 1 content/budget violation on stdout, 2 unreadable input on stderr.
 """
 from __future__ import annotations
@@ -103,7 +108,7 @@ def totals(data):
             reservation.update(remaining=Decimal(0), settled=True)
             if event["phase"] in ("grading", "closeout"):
                 protected_used -= -r - a - u
-        elif event["operation"] not in ("open", "attempt-open", "attempt-close") or a or r or u:
+        elif event["operation"] not in ("open", "attempt-open", "attempt-close", "cap-freeze") or a or r or u:
             raise Violation("unsupported budget event operation")
     values = dict(actual_usd=actual, reserved_usd=reserved, uncertainty_usd=uncertain,
                   pre_freeze_actual_usd=pre_actual, pre_freeze_reserved_usd=pre_reserved)
@@ -233,18 +238,55 @@ def transact(path, operation, rid, amount, phase="review", attempt=None,
         return event
 
 
+def freeze_cap(path, cap, reserve, evidence, ticket=149):
+    """Set the frozen total cap and the protected grading/closeout reserve, once."""
+    path = Path(path)
+    cap, reserve = usd(cap), usd(reserve)
+    if not evidence:
+        raise Violation("evidence is required")
+    with locked(path):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        values, _, _ = totals(data)
+        if data["frozen_total_cap_usd"] is not None or data["grading_closeout_reserve_usd"] is not None:
+            raise Violation("the cap and reserve are already frozen; append a dated adjustment instead")
+        if reserve <= 0:
+            raise Violation("the grading/closeout reserve must be positive")
+        ceiling = min(usd(data["total_ceiling_usd"]), Decimal(150))
+        if cap > ceiling:
+            raise Violation("the frozen cap cannot exceed the total ceiling")
+        occupied = values["actual_usd"] + values["reserved_usd"] + values["uncertainty_usd"]
+        if occupied > cap:
+            raise Violation("the frozen cap cannot discard sunk spend, reservations or uncertainty")
+        if occupied + reserve > cap:
+            raise Violation("the frozen cap cannot hold the incurred spend and the protected reserve")
+        event = dict(event_id=str(uuid.uuid4()), previous_event_id=data["events"][-1]["event_id"],
+                     observed_at=now(), ticket=ticket, actor=data["owner"], phase="pre-freeze",
+                     operation="cap-freeze", attempt_id=None, helper_id=None,
+                     request_refs=[evidence], reservation_id=None, actual_delta_usd="0",
+                     reservation_delta_usd="0", uncertainty_usd="0", rate_usage_evidence=[evidence],
+                     reason="Freeze the total cap and the protected grading/closeout reserve",
+                     frozen_total_cap_usd=str(cap), grading_closeout_reserve_usd=str(reserve))
+        data["events"].append(event)
+        data["frozen_total_cap_usd"] = str(cap)
+        data["grading_closeout_reserve_usd"] = str(reserve)
+        totals(data)
+        save(path, data)
+        return event
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("ledger", type=Path, nargs="?")
-    parser.add_argument("operation", choices=("reserve", "settle"), nargs="?")
+    parser.add_argument("operation", choices=("reserve", "settle", "cap-freeze"), nargs="?")
     parser.add_argument("--id")
     parser.add_argument("--amount")
     parser.add_argument("--phase", default="review")
     parser.add_argument("--attempt")
     parser.add_argument("--attempt-cap")
     parser.add_argument("--uncertainty", default="0")
+    parser.add_argument("--reserve", help="protected grading/closeout reserve, with cap-freeze")
     parser.add_argument("--evidence")
-    parser.add_argument("--ticket", type=int, default=147, help="issue number operating this reservation or settlement (default 147)")
+    parser.add_argument("--ticket", type=int, default=147, help="issue number operating this reservation, settlement or cap freeze (default 147)")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -254,9 +296,16 @@ def main():
             "AdapterTests.test_pre_freeze_unfrozen_ledger",
             "AdapterTests.test_malformed_reservation_delta_closes_out",
             "AdapterTests.test_attempt_replacement_and_concurrency_caps"]).returncode
-    if not all((args.ledger, args.operation, args.id, args.amount, args.evidence)):
+    if args.operation == "cap-freeze":
+        if not all((args.ledger, args.amount, args.reserve, args.evidence)):
+            parser.error("ledger, --amount, --reserve and --evidence are required for cap-freeze")
+    elif not all((args.ledger, args.operation, args.id, args.amount, args.evidence)):
         parser.error("ledger, operation, --id, --amount and --evidence are required")
     try:
+        if args.operation == "cap-freeze":
+            print(json.dumps(freeze_cap(args.ledger, args.amount, args.reserve,
+                                        args.evidence, args.ticket)))
+            return 0
         print(json.dumps(transact(args.ledger, args.operation, args.id, args.amount,
                                   args.phase, args.attempt, args.attempt_cap,
                                   args.uncertainty, args.evidence, args.ticket)))

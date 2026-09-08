@@ -33,7 +33,8 @@ Unreadable config/scenario or an existing destination fails before artifact crea
 
 The fake ledger is a disposable copy marked `synthetic: true`. Its arithmetic is synthetic
 usage, not experimental spend. Fake work against the real epic ledger is refused.
-The real [ledger.json](ledger.json) remains at $0 incurred and $0 reserved.
+The real [ledger.json](ledger.json) carried $0 incurred and $0 reserved when this ticket delivered;
+#148's target preparation and #149's capability probes have charged it since.
 Ordinary implementation work is outside measured experiment costs.
 
 ## Files and interfaces
@@ -42,7 +43,7 @@ Ordinary implementation work is outside measured experiment costs.
 | --- | --- |
 | `scripts/adapter.py` | One cell's transitions, concurrent C discovery, structural checks, compact packets, retained transcripts, stop and closeout |
 | `scripts/fake_worker.py` | Trusted synthetic responses and finite read tools; no model, shell, network or arbitrary code tool |
-| `scripts/budget.py` | Shared POSIX lock, reservations/settlements, protected reserve, attempt/context/replacement registration |
+| `scripts/budget.py` | Shared POSIX lock, reservations/settlements, protected reserve, attempt/context/replacement registration, and #149's one-time `cap-freeze` |
 | `scripts/fixtures.py` | Disposable common inputs, explicit paper judgments, canaries and synthetic responses |
 | `scripts/test_adapter.py` | CLI checks of transitions, failures, isolation, budgets and evidence records |
 
@@ -228,3 +229,10 @@ closeout capacity inside the existing $15 pre-freeze subtotal. No child gets a n
 Stronger-worker selection remains #149's prospective choice. A failed probe produces a stop
 with evidence and incurred spend. This ticket authorizes no paid grid, default promotion or
 model-quality conclusion.
+
+**#149 ran these probes on 2026-09-08** and recorded the results in
+[`../bounded-discovery-runs-2026-09-08/probes/`](../bounded-discovery-runs-2026-09-08/probes/README.md).
+Items 1, 3 and 4 came back supported. Item 2 came back split: the file tools are confined under
+`--restricted`, but an allow-listed interpreter in the shell reads any path that exists and a raw
+socket to an IP address bypasses a name-based egress proxy, so that freeze's isolation control is
+the physical absence of the forbidden material rather than confinement.

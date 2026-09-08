@@ -1,0 +1,51 @@
+{
+  "p1-settings": {
+    "session_id": "819a42e7-a268-4bee-af41-a01206cd002b",
+    "first_user_message_prefix": "This is a capability probe. Do exactly these two steps and n",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  },
+  "p2a-isolation-finder": {
+    "session_id": "3a05c7cf-07b2-453a-aade-cbb5e3a5b1b6",
+    "first_user_message_prefix": "This is a read-isolation capability probe, not a review. You",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  },
+  "p2b-isolation-primary": {
+    "session_id": "6efcf900-a2af-46d1-ad1f-db912d4b15b4",
+    "first_user_message_prefix": "This is a read-isolation capability probe, not a review. You",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  },
+  "p2c-egress": {
+    "session_id": "43d6403a-2623-44c9-b1b2-7e7579cd7d76",
+    "first_user_message_prefix": "This is a network-isolation capability probe, not a review. ",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  },
+  "p3a-cancellation-precheck": {
+    "session_id": "d20a4f67-5c2d-4b4a-8ff3-b5077b5eda78",
+    "first_user_message_prefix": "This is a cancellation probe, not a review. Work in /tmp/bd1",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  },
+  "p3b-cancelled": {
+    "session_id": "b18af76d-b4a2-410c-9210-3afb087ea195",
+    "first_user_message_prefix": "This is a cancellation probe, not a review. Work in /tmp/bd1",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  },
+  "p4-allowance": {
+    "session_id": "5c168712-73c6-4c4e-a8d7-c55985710ff2",
+    "first_user_message_prefix": "This is a cancellation probe, not a review. Work in /tmp/bd1",
+    "user_text_messages": 1,
+    "summary_records": 0,
+    "resumed_or_forked": false
+  }
+}
