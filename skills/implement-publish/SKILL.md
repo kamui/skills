@@ -5,7 +5,7 @@ description: Implement work from a spec, issue, or set of tickets and open a pul
 
 # Implement and publish
 
-Implement the work, then open one pull request linked to its spec. This skill stops at the pull request; reviewing it is `code-review-publish`'s job.
+Implement the work, review it locally with a fresh-context subagent, then open one pull request linked to its spec. This skill stops at the pull request; `code-review-publish` handles the published review.
 
 ## Process
 
@@ -21,9 +21,19 @@ Follow the repository's branch and commit conventions. If the current branch is 
 
 Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
 
-End with the work committed on the branch and the relevant checks run.
+End with the work committed on the branch and the relevant checks run. Keep implementation and review local until step 5.
 
-### 4. Open the pull request
+### 4. Review before publishing
+
+Spawn a separate reviewer with fresh context, without inheriting the implementation conversation. Use the host's context-isolation option, such as `fork_turns="none"` where available. Give it the repository path, base and head SHAs, the merge-base diff command, every spec source resolved in step 1, and the locations of repository instructions and coding standards. Supply user requirements and clarifications as source material, excluding the implementor's reasoning and conclusions.
+
+The reviewer inspects the diff and relevant surrounding code independently for correctness, regressions, compliance with repository standards, and fidelity to the spec. Keep the review read-only and return findings internally, with file and line references, supporting evidence, and a distinction between blocking defects and optional suggestions. Report coverage gaps or missing information that prevents a judgment.
+
+Evaluate every finding against the code and spec. Fix warranted defects, rerun affected checks, and commit the fixes. Return the updated head to the reviewer for verification and review of the new changes, keeping the implementation conversation excluded. Record an evidence-based reason for declining a finding; a disputed blocking defect remains unresolved.
+
+Proceed only when the reviewer has covered the final committed head and no blocking defects or material coverage gaps remain. If an isolated reviewer is unavailable or a blocker cannot be resolved, report the limitation and stop before publishing. Include the review outcome and any remaining optional findings in the final handoff.
+
+### 5. Open the pull request
 
 Push the head branch first — an existing pull request advertises whatever its head points at, so skipping the push leaves the work invisible on a pull request that looks updated. Then check for one before creating another:
 
