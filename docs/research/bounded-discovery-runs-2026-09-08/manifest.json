@@ -389,7 +389,7 @@
   },
   "preregistration": {
     "access": "coordinator-only",
-    "sha256": "d6e6216f072534e90c5a0534157d149bbd7cfcd528fdbf09a42aee96f18fabed",
+    "sha256": "220a23c7436a8d7b85d55aad0554af18b2423cf8ecfd9df2ab078752896db7d5",
     "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
   },
   "probes": {
@@ -442,7 +442,7 @@
         "verdict": "supported, with the interpreter escape recorded as an audited limitation"
       },
       {
-        "establishes": "meter_split.py prices each transcript at its own model's frozen rates and reproduces the runtime self-report: five sessions to within $0.0000005, and the four launched with --restricted about $0.00134 low each, a fixed amount billed without appearing in the transcript. The larger figure is charged and the difference recorded; see probes/reconciliation.json.",
+        "establishes": "meter_split.py prices each transcript at its own model's frozen rates and reproduces the runtime self-report: five of the eleven that produced a runtime figure to within $0.0000005, and the six launched with --restricted about $0.0013 low each, a fixed amount billed without appearing in the transcript. The larger figure is charged and the difference recorded; see probes/reconciliation.json.",
         "probe": "accounting",
         "verdict": "supported"
       },
@@ -452,7 +452,8 @@
         "verdict": "supported after the configuration was corrected"
       }
     ],
-    "retained_uncertainty_usd": "0.082158"
+    "retained_uncertainty_usd": "0.082158",
+    "settlement": "the twelve recomputed figures sum to $0.950441; the amounts charged -- the larger of the recomputed figure and the runtime's own, per probe -- sum to $0.9584009, settled on the ledger as $0.958401"
   },
   "repository_commit_read": "cfde565d8b27237b7c378a474e8008d27ac25bfe",
   "schema_version": "bounded-discovery-v1",

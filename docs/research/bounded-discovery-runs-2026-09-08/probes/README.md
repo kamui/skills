@@ -48,5 +48,8 @@ covers it — charge the larger of the two figures and record the difference as 
 residual, never silently take the cheaper one.
 
 The cancelled session p3b produced no runtime figure at all and was settled from its six retained
-request records, which is the rule for any attempt that stops without one. The twelve recomputed figures
-sum to $0.958401, the amount settled on the ledger.
+request records, which is the rule for any attempt that stops without one. The twelve recomputed
+figures sum to $0.950441. The amounts actually **charged** — the larger of the two per probe, which
+is the settlement rule — sum to $0.9584009, and the ledger's two settlements for this ticket total
+$0.958401, that figure rounded at settlement time. The recomputed sum is not the settled sum, and
+saying so is the point of the rule.
