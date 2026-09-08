@@ -240,7 +240,9 @@ def check_attestation(spec, attestation, mirror, clone_now):
         if pinned.get("refs") != mirror["refs"]:
             problems.append("the mirror's refs changed since the attestation: %s then, %s now"
                             % (pinned.get("refs"), mirror["refs"]))
-        if pinned.get("objects_sha256") != mirror.get("objects_sha256"):
+        if not pinned.get("objects_sha256"):
+            problems.append("the attestation carries no mirror object-state digest")
+        elif pinned.get("objects_sha256") != mirror.get("objects_sha256"):
             problems.append("the mirror's object store changed since the attestation: %s objects "
                             "then, %s now" % (pinned.get("objects"), mirror.get("objects")))
         if mirror.get("alternates"):
@@ -254,8 +256,6 @@ def check_attestation(spec, attestation, mirror, clone_now):
         elif attested_clone.get("objects_sha256") != clone_now.get("objects_sha256"):
             problems.append("the clone's object store changed since the attestation: %s objects "
                             "then, %s now" % (attested_clone.get("objects"), clone_now.get("objects")))
-        if not pinned.get("objects_sha256"):
-            problems.append("the attestation carries no mirror object-state digest")
     return {"check": "the preparation attestation covers these exact object stores, with no leak-set hit",
             "attestation_observed_at": (attestation or {}).get("observed_at"),
             "problems": problems, "passed": not problems}
@@ -442,8 +442,9 @@ def self_test():
     no_mirror_digest = json.loads(json.dumps(prepared))
     no_mirror_digest["mirror"].pop("objects_sha256", None)
     result = run(spec, "pre-dispatch", no_mirror_digest)["checks"][3]
-    checks.append(("an attestation without a mirror object-state digest fails",
-                   any("no mirror object-state digest" in p for p in result["problems"])))
+    checks.append(("an attestation without a mirror object-state digest says so, not 'changed'",
+                   any("no mirror object-state digest" in p for p in result["problems"]) and
+                   not any("mirror's object store changed" in p for p in result["problems"])))
     for name, ok in checks:
         print(("ok   " if ok else "FAIL ") + name)
     return 0 if all(ok for _, ok in checks) else 1
