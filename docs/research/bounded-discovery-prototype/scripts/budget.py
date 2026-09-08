@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/budget.py LEDGER reserve|settle --id ID --amount USD
        [--phase pre-freeze|review|grading|closeout] [--attempt ID]
-       [--attempt-cap USD] [--uncertainty USD] [--evidence REF]
+       [--attempt-cap USD] [--uncertainty USD] [--evidence REF] [--ticket N]
 Input: DESIGN.md BudgetEvent ledger; pre-freeze permits an unset cap/reserve.
 Reserve amounts include request/cancellation headroom. Settlement amount is actual
 cost; uncertainty retains part of the reservation. Re-settlement is prohibited.
@@ -164,7 +164,7 @@ def attempt_event(path, config, close=None):
 
 
 def transact(path, operation, rid, amount, phase="review", attempt=None,
-             attempt_cap=None, uncertainty="0", evidence=None):
+             attempt_cap=None, uncertainty="0", evidence=None, ticket=147):
     path = Path(path)
     amount, uncertainty = usd(amount), usd(uncertainty)
     if phase not in ("pre-freeze", "review", "grading", "closeout"):
@@ -215,7 +215,7 @@ def transact(path, operation, rid, amount, phase="review", attempt=None,
         else:
             raise Violation("unsupported operation")
         event = dict(event_id=str(uuid.uuid4()), previous_event_id=data["events"][-1]["event_id"],
-                     observed_at=now(), ticket=147, actor=data["owner"], phase=phase,
+                     observed_at=now(), ticket=ticket, actor=data["owner"], phase=phase,
                      operation=operation, attempt_id=attempt, helper_id=None,
                      request_refs=[evidence], reservation_id=rid,
                      actual_delta_usd=str(actual_delta), reservation_delta_usd=str(reservation_delta),
@@ -244,6 +244,7 @@ def main():
     parser.add_argument("--attempt-cap")
     parser.add_argument("--uncertainty", default="0")
     parser.add_argument("--evidence")
+    parser.add_argument("--ticket", type=int, default=147, help="issue number operating this reservation or settlement (default 147)")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -258,7 +259,7 @@ def main():
     try:
         print(json.dumps(transact(args.ledger, args.operation, args.id, args.amount,
                                   args.phase, args.attempt, args.attempt_cap,
-                                  args.uncertainty, args.evidence)))
+                                  args.uncertainty, args.evidence, args.ticket)))
         return 0
     except (ValueError, KeyError, TypeError) as exc:
         print(str(exc))

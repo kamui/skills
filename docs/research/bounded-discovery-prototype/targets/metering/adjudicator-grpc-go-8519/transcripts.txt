@@ -1,0 +1,2 @@
+session 0b4e85c7-155f-4d4b-9f42-844e99cac54d transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-adjudication-grpc-go-8519/0b4e85c7-155f-4d4b-9f42-844e99cac54d.jsonl sha256 533f5fe05a799ca5ec01d6143a75e3334461eed5f2e82930c41746e4d497543f
