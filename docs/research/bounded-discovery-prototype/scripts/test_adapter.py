@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
@@ -173,6 +174,44 @@ sys.exit(adapter.main())
             data = dict(original, **changes)
             save(ledger, data)
             self.assertEqual(reserve("over-cap", amount).returncode, 1)
+
+    def test_cap_freeze_gates_the_review_phase(self):
+        """#149's gate: freeze once, keep sunk spend, and hold the protected reserve."""
+        ledger = self.root / "ledger.json"
+        original = opening_state(read(HERE.parent / "ledger.json"))
+        save(ledger, original)
+        def freeze(cap, reserve):
+            return cli("budget.py", ledger, "cap-freeze", "--amount", cap, "--reserve", reserve,
+                       "--evidence", "synthetic-projection", "--ticket", "149")
+        def reserve(rid, amount, phase="review"):
+            return cli("budget.py", ledger, "reserve", "--id", rid, "--amount", amount,
+                       "--phase", phase, "--evidence", "synthetic-probe")
+        # A review reservation is refused while the cap and reserve are unset.
+        self.assertEqual(reserve("early", "1").returncode, 1)
+        # Sink some pre-freeze spend, then freeze around it.
+        self.assertEqual(reserve("probe", "10", "pre-freeze").returncode, 0)
+        self.assertEqual(cli("budget.py", ledger, "settle", "--id", "probe", "--amount", "8",
+                             "--evidence", "synthetic-usage").returncode, 0)
+        self.assertEqual(freeze("151", "10").returncode, 1)   # above the $150 ceiling
+        self.assertEqual(freeze("7", "1").returncode, 1)      # below the $8 already spent
+        self.assertEqual(freeze("10", "5").returncode, 1)     # spend plus reserve does not fit
+        self.assertEqual(freeze("100", "0").returncode, 1)    # no protected reserve
+        self.assertEqual(read(ledger), read(ledger))
+        self.assertIsNone(read(ledger)["frozen_total_cap_usd"])
+        result = freeze("100", "10")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        frozen = read(ledger)
+        self.assertEqual(frozen["frozen_total_cap_usd"], "100")
+        self.assertEqual(frozen["grading_closeout_reserve_usd"], "10")
+        self.assertEqual(frozen["events"][-1]["operation"], "cap-freeze")
+        self.assertEqual(Decimal(frozen["actual_usd"]), Decimal("8"))
+        self.assertEqual(freeze("120", "10").returncode, 1)   # freezing twice is refused
+        # Review work now fits under the cap only while the reserve stays protected.
+        self.assertEqual(reserve("cells", "82").returncode, 0)
+        self.assertEqual(reserve("one-more", "0.01").returncode, 1)
+        # The protected reserve is spendable by the phase it protects, and only once.
+        self.assertEqual(reserve("grading", "10", "grading").returncode, 0)
+        self.assertEqual(reserve("grading-again", "0.01", "closeout").returncode, 1)
 
     def test_malformed_reservation_delta_closes_out(self):
         for delta in ("abc", "NaN", "Infinity"):

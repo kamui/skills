@@ -21,6 +21,12 @@ fake-worker CLI checks and an explicit no-cell stop for an unprobed Claude runti
 [Evidence](evidence/README.md) records the implementation checks and retained examples.
 Runtime readiness and benchmark dispatch remain #149's gate.
 
+The experiment itself is frozen in
+[bounded-discovery-runs-2026-09-08/](../bounded-discovery-runs-2026-09-08/README.md) for #149:
+the preregistration and machine-readable manifest, the ten metered capability probes that
+established the runtime controls, the sealed cell order, the frozen ceilings and screening rules, and
+the `ready` handoff #150 reads. Every value this directory left open is fixed there.
+
 Target preparation for #148 lives in [targets/](targets/README.md): the frozen selection criteria,
 the sealed candidate inventory and registers, four per-slot manifests with packets, selected scopes,
 mirror and setup recipes, access checks and metering. Hidden truth is committed only as ciphertext;

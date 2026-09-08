@@ -1,0 +1,43 @@
+{
+  "difference_usd": "-0.0013802",
+  "label": "p6-shell-allowlist",
+  "per_model": {
+    "claude-sonnet-5": {
+      "cost_usd": "0.057229",
+      "rates": {
+        "cache_read_mult": "0.1",
+        "cache_write_1h_mult": "2.0",
+        "cache_write_5m_mult": "1.25",
+        "input_usd_per_mtok": "2",
+        "output_usd_per_mtok": "10"
+      },
+      "transcripts": [
+        "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p6-work/c75cab68-a6a8-46e1-ab40-1d81966af2ef.jsonl"
+      ],
+      "turns": 2
+    }
+  },
+  "per_role": {
+    "unassigned": {
+      "cost_usd": "0.057229",
+      "transcripts": [
+        "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p6-work/c75cab68-a6a8-46e1-ab40-1d81966af2ef.jsonl"
+      ]
+    }
+  },
+  "per_transcript": {
+    "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p6-work/c75cab68-a6a8-46e1-ab40-1d81966af2ef.jsonl": {
+      "cost_usd": "0.057229",
+      "model": "claude-sonnet-5",
+      "role": "unassigned",
+      "turns": 2
+    }
+  },
+  "rates_observed_at": "2026-09-08",
+  "rates_source": "First-party Anthropic list prices in dollars per million tokens, as used and recorded by the two dated experiment bundles this freeze builds on: Sonnet 5 $2/$10 in docs/research/one-shot-qualification-2026-09-07/ledger.md and in every #148 helper settlement, and Opus 5 $5/$25 in docs/research/tier-split-evaluation-arm.md section 3. Cache multipliers are transcript_usage.py's documented defaults and match #97's tier pricing: 5-minute cache write x1.25, 1-hour cache write x2.0, cache read x0.1.",
+  "schema_version": "bounded-discovery-v1",
+  "self_report_usd": "0.0586092",
+  "tolerance_usd": "0.01",
+  "total_cost_usd": "0.057229",
+  "within_tolerance": true
+}
