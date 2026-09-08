@@ -6,6 +6,13 @@
     "summary_records": 0,
     "user_text_messages": 1
   },
+  "p10-background": {
+    "first_user_message_prefix": "This is a capability probe, not a review. Answer the questio",
+    "resumed_or_forked": false,
+    "session_id": "a995295e-0dd6-4ca3-958e-1614065449b2",
+    "summary_records": 0,
+    "user_text_messages": 1
+  },
   "p2a-isolation-finder": {
     "first_user_message_prefix": "This is a read-isolation capability probe, not a review. You",
     "resumed_or_forked": false,

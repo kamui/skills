@@ -1,6 +1,6 @@
 {
   "schema_version": "bounded-discovery-v1",
-  "note": "Frozen prospective scoring checks for issue #149. Every case is synthetic: no target, defect ID or cost here comes from a real attempt, and none of it is evidence about the arms. Case 1 is the recovered-but-Approved case #149 requires, and it carries forward to #152.",
+  "note": "Frozen prospective scoring checks for issue #149. Every case is synthetic: no target, defect ID or cost here comes from a real attempt, and none of it is evidence about the arms. Case 1 is the recovered-but-Approved case #149 requires, and it carries forward to #152. Statuses are coherent with clean_claim throughout: an attempt that returns Approved claims clean, and the scorer refuses the pair when it does not.",
   "cases": [
     {
       "name": "a recovered defect returned as Approved is still false clean",
@@ -259,7 +259,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -282,7 +282,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -305,7 +305,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -329,7 +329,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -353,7 +353,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -378,7 +378,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -404,7 +404,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -423,7 +423,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -442,7 +442,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -461,7 +461,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -480,7 +480,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -499,7 +499,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -518,7 +518,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -537,7 +537,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -555,7 +555,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -578,7 +578,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -601,7 +601,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -624,7 +624,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -664,10 +664,16 @@
       "expect": {
         "arms": {
           "A": {
-            "macro_material_recall_all_attempts": 0.25
+            "macro_material_recall_all_attempts": 0.25,
+            "false_clean_count": 2
           },
           "B": {
-            "macro_material_recall_all_attempts": 1.0
+            "macro_material_recall_all_attempts": 1.0,
+            "false_clean_count": 0
+          },
+          "C": {
+            "macro_material_recall_all_attempts": 1.0,
+            "false_clean_count": 0
           }
         },
         "screens": [
@@ -726,7 +732,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -749,7 +755,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -772,7 +778,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -796,7 +802,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -820,7 +826,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -845,7 +851,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -871,7 +877,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -890,7 +896,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -909,7 +915,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -928,7 +934,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -947,7 +953,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 1,
@@ -966,7 +972,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -985,7 +991,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1004,7 +1010,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1022,7 +1028,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1045,7 +1051,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1068,7 +1074,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1091,7 +1097,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1185,7 +1191,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -1208,7 +1214,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -1231,7 +1237,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1255,7 +1261,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1279,7 +1285,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1304,7 +1310,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1330,7 +1336,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1349,7 +1355,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1368,7 +1374,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1387,7 +1393,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1406,7 +1412,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1425,7 +1431,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1444,7 +1450,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1463,7 +1469,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1481,7 +1487,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1504,7 +1510,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1527,7 +1533,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1618,7 +1624,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -1641,7 +1647,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -1664,7 +1670,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1688,7 +1694,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1712,7 +1718,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1737,7 +1743,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -1763,7 +1769,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1782,7 +1788,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1801,7 +1807,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1820,7 +1826,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1839,7 +1845,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1858,7 +1864,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1877,7 +1883,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1896,7 +1902,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -1914,7 +1920,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1937,7 +1943,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1960,7 +1966,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -1983,7 +1989,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -2074,7 +2080,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -2097,7 +2103,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -2120,7 +2126,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -2144,7 +2150,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -2168,7 +2174,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -2193,7 +2199,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -2219,7 +2225,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2238,7 +2244,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2257,7 +2263,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2276,7 +2282,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2295,7 +2301,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2314,7 +2320,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2333,7 +2339,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2352,7 +2358,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2370,7 +2376,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -2393,7 +2399,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -2416,7 +2422,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -2439,7 +2445,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -2529,7 +2535,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2548,7 +2554,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2567,7 +2573,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -2590,7 +2596,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -2613,7 +2619,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2632,7 +2638,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2652,7 +2658,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2671,7 +2677,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2690,7 +2696,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2709,7 +2715,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2728,7 +2734,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2747,7 +2753,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -2765,7 +2771,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2784,7 +2790,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2803,7 +2809,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2822,7 +2828,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2841,7 +2847,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2860,7 +2866,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Needs Information",
             "clean_claim": false,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
@@ -2935,23 +2941,9 @@
               "D2"
             ],
             "truth_version": "v1"
-          },
-          "slot-2": {
-            "status": "clean",
-            "defect_ids": [],
-            "truth_version": "v1"
-          },
-          "slot-3": {
-            "status": "buggy",
-            "defect_ids": [
-              "D3"
-            ],
-            "truth_version": "v1"
           }
         },
-        "expected_clean_targets": [
-          "slot-2"
-        ],
+        "expected_clean_targets": [],
         "attempts": [
           {
             "attempt_id": "att-slot-1-A-replicate-1",
@@ -2961,7 +2953,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D9"
@@ -3001,23 +2993,9 @@
               "D2"
             ],
             "truth_version": "v1"
-          },
-          "slot-2": {
-            "status": "clean",
-            "defect_ids": [],
-            "truth_version": "v1"
-          },
-          "slot-3": {
-            "status": "buggy",
-            "defect_ids": [
-              "D3"
-            ],
-            "truth_version": "v1"
           }
         },
-        "expected_clean_targets": [
-          "slot-2"
-        ],
+        "expected_clean_targets": [],
         "attempts": [
           {
             "attempt_id": "att-slot-1-A-replicate-1",
@@ -3027,7 +3005,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -3097,7 +3075,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -3120,7 +3098,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1"
@@ -3143,7 +3121,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -3167,7 +3145,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -3191,7 +3169,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -3216,7 +3194,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D1",
@@ -3242,7 +3220,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3261,7 +3239,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3280,7 +3258,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3299,7 +3277,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3318,7 +3296,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3337,7 +3315,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3356,7 +3334,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3375,7 +3353,7 @@
             "valid": true,
             "completed": true,
             "status": "Approved",
-            "clean_claim": false,
+            "clean_claim": true,
             "recovered_defect_ids": [],
             "sufficient_fix_defect_ids": [],
             "raw_false_finding_items": 0,
@@ -3393,7 +3371,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -3416,7 +3394,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -3439,7 +3417,7 @@
             "replicate": 1,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -3462,7 +3440,7 @@
             "replicate": 2,
             "valid": true,
             "completed": true,
-            "status": "Approved",
+            "status": "Changes Requested",
             "clean_claim": false,
             "recovered_defect_ids": [
               "D3"
@@ -3507,6 +3485,1004 @@
             "blocker_contains": "clean/buggy target mix changed"
           }
         ]
+      }
+    },
+    {
+      "name": "a supported false finding rejects the arm even with a cell missing",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 1,
+            "unique_false_claims": 1,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "C",
+            "verdict": "fail",
+            "blocker_contains": "slot-3-C-replicate-2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a planned cell attempted but never validly completed blocks the screen",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          },
+          "slot-2": {
+            "status": "clean",
+            "defect_ids": [],
+            "truth_version": "v1"
+          },
+          "slot-3": {
+            "status": "buggy",
+            "defect_ids": [
+              "D3"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [
+          "slot-2"
+        ],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-A-replicate-2",
+            "cell_id": "slot-1-A-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-1",
+            "cell_id": "slot-1-B-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-B-replicate-2",
+            "cell_id": "slot-1-B-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.60"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-1",
+            "cell_id": "slot-1-C-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-1-C-replicate-2",
+            "cell_id": "slot-1-C-replicate-2",
+            "target_slot": "slot-1",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.90"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-1",
+            "cell_id": "slot-2-A-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-A-replicate-2",
+            "cell_id": "slot-2-A-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "A",
+            "replicate": 2,
+            "valid": false,
+            "completed": false,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.00"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-1",
+            "cell_id": "slot-2-B-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-B-replicate-2",
+            "cell_id": "slot-2-B-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "B",
+            "replicate": 2,
+            "valid": false,
+            "completed": false,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.20"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-1",
+            "cell_id": "slot-2-C-replicate-1",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-2-C-replicate-2",
+            "cell_id": "slot-2-C-replicate-2",
+            "target_slot": "slot-2",
+            "arm": "C",
+            "replicate": 2,
+            "valid": false,
+            "completed": false,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "2.40"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-1",
+            "cell_id": "slot-3-A-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-A-replicate-2",
+            "cell_id": "slot-3-A-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "A",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": true,
+            "recovered_defect_ids": [],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.00"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-1",
+            "cell_id": "slot-3-B-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-B-replicate-2",
+            "cell_id": "slot-3-B-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "B",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.40"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-1",
+            "cell_id": "slot-3-C-replicate-1",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          },
+          {
+            "attempt_id": "att-slot-3-C-replicate-2",
+            "cell_id": "slot-3-C-replicate-2",
+            "target_slot": "slot-3",
+            "arm": "C",
+            "replicate": 2,
+            "valid": true,
+            "completed": true,
+            "status": "Changes Requested",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D3"
+            ],
+            "sufficient_fix_defect_ids": [
+              "D3"
+            ],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "3.60"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1",
+          "slot-1-A-replicate-2",
+          "slot-1-B-replicate-1",
+          "slot-1-B-replicate-2",
+          "slot-1-C-replicate-1",
+          "slot-1-C-replicate-2",
+          "slot-2-A-replicate-1",
+          "slot-2-A-replicate-2",
+          "slot-2-B-replicate-1",
+          "slot-2-B-replicate-2",
+          "slot-2-C-replicate-1",
+          "slot-2-C-replicate-2",
+          "slot-3-A-replicate-1",
+          "slot-3-A-replicate-2",
+          "slot-3-B-replicate-1",
+          "slot-3-B-replicate-2",
+          "slot-3-C-replicate-1",
+          "slot-3-C-replicate-2"
+        ]
+      },
+      "expect": {
+        "screens": [
+          {
+            "candidate_arm": "B",
+            "verdict": "inconclusive",
+            "blocker_contains": "no valid completed outcome"
+          },
+          {
+            "candidate_arm": "C",
+            "verdict": "inconclusive",
+            "blocker_contains": "no valid completed outcome"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Approved with clean_claim false is refused as contradictory",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "Approved",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1"
+        ]
+      },
+      "expect": {
+        "violation": "returns Approved with clean_claim false"
+      }
+    },
+    {
+      "name": "a status outside the output contract is refused",
+      "input": {
+        "experiment_id": "issue-138-fixture",
+        "truth_version": "v1",
+        "control_arm": "A",
+        "candidate_arms": [
+          "B",
+          "C"
+        ],
+        "targets": {
+          "slot-1": {
+            "status": "buggy",
+            "defect_ids": [
+              "D1",
+              "D2"
+            ],
+            "truth_version": "v1"
+          }
+        },
+        "expected_clean_targets": [],
+        "attempts": [
+          {
+            "attempt_id": "att-slot-1-A-replicate-1",
+            "cell_id": "slot-1-A-replicate-1",
+            "target_slot": "slot-1",
+            "arm": "A",
+            "replicate": 1,
+            "valid": true,
+            "completed": true,
+            "status": "LGTM",
+            "clean_claim": false,
+            "recovered_defect_ids": [
+              "D1"
+            ],
+            "sufficient_fix_defect_ids": [],
+            "raw_false_finding_items": 0,
+            "unique_false_claims": 0,
+            "action_errors": 0,
+            "priority_errors": 0,
+            "unresolved_adjudications": 0,
+            "billed_cost_usd": "4.00"
+          }
+        ],
+        "planned_cells": [
+          "slot-1-A-replicate-1"
+        ]
+      },
+      "expect": {
+        "violation": "has status 'LGTM'"
       }
     }
   ]

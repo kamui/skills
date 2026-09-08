@@ -12,6 +12,17 @@
       "session_id": "819a42e7-a268-4bee-af41-a01206cd002b",
       "transcripts": 2
     },
+    "p10-background": {
+      "difference_usd": "-0.0012508",
+      "models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.082191",
+      "runtime_self_report_usd": "0.0834418",
+      "session_id": "a995295e-0dd6-4ca3-958e-1614065449b2",
+      "transcripts": 2
+    },
     "p2a-isolation-finder": {
       "difference_usd": "-0.001342",
       "models": [

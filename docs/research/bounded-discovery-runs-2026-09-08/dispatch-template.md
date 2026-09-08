@@ -33,7 +33,7 @@ Arms B and C (`agents-BC.json`) — byte-identical to A except the model:
 CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 \
 HTTPS_PROXY=http://127.0.0.1:{PROXY_PORT} HTTP_PROXY=http://127.0.0.1:{PROXY_PORT} \
 ALL_PROXY=http://127.0.0.1:{PROXY_PORT} \
-timeout 5400 claude -p --session-id "{PRIMARY_SID}" \
+timeout {ROOT_WALL_REMAINING} claude -p --session-id "{PRIMARY_SID}" \
   --model claude-sonnet-5 --effort high --restricted \
   --tools "Bash,Read,Write,Edit,Glob,Grep,Agent,Task" \
   --allowedTools "Write" "Edit" \
@@ -44,9 +44,14 @@ timeout 5400 claude -p --session-id "{PRIMARY_SID}" \
   --max-budget-usd {REMAINING_ALLOWANCE} --output-format json "$(cat {DISPATCH})" < /dev/null
 ```
 
-The working directory is `{WORK}`. In arm C the same command runs twice: phase 1 as written, then
-`--resume "{PRIMARY_SID}"` with `{ADMISSION}` as the prompt and the allowance reduced by phase 1's
-settled cost.
+The working directory is `{WORK}`. `{ROOT_WALL_REMAINING}` is the whole attempt's wall allowance:
+**5400 seconds counted once, from the root dispatch instant recorded in the timing sidecar** — not
+per invocation. In arm C the same command runs twice, phase 1 as written and then
+`--resume "{PRIMARY_SID}"` with `{ADMISSION}` as the prompt; before the resume the runner recomputes
+`{ROOT_WALL_REMAINING}` as `5400 - (now - root_dispatched_at)` and reduces
+`{REMAINING_ALLOWANCE}` by phase 1's settled cost. The barrier wait and the finder's own run fall
+inside that window, so a C attempt gets the same 5400 seconds an A or B attempt gets, and an
+exhausted allowance stops the attempt rather than starting a second full-length phase.
 
 `Write` and `Edit` are named in `--allowedTools` because they have to be: under `--restricted` with
 `--permission-prompts none` the write tools are denied outright unless the allow list names them,
@@ -69,7 +74,29 @@ timeout 1800 claude -p --session-id "{FINDER_SID}" \
 ```
 
 The finder's working directory is `{FINDER_STORE}`, which the primary cannot read and which the
-finder cannot leave. It has no shell, no sub-agent tool and no network tool.
+finder cannot leave. It has no shell, no sub-agent tool and no network tool — and no write tool
+either, which is why it does not write its own artifact.
+
+**The coordinator captures the finder's output.** Probes 8 and 9 established that a session cannot
+write a file unless `--allowedTools` names `Write`, and the finder is deliberately kept read-only:
+giving it `Write` would also let it write into `{CLONE}`, which `--add-dir` puts inside its permitted
+roots and which no worker may dirty. So the finder returns its discovery JSON as the last thing it
+says, the runtime saves that verbatim in the result envelope, and the coordinator — not the finder —
+persists it:
+
+1. read `.result` from the finder's `--output-format json` envelope;
+2. parse the single fenced ```json block out of it;
+3. check the required keys (`context_id`, `packet_sha256`, `scope_id`, `claims`, `inspected`,
+   `frontier_expansions`, `unavailable`), that `claims` is a list, and that every claim carries
+   `id`, `kind`, `claim`, `trigger`, `impact` and `citations`;
+4. write it to `{FINDER_STORE}/discovery.json`, hash it, and record that hash as the finder's
+   freeze artifact;
+5. a missing envelope, a missing or unparsable block, or a failed key check is a **missing or
+   malformed finder**, which the design's transition table already covers: cancel the remaining
+   work, preserve the partial stores, close the attempt as an operational failure, and never
+   substitute arm B's shape for it or infer a clean result from it.
+
+Only after step 4 succeeds does the coordinator release the claims to the primary.
 
 ---
 
@@ -151,7 +178,12 @@ another agent; the only sub-agents you may spawn are the ones your skill's own p
    genuinely missing, apply your skill's incomplete-coverage rule and say so in the report.
 10. **Dispatch every sub-agent in the foreground** (`run_in_background: false`) and wait for its
     result before continuing. Never end your turn while a sub-agent of yours is still running, and
-    never end your turn before the report and payload files are complete.
+    never end your turn before the report and payload files are complete. This is a deliberate
+    constraint, not a runtime limit: probe 10 showed background dispatch works in this exact
+    configuration. It is frozen foreground because #137 lost a session to a background-wait
+    termination on this runtime family, because it is identical in all three arms and so cannot bias
+    the comparison, and because it leaves token cost — which is a gate — untouched. What it does
+    change is elapsed time, and the preregistration records that as an interpretation limit.
 
 {ARM_C_BARRIER_BLOCK}
 
@@ -243,9 +275,9 @@ one change and report what you find, once, then stop.
 - Packet: `{PACKET}` — the pinned description of the change under inspection. Use its values verbatim.
 - Clone: `{CLONE}` — offline; branch `{BASE_BRANCH}` is at the merge-base, `review-head` at the head.
 - Selected scope: `{SCOPE}` — the roots and frontier you may read. This is the whole of your surface.
-- Your store: `{FINDER_STORE}` — write your report here and nowhere else.
-
-You have `Read`, `Grep` and `Glob` and nothing else: no shell, no tests, no sub-agents, no network.
+- Your working directory: `{FINDER_STORE}`. You have `Read`, `Grep` and `Glob` and nothing else: no
+  shell, no tests, no sub-agents, no network, and no way to write a file. You do not need one — your
+  report is the last thing you say, and the harness saves it.
 
 ## Your scope, and its edges
 
@@ -260,7 +292,8 @@ scope or for the change as a whole.
 
 ## What to report
 
-Write `{FINDER_STORE}/discovery.json`: a JSON object with
+End your turn with a single fenced ```json block and nothing after it. The block is one JSON object
+with
 
 - `context_id`, `packet_sha256`, `scope_id`,
 - `claims`: a list, possibly empty, each with a local `id`, a `kind`, the `claim` in one or two
@@ -275,6 +308,10 @@ Report a complete object even when you found nothing; `claims: []` is a real res
 unsure of belongs in the list with its uncertainty stated in the `claim` field — someone else will
 falsify it, and that is their job, not yours.
 
-Do not read outside the clone, the packet and your store. Do not make any network request. Both are
-checked against your transcript after this session stops.
+Emit that block exactly once, as your final message, with no prose after it. It is the whole of your
+output: nothing you say elsewhere is collected, and a missing or unparsable block ends this cell as a
+failed discovery pass rather than an empty one.
+
+Do not read outside the clone, the packet and your working directory. Do not make any network
+request. Both are checked against your transcript after this session stops.
 ````
