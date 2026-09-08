@@ -292,7 +292,7 @@ sources; synthetic records use `fixture://` locators resolved by #147's fake ada
 | Inspected evidence | att-12 §5 commands 8–10; `middleware.ts:65,81,103,120,136`, `procedureBuilder.ts:38-44` | `fixture://concrete.ts:1-3`: `type A={a:string}; type B={b:number};` and an assertion for this exact pair |
 | Stated safety premise | operands are already resolved object shapes due to `_ctx_out: {}` and UnsetMarker guards | this specified concrete A/B pair evaluates to the asserted merged object |
 | Asserted scope | all existing callers, including inferred router shapes; preserve the recorded overbroad scope | only that concrete A/B instantiation; generic operands unassessed |
-| Admission / disposition evidence | rejected before formal candidate admission; att-12 §3 compatibility row and §11 reasoning | rejected; fake supplied decisive concrete-type assertion, no extrapolation |
+| Admission / disposition evidence | rejected before formal candidate admission; att-12 §3 compatibility row and §10 note 3 reasoning | rejected; fake supplied decisive concrete-type assertion, no extrapolation |
 | Batch trigger / receipt | surviving hygiene does not qualify; rejected concern not eligible; ordinary type-inference surface; `[]` | same routing assumptions: ordinary surface, optional local hygiene survivor, `[]` |
 | Verification / publication | `not-required-policy`; `not-admitted` | `not-required-policy`; `not-admitted` |
 | Evaluator-only outcome | inspected premise failed for unresolved generic operands; not missing inspection or mandatory dispatch | supported for the stipulated concrete pair; no global safety claim |
