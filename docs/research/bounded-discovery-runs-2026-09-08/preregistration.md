@@ -219,21 +219,24 @@ Sunk spend is reconciled first, not written off. #146 and #147 charged nothing; 
 $9.895998 for six selectors and six adjudicators; this ticket's probes charged $0.958401 and retain
 $0.082158 of uncertainty for one request the cancelled probe may never have recorded. Pre-freeze
 actual is **$10.8543989** of the $15.00 subtotal. The cap was frozen against a $135.99 projection
-before probes 8 and 9 ran; deviation 5 records why the recomputed $136.0520 leaves it unchanged.
+before probes 8 and 9 ran; deviation 5 records why the recomputed $136.0527 leaves it unchanged.
 
-Rows are shown to four decimal places so the column adds up exactly; the cap and the gate use the
-same unrounded values.
+Every figure is shown to four decimal places and computed from the unrounded inputs, so the column
+adds up as printed. The per-arm means are themselves rounded for display: recombining $3.4200,
+$3.7413 and $5.6294 by hand gives $102.3256 for the 24 cells rather than the $102.3254 below, because
+C's unrounded value is a shade under $5.6294. Two hundredths of a cent changes nothing here, and the
+gate uses the unrounded numbers throughout.
 
 | Line | Amount | Basis |
 | --- | --- | --- |
 | Sunk pre-freeze, including probes | $10.8544 | the ledger |
 | Retained uncertainty | $0.0822 | the cancelled probe's largest observed request |
-| 24 cells | $102.3248 | 8 × ($3.4200 A + $3.7412 B + $5.6294 C) |
-| Three-replacement allowance | $12.7906 | 3 × the $4.2635 mean cell |
+| 24 cells | $102.3254 | 8 × ($3.4200 A + $3.7413 B + $5.6294 C) |
+| Three-replacement allowance | $12.7907 | 3 × the $4.2636 mean cell |
 | Grading and closeout reserve | $10.0000 | #152's blind adjudication and per-target scoring plus #153's synthesis |
-| **Projected full experimental cost** | **$136.0520** | |
-| **Frozen cap** | **$150.00** | `min(1.5 × 136.0520, 150)` |
-| Headroom | $13.9480 | 9.3% of the cap |
+| **Projected full experimental cost** | **$136.0527** | |
+| **Frozen cap** | **$150.00** | `min(1.5 × 136.0527, 150)` |
+| Headroom | $13.9473 | 9.3% of the cap |
 
 The per-cell figures come from measured runs at the dated rates in [`rates.json`](rates.json), not
 from a guess. A is the mean attempt cost of the twelve `bea6be14` cells in
@@ -392,9 +395,9 @@ a partial run is reported as what it measured rather than forced into a global i
 5. **Probes 8 and 9 ran after the `cap-freeze` event (2026-09-08).** The gate was recorded against a
    $135.99 projection; then probes 8 and 9 found that the cell configuration as written could not
    write its own payload, and fixed it. They are pre-freeze spend inside the same $15.00 subtotal and
-   they raise the projection to $136.0520, which still fits the $150.00 cap with $13.9480 of headroom.
+   they raise the projection to $136.0527, which still fits the $150.00 cap with $13.9473 of headroom.
    The `cap-freeze` event is left exactly as written — it was true when it was recorded, and the
-   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.0520`
+   ledger's event chain is append-only — and the cap it set is unchanged, because `1.5 × 136.0527`
    still exceeds $150.00. Section 7's table carries the recomputed figures.
 6. **Two earlier stage records now quote stale digests (2026-09-08).** #147's
    `implementation-handoff.json` records `ADAPTER.md` and `ledger.json` as they were when it
