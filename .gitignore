@@ -11,3 +11,4 @@ node_modules/
 !.env.example
 __pycache__/
 *.pyc
+/docs/research/bounded-discovery-prototype/ledger.json.lock
