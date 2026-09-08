@@ -171,7 +171,7 @@ def make(root, case, arm="C"):
                  historical_local_id="internal/overwrite-compat-break", original_kind="requirement/compatibility",
                  safety_premise="Operands are already resolved object shapes due to _ctx_out: {} and UnsetMarker guards",
                  asserted_scope="All existing callers, including inferred router shapes",
-                 disposition_evidence="Corrected #137 att-12 sections 3 and 11; rejected before formal admission")
+                 disposition_evidence="Corrected #137 att-12 section 3 and section 10 note 3; rejected before formal admission")
         t["inspected_evidence"][0].update(locator="att-12 section 5 commands 8-10; middleware.ts:65,81,103,120,136; procedureBuilder.ts:38-44",
                                          reason="Caller searches and reads preceded rejection")
         history = HERE.parents[1] / "one-shot-qualification-2026-09-07/j-trpc-5017/j-bea6be14-seed2-att-12-run.md"

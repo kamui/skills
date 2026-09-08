@@ -4,7 +4,7 @@
 Usage: python3 scripts/budget.py LEDGER reserve|settle --id ID --amount USD
        [--phase pre-freeze|review|grading|closeout] [--attempt ID]
        [--attempt-cap USD] [--uncertainty USD] [--evidence REF]
-Input: DESIGN.md BudgetEvent ledger, with a frozen cap and protected reserve.
+Input: DESIGN.md BudgetEvent ledger; pre-freeze permits an unset cap/reserve.
 Reserve amounts include request/cancellation headroom. Settlement amount is actual
 cost; uncertainty retains part of the reservation. Re-settlement is prohibited.
 Exit: 0 success, 1 content/budget violation on stdout, 2 unreadable input on stderr.
@@ -29,13 +29,13 @@ class Violation(ValueError):
     pass
 
 
-def usd(value):
+def usd(value, signed=False):
     try:
         result = Decimal(str(value))
     except InvalidOperation as exc:
         raise Violation("invalid USD amount") from exc
-    if not result.is_finite() or result < 0:
-        raise Violation("USD amounts must be finite and nonnegative")
+    if not result.is_finite() or not signed and result < 0:
+        raise Violation("USD amounts must be finite" + ("" if signed else " and nonnegative"))
     return result
 
 
@@ -77,9 +77,7 @@ def totals(data):
         ids.add(event["event_id"])
         prior = event["event_id"]
         a = usd(event["actual_delta_usd"])
-        r = Decimal(event["reservation_delta_usd"])
-        if not r.is_finite():
-            raise Violation("invalid reservation delta")
+        r = usd(event["reservation_delta_usd"], signed=True)
         u = usd(event["uncertainty_usd"])
         actual += a
         reserved += r
@@ -176,8 +174,18 @@ def transact(path, operation, rid, amount, phase="review", attempt=None,
     with locked(path):
         data = json.loads(path.read_text(encoding="utf-8"))
         values, reservations, used = totals(data)
-        cap = min(usd(data["total_ceiling_usd"]), usd(data["frozen_total_cap_usd"]), Decimal(150))
-        protected = usd(data["grading_closeout_reserve_usd"]) - used
+        if operation == "settle":
+            reservation = reservations.get(rid)
+            if not reservation or reservation["settled"]:
+                raise Violation("unknown or already settled reservation")
+            phase, attempt = reservation["phase"], reservation["attempt_id"]
+        frozen = data["frozen_total_cap_usd"]
+        reserve = data["grading_closeout_reserve_usd"]
+        if phase != "pre-freeze" and (frozen is None or reserve is None):
+            raise Violation("frozen cap and grading/closeout reserve must be set before " + phase)
+        cap = min(usd(data["total_ceiling_usd"]),
+                  usd(data["total_ceiling_usd"] if frozen is None else frozen), Decimal(150))
+        protected = usd("0" if reserve is None else reserve) - used
         if protected < 0:
             raise Violation("protected reserve overdrawn")
         if operation == "reserve":
@@ -194,19 +202,15 @@ def transact(path, operation, rid, amount, phase="review", attempt=None,
                     min(usd(data["pre_freeze_ceiling_usd"]), Decimal(15))):
                 raise Violation("pre-freeze budget cannot fit reservation")
             if attempt:
-                spent = sum((usd(e["actual_delta_usd"]) + Decimal(e["reservation_delta_usd"]) +
+                spent = sum((usd(e["actual_delta_usd"]) + usd(e["reservation_delta_usd"], signed=True) +
                              usd(e["uncertainty_usd"]) for e in data["events"]
                              if e["attempt_id"] == attempt), Decimal(0))
                 if attempt_cap is None or spent + amount > usd(attempt_cap):
                     raise Violation("attempt budget cannot fit reservation")
             actual_delta, reservation_delta = Decimal(0), amount
         elif operation == "settle":
-            reservation = reservations.get(rid)
-            if not reservation or reservation["settled"]:
-                raise Violation("unknown or already settled reservation")
             if amount + uncertainty > reservation["remaining"]:
                 raise Violation("actual plus uncertainty exceeds reservation; retain bound and stop")
-            phase, attempt = reservation["phase"], reservation["attempt_id"]
             actual_delta, reservation_delta = amount, -reservation["remaining"]
         else:
             raise Violation("unsupported operation")
@@ -246,6 +250,8 @@ def main():
         return subprocess.run([sys.executable, str(Path(__file__).with_name("test_adapter.py")),
             "AdapterTests.test_atomic_budget_reservations_and_settlements",
             "AdapterTests.test_phase_attempt_caps_corruption_and_attempt_identity",
+            "AdapterTests.test_pre_freeze_unfrozen_ledger",
+            "AdapterTests.test_malformed_reservation_delta_closes_out",
             "AdapterTests.test_attempt_replacement_and_concurrency_caps"]).returncode
     if not all((args.ledger, args.operation, args.id, args.amount, args.evidence)):
         parser.error("ledger, operation, --id, --amount and --evidence are required")

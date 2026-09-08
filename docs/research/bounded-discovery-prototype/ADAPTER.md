@@ -164,6 +164,9 @@ inherited descriptors and other checkouts before a faithful run.
 Events append IDs and previous-event links without rewriting old events. Actual spend,
 outstanding reservations/uncertainty, protected closeout reserve and the new allowance must
 fit the frozen/absolute cap. Pre-freeze cannot exceed $15; the absolute cap cannot exceed $150.
+Before configuration freeze, pre-freeze reservations use the total ceiling when the frozen
+cap is null and zero protected reserve when that reserve is null. Other phases require both
+values to be set. Settlement uses the reservation's recorded phase, including for probes.
 
 Each request reserves a conservative token-priced allowance plus one-call/cancellation
 headroom before launch. Concurrent requests cannot share money or token capacity. Worker
@@ -180,6 +183,8 @@ Deadlines include remaining root and worker-phase time. Peer failure cancels lat
 and continuations; running fake peers are killed and reaped. The fake has no descendant-process
 tool. These checks do not establish provider cancellation or hard token controls. Real dispatch
 needs an enforceable conservative request allowance or demonstrated hard token controls.
+Closeout preserves the first worker failure's disposition and reason. A peer's cancellation
+record names that failure; only an expired deadline records a timeout.
 
 `timing.json` uses #130's unchanged four fields: `completion_mode`, `root_dispatched_at`,
 `payload_validated_at` and `completed_at`. Stop time remains in Attempt/Handoff. The shared

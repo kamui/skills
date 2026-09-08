@@ -49,9 +49,29 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return root
 
-    def run_cell(self, root, rc=0, runtime="fake", output="run"):
-        result = cli("adapter.py", "--config", root / "config.json", "--scenario", root / "scenario.json",
-                     "--out", root / output, "--runtime", runtime)
+    def run_cell(self, root, rc=0, runtime="fake", output="run", delayed_role=None):
+        args = ["--config", str(root / "config.json"), "--scenario", str(root / "scenario.json"),
+                "--out", str(root / output), "--runtime", runtime]
+        if delayed_role:
+            # The finder cap cannot exceed the primary cap. Stagger phase start
+            # to exercise primary timeout while the finder still has time left.
+            program = """
+import sys, time
+sys.path.insert(0, sys.argv.pop(1))
+import adapter
+delayed_role = sys.argv.pop(1)
+run_worker = adapter.Cell.run_worker
+def staggered(self, role, phase, packet):
+    if role == delayed_role:
+        time.sleep(0.3)
+    return run_worker(self, role, phase, packet)
+adapter.Cell.run_worker = staggered
+sys.exit(adapter.main())
+"""
+            result = subprocess.run([sys.executable, "-c", program, str(HERE), delayed_role, *args],
+                                    capture_output=True, text=True, encoding="utf-8", timeout=90)
+        else:
+            result = cli("adapter.py", *args)
         self.assertEqual(result.returncode, rc, result.stdout + result.stderr)
         return read(root / output / "attempt.json"), read(root / output / "handoff.json")
 
@@ -65,6 +85,8 @@ class AdapterTests(unittest.TestCase):
                 self.assertFalse(handoff["dispatch_authorized"])
                 self.assertLessEqual(len(attempt["batches"]), 2)
                 if stopped:
+                    self.assertEqual(handoff["disposition"],
+                                     "stopped-budget" if case == "timeout" else "stopped-invalid")
                     self.assertIsNone(attempt["final_payload"])
                     self.assertTrue((root / "run/stop.json").exists())
                     self.assertIsNone(read(root / "run/timing.json")["completed_at"])
@@ -88,6 +110,87 @@ class AdapterTests(unittest.TestCase):
                     self.assertEqual(attempt["batches"][1]["decision"]["row_ids"], ["Q1"])
                 if case == "spent-follow-up":
                     self.assertEqual(attempt["gaps"][0]["kind"], "required-unavailable-at-cap")
+
+    def test_peer_failure_preserves_first_stop(self):
+        for fault in ("missing", "malformed", "timeout"):
+            for failed, peer in (("primary", "finder"), ("finder", "primary")):
+                with self.subTest(fault=fault, failed=failed):
+                    root = self.fixture()
+                    scenario = read(root / "scenario.json")
+                    scenario[peer]["discovery"]["delay_seconds"] = 5
+                    if fault == "timeout":
+                        scenario[failed]["discovery"]["delay_seconds"] = 5
+                        config = read(root / "config.json")
+                        config["limits"].update(worker_seconds=10, finder_seconds=0.6)
+                        if failed == "primary":
+                            config["limits"]["worker_seconds"] = 0.6
+                        save(root / "config.json", config)
+                    else:
+                        scenario[failed]["discovery"][fault] = True
+                    save(root / "scenario.json", scenario)
+                    attempt, handoff = self.run_cell(root, 1,
+                        delayed_role="finder" if fault == "timeout" and failed == "primary" else None)
+                    disposition = "stopped-budget" if fault == "timeout" else "stopped-invalid"
+                    self.assertEqual(handoff["disposition"], disposition)
+                    self.assertEqual(read(root / "run/stop.json")["disposition"], disposition)
+                    self.assertEqual(read(root / "ledger.json")["events"][-1]["disposition"], disposition)
+                    cancellations = {e["context_id"]: e["reason"] for e in attempt["events"]
+                                     if e["kind"] == "worker-cancelled"}
+                    self.assertIn("peer failure", cancellations["toy-" + peer])
+                    if fault == "timeout":
+                        self.assertIn("timeout", cancellations["toy-" + failed])
+                    else:
+                        self.assertNotIn("time limit", handoff["reason"])
+                    self.assertFalse(any(e["kind"] == "cross-feed" for e in attempt["events"]))
+                    self.assertGreater(float(handoff["reserved_usd"]), 0)
+
+    def test_pre_freeze_unfrozen_ledger(self):
+        ledger = self.root / "ledger.json"
+        original = read(HERE.parent / "ledger.json")
+        save(ledger, original)
+        def reserve(rid, amount, phase="pre-freeze"):
+            return cli("budget.py", ledger, "reserve", "--id", rid, "--amount", amount,
+                       "--phase", phase, "--evidence", "synthetic-probe")
+        result = reserve("probe", "10")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(reserve("excess", "6").returncode, 1)
+        result = cli("budget.py", ledger, "settle", "--id", "probe", "--amount", "8",
+                     "--uncertainty", "1", "--evidence", "synthetic-usage")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(reserve("remaining", "6").returncode, 0)
+        self.assertEqual(reserve("over", "0.01").returncode, 1)
+        for cap, protected in ((None, None), ("150", None), (None, "1")):
+            for phase in ("review", "grading", "closeout"):
+                data = deepcopy(original)
+                data.update(frozen_total_cap_usd=cap, grading_closeout_reserve_usd=protected)
+                save(ledger, data)
+                self.assertEqual(reserve("unfrozen", "1", phase).returncode, 1)
+                self.assertEqual(read(ledger), data)
+        for changes, amount in ((dict(total_ceiling_usd="2"), "3"),
+                                (dict(frozen_total_cap_usd="2"), "3"),
+                                (dict(pre_freeze_ceiling_usd="2"), "3"),
+                                (dict(pre_freeze_ceiling_usd="200", total_ceiling_usd="200"), "151")):
+            data = dict(original, **changes)
+            save(ledger, data)
+            self.assertEqual(reserve("over-cap", amount).returncode, 1)
+
+    def test_malformed_reservation_delta_closes_out(self):
+        for delta in ("abc", "NaN", "Infinity"):
+            with self.subTest(delta=delta):
+                root = self.fixture()
+                ledger = root / "ledger.json"
+                data = read(ledger)
+                data["events"][0]["reservation_delta_usd"] = delta
+                save(ledger, data)
+                result = cli("budget.py", ledger, "reserve", "--id", "bad", "--amount", "1", "--evidence", "bound")
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(len(result.stdout.splitlines()), 1)
+                self.assertEqual(result.stderr, "")
+                attempt, handoff = self.run_cell(root, 1)
+                self.assertEqual(handoff["disposition"], "stopped-invalid")
+                self.assertIsNone(attempt["attempt_id"])
+                self.assertEqual(handoff["actual_usd"], "unknown")
+                self.assertTrue((root / "run/stop.json").exists())
 
     def test_barrier_freshness_compact_packets_and_actual_tool_reads(self):
         root = self.fixture("duplicate")
