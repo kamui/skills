@@ -224,8 +224,8 @@ before probes 8 and 9 ran; deviation 5 records why the recomputed $136.0527 leav
 Every figure is shown to four decimal places and computed from the unrounded inputs, so the column
 adds up as printed. The per-arm means are themselves rounded for display: recombining $3.4200,
 $3.7413 and $5.6294 by hand gives $102.3256 for the 24 cells rather than the $102.3254 below, because
-C's unrounded value is a shade under $5.6294. Two hundredths of a cent changes nothing here, and the
-gate uses the unrounded numbers throughout.
+B's unrounded value is $3.74125 and rounds up while C's $5.629430 rounds down. Two hundredths of a
+cent changes nothing here, and the gate uses the unrounded numbers throughout.
 
 | Line | Amount | Basis |
 | --- | --- | --- |

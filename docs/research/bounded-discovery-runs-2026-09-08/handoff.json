@@ -8,12 +8,12 @@
   "evidence": [
     {
       "access": "coordinator-only",
-      "sha256": "d6e6216f072534e90c5a0534157d149bbd7cfcd528fdbf09a42aee96f18fabed",
+      "sha256": "220a23c7436a8d7b85d55aad0554af18b2423cf8ecfd9df2ab078752896db7d5",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
     },
     {
       "access": "coordinator-only",
-      "sha256": "8ae2e46eeb92e57a7e779f0c0279ce9e7d3cf2f465ae178a565530ac3bb62208",
+      "sha256": "9cfb48abd9f9cb68d90fe6c9a33b116765bd26e580b83c810d44f022d8540d8c",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json"
     },
     {
