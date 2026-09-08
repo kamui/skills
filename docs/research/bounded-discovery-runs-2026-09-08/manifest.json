@@ -205,7 +205,7 @@
     ],
     "checker": {
       "access": "coordinator-only",
-      "sha256": "e64190a0b657cb26ac63dd65fa253f347651ac56ff7c82708f05810737dbb3a6",
+      "sha256": "114b87978e17488ed08275226541309696e67791b5c8ff9c8acc6ebdc0a637ec",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
     },
     "enforced": [
@@ -291,7 +291,7 @@
     "freeze_tools": {
       "check_cell_isolation.py": {
         "access": "coordinator-only",
-        "sha256": "e64190a0b657cb26ac63dd65fa253f347651ac56ff7c82708f05810737dbb3a6",
+        "sha256": "114b87978e17488ed08275226541309696e67791b5c8ff9c8acc6ebdc0a637ec",
         "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
       },
       "egress_proxy.py": {

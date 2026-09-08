@@ -249,11 +249,13 @@ def check_attestation(spec, attestation, mirror, clone_now):
                                if c["check"].startswith("clone is at the pinned head")), None)
         if not attested_clone or attested_clone.get("head_oid") != spec["clone"]["head_oid"]:
             problems.append("the attestation pinned a different clone head")
+        elif not attested_clone.get("objects_sha256"):
+            problems.append("the attestation carries no clone object-state digest")
         elif attested_clone.get("objects_sha256") != clone_now.get("objects_sha256"):
             problems.append("the clone's object store changed since the attestation: %s objects "
                             "then, %s now" % (attested_clone.get("objects"), clone_now.get("objects")))
-        elif not attested_clone.get("objects_sha256"):
-            problems.append("the attestation carries no clone object-state digest")
+        if not pinned.get("objects_sha256"):
+            problems.append("the attestation carries no mirror object-state digest")
     return {"check": "the preparation attestation covers these exact object stores, with no leak-set hit",
             "attestation_observed_at": (attestation or {}).get("observed_at"),
             "problems": problems, "passed": not problems}
@@ -264,7 +266,11 @@ def run(spec, phase, attestation=None):
     mirror = mirror_state(spec["clone"])
     if phase == "preparation":
         # Evaluator material is still present here, and this is the only phase that reads it.
-        checks = [clone, check_leak_set(spec["clone"], spec["leak_set"])
+        checks = [clone,
+                  {"check": "the mirror has no alternate object store",
+                   "alternates": mirror.get("alternates", []),
+                   "passed": bool(mirror.get("origin")) and not mirror.get("alternates")},
+                  check_leak_set(spec["clone"], spec["leak_set"])
                   if spec.get("leak_set") else
                   {"check": "no sealed leak-set object resolves in the clone or its mirror",
                    "passed": False, "examined": 0,
@@ -413,6 +419,31 @@ def self_test():
                    not check_clone(spec["clone"])["passed"]))
     alternates.unlink()
     checks.append(("removing the alternate restores the clone check", check_clone(spec["clone"])["passed"]))
+    # Preparation runs while evaluator material is present, so put the leak set back for these.
+    evaluator.mkdir()
+    (evaluator / "leak.json").write_text(json.dumps({"shas": ["0" * 40]}), encoding="utf-8")
+    mirror_alternates = Path(mirror, "objects", "info", "alternates")
+    mirror_alternates.parent.mkdir(parents=True, exist_ok=True)
+    mirror_alternates.write_text(str(root / "somewhere-else") + "\n", encoding="utf-8")
+    prepared_with_alternate = run(spec, "preparation")
+    checks.append(("preparation is not ready over a mirror with an alternate",
+                   not prepared_with_alternate["ready"] and
+                   not prepared_with_alternate["checks"][1]["passed"]))
+    mirror_alternates.unlink()
+    checks.append(("preparation is ready again once the alternate is gone", run(spec, "preparation")["ready"]))
+    shutil.rmtree(evaluator)                                   # and take it away again
+    no_digest = json.loads(json.dumps(prepared))
+    for c in no_digest["checks"]:
+        c.pop("objects_sha256", None)
+    result = run(spec, "pre-dispatch", no_digest)["checks"][3]
+    checks.append(("an attestation without a clone object-state digest says so, not 'changed'",
+                   any("no clone object-state digest" in p for p in result["problems"]) and
+                   not any("clone's object store changed" in p for p in result["problems"])))
+    no_mirror_digest = json.loads(json.dumps(prepared))
+    no_mirror_digest["mirror"].pop("objects_sha256", None)
+    result = run(spec, "pre-dispatch", no_mirror_digest)["checks"][3]
+    checks.append(("an attestation without a mirror object-state digest fails",
+                   any("no mirror object-state digest" in p for p in result["problems"])))
     for name, ok in checks:
         print(("ok   " if ok else "FAIL ") + name)
     return 0 if all(ok for _, ok in checks) else 1

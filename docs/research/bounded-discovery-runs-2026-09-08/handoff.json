@@ -13,7 +13,7 @@
     },
     {
       "access": "coordinator-only",
-      "sha256": "21c95730d16d13491294e3b9a4420e35b5842f5baf0d5024a0bae33a5c0f432f",
+      "sha256": "ec08bcf0da63c6aff64f65daed44163af5a760ea435dcc45269ccfdd2e350c8c",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json"
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "access": "coordinator-only",
-      "sha256": "e64190a0b657cb26ac63dd65fa253f347651ac56ff7c82708f05810737dbb3a6",
+      "sha256": "114b87978e17488ed08275226541309696e67791b5c8ff9c8acc6ebdc0a637ec",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
     },
     {
