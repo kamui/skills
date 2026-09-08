@@ -8,12 +8,12 @@
   "evidence": [
     {
       "access": "coordinator-only",
-      "sha256": "6c22dae9210a2d7a8dcd35403224263dc05fccc43af6243da864d5657f9cbb06",
+      "sha256": "110a7eb3030112a9585e78193e454af0eaa048737f4a69ac9e1ca5978a80f1d1",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
     },
     {
       "access": "coordinator-only",
-      "sha256": "75f63d33306d1d788408f0311eb6764015ba6ad59341ac8d1142ce6b595ad797",
+      "sha256": "21c95730d16d13491294e3b9a4420e35b5842f5baf0d5024a0bae33a5c0f432f",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json"
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "access": "coordinator-only",
-      "sha256": "8e04c406650606281700c09b89b5dfa8a047d67787e7d1346814fa4f64fc18cc",
+      "sha256": "e64190a0b657cb26ac63dd65fa253f347651ac56ff7c82708f05810737dbb3a6",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
     },
     {

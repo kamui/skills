@@ -205,7 +205,7 @@
     ],
     "checker": {
       "access": "coordinator-only",
-      "sha256": "8e04c406650606281700c09b89b5dfa8a047d67787e7d1346814fa4f64fc18cc",
+      "sha256": "e64190a0b657cb26ac63dd65fa253f347651ac56ff7c82708f05810737dbb3a6",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
     },
     "enforced": [
@@ -225,7 +225,7 @@
         "surface": "network by name"
       },
       {
-        "control": "absence for the whole dispatch window, verified before and after every cell by check_cell_isolation.py: the evaluator key directory, every other slot's mirror, clone and staging clone, every other attempt's store, and the repository checkouts holding this bundle must not exist on the local filesystem. Because the sealed leak set lives in that same storage, the leak-set check runs in a separate preparation phase before the material is removed and leaves a non-revealing attestation bound to the clone head and the mirror's refs; the dispatch phases verify that attestation instead of reading any evaluator file.",
+        "control": "absence for the whole dispatch window, verified before and after every cell by check_cell_isolation.py: the evaluator key directory, every other slot's mirror, clone and staging clone, every other attempt's store, and the repository checkouts holding this bundle must not exist on the local filesystem. Because the sealed leak set lives in that same storage, the leak-set check runs in a separate preparation phase before the material is removed and leaves a non-revealing attestation bound to the clone head, the mirror's refs and a digest over every object each repository holds, referenced or not, alternates followed; the dispatch phases verify that attestation instead of reading any evaluator file.",
         "evidence": "probe 2b and probe 7 are why: a reviewer-shaped session read every canary, and under --restricted an allow-listed python3 still read any path that existed. What is not on the machine cannot be read, which is the control that holds.",
         "surface": "hidden truth, other targets and other attempts"
       },
@@ -235,7 +235,7 @@
         "surface": "cross-cell"
       },
       {
-        "control": "#148's truncated mirrors, checked against the slot's sealed leak set in the preparation phase and re-bound to the live clone and mirror by the attestation at every dispatch phase",
+        "control": "#148's truncated mirrors, checked against the slot's sealed leak set in the preparation phase and re-bound to the live clone and mirror at every dispatch phase by their complete object-store digests, not only their refs",
         "evidence": "each slot manifest's negative_object_checks, re-run by check_cell_isolation.py",
         "surface": "history"
       }
@@ -291,7 +291,7 @@
     "freeze_tools": {
       "check_cell_isolation.py": {
         "access": "coordinator-only",
-        "sha256": "8e04c406650606281700c09b89b5dfa8a047d67787e7d1346814fa4f64fc18cc",
+        "sha256": "e64190a0b657cb26ac63dd65fa253f347651ac56ff7c82708f05810737dbb3a6",
         "uri": "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
       },
       "egress_proxy.py": {
@@ -397,7 +397,7 @@
   },
   "preregistration": {
     "access": "coordinator-only",
-    "sha256": "6c22dae9210a2d7a8dcd35403224263dc05fccc43af6243da864d5657f9cbb06",
+    "sha256": "110a7eb3030112a9585e78193e454af0eaa048737f4a69ac9e1ca5978a80f1d1",
     "uri": "docs/research/bounded-discovery-runs-2026-09-08/preregistration.md"
   },
   "probes": {

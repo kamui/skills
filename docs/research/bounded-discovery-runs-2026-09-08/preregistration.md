@@ -163,8 +163,10 @@ not on the machine while a cell runs**.
 sealed leak set, and the absence gate requires that same evaluator storage to be gone — so
 [`scripts/check_cell_isolation.py`](scripts/check_cell_isolation.py) runs first in a `preparation`
 phase, while the evaluator material is still present, and emits an **attestation**: the clone head,
-base and merge-base, the mirror's refs, the SHA-256 of the leak-set *file*, and how many objects it
-examined and how many hit. It carries no SHA *from* the set, so it crosses into the dispatch window
+base and merge-base, the mirror's refs, a digest of every object each repository holds — referenced
+or not, alternates followed — the SHA-256 of the leak-set *file*, and how many objects it examined
+and how many hit. HEAD and refs alone would not bind it: an object can arrive in a store without
+moving either, which is precisely the leaked evidence the leak-set check rules absent. It carries no SHA *from* the set, so it crosses into the dispatch window
 without carrying truth with it. The file digest names which set was checked; nothing during the
 dispatch window can compare it, because the file is deliberately gone by then, but #152 and #153 can
 once the sealed material returns — which is what makes the attestation auditable rather than merely
@@ -182,7 +184,8 @@ removed. The script writes a dated record and exits non-zero unless all of the f
 2. the permitted roots exist and contain no forbidden path;
 3. the clone is at the pinned head, its base branch at the pinned merge-base, and its tracked tree is
    clean;
-4. the preparation attestation covers this exact clone and mirror — same head, same refs — and
+4. the preparation attestation covers these exact object stores — same head, same refs, the same
+   digest over every object in the clone and in the mirror, and no alternate store in either — and
    records a non-empty leak set, with a file digest and zero hits. No evaluator file is read in this
    phase, and none needs to be;
 5. the egress proxy is listening and refuses a host that is not on its allow list.
