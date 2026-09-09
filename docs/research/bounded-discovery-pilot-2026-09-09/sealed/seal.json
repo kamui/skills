@@ -1,0 +1,19 @@
+{
+  "ciphertext_bytes": 4303008,
+  "ciphertext_sha256": "b684d49359b42da2c4ec8e11237afd063cf4fff1d58b5bce07c3a1c5ccd6ecdd",
+  "excluded_file_count": 0,
+  "invalidated_attempts_sealed": [
+    "position-03-attempt-1",
+    "position-03-attempt-1-home"
+  ],
+  "ledger_included": true,
+  "plaintext_sha256": "abc7fbfc40cdab107370cf13c993a53f83e954a64e32aa5d0c481f955ee37f72",
+  "positions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ]
+}

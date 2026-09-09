@@ -796,7 +796,10 @@ def dispatch(config, position, attempt=1):
             problems.append("post-dispatch isolation failed: %s"
                             % (post.stdout or post.stderr).strip())
         result["elapsed_seconds"] = round(time.time() - started, 3)
-        result.setdefault("disposition", "dispatched")
+        result["completion"] = completion_of(result["phases"])
+        result.setdefault("disposition",
+                          "dispatched" if result["completion"] == "complete"
+                          else result["completion"])
         return finish(root, result, problems)
     finally:
         proxy.terminate()
@@ -824,6 +827,25 @@ def run_phase(config, root, slot, row, label, argv) -> dict:
             "cost_usd": float((found or {}).get("total_cost_usd") or 0.0),
             "num_turns": (found or {}).get("num_turns"),
             "envelope": bool(found)}
+
+
+def completion_of(phases) -> str:
+    """Whether the attempt finished, or stopped against a frozen ceiling.
+
+    A dollar-allowance stop is a measured incomplete result in every arm alike, not
+    an infrastructure failure and not a replacement opportunity - the preregistration
+    is explicit about that. It is also not a completed cell, so calling it
+    ``dispatched`` would quietly promote an unfinished attempt into the screen.
+    """
+    if not phases:
+        return "stopped-runtime"
+    for phase in phases:
+        if phase.get("subtype") == "error_max_budget_usd":
+            return "stopped-budget"
+    for phase in phases:
+        if phase.get("is_error") or phase.get("exit_code") not in (0, None):
+            return "stopped-runtime"
+    return "complete"
 
 
 def finish(root, result, problems) -> int:
@@ -968,7 +990,10 @@ def settle(config, position, attempt=1):
     problems = []
     record = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
-              "target_slot": slot, "dispatch_disposition": dispatched.get("disposition")}
+              "target_slot": slot, "dispatch_disposition": dispatched.get("disposition"),
+              # Derived here as well as at dispatch, so a record written before this
+              # rule existed is still classified by it.
+              "completion": completion_of(dispatched.get("phases") or [])}
 
     transcripts = transcripts_for(root)
     record["transcript_count"] = len(transcripts)
