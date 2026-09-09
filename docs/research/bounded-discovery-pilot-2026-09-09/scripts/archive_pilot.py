@@ -126,6 +126,9 @@ def summarize(root, secrets) -> dict:
         "replicate": prepared["replicate"],
         "block": prepared["block"],
         "worker_model": prompts.get("worker_model"),
+        # The ordinal alone is publishable; the full attempt ID names a slot.
+        "attempt_ordinal": int(str(dispatched.get("attempt_id", "-attempt-1")
+                                   ).rsplit("-attempt-", 1)[-1] or 1),
         "dispatch_template_sha256": prompts.get("dispatch_template_sha256"),
         "rendered_prompt_sha256": prompts.get("rendered_sha256"),
         "preparation": {"attestation_ready": attestation.get("ready"),
