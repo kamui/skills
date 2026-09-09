@@ -233,32 +233,25 @@ def summarize(root, secrets, salt) -> dict:
     return scrub(summary, secrets)
 
 
-# Compiler output is not evidence. A cargo target directory runs to hundreds of
-# megabytes and is fully reproducible from the pinned clone, so it is excluded by
-# name, and any other oversized file is excluded by size and listed.
-# Build output plus the inputs that are reproducible from the freeze: the clone and
-# its mirror come from the pinned recipe and OIDs, and the toolchain caches from the
-# recorded provisioning. The attestation already pins both object stores by digest,
-# so sealing the bytes again would add hundreds of megabytes and no evidence.
-BUILD_DIRS = ("target", "target-scratch", "incremental", ".fingerprint",
-              "caches", "clone", "mirror.git")
-MAX_FILE_BYTES = 4 * 1024 * 1024
+# Only identified build inputs and outputs can be reproduced from the pins.
+BUILD_DIRS = ("clone", "mirror.git", "caches", "finder-clone",
+              "work/target", "work/target-scratch")
+MAX_FILE_BYTES = 4 * 1024 * 1024  # Regression fixture size, never an archival limit.
 
 
-def copy_evidence(source, destination) -> list:
+def copy_evidence(source, destination, excluded=BUILD_DIRS) -> list:
     """Copy a tree, skipping build output, and report what was left behind."""
     skipped = []
     for path in sorted(Path(source).rglob("*")):
         relative = path.relative_to(source)
-        if any(part in BUILD_DIRS for part in relative.parts):
+        if any(relative == Path(entry) or Path(entry) in relative.parents for entry in excluded):
             continue
+        if path.is_symlink():
+            raise Failed("cannot archive evidence symlink: %s" % path)
         if path.is_dir():
             (destination / relative).mkdir(parents=True, exist_ok=True)
             continue
         if path.is_symlink() or not path.is_file():
-            continue
-        if path.stat().st_size > MAX_FILE_BYTES:
-            skipped.append({"path": str(relative), "bytes": path.stat().st_size})
             continue
         (destination / relative).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path, destination / relative)
@@ -272,16 +265,23 @@ def stage_sealed(root, staging) -> list:
     skipped = []
     for name in ("artifacts", "runner", "logs", "work"):
         if (root / name).is_dir():
-            skipped.extend(copy_evidence(root / name, destination / name))
+            skipped.extend(copy_evidence(root / name, destination / name,
+                                         ("target", "target-scratch") if name == "work" else ()))
     discovery = root / "finder-store" / "discovery.json"
     if discovery.is_file():
         shutil.copyfile(discovery, destination / "discovery.json")
-    home = root.parent / "homes" / root.name / ".claude" / "projects"
-    if home.is_dir():
-        skipped.extend(copy_evidence(home, destination / "transcripts"))
+    if (root / "session-homes").is_dir():
+        for role in ("primary", "finder"):
+            home = root / "session-homes" / role / ".claude" / "projects"
+            if home.is_dir():
+                skipped.extend(copy_evidence(home, destination / "transcripts" / role, ()))
+    else:
+        home = root.parent / "homes" / root.name / ".claude" / "projects"
+        if home.is_dir():
+            skipped.extend(copy_evidence(home, destination / "transcripts", ()))
     if skipped:
         write(destination / "excluded-from-seal.json",
-              {"reason": "build output and oversized files are reproducible from the "
+              {"reason": "identified build output is reproducible from the "
                          "pinned clone and are not evidence",
                "excluded": skipped})
     return skipped
@@ -383,6 +383,13 @@ def main(argv=None):
                 if entry.is_dir():
                     excluded.extend(copy_evidence(entry, staging / "invalid" / entry.name))
                     invalidated.append(entry.name)
+        retained = cells / "retained-attempts"
+        if retained.is_dir():
+            shutil.copytree(retained, staging / "retained-attempts")
+        for attempt in sorted(cells.glob("position-*/attempt-*")):
+            if (attempt / "artifacts" / "prepare.json").is_file():
+                # Retain replacements without publishing their identities or outcomes.
+                copy_evidence(attempt, staging / "replacements" / attempt.parent.name / attempt.name)
         ledger = Path(os.path.expanduser(config["ledger"]))
         if ledger.is_file():
             shutil.copyfile(ledger, staging / "ledger.json")
@@ -452,9 +459,9 @@ def self_test():
                    not (out / "work" / "target").exists()))
     checks.append(("ordinary evidence is copied",
                    (out / "work" / "report.md").is_file()))
-    checks.append(("an oversized file is excluded and listed",
-                   not (out / "work" / "huge.bin").exists()
-                   and [entry["path"] for entry in left] == ["work/huge.bin"]))
+    checks.append(("an oversized evidence file is retained",
+                   (out / "work" / "huge.bin").stat().st_size == MAX_FILE_BYTES + 1
+                   and not left))
     public = root / "public"
     (public / "position-99").mkdir(parents=True)
     (public / "position-99" / "summary.json").write_text(

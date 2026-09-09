@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""Exercise PR 197 failure paths with synthetic cells and no provider calls.
+
+Usage: python3 scripts/test_review_fixes.py [--docker-image IMAGE]
+Input: optional local image containing python3, for real mount-boundary checks.
+Exit: 0 when checks pass, 1 on test failures, 2 on invalid CLI input.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import json
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import unittest
+from decimal import Decimal
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+SCRIPTS = Path(__file__).resolve().parent
+
+
+def module(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / (name + ".py"))
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    return loaded
+
+
+runner = module("run_cell")
+archive = module("archive_pilot")
+handoff = module("write_handoff")
+DOCKER_IMAGE = None
+
+
+def result(stdout="", code=0):
+    return subprocess.CompletedProcess([], code, stdout, "")
+
+
+class ReviewFixes(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name)
+        self.root = self.base / "position-99"
+        for name in ("artifacts", "runner", "logs", "work", "clone", "finder-clone",
+                     "finder-store", "packet", "snapshot"):
+            (self.root / name).mkdir(parents=True)
+        self.row = {"position": 99, "attempt_id": "example-C-attempt-1",
+                    "cell_id": "example-C", "arm": "C", "target_slot": "slot-9"}
+        self.config = {"cells_root": str(self.base), "targets": str(self.base / "targets"),
+                       "auth_env_file": str(self.base / "auth"), "proxy_port": 19876,
+                       "image": DOCKER_IMAGE or "test", "ledger": str(self.base / "ledger.json")}
+        (self.base / "auth").write_text("# synthetic configuration\n", encoding="utf-8")
+        (self.base / "targets" / "slot-9").mkdir(parents=True)
+        runner.write(self.base / "targets" / "slot-9" / "manifest.json", {})
+        runner.write(self.root / "artifacts" / "prepare.json",
+                     {"attempt_id": self.row["attempt_id"], "problems": [], "packet_sha256": "packet"})
+        runner.write(self.root / "artifacts" / "attestation.json", {"ready": True})
+        for name in ("dispatch.md", "finder-prompt.md", "agents.json", "admission.md"):
+            (self.root / "runner" / name).write_text("{FINDER_CLAIMS}" if name == "admission.md" else "test",
+                                                      encoding="utf-8")
+        shutil.copyfile(SCRIPTS / "mark_event.py", self.root / "runner" / "mark_event.py")
+
+    def fake_finder(self, malformed=False):
+        claims = {"context_id": "finder", "packet_sha256": "packet", "scope_id": "scope",
+                  "claims": [], "inspected": [], "frontier_expansions": [], "unavailable": []}
+        output = json.dumps({"type": "result", "subtype": "success", "total_cost_usd": 2,
+                             "result": "```json\n%s\n```" % json.dumps([] if malformed else claims)})
+        process = Mock(returncode=0)
+        process.communicate.return_value = (output, None)
+        return process
+
+    def dispatch(self, phases, malformed=False):
+        finder = self.fake_finder(malformed)
+        proxy = Mock()
+        launches = []
+        real_run = runner.run
+
+        def phase(config, root, slot, row, label, argv):
+            launches.append(argv)
+            value = phases[len(launches) - 1]
+            if isinstance(value, Exception):
+                raise value
+            runner.write(root / "work" / "freeze.json", {"ledger": []})
+            (root / "work" / "review-payload.md").write_text("validated payload", encoding="utf-8")
+            (root / "work" / "research-report.md").write_text("report", encoding="utf-8")
+            real_run(sys.executable, root / "runner" / "mark_event.py",
+                     root / "work" / "timing.json", "payload_validated_at")
+            return dict(value, label=label)
+
+        with patch.object(runner, "schedule_row", return_value=self.row), \
+             patch.object(runner, "specs", return_value=({}, {"permitted_roots": []})), \
+             patch.object(runner, "proxy_start", return_value=(proxy, None)), \
+             patch.object(runner, "record_mounts"), \
+             patch.object(runner, "isolation_phase", return_value=result()) as isolation, \
+             patch.object(runner, "claim_attempt"), \
+             patch.object(runner, "register_contexts"), \
+             patch.object(runner, "reserve", return_value=result("reserved")) as reserve, \
+             patch.object(runner.subprocess, "Popen", side_effect=lambda *args, **kw:
+                          finder if args[0][0] == "docker" else self.real_popen(*args, **kw)), \
+             patch.object(runner, "run_phase", side_effect=phase):
+            runner.dispatch(self.config, 99)
+        return runner.load(self.root / "artifacts" / "dispatch.json"), finder, launches, reserve, isolation
+
+    @property
+    def real_popen(self):
+        return REAL_POPEN
+
+    def phase(self, cost=1, subtype="success", envelope=True, code=0):
+        return {"cost_usd": cost, "subtype": subtype, "envelope": envelope,
+                "exit_code": code, "is_error": subtype != "success", "stderr_tail": ""}
+
+    def test_finder_shapes(self):
+        for value in ([], None, 1, "text", {"claims": [1]}, {"claims": [None]}):
+            with self.subTest(value=value):
+                claims, problems = runner.finder_claims("```json\n%s\n```" % json.dumps(value))
+                self.assertIsNone(claims)
+                self.assertTrue(problems)
+
+    def test_shared_allowance_before_launch_and_after_barrier(self):
+        record, _, launches, reserve, _ = self.dispatch([self.phase(cost=3), self.phase(cost=1)])
+        allowances = [Decimal(argv[argv.index("--max-budget-usd") + 1]) for argv in launches]
+        self.assertEqual(allowances, [Decimal(7), Decimal(4)])
+        self.assertEqual(allowances[0] + Decimal(runner.FINDER_CEILING), Decimal(9))
+        self.assertEqual(reserve.call_args.args[2], "11.00")
+        self.assertEqual(record["completion"], "complete")
+        self.assertIsNotNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
+
+    def test_missing_primary_envelope_retains_finder_and_post_check(self):
+        record, finder, _, _, isolation = self.dispatch([self.phase(envelope=False, code=1)])
+        self.assertEqual(record["completion"], "stopped-runtime")
+        self.assertEqual(record["finder"]["cost_usd"], 2)
+        self.assertTrue((self.root / "artifacts" / "finder-result.json").is_file())
+        finder.communicate.assert_called_once()
+        self.assertEqual(isolation.call_count, 2)
+        self.assertIn("stopped_at", record)
+        self.assertIsNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
+
+    def test_primary_launch_exception_retains_finder(self):
+        record, finder, _, _, _ = self.dispatch([runner.Failed("synthetic launch failure")])
+        self.assertEqual(record["completion"], "stopped-runtime")
+        self.assertEqual(record["finder"]["cost_usd"], 2)
+        finder.communicate.assert_called_once()
+
+    def test_malformed_finder_keeps_terminal_outcome(self):
+        record, _, launches, _, _ = self.dispatch([self.phase()], malformed=True)
+        self.assertEqual(record["completion"], "stopped-finder")
+        self.assertEqual(len(launches), 1)
+        self.assertEqual(runner.attempt_completion(record), "stopped-finder")
+        self.assertIsNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
+
+    def test_exhausted_allowance_and_phase_two_stop_never_complete(self):
+        for phases in ([self.phase(cost=7)], [self.phase(), self.phase(subtype="error_max_budget_usd")]):
+            with self.subTest(phases=phases):
+                for path in (self.root / "artifacts" / "dispatch.json", self.root / "work" / "timing.json"):
+                    path.unlink(missing_ok=True)
+                record, _, _, _, _ = self.dispatch(phases)
+                self.assertEqual(record["completion"], "stopped-budget")
+                self.assertIn("stopped_at", record)
+                self.assertIsNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
+
+    def test_finder_is_stopped_and_reaped_on_timeout(self):
+        process = self.fake_finder()
+        output = process.communicate.return_value
+        process.communicate.side_effect = [subprocess.TimeoutExpired("finder", 0), output]
+        record = {}
+        with patch.object(runner, "run", return_value=result()) as command:
+            runner.collect_finder(self.root, process, record)
+        self.assertEqual(command.call_args.args[:2], ("docker", "stop"))
+        self.assertEqual(process.communicate.call_count, 2)
+        self.assertEqual(record["finder"]["cost_usd"], 2)
+
+    def test_large_raw_evidence_is_retained(self):
+        source = self.base / "raw"
+        (source / "target").mkdir(parents=True)
+        for name in ("session.jsonl", "raw.log", "result.json", "target/review.md"):
+            (source / name).write_bytes(b"x" * (4 * 1024 * 1024 + 1))
+        destination = self.base / "saved"
+        archive.copy_evidence(source, destination, ())
+        for name in ("session.jsonl", "raw.log", "result.json", "target/review.md"):
+            self.assertEqual(runner.digest(source / name), runner.digest(destination / name))
+
+    def test_empty_and_partial_handoff_cli(self):
+        ledger = {"events": [], "frozen_total_cap_usd": "150", "grading_closeout_reserve_usd": "10",
+                  "actual_usd": "0", "reserved_usd": "0", "uncertainty_usd": "0"}
+        runner.write(self.base / "ledger.json", ledger)
+        runner.write(self.base / "config.json", self.config)
+        command = [sys.executable, str(SCRIPTS / "write_handoff.py"), "--config", str(self.base / "config.json"),
+                   "--bundle", str(self.base / "public"), "--out", str(self.base / "handoff.json")]
+        completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        document = runner.load(self.base / "handoff.json")
+        self.assertEqual(document["disposition"], "stopped-incomplete")
+        self.assertEqual(len(document["cells"]), 6)
+        self.assertIsNone(document["affordability"]["fits"])
+        money = handoff.affordability([{"arm": "A", "settled_usd": "3"}], Decimal("100"))
+        self.assertEqual(money["missing_arm_measurements"], ["B", "C"])
+
+    def test_direct_socket_evidence_requires_a_recorded_judgment(self):
+        transcript = self.base / "socket.jsonl"
+        command = "python3 -c 'import socket; socket.create_connection((\"192.0.2.1\",443))'"
+        runner.write(transcript, {})
+        transcript.write_text(json.dumps({"message": {"content": [{"type": "tool_use", "name": "Bash",
+                                             "input": {"command": command}}]}}) + "\n", encoding="utf-8")
+        self.assertFalse(runner.audit_network([str(transcript)], [])["passed"])
+        self.assertFalse(runner.audit_network([str(transcript)], [{"host": "api.anthropic.com"}])["passed"])
+        decision = {"command_sha256": hashlib.sha256(command.encode()).hexdigest(),
+                    "reason": "synthetic test acceptance", "egress_event_indices": [0], "egress_sha256": "wrong"}
+        self.assertFalse(runner.audit_network([str(transcript)], [], [decision])["passed"])
+
+    def test_replacement_preserves_predecessor_and_uses_only_own_transcripts(self):
+        runner.write(self.root / "artifacts" / "settle.json", {"completion": "stopped-invalid"})
+        old = runner.session_home(self.root, "primary") / ".claude" / "projects" / "old.jsonl"
+        old.parent.mkdir(parents=True)
+        old.write_text("old evidence\n", encoding="utf-8")
+        runner.retain_predecessor(self.config, 99, 2)
+        saved = self.base / "retained-attempts" / "position-99-attempt-01.tar.gz"
+        with tarfile.open(saved) as evidence:
+            self.assertIn("attempt/session-homes/primary/.claude/projects/old.jsonl", evidence.getnames())
+        retry = runner.cell_root(self.config, 99, 2)
+        fresh = runner.session_home(retry, "primary") / ".claude" / "projects" / "new.jsonl"
+        fresh.parent.mkdir(parents=True)
+        fresh.write_text("new evidence\n", encoding="utf-8")
+        self.assertEqual(runner.transcripts_for(retry), [str(fresh)])
+        self.assertEqual(runner.transcripts_for(self.root), [str(old)])
+        self.assertFalse((retry / "work" / "timing.json").exists())
+        runner.write(self.root / "work" / "timing.json", {})
+        with patch.object(runner, "schedule_row", return_value=self.row):
+            with self.assertRaises(runner.Failed):
+                runner.prepare(self.config, 99, force=True)
+        self.assertTrue(old.is_file())
+
+    def fresh_ledger(self):
+        self.config["targets"] = str(SCRIPTS.parents[1] / "bounded-discovery-prototype" / "targets")
+        runner.write(self.base / "ledger.json", {
+            "owner": "test", "frozen_total_cap_usd": "150", "total_ceiling_usd": "150",
+            "grading_closeout_reserve_usd": "10", "pre_freeze_ceiling_usd": "15",
+            "actual_usd": "0", "reserved_usd": "0", "uncertainty_usd": "0",
+            "pre_freeze_actual_usd": "0", "pre_freeze_reserved_usd": "0",
+            "attempt_limit": 27, "replacement_limit": 3,
+            "events": [{"event_id": "initial", "previous_event_id": None, "operation": "open",
+                        "phase": "pre-freeze", "attempt_id": None, "actual_delta_usd": "0", "reservation_delta_usd": "0",
+                        "uncertainty_usd": "0"}]})
+
+    def test_actual_worker_registration_is_append_only_and_rejects_reuse(self):
+        self.fresh_ledger()
+        contexts = {"primary": "primary-id", "finder": "finder-id"}
+        runner.claim_attempt(self.config, self.row, contexts)
+        prefix = runner.load(self.config["ledger"])["events"]
+        contexts["verifier:agent-new"] = "agent-new"
+        runner.register_contexts(self.config, self.row, contexts)
+        saved = runner.load(self.config["ledger"])
+        self.assertEqual(saved["events"], prefix)
+        self.assertEqual(len(saved["context_claims"]), 3)
+        runner.register_contexts(self.config, self.row, contexts)
+        self.assertEqual(runner.load(self.config["ledger"]), saved)
+        with self.assertRaises(runner.Failed):
+            runner.register_contexts(self.config, self.row, {"verifier": "finder-id"})
+        runner.close_attempt(self.config, self.row, "complete")
+        other = dict(self.row, attempt_id="other", cell_id="other")
+        with self.assertRaises(runner.Failed):
+            runner.claim_attempt(self.config, other, {"primary": "agent-new"})
+        runner.claim_attempt(self.config, other, {"primary": "fresh"})
+        with self.assertRaises(runner.Failed):
+            runner.register_contexts(self.config, other, {"verifier": "agent-new"})
+
+    def test_settlement_keeps_stop_reason_and_closes_invalid_attempt(self):
+        self.fresh_ledger()
+        self.config["bundle"] = str(self.base)
+        runner.claim_attempt(self.config, self.row, runner.cell_contexts(self.root, self.row))
+        self.assertEqual(runner.reserve(self.config, self.row, "11.00", "test").returncode, 0)
+        runner.write(self.root / "artifacts" / "dispatch.json", {
+            "attempt_id": self.row["attempt_id"], "arm": "C", "disposition": "stopped-finder",
+            "phases": [self.phase()], "finder": {"cost_usd": 2}, "problems": ["malformed finder"],
+            "stopped_at": "2026-01-01T00:00:00+00:00"})
+        runner.write(self.root / "artifacts" / "cell-env-dispatch.json", {"permitted_roots": []})
+        with patch.object(runner, "schedule_row", return_value=self.row):
+            self.assertEqual(runner.settle(self.config, 99), 1)
+        saved = runner.load(self.root / "artifacts" / "settle.json")
+        self.assertEqual(saved["completion"], "stopped-finder")
+        self.assertIn("malformed finder", saved["problems"])
+        self.assertEqual(saved["stopped_at"], "2026-01-01T00:00:00+00:00")
+        events = runner.load(self.config["ledger"])["events"]
+        self.assertEqual(events[-1]["operation"], "attempt-close")
+        self.assertEqual(events[-1]["disposition"], "stopped-invalid")
+        self.assertEqual(saved["settled_usd"], "3.0000000")
+
+    def test_final_payload_change_requires_revalidation(self):
+        script = SCRIPTS / "mark_event.py"
+        sidecar = self.root / "work" / "timing.json"
+        runner.run(sys.executable, script, sidecar, "root_dispatched_at", "--create")
+        self.assertEqual(runner.run(sys.executable, script, sidecar, "completed_at", check=False).returncode, 1)
+        for name in ("review-payload.md", "research-report.md"):
+            (sidecar.parent / name).write_text("first", encoding="utf-8")
+        runner.run(sys.executable, script, sidecar, "payload_validated_at")
+        (sidecar.parent / "review-payload.md").write_text("changed", encoding="utf-8")
+        self.assertEqual(runner.run(sys.executable, script, sidecar, "completed_at", check=False).returncode, 1)
+        self.assertIsNone(runner.load(sidecar)["completed_at"])
+
+    def test_container_roles_cannot_read_each_others_stores(self):
+        if not DOCKER_IMAGE:
+            self.skipTest("pass --docker-image for the local container check")
+        for role in ("primary", "finder"):
+            home = runner.session_home(self.root, role)
+            home.mkdir(parents=True)
+            (home / "canary").write_text(role, encoding="utf-8")
+        (self.root / "work" / "secret").write_text("primary", encoding="utf-8")
+        (self.root / "finder-store" / "secret").write_text("finder", encoding="utf-8")
+        (self.root / "logs" / "finder.log").write_text("finder", encoding="utf-8")
+        self.assertTrue(runner.record_mounts(self.config, self.root, "slot-9",
+                                             self.root / "artifacts" / "mounts.json", "C"))
+        for role, hidden in (("primary", ["finder-store/secret", "logs/finder.log", "session-homes/finder/canary"]),
+                             ("finder", ["work/secret", "runner/dispatch.md", "session-homes/primary/canary"])):
+            probe = "from pathlib import Path; import json; print(json.dumps([Path(p).exists() for p in %r]))" % [str(self.root / p) for p in hidden]
+            argv = runner.docker_argv(self.config, self.root, "slot-9", "pr197-test-" + role,
+                                      ["python3", "-c", probe], self.root / ("work" if role == "primary" else "finder-store"), role=role)
+            observed = runner.run(*argv)
+            self.assertEqual(json.loads(observed.stdout), [False] * len(hidden))
+
+
+REAL_POPEN = subprocess.Popen
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--docker-image")
+    args = parser.parse_args()
+    DOCKER_IMAGE = args.docker_image
+    unittest.main(argv=[sys.argv[0]], verbosity=2)

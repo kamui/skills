@@ -103,3 +103,41 @@ judgment that position 1's refused launch measured nothing and so should not cou
 is that any second attempt at a cell is a replacement requiring a predecessor closed as invalid, and
 the replay therefore counts **two of three**. The ledger's definition governs, and the narrative
 judgment was wrong.
+
+## 11. Coordinator corrections and historical fidelity (2026-09-09)
+
+PR #197 identified ten defects in the coordinator and closeout helpers. The fixes apply to future
+attempts. They do not change the frozen manifest, the committed ledger, the six historical cell
+summaries or the sealed archive, and no new provider call was made to validate them.
+
+Arm C now allocates $7 to primary phase 1 and $2 to the finder before launch. Its reservation is
+$11, including $1 of call headroom for each concurrent session. Phase 2 receives only the remainder
+of the $9 review allowance after both observed costs. The total cap and protected reserve still
+apply. This corrects the old $9-plus-$2 launch and its inadequate $10 reservation; it does not
+establish that historical spending met the treatment ceiling. The frozen per-call overshoot
+assumption still needs validation against the actual runtime records.
+
+The workers now mount separate session homes and stores. The finder reads a private immutable
+clone copy, so primary build output cannot carry discoveries across the barrier. An unpaid Python
+probe checks both worker mount sets before dispatch. Static transcript network auditing remains an
+audit, not a firewall: a suspected network command requires a recorded explanation tied to proxy
+events, or evidence that no traffic occurred. Indirect calls still need manual transcript review.
+
+Dispatch now collects the finder and retains its output before closeout on early returns and launch
+errors. Terminal reasons survive settlement. Completion requires a recorded final validation event
+whose payload digest still matches. Actual verifier identities are registered at phase validation
+and settlement in an append-only `context_claims` list under the live ledger's lock. Existing money
+and attempt events are not rewritten, and the frozen budget module remains unchanged.
+
+Prepare replacements with `--attempt-number N` before dispatching that ordinal. Preparation archives
+the settled predecessor, creates a distinct attempt directory, and refuses to force-delete an
+attempted workspace. Each attempt has fresh prompts, timing and session homes. Archives retain raw
+evidence regardless of size. Missing arm costs produce an unavailable projection and a stopped
+handoff rather than preventing closeout.
+
+The historical assessment `pilot/actual-fidelity` remains blocked. Verification needs a complete
+operational extract that excludes comparative outcomes, or access to the retained evidence after
+every reviewer run has stopped. No seal was opened during this addressing round. The handoff is
+therefore `stopped-incomplete`; reported historical completions and costs remain unchanged pending
+that review. Any required invalidation must account for all affected comparison members and fit
+the existing three-replacement limit, with two replacements already reported as consumed.

@@ -160,17 +160,21 @@ def affordability(cells, remaining) -> dict:
     means = {arm: sum(costs) / len(costs) for arm, costs in sorted(by_arm.items())}
     triple = sum(means.values()) if len(means) == 3 else None
     needed = triple * 6 if triple is not None else None
-    fits = bool(needed is not None and needed <= remaining)
-    triples = int(remaining / triple) if triple else 0
-    warning = ("the remaining grid fits at the measured costs"
+    fits = needed <= remaining if needed is not None else None
+    triples = max(0, min(6, int(remaining / triple))) if triple else None
+    missing = sorted(set("ABC") - set(means))
+    warning = ("Projection unavailable: no settled cost for arm(s) %s. Known costs and "
+               "unattempted cells are retained; no full-grid affordability claim is available."
+               % ", ".join(missing) if missing else ("the remaining grid fits at the measured costs"
                if fits else
                "SHORTFALL: the eighteen remaining cells project to %s against %s available, "
                "so the grid cannot be completed under the frozen cap. At %s per triple the "
                "allowance covers %d of the 6 remaining triples, leaving %d cells unrun. #151 "
                "should expect stopped-budget and must stop on a triple boundary."
                % (str(round(needed, 4)), str(round(remaining, 4)), str(round(triple, 4)),
-                  triples, 18 - triples * 3))
+                  triples or 0, 18 - (triples or 0) * 3)))
     return {
+        "missing_arm_measurements": missing,
         "measured_mean_per_arm_usd": {arm: str(round(mean, 4)) for arm, mean in means.items()},
         "measured_triple_usd": str(round(triple, 4)) if triple is not None else None,
         "remaining_grid_cells": 18,
@@ -307,8 +311,10 @@ def main(argv=None):
                                      if e.get("operation") == "attempt-open"
                                      and e.get("predecessor")),
         "replacement_limit": ledger.get("replacement_limit"),
-        "contexts_claimed": sum(len(e.get("contexts") or []) for e in ledger["events"]
-                                if e.get("operation") == "attempt-open"),
+        "contexts_claimed": len({context for event in ledger["events"]
+                                 if event.get("operation") == "attempt-open"
+                                 for context in event.get("contexts", [])}
+                                | {entry["context_id"] for entry in ledger.get("context_claims", [])}),
         "note": "claimed through the ledger's own attempt_event, which refuses a reused "
                 "attempt ID or context ID, enforces both caps, and refuses a replacement "
                 "whose predecessor was not closed as documented invalidity.",
