@@ -70,6 +70,9 @@ def main(argv=None) -> int:
                         help="create the sidecar; only with root_dispatched_at")
     parser.add_argument("--mode", default="render-only",
                         help="completion_mode for --create (default render-only)")
+    parser.add_argument("--at", help="record this ISO 8601 instant instead of now, for an "
+                                     "event the coordinator derives from retained records "
+                                     "rather than observes as it happens")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -94,7 +97,14 @@ def main(argv=None) -> int:
             sys.stderr.write("cannot read %s: %s\n" % (path, exc))
             return 2
 
-    problems = record(document, args.event, now())
+    stamp = args.at or now()
+    if args.at:
+        try:
+            datetime.fromisoformat(args.at)
+        except ValueError:
+            print("--at %s is not an ISO 8601 instant" % args.at)
+            return 1
+    problems = record(document, args.event, stamp)
     if problems:
         for problem in problems:
             print(problem)
@@ -146,6 +156,14 @@ def self_test() -> int:
                    run(str(sidecar), "finished_at").returncode == 1))
     checks.append(("a missing sidecar is an input error",
                    run(str(root / "absent.json"), "completed_at").returncode == 2))
+    derived = root / "derived.json"
+    run(str(derived), "root_dispatched_at", "--create")
+    run(str(derived), "completed_at", "--at", "2026-09-09T05:33:54.122000+00:00")
+    checks.append(("--at records the given instant",
+                   json.loads(derived.read_text(encoding="utf-8"))["completed_at"]
+                   == "2026-09-09T05:33:54.122000+00:00"))
+    checks.append(("--at rejects a non-instant",
+                   run(str(derived), "payload_validated_at", "--at", "yesterday").returncode == 1))
 
     bare = root / "bare.json"
     bare.write_text(json.dumps(empty("render-only")) + "\n", encoding="utf-8")

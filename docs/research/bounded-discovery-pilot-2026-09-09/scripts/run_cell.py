@@ -779,6 +779,13 @@ def dispatch(config, position, attempt=1):
                                                 resume=True))
                 result["phases"].append(phase2)
 
+        # #130's render-only completion: the final rendered result has returned,
+        # with the payload and the research report the dispatch requires.
+        completed = run(sys.executable, str(root / "runner" / "mark_event.py"),
+                        str(timing), "completed_at", check=False)
+        if completed.returncode:
+            problems.append("could not record completed_at: %s" % completed.stdout.strip())
+
         post = isolation_phase(config, root, slot, "post-dispatch",
                                root / "artifacts" / "isolation-post.json")
         if post.returncode:
@@ -941,8 +948,13 @@ def settle(config, position, attempt=1):
                     *transcripts, check=False)
         (root / "logs" / "meter.log").write_text(
             (split.stdout or "") + (split.stderr or ""), encoding="utf-8")
-        if split.returncode:
-            problems.append("meter_split.py exited %s; see logs/meter.log" % split.returncode)
+        # meter_split exits 1 when the two sources differ by more than its default
+        # tolerance, but it still writes the split. The preregistration expects every
+        # cell to differ - it names the cause - so the split is kept and the
+        # difference is decomposed below rather than failing the settlement.
+        if split.returncode and not (root / "artifacts" / "usage-split.json").is_file():
+            problems.append("meter_split.py exited %s and wrote no split; see logs/meter.log"
+                            % split.returncode)
 
     audit = audit_reads(root, transcripts, spec["permitted_roots"])
     write(root / "artifacts" / "read-audit.json", audit)
@@ -960,30 +972,72 @@ def settle(config, position, attempt=1):
     record["egress_refused"] = sum(1 for entry in egress
                                    if entry.get("decision") not in ("allow", "allowed"))
 
-    # Settlement charges the larger of the self-report and the retained records.
+    # Settlement charges the larger of the self-report and the retained records, and
+    # records the difference between them as a reconciliation residual. The probes
+    # found the runtime bills a small Haiku request it never writes to a transcript,
+    # so the residual is decomposed: the part the envelopes attribute to an
+    # untranscripted model, and whatever is left unexplained.
     metered = self_report
+    transcript_total = None
     try:
         split_document = load(root / "artifacts" / "usage-split.json")
-        metered = max(metered, float(split_document.get("total_cost_usd") or 0.0))
+        transcript_total = float(split_document.get("total_cost_usd") or 0.0)
+        metered = max(metered, transcript_total)
         record["usage_split_total_usd"] = split_document.get("total_cost_usd")
         record["usage_within_tolerance"] = split_document.get("within_tolerance")
-        record["usage_difference_usd"] = split_document.get("difference_usd")
+        record["models_priced"] = sorted(split_document.get("per_model", {}))
     except Failed:
         problems.append("no usage split was produced")
+
+    untranscripted = 0.0
+    envelope_models = {}
+    for result_file in sorted((root / "artifacts").glob("*-result.json")):
+        for model, usage in (load(result_file).get("modelUsage") or {}).items():
+            envelope_models[model] = envelope_models.get(model, 0.0) + (usage.get("costUSD") or 0.0)
+    for model, cost in envelope_models.items():
+        if model not in (split_document.get("per_model", {}) if transcript_total is not None else {}):
+            untranscripted += cost
+    record["envelope_per_model_usd"] = {m: "%.7f" % c for m, c in sorted(envelope_models.items())}
     record["self_report_usd"] = "%.7f" % self_report
     record["settled_usd"] = "%.7f" % metered
-    record["reconciliation_residual_usd"] = "%.7f" % (metered - self_report)
+    residual = self_report - (transcript_total if transcript_total is not None else self_report)
+    unexplained = residual - untranscripted
+    record["reconciliation_residual_usd"] = "%.7f" % residual
+    record["residual_untranscripted_models_usd"] = "%.7f" % untranscripted
+    record["residual_unexplained_usd"] = "%.7f" % unexplained
+    # One per cent of the attempt is this runner's reporting threshold, not a frozen
+    # value: below it the residual is noted, above it a researcher should look.
+    if metered and abs(unexplained) > 0.01 * metered:
+        problems.append("%.7f of the reconciliation residual is unexplained, above one per "
+                        "cent of the settled cost; meter by hand before trusting this cell"
+                        % unexplained)
 
-    budget = Path(config["targets"]).parent / "scripts" / "budget.py"
-    settled = run(sys.executable, str(budget), config["ledger"], "settle",
-                  "--id", "%s-reservation" % row["attempt_id"],
-                  "--amount", "%.7f" % metered, "--phase", "review",
-                  "--attempt", row["attempt_id"], "--ticket", "150",
-                  "--evidence", "metered from the retained per-request records and the "
-                                "result envelopes of cell %s" % row["cell_id"], check=False)
-    if settled.returncode:
-        problems.append("ledger settlement refused: %s"
-                        % (settled.stdout or settled.stderr).strip())
+    # Re-settlement is prohibited by the ledger and rightly so, but this stage has to
+    # be re-runnable to correct a record without charging twice, so an existing
+    # settlement for this reservation is reported rather than attempted again.
+    reservation_id = "%s-reservation" % row["attempt_id"]
+    ledger = load(config["ledger"])
+    already = next((event for event in ledger["events"]
+                    if event.get("reservation_id") == reservation_id
+                    and event.get("operation") == "settle"), None)
+    if already:
+        record["ledger_already_settled_usd"] = already["actual_delta_usd"]
+        record["ledger_settled_at"] = already["observed_at"]
+        if abs(float(already["actual_delta_usd"]) - metered) > 0.0000005:
+            problems.append("the ledger settled %s for this attempt but metering now says "
+                            "%.7f; the ledger is append-only and stands"
+                            % (already["actual_delta_usd"], metered))
+    else:
+        budget = Path(config["targets"]).parent / "scripts" / "budget.py"
+        settled = run(sys.executable, str(budget), config["ledger"], "settle",
+                      "--id", reservation_id,
+                      "--amount", "%.7f" % metered, "--phase", "review",
+                      "--attempt", row["attempt_id"], "--ticket", "150",
+                      "--evidence", "metered from the retained per-request records and the "
+                                    "result envelopes of cell %s" % row["cell_id"], check=False)
+        if settled.returncode:
+            problems.append("ledger settlement refused: %s"
+                            % (settled.stdout or settled.stderr).strip())
     record["problems"] = problems
     write(root / "artifacts" / "settle.json", record)
     for problem in problems:
