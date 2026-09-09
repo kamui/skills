@@ -213,6 +213,35 @@ def seal(staging, out, key) -> dict:
             "ciphertext_bytes": encrypted.stat().st_size}
 
 
+def leak_scan(public, secrets, extra) -> list:
+    """Refuse to publish if any identifying token survived into a public file.
+
+    The whitelist and the scrub are both things a future edit can get wrong, so the
+    last step is a mechanical check of the bytes actually being published rather than
+    trust in the two steps that produced them.
+    """
+    hits = []
+    for path in sorted(Path(public).rglob("*")):
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for token in list(secrets) + list(extra):
+            if token and token in text:
+                hits.append("%s names %r" % (path, token))
+    return hits
+
+
+def leak_tokens(config) -> list:
+    """The leak-set digests, which identify a target as precisely as its name."""
+    tokens = []
+    leaks = Path(os.path.expanduser(config.get("leak_sets", "")))
+    if leaks.is_dir():
+        for entry in sorted(leaks.glob("*.json")):
+            tokens.append(hashlib.sha256(entry.read_bytes()).hexdigest())
+            tokens.append(entry.stem)
+    return tokens
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config")
@@ -245,6 +274,12 @@ def main(argv=None):
         ledger = Path(os.path.expanduser(config["ledger"]))
         if ledger.is_file():
             shutil.copyfile(ledger, staging / "ledger.json")
+        hits = leak_scan(out / "cells", secrets, leak_tokens(config))
+        if hits:
+            for hit in hits:
+                print(hit)
+            print("refusing to seal: the public summaries would disclose sealed truth")
+            return 1
         sealed = seal(staging, out, os.path.expanduser(args.key))
         shutil.rmtree(staging)
         write(out / "sealed" / "seal.json",
@@ -287,6 +322,20 @@ def self_test():
     blob = (root / "sealed" / "pilot-evidence.tar.enc").read_bytes()
     checks.append(("the ciphertext does not contain the cleartext token",
                    b"slot-2" not in blob))
+    public = root / "public"
+    (public / "position-01").mkdir(parents=True)
+    (public / "position-01" / "summary.json").write_text(
+        json.dumps({"arm": "A", "position": 1}) + "\n", encoding="utf-8")
+    checks.append(("a clean public tree passes the leak scan",
+                   leak_scan(public, secrets, []) == []))
+    (public / "position-01" / "oops.json").write_text(
+        json.dumps({"note": "ran on slot-2"}) + "\n", encoding="utf-8")
+    checks.append(("a leaked token is caught by the scan",
+                   len(leak_scan(public, secrets, [])) == 1))
+    (public / "position-01" / "oops.json").write_text(
+        json.dumps({"digest": "deadbeef"}) + "\n", encoding="utf-8")
+    checks.append(("an extra token such as a leak-set digest is caught",
+                   len(leak_scan(public, secrets, ["deadbeef"])) == 1))
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1
