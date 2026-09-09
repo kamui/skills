@@ -108,9 +108,13 @@ def digest(path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def load(path):
+def load(path, default=None):
     try:
         return json.loads(Path(os.path.expanduser(str(path))).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        if default is not None:
+            return default
+        raise Failed("missing %s" % path)
     except (OSError, ValueError) as exc:
         raise Failed("cannot read %s: %s" % (path, exc))
 
@@ -844,7 +848,7 @@ IMAGE_ROOTS = ("/usr/", "/bin/", "/sbin/", "/lib/", "/etc/", "/proc/", "/sys/",
                "/dev/", "/var/", "/opt/", "/root/", "/cell-home", "/tmp/bd148/")
 
 
-def audit_reads(root, transcripts, permitted) -> dict:
+def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
     """What the cell's tools actually addressed, against its permitted roots.
 
     A read outside the permitted roots, or network use absent from the egress log,
@@ -862,14 +866,26 @@ def audit_reads(root, transcripts, permitted) -> dict:
     suspects = {}
     # Only a path that starts a token is an absolute path. Without the lookbehind
     # this also matches inside "./xds/internal/..." and inside a URL's
-    # "https://github.com/...", which are relative paths and text, not reads.
-    absolute = re.compile(r"(?<![A-Za-z0-9_.:/@+~-])(/[A-Za-z0-9_][A-Za-z0-9_./@+-]*)")
+    # "https://github.com/...", which are relative paths and text, not reads. The
+    # glob characters are excluded too: find's -not -path '*/target/*' names a
+    # pattern, not a path, and matching inside it manufactured a false hit.
+    absolute = re.compile(r"(?<![A-Za-z0-9_.:/@+~*?\]\[-])(/[A-Za-z0-9_][A-Za-z0-9_./@+-]*)")
     allowed = tuple(str(Path(entry)) for entry in permitted) + IMAGE_ROOTS
     commands = 0
     tool_calls = 0
 
+    # An acceptance is a recorded judgment that one hit is not an escape, with its
+    # reason. It keeps the hit visible instead of widening the pattern until the
+    # check stops firing, and #152 can overrule every one of them.
+    acceptances = {entry["path"]: entry.get("reason", "") for entry in accepted}
+    ruled = []
+
     def suspicious(candidate, transcript, origin):
         if candidate.startswith(allowed) or candidate in ("/", "/tmp"):
+            return
+        if candidate in acceptances:
+            ruled.append({"path": candidate, "via": origin,
+                          "reason": acceptances[candidate]})
             return
         suspects.setdefault(transcript, []).append({"path": candidate, "via": origin})
 
@@ -907,6 +923,7 @@ def audit_reads(root, transcripts, permitted) -> dict:
     return {"transcripts": len(transcripts), "tool_calls": tool_calls,
             "shell_commands": commands,
             "paths_outside_permitted_roots": suspects,
+            "accepted_hits": ruled,
             "passed": not suspects}
 
 
@@ -1002,7 +1019,8 @@ def settle(config, position, attempt=1):
                 problems.append("meter_split.py exited %s and wrote no split; see logs/meter.log"
                                 % split.returncode)
 
-    audit = audit_reads(root, transcripts, spec["permitted_roots"])
+    accepted = load(root / "artifacts" / "audit-acceptances.json", [])
+    audit = audit_reads(root, transcripts, spec["permitted_roots"], accepted)
     write(root / "artifacts" / "read-audit.json", audit)
     if not audit["passed"]:
         problems.append("the transcripts name paths outside the permitted roots; "
@@ -1117,15 +1135,24 @@ def audit_self_test() -> list:
     checks = []
     # Every one of these appeared in cell 1's transcript and must not be a hit.
     benign = transcript(
+        ("Bash", {"command": "find . -not -path '*/target/*' | head -5"}),
         ("Bash", {"command": "go vet ./xds/internal/balancer/priority/"}),
         ("Bash", {"command": "echo https://github.com/grpc/grpc-go/blob/abc/x.go"}),
         ("Bash", {"command": "ls /usr/local/go/bin"}),
         ("Read", {"file_path": "/tmp/bd150/cells/position-01/clone/go.mod"}),
     )
     result = audit_reads(root, benign, permitted)
-    checks.append(("a relative path, a URL and an image path are not reads",
-                   result["passed"] and result["shell_commands"] == 3
-                   and result["tool_calls"] == 4))
+    checks.append(("a glob, a relative path, a URL and an image path are not reads",
+                   result["passed"] and result["shell_commands"] == 4
+                   and result["tool_calls"] == 5))
+    scratch = transcript(("Bash", {"command": "git show master:a.rs > /tmp/view.txt"}))
+    checks.append(("an unaccepted out-of-root path still fails",
+                   not audit_reads(root, scratch, permitted)["passed"]))
+    ruled = audit_reads(root, scratch, permitted,
+                        [{"path": "/tmp/view.txt", "reason": "its own clone's content"}])
+    checks.append(("an accepted hit passes but stays visible with its reason",
+                   ruled["passed"] and len(ruled["accepted_hits"]) == 1
+                   and ruled["accepted_hits"][0]["reason"]))
     escaped = transcript(("Read", {"file_path": "/Users/jack/Development/skills/AGENTS.md"}))
     result = audit_reads(root, escaped, permitted)
     checks.append(("a read outside the permitted roots is a hit",
