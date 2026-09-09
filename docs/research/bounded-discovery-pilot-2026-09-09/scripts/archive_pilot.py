@@ -142,6 +142,7 @@ def summarize(root, secrets) -> dict:
             "mount_count": len(mounts.get("requested_mounts", [])),
         },
         "disposition": dispatched.get("disposition"),
+        "completion": settled.get("completion") or dispatched.get("completion"),
         "elapsed_seconds": dispatched.get("elapsed_seconds"),
         "phases": [{"label": phase.get("label"), "exit_code": phase.get("exit_code"),
                     "subtype": phase.get("subtype"), "is_error": phase.get("is_error"),
@@ -174,34 +175,73 @@ def summarize(root, secrets) -> dict:
     return scrub(summary, secrets)
 
 
-def stage_sealed(root, staging):
+# Compiler output is not evidence. A cargo target directory runs to hundreds of
+# megabytes and is fully reproducible from the pinned clone, so it is excluded by
+# name, and any other oversized file is excluded by size and listed.
+# Build output plus the inputs that are reproducible from the freeze: the clone and
+# its mirror come from the pinned recipe and OIDs, and the toolchain caches from the
+# recorded provisioning. The attestation already pins both object stores by digest,
+# so sealing the bytes again would add hundreds of megabytes and no evidence.
+BUILD_DIRS = ("target", "target-scratch", "incremental", ".fingerprint",
+              "caches", "clone", "mirror.git")
+MAX_FILE_BYTES = 4 * 1024 * 1024
+
+
+def copy_evidence(source, destination) -> list:
+    """Copy a tree, skipping build output, and report what was left behind."""
+    skipped = []
+    for path in sorted(Path(source).rglob("*")):
+        relative = path.relative_to(source)
+        if any(part in BUILD_DIRS for part in relative.parts):
+            continue
+        if path.is_dir():
+            (destination / relative).mkdir(parents=True, exist_ok=True)
+            continue
+        if path.is_symlink() or not path.is_file():
+            continue
+        if path.stat().st_size > MAX_FILE_BYTES:
+            skipped.append({"path": str(relative), "bytes": path.stat().st_size})
+            continue
+        (destination / relative).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, destination / relative)
+    return skipped
+
+
+def stage_sealed(root, staging) -> list:
     """Copy one position's full evidence, identity included, into the seal staging."""
     destination = staging / ("position-%02d" % load(root / "artifacts" / "prepare.json")["position"])
     destination.mkdir(parents=True, exist_ok=True)
-    for name in ("artifacts", "runner", "logs"):
+    skipped = []
+    for name in ("artifacts", "runner", "logs", "work"):
         if (root / name).is_dir():
-            shutil.copytree(root / name, destination / name, dirs_exist_ok=True)
-    work = root / "work"
-    if work.is_dir():
-        shutil.copytree(work, destination / "work", dirs_exist_ok=True)
+            skipped.extend(copy_evidence(root / name, destination / name))
     discovery = root / "finder-store" / "discovery.json"
     if discovery.is_file():
         shutil.copyfile(discovery, destination / "discovery.json")
     home = root.parent / "homes" / root.name / ".claude" / "projects"
     if home.is_dir():
-        shutil.copytree(home, destination / "transcripts", dirs_exist_ok=True)
+        skipped.extend(copy_evidence(home, destination / "transcripts"))
+    if skipped:
+        write(destination / "excluded-from-seal.json",
+              {"reason": "build output and oversized files are reproducible from the "
+                         "pinned clone and are not evidence",
+               "excluded": skipped})
+    return skipped
 
 
 def seal(staging, out, key) -> dict:
     """Tar the staging, record the plaintext digest, encrypt under #148's key."""
-    tar = out / "sealed" / "pilot-evidence.tar"
+    # Compressed before encryption: the bulk is JSONL transcripts, which compress by
+    # roughly an order of magnitude, and encrypting afterwards means the committed blob
+    # is small without revealing anything about its contents.
+    tar = out / "sealed" / "pilot-evidence.tar.gz"
     tar.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(["tar", "-cf", str(tar), "-C", str(staging), "."],
+    result = subprocess.run(["tar", "-czf", str(tar), "-C", str(staging), "."],
                             capture_output=True, text=True, encoding="utf-8")
     if result.returncode:
         raise Failed("tar: %s" % result.stderr.strip())
     plaintext = hashlib.sha256(tar.read_bytes()).hexdigest()
-    encrypted = out / "sealed" / "pilot-evidence.tar.enc"
+    encrypted = out / "sealed" / "pilot-evidence.tar.gz.enc"
     result = subprocess.run(
         ["openssl", "enc", "-aes-256-cbc", "-pbkdf2", "-iter", "200000", "-salt",
          "-pass", "file:%s" % key, "-in", str(tar), "-out", str(encrypted)],
@@ -210,7 +250,7 @@ def seal(staging, out, key) -> dict:
         raise Failed("openssl: %s" % result.stderr.strip())
     tar.unlink()
     (out / "sealed" / "SHA256SUMS").write_text(
-        "%s  pilot-evidence.tar\n" % plaintext, encoding="utf-8")
+        "%s  pilot-evidence.tar.gz\n" % plaintext, encoding="utf-8")
     return {"plaintext_sha256": plaintext,
             "ciphertext_sha256": hashlib.sha256(encrypted.read_bytes()).hexdigest(),
             "ciphertext_bytes": encrypted.stat().st_size}
@@ -267,13 +307,23 @@ def main(argv=None):
             shutil.rmtree(staging)
         staging.mkdir(parents=True)
         positions = []
+        excluded = []
         for root in sorted(cells.glob("position-*")):
             if not (root / "artifacts" / "prepare.json").is_file():
                 continue
             summary = summarize(root, secrets)
             write(out / "cells" / root.name / "summary.json", summary)
-            stage_sealed(root, staging)
+            excluded.extend(stage_sealed(root, staging))
             positions.append(summary["position"])
+        # Invalidated attempts are sealed too: the replacement policy requires the raw
+        # output and the costs of an invalid attempt to be retained, not discarded.
+        invalid = cells.parent / "invalid"
+        invalidated = []
+        if invalid.is_dir():
+            for entry in sorted(invalid.iterdir()):
+                if entry.is_dir():
+                    excluded.extend(copy_evidence(entry, staging / "invalid" / entry.name))
+                    invalidated.append(entry.name)
         ledger = Path(os.path.expanduser(config["ledger"]))
         if ledger.is_file():
             shutil.copyfile(ledger, staging / "ledger.json")
@@ -286,7 +336,9 @@ def main(argv=None):
         sealed = seal(staging, out, os.path.expanduser(args.key))
         shutil.rmtree(staging)
         write(out / "sealed" / "seal.json",
-              {"positions": positions, "ledger_included": ledger.is_file(), **sealed})
+              {"positions": positions, "ledger_included": ledger.is_file(),
+               "invalidated_attempts_sealed": invalidated,
+               "excluded_file_count": len(excluded), **sealed})
         print("sealed %d positions; plaintext %s" % (len(positions), sealed["plaintext_sha256"]))
         return 0
     except Failed as exc:
@@ -297,14 +349,16 @@ def main(argv=None):
 def self_test():
     import tempfile
     checks = []
-    secrets = ["grpc/grpc-go", "grpc-go-7417", "slot-2", "7417"]
-    scrubbed = scrub({"note": "cell slot-2 on grpc/grpc-go#7417 failed"}, secrets)
+    # Fixtures deliberately name a slot outside the real range and a fictional
+    # repository, so nothing in this file can be misread as evidence about the run.
+    secrets = ["example/repo", "repo-9999", "slot-9", "9999"]
+    scrubbed = scrub({"note": "cell slot-9 on example/repo#9999 failed"}, secrets)
     checks.append(("an identifying string is scrubbed",
-                   "slot-2" not in scrubbed["note"] and "grpc" not in scrubbed["note"]))
+                   "slot-9" not in scrubbed["note"] and "example" not in scrubbed["note"]))
     checks.append(("a longer token is replaced before its substring",
-                   scrub("grpc-go-7417", ["grpc-go-7417", "7417"]) == "<sealed>"))
+                   scrub("repo-9999", ["repo-9999", "9999"]) == "<sealed>"))
     checks.append(("nested values are scrubbed",
-                   scrub({"a": ["slot-2"]}, secrets) == {"a": ["<sealed>"]}))
+                   scrub({"a": ["slot-9"]}, secrets) == {"a": ["<sealed>"]}))
     checks.append(("non-strings pass through", scrub({"n": 3, "b": True}, secrets)
                    == {"n": 3, "b": True}))
     checks.append(("check lists keep only name and verdict",
@@ -313,29 +367,43 @@ def self_test():
     root = Path(tempfile.mkdtemp())
     (root / "sealed").mkdir()
     staging = root / "staging"
-    (staging / "position-01").mkdir(parents=True)
-    (staging / "position-01" / "secret.txt").write_text("slot-2\n", encoding="utf-8")
+    (staging / "position-99").mkdir(parents=True)
+    (staging / "position-99" / "secret.txt").write_text("slot-9\n", encoding="utf-8")
     key = root / "key"
     key.write_text("test-key\n", encoding="utf-8")
     sealed = seal(staging, root, str(key))
     checks.append(("sealing produces ciphertext and a plaintext digest",
-                   (root / "sealed" / "pilot-evidence.tar.enc").is_file()
+                   (root / "sealed" / "pilot-evidence.tar.gz.enc").is_file()
                    and len(sealed["plaintext_sha256"]) == 64
-                   and not (root / "sealed" / "pilot-evidence.tar").exists()))
-    blob = (root / "sealed" / "pilot-evidence.tar.enc").read_bytes()
+                   and not (root / "sealed" / "pilot-evidence.tar.gz").exists()))
+    blob = (root / "sealed" / "pilot-evidence.tar.gz.enc").read_bytes()
     checks.append(("the ciphertext does not contain the cleartext token",
-                   b"slot-2" not in blob))
+                   b"slot-9" not in blob))
+    tree = root / "evidence"
+    (tree / "work" / "target" / "deps").mkdir(parents=True)
+    (tree / "work" / "target" / "deps" / "libx.rlib").write_bytes(b"x" * 1024)
+    (tree / "work" / "report.md").write_text("report\n", encoding="utf-8")
+    (tree / "work" / "huge.bin").write_bytes(b"y" * (MAX_FILE_BYTES + 1))
+    out = root / "staged"
+    left = copy_evidence(tree, out)
+    checks.append(("build output is excluded by name",
+                   not (out / "work" / "target").exists()))
+    checks.append(("ordinary evidence is copied",
+                   (out / "work" / "report.md").is_file()))
+    checks.append(("an oversized file is excluded and listed",
+                   not (out / "work" / "huge.bin").exists()
+                   and [entry["path"] for entry in left] == ["work/huge.bin"]))
     public = root / "public"
-    (public / "position-01").mkdir(parents=True)
-    (public / "position-01" / "summary.json").write_text(
-        json.dumps({"arm": "A", "position": 1}) + "\n", encoding="utf-8")
+    (public / "position-99").mkdir(parents=True)
+    (public / "position-99" / "summary.json").write_text(
+        json.dumps({"arm": "A", "position": 99}) + "\n", encoding="utf-8")
     checks.append(("a clean public tree passes the leak scan",
                    leak_scan(public, secrets, []) == []))
-    (public / "position-01" / "oops.json").write_text(
-        json.dumps({"note": "ran on slot-2"}) + "\n", encoding="utf-8")
+    (public / "position-99" / "oops.json").write_text(
+        json.dumps({"note": "ran on slot-9"}) + "\n", encoding="utf-8")
     checks.append(("a leaked token is caught by the scan",
                    len(leak_scan(public, secrets, [])) == 1))
-    (public / "position-01" / "oops.json").write_text(
+    (public / "position-99" / "oops.json").write_text(
         json.dumps({"digest": "deadbeef"}) + "\n", encoding="utf-8")
     checks.append(("an extra token such as a leak-set digest is caught",
                    len(leak_scan(public, secrets, ["deadbeef"])) == 1))

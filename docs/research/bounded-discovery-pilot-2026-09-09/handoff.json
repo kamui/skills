@@ -1,0 +1,222 @@
+{
+  "accounting": {
+    "actual_usd": "47.3136581",
+    "frozen_total_cap_usd": "150.00",
+    "grading_closeout_reserve_usd": "10.00",
+    "remaining_under_cap_usd": "92.5220259",
+    "reserved_usd": "0.00",
+    "uncertainty_usd": "0.164316"
+  },
+  "affordability": {
+    "affordable_remaining_triples": 5,
+    "fits": false,
+    "measured_mean_per_arm_usd": {
+      "A": "4.1950",
+      "B": "5.1224",
+      "C": "8.0022"
+    },
+    "measured_triple_usd": "17.3196",
+    "note": "The frozen order is what makes a shortfall survivable: A/B/C triples are contiguous, so a mid-grid stopped-budget leaves whole triples rather than a ragged grid. The preregistration accepted that risk prospectively and said the headroom was thin; these are the first measured cells of this configuration, and they are dearer than the projection it used.",
+    "projected_remaining_grid_usd": "103.9177",
+    "remaining_grid_cells": 18,
+    "remaining_under_cap_usd": "92.5220",
+    "warning": "SHORTFALL: the eighteen remaining cells project to 103.9177 against 92.5220 available, so the grid cannot be completed under the frozen cap. At 17.3196 per triple the allowance covers 5 of the 6 remaining triples, leaving 3 cells unrun. #151 should expect stopped-budget and must stop on a triple boundary."
+  },
+  "artifact_id": "issue-150-pilot-handoff",
+  "attempts": [
+    {
+      "disposition": "stopped-runtime",
+      "ordinal": 1,
+      "position": 1,
+      "reason": "coordinator defect, no model request issued: claude refused the launch because --session-id was the attempt ID rather than a UUID. Settled at zero. Recorded as an attempt ID consumed, but not counted as a replacement, because nothing was measured and no experimental input was invalidated.",
+      "replacement_consumed": false,
+      "settled_usd": "0.0000000",
+      "validity": "invalid"
+    },
+    {
+      "disposition": "stopped-runtime",
+      "ordinal": 1,
+      "position": 3,
+      "reason": "documented infrastructure invalidity: the primary died on a provider 502 at turn 43 with terminal_reason api_error, before writing its arm C freeze artifact. Its finder had already succeeded. Raw output and costs retained and sealed.",
+      "replacement_consumed": true,
+      "settled_usd": "1.5838690",
+      "validity": "invalid"
+    },
+    {
+      "disposition": "dispatched",
+      "ordinal": 2,
+      "position": 1,
+      "reconciliation_residual_usd": "0.0139000",
+      "settled_usd": "3.8595330",
+      "validity": "valid"
+    },
+    {
+      "disposition": "dispatched",
+      "ordinal": 1,
+      "position": 2,
+      "reconciliation_residual_usd": "0.0035420",
+      "settled_usd": "3.8777270",
+      "validity": "valid"
+    },
+    {
+      "disposition": "dispatched",
+      "ordinal": 2,
+      "position": 3,
+      "reconciliation_residual_usd": "0.0056467",
+      "settled_usd": "7.0003047",
+      "validity": "valid"
+    },
+    {
+      "disposition": "dispatched",
+      "ordinal": 1,
+      "position": 4,
+      "reconciliation_residual_usd": "0.0034858",
+      "settled_usd": "4.5304828",
+      "validity": "valid"
+    },
+    {
+      "disposition": "dispatched",
+      "ordinal": 1,
+      "position": 5,
+      "reconciliation_residual_usd": "0.0315317",
+      "settled_usd": "6.3671277",
+      "validity": "valid"
+    },
+    {
+      "disposition": "dispatched",
+      "ordinal": 1,
+      "position": 6,
+      "reconciliation_residual_usd": "0.0055772",
+      "settled_usd": "9.0040632",
+      "validity": "valid"
+    }
+  ],
+  "available_claims": [],
+  "blockers": [],
+  "cells": [
+    {
+      "arm": "A",
+      "completion": "complete",
+      "disposition": "dispatched",
+      "elapsed_seconds": 1864.592,
+      "isolation_ready": true,
+      "position": 1,
+      "problems": [],
+      "read_audit_passed": true,
+      "replicate": 1,
+      "settled_usd": "3.8595330",
+      "valid_completed": true,
+      "worker_model": "claude-sonnet-5"
+    },
+    {
+      "arm": "B",
+      "completion": "complete",
+      "disposition": "dispatched",
+      "elapsed_seconds": 1214.654,
+      "isolation_ready": true,
+      "position": 2,
+      "problems": [],
+      "read_audit_passed": true,
+      "replicate": 1,
+      "settled_usd": "3.8777270",
+      "valid_completed": true,
+      "worker_model": "claude-opus-5"
+    },
+    {
+      "arm": "C",
+      "completion": "complete",
+      "disposition": "dispatched",
+      "elapsed_seconds": 1880.859,
+      "isolation_ready": true,
+      "position": 3,
+      "problems": [],
+      "read_audit_passed": true,
+      "replicate": 1,
+      "settled_usd": "7.0003047",
+      "valid_completed": true,
+      "worker_model": "claude-opus-5"
+    },
+    {
+      "arm": "A",
+      "completion": "complete",
+      "disposition": "dispatched",
+      "elapsed_seconds": 1110.633,
+      "isolation_ready": true,
+      "position": 4,
+      "problems": [],
+      "read_audit_passed": true,
+      "replicate": 1,
+      "settled_usd": "4.5304828",
+      "valid_completed": true,
+      "worker_model": "claude-sonnet-5"
+    },
+    {
+      "arm": "B",
+      "completion": "complete",
+      "disposition": "dispatched",
+      "elapsed_seconds": 1667.18,
+      "isolation_ready": true,
+      "position": 5,
+      "problems": [],
+      "read_audit_passed": true,
+      "replicate": 1,
+      "settled_usd": "6.3671277",
+      "valid_completed": true,
+      "worker_model": "claude-opus-5"
+    },
+    {
+      "arm": "C",
+      "completion": "stopped-budget",
+      "disposition": "dispatched",
+      "elapsed_seconds": 2148.942,
+      "isolation_ready": true,
+      "position": 6,
+      "problems": [],
+      "read_audit_passed": true,
+      "replicate": 1,
+      "settled_usd": "9.0040632",
+      "valid_completed": false,
+      "worker_model": "claude-opus-5"
+    }
+  ],
+  "claims_note": "No quality, recall or cost comparison is reported here. The pilot's outcomes stay sealed until every reviewer run has stopped, and no arm may be described as better or worse on this evidence.",
+  "created_at": "2026-09-09T08:26:07.551668+00:00",
+  "disposition": "continue",
+  "incomplete_cells": [
+    {
+      "completion": "stopped-budget",
+      "effect": "counts as missing in the screen, not as present; it is a measured result and not replacement-eligible",
+      "position": 6
+    }
+  ],
+  "next_stage": {
+    "budget_warning": "SHORTFALL: the eighteen remaining cells project to 103.9177 against 92.5220 available, so the grid cannot be completed under the frozen cap. At 17.3196 per triple the allowance covers 5 of the 6 remaining triples, leaving 3 cells unrun. #151 should expect stopped-budget and must stop on a triple boundary.",
+    "tickets": [
+      151,
+      152
+    ],
+    "work": "#151 runs the grid cells under the same frozen rules and the same container isolation deviation, appending to the same ledger chain, which now lives in evaluator storage because its attempt IDs name slots. #152 adjudicates and scores once every reviewer run has stopped. Neither may read the sealed pilot outcomes before then."
+  },
+  "planned_pilot_cells": 6,
+  "schema_version": "bounded-discovery-v1",
+  "sealed_evidence": {
+    "ciphertext_bytes": 4303008,
+    "ciphertext_sha256": "b684d49359b42da2c4ec8e11237afd063cf4fff1d58b5bce07c3a1c5ccd6ecdd",
+    "excluded_file_count": 0,
+    "invalidated_attempts_sealed": [
+      "position-03-attempt-1",
+      "position-03-attempt-1-home"
+    ],
+    "ledger_included": true,
+    "plaintext_sha256": "abc7fbfc40cdab107370cf13c993a53f83e954a64e32aa5d0c481f955ee37f72",
+    "positions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "stage": "pilot"
+}

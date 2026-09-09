@@ -1,0 +1,116 @@
+{
+  "accounting": {
+    "reconciliation_residual_usd": "0.0315317",
+    "self_report_usd": "6.3671277",
+    "settled_usd": "6.3671277",
+    "usage_split_total_usd": "6.335596",
+    "within_tolerance": false
+  },
+  "arm": "B",
+  "attempt_ordinal": 1,
+  "block": "pilot",
+  "completion": "complete",
+  "dispatch_template_sha256": "a1c34371abe4819512db336543bfc6d160765addf4f1177e57b4b76ad8dd626c",
+  "disposition": "dispatched",
+  "egress": {
+    "attempts": 92,
+    "refused": 50
+  },
+  "elapsed_seconds": 1667.18,
+  "fidelity": {
+    "effort_report": "5eccc4ae-5193-5ff4-b18f-e4cd46c1fc7a.jsonl lines=205 models=claude-sonnet-5\u00d7205 efforts=high\u00d7205\nagent-a2bbaf8bb1f4b8231.jsonl lines=45 models=claude-opus-5\u00d745 efforts=high\u00d745\n",
+    "models_priced": [
+      "claude-opus-5",
+      "claude-sonnet-5"
+    ],
+    "transcript_count": 2
+  },
+  "isolation": {
+    "forbidden_paths_examined": 55,
+    "mount_count": 3,
+    "post_dispatch_checks": [
+      {
+        "check": "forbidden paths are absent",
+        "passed": true
+      },
+      {
+        "check": "permitted roots exist and hold no forbidden path",
+        "passed": true
+      },
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the preparation attestation covers these exact object stores, with no leak-set hit",
+        "passed": true
+      },
+      {
+        "check": "egress proxy refuses a host that is not allow-listed",
+        "passed": true
+      }
+    ],
+    "post_dispatch_ready": true,
+    "pre_dispatch_checks": [
+      {
+        "check": "forbidden paths are absent",
+        "passed": true
+      },
+      {
+        "check": "permitted roots exist and hold no forbidden path",
+        "passed": true
+      },
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the preparation attestation covers these exact object stores, with no leak-set hit",
+        "passed": true
+      },
+      {
+        "check": "egress proxy refuses a host that is not allow-listed",
+        "passed": true
+      }
+    ],
+    "pre_dispatch_ready": true
+  },
+  "phases": [
+    {
+      "cost_usd": 6.367127650000001,
+      "elapsed_seconds": 1665.891,
+      "exit_code": 0,
+      "is_error": false,
+      "label": "primary-phase-1",
+      "num_turns": 111,
+      "subtype": "success"
+    }
+  ],
+  "position": 5,
+  "preparation": {
+    "attestation_ready": true,
+    "checks": [
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the mirror has no alternate object store",
+        "passed": true
+      },
+      {
+        "check": "no sealed leak-set object resolves in the clone or its mirror",
+        "passed": true
+      }
+    ]
+  },
+  "problems": [],
+  "read_audit_passed": true,
+  "rendered_prompt_sha256": {
+    "agents.json": "66da9031b39cd40600998c74c041fb1fb9bc1c97a408d972c7f7a00c5c704aa1",
+    "dispatch.md": "cfae0004805e9ddc7db9f163b55102d105fd11683574fcf772740b9bb1893bcb"
+  },
+  "replicate": 1,
+  "schema_version": "bounded-discovery-v1",
+  "worker_model": "claude-opus-5"
+}

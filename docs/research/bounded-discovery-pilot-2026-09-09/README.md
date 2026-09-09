@@ -1,12 +1,12 @@
 # Bounded discovery — the six-cell pilot
 
-**In progress (2026-09-09, UTC).** This bundle is [#150](https://github.com/kamui/skills/issues/150),
+**Delivered 2026-09-09 (UTC).** This bundle is [#150](https://github.com/kamui/skills/issues/150),
 the first dispatch stage of the [#138](https://github.com/kamui/skills/issues/138) epic. It runs the
 six `pilot` cells of the grid [#149](https://github.com/kamui/skills/issues/149) froze, and records
 their dispositions, their fidelity evidence and a reconciled ledger.
 
-**No cell has been dispatched yet and no experiment spend has been charged.** The ledger stands where
-#149 left it: `$10.9378407` actual, `$0.00` reserved, 0 attempts dispatched.
+**Disposition: `continue`** ([handoff.json](handoff.json)) — the pilot was executed faithfully and the
+grid can proceed, though not to completion: see "The grid no longer fits" below.
 
 ## The gate
 
@@ -57,20 +57,95 @@ asserts that no `{PLACEHOLDER}` survives rendering before any dispatch.
 #147's adapter is not in the dispatch path: its Claude entry point is an immutable no-cell
 `stopped-runtime` by design, so the coordinator executes the frozen template directly, which is what
 preregistration section 12 lists.
+## What the pilot did
 
-## Status
+All six frozen pilot cells were dispatched in sealed schedule order, one at a time, each in its own
+container. **Five completed; one stopped against the frozen dollar allowance.** Cells are identified by
+schedule position only — naming their slots would disclose which slot holds the clean control.
 
-| Stage | State |
-| --- | --- |
-| freeze verified, gate evaluated | done |
-| `mark_event.py` | done, 9 self-test checks pass |
-| `run_cell.py prepare` | done, 7 self-test checks pass; position 1 prepared and verified |
-| `run_cell.py dispatch` / `settle` | not yet implemented |
-| six cells dispatched | none |
-| handoff, dispositions, reconciled ledger | not yet written |
+| Position | Arm | Worker model | Completion | Settled (USD) | Isolation | Read audit |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | A | claude-sonnet-5 | complete | 3.8595330 | yes | yes |
+| 2 | B | claude-opus-5 | complete | 3.8777270 | yes | yes |
+| 3 | C | claude-opus-5 | complete | 7.0003047 | yes | yes |
+| 4 | A | claude-sonnet-5 | complete | 4.5304828 | yes | yes |
+| 5 | B | claude-opus-5 | complete | 6.3671277 | yes | yes |
+| 6 | C | claude-opus-5 | stopped-budget | 9.0040632 | yes | yes |
 
-`prepare` builds a cell from the pinned inputs only: a private mirror copy, a clone made by the
-frozen recipe and checked against the pinned head and merge-base, the policy snapshot extracted by
-`git archive` from tree `bea6be14…` (the skill alone — cells never read a checkout), the packet and
-scope verified against the digests #148 froze and #149 bound, and a private copy of the target's
-toolchain caches mounted at the paths the packet hardcodes.
+Position 6 ended `error_max_budget_usd` at $9.0040632 — the $9.00 per-attempt ceiling plus
+exactly the one-call overshoot probe 4 measured, absorbed by the $1.00 of reservation headroom the
+freeze requires. That is a **measured incomplete result in every arm alike**, not an infrastructure
+failure and not replacement-eligible. It counts as missing in #152's screen rather than as present.
+
+### Two invalid attempts, both retained
+
+| Position | Attempt | Cost | Why invalid | Replacement consumed |
+| --- | --- | --- | --- | --- |
+| 1 | 1 | $0.0000000 | coordinator defect: `--session-id` was the attempt ID, not a UUID, so the launch was refused before any model request | no |
+| 3 | 1 | $1.5838690 | documented infrastructure invalidity: provider 502 at turn 43, `terminal_reason: api_error`, before the arm C freeze artifact was written | **yes** |
+
+One of three replacements is consumed. Eight attempt IDs of the 27 allowed are used, and none is recycled.
+Both invalid attempts' raw output and costs are retained inside the sealed archive, as the replacement
+policy requires.
+
+### Fidelity
+
+Every arm's worker configuration is **verified from transcripts**, not assumed — `agent_effort.py` over
+every assistant line of every transcript, root and worker alike:
+
+- arm A: primary and verifier `claude-sonnet-5`, effort `high`
+- arm B: primary `claude-sonnet-5`, verifier `claude-opus-5`, both effort `high`
+- arm C: primary `claude-sonnet-5`, **finder and verifier** `claude-opus-5`, all effort `high`
+
+Arm C's barrier held in both of its cells: the primary wrote its freeze artifact — its own complete
+candidate ledger, hashed — and stopped, before the coordinator released any finder claim to it. The
+finder returned a valid fenced block with all seven required keys in both cells, and it has no write
+tool, so the coordinator persisted it.
+
+One position dispatched **no verifier at all**, which §9 expressly permits for arms A and B under the
+pinned rules and requires be counted rather than forced into a batch.
+
+### Isolation
+
+Every cell passed the absence gate before and after its dispatch, inside its own container, against
+52–55 forbidden host paths. Every mount set was exactly four entries. The egress proxy allowed only
+`api.anthropic.com` and refused everything else — Datadog telemetry in every cell, and `api.github.com`
+only where the isolation checks probe it deliberately. **No cell attempted a forge fetch.** Every clone
+was verified at its pinned head with a clean tracked tree afterwards, so the no-mutation rule held even
+though every completed cell ran its focused tests.
+
+One sandbox-audit hit survived review and is recorded as an acceptance with its reason rather than
+pattern-matched away: a cell redirected `git show` of a base file **from its own clone** into a
+container-local `/tmp` scratch path and read it back, instead of writing under its work directory.
+#152 can overrule that judgment.
+
+### Accounting
+
+Pre-freeze spend was $47.3136581 at the close of #149 plus this ticket's cells. Actual now
+**$47.3136581** of the $150.00 cap, with $0.164316 retained as
+uncertainty and $92.5220259 remaining after the $10.00
+protected grading reserve. Every cell's residual is decomposed into the part the result envelopes
+attribute to an untranscripted model and the part left unexplained; settlement charges the larger of
+the runtime self-report and the retained records in every case.
+
+### The grid no longer fits
+
+Measured means: **A $4.1950, B $5.1224,
+C $8.0022** — a triple costs $17.3196 against the freeze's
+$12.79 projection. The eighteen remaining cells therefore project to
+**$103.9177 against $92.5220 available**: a shortfall.
+The allowance covers 5 of the 6 remaining triples, leaving 3 cells unrun.
+
+The preregistration accepted this risk prospectively and said the headroom was thin. What makes it
+survivable is the frozen contiguous-triple order: #151 must stop on a triple boundary, which leaves an
+interpretable partial grid rather than a ragged one.
+
+### No result is reported here
+
+`available_claims` is empty. No recall, cost ratio, quality comparison or statement that any arm is
+better or worse appears in this bundle or in its handoff. The outcomes — payloads, research reports,
+finder claims, transcripts and the reconciled ledger — are **sealed** under #148's key in
+[`sealed/`](sealed/), with the plaintext digest in [`SHA256SUMS`](sealed/SHA256SUMS), and stay sealed
+until every reviewer run has stopped. #152 scores; this ticket only ran the cells and proved they were
+run faithfully.
+
