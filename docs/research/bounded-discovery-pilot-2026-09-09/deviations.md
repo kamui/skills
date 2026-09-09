@@ -50,11 +50,31 @@ probe 4 measured — but the credential path differs from the sessions that esta
 controls, and an attempt's settlement is still taken from the larger of the runtime self-report and
 the retained per-request records.
 
-## 9. Elapsed time is not comparable to the measured cost basis (2026-09-09)
+## 9. The execution allowance was re-measured on the container substrate (2026-09-09)
 
-The per-cell projections ($3.4200 A, $3.7413 B, $5.6294 C) come from host runs with warm toolchain
-caches. A container starts with a cold compiler cache, so a cell's provisioning and its focused test
-commands take longer than the host timings #148 recorded, inside the same frozen five-minute
-per-command and ten-minute per-target allowances. Token cost is unaffected and every arm carries the
-change equally, so no gate moves; but this grid's elapsed distributions are this substrate's, and
-preregistration section 10 already forbids reading them as the policy's production timing.
+The per-target execution notes were provisioned and timed by #148 on macOS with warm caches, and the
+concern going in was that a Linux container would start cold and push a focused command past the
+frozen five-minute limit. **Measured, it does not.** The container reproduces #148's host timings:
+
+| Command | #148 on the host | This container |
+| --- | --- | --- |
+| `go vet ./xds/internal/balancer/priority/` | exit 0, 7 s | exit 0, 7 s |
+| `go test -count=1 -run 'Test/' ./xds/...priority/` | exit 0, 4 s | exit 0, 4 s (`ok`, 1.995 s) |
+| `cargo test --offline --locked --test builder multiple_values` | exit 0, 74 passed, ~30 s build | exit 0, 74 passed, 28 s |
+
+The reason is that the expensive, platform-independent part of each cache — the Go module cache and
+the Cargo registry — carries over unchanged, while the build output each cell produces for itself is
+the cheap part. The macOS `GOCACHE` is useless in Linux and is simply rebuilt inside the allowance.
+Both clones were verified clean after these runs, so the execution note's "nothing added to or
+changed in the clone" holds on this substrate too.
+
+Provisioning therefore stays exactly what #148 recorded: the module and registry caches, copied
+per cell so no two cells share mutable state, and **not** the build output. Each cell pays its own
+~30 s test-binary build, which is what its execution note describes. The earlier draft of this
+deviation asserted that cold caches would lengthen the cells; that was a prediction, it was wrong, and
+it is replaced by the measurement above.
+
+What remains true is narrower: elapsed time is still this harness's, not the policy's production
+timing — because verification runs in the foreground in every arm by choice, which preregistration
+section 10 already records as an interpretation limit. Token cost is unaffected and every arm carries
+the substrate equally, so no gate moves.
