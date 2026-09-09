@@ -64,11 +64,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-CONTAINER = {"clone": "/cell/clone", "snapshot": "/cell/snapshot",
-             "packet": "/cell/packet", "work": "/cell/work",
-             "runner": "/cell/runner", "finder_store": "/cell/finder-store",
-             "artifacts": "/cell/artifacts"}
-
 # Per-slot toolchain caches. The packets hardcode these paths, so the container
 # mounts each cell's private copy at the identical path and the frozen execution
 # note stays literally true inside it.
@@ -87,6 +82,24 @@ def run(*command, cwd=None, check=True, capture=True):
         raise Failed("%s: %s" % (" ".join(str(p) for p in command),
                                  (result.stderr or result.stdout or "").strip()))
     return result
+
+
+def copy_tree(source, destination):
+    """Copy a directory, preferring an APFS clone, and leave it writable.
+
+    Each cell gets its own copy of the mirror and the toolchain caches so that no
+    two cells share mutable state. ``cp -Rc`` asks APFS for copy-on-write clones,
+    which costs no space and no time until something is written; it falls back to
+    a plain recursive copy on a filesystem that cannot clone. Go makes every file
+    in its module cache read-only, so the copy is made writable afterwards -
+    otherwise ``go`` cannot take its own lock and the copy cannot be removed.
+    """
+    destination = Path(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    cloned = run("cp", "-Rc", str(source), str(destination), check=False)
+    if cloned.returncode:
+        run("cp", "-R", str(source), str(destination))
+    run("chmod", "-R", "u+w", str(destination))
 
 
 def digest(path) -> str:
@@ -143,6 +156,149 @@ def unfilled(text: str) -> list:
     return sorted(set(re.findall(r"\{[A-Z][A-Z0-9_]*\}", text)))
 
 
+HEADINGS = {
+    "agents_a": "Arm A (`agents-A.json`):",
+    "agents_bc": "Arms B and C (`agents-BC.json`) — byte-identical to A except the model:",
+    "primary": "## Primary dispatch prompt",
+    "barrier": "### `{ARM_C_BARRIER_BLOCK}` — empty in arms A and B, this text in arm C",
+    "admission": "### `{ADMISSION}` — the resume prompt for arm C's phase 2",
+    "finder": "## Finder prompt (arm C only)",
+}
+
+WORKER_MODEL = {"A": "claude-sonnet-5", "B": "claude-opus-5", "C": "claude-opus-5"}
+
+
+def paths_for(root) -> dict:
+    """Every path the rendered prompts name, all inside the cell's own tree."""
+    return {"CLONE": str(root / "clone"), "SKILL_DIR": str(root / "snapshot"),
+            "PACKET_DIR": str(root / "packet"), "PACKET": str(root / "packet" / "packet.md"),
+            "WORK": str(root / "work"), "RUNNER": str(root / "runner"),
+            "PAYLOAD": str(root / "work" / "review-payload.md"),
+            "REPORT": str(root / "work" / "research-report.md"),
+            "TIMING": str(root / "work" / "timing.json"),
+            "FREEZE": str(root / "work" / "freeze.json"),
+            "FINDER_STORE": str(root / "finder-store"),
+            "SCOPE": str(root / "finder-store" / "scope.json")}
+
+
+def render_prompts(config, root, row, manifest) -> list:
+    """Render this cell's prompts and worker definitions from the frozen template.
+
+    Every byte that is not a placeholder comes from ``dispatch-template.md``, and
+    a rendering that still contains a placeholder is refused: the template makes
+    "no unfilled placeholder" a dispatch precondition.
+    """
+    template_path = Path(config["bundle"]) / "dispatch-template.md"
+    template = template_path.read_text(encoding="utf-8")
+    arm = row["arm"]
+    target = manifest["target"]
+    values = dict(paths_for(root))
+    values.update({
+        "TARGET_SLOT": row["target_slot"],
+        "REPO_PR": "%s#%s" % (target["repository"], target["pr"]),
+        "CELL": row["cell_id"], "ATTEMPT": row["attempt_id"],
+        "WORKER_MODEL": WORKER_MODEL[arm],
+        "BASE_BRANCH": target["base_ref"],
+        "EXEC_NOTE": manifest["execution"]["note"],
+    })
+    # The barrier block is itself a template - it names {FREEZE} - so it is
+    # rendered before being substituted into the dispatch prompt. One pass over an
+    # already-substituted value would leave that placeholder behind.
+    barrier = fenced(template, HEADINGS["barrier"]) if arm == "C" else ""
+    values["ARM_C_BARRIER_BLOCK"] = render(barrier, values)
+    problems = []
+    written = {}
+    prompts = {"dispatch.md": fenced(template, HEADINGS["primary"]),
+               "agents.json": fenced(template, HEADINGS["agents_a"] if arm == "A"
+                                     else HEADINGS["agents_bc"])}
+    if arm == "C":
+        prompts["finder-prompt.md"] = fenced(template, HEADINGS["finder"])
+        prompts["admission.md"] = fenced(template, HEADINGS["admission"])
+    for name, text in prompts.items():
+        rendered = render(text, values)
+        # The admission prompt keeps {FINDER_CLAIMS} until the finder has run.
+        remaining = [p for p in unfilled(rendered) if p != "{FINDER_CLAIMS}"]
+        if remaining:
+            problems.append("%s still contains %s" % (name, ", ".join(remaining)))
+        destination = root / "runner" / name
+        destination.write_text(rendered, encoding="utf-8")
+        written[name] = digest(destination)
+    write(root / "artifacts" / "prompts.json",
+          {"dispatch_template": str(template_path),
+           "dispatch_template_sha256": digest(template_path),
+           "rendered_sha256": written, "worker_model": WORKER_MODEL[arm]})
+    return problems
+
+
+def checkouts(config) -> list:
+    """Every checkout of this repository, which the frozen absence gate forbids.
+
+    A linked worktree shares the primary checkout's object store, so it reaches
+    ``targets/README.md`` and the whole sealed bundle at any commit whatever its
+    own tree holds. They are all forbidden, and listing them by path is what lets
+    the in-container check establish that none of them is reachable.
+    """
+    result = run("git", "-C", config["repo"], "worktree", "list", "--porcelain")
+    paths = [line.split(" ", 1)[1].strip()
+             for line in result.stdout.splitlines() if line.startswith("worktree ")]
+    common = run("git", "-C", config["repo"], "rev-parse", "--path-format=absolute",
+                 "--git-common-dir").stdout.strip()
+    primary = str(Path(common).parent)
+    if primary not in paths:
+        paths.append(primary)
+    return sorted(set(paths))
+
+
+def forbidden_paths(config, position, slot, manifest) -> list:
+    """The frozen forbidden set for this cell, as concrete paths."""
+    paths = [os.path.expanduser("~/.config/bounded-discovery")]
+    paths.extend(checkouts(config))
+    mirrors = Path(os.path.expanduser(manifest["mirror"]["path"])).parent
+    own = Path(os.path.expanduser(manifest["mirror"]["path"])).name
+    if mirrors.is_dir():
+        paths.extend(str(mirrors / entry.name) for entry in mirrors.iterdir()
+                     if entry.name != own)
+    staging = mirrors.parent
+    paths.extend(str(staging / name) for name in ("staging", "clones", "adjudication",
+                                                  "selector", "sessions", "hunt",
+                                                  "ledger.live.json"))
+    cells = Path(os.path.expanduser(config["cells_root"]))
+    if cells.is_dir():
+        paths.extend(str(entry) for entry in cells.iterdir()
+                     if entry.name != ("position-%02d" % int(position)))
+    return sorted(set(paths))
+
+
+def specs(config, position, slot, manifest, root, cell_id) -> tuple:
+    """The preparation spec (host) and the dispatch spec (inside the container).
+
+    Both name the same clone, because the cell tree is mounted at its identical
+    absolute path; they differ in the proxy address, which the container reaches
+    through ``host.docker.internal``, and in whether a leak set is named at all.
+    """
+    target = manifest["target"]
+    clone = {"path": str(root / "clone"), "head_oid": target["head_oid"],
+             "base_branch": target["base_ref"],
+             "merge_base_oid": target["merge_base_oid"]}
+    permitted = [str(root / name) for name in ("clone", "work", "snapshot", "packet",
+                                               "finder-store", "artifacts", "runner")]
+    permitted.append(str(root / "mirror.git"))
+    permitted.extend(CACHES.get(slot, []))
+    leak_set = Path(os.path.expanduser(config["leak_sets"])) / (manifest["label"] + ".json")
+    preparation = {"cell_id": cell_id, "target_slot": slot, "clone": clone,
+                   "permitted_roots": permitted, "forbidden_paths": [],
+                   "leak_set": str(leak_set),
+                   "egress_proxy": {"host": "127.0.0.1", "port": int(config["proxy_port"]),
+                                    "probe_host": "api.github.com"}}
+    dispatch_spec = dict(preparation)
+    dispatch_spec["forbidden_paths"] = forbidden_paths(config, position, slot, manifest)
+    dispatch_spec.pop("leak_set")
+    dispatch_spec["egress_proxy"] = {"host": "host.docker.internal",
+                                     "port": int(config["proxy_port"]),
+                                     "probe_host": "api.github.com"}
+    return preparation, dispatch_spec
+
+
 def schedule_row(config, position):
     schedule = load(config["schedule"])
     for row in schedule["ordered_cells"]:
@@ -174,7 +330,7 @@ def prepare(config, position, force=False):
 
     # A private mirror copy, so no other slot's mirror has to be present.
     mirror = root / "mirror.git"
-    shutil.copytree(os.path.expanduser(manifest["mirror"]["path"]), mirror)
+    copy_tree(os.path.expanduser(manifest["mirror"]["path"]), mirror)
     target = manifest["target"]
     base_branch = target["base_ref"]
     clone = root / "clone"
@@ -232,10 +388,28 @@ def prepare(config, position, force=False):
         if not Path(cache).is_dir():
             problems.append("toolchain cache %s is missing" % cache)
             continue
-        shutil.copytree(cache, destination, symlinks=True)
+        copy_tree(cache, destination)
 
     shutil.copyfile(Path(__file__).resolve().parent / "mark_event.py",
                     root / "runner" / "mark_event.py")
+    problems.extend(render_prompts(config, root, row, manifest))
+    isolation = Path(config["bundle"]) / "scripts" / "check_cell_isolation.py"
+    shutil.copyfile(isolation, root / "runner" / "check_cell_isolation.py")
+
+    # The attestation has to be taken while the evaluator material is still
+    # present, because the leak-set check reads the very storage the absence gate
+    # requires to be gone. It carries no SHA from the set into the dispatch window.
+    preparation, dispatch_spec = specs(config, position, slot, manifest, root,
+                                       row["cell_id"])
+    write(root / "artifacts" / "cell-env-preparation.json", preparation)
+    write(root / "artifacts" / "cell-env-dispatch.json", dispatch_spec)
+    attestation = root / "artifacts" / "attestation.json"
+    attested = run(sys.executable, str(isolation), "--spec",
+                   str(root / "artifacts" / "cell-env-preparation.json"),
+                   "--phase", "preparation", "--out", str(attestation), check=False)
+    if attested.returncode:
+        problems.append("preparation attestation failed: %s"
+                        % (attested.stdout or attested.stderr).strip())
 
     record = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"],
@@ -247,6 +421,466 @@ def prepare(config, position, force=False):
               "policy_tree": config["policy_tree"],
               "caches": CACHES.get(slot, []), "problems": problems}
     write(root / "artifacts" / "prepare.json", record)
+    for problem in problems:
+        print(problem)
+    return 1 if problems else 0
+
+
+ATTEMPT_CEILING = "9.00"
+CALL_HEADROOM = "1.00"
+FINDER_CEILING = "2.00"
+ROOT_WALL_SECONDS = 5400
+FINDER_WALL_SECONDS = 1800
+
+ALLOWED_TOOLS = ["Write", "Edit", "Bash(git:*)", "Bash(go:*)", "Bash(cargo:*)",
+                 "Bash(python3:*)", "Bash(cat:*)", "Bash(ls:*)", "Bash(head:*)",
+                 "Bash(tail:*)", "Bash(wc:*)", "Bash(sed:*)", "Bash(grep:*)"]
+
+
+def proxy_start(config, root):
+    """Start the cell's allow-list egress proxy and wait until it is listening.
+
+    It binds every interface rather than loopback only, because the cell reaches it
+    from inside a container; that is a consequence of the isolation deviation and is
+    recorded with it. The allow list stays exactly the frozen ``.anthropic.com``.
+    """
+    log = root / "artifacts" / "egress.jsonl"
+    output = open(root / "logs" / "proxy.log", "w", encoding="utf-8")
+    process = subprocess.Popen(
+        [sys.executable, str(Path(config["bundle"]) / "scripts" / "egress_proxy.py"),
+         "--host", "0.0.0.0", "--port", str(config["proxy_port"]),
+         "--log", str(log), "--allow", ".anthropic.com"],
+        stdout=output, stderr=subprocess.STDOUT)
+    for _ in range(100):
+        text = Path(root / "logs" / "proxy.log").read_text(encoding="utf-8")
+        if "listening" in text:
+            return process, log
+        if process.poll() is not None:
+            raise Failed("egress proxy exited: %s" % text.strip())
+        __import__("time").sleep(0.1)
+    process.terminate()
+    raise Failed("egress proxy did not report listening")
+
+
+def mounts_for(config, root, slot) -> list:
+    """Only the cell's own tree and its private caches, at their host paths.
+
+    Mounting at the identical absolute path is what keeps the frozen packet's
+    hardcoded cache paths and the rendered prompts literally true inside the
+    container, and it is why no path translation is needed anywhere else.
+    """
+    arguments = ["-v", "%s:%s" % (root, root)]
+    for cache in CACHES.get(slot, []):
+        arguments += ["-v", "%s:%s" % (root / "caches" / cache.lstrip("/"), cache)]
+    home = root.parent / "homes" / root.name
+    home.mkdir(parents=True, exist_ok=True)
+    arguments += ["-v", "%s:/root/.claude" % home]
+    return arguments
+
+
+def docker_argv(config, root, slot, name, argv, workdir) -> list:
+    url = "http://host.docker.internal:%s" % config["proxy_port"]
+    return ["docker", "run", "--rm", "--name", name,
+            "--env-file", os.path.expanduser(config["auth_env_file"]),
+            "-e", "CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0",
+            "-e", "HTTPS_PROXY=%s" % url, "-e", "HTTP_PROXY=%s" % url,
+            "-e", "ALL_PROXY=%s" % url,
+            *mounts_for(config, root, slot), "-w", str(workdir),
+            config["image"], *argv]
+
+
+def primary_argv(root, wall, sid, allowance, prompt, agents, resume=False) -> list:
+    """The frozen primary launch, with the template's flags in the template's order."""
+    paths = paths_for(root)
+    return ["timeout", str(int(wall)), "claude", "-p",
+            *(["--resume", sid] if resume else ["--session-id", sid]),
+            "--model", "claude-sonnet-5", "--effort", "high", "--restricted",
+            "--tools", "Bash,Read,Write,Edit,Glob,Grep,Agent,Task",
+            "--allowedTools", *ALLOWED_TOOLS,
+            "--add-dir", paths["CLONE"], "--add-dir", paths["SKILL_DIR"],
+            "--add-dir", paths["PACKET_DIR"],
+            "--permission-prompts", "none", "--agents", agents,
+            "--max-budget-usd", str(allowance), "--output-format", "json", prompt]
+
+
+def finder_argv(root, sid, prompt) -> list:
+    paths = paths_for(root)
+    return ["timeout", str(FINDER_WALL_SECONDS), "claude", "-p", "--session-id", sid,
+            "--model", "claude-opus-5", "--effort", "high", "--restricted",
+            "--tools", "Read,Grep,Glob",
+            "--add-dir", paths["CLONE"], "--add-dir", paths["FINDER_STORE"],
+            "--permission-prompts", "none", "--max-budget-usd", FINDER_CEILING,
+            "--output-format", "json", prompt]
+
+
+def envelope(text):
+    """The result envelope from a ``--output-format json`` session, or None."""
+    for line in reversed(text.strip().splitlines()):
+        try:
+            document = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(document, dict) and document.get("type") == "result":
+            return document
+    return None
+
+
+def finder_claims(result: str) -> tuple:
+    """The finder's single fenced JSON block, checked key by key.
+
+    The finder has no write tool on purpose, so the coordinator persists its output.
+    A missing, unparsable or incomplete block is a malformed finder, which the
+    design's transition table treats as an operational failure - never as an empty
+    discovery pass and never as arm B's shape.
+    """
+    required = ("context_id", "packet_sha256", "scope_id", "claims", "inspected",
+                "frontier_expansions", "unavailable")
+    fields = ("id", "kind", "claim", "trigger", "impact", "citations")
+    if not result:
+        return None, ["the finder produced no result to parse"]
+    start = result.find("```json")
+    if start < 0:
+        return None, ["the finder's result has no fenced json block"]
+    end = result.find("```", start + len("```json"))
+    if end < 0:
+        return None, ["the finder's fenced json block is not closed"]
+    try:
+        document = json.loads(result[start + len("```json"):end])
+    except ValueError as exc:
+        return None, ["the finder's fenced json block does not parse: %s" % exc]
+    problems = ["the finder's block has no %s" % key
+                for key in required if key not in document]
+    if not isinstance(document.get("claims"), list):
+        problems.append("the finder's claims is not a list")
+    else:
+        for claim in document["claims"]:
+            problems.extend("a finder claim has no %s" % field
+                            for field in fields if field not in claim)
+    return (document, problems) if not problems else (None, problems)
+
+
+def reserve(config, row, amount, evidence):
+    budget = Path(config["targets"]).parent / "scripts" / "budget.py"
+    return run(sys.executable, str(budget), config["ledger"], "reserve",
+               "--id", "%s-reservation" % row["attempt_id"], "--amount", str(amount),
+               "--phase", "review", "--attempt", row["attempt_id"],
+               "--attempt-cap", ATTEMPT_CEILING, "--ticket", "150",
+               "--evidence", evidence, check=False)
+
+
+def isolation_phase(config, root, slot, phase, out):
+    """Run the absence gate inside the cell's own container.
+
+    Under the isolation deviation this is where the check belongs: the property
+    being established is that the forbidden material is not reachable from the
+    cell, and the cell's filesystem is the container's. The spec still names the
+    host paths, so a mount that accidentally exposed one would fail here.
+    """
+    argv = ["python3", str(root / "runner" / "check_cell_isolation.py"),
+            "--spec", str(root / "artifacts" / "cell-env-dispatch.json"),
+            "--phase", phase,
+            "--attestation", str(root / "artifacts" / "attestation.json"),
+            "--out", str(out)]
+    name = "bd150-%s-%s" % (root.name, phase)
+    return run(*docker_argv(config, root, slot, name, argv, root / "work"), check=False)
+
+
+def record_mounts(config, root, slot, destination):
+    """The asserted mount set, which under the deviation is the isolation evidence."""
+    argv = docker_argv(config, root, slot, "bd150-%s-mounts" % root.name,
+                       ["sh", "-c", "ls -1 / && echo --- && cat /proc/mounts"],
+                       root / "work")
+    observed = run(*argv, check=False)
+    requested = [argv[index + 1] for index, part in enumerate(argv) if part == "-v"]
+    write(destination, {"requested_mounts": requested,
+                        "container_root_listing": observed.stdout,
+                        "exit_code": observed.returncode})
+    return requested
+
+
+def dispatch(config, position):
+    import time
+
+    row = schedule_row(config, position)
+    root = cell_root(config, position)
+    slot, arm = row["target_slot"], row["arm"]
+    manifest = load(Path(config["targets"]) / slot / "manifest.json")
+    prepared = load(root / "artifacts" / "prepare.json")
+    problems = []
+    if prepared["problems"]:
+        print("the cell's prepare stage reported problems; rerun prepare")
+        return 1
+    if not load(root / "artifacts" / "attestation.json").get("ready"):
+        print("the preparation attestation is not ready")
+        return 1
+    auth = Path(os.path.expanduser(config["auth_env_file"]))
+    if not auth.is_file() or not auth.stat().st_size:
+        print("no container credential at %s" % auth)
+        return 1
+
+    # Regenerate the forbidden set so the record describes the machine as it is now.
+    _, dispatch_spec = specs(config, position, slot, manifest, root, row["cell_id"])
+    write(root / "artifacts" / "cell-env-dispatch.json", dispatch_spec)
+
+    proxy, egress_log = proxy_start(config, root)
+    started = time.time()
+    result = {"schema_version": "bounded-discovery-v1", "position": int(position),
+              "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
+              "target_slot": slot, "phases": [], "problems": problems}
+    try:
+        record_mounts(config, root, slot, root / "artifacts" / "mounts.json")
+        pre = isolation_phase(config, root, slot, "pre-dispatch",
+                              root / "artifacts" / "isolation-pre.json")
+        if pre.returncode:
+            problems.append("pre-dispatch isolation failed: %s"
+                            % (pre.stdout or pre.stderr).strip())
+            result["disposition"] = "stopped-isolation"
+            return finish(root, result, problems)
+
+        reservation = reserve(config, row,
+                              "%.2f" % (float(ATTEMPT_CEILING) + float(CALL_HEADROOM)),
+                              "cell %s attempt %s: container dispatch under the frozen "
+                              "ceilings, reserved before launch"
+                              % (row["cell_id"], row["attempt_id"]))
+        if reservation.returncode:
+            problems.append("ledger reservation refused: %s"
+                            % (reservation.stdout or reservation.stderr).strip())
+            result["disposition"] = "stopped-budget"
+            return finish(root, result, problems)
+        result["reservation"] = (reservation.stdout or "").strip()
+
+        timing = Path(paths_for(root)["TIMING"])
+        created = run(sys.executable, str(root / "runner" / "mark_event.py"),
+                      str(timing), "root_dispatched_at", "--create", check=False)
+        if created.returncode:
+            problems.append("could not create the timing sidecar: %s" % created.stdout.strip())
+            result["disposition"] = "stopped-runtime"
+            return finish(root, result, problems)
+        dispatched = time.time()
+
+        agents = (root / "runner" / "agents.json").read_text(encoding="utf-8")
+        prompt = (root / "runner" / "dispatch.md").read_text(encoding="utf-8")
+        finder = None
+        if arm == "C":
+            finder_prompt = (root / "runner" / "finder-prompt.md").read_text(encoding="utf-8")
+            finder = subprocess.Popen(
+                docker_argv(config, root, slot, "bd150-%s-finder" % root.name,
+                            finder_argv(root, "%s-finder" % row["attempt_id"], finder_prompt),
+                            root / "finder-store"),
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                encoding="utf-8")
+
+        phase1 = run_phase(config, root, slot, row, "primary-phase-1",
+                           primary_argv(root, ROOT_WALL_SECONDS,
+                                        row["attempt_id"], ATTEMPT_CEILING, prompt, agents))
+        result["phases"].append(phase1)
+
+        if arm == "C":
+            spent = phase1["cost_usd"] or 0.0
+            freeze = Path(paths_for(root)["FREEZE"])
+            if not freeze.is_file():
+                problems.append("arm C phase 1 ended without writing its freeze artifact")
+            finder_output = ""
+            try:
+                finder_output = finder.communicate(
+                    timeout=max(60, FINDER_WALL_SECONDS - (time.time() - dispatched)))[0]
+            except subprocess.TimeoutExpired:
+                run("docker", "kill", "bd150-%s-finder" % root.name, check=False)
+                finder_output = finder.communicate()[0] or ""
+            (root / "logs" / "finder.log").write_text(finder_output, encoding="utf-8")
+            finder_envelope = envelope(finder_output)
+            claims, finder_problems = finder_claims(
+                (finder_envelope or {}).get("result", ""))
+            finder_cost = float((finder_envelope or {}).get("total_cost_usd") or 0.0)
+            result["finder"] = {"cost_usd": finder_cost, "problems": finder_problems,
+                                "envelope_subtype": (finder_envelope or {}).get("subtype")}
+            if finder_problems or claims is None:
+                problems.extend(finder_problems)
+                problems.append("missing or malformed finder: the attempt closes as an "
+                                "operational failure rather than an empty discovery pass")
+                result["disposition"] = "stopped-finder"
+                return finish(root, result, problems)
+            discovery = root / "finder-store" / "discovery.json"
+            write(discovery, claims)
+            result["finder"]["discovery_sha256"] = digest(discovery)
+
+            if not problems:
+                admission = render(
+                    (root / "runner" / "admission.md").read_text(encoding="utf-8"),
+                    {"FINDER_CLAIMS": json.dumps(claims["claims"], indent=2, sort_keys=True)})
+                left = unfilled(admission)
+                if left:
+                    problems.append("the admission prompt still contains %s" % ", ".join(left))
+                (root / "runner" / "admission.rendered.md").write_text(admission,
+                                                                      encoding="utf-8")
+                # The whole attempt gets 5400 s counted once, and the finder's spend
+                # is charged inside C's ceiling rather than in addition to it.
+                remaining_wall = ROOT_WALL_SECONDS - (time.time() - dispatched)
+                remaining_usd = float(ATTEMPT_CEILING) - spent - finder_cost
+                if remaining_wall < 60 or remaining_usd <= 0:
+                    problems.append("arm C had no allowance left to resume: %.0f s and $%.4f"
+                                    % (remaining_wall, remaining_usd))
+                    result["disposition"] = "stopped-budget"
+                    return finish(root, result, problems)
+                phase2 = run_phase(config, root, slot, row, "primary-phase-2",
+                                   primary_argv(root, remaining_wall, row["attempt_id"],
+                                                "%.4f" % remaining_usd, admission, agents,
+                                                resume=True))
+                result["phases"].append(phase2)
+
+        post = isolation_phase(config, root, slot, "post-dispatch",
+                               root / "artifacts" / "isolation-post.json")
+        if post.returncode:
+            problems.append("post-dispatch isolation failed: %s"
+                            % (post.stdout or post.stderr).strip())
+        result["elapsed_seconds"] = round(time.time() - started, 3)
+        result.setdefault("disposition", "dispatched")
+        return finish(root, result, problems)
+    finally:
+        proxy.terminate()
+
+
+def run_phase(config, root, slot, row, label, argv) -> dict:
+    """One container invocation of the primary, with its envelope retained."""
+    import time
+
+    name = "bd150-%s-%s" % (root.name, label)
+    started = time.time()
+    observed = run(*docker_argv(config, root, slot, name, argv, root / "work"),
+                   check=False)
+    (root / "logs" / ("%s.log" % label)).write_text(observed.stdout or "", encoding="utf-8")
+    found = envelope(observed.stdout or "")
+    if found:
+        write(root / "artifacts" / ("%s-result.json" % label), found)
+    return {"label": label, "exit_code": observed.returncode,
+            "elapsed_seconds": round(time.time() - started, 3),
+            "subtype": (found or {}).get("subtype"),
+            "is_error": (found or {}).get("is_error"),
+            "cost_usd": float((found or {}).get("total_cost_usd") or 0.0),
+            "num_turns": (found or {}).get("num_turns"),
+            "envelope": bool(found)}
+
+
+def finish(root, result, problems) -> int:
+    write(root / "artifacts" / "dispatch.json", result)
+    for problem in problems:
+        print(problem)
+    return 1 if problems else 0
+
+
+def transcripts_for(root) -> list:
+    """Every transcript this cell's sessions wrote, root and workers alike."""
+    home = root.parent / "homes" / root.name / "projects"
+    return sorted(str(path) for path in home.rglob("*.jsonl")) if home.is_dir() else []
+
+
+def audit_reads(root, transcripts, permitted) -> dict:
+    """Paths and network use the transcripts show, against the cell's sandbox.
+
+    A read outside the permitted roots, or network use that never reaches the egress
+    log, invalidates the attempt on protocol grounds. This reports the evidence; the
+    judgment of whether a hit is real stays with the researcher reading it.
+    """
+    import re
+
+    suspects = {}
+    pattern = re.compile(r"(/(?:Users|private|tmp|var|etc|opt|home)[A-Za-z0-9_./@+-]*)")
+    allowed = tuple(str(Path(p)) for p in permitted)
+    for transcript in transcripts:
+        try:
+            text = Path(transcript).read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            suspects.setdefault("unreadable", []).append("%s: %s" % (transcript, exc))
+            continue
+        for candidate in set(pattern.findall(text)):
+            if candidate.startswith(allowed) or candidate.startswith("/tmp/bd148/"):
+                continue
+            suspects.setdefault(transcript, []).append(candidate)
+    return {"transcripts": len(transcripts),
+            "paths_outside_permitted_roots": suspects,
+            "passed": not suspects}
+
+
+def settle(config, position):
+    row = schedule_row(config, position)
+    root = cell_root(config, position)
+    slot, arm = row["target_slot"], row["arm"]
+    dispatched = load(root / "artifacts" / "dispatch.json")
+    spec = load(root / "artifacts" / "cell-env-dispatch.json")
+    problems = []
+    record = {"schema_version": "bounded-discovery-v1", "position": int(position),
+              "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
+              "target_slot": slot, "dispatch_disposition": dispatched.get("disposition")}
+
+    transcripts = transcripts_for(root)
+    record["transcript_count"] = len(transcripts)
+    if not transcripts:
+        problems.append("no transcript was retained, so nothing can be metered from it")
+
+    # Model and effort on every assistant line of every transcript, per role.
+    effort = run(sys.executable, str(Path(config["tools"]) / "agent_effort.py"),
+                 *transcripts, check=False) if transcripts else None
+    if effort is not None:
+        (root / "artifacts" / "effort.txt").write_text(effort.stdout or "", encoding="utf-8")
+        if effort.returncode:
+            problems.append("agent_effort.py exited %s" % effort.returncode)
+
+    # Price each transcript at its own model's rate and sum the groups.
+    self_report = sum(phase.get("cost_usd") or 0.0 for phase in dispatched.get("phases", []))
+    self_report += float((dispatched.get("finder") or {}).get("cost_usd") or 0.0)
+    if transcripts:
+        split = run(sys.executable,
+                    str(Path(config["bundle"]) / "scripts" / "meter_split.py"),
+                    "--rates", str(Path(config["bundle"]) / "rates.json"),
+                    "--out", str(root / "artifacts" / "usage-split.json"),
+                    "--label", row["attempt_id"],
+                    "--self-report", "%.7f" % self_report,
+                    *transcripts, check=False)
+        (root / "logs" / "meter.log").write_text(
+            (split.stdout or "") + (split.stderr or ""), encoding="utf-8")
+        if split.returncode:
+            problems.append("meter_split.py exited %s; see logs/meter.log" % split.returncode)
+
+    audit = audit_reads(root, transcripts, spec["permitted_roots"])
+    write(root / "artifacts" / "read-audit.json", audit)
+    if not audit["passed"]:
+        problems.append("the transcripts name paths outside the permitted roots; "
+                        "the attempt is invalid on protocol grounds unless the "
+                        "researcher rules each one a false positive")
+    try:
+        egress = [json.loads(line) for line
+                  in (root / "artifacts" / "egress.jsonl").read_text(
+                      encoding="utf-8").splitlines() if line.strip()]
+    except OSError:
+        egress = []
+    record["egress_attempts"] = len(egress)
+    record["egress_refused"] = sum(1 for entry in egress
+                                   if entry.get("decision") not in ("allow", "allowed"))
+
+    # Settlement charges the larger of the self-report and the retained records.
+    metered = self_report
+    try:
+        split_document = load(root / "artifacts" / "usage-split.json")
+        metered = max(metered, float(split_document.get("total_usd") or 0.0))
+        record["usage_split_total_usd"] = split_document.get("total_usd")
+    except Failed:
+        problems.append("no usage split was produced")
+    record["self_report_usd"] = "%.7f" % self_report
+    record["settled_usd"] = "%.7f" % metered
+    record["reconciliation_residual_usd"] = "%.7f" % (metered - self_report)
+
+    budget = Path(config["targets"]).parent / "scripts" / "budget.py"
+    settled = run(sys.executable, str(budget), config["ledger"], "settle",
+                  "--id", "%s-reservation" % row["attempt_id"],
+                  "--amount", "%.7f" % metered, "--phase", "review",
+                  "--attempt", row["attempt_id"], "--ticket", "150",
+                  "--evidence", "metered from the retained per-request records and the "
+                                "result envelopes of cell %s" % row["cell_id"], check=False)
+    if settled.returncode:
+        problems.append("ledger settlement refused: %s"
+                        % (settled.stdout or settled.stderr).strip())
+    record["problems"] = problems
+    write(root / "artifacts" / "settle.json", record)
     for problem in problems:
         print(problem)
     return 1 if problems else 0
@@ -269,8 +903,9 @@ def main(argv=None):
     try:
         if args.stage == "prepare":
             return prepare(config, args.position, force=args.force)
-        print("%s is not implemented in this revision" % args.stage)
-        return 1
+        if args.stage == "dispatch":
+            return dispatch(config, args.position)
+        return settle(config, args.position)
     except Failed as exc:
         sys.stderr.write(str(exc) + "\n")
         return 2
@@ -296,6 +931,15 @@ def self_test():
     checks.append(("a rendered prompt reports none",
                    unfilled(render("hello {NAME}", {"NAME": "world"})) == []))
     checks.append(("lowercase braces are not placeholders", unfilled("{braces}") == []))
+    # Arm C's barrier block is substituted into the dispatch prompt and itself
+    # names {FREEZE}: a single pass over the outer template leaves that behind.
+    values = {"FREEZE": "/cell/work/freeze.json"}
+    values["BLOCK"] = render("write {FREEZE} and stop", values)
+    checks.append(("a block rendered before substitution leaves no placeholder",
+                   unfilled(render("prompt: {BLOCK}", values)) == []))
+    checks.append(("substituting an unrendered block would leave one",
+                   unfilled(render("prompt: {BLOCK}", {"BLOCK": "write {FREEZE}"}))
+                   == ["{FREEZE}"]))
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1
