@@ -98,6 +98,37 @@ def scrub(value, secrets):
     return value
 
 
+def commitment_salt(config) -> bytes:
+    """A per-bundle secret that turns a public digest into a non-invertible commitment.
+
+    A raw SHA-256 of a rendered prompt is a commitment over one secret: which of four
+    slots filled its placeholders. Everything else that goes into it - the frozen
+    template, the per-slot manifests, this runner's own rendering code - is committed
+    and public, so the digest falls to a four-candidate preimage search. Keyed with a
+    secret salt it does not, while still binding the rendering at publication time so
+    it cannot be retrofitted. The salt is sealed, so #153 can verify at reveal.
+    """
+    path = Path(os.path.expanduser("~/.config/bounded-discovery/issue-150/commitment-salt"))
+    if not path.is_file():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(os.urandom(32))
+        path.chmod(0o600)
+    return path.read_bytes()
+
+
+def commit(path, salt) -> str:
+    """An HMAC over a file's bytes: binding, and not invertible by guessing inputs."""
+    import hmac
+
+    return hmac.new(salt, Path(path).read_bytes(), hashlib.sha256).hexdigest()
+
+
+def prompt_commitments(root, salt) -> dict:
+    return {entry.name: commit(entry, salt)
+            for entry in sorted((root / "runner").glob("*"))
+            if entry.is_file() and entry.suffix in (".md", ".json")}
+
+
 def mounts_confined(requested, root) -> bool:
     """Whether every mount source is the cell's own tree, its caches or its home."""
     root = str(root)
@@ -116,7 +147,7 @@ def checks_of(document) -> list:
             for check in document.get("checks", [])]
 
 
-def summarize(root, secrets) -> dict:
+def summarize(root, secrets, salt) -> dict:
     """The public record of one position: process and fidelity, never identity."""
     prepared = load(root / "artifacts" / "prepare.json")
     dispatched = load(root / "artifacts" / "dispatch.json", {})
@@ -127,10 +158,6 @@ def summarize(root, secrets) -> dict:
     mounts = load(root / "artifacts" / "mounts.json", {})
     prompts = load(root / "artifacts" / "prompts.json", {})
     usage = load(root / "artifacts" / "usage-split.json", {})
-    effort = ""
-    if (root / "artifacts" / "effort.txt").is_file():
-        effort = (root / "artifacts" / "effort.txt").read_text(encoding="utf-8")
-
     summary = {
         "schema_version": "bounded-discovery-v1",
         "position": prepared["position"],
@@ -142,7 +169,8 @@ def summarize(root, secrets) -> dict:
         "attempt_ordinal": int(str(dispatched.get("attempt_id", "-attempt-1")
                                    ).rsplit("-attempt-", 1)[-1] or 1),
         "dispatch_template_sha256": prompts.get("dispatch_template_sha256"),
-        "rendered_prompt_sha256": prompts.get("rendered_sha256"),
+        # Keyed, not raw: see commitment_salt. The raw digests are in the seal.
+        "rendered_prompt_hmac_sha256": prompt_commitments(root, salt),
         "preparation": {"attestation_ready": attestation.get("ready"),
                         "checks": checks_of(attestation)},
         "isolation": {
@@ -170,7 +198,18 @@ def summarize(root, secrets) -> dict:
                     "cost_usd": phase.get("cost_usd")}
                    for phase in dispatched.get("phases", [])],
         "fidelity": {
-            "effort_report": effort,
+            # Not the raw effort report: it prints transcript file names, which are the
+            # derived session UUIDs, and a session UUID is uuid5 over a string holding
+            # the slot - a four-guess commitment to it. The verdicts are what matter.
+            "model_effort_verified": settled.get("model_effort_verified"),
+            "by_role": {role: {"expected_model": entry.get("expected_model"),
+                               "expected_effort": entry.get("expected_effort"),
+                               "transcripts": entry.get("transcripts"),
+                               "assistant_lines": entry.get("assistant_lines"),
+                               "verified": entry.get("verified")}
+                        for role, entry in sorted(
+                            (load(root / "artifacts" / "model-verification.json", {})
+                             ).items())},
             "transcript_count": settled.get("transcript_count"),
             "models_priced": sorted(usage.get("per_model", {})),
         },
@@ -319,6 +358,7 @@ def main(argv=None):
     try:
         config = load(args.config)
         secrets = secrets_from(config["targets"])
+        salt = commitment_salt(config)
         out = Path(args.out)
         cells = Path(os.path.expanduser(config["cells_root"]))
         staging = cells / "seal-staging"
@@ -330,7 +370,7 @@ def main(argv=None):
         for root in sorted(cells.glob("position-*")):
             if not (root / "artifacts" / "prepare.json").is_file():
                 continue
-            summary = summarize(root, secrets)
+            summary = summarize(root, secrets, salt)
             write(out / "cells" / root.name / "summary.json", summary)
             excluded.extend(stage_sealed(root, staging))
             positions.append(summary["position"])
@@ -346,6 +386,9 @@ def main(argv=None):
         ledger = Path(os.path.expanduser(config["ledger"]))
         if ledger.is_file():
             shutil.copyfile(ledger, staging / "ledger.json")
+        shutil.copyfile(
+            os.path.expanduser("~/.config/bounded-discovery/issue-150/commitment-salt"),
+            staging / "commitment-salt")
         hits = leak_scan(out / "cells", secrets, leak_tokens(config))
         if hits:
             for hit in hits:
@@ -381,7 +424,7 @@ def self_test():
     checks.append(("non-strings pass through", scrub({"n": 3, "b": True}, secrets)
                    == {"n": 3, "b": True}))
     checks.append(("check lists keep only name and verdict",
-                   checks_of({"checks": [{"check": "x", "passed": True, "objects": 40737}]})
+                   checks_of({"checks": [{"check": "x", "passed": True, "objects": 12345}]})
                    == [{"check": "x", "passed": True}]))
     root = Path(tempfile.mkdtemp())
     (root / "sealed").mkdir()
@@ -426,6 +469,14 @@ def self_test():
         json.dumps({"digest": "deadbeef"}) + "\n", encoding="utf-8")
     checks.append(("an extra token such as a leak-set digest is caught",
                    len(leak_scan(public, secrets, ["deadbeef"])) == 1))
+    body = root / "rendered.md"
+    body.write_text("a rendered prompt naming slot-9\n", encoding="utf-8")
+    raw = hashlib.sha256(body.read_bytes()).hexdigest()
+    keyed = commit(body, b"\x01" * 32)
+    checks.append(("a keyed commitment is not the raw digest, and is stable",
+                   keyed != raw and keyed == commit(body, b"\x01" * 32)))
+    checks.append(("a different salt gives a different commitment",
+                   commit(body, b"\x02" * 32) != keyed))
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1

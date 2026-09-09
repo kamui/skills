@@ -78,3 +78,28 @@ $0.0013 because these sessions are larger — and a remainder. The remainder was
 cell and under a tenth of a cent in another; the one cell with a materially larger unexplained
 remainder was the attempt a 502 cut off mid-stream, where the final request was billed but its
 transcript record was truncated. Settlement charges the larger source in every case.
+
+## 5. A blind can be broken by a digest, not only by a name
+
+The hardest part of keeping this pilot's pairing sealed was not redacting names. Review found two
+routes that leaked it through values that look inert:
+
+- **A digest of a rendered prompt.** Everything that goes into a cell's dispatch prompt is public —
+  the frozen template, the per-slot manifests, and the runner's own rendering code — except which of
+  four slots filled the placeholders. So a published SHA-256 of that prompt is a commitment over a
+  four-candidate secret, and a preimage search recovers the slot exactly. This was demonstrated, not
+  theorised: four of the six positions were matched against their committed digests.
+- **A derived session UUID.** The runner derives session IDs as `uuid5` over a string containing the
+  attempt ID, which contains the slot. Transcript file names are therefore the same four-guess
+  commitment, and the public fidelity report printed them.
+
+Both are closed here: the public prompt commitments are HMACs under a sealed per-bundle salt, which
+binds the rendering at publication without being invertible, and the fidelity report publishes per-role
+verdicts and line counts instead of file names. The raw digests and the salt are inside the seal, so
+#153 can still verify everything at reveal.
+
+**The general rule, for #151 and anyone else publishing alongside a blind:** a hash is only opaque
+when its input has real entropy. Over a small, enumerable secret it is a lookup table. Before
+publishing any digest, identifier or count derived from sealed material, ask how many candidate inputs
+there are — if the answer is four, the value is the secret. A whitelist does not catch this on its own,
+because each of these fields was individually innocuous and deliberately allowed through.

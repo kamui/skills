@@ -18,7 +18,30 @@
   },
   "elapsed_seconds": 2148.942,
   "fidelity": {
-    "effort_report": "889a7be3-faaa-501f-ac66-f16005c0b000.jsonl lines=34 models=claude-opus-5\u00d734 efforts=high\u00d734\n80842e43-cf04-5ac5-b92d-0d5bf855360d.jsonl lines=187 models=claude-sonnet-5\u00d7187 efforts=high\u00d7187\nagent-ad08504162f9b42ca.jsonl lines=51 models=claude-opus-5\u00d751 efforts=high\u00d751\n",
+    "by_role": {
+      "finder": {
+        "assistant_lines": 34,
+        "expected_effort": "high",
+        "expected_model": "claude-opus-5",
+        "transcripts": 1,
+        "verified": true
+      },
+      "primary": {
+        "assistant_lines": 187,
+        "expected_effort": "high",
+        "expected_model": "claude-sonnet-5",
+        "transcripts": 1,
+        "verified": true
+      },
+      "worker": {
+        "assistant_lines": 51,
+        "expected_effort": "high",
+        "expected_model": "claude-opus-5",
+        "transcripts": 1,
+        "verified": true
+      }
+    },
+    "model_effort_verified": true,
     "models_priced": [
       "claude-opus-5",
       "claude-sonnet-5"
@@ -120,11 +143,12 @@
   },
   "problems": [],
   "read_audit_passed": true,
-  "rendered_prompt_sha256": {
-    "admission.md": "42741b10c18b08cce40dd8262e402ea41ce0c282d89bec86e4805b92369833b7",
-    "agents.json": "66da9031b39cd40600998c74c041fb1fb9bc1c97a408d972c7f7a00c5c704aa1",
-    "dispatch.md": "0cc8a4ae4bb53b4b40136bf08917c58ca265db86a6893b06a7e75d95be453cb7",
-    "finder-prompt.md": "c632783ebd7aa94649702863494876a8c13316b30964c5801eae61894e0c402a"
+  "rendered_prompt_hmac_sha256": {
+    "admission.md": "cc7a9fe81375c6353397166872fce47149225c4558523e6be05f6099e7515deb",
+    "admission.rendered.md": "8c08e173e04f4b16a6ecb09ab2710013c360bd0078d8ffac3e25ace32ae1884a",
+    "agents.json": "0e494211890cd15dd8bb7fdc9a82bdabdb0cda9ba1ffab3bd6d6bb0e267e7e24",
+    "dispatch.md": "b05c3b1e080502bb121c7570786c099063c98d44d50db84d89ce6061b5b66ce1",
+    "finder-prompt.md": "61e480ad5d218bf42c8ec190218902b9cdcdf2e1cab04ec0793cc32e7d3f80fd"
   },
   "replicate": 1,
   "schema_version": "bounded-discovery-v1",

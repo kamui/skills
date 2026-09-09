@@ -23,6 +23,15 @@ slot, clean first"), so naming the pilot pair would disclose which slots hold th
 artifact here is therefore keyed by **position**, never by slot, and the outcome evidence is sealed
 until every reviewer run has stopped.
 
+Keying by position is necessary but **not sufficient**, and review proved it. The pairing was also
+recoverable two other ways, each from a value that looks inert: a published SHA-256 of a cell's rendered
+dispatch prompt, and a derived session UUID printed in the fidelity report. Both are hashes over a
+four-candidate secret — which slot filled the placeholders — so a preimage search inverts them, and four
+of the six positions were matched that way against their own committed digests. The public prompt
+commitments are now HMACs under a salt that lives inside the seal, which binds each rendering at
+publication without being invertible, and the fidelity record publishes per-role verdicts and line counts
+instead of file names. [`observations.md`](observations.md) section 5 states the general rule.
+
 ## Isolation: why this bundle carries a deviation
 
 The preregistration's frozen isolation control is **absence** — the evaluator key and plaintexts,

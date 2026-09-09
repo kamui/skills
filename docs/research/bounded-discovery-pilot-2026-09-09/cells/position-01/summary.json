@@ -18,7 +18,23 @@
   },
   "elapsed_seconds": 1864.592,
   "fidelity": {
-    "effort_report": "1ba20531-0b3e-538a-bb08-3772e0692c22.jsonl lines=126 models=claude-sonnet-5\u00d7126 efforts=high\u00d7126\nagent-a8f81d5b19e104630.jsonl lines=26 models=claude-sonnet-5\u00d726 efforts=high\u00d726\n",
+    "by_role": {
+      "primary": {
+        "assistant_lines": 126,
+        "expected_effort": "high",
+        "expected_model": "claude-sonnet-5",
+        "transcripts": 1,
+        "verified": true
+      },
+      "worker": {
+        "assistant_lines": 26,
+        "expected_effort": "high",
+        "expected_model": "claude-sonnet-5",
+        "transcripts": 1,
+        "verified": true
+      }
+    },
+    "model_effort_verified": true,
     "models_priced": [
       "claude-sonnet-5"
     ],
@@ -105,9 +121,9 @@
   },
   "problems": [],
   "read_audit_passed": true,
-  "rendered_prompt_sha256": {
-    "agents.json": "5fc655d0d35e07e4885ee7b03d0402da6a9722b91be36513b24c5f6487689827",
-    "dispatch.md": "4920db1aa9f70cbc88ee24998a15b0badf16464f3b91c6dc75ff564bdcdf2d08"
+  "rendered_prompt_hmac_sha256": {
+    "agents.json": "4dce08b5a861e19424bff2a92b12e5e9dd2f7424e305758a94713e21da020e6f",
+    "dispatch.md": "3b6197ef0f5d22848346c25f81ac0122e6b125ef90cdb9912e5b19ec8d526645"
   },
   "replicate": 1,
   "schema_version": "bounded-discovery-v1",
