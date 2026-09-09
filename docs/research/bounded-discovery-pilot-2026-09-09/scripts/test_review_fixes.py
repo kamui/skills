@@ -235,6 +235,30 @@ class ReviewFixes(unittest.TestCase):
                 runner.prepare(self.config, 99, force=True)
         self.assertTrue(old.is_file())
 
+    def test_replacement_summary_uses_latest_and_retains_both_costs(self):
+        retry = self.root / "attempt-02"
+        (retry / "artifacts").mkdir(parents=True)
+        runner.write(retry / "artifacts" / "prepare.json", {})
+        def summary(path, secrets, salt):
+            second = path == retry
+            return {"attempt_ordinal": 2 if second else 1,
+                    "disposition": "dispatched" if second else "stopped-invalid",
+                    "problems": [] if second else ["old failure"],
+                    "accounting": {"settled_usd": "3" if second else "2",
+                                   "reconciliation_residual_usd": "0"}}
+        with patch.object(archive, "summarize", side_effect=summary), \
+             patch.object(archive, "stage_sealed", return_value=[]) as stage:
+            public, _ = archive.stage_position(self.root, self.base / "staging", [], b"salt")
+        self.assertEqual(public["disposition"], "dispatched")
+        self.assertEqual(stage.call_count, 2)
+        self.assertNotEqual(stage.call_args_list[0].args[2], stage.call_args_list[1].args[2])
+        target = self.base / "public" / "cells" / "position-01"
+        target.mkdir(parents=True)
+        runner.write(target / "summary.json", public)
+        attempts = handoff.attempt_records(self.base / "public", [])
+        self.assertEqual([entry["ordinal"] for entry in attempts], [1, 2])
+        self.assertEqual(sum(Decimal(entry["settled_usd"]) for entry in attempts), Decimal(5))
+
     def fresh_ledger(self):
         self.config["targets"] = str(SCRIPTS.parents[1] / "bounded-discovery-prototype" / "targets")
         runner.write(self.base / "ledger.json", {

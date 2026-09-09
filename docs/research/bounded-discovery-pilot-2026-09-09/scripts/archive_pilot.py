@@ -258,9 +258,10 @@ def copy_evidence(source, destination, excluded=BUILD_DIRS) -> list:
     return skipped
 
 
-def stage_sealed(root, staging) -> list:
+def stage_sealed(root, staging, destination=None) -> list:
     """Copy one position's full evidence, identity included, into the seal staging."""
-    destination = staging / ("position-%02d" % load(root / "artifacts" / "prepare.json")["position"])
+    if destination is None:
+        destination = staging / ("position-%02d" % load(root / "artifacts" / "prepare.json")["position"])
     destination.mkdir(parents=True, exist_ok=True)
     skipped = []
     for name in ("artifacts", "runner", "logs", "work"):
@@ -285,6 +286,25 @@ def stage_sealed(root, staging) -> list:
                          "pinned clone and are not evidence",
                "excluded": skipped})
     return skipped
+
+
+def stage_position(root, staging, secrets, salt):
+    """Publish the latest attempt's disposition and retain every attempt's cost."""
+    roots = [root] + [path for path in sorted(root.glob("attempt-*"))
+                     if (path / "artifacts" / "prepare.json").is_file()]
+    summaries = [summarize(path, secrets, salt) for path in roots]
+    excluded = []
+    for path, summary in zip(roots, summaries):
+        destination = staging / root.name / ("attempt-%02d" % summary["attempt_ordinal"])
+        excluded.extend(stage_sealed(path, staging, destination))
+    latest = dict(summaries[-1])
+    latest["attempt_history"] = [
+        {"ordinal": entry["attempt_ordinal"], "disposition": entry["disposition"],
+         "validity": "questioned" if entry["problems"] else "valid",
+         "settled_usd": entry["accounting"]["settled_usd"],
+         "reconciliation_residual_usd": entry["accounting"]["reconciliation_residual_usd"]}
+        for entry in summaries]
+    return latest, excluded
 
 
 def seal(staging, out, key) -> dict:
@@ -370,9 +390,9 @@ def main(argv=None):
         for root in sorted(cells.glob("position-*")):
             if not (root / "artifacts" / "prepare.json").is_file():
                 continue
-            summary = summarize(root, secrets, salt)
+            summary, skipped = stage_position(root, staging, secrets, salt)
             write(out / "cells" / root.name / "summary.json", summary)
-            excluded.extend(stage_sealed(root, staging))
+            excluded.extend(skipped)
             positions.append(summary["position"])
         # Invalidated attempts are sealed too: the replacement policy requires the raw
         # output and the costs of an invalid attempt to be retained, not discarded.
@@ -386,10 +406,6 @@ def main(argv=None):
         retained = cells / "retained-attempts"
         if retained.is_dir():
             shutil.copytree(retained, staging / "retained-attempts")
-        for attempt in sorted(cells.glob("position-*/attempt-*")):
-            if (attempt / "artifacts" / "prepare.json").is_file():
-                # Retain replacements without publishing their identities or outcomes.
-                copy_evidence(attempt, staging / "replacements" / attempt.parent.name / attempt.name)
         ledger = Path(os.path.expanduser(config["ledger"]))
         if ledger.is_file():
             shutil.copyfile(ledger, staging / "ledger.json")
