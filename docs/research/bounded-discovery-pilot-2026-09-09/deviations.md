@@ -54,27 +54,52 @@ the retained per-request records.
 
 The per-target execution notes were provisioned and timed by #148 on macOS with warm caches, and the
 concern going in was that a Linux container would start cold and push a focused command past the
-frozen five-minute limit. **Measured, it does not.** The container reproduces #148's host timings:
+frozen five-minute limit. **Measured, it does not.** Each pilot target's focused commands were re-run
+inside the container and reproduced #148's host timings to within about a second, well inside the
+five-minute per-command and ten-minute per-target allowances.
 
-| Command | #148 on the host | This container |
-| --- | --- | --- |
-| `go vet ./xds/internal/balancer/priority/` | exit 0, 7 s | exit 0, 7 s |
-| `go test -count=1 -run 'Test/' ./xds/...priority/` | exit 0, 4 s | exit 0, 4 s (`ok`, 1.995 s) |
-| `cargo test --offline --locked --test builder multiple_values` | exit 0, 74 passed, ~30 s build | exit 0, 74 passed, 28 s |
+The per-command figures are **sealed rather than printed here**: a command names the package path of
+the repository it runs against, and the set of targets the pilot exercised is exactly the pairing the
+freeze seals. The table lives in the sealed archive alongside each cell's evidence, keyed by schedule
+position, and #153 can read it at reveal.
 
-The reason is that the expensive, platform-independent part of each cache — the Go module cache and
-the Cargo registry — carries over unchanged, while the build output each cell produces for itself is
-the cheap part. The macOS `GOCACHE` is useless in Linux and is simply rebuilt inside the allowance.
-Both clones were verified clean after these runs, so the execution note's "nothing added to or
-changed in the clone" holds on this substrate too.
+The reason the concern did not materialise is that the expensive, platform-independent part of each
+cache — the dependency source caches — carries over unchanged, while the build output each cell
+produces for itself is the cheap part. A platform-specific build cache is useless in Linux and is
+simply rebuilt inside the allowance. Every clone was verified clean after these runs, so the
+execution notes' "nothing added to or changed in the clone" holds on this substrate too.
 
-Provisioning therefore stays exactly what #148 recorded: the module and registry caches, copied
-per cell so no two cells share mutable state, and **not** the build output. Each cell pays its own
-~30 s test-binary build, which is what its execution note describes. The earlier draft of this
-deviation asserted that cold caches would lengthen the cells; that was a prediction, it was wrong, and
-it is replaced by the measurement above.
+Provisioning therefore stays exactly what #148 recorded: the dependency caches, copied per cell so no
+two cells share mutable state, and **not** the build output. Each cell pays its own test-binary build,
+which is what its execution note describes. The earlier draft of this deviation asserted that cold
+caches would lengthen the cells; that was a prediction, it was wrong, and the measurement replaces it.
 
 What remains true is narrower: elapsed time is still this harness's, not the policy's production
 timing — because verification runs in the foreground in every arm by choice, which preregistration
 section 10 already records as an interpretation limit. Token cost is unaffected and every arm carries
 the substrate equally, so no gate moves.
+
+## 10. Attempts were claimed on the ledger after they ran, not before (2026-09-09)
+
+`budget.py`'s `attempt_event` is the control that makes the attempt and replacement caps real: it
+refuses a reused attempt ID, refuses a reused worker context ID, enforces the 27-attempt and
+three-replacement limits and the concurrent-cell ceiling, and refuses a replacement whose predecessor
+was not closed as documented invalidity. #150's issue text asks for exactly this — "atomically reserve
+the complete next cell/worker bound".
+
+The runner did not call it during the pilot. It reserved the dollar allowance, which is a different
+control and enforces none of those things, so for the duration of the pilot those caps were bookkeeping
+rather than enforcement. The defect was found in review, before publication.
+
+Two corrections followed. The runner now claims the cell and its contexts through `attempt_event`
+*before* the dollar reservation, so a reused ID or an unearned replacement stops a cell before it
+spends, and `settle` closes the attempt with its disposition. And the pilot's eight attempts were
+replayed into the chain in order, through the ledger's own checks, so #151 inherits enforcement rather
+than an empty history.
+
+The replay is honest about what it is: it does not pretend the checks were in force at dispatch time.
+It did, however, change a reported fact. The handoff had recorded one replacement consumed, on the
+judgment that position 1's refused launch measured nothing and so should not count. The ledger's rule
+is that any second attempt at a cell is a replacement requiring a predecessor closed as invalid, and
+the replay therefore counts **two of three**. The ledger's definition governs, and the narrative
+judgment was wrong.

@@ -23,13 +23,21 @@
     "warning": "SHORTFALL: the eighteen remaining cells project to 103.9177 against 92.5220 available, so the grid cannot be completed under the frozen cap. At 17.3196 per triple the allowance covers 5 of the 6 remaining triples, leaving 3 cells unrun. #151 should expect stopped-budget and must stop on a triple boundary."
   },
   "artifact_id": "issue-150-pilot-handoff",
+  "attempt_ledger": {
+    "attempt_limit": 27,
+    "attempt_open_events": 8,
+    "contexts_claimed": 16,
+    "note": "claimed through the ledger's own attempt_event, which refuses a reused attempt ID or context ID, enforces both caps, and refuses a replacement whose predecessor was not closed as documented invalidity.",
+    "replacement_limit": 3,
+    "replacements_consumed": 2
+  },
   "attempts": [
     {
       "disposition": "stopped-runtime",
       "ordinal": 1,
       "position": 1,
-      "reason": "coordinator defect, no model request issued: claude refused the launch because --session-id was the attempt ID rather than a UUID. Settled at zero. Recorded as an attempt ID consumed, but not counted as a replacement, because nothing was measured and no experimental input was invalidated.",
-      "replacement_consumed": false,
+      "reason": "coordinator defect, no model request issued: claude refused the launch because --session-id was the attempt ID rather than a UUID. Settled at zero. The ledger's own rule counts any second attempt at a cell as a replacement requiring a predecessor closed as documented invalidity, so this consumed a replacement even though nothing was measured - the ledger's definition governs over the earlier narrative judgment that it should not.",
+      "replacement_consumed": true,
       "settled_usd": "0.0000000",
       "validity": "invalid"
     },
@@ -180,7 +188,7 @@
     }
   ],
   "claims_note": "No quality, recall or cost comparison is reported here. The pilot's outcomes stay sealed until every reviewer run has stopped, and no arm may be described as better or worse on this evidence.",
-  "created_at": "2026-09-09T08:26:07.551668+00:00",
+  "created_at": "2026-09-09T08:50:54.339591+00:00",
   "disposition": "continue",
   "incomplete_cells": [
     {
@@ -198,17 +206,26 @@
     "work": "#151 runs the grid cells under the same frozen rules and the same container isolation deviation, appending to the same ledger chain, which now lives in evaluator storage because its attempt IDs name slots. #152 adjudicates and scores once every reviewer run has stopped. Neither may read the sealed pilot outcomes before then."
   },
   "planned_pilot_cells": 6,
+  "reconciliation": {
+    "accounted_usd": "47.3136581",
+    "attempts_settled_usd": "36.2231074",
+    "difference_usd": "0E-7",
+    "ledger_actual_usd": "47.3136581",
+    "pre_freeze_actual_usd": "10.9378407",
+    "reconciles": true,
+    "setup_usd": "0.1527100"
+  },
   "schema_version": "bounded-discovery-v1",
   "sealed_evidence": {
-    "ciphertext_bytes": 4303008,
-    "ciphertext_sha256": "b684d49359b42da2c4ec8e11237afd063cf4fff1d58b5bce07c3a1c5ccd6ecdd",
+    "ciphertext_bytes": 4305248,
+    "ciphertext_sha256": "b26570e1728e1363abf17b1347492a5fe0e1fe4dc3242bd585907f9b17accc78",
     "excluded_file_count": 0,
     "invalidated_attempts_sealed": [
       "position-03-attempt-1",
       "position-03-attempt-1-home"
     ],
     "ledger_included": true,
-    "plaintext_sha256": "abc7fbfc40cdab107370cf13c993a53f83e954a64e32aa5d0c481f955ee37f72",
+    "plaintext_sha256": "729874429cec1cbe0f8253ba80caef9f2a17f6ef514175c8937bdd36c6ddb668",
     "positions": [
       1,
       2,
@@ -217,6 +234,27 @@
       5,
       6
     ]
+  },
+  "setup_charges": {
+    "items": [
+      {
+        "reservation_id": "issue-150-container-auth-check",
+        "usd": "0.0394838",
+        "why": "result envelope total_cost_usd 0.0394838, subtype success; charged once to the epic as shared setup per preregistration section 7"
+      },
+      {
+        "reservation_id": "issue-150-flagset-check",
+        "usd": "0.0748426",
+        "why": "result envelope total_cost_usd 0.0748426, subtype success, permission_denials empty, Write succeeded inside a permitted root under --restricted"
+      },
+      {
+        "reservation_id": "issue-150-launch-shape-checks",
+        "usd": "0.0383836",
+        "why": "envelopes: launch check 0.0136608 and flush check 0.0247228. A third session was cancelled by its timeout with no envelope and its transcript was deleted before it was metered, which is a coordinator error; one request at the largest observed per-request cost (0.082158, the #149 precedent) is retained as uncertainty rather than treating the unmetered session as free"
+      }
+    ],
+    "note": "one-off shared setup: establishing that the cell image authenticates, that the frozen flag set runs in it, and that a session's transcript can be metered and fidelity-checked. Charged before any attempt was reserved so an infrastructure failure could not burn an attempt ID.",
+    "total_usd": "0.1527100"
   },
   "stage": "pilot"
 }

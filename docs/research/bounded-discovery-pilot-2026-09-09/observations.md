@@ -10,27 +10,29 @@ not rediscover them, and because two of them add noise to figures the screening 
 ## 1. The allow list refuses the command forms the execution notes suggest
 
 The frozen `--allowedTools` list admits a shell command only when it matches an allow-listed
-**prefix**. The per-target execution notes tell the cell to run, for example,
+**prefix**. The per-target execution notes tell the cell to invoke its build tool with the cache
+locations set as environment-variable prefixes, of the shape
 
 ```
-GOMODCACHE=/tmp/bd148/gomodcache GOCACHE=... GOFLAGS=-mod=mod GOPROXY=off go vet ./pkg/
+VAR=/path VAR2=/path <tool> <subcommand> <package>
 ```
 
-which does not start with `go`, so `Bash(go:*)` does not match it and the call is denied. The same
-is true of `env ... go vet`, of `cargo` with a `CARGO_HOME=...` prefix, and of every compound
-`a && b` — the dispatch template already warns about the last of these.
+which does not start with the tool's name, so a `Bash(<tool>:*)` pattern does not match it and the
+call is denied. The same is true of `env VAR=... <tool> ...`, of a `<tool>` invocation prefixed with
+its own cache variable, and of every compound `a && b` — the dispatch template already warns about
+the last of these.
 
 **Observed, not inferred.** Every cell hit it. One arm C cell accumulated seven denials in a row
-working through `GOMODCACHE=... go vet`, `go -C <clone> vet`, `export ...; go vet`,
-`env ... go vet`, `GOPROXY=off go vet ./...` and `GOFLAGS=-mod=mod go vet` before the attempt
-ended.
+working through six spellings of the same vet command — the environment-variable prefix, the tool's
+own `-C` directory flag, an `export` compound, an `env` prefix, and two single-variable prefixes —
+before the attempt ended.
 
 **It is friction, not a blocker.** Tests do run: every cell that completed executed its focused
-commands successfully — `ok google.golang.org/grpc/...` and a 74-test `cargo test` — by routing
-through the allow-listed interpreter, `python3 -c "...subprocess..."` or a small script written
-into the work directory. Between 3,995 and 4,856 build-cache files were written per cell, and
-every clone was verified clean afterwards, so the execution allowance was genuinely exercised
-and the no-mutation rule held.
+commands successfully, reporting passing test runs, by routing through the allow-listed interpreter —
+`python3 -c "...subprocess..."` or a small script written into the work directory. Between 3,995 and
+4,856 build-cache files were written per cell, and every clone was verified clean afterwards, so the
+execution allowance was genuinely exercised and the no-mutation rule held. The commands and their
+output are sealed with each cell, because a package path names its repository.
 
 **Why it matters to the gates.** The turns spent discovering the workaround are charged to the
 attempt, and how quickly a cell finds it varies. That is noise in billed cost and in elapsed
@@ -41,6 +43,10 @@ alike, so it does not bias one arm, but it widens the spread.
 permissions every arm receives, which the preregistration fixes as identical across arms. Running
 part of the grid under one allow list and part under another would be a worse defect than the
 friction. #151 should inherit the list unchanged; a future frozen study should widen it.
+
+The runner's per-slot cache table now covers all four slots. During the pilot it covered only the two
+the pilot used, which would have silently mounted no cache for the other slots and is fixed here
+before #151 inherits it.
 
 ## 2. A provider error costs the per-role cost split, through the frozen meter
 

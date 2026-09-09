@@ -27,7 +27,7 @@
   },
   "isolation": {
     "forbidden_paths_examined": 55,
-    "mount_count": 4,
+    "mounts_limited_to_cell_tree_caches_and_home": true,
     "post_dispatch_checks": [
       {
         "check": "forbidden paths are absent",

@@ -81,17 +81,26 @@ failure and not replacement-eligible. It counts as missing in #152's screen rath
 
 | Position | Attempt | Cost | Why invalid | Replacement consumed |
 | --- | --- | --- | --- | --- |
-| 1 | 1 | $0.0000000 | coordinator defect: `--session-id` was the attempt ID, not a UUID, so the launch was refused before any model request | no |
+| 1 | 1 | $0.0000000 | coordinator defect: `--session-id` was the attempt ID, not a UUID, so the launch was refused before any model request | **yes** |
 | 3 | 1 | $1.5838690 | documented infrastructure invalidity: provider 502 at turn 43, `terminal_reason: api_error`, before the arm C freeze artifact was written | **yes** |
 
-One of three replacements is consumed. Eight attempt IDs of the 27 allowed are used, and none is recycled.
+**Two of three replacements are consumed**, and the ledger — not a narrative — is what says so. Every
+attempt is claimed through `budget.py`'s `attempt_event`, which refuses a reused attempt ID or worker
+context ID, enforces the 27-attempt and three-replacement caps, and refuses a replacement whose
+predecessor was not closed as documented invalidity. Position 1's retry was initially recorded as *not*
+consuming a replacement on the grounds that nothing had been measured; the ledger's rule is that any
+second attempt at a cell is a replacement, and that rule governs. Eight attempt IDs of 27 are used,
+none recycled, and all sixteen worker contexts are distinct — which is how "no finder context resumes
+as verifier" is established rather than asserted.
+
 Both invalid attempts' raw output and costs are retained inside the sealed archive, as the replacement
 policy requires.
 
 ### Fidelity
 
-Every arm's worker configuration is **verified from transcripts**, not assumed — `agent_effort.py` over
-every assistant line of every transcript, root and worker alike:
+Every arm's worker configuration is **verified from transcripts**, not assumed: `agent_effort.py` is run
+per role with `--expect-model` and `--expect-effort` for that role, over every assistant line of every
+transcript, and a mismatch is a fidelity failure that invalidates the attempt. All six cells pass:
 
 - arm A: primary and verifier `claude-sonnet-5`, effort `high`
 - arm B: primary `claude-sonnet-5`, verifier `claude-opus-5`, both effort `high`
@@ -120,6 +129,14 @@ container-local `/tmp` scratch path and read it back, instead of writing under i
 #152 can overrule that judgment.
 
 ### Accounting
+
+The total reconciles from its parts, which `handoff.json` now carries explicitly: pre-freeze
+`$10.9378407` plus `$36.2231074` across all eight attempts plus `$0.1527100` of one-off shared setup
+equals the ledger's `$47.3136581`, to the last digit. The setup charges — establishing that the cell
+image authenticates, that the frozen flag set runs inside it, and that a session's transcript can be
+metered and fidelity-checked — were charged before any attempt was reserved, so an infrastructure
+failure could not burn an attempt ID, and are itemised rather than folded into a cell.
+
 
 Pre-freeze spend was $47.3136581 at the close of #149 plus this ticket's cells. Actual now
 **$47.3136581** of the $150.00 cap, with $0.164316 retained as
