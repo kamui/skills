@@ -1347,6 +1347,89 @@ def completion_self_test() -> list:
     ]
 
 
+def claim_self_test() -> list:
+    """The ledger claim, which is what actually enforces the attempt and replacement caps.
+
+    Driven against a disposable ledger, because the checks that matter here are refusals
+    and a refusal is only trustworthy if it has been seen to happen.
+    """
+    import tempfile
+
+    root = Path(tempfile.mkdtemp())
+    ledger = root / "ledger.json"
+
+    def fresh(attempt_limit=27, replacement_limit=3):
+        ledger.write_text(json.dumps({
+            "schema_version": "bounded-discovery-v1", "experiment_id": "test",
+            "owner": "test", "currency": "USD", "total_ceiling_usd": "150.00",
+            "pre_freeze_ceiling_usd": "15.00", "frozen_total_cap_usd": "150.00",
+            "grading_closeout_reserve_usd": "10.00", "actual_usd": "0.00",
+            "reserved_usd": "0.00", "uncertainty_usd": "0.00",
+            "pre_freeze_actual_usd": "0.00", "pre_freeze_reserved_usd": "0.00",
+            "planned_cells": 24, "attempts_dispatched": 0,
+            "replacement_limit": replacement_limit, "attempt_limit": attempt_limit,
+            "events": [{"event_id": "e0", "previous_event_id": None,
+                        "observed_at": "2026-01-01T00:00:00+00:00", "ticket": 146,
+                        "actor": "test", "phase": "pre-freeze", "operation": "open",
+                        "attempt_id": None, "helper_id": None, "request_refs": [],
+                        "reservation_id": None, "actual_delta_usd": "0.00",
+                        "reservation_delta_usd": "0.00", "uncertainty_usd": "0.00",
+                        "rate_usage_evidence": [], "reason": "open"}]}) + "\n",
+            encoding="utf-8")
+
+    config = {"ledger": str(ledger),
+              "targets": str(Path(__file__).resolve().parents[2]
+                             / "bounded-discovery-prototype" / "targets")}
+    row = {"attempt_id": "t-cell-a-attempt-1", "cell_id": "t-cell-a", "arm": "A"}
+
+    def refused(call):
+        try:
+            call()
+            return False
+        except Exception:
+            return True
+
+    checks = []
+    fresh()
+    claim_attempt(config, row, {"primary": "ctx-1"})
+    checks.append(("a first claim is accepted", True))
+    checks.append(("a reused attempt ID is refused",
+                   refused(lambda: claim_attempt(config, row, {"primary": "ctx-2"}))))
+    other = {"attempt_id": "t-cell-b-attempt-1", "cell_id": "t-cell-b", "arm": "A"}
+    checks.append(("a reused context ID is refused",
+                   refused(lambda: claim_attempt(config, other, {"primary": "ctx-1"}))))
+    retry = {"attempt_id": "t-cell-a-attempt-2", "cell_id": "t-cell-a", "arm": "A"}
+    checks.append(("a replacement is refused while its predecessor is open",
+                   refused(lambda: claim_attempt(config, retry, {"primary": "ctx-3"},
+                                                 predecessor=row["attempt_id"], ordinal=1,
+                                                 evidence="why"))))
+    close_attempt(config, row, "complete")
+    checks.append(("a replacement of a completed attempt is refused",
+                   refused(lambda: claim_attempt(config, retry, {"primary": "ctx-3"},
+                                                 predecessor=row["attempt_id"], ordinal=1,
+                                                 evidence="why"))))
+    fresh()
+    claim_attempt(config, row, {"primary": "ctx-1"})
+    close_attempt(config, row, "stopped-invalid")
+    checks.append(("a replacement without evidence is refused",
+                   refused(lambda: claim_attempt(config, retry, {"primary": "ctx-3"},
+                                                 predecessor=row["attempt_id"], ordinal=1))))
+    claim_attempt(config, retry, {"primary": "ctx-3"}, predecessor=row["attempt_id"],
+                  ordinal=1, evidence="documented invalidity")
+    checks.append(("a replacement of an invalid attempt, with evidence, is accepted", True))
+    ledger_now = json.loads(ledger.read_text(encoding="utf-8"))
+    opens = [e for e in ledger_now["events"] if e.get("operation") == "attempt-open"]
+    checks.append(("the replacement is recorded as one",
+                   sum(bool(e.get("predecessor")) for e in opens) == 1))
+
+    fresh(attempt_limit=1)
+    claim_attempt(config, row, {"primary": "ctx-1"})
+    close_attempt(config, row, "complete")
+    checks.append(("the attempt cap is enforced",
+                   refused(lambda: claim_attempt(config, other, {"primary": "ctx-9"}))))
+    return checks
+
+
 def audit_self_test() -> list:
     """The read audit, against the false positives a real cell transcript produced."""
     import tempfile
@@ -1499,6 +1582,7 @@ def self_test():
     checks.extend(audit_self_test())
     checks.extend(role_self_test())
     checks.extend(completion_self_test())
+    checks.extend(claim_self_test())
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1
