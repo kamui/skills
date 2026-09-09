@@ -67,6 +67,8 @@ from pathlib import Path
 # Per-slot toolchain caches. The packets hardcode these paths, so the container
 # mounts each cell's private copy at the identical path and the frozen execution
 # note stays literally true inside it.
+CELL_HOME = "/cell-home"
+
 CACHES = {"slot-1": ["/tmp/bd148/cargo-home"],
           "slot-2": ["/tmp/bd148/gomodcache", "/tmp/bd148/gocache-grpc-go-7417"]}
 
@@ -166,6 +168,20 @@ HEADINGS = {
 }
 
 WORKER_MODEL = {"A": "claude-sonnet-5", "B": "claude-opus-5", "C": "claude-opus-5"}
+
+
+def session_id(attempt_id, role="primary") -> str:
+    """A stable UUID per attempt and role.
+
+    ``claude`` refuses a ``--session-id`` that is not a UUID, so the attempt ID
+    cannot be used directly. Deriving it with uuid5 keeps the mapping
+    deterministic - the same attempt always names the same session, which is what
+    arm C's ``--resume`` and the transcript audit both need - while staying a
+    valid UUID.
+    """
+    import uuid
+    return str(uuid.uuid5(uuid.NAMESPACE_URL,
+                          "bounded-discovery/%s/%s" % (attempt_id, role)))
 
 
 def paths_for(root) -> dict:
@@ -472,9 +488,11 @@ def mounts_for(config, root, slot) -> list:
     arguments = ["-v", "%s:%s" % (root, root)]
     for cache in CACHES.get(slot, []):
         arguments += ["-v", "%s:%s" % (root / "caches" / cache.lstrip("/"), cache)]
+    # The whole home is mounted, not just .claude: claude keeps .claude.json
+    # beside it and refuses to start cleanly when that file cannot persist.
     home = root.parent / "homes" / root.name
     home.mkdir(parents=True, exist_ok=True)
-    arguments += ["-v", "%s:/root/.claude" % home]
+    arguments += ["-v", "%s:%s" % (home, CELL_HOME)]
     return arguments
 
 
@@ -482,6 +500,10 @@ def docker_argv(config, root, slot, name, argv, workdir) -> list:
     url = "http://host.docker.internal:%s" % config["proxy_port"]
     return ["docker", "run", "--rm", "--name", name,
             "--env-file", os.path.expanduser(config["auth_env_file"]),
+            "-e", "HOME=%s" % CELL_HOME,
+            # rustup's proxies resolve the toolchain under RUSTUP_HOME, which
+            # defaults to $HOME; the toolchain lives in the image's own root.
+            "-e", "RUSTUP_HOME=/root/.rustup",
             "-e", "CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0",
             "-e", "HTTPS_PROXY=%s" % url, "-e", "HTTP_PROXY=%s" % url,
             "-e", "ALL_PROXY=%s" % url,
@@ -559,12 +581,25 @@ def finder_claims(result: str) -> tuple:
     return (document, problems) if not problems else (None, problems)
 
 
+def attempt_exposure() -> str:
+    """The most one attempt can cost: the review ceiling plus one call of overshoot.
+
+    ``--max-budget-usd`` holds the frozen $9.00 whole-review ceiling, but probe 4
+    showed the allowance is only checked after a call completes, so a session can
+    finish slightly above it. The preregistration adds $1.00 of one-call headroom to
+    every reservation for exactly that, and the ledger requires a reservation to fit
+    inside the attempt cap - so the cap is the ceiling plus the headroom, not the
+    ceiling alone. The ceiling itself is unchanged.
+    """
+    return "%.2f" % (float(ATTEMPT_CEILING) + float(CALL_HEADROOM))
+
+
 def reserve(config, row, amount, evidence):
     budget = Path(config["targets"]).parent / "scripts" / "budget.py"
     return run(sys.executable, str(budget), config["ledger"], "reserve",
                "--id", "%s-reservation" % row["attempt_id"], "--amount", str(amount),
                "--phase", "review", "--attempt", row["attempt_id"],
-               "--attempt-cap", ATTEMPT_CEILING, "--ticket", "150",
+               "--attempt-cap", attempt_exposure(), "--ticket", "150",
                "--evidence", evidence, check=False)
 
 
@@ -598,10 +633,16 @@ def record_mounts(config, root, slot, destination):
     return requested
 
 
-def dispatch(config, position):
+def attempt_id_for(row, attempt) -> str:
+    base = row["attempt_id"].rsplit("-attempt-", 1)[0]
+    return "%s-attempt-%d" % (base, int(attempt))
+
+
+def dispatch(config, position, attempt=1):
     import time
 
-    row = schedule_row(config, position)
+    row = dict(schedule_row(config, position))
+    row["attempt_id"] = attempt_id_for(row, attempt)
     root = cell_root(config, position)
     slot, arm = row["target_slot"], row["arm"]
     manifest = load(Path(config["targets"]) / slot / "manifest.json")
@@ -637,8 +678,7 @@ def dispatch(config, position):
             result["disposition"] = "stopped-isolation"
             return finish(root, result, problems)
 
-        reservation = reserve(config, row,
-                              "%.2f" % (float(ATTEMPT_CEILING) + float(CALL_HEADROOM)),
+        reservation = reserve(config, row, attempt_exposure(),
                               "cell %s attempt %s: container dispatch under the frozen "
                               "ceilings, reserved before launch"
                               % (row["cell_id"], row["attempt_id"]))
@@ -665,15 +705,25 @@ def dispatch(config, position):
             finder_prompt = (root / "runner" / "finder-prompt.md").read_text(encoding="utf-8")
             finder = subprocess.Popen(
                 docker_argv(config, root, slot, "bd150-%s-finder" % root.name,
-                            finder_argv(root, "%s-finder" % row["attempt_id"], finder_prompt),
+                            finder_argv(root, session_id(row["attempt_id"], "finder"),
+                                        finder_prompt),
                             root / "finder-store"),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                 encoding="utf-8")
 
         phase1 = run_phase(config, root, slot, row, "primary-phase-1",
                            primary_argv(root, ROOT_WALL_SECONDS,
-                                        row["attempt_id"], ATTEMPT_CEILING, prompt, agents))
+                                        session_id(row["attempt_id"]), ATTEMPT_CEILING,
+                                        prompt, agents))
         result["phases"].append(phase1)
+        if not phase1["envelope"]:
+            # No result envelope means the session never reported: a launch refusal
+            # or a cancellation. Either way it is not a measured attempt, and
+            # calling it dispatched would hide a runtime failure.
+            problems.append("primary phase 1 produced no result envelope (exit %s): %s"
+                            % (phase1["exit_code"], phase1["stderr_tail"]))
+            result["disposition"] = "stopped-runtime"
+            return finish(root, result, problems)
 
         if arm == "C":
             spent = phase1["cost_usd"] or 0.0
@@ -723,7 +773,8 @@ def dispatch(config, position):
                     result["disposition"] = "stopped-budget"
                     return finish(root, result, problems)
                 phase2 = run_phase(config, root, slot, row, "primary-phase-2",
-                                   primary_argv(root, remaining_wall, row["attempt_id"],
+                                   primary_argv(root, remaining_wall,
+                                                session_id(row["attempt_id"]),
                                                 "%.4f" % remaining_usd, admission, agents,
                                                 resume=True))
                 result["phases"].append(phase2)
@@ -748,11 +799,14 @@ def run_phase(config, root, slot, row, label, argv) -> dict:
     started = time.time()
     observed = run(*docker_argv(config, root, slot, name, argv, root / "work"),
                    check=False)
-    (root / "logs" / ("%s.log" % label)).write_text(observed.stdout or "", encoding="utf-8")
+    (root / "logs" / ("%s.log" % label)).write_text(
+        (observed.stdout or "") + "\n--- stderr ---\n" + (observed.stderr or ""),
+        encoding="utf-8")
     found = envelope(observed.stdout or "")
     if found:
         write(root / "artifacts" / ("%s-result.json" % label), found)
     return {"label": label, "exit_code": observed.returncode,
+            "stderr_tail": (observed.stderr or "").strip()[-400:],
             "elapsed_seconds": round(time.time() - started, 3),
             "subtype": (found or {}).get("subtype"),
             "is_error": (found or {}).get("is_error"),
@@ -770,7 +824,7 @@ def finish(root, result, problems) -> int:
 
 def transcripts_for(root) -> list:
     """Every transcript this cell's sessions wrote, root and workers alike."""
-    home = root.parent / "homes" / root.name / "projects"
+    home = root.parent / "homes" / root.name / ".claude" / "projects"
     return sorted(str(path) for path in home.rglob("*.jsonl")) if home.is_dir() else []
 
 
@@ -801,8 +855,9 @@ def audit_reads(root, transcripts, permitted) -> dict:
             "passed": not suspects}
 
 
-def settle(config, position):
-    row = schedule_row(config, position)
+def settle(config, position, attempt=1):
+    row = dict(schedule_row(config, position))
+    row["attempt_id"] = attempt_id_for(row, attempt)
     root = cell_root(config, position)
     slot, arm = row["target_slot"], row["arm"]
     dispatched = load(root / "artifacts" / "dispatch.json")
@@ -861,8 +916,10 @@ def settle(config, position):
     metered = self_report
     try:
         split_document = load(root / "artifacts" / "usage-split.json")
-        metered = max(metered, float(split_document.get("total_usd") or 0.0))
-        record["usage_split_total_usd"] = split_document.get("total_usd")
+        metered = max(metered, float(split_document.get("total_cost_usd") or 0.0))
+        record["usage_split_total_usd"] = split_document.get("total_cost_usd")
+        record["usage_within_tolerance"] = split_document.get("within_tolerance")
+        record["usage_difference_usd"] = split_document.get("difference_usd")
     except Failed:
         problems.append("no usage split was produced")
     record["self_report_usd"] = "%.7f" % self_report
@@ -892,6 +949,8 @@ def main(argv=None):
     parser.add_argument("--config")
     parser.add_argument("--position", type=int)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--attempt-number", type=int, default=1,
+                        help="attempt ordinal for this cell; IDs are never recycled")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -904,8 +963,8 @@ def main(argv=None):
         if args.stage == "prepare":
             return prepare(config, args.position, force=args.force)
         if args.stage == "dispatch":
-            return dispatch(config, args.position)
-        return settle(config, args.position)
+            return dispatch(config, args.position, attempt=args.attempt_number)
+        return settle(config, args.position, attempt=args.attempt_number)
     except Failed as exc:
         sys.stderr.write(str(exc) + "\n")
         return 2
