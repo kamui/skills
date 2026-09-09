@@ -32,6 +32,7 @@ violation on stdout, 2 when the sidecar cannot be read or written.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
@@ -58,6 +59,8 @@ def record(sidecar: dict, event: str, stamp: str) -> list:
         return ["%s is already %s; it is written once" % (event, sidecar[event])]
     if event != "root_dispatched_at" and not sidecar.get("root_dispatched_at"):
         return ["%s cannot precede root_dispatched_at, which is unset" % event]
+    if event == "completed_at" and not sidecar.get("payload_validated_at"):
+        return ["completed_at requires final payload validation"]
     sidecar[event] = stamp
     return []
 
@@ -104,6 +107,18 @@ def main(argv=None) -> int:
         except ValueError:
             print("--at %s is not an ISO 8601 instant" % args.at)
             return 1
+    if args.event in ("payload_validated_at", "completed_at"):
+        payload = path.parent / "review-payload.md"
+        report = path.parent / "research-report.md"
+        if not payload.is_file() or not payload.stat().st_size or not report.is_file() or not report.stat().st_size:
+            print("final payload and research report must both be nonempty")
+            return 1
+        payload_hash = hashlib.sha256(payload.read_bytes()).hexdigest()
+        if args.event == "payload_validated_at":
+            document["validated_payload_sha256"] = payload_hash
+        elif document.get("validated_payload_sha256") != payload_hash:
+            print("the final payload has changed since validation")
+            return 1
     problems = record(document, args.event, stamp)
     if problems:
         for problem in problems:
@@ -141,6 +156,8 @@ def self_test() -> int:
     checks.append(("root_dispatched_at is written once",
                    run(str(sidecar), "root_dispatched_at").returncode == 1))
 
+    (root / "review-payload.md").write_text("payload", encoding="utf-8")
+    (root / "research-report.md").write_text("report", encoding="utf-8")
     first = run(str(sidecar), "payload_validated_at")
     stamp = json.loads(sidecar.read_text(encoding="utf-8"))["payload_validated_at"]
     second = run(str(sidecar), "payload_validated_at")
@@ -158,6 +175,7 @@ def self_test() -> int:
                    run(str(root / "absent.json"), "completed_at").returncode == 2))
     derived = root / "derived.json"
     run(str(derived), "root_dispatched_at", "--create")
+    run(str(derived), "payload_validated_at")
     run(str(derived), "completed_at", "--at", "2026-09-09T05:33:54.122000+00:00")
     checks.append(("--at records the given instant",
                    json.loads(derived.read_text(encoding="utf-8"))["completed_at"]

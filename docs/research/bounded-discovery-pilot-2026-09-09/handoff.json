@@ -100,7 +100,9 @@
     }
   ],
   "available_claims": [],
-  "blockers": [],
+  "blockers": [
+    "Historical pilot fidelity remains unverified after PR #197 identified budget, role-isolation, stop-state and evidence-retention defects. #151 must not dispatch from this handoff until an operational-only extract or post-gate evidence review establishes which attempts are valid and whether repairs fit the frozen replacement policy."
+  ],
   "cells": [
     {
       "arm": "A",
@@ -189,7 +191,14 @@
   ],
   "claims_note": "No quality, recall or cost comparison is reported here. The pilot's outcomes stay sealed until every reviewer run has stopped, and no arm may be described as better or worse on this evidence.",
   "created_at": "2026-09-09T09:07:42.324108+00:00",
-  "disposition": "continue",
+  "disposition": "stopped-incomplete",
+  "fidelity_review": {
+    "finding_id": "pilot/actual-fidelity",
+    "historical_records": "Preserved as originally reported; coordinator fixes do not retroactively establish fidelity.",
+    "review": "https://github.com/kamui/skills/pull/197#pullrequestreview-5156879681",
+    "seal_opened": false,
+    "status": "blocked"
+  },
   "incomplete_cells": [
     {
       "completion": "stopped-budget",
@@ -203,7 +212,7 @@
       151,
       152
     ],
-    "work": "#151 runs the grid cells under the same frozen rules and the same container isolation deviation, appending to the same ledger chain, which now lives in evaluator storage because its attempt IDs name slots. #152 adjudicates and scores once every reviewer run has stopped. Neither may read the sealed pilot outcomes before then."
+    "work": "#151 must assemble stopped closeout unless historical fidelity is verified and any required repair fits the frozen limits. #152 may inspect sealed outcomes only after every reviewer run has stopped. Operational verification may instead use an extract that reveals no comparative outcomes."
   },
   "planned_pilot_cells": 6,
   "reconciliation": {

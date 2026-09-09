@@ -5,8 +5,11 @@ the first dispatch stage of the [#138](https://github.com/kamui/skills/issues/13
 six `pilot` cells of the grid [#149](https://github.com/kamui/skills/issues/149) froze, and records
 their dispositions, their fidelity evidence and a reconciled ledger.
 
-**Disposition: `continue`** ([handoff.json](handoff.json)) — the pilot was executed faithfully and the
-grid can proceed, though not to completion: see "The grid no longer fits" below.
+**Disposition: `stopped-incomplete`** ([handoff.json](handoff.json)). Historical pilot fidelity is
+unverified following [PR #197's review](https://github.com/kamui/skills/pull/197#pullrequestreview-5156879681).
+The recorded costs and per-cell summaries below are preserved historical reports, not a fresh
+validation of the pilot. #151 must not dispatch from this handoff while that assessment is open.
+See [deviation 11](deviations.md#11-coordinator-corrections-and-historical-fidelity-2026-09-09).
 
 ## The gate
 

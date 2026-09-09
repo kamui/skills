@@ -75,6 +75,10 @@ CACHES = {"slot-1": ["/tmp/bd148/cargo-home"],
           "slot-4": ["/tmp/bd148/gomodcache", "/tmp/bd148/gocache-nats-server-7395"]}
 
 
+class DispatchStopped(Exception):
+    """A recorded terminal outcome exits the launch sequence through cleanup."""
+
+
 class Failed(Exception):
     """An input could not be read or a subprocess failed: exit 2."""
 
@@ -329,20 +333,58 @@ def schedule_row(config, position):
     raise Failed("no cell at position %s in the sealed schedule" % position)
 
 
-def cell_root(config, position):
-    return Path(os.path.expanduser(config["cells_root"])) / ("position-%02d" % int(position))
+def cell_root(config, position, attempt=1):
+    position_root = Path(os.path.expanduser(config["cells_root"])) / ("position-%02d" % int(position))
+    # Keep the first attempt's historical path; never reuse it for a replacement.
+    return position_root if attempt == 1 else position_root / ("attempt-%02d" % int(attempt))
 
 
-def prepare(config, position, force=False):
-    row = schedule_row(config, position)
+def session_home(root, role):
+    return root / "session-homes" / role
+
+
+def retain_predecessor(config, position, attempt):
+    """Archive a settled predecessor before creating any replacement workspace."""
+    if attempt <= 1:
+        return
+    import tarfile
+    previous = cell_root(config, position, attempt - 1)
+    if not (previous / "artifacts" / "settle.json").is_file():
+        raise Failed("settle the predecessor before preparing a replacement")
+    destination = Path(config["cells_root"]) / "retained-attempts"
+    destination.mkdir(parents=True, exist_ok=True)
+    archive = destination / ("position-%02d-attempt-%02d.tar.gz" % (position, attempt - 1))
+    if not archive.exists():
+        temporary = archive.with_suffix(".partial")
+        with tarfile.open(temporary, "w:gz") as output:
+            output.add(previous, arcname="attempt", filter=lambda entry:
+                       None if entry.name.split("/")[1:2] and
+                       entry.name.split("/")[1].startswith("attempt-") else entry)
+            legacy_home = previous.parent / "homes" / previous.name
+            if legacy_home.is_dir():
+                output.add(legacy_home, arcname="legacy-session-home")
+        temporary.replace(archive)
+    with tarfile.open(archive, "r:gz") as saved:
+        if "attempt/artifacts/settle.json" not in saved.getnames():
+            raise Failed("the predecessor archive is incomplete")
+
+
+def prepare(config, position, force=False, attempt=1):
+    row = dict(schedule_row(config, position))
+    row["attempt_id"] = attempt_id_for(row, attempt)
     slot = row["target_slot"]
     arm = row["arm"]
     manifest = load(Path(config["targets"]) / slot / "manifest.json")
-    root = cell_root(config, position)
+    root = cell_root(config, position, attempt)
+    retain_predecessor(config, position, attempt)
     if root.exists():
         if not force:
             print("%s already exists; pass --force to rebuild it" % root)
             return 1
+        if ((root / "work" / "timing.json").exists()
+                or (root / "artifacts" / "dispatch.json").exists()
+                or transcripts_for(root)):
+            raise Failed("--force cannot delete an attempted workspace; prepare a new attempt")
         shutil.rmtree(root)
     problems = []
 
@@ -362,6 +404,9 @@ def prepare(config, position, force=False):
     run("git", "-C", str(clone), "checkout", "--quiet", "--detach", target["head_oid"])
     run("git", "-C", str(clone), "branch", "-f", base_branch, target["merge_base_oid"])
     run("git", "-C", str(clone), "checkout", "--quiet", "-B", "review-head", target["head_oid"])
+
+    if arm == "C":
+        copy_tree(clone, root / "finder-clone")
 
     observed = run("git", "-C", str(clone), "rev-parse", "HEAD").stdout.strip()
     if observed != target["head_oid"]:
@@ -484,36 +529,35 @@ def proxy_start(config, root):
     raise Failed("egress proxy did not report listening")
 
 
-def mounts_for(config, root, slot) -> list:
-    """Only the cell's own tree and its private caches, at their host paths.
-
-    Mounting at the identical absolute path is what keeps the frozen packet's
-    hardcoded cache paths and the rendered prompts literally true inside the
-    container, and it is why no path translation is needed anywhere else.
-    """
-    arguments = ["-v", "%s:%s" % (root, root)]
-    for cache in CACHES.get(slot, []):
-        arguments += ["-v", "%s:%s" % (root / "caches" / cache.lstrip("/"), cache)]
-    # The whole home is mounted, not just .claude: claude keeps .claude.json
-    # beside it and refuses to start cleanly when that file cannot persist.
-    home = root.parent / "homes" / root.name
+def mounts_for(config, root, slot, role="primary") -> list:
+    """Expose only a role's inputs, working store and private session home."""
+    if role == "coordinator":
+        entries = [(root, root, False)]
+    elif role == "finder":
+        entries = [(root / "finder-clone", root / "clone", True),
+                   (root / "finder-store", root / "finder-store", True)]
+    else:
+        entries = [(root / name, root / name, name not in ("clone", "work"))
+                   for name in ("clone", "snapshot", "packet", "runner", "work")]
+        entries.extend((root / "caches" / cache.lstrip("/"), cache, False)
+                       for cache in CACHES.get(slot, []))
+    home = session_home(root, role)
     home.mkdir(parents=True, exist_ok=True)
-    arguments += ["-v", "%s:%s" % (home, CELL_HOME)]
-    return arguments
+    entries.append((home, CELL_HOME, False))
+    return [argument for source, target, readonly in entries
+            for argument in ("-v", "%s:%s%s" % (source, target, ":ro" if readonly else ""))]
 
 
-def docker_argv(config, root, slot, name, argv, workdir) -> list:
+def docker_argv(config, root, slot, name, argv, workdir, role="primary") -> list:
     url = "http://host.docker.internal:%s" % config["proxy_port"]
     return ["docker", "run", "--rm", "--name", name,
             "--env-file", os.path.expanduser(config["auth_env_file"]),
             "-e", "HOME=%s" % CELL_HOME,
-            # rustup's proxies resolve the toolchain under RUSTUP_HOME, which
-            # defaults to $HOME; the toolchain lives in the image's own root.
             "-e", "RUSTUP_HOME=/root/.rustup",
             "-e", "CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0",
             "-e", "HTTPS_PROXY=%s" % url, "-e", "HTTP_PROXY=%s" % url,
             "-e", "ALL_PROXY=%s" % url,
-            *mounts_for(config, root, slot), "-w", str(workdir),
+            *mounts_for(config, root, slot, role), "-w", str(workdir),
             config["image"], *argv]
 
 
@@ -564,8 +608,8 @@ def finder_claims(result: str) -> tuple:
     required = ("context_id", "packet_sha256", "scope_id", "claims", "inspected",
                 "frontier_expansions", "unavailable")
     fields = ("id", "kind", "claim", "trigger", "impact", "citations")
-    if not result:
-        return None, ["the finder produced no result to parse"]
+    if not isinstance(result, str) or not result:
+        return None, ["the finder produced no text result to parse"]
     start = result.find("```json")
     if start < 0:
         return None, ["the finder's result has no fenced json block"]
@@ -576,12 +620,17 @@ def finder_claims(result: str) -> tuple:
         document = json.loads(result[start + len("```json"):end])
     except ValueError as exc:
         return None, ["the finder's fenced json block does not parse: %s" % exc]
+    if not isinstance(document, dict):
+        return None, ["the finder's block is not an object"]
     problems = ["the finder's block has no %s" % key
                 for key in required if key not in document]
     if not isinstance(document.get("claims"), list):
         problems.append("the finder's claims is not a list")
     else:
         for claim in document["claims"]:
+            if not isinstance(claim, dict):
+                problems.append("a finder claim is not an object")
+                continue
             problems.extend("a finder claim has no %s" % field
                             for field in fields if field not in claim)
     return (document, problems) if not problems else (None, problems)
@@ -611,7 +660,7 @@ def cell_contexts(root, row) -> dict:
         contexts["finder"] = session_id(row["attempt_id"], "finder")
     for index, transcript in enumerate(transcripts_for(root), start=1):
         if Path(transcript).stem.startswith("agent-"):
-            contexts["worker-%d" % index] = Path(transcript).stem
+            contexts["verifier:%s" % Path(transcript).stem] = Path(transcript).stem
     return contexts
 
 
@@ -625,11 +674,49 @@ def claim_attempt(config, row, contexts, predecessor=None, ordinal=0, evidence=N
     does none of that.
     """
     budget = budget_module(config)
-    return budget.attempt_event(os.path.expanduser(config["ledger"]), {
-        "attempt_id": row["attempt_id"], "cell_id": row["cell_id"],
-        "contexts": contexts, "predecessor": predecessor,
-        "replacement_ordinal": ordinal,
-        "replacement_evidence": evidence})
+    ledger = Path(os.path.expanduser(config["ledger"]))
+    # Serialize the registry precheck and the frozen attempt_event transaction.
+    with budget.locked(str(ledger) + ".contexts"):
+        data = load(ledger)
+        used = {entry["context_id"] for entry in data.get("context_claims", [])}
+        if used.intersection(contexts.values()) or len(set(contexts.values())) != len(contexts):
+            raise Failed("context ID already claimed or repeated across roles")
+        return budget.attempt_event(str(ledger), {
+            "attempt_id": row["attempt_id"], "cell_id": row["cell_id"],
+            "contexts": contexts, "predecessor": predecessor,
+            "replacement_ordinal": ordinal,
+            "replacement_evidence": evidence})
+
+
+def register_contexts(config, row, contexts):
+    """Append actual verifier identities at validation without rewriting old events."""
+    budget = budget_module(config)
+    ledger = Path(os.path.expanduser(config["ledger"]))
+    with budget.locked(str(ledger) + ".contexts"), budget.locked(ledger):
+        data = load(ledger)
+        budget.totals(data)
+        opens = [event for event in data["events"] if event["operation"] == "attempt-open"]
+        if not any(event["attempt_id"] == row["attempt_id"] for event in opens):
+            raise Failed("cannot register contexts before claiming the attempt")
+        claims = data.setdefault("context_claims", [])
+        owners = {context: (event["attempt_id"], None) for event in opens
+                  for context in event["contexts"]}
+        owners.update({entry["context_id"]: (entry["attempt_id"], entry["role"])
+                       for entry in claims})
+        if len(set(contexts.values())) != len(contexts):
+            raise Failed("a context is shared across roles")
+        for role, context in contexts.items():
+            owner = owners.get(context)
+            if owner and (owner[0] != row["attempt_id"] or owner[1] not in (None, role)):
+                raise Failed("context %s was already used by another attempt or role" % context)
+        for role, context in contexts.items():
+            if any(entry["context_id"] == context for entry in claims):
+                continue
+            claims.append({"sequence": len(claims) + 1, "observed_at": budget.now(),
+                           "attempt_id": row["attempt_id"], "role": role,
+                           "context_id": context})
+        budget.save(ledger, data)
+        return len(contexts)
 
 
 def close_attempt(config, row, disposition):
@@ -641,17 +728,15 @@ def close_attempt(config, row, disposition):
                                 close=disposition)
 
 
-def attempt_exposure() -> str:
-    """The most one attempt can cost: the review ceiling plus one call of overshoot.
+def attempt_exposure(arm="A") -> str:
+    """Reserve the $9 review allowance plus $1 for each concurrent session.
 
-    ``--max-budget-usd`` holds the frozen $9.00 whole-review ceiling, but probe 4
-    showed the allowance is only checked after a call completes, so a session can
-    finish slightly above it. The preregistration adds $1.00 of one-call headroom to
-    every reservation for exactly that, and the ledger requires a reservation to fit
-    inside the attempt cap - so the cap is the ceiling plus the headroom, not the
-    ceiling alone. The ceiling itself is unchanged.
+    Arm C allocates $7 to phase 1 and $2 to its finder before either starts.
+    Both can overshoot by one call. Phase 2 receives only the actual remaining
+    review allowance, so its call headroom fits within the same reservation.
+    The frozen total cap and protected closeout reserve still govern admission.
     """
-    return "%.2f" % (float(ATTEMPT_CEILING) + float(CALL_HEADROOM))
+    return "%.2f" % (float(ATTEMPT_CEILING) + float(CALL_HEADROOM) * (2 if arm == "C" else 1))
 
 
 def reserve(config, row, amount, evidence):
@@ -659,7 +744,7 @@ def reserve(config, row, amount, evidence):
     return run(sys.executable, str(budget), config["ledger"], "reserve",
                "--id", "%s-reservation" % row["attempt_id"], "--amount", str(amount),
                "--phase", "review", "--attempt", row["attempt_id"],
-               "--attempt-cap", attempt_exposure(), "--ticket", "150",
+               "--attempt-cap", attempt_exposure(row["arm"]), "--ticket", "150",
                "--evidence", evidence, check=False)
 
 
@@ -677,20 +762,37 @@ def isolation_phase(config, root, slot, phase, out):
             "--attestation", str(root / "artifacts" / "attestation.json"),
             "--out", str(out)]
     name = "bd150-%s-%s" % (root.name, phase)
-    return run(*docker_argv(config, root, slot, name, argv, root / "work"), check=False)
+    return run(*docker_argv(config, root, slot, name, argv, root / "work", role="coordinator"), check=False)
 
 
-def record_mounts(config, root, slot, destination):
-    """The asserted mount set, which under the deviation is the isolation evidence."""
-    argv = docker_argv(config, root, slot, "bd150-%s-mounts" % root.name,
-                       ["sh", "-c", "ls -1 / && echo --- && cat /proc/mounts"],
-                       root / "work")
-    observed = run(*argv, check=False)
-    requested = [argv[index + 1] for index, part in enumerate(argv) if part == "-v"]
-    write(destination, {"requested_mounts": requested,
-                        "container_root_listing": observed.stdout,
-                        "exit_code": observed.returncode})
-    return requested
+def record_mounts(config, root, slot, destination, arm="A"):
+    """Probe the actual worker mount sets before any provider request."""
+    roles = {}
+    requested = []
+    for role in (("primary", "finder") if arm == "C" else ("primary",)):
+        hidden = ([root / "finder-store", root / "logs", root / "artifacts",
+                   session_home(root, "finder")] if role == "primary" else
+                  [root / "work", root / "runner", root / "logs", root / "artifacts",
+                   session_home(root, "primary")])
+        probe = ("import json; from pathlib import Path; "
+                 "print(json.dumps([str(p) for p in map(Path, %r) if p.exists()]))"
+                 % [str(path) for path in hidden])
+        argv = docker_argv(config, root, slot, "bd150-%s-%s-mounts" % (root.name, role),
+                           ["python3", "-c", probe],
+                           root / ("work" if role == "primary" else "finder-store"), role=role)
+        observed = run(*argv, check=False)
+        mounts = [argv[index + 1] for index, part in enumerate(argv) if part == "-v"]
+        requested.extend(mounts)
+        try:
+            exposed = json.loads(observed.stdout)
+        except ValueError:
+            exposed = ["mount probe produced no valid result"]
+        roles[role] = {"requested_mounts": mounts, "exposed_private_paths": exposed,
+                       "exit_code": observed.returncode,
+                       "passed": observed.returncode == 0 and exposed == []}
+    write(destination, {"requested_mounts": requested, "roles": roles,
+                        "passed": all(entry["passed"] for entry in roles.values())})
+    return all(entry["passed"] for entry in roles.values())
 
 
 def attempt_id_for(row, attempt) -> str:
@@ -707,11 +809,15 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
     if attempt > 1 and not predecessor:
         predecessor = attempt_id_for(row, attempt - 1)
         ordinal = ordinal or attempt - 1
-    root = cell_root(config, position)
+    root = cell_root(config, position, attempt)
     slot, arm = row["target_slot"], row["arm"]
     manifest = load(Path(config["targets"]) / slot / "manifest.json")
     prepared = load(root / "artifacts" / "prepare.json")
     problems = []
+    if prepared["attempt_id"] != row["attempt_id"]:
+        raise Failed("prepare this attempt before dispatch")
+    if (root / "work" / "timing.json").exists() or (root / "artifacts" / "dispatch.json").exists():
+        raise Failed("this workspace has already been dispatched")
     if prepared["problems"]:
         print("the cell's prepare stage reported problems; rerun prepare")
         return 1
@@ -732,15 +838,19 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
     result = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
               "target_slot": slot, "phases": [], "problems": problems}
+    finder = None
     try:
-        record_mounts(config, root, slot, root / "artifacts" / "mounts.json")
+        if not record_mounts(config, root, slot, root / "artifacts" / "mounts.json", arm):
+            problems.append("worker mount isolation failed")
+            result["disposition"] = "stopped-isolation"
+            raise DispatchStopped()
         pre = isolation_phase(config, root, slot, "pre-dispatch",
                               root / "artifacts" / "isolation-pre.json")
         if pre.returncode:
             problems.append("pre-dispatch isolation failed: %s"
                             % (pre.stdout or pre.stderr).strip())
             result["disposition"] = "stopped-isolation"
-            return finish(root, result, problems)
+            raise DispatchStopped()
 
         # Claim the cell and its contexts before the money, so a reused attempt ID, a
         # reused context or an unearned replacement stops the cell before it spends.
@@ -751,9 +861,9 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
         except Exception as exc:
             problems.append("the ledger refused this attempt: %s" % exc)
             result["disposition"] = "stopped-invalid"
-            return finish(root, result, problems)
+            raise DispatchStopped()
 
-        reservation = reserve(config, row, attempt_exposure(),
+        reservation = reserve(config, row, attempt_exposure(arm),
                               "cell %s attempt %s: container dispatch under the frozen "
                               "ceilings, reserved before launch"
                               % (row["cell_id"], row["attempt_id"]))
@@ -761,7 +871,7 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
             problems.append("ledger reservation refused: %s"
                             % (reservation.stdout or reservation.stderr).strip())
             result["disposition"] = "stopped-budget"
-            return finish(root, result, problems)
+            raise DispatchStopped()
         result["reservation"] = (reservation.stdout or "").strip()
 
         timing = Path(paths_for(root)["TIMING"])
@@ -770,27 +880,31 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
         if created.returncode:
             problems.append("could not create the timing sidecar: %s" % created.stdout.strip())
             result["disposition"] = "stopped-runtime"
-            return finish(root, result, problems)
+            raise DispatchStopped()
         dispatched = time.time()
 
         agents = (root / "runner" / "agents.json").read_text(encoding="utf-8")
         prompt = (root / "runner" / "dispatch.md").read_text(encoding="utf-8")
-        finder = None
         if arm == "C":
             finder_prompt = (root / "runner" / "finder-prompt.md").read_text(encoding="utf-8")
             finder = subprocess.Popen(
                 docker_argv(config, root, slot, "bd150-%s-finder" % root.name,
                             finder_argv(root, session_id(row["attempt_id"], "finder"),
                                         finder_prompt),
-                            root / "finder-store"),
+                            root / "finder-store", role="finder"),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                 encoding="utf-8")
 
         phase1 = run_phase(config, root, slot, row, "primary-phase-1",
                            primary_argv(root, ROOT_WALL_SECONDS,
-                                        session_id(row["attempt_id"]), ATTEMPT_CEILING,
+                                        session_id(row["attempt_id"]),
+                                        "7.00" if arm == "C" else ATTEMPT_CEILING,
                                         prompt, agents))
         result["phases"].append(phase1)
+        register_contexts(config, row, cell_contexts(root, row))
+        if completion_of([phase1]) == "stopped-budget":
+            result["disposition"] = "stopped-budget"
+            raise DispatchStopped()
         if not phase1["envelope"]:
             # No result envelope means the session never reported: a launch refusal
             # or a cancellation. Either way it is not a measured attempt, and
@@ -798,38 +912,40 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
             problems.append("primary phase 1 produced no result envelope (exit %s): %s"
                             % (phase1["exit_code"], phase1["stderr_tail"]))
             result["disposition"] = "stopped-runtime"
-            return finish(root, result, problems)
+            raise DispatchStopped()
 
         if arm == "C":
             spent = phase1["cost_usd"] or 0.0
             freeze = Path(paths_for(root)["FREEZE"])
             if not freeze.is_file():
                 problems.append("arm C phase 1 ended without writing its freeze artifact")
-            finder_output = ""
-            try:
-                finder_output = finder.communicate(
-                    timeout=max(60, FINDER_WALL_SECONDS - (time.time() - dispatched)))[0]
-            except subprocess.TimeoutExpired:
-                run("docker", "kill", "bd150-%s-finder" % root.name, check=False)
-                finder_output = finder.communicate()[0] or ""
-            (root / "logs" / "finder.log").write_text(finder_output, encoding="utf-8")
-            finder_envelope = envelope(finder_output)
-            claims, finder_problems = finder_claims(
-                (finder_envelope or {}).get("result", ""))
-            finder_cost = float((finder_envelope or {}).get("total_cost_usd") or 0.0)
-            result["finder"] = {"cost_usd": finder_cost, "problems": finder_problems,
-                                "envelope_subtype": (finder_envelope or {}).get("subtype")}
+            collect_finder(root, finder, result, wait=max(
+                0, FINDER_WALL_SECONDS - (time.time() - dispatched)))
+            finder = None
+            finder_envelope = load(root / "artifacts" / "finder-result.json", {})
+            claims, finder_problems = finder_claims(finder_envelope.get("result", ""))
+            finder_cost = result["finder"]["cost_usd"]
+            result["finder"]["problems"] = finder_problems
             if finder_problems or claims is None:
                 problems.extend(finder_problems)
                 problems.append("missing or malformed finder: the attempt closes as an "
                                 "operational failure rather than an empty discovery pass")
                 result["disposition"] = "stopped-finder"
-                return finish(root, result, problems)
+                raise DispatchStopped()
+            if finder_envelope.get("subtype") != "success" or finder_envelope.get("is_error"):
+                result["disposition"] = ("stopped-budget" if finder_envelope.get("subtype") ==
+                                         "error_max_budget_usd" else "stopped-finder")
+                problems.append("the finder did not complete successfully")
+                raise DispatchStopped()
+            if claims.get("packet_sha256") != prepared["packet_sha256"]:
+                problems.append("finder packet hash differs from the prepared packet")
             discovery = root / "finder-store" / "discovery.json"
             write(discovery, claims)
             result["finder"]["discovery_sha256"] = digest(discovery)
 
             if not problems:
+                result["primary_freeze_sha256"] = digest(freeze)
+                shutil.copyfile(freeze, root / "artifacts" / "primary-freeze.json")
                 admission = render(
                     (root / "runner" / "admission.md").read_text(encoding="utf-8"),
                     {"FINDER_CLAIMS": json.dumps(claims["claims"], indent=2, sort_keys=True)})
@@ -846,34 +962,103 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
                     problems.append("arm C had no allowance left to resume: %.0f s and $%.4f"
                                     % (remaining_wall, remaining_usd))
                     result["disposition"] = "stopped-budget"
-                    return finish(root, result, problems)
+                    raise DispatchStopped()
                 phase2 = run_phase(config, root, slot, row, "primary-phase-2",
                                    primary_argv(root, remaining_wall,
                                                 session_id(row["attempt_id"]),
                                                 "%.4f" % remaining_usd, admission, agents,
                                                 resume=True))
                 result["phases"].append(phase2)
+                register_contexts(config, row, cell_contexts(root, row))
 
-        # #130's render-only completion: the final rendered result has returned,
-        # with the payload and the research report the dispatch requires.
-        completed = run(sys.executable, str(root / "runner" / "mark_event.py"),
-                        str(timing), "completed_at", check=False)
-        if completed.returncode:
-            problems.append("could not record completed_at: %s" % completed.stdout.strip())
-
-        post = isolation_phase(config, root, slot, "post-dispatch",
-                               root / "artifacts" / "isolation-post.json")
-        if post.returncode:
-            problems.append("post-dispatch isolation failed: %s"
-                            % (post.stdout or post.stderr).strip())
-        result["elapsed_seconds"] = round(time.time() - started, 3)
         result["completion"] = completion_of(result["phases"])
-        result.setdefault("disposition",
-                          "dispatched" if result["completion"] == "complete"
+        result.setdefault("disposition", "dispatched" if result["completion"] == "complete"
                           else result["completion"])
-        return finish(root, result, problems)
+    except DispatchStopped:
+        pass
+    except Exception as exc:
+        problems.append("dispatch failed: %s" % exc)
+        result["disposition"] = "stopped-runtime"
     finally:
+        # Every return, timeout and launch exception collects the finder before
+        # the post-run checks, proxy shutdown and durable dispatch record.
+        try:
+            if finder is not None:
+                collect_finder(root, finder, result, wait=0)
+        except (Failed, OSError) as exc:
+            problems.append("finder cleanup failed: %s" % exc)
+            result["disposition"] = "stopped-runtime"
+        try:
+            post = isolation_phase(config, root, slot, "post-dispatch",
+                                   root / "artifacts" / "isolation-post.json")
+            if post.returncode:
+                problems.append("post-dispatch isolation failed: %s"
+                                % (post.stdout or post.stderr).strip())
+        except (Failed, OSError) as exc:
+            problems.append("post-dispatch isolation failed: %s" % exc)
         proxy.terminate()
+        try:
+            proxy.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proxy.kill()
+            proxy.wait()
+        result["elapsed_seconds"] = round(time.time() - started, 3)
+        result["completion"] = attempt_completion(result)
+        if result["completion"] == "complete":
+            timing = root / "work" / "timing.json"
+            completed = run(sys.executable, str(root / "runner" / "mark_event.py"),
+                            str(timing), "completed_at", check=False)
+            if completed.returncode:
+                problems.append("final payload validation/completion is missing: %s"
+                                % (completed.stdout or completed.stderr).strip())
+                result["completion"] = "stopped-invalid"
+        if result["completion"] != "complete":
+            from datetime import datetime, timezone
+            result["stopped_at"] = datetime.now(timezone.utc).isoformat()
+            result["disposition"] = result["completion"]
+            timing = root / "work" / "timing.json"
+            if timing.exists():
+                sidecar = load(timing)
+                sidecar["completed_at"] = None
+                write(timing, sidecar)
+    return finish(root, result, problems)
+
+
+def collect_finder(root, process, result, wait=0):
+    """Stop the finder if necessary, reap it, and retain output and billing."""
+    try:
+        output = process.communicate(timeout=wait)[0] or ""
+    except subprocess.TimeoutExpired:
+        run("docker", "stop", "--time", "10", "bd150-%s-finder" % root.name, check=False)
+        try:
+            output = process.communicate(timeout=15)[0] or ""
+        except subprocess.TimeoutExpired:
+            run("docker", "kill", "bd150-%s-finder" % root.name, check=False)
+            process.kill()
+            output = process.communicate()[0] or ""
+    (root / "logs" / "finder.log").write_text(output, encoding="utf-8")
+    found = envelope(output)
+    if found:
+        write(root / "artifacts" / "finder-result.json", found)
+    result["finder"] = {"cost_usd": float((found or {}).get("total_cost_usd") or 0),
+                        "exit_code": process.returncode, "envelope": bool(found),
+                        "envelope_subtype": (found or {}).get("subtype"),
+                        "problems": [] if found else ["finder produced no result envelope"]}
+
+
+def attempt_completion(dispatched):
+    """The full dispatch outcome governs settlement, including early stops."""
+    disposition = dispatched.get("disposition", "")
+    if disposition.startswith("stopped-"):
+        return disposition
+    if dispatched.get("problems"):
+        return "stopped-invalid"
+    phases = dispatched.get("phases") or []
+    outcome = completion_of(phases)
+    if outcome == "complete" and dispatched.get("arm") == "C":
+        if len(phases) != 2 or not dispatched.get("finder"):
+            return "stopped-runtime"
+    return outcome
 
 
 def run_phase(config, root, slot, row, label, argv) -> dict:
@@ -914,7 +1099,10 @@ def completion_of(phases) -> str:
         if phase.get("subtype") == "error_max_budget_usd":
             return "stopped-budget"
     for phase in phases:
-        if phase.get("is_error") or phase.get("exit_code") not in (0, None):
+        if phase.get("exit_code") == 124:
+            return "stopped-budget"
+        if (phase.get("envelope") is False or phase.get("is_error")
+                or phase.get("exit_code") not in (0, None)):
             return "stopped-runtime"
     return "complete"
 
@@ -928,8 +1116,12 @@ def finish(root, result, problems) -> int:
 
 def transcripts_for(root) -> list:
     """Every transcript this cell's sessions wrote, root and workers alike."""
-    home = root.parent / "homes" / root.name / ".claude" / "projects"
-    return sorted(str(path) for path in home.rglob("*.jsonl")) if home.is_dir() else []
+    homes = [session_home(root, role) / ".claude" / "projects"
+             for role in ("primary", "finder")]
+    # Historical attempts predate role-specific homes. Never combine the layouts.
+    if not (root / "session-homes").exists():
+        homes = [root.parent / "homes" / root.name / ".claude" / "projects"]
+    return sorted(str(path) for home in homes for path in home.rglob("*.jsonl"))
 
 
 FILE_TOOLS = ("Read", "Write", "Edit", "Glob", "Grep", "NotebookEdit")
@@ -1018,6 +1210,49 @@ def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
             "paths_outside_permitted_roots": suspects,
             "accepted_hits": ruled,
             "passed": not suspects}
+
+
+def audit_network(transcripts, egress, decisions=()):
+    """Flag network commands for evidence-based review against the proxy log.
+
+    This is an audit, not a claim to prevent arbitrary interpreter networking.
+    Every candidate remains invalid until a recorded judgment either establishes
+    no traffic occurred or binds it to concrete retained proxy events.
+    """
+    import re
+    pattern = re.compile(r"\b(socket|create_connection|connect|connect_ex|urlopen|urlretrieve|"
+                         r"requests|httpx|aiohttp|urllib|http\.client|curl|wget|fetch)\b")
+    judged = {entry["command_sha256"]: entry for entry in decisions}
+    events_hash = hashlib.sha256(json.dumps(egress, sort_keys=True).encode()).hexdigest()
+    candidates = []
+    for transcript in transcripts:
+        for line_number, line in enumerate(Path(transcript).read_text(encoding="utf-8").splitlines(), 1):
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            content = (entry.get("message") or {}).get("content")
+            for block in content if isinstance(content, list) else []:
+                if not isinstance(block, dict) or block.get("type") != "tool_use":
+                    continue
+                name = block.get("name", "")
+                arguments = block.get("input") or {}
+                command = arguments.get("command", "")
+                if name != "Bash" or not isinstance(command, str) or not pattern.search(command):
+                    continue
+                identity = hashlib.sha256(command.encode()).hexdigest()
+                decision = judged.get(identity, {})
+                indices = decision.get("egress_event_indices") or []
+                matched = (decision.get("egress_sha256") == events_hash and bool(indices)
+                           and all(type(index) is int and 0 <= index < len(egress) for index in indices))
+                accepted = bool(decision.get("reason") and
+                                (decision.get("no_network_occurred") is True or matched))
+                candidates.append({"transcript": transcript, "line": line_number,
+                                   "command": command, "command_sha256": identity,
+                                   "accepted": accepted, "decision": decision})
+    return {"egress_sha256": events_hash, "candidates": candidates,
+            "passed": all(entry["accepted"] for entry in candidates),
+            "limitation": "Static command audit; indirect network calls may need manual transcript review."}
 
 
 def without_synthetic(transcripts, destination) -> tuple:
@@ -1122,20 +1357,28 @@ def verify_models(config, root, row, transcripts) -> tuple:
 def settle(config, position, attempt=1):
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
-    root = cell_root(config, position)
+    root = cell_root(config, position, attempt)
     slot, arm = row["target_slot"], row["arm"]
     dispatched = load(root / "artifacts" / "dispatch.json")
     spec = load(root / "artifacts" / "cell-env-dispatch.json")
-    problems = []
+    if dispatched["attempt_id"] != row["attempt_id"]:
+        raise Failed("dispatch record belongs to a different attempt")
+    problems = list(dispatched.get("problems") or [])
     record = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
               "target_slot": slot, "dispatch_disposition": dispatched.get("disposition"),
               # Derived here as well as at dispatch, so a record written before this
               # rule existed is still classified by it.
-              "completion": completion_of(dispatched.get("phases") or [])}
+              "completion": attempt_completion(dispatched),
+              "stopped_at": dispatched.get("stopped_at")}
 
     transcripts = transcripts_for(root)
     record["transcript_count"] = len(transcripts)
+    try:
+        record["contexts_registered"] = register_contexts(config, row, cell_contexts(root, row))
+    except (Failed, OSError, ValueError) as exc:
+        problems.append("worker context validation failed: %s" % exc)
+        record["completion"] = "stopped-invalid"
     if not transcripts:
         problems.append("no transcript was retained, so nothing can be metered from it")
 
@@ -1205,6 +1448,13 @@ def settle(config, position, attempt=1):
                       encoding="utf-8").splitlines() if line.strip()]
     except OSError:
         egress = []
+    network = audit_network(transcripts, egress,
+                            load(root / "artifacts" / "network-acceptances.json", []))
+    write(root / "artifacts" / "network-audit.json", network)
+    record["network_audit_passed"] = network["passed"]
+    if not network["passed"]:
+        problems.append("network-use evidence lacks a reviewed explanation against the egress log")
+        record["completion"] = "stopped-invalid"
     record["egress_attempts"] = len(egress)
     record["egress_refused"] = sum(1 for entry in egress
                                    if entry.get("decision") not in ("allow", "allowed"))
@@ -1289,13 +1539,17 @@ def settle(config, position, attempt=1):
     closed = any(e.get("attempt_id") == row["attempt_id"]
                  and e.get("operation") == "attempt-close" for e in ledger_now["events"])
     if opened and not closed:
-        disposition = ("stopped-invalid" if problems else
-                       record.get("completion") or "complete")
+        disposition = ("stopped-invalid" if problems and record["completion"] == "complete"
+                       else record["completion"])
+        if disposition in ("stopped-runtime", "stopped-finder", "stopped-isolation"):
+            disposition = "stopped-invalid"
         try:
             close_attempt(config, row, disposition)
             record["attempt_closed_as"] = disposition
         except Exception as exc:
             problems.append("could not close the attempt on the ledger: %s" % exc)
+    if problems and record["completion"] == "complete":
+        record["completion"] = "stopped-invalid"
     record["problems"] = problems
     write(root / "artifacts" / "settle.json", record)
     for problem in problems:
@@ -1540,7 +1794,7 @@ def main(argv=None):
     config = load(args.config)
     try:
         if args.stage == "prepare":
-            return prepare(config, args.position, force=args.force)
+            return prepare(config, args.position, force=args.force, attempt=args.attempt_number)
         if args.stage == "dispatch":
             return dispatch(config, args.position, attempt=args.attempt_number,
                             replacement_evidence=args.replacement_evidence)
