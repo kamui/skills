@@ -92,6 +92,9 @@ def attempt_records(bundle, extra) -> list:
         if not summary_path.is_file():
             continue
         summary = load(summary_path)
+        if summary.get("attempt_history"):
+            attempts.extend(dict(entry, position=position) for entry in summary["attempt_history"])
+            continue
         attempts.append({
             "position": position, "ordinal": summary.get("attempt_ordinal", 1),
             "validity": "valid" if not summary.get("problems") else "questioned",
