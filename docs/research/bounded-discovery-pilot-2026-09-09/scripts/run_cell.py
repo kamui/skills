@@ -25,7 +25,7 @@ Three stages, each restartable and each writing its own record:
     frozen ceilings, retaining every result envelope and transcript.
 
 ``settle``
-    Re-check isolation, meter the attempt per model with ``meter_split.py``,
+    Meter the attempt per model with ``meter_split.py``,
     verify model and effort on every assistant line with ``agent_effort.py``,
     audit the transcripts for out-of-sandbox reads and unlogged network use,
     settle the ledger and archive the artifacts.
@@ -828,29 +828,77 @@ def transcripts_for(root) -> list:
     return sorted(str(path) for path in home.rglob("*.jsonl")) if home.is_dir() else []
 
 
-def audit_reads(root, transcripts, permitted) -> dict:
-    """Paths and network use the transcripts show, against the cell's sandbox.
+FILE_TOOLS = ("Read", "Write", "Edit", "Glob", "Grep", "NotebookEdit")
 
-    A read outside the permitted roots, or network use that never reaches the egress
-    log, invalidates the attempt on protocol grounds. This reports the evidence; the
-    judgment of whether a hit is real stays with the researcher reading it.
+# Paths every container session touches that belong to the image, not to the host:
+# the runtime, the toolchains and the session's own home. A read of one of these is
+# not a read of forbidden material, and flagging them would bury a real hit.
+IMAGE_ROOTS = ("/usr/", "/bin/", "/sbin/", "/lib/", "/etc/", "/proc/", "/sys/",
+               "/dev/", "/var/", "/opt/", "/root/", "/cell-home", "/tmp/bd148/")
+
+
+def audit_reads(root, transcripts, permitted) -> dict:
+    """What the cell's tools actually addressed, against its permitted roots.
+
+    A read outside the permitted roots, or network use absent from the egress log,
+    invalidates the attempt on protocol grounds - so this looks at the arguments the
+    session really passed to its file tools and its shell, not at every path-shaped
+    string anywhere in the transcript. Tool output quotes paths constantly; treating
+    those as reads produces enough false positives to hide a true one.
+
+    It reports evidence, not a verdict: whether a hit is a real escape stays a
+    judgment for the researcher, which is why each one is recorded with the tool
+    that made it.
     """
     import re
 
     suspects = {}
-    pattern = re.compile(r"(/(?:Users|private|tmp|var|etc|opt|home)[A-Za-z0-9_./@+-]*)")
-    allowed = tuple(str(Path(p)) for p in permitted)
+    # Only a path that starts a token is an absolute path. Without the lookbehind
+    # this also matches inside "./xds/internal/..." and inside a URL's
+    # "https://github.com/...", which are relative paths and text, not reads.
+    absolute = re.compile(r"(?<![A-Za-z0-9_.:/@+~-])(/[A-Za-z0-9_][A-Za-z0-9_./@+-]*)")
+    allowed = tuple(str(Path(entry)) for entry in permitted) + IMAGE_ROOTS
+    commands = 0
+    tool_calls = 0
+
+    def suspicious(candidate, transcript, origin):
+        if candidate.startswith(allowed) or candidate in ("/", "/tmp"):
+            return
+        suspects.setdefault(transcript, []).append({"path": candidate, "via": origin})
+
     for transcript in transcripts:
         try:
-            text = Path(transcript).read_text(encoding="utf-8", errors="replace")
+            lines = Path(transcript).read_text(encoding="utf-8",
+                                              errors="replace").splitlines()
         except OSError as exc:
-            suspects.setdefault("unreadable", []).append("%s: %s" % (transcript, exc))
+            suspects.setdefault("unreadable", []).append({"path": transcript,
+                                                          "via": str(exc)})
             continue
-        for candidate in set(pattern.findall(text)):
-            if candidate.startswith(allowed) or candidate.startswith("/tmp/bd148/"):
+        for line in lines:
+            try:
+                entry = json.loads(line)
+            except ValueError:
                 continue
-            suspects.setdefault(transcript, []).append(candidate)
-    return {"transcripts": len(transcripts),
+            content = (entry.get("message") or {}).get("content")
+            for block in content if isinstance(content, list) else []:
+                if not isinstance(block, dict) or block.get("type") != "tool_use":
+                    continue
+                name = block.get("name")
+                arguments = block.get("input") or {}
+                tool_calls += 1
+                if name in FILE_TOOLS:
+                    for key in ("file_path", "path", "notebook_path"):
+                        value = arguments.get(key)
+                        if isinstance(value, str) and value.startswith("/"):
+                            suspicious(value, transcript, name)
+                elif name == "Bash":
+                    commands += 1
+                    command = arguments.get("command")
+                    if isinstance(command, str):
+                        for candidate in set(absolute.findall(command)):
+                            suspicious(candidate, transcript, "Bash")
+    return {"transcripts": len(transcripts), "tool_calls": tool_calls,
+            "shell_commands": commands,
             "paths_outside_permitted_roots": suspects,
             "passed": not suspects}
 
@@ -943,6 +991,44 @@ def settle(config, position, attempt=1):
     return 1 if problems else 0
 
 
+def audit_self_test() -> list:
+    """The read audit, against the false positives a real cell transcript produced."""
+    import tempfile
+
+    root = Path(tempfile.mkdtemp())
+    permitted = ["/tmp/bd150/cells/position-01/clone"]
+
+    def transcript(*tool_uses):
+        path = root / ("t%d.jsonl" % len(list(root.glob("*.jsonl"))))
+        with open(path, "w", encoding="utf-8") as handle:
+            for name, arguments in tool_uses:
+                handle.write(json.dumps({"type": "assistant", "message": {"content": [
+                    {"type": "tool_use", "name": name, "input": arguments}]}}) + "\n")
+        return [str(path)]
+
+    checks = []
+    # Every one of these appeared in cell 1's transcript and must not be a hit.
+    benign = transcript(
+        ("Bash", {"command": "go vet ./xds/internal/balancer/priority/"}),
+        ("Bash", {"command": "echo https://github.com/grpc/grpc-go/blob/abc/x.go"}),
+        ("Bash", {"command": "ls /usr/local/go/bin"}),
+        ("Read", {"file_path": "/tmp/bd150/cells/position-01/clone/go.mod"}),
+    )
+    result = audit_reads(root, benign, permitted)
+    checks.append(("a relative path, a URL and an image path are not reads",
+                   result["passed"] and result["shell_commands"] == 3
+                   and result["tool_calls"] == 4))
+    escaped = transcript(("Read", {"file_path": "/Users/jack/Development/skills/AGENTS.md"}))
+    result = audit_reads(root, escaped, permitted)
+    checks.append(("a read outside the permitted roots is a hit",
+                   not result["passed"]
+                   and result["paths_outside_permitted_roots"][escaped[0]][0]["via"] == "Read"))
+    shell = transcript(("Bash", {"command": "cat /Users/jack/.config/bounded-discovery/x"}))
+    checks.append(("a shell path outside the permitted roots is a hit",
+                   not audit_reads(root, shell, permitted)["passed"]))
+    return checks
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("stage", nargs="?", choices=("prepare", "dispatch", "settle"))
@@ -999,6 +1085,7 @@ def self_test():
     checks.append(("substituting an unrendered block would leave one",
                    unfilled(render("prompt: {BLOCK}", {"BLOCK": "write {FREEZE}"}))
                    == ["{FREEZE}"]))
+    checks.extend(audit_self_test())
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1
