@@ -18,7 +18,16 @@
   },
   "elapsed_seconds": 1110.633,
   "fidelity": {
-    "effort_report": "c71c107a-e0f9-562b-ab2f-978205413ec7.jsonl lines=183 models=claude-sonnet-5\u00d7183 efforts=high\u00d7183\n",
+    "by_role": {
+      "primary": {
+        "assistant_lines": 183,
+        "expected_effort": "high",
+        "expected_model": "claude-sonnet-5",
+        "transcripts": 1,
+        "verified": true
+      }
+    },
+    "model_effort_verified": true,
     "models_priced": [
       "claude-sonnet-5"
     ],
@@ -105,9 +114,9 @@
   },
   "problems": [],
   "read_audit_passed": true,
-  "rendered_prompt_sha256": {
-    "agents.json": "5fc655d0d35e07e4885ee7b03d0402da6a9722b91be36513b24c5f6487689827",
-    "dispatch.md": "a147ed4502b2c7d40b38dae09663813cdb852a29e134cdde2f140d88af161691"
+  "rendered_prompt_hmac_sha256": {
+    "agents.json": "4dce08b5a861e19424bff2a92b12e5e9dd2f7424e305758a94713e21da020e6f",
+    "dispatch.md": "67f981c1ae8bf3ffbe7de344a13b1bc4c81a42bc5ee9f1ca6d8d02b3073ba4dc"
   },
   "replicate": 1,
   "schema_version": "bounded-discovery-v1",

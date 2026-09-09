@@ -188,7 +188,7 @@
     }
   ],
   "claims_note": "No quality, recall or cost comparison is reported here. The pilot's outcomes stay sealed until every reviewer run has stopped, and no arm may be described as better or worse on this evidence.",
-  "created_at": "2026-09-09T08:50:54.339591+00:00",
+  "created_at": "2026-09-09T09:07:42.324108+00:00",
   "disposition": "continue",
   "incomplete_cells": [
     {
@@ -217,15 +217,15 @@
   },
   "schema_version": "bounded-discovery-v1",
   "sealed_evidence": {
-    "ciphertext_bytes": 4305248,
-    "ciphertext_sha256": "b26570e1728e1363abf17b1347492a5fe0e1fe4dc3242bd585907f9b17accc78",
+    "ciphertext_bytes": 4305568,
+    "ciphertext_sha256": "aee5c93d9ade23ef8c6f58b4bd08ec4eb74f1a526d24d4aa3af5727143ba3b54",
     "excluded_file_count": 0,
     "invalidated_attempts_sealed": [
       "position-03-attempt-1",
       "position-03-attempt-1-home"
     ],
     "ledger_included": true,
-    "plaintext_sha256": "729874429cec1cbe0f8253ba80caef9f2a17f6ef514175c8937bdd36c6ddb668",
+    "plaintext_sha256": "8d23ced49a5a5d2c129889e8a2b00c9060ed13d89eee2430a4c1216a5345f5cd",
     "positions": [
       1,
       2,

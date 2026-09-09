@@ -1073,6 +1073,8 @@ def verify_models(config, root, row, transcripts) -> tuple:
     their workers are deliberately different models. So the transcripts are grouped by
     role and each group is checked against its own expectation.
     """
+    import re
+
     expected = {"primary": "claude-sonnet-5", "finder": "claude-opus-5",
                 "worker": WORKER_MODEL[row["arm"]]}
     groups = {}
@@ -1090,8 +1092,17 @@ def verify_models(config, root, row, transcripts) -> tuple:
         observed = run(sys.executable, str(Path(config["tools"]) / "agent_effort.py"),
                        "--expect-model", model, "--expect-effort", "high",
                        *files, check=False)
+        # The per-line counts are publishable; the transcript file names are not. A
+        # file name is the derived session UUID, which is uuid5 over a string holding
+        # the slot, so printing it is a four-guess commitment to the slot.
+        lines = 0
+        for line in (observed.stdout or "").splitlines():
+            match = re.search(r"lines=(\d+)", line)
+            if match:
+                lines += int(match.group(1))
         results[role] = {"expected_model": model, "expected_effort": "high",
-                         "transcripts": len(files), "exit_code": observed.returncode,
+                         "transcripts": len(files), "assistant_lines": lines,
+                         "exit_code": observed.returncode,
                          "report": (observed.stdout or "").strip(),
                          "verified": observed.returncode == 0}
         if observed.returncode:
@@ -1292,12 +1303,56 @@ def settle(config, position, attempt=1):
     return 1 if problems else 0
 
 
+def role_self_test() -> list:
+    """Role attribution, which decides which expectation each transcript is held to."""
+    row = {"attempt_id": "issue-138-slot-9-C-replicate-1-attempt-1", "arm": "C"}
+    primary = session_id(row["attempt_id"]) + ".jsonl"
+    finder = session_id(row["attempt_id"], "finder") + ".jsonl"
+    checks = [
+        ("the primary session ID is attributed to the primary",
+         role_of("/x/" + primary, row) == "primary"),
+        ("the finder session ID is attributed to the finder",
+         role_of("/x/" + finder, row) == "finder"),
+        ("a sub-agent transcript is attributed to a worker",
+         role_of("/x/agent-abc123.jsonl", row) == "worker"),
+        # An unrecognised transcript must not be silently skipped: it would mean a
+        # session nobody verified the model of.
+        ("an unrecognised transcript is unattributed, not ignored",
+         role_of("/x/something-else.jsonl", row) == "unattributed"),
+        ("primary and finder IDs differ for the same attempt", primary != finder),
+        ("a different attempt gets different session IDs",
+         session_id("issue-138-slot-9-C-replicate-1-attempt-2") != session_id(row["attempt_id"])),
+    ]
+    expected = {"A": "claude-sonnet-5", "B": "claude-opus-5", "C": "claude-opus-5"}
+    checks.append(("each arm's worker model is the frozen one",
+                   WORKER_MODEL == expected))
+    return checks
+
+
+def completion_self_test() -> list:
+    """How an attempt's outcome is classified, which gates the screen."""
+    return [
+        ("a clean phase set is complete",
+         completion_of([{"exit_code": 0, "is_error": False, "subtype": "success"}]) == "complete"),
+        ("a dollar-allowance stop is a budget stop, not a runtime failure",
+         completion_of([{"exit_code": 0, "is_error": False, "subtype": "success"},
+                        {"exit_code": 1, "is_error": True,
+                         "subtype": "error_max_budget_usd"}]) == "stopped-budget"),
+        ("any other error is a runtime stop",
+         completion_of([{"exit_code": 1, "is_error": True, "subtype": None}])
+         == "stopped-runtime"),
+        ("no phase at all is a runtime stop", completion_of([]) == "stopped-runtime"),
+        ("the attempt exposure is the ceiling plus one call of headroom",
+         attempt_exposure() == "10.00"),
+    ]
+
+
 def audit_self_test() -> list:
     """The read audit, against the false positives a real cell transcript produced."""
     import tempfile
 
     root = Path(tempfile.mkdtemp())
-    permitted = ["/tmp/bd150/cells/position-01/clone"]
+    permitted = ["/cells/example/position-01/clone"]
 
     def transcript(*tool_uses):
         path = root / ("t%d.jsonl" % len(list(root.glob("*.jsonl"))))
@@ -1316,26 +1371,26 @@ def audit_self_test() -> list:
         ("Bash", {"command": "go vet ./internal/example/widget/"}),
         ("Bash", {"command": "echo https://github.com/example/repo/blob/abc/x.go"}),
         ("Bash", {"command": "ls /usr/local/go/bin"}),
-        ("Read", {"file_path": "/tmp/bd150/cells/position-01/clone/go.mod"}),
+        ("Read", {"file_path": "/cells/example/position-01/clone/go.mod"}),
     )
     result = audit_reads(root, benign, permitted)
     checks.append(("a glob, a relative path, a URL and an image path are not reads",
                    result["passed"] and result["shell_commands"] == 4
                    and result["tool_calls"] == 5))
-    scratch = transcript(("Bash", {"command": "git show master:a.rs > /tmp/view.txt"}))
+    scratch = transcript(("Bash", {"command": "git show master:a.rs > /elsewhere/view.txt"}))
     checks.append(("an unaccepted out-of-root path still fails",
                    not audit_reads(root, scratch, permitted)["passed"]))
     ruled = audit_reads(root, scratch, permitted,
-                        [{"path": "/tmp/view.txt", "reason": "its own clone's content"}])
+                        [{"path": "/elsewhere/view.txt", "reason": "its own clone's content"}])
     checks.append(("an accepted hit passes but stays visible with its reason",
                    ruled["passed"] and len(ruled["accepted_hits"]) == 1
                    and ruled["accepted_hits"][0]["reason"]))
-    escaped = transcript(("Read", {"file_path": "/Users/jack/Development/skills/AGENTS.md"}))
+    escaped = transcript(("Read", {"file_path": "/elsewhere/checkout/AGENTS.md"}))
     result = audit_reads(root, escaped, permitted)
     checks.append(("a read outside the permitted roots is a hit",
                    not result["passed"]
                    and result["paths_outside_permitted_roots"][escaped[0]][0]["via"] == "Read"))
-    shell = transcript(("Bash", {"command": "cat /Users/jack/.config/bounded-discovery/x"}))
+    shell = transcript(("Bash", {"command": "cat /elsewhere/evaluator/secret"}))
     checks.append(("a shell path outside the permitted roots is a hit",
                    not audit_reads(root, shell, permitted)["passed"]))
     return checks
@@ -1434,7 +1489,7 @@ def self_test():
     checks.append(("lowercase braces are not placeholders", unfilled("{braces}") == []))
     # Arm C's barrier block is substituted into the dispatch prompt and itself
     # names {FREEZE}: a single pass over the outer template leaves that behind.
-    values = {"FREEZE": "/cell/work/freeze.json"}
+    values = {"FREEZE": "/cells/example/work/freeze.json"}
     values["BLOCK"] = render("write {FREEZE} and stop", values)
     checks.append(("a block rendered before substitution leaves no placeholder",
                    unfilled(render("prompt: {BLOCK}", values)) == []))
@@ -1442,6 +1497,8 @@ def self_test():
                    unfilled(render("prompt: {BLOCK}", {"BLOCK": "write {FREEZE}"}))
                    == ["{FREEZE}"]))
     checks.extend(audit_self_test())
+    checks.extend(role_self_test())
+    checks.extend(completion_self_test())
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1
