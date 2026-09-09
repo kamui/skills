@@ -187,6 +187,44 @@ def affordability(cells, remaining) -> dict:
     }
 
 
+def setup_charges(ledger) -> dict:
+    """Spend this ticket charged outside any attempt, itemised so the total reconciles.
+
+    Preregistration section 7 requires shared setup to be charged once to the epic and
+    never omitted, which means it also has to be visible: without it the handoff's
+    actual_usd cannot be reproduced from the attempts it lists, and a reader is left
+    with an unexplained gap.
+    """
+    items = []
+    for event in ledger["events"]:
+        if (event.get("operation") == "settle" and not event.get("attempt_id")
+                and event.get("phase") == "review" and Decimal(str(event["actual_delta_usd"])) > 0):
+            items.append({"reservation_id": event.get("reservation_id"),
+                          "usd": event["actual_delta_usd"],
+                          "why": (event.get("request_refs") or [""])[0]})
+    total = sum(usd(item["usd"]) for item in items)
+    return {"items": items, "total_usd": str(total),
+            "note": "one-off shared setup: establishing that the cell image authenticates, "
+                    "that the frozen flag set runs in it, and that a session's transcript can "
+                    "be metered and fidelity-checked. Charged before any attempt was reserved "
+                    "so an infrastructure failure could not burn an attempt ID."}
+
+
+def reconcile(ledger, cells, attempts, setup) -> dict:
+    """Check the reported total against the parts this handoff itemises."""
+    pre_freeze = usd(ledger.get("pre_freeze_actual_usd"))
+    attempted = sum(usd(entry.get("settled_usd")) for entry in attempts)
+    accounted = pre_freeze + attempted + usd(setup["total_usd"])
+    reported = usd(ledger["actual_usd"])
+    return {"pre_freeze_actual_usd": str(pre_freeze),
+            "attempts_settled_usd": str(attempted),
+            "setup_usd": setup["total_usd"],
+            "accounted_usd": str(accounted),
+            "ledger_actual_usd": str(reported),
+            "difference_usd": str(reported - accounted),
+            "reconciles": reported == accounted}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config")
@@ -205,6 +243,7 @@ def main(argv=None):
     config = load(args.config)
     ledger = load(config["ledger"])
     cells = cell_records(args.bundle)
+    attempt_rows = None
     extra = load(args.extra_attempts, []) if args.extra_attempts else []
     seal = load(args.seal, {}) if args.seal else {}
 
@@ -214,6 +253,13 @@ def main(argv=None):
     remaining = cap - protected - occupied
     disposition, blockers, incomplete = decide(cells, remaining)
     money = affordability(cells, remaining)
+    attempt_rows = attempt_records(args.bundle, extra)
+    setup = setup_charges(ledger)
+    books = reconcile(ledger, cells, attempt_rows, setup)
+    if not books["reconciles"]:
+        blockers.append("the reported total does not reconcile with the itemised parts: "
+                        "%s unexplained" % books["difference_usd"])
+        disposition = "stopped-incomplete"
 
     document = {
         "schema_version": "bounded-discovery-v1",
@@ -230,7 +276,9 @@ def main(argv=None):
         "incomplete_cells": incomplete,
         "affordability": money,
         "cells": cells,
-        "attempts": attempt_records(args.bundle, extra),
+        "attempts": attempt_rows,
+        "setup_charges": setup,
+        "reconciliation": None,
         "accounting": {
             "frozen_total_cap_usd": str(cap),
             "grading_closeout_reserve_usd": str(protected),
@@ -249,6 +297,21 @@ def main(argv=None):
                     "read the sealed pilot outcomes before then.",
             "budget_warning": money["warning"],
         },
+    }
+    document["reconciliation"] = books
+    document["attempt_ledger"] = {
+        "attempt_open_events": sum(1 for e in ledger["events"]
+                                   if e.get("operation") == "attempt-open"),
+        "attempt_limit": ledger.get("attempt_limit"),
+        "replacements_consumed": sum(1 for e in ledger["events"]
+                                     if e.get("operation") == "attempt-open"
+                                     and e.get("predecessor")),
+        "replacement_limit": ledger.get("replacement_limit"),
+        "contexts_claimed": sum(len(e.get("contexts") or []) for e in ledger["events"]
+                                if e.get("operation") == "attempt-open"),
+        "note": "claimed through the ledger's own attempt_event, which refuses a reused "
+                "attempt ID or context ID, enforces both caps, and refuses a replacement "
+                "whose predecessor was not closed as documented invalidity.",
     }
     Path(args.out).write_text(json.dumps(document, indent=2, sort_keys=True) + "\n",
                               encoding="utf-8")
@@ -319,6 +382,17 @@ def self_test():
                            cell(3, arm="C", settled_usd="8")], Decimal("50"))
     checks.append(("a shortfall is reported rather than smoothed",
                    tight["fits"] is False))
+    ledger = {"pre_freeze_actual_usd": "10.00", "actual_usd": "20.00", "events": [
+        {"operation": "settle", "attempt_id": None, "phase": "review",
+         "actual_delta_usd": "1.00", "reservation_id": "setup", "request_refs": ["why"]}]}
+    setup = setup_charges(ledger)
+    checks.append(("setup charges are itemised from the ledger",
+                   setup["total_usd"] == "1.00" and len(setup["items"]) == 1))
+    books = reconcile(ledger, [], [{"settled_usd": "9.00"}], setup)
+    checks.append(("a total that adds up reconciles", books["reconciles"] is True))
+    books = reconcile(ledger, [], [{"settled_usd": "8.00"}], setup)
+    checks.append(("an unexplained gap is reported, not hidden",
+                   books["reconciles"] is False and books["difference_usd"] == "1.00"))
     for name, passed in checks:
         print("%s %s" % ("ok  " if passed else "FAIL", name))
     return 0 if all(passed for _, passed in checks) else 1

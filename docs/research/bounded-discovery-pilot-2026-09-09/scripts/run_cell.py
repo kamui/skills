@@ -70,7 +70,9 @@ from pathlib import Path
 CELL_HOME = "/cell-home"
 
 CACHES = {"slot-1": ["/tmp/bd148/cargo-home"],
-          "slot-2": ["/tmp/bd148/gomodcache", "/tmp/bd148/gocache-grpc-go-7417"]}
+          "slot-2": ["/tmp/bd148/gomodcache", "/tmp/bd148/gocache-grpc-go-7417"],
+          "slot-3": ["/tmp/bd148/gomodcache", "/tmp/bd148/gocache-nats-server-6593"],
+          "slot-4": ["/tmp/bd148/gomodcache", "/tmp/bd148/gocache-nats-server-7395"]}
 
 
 class Failed(Exception):
@@ -585,6 +587,60 @@ def finder_claims(result: str) -> tuple:
     return (document, problems) if not problems else (None, problems)
 
 
+def budget_module(config):
+    """#147's ledger module, loaded by path because it is pinned, not installed."""
+    import importlib.util
+
+    path = Path(config["targets"]).parent / "scripts" / "budget.py"
+    spec = importlib.util.spec_from_file_location("bd_budget", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def cell_contexts(root, row) -> dict:
+    """Every worker context this attempt used, by role.
+
+    The ledger refuses an attempt that reuses a context ID, which is how "no finder
+    context resumes as verifier" is enforced rather than merely asserted. The primary
+    and finder IDs are the session IDs the runner derived; worker IDs are the
+    sub-agent transcripts the runtime wrote.
+    """
+    contexts = {"primary": session_id(row["attempt_id"])}
+    if row["arm"] == "C":
+        contexts["finder"] = session_id(row["attempt_id"], "finder")
+    for index, transcript in enumerate(transcripts_for(root), start=1):
+        if Path(transcript).stem.startswith("agent-"):
+            contexts["worker-%d" % index] = Path(transcript).stem
+    return contexts
+
+
+def claim_attempt(config, row, contexts, predecessor=None, ordinal=0, evidence=None):
+    """Claim the cell and its contexts atomically, before anything is dispatched.
+
+    This is the control the issue asks for by name: it refuses a reused attempt ID or
+    context ID, enforces the 27-attempt and three-replacement caps and the
+    one-or-two-concurrent-cell ceiling, and refuses a replacement whose predecessor was
+    not closed as documented invalidity. The dollar reservation is a separate thing and
+    does none of that.
+    """
+    budget = budget_module(config)
+    return budget.attempt_event(os.path.expanduser(config["ledger"]), {
+        "attempt_id": row["attempt_id"], "cell_id": row["cell_id"],
+        "contexts": contexts, "predecessor": predecessor,
+        "replacement_ordinal": ordinal,
+        "replacement_evidence": evidence})
+
+
+def close_attempt(config, row, disposition):
+    budget = budget_module(config)
+    return budget.attempt_event(os.path.expanduser(config["ledger"]),
+                                {"attempt_id": row["attempt_id"], "cell_id": row["cell_id"],
+                                 "contexts": {}, "predecessor": None,
+                                 "replacement_ordinal": 0},
+                                close=disposition)
+
+
 def attempt_exposure() -> str:
     """The most one attempt can cost: the review ceiling plus one call of overshoot.
 
@@ -642,11 +698,15 @@ def attempt_id_for(row, attempt) -> str:
     return "%s-attempt-%d" % (base, int(attempt))
 
 
-def dispatch(config, position, attempt=1):
+def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
+             replacement_evidence=None):
     import time
 
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
+    if attempt > 1 and not predecessor:
+        predecessor = attempt_id_for(row, attempt - 1)
+        ordinal = ordinal or attempt - 1
     root = cell_root(config, position)
     slot, arm = row["target_slot"], row["arm"]
     manifest = load(Path(config["targets"]) / slot / "manifest.json")
@@ -680,6 +740,17 @@ def dispatch(config, position, attempt=1):
             problems.append("pre-dispatch isolation failed: %s"
                             % (pre.stdout or pre.stderr).strip())
             result["disposition"] = "stopped-isolation"
+            return finish(root, result, problems)
+
+        # Claim the cell and its contexts before the money, so a reused attempt ID, a
+        # reused context or an unearned replacement stops the cell before it spends.
+        try:
+            claim_attempt(config, row, cell_contexts(root, row),
+                          predecessor=predecessor, ordinal=ordinal,
+                          evidence=replacement_evidence)
+        except Exception as exc:
+            problems.append("the ledger refused this attempt: %s" % exc)
+            result["disposition"] = "stopped-invalid"
             return finish(root, result, problems)
 
         reservation = reserve(config, row, attempt_exposure(),
@@ -887,7 +958,7 @@ def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
 
     suspects = {}
     # Only a path that starts a token is an absolute path. Without the lookbehind
-    # this also matches inside "./xds/internal/..." and inside a URL's
+    # this also matches inside "./internal/example/..." and inside a URL's
     # "https://github.com/...", which are relative paths and text, not reads. The
     # glob characters are excluded too: find's -not -path '*/target/*' names a
     # pattern, not a path, and matching inside it manufactured a false hit.
@@ -980,6 +1051,63 @@ def without_synthetic(transcripts, destination) -> tuple:
     return copies, removed
 
 
+def role_of(transcript, row) -> str:
+    """Which worker wrote this transcript, from the session IDs the runner chose."""
+    name = Path(transcript).stem
+    if name == session_id(row["attempt_id"], "finder"):
+        return "finder"
+    if name == session_id(row["attempt_id"]):
+        return "primary"
+    if name.startswith("agent-"):
+        return "worker"
+    return "unattributed"
+
+
+def verify_models(config, root, row, transcripts) -> tuple:
+    """Verify model and effort per role, as section 9 requires, not merely observe them.
+
+    Section 9 asks for ``agent_effort.py`` with ``--expect-model`` and ``--expect-effort``
+    *for that role*, and makes a mismatch a fidelity failure that invalidates the
+    attempt. One call without expectations cannot fail, and one call over every
+    transcript could not express arm B's or arm C's split anyway - their primary and
+    their workers are deliberately different models. So the transcripts are grouped by
+    role and each group is checked against its own expectation.
+    """
+    expected = {"primary": "claude-sonnet-5", "finder": "claude-opus-5",
+                "worker": WORKER_MODEL[row["arm"]]}
+    groups = {}
+    for transcript in transcripts:
+        groups.setdefault(role_of(transcript, row), []).append(transcript)
+    results = {}
+    problems = []
+    for role, files in sorted(groups.items()):
+        model = expected.get(role)
+        if model is None:
+            problems.append("%d transcript(s) could not be attributed to a worker role, so "
+                            "their model and effort are unverifiable" % len(files))
+            results[role] = {"transcripts": len(files), "verified": False}
+            continue
+        observed = run(sys.executable, str(Path(config["tools"]) / "agent_effort.py"),
+                       "--expect-model", model, "--expect-effort", "high",
+                       *files, check=False)
+        results[role] = {"expected_model": model, "expected_effort": "high",
+                         "transcripts": len(files), "exit_code": observed.returncode,
+                         "report": (observed.stdout or "").strip(),
+                         "verified": observed.returncode == 0}
+        if observed.returncode:
+            problems.append("fidelity failure: %s transcripts are not all %s at effort high "
+                            "(agent_effort.py exit %d): %s"
+                            % (role, model, observed.returncode,
+                               (observed.stdout or observed.stderr or "").strip()[:300]))
+    if row["arm"] == "C" and "finder" not in groups:
+        problems.append("arm C kept no finder transcript, so the finder's model and effort "
+                        "cannot be verified")
+    if "primary" not in groups:
+        problems.append("no primary transcript was attributed, so the root's model and effort "
+                        "cannot be verified")
+    return results, problems
+
+
 def settle(config, position, attempt=1):
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
@@ -1000,13 +1128,22 @@ def settle(config, position, attempt=1):
     if not transcripts:
         problems.append("no transcript was retained, so nothing can be metered from it")
 
-    # Model and effort on every assistant line of every transcript, per role.
-    effort = run(sys.executable, str(Path(config["tools"]) / "agent_effort.py"),
-                 *transcripts, check=False) if transcripts else None
-    if effort is not None:
-        (root / "artifacts" / "effort.txt").write_text(effort.stdout or "", encoding="utf-8")
-        if effort.returncode:
-            problems.append("agent_effort.py exited %s" % effort.returncode)
+    # Model and effort on every assistant line of every transcript, per role, against
+    # that role's expectation. A mismatch invalidates the attempt.
+    if transcripts:
+        observed = run(sys.executable, str(Path(config["tools"]) / "agent_effort.py"),
+                       *transcripts, check=False)
+        (root / "artifacts" / "effort.txt").write_text(observed.stdout or "", encoding="utf-8")
+        verified, fidelity_problems = verify_models(config, root, row, transcripts)
+        write(root / "artifacts" / "model-verification.json", verified)
+        record["model_effort_verified"] = all(entry.get("verified")
+                                              for entry in verified.values())
+        record["model_effort_by_role"] = {
+            role: {"expected_model": entry.get("expected_model"),
+                   "verified": entry.get("verified"),
+                   "transcripts": entry.get("transcripts")}
+            for role, entry in verified.items()}
+        problems.extend(fidelity_problems)
 
     # Price each transcript at its own model's rate and sum the groups.
     self_report = sum(phase.get("cost_usd") or 0.0 for phase in dispatched.get("phases", []))
@@ -1135,6 +1272,19 @@ def settle(config, position, attempt=1):
         if settled.returncode:
             problems.append("ledger settlement refused: %s"
                             % (settled.stdout or settled.stderr).strip())
+    ledger_now = load(config["ledger"])
+    opened = any(e.get("attempt_id") == row["attempt_id"]
+                 and e.get("operation") == "attempt-open" for e in ledger_now["events"])
+    closed = any(e.get("attempt_id") == row["attempt_id"]
+                 and e.get("operation") == "attempt-close" for e in ledger_now["events"])
+    if opened and not closed:
+        disposition = ("stopped-invalid" if problems else
+                       record.get("completion") or "complete")
+        try:
+            close_attempt(config, row, disposition)
+            record["attempt_closed_as"] = disposition
+        except Exception as exc:
+            problems.append("could not close the attempt on the ledger: %s" % exc)
     record["problems"] = problems
     write(root / "artifacts" / "settle.json", record)
     for problem in problems:
@@ -1158,11 +1308,13 @@ def audit_self_test() -> list:
         return [str(path)]
 
     checks = []
-    # Every one of these appeared in cell 1's transcript and must not be a hit.
+    # These are the shapes a real transcript produced, rewritten over a fictional
+    # repository: naming the actual package path here would tie a schedule position
+    # to a target, which is the pairing the freeze seals.
     benign = transcript(
         ("Bash", {"command": "find . -not -path '*/target/*' | head -5"}),
-        ("Bash", {"command": "go vet ./xds/internal/balancer/priority/"}),
-        ("Bash", {"command": "echo https://github.com/grpc/grpc-go/blob/abc/x.go"}),
+        ("Bash", {"command": "go vet ./internal/example/widget/"}),
+        ("Bash", {"command": "echo https://github.com/example/repo/blob/abc/x.go"}),
         ("Bash", {"command": "ls /usr/local/go/bin"}),
         ("Read", {"file_path": "/tmp/bd150/cells/position-01/clone/go.mod"}),
     )
@@ -1189,9 +1341,44 @@ def audit_self_test() -> list:
     return checks
 
 
+def claim_history(config, path) -> int:
+    """Record attempts that already ran, in order, through the ledger's own checks.
+
+    The pilot's attempts were dispatched before this runner claimed them on the ledger,
+    so the caps the ledger enforces were not in force at the time. Replaying them here
+    does not pretend otherwise - it is recorded as a dated deviation - but it puts the
+    real history in the chain so #151 inherits enforcement, and it lets the ledger rather
+    than a narrative decide how many replacements the pilot consumed.
+    """
+    history = load(path)
+    recorded = []
+    for entry in history:
+        row = {"attempt_id": entry["attempt_id"], "cell_id": entry["cell_id"],
+               "arm": entry.get("arm", "A")}
+        try:
+            claim_attempt(config, row, entry["contexts"], entry.get("predecessor"),
+                          entry.get("replacement_ordinal", 0),
+                          entry.get("replacement_evidence"))
+            close_attempt(config, row, entry["disposition"])
+        except Exception as exc:
+            print("%s: %s" % (entry["attempt_id"], exc))
+            return 1
+        recorded.append(entry["attempt_id"])
+    ledger = load(config["ledger"])
+    opens = [e for e in ledger["events"] if e.get("operation") == "attempt-open"]
+    print("recorded %d attempts; ledger now holds %d attempt-open events, %d replacements"
+          % (len(recorded), len(opens), sum(bool(e.get("predecessor")) for e in opens)))
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("stage", nargs="?", choices=("prepare", "dispatch", "settle"))
+    parser.add_argument("stage", nargs="?",
+                        choices=("prepare", "dispatch", "settle", "claim-history"))
+    parser.add_argument("--history", help="JSON list of already-run attempts, for claim-history")
+    parser.add_argument("--replacement-evidence",
+                        help="why the predecessor attempt was invalid; the ledger refuses a "
+                             "replacement without it")
     parser.add_argument("--config")
     parser.add_argument("--position", type=int)
     parser.add_argument("--force", action="store_true")
@@ -1202,6 +1389,14 @@ def main(argv=None):
 
     if args.self_test:
         return self_test()
+    if args.stage == "claim-history":
+        if not args.config or not args.history:
+            parser.error("claim-history needs --config and --history")
+        try:
+            return claim_history(load(args.config), args.history)
+        except Failed as exc:
+            sys.stderr.write(str(exc) + "\n")
+            return 2
     if not args.stage or not args.config or args.position is None:
         parser.error("a stage, --config and --position are required")
     config = load(args.config)
@@ -1209,7 +1404,8 @@ def main(argv=None):
         if args.stage == "prepare":
             return prepare(config, args.position, force=args.force)
         if args.stage == "dispatch":
-            return dispatch(config, args.position, attempt=args.attempt_number)
+            return dispatch(config, args.position, attempt=args.attempt_number,
+                            replacement_evidence=args.replacement_evidence)
         return settle(config, args.position, attempt=args.attempt_number)
     except Failed as exc:
         sys.stderr.write(str(exc) + "\n")

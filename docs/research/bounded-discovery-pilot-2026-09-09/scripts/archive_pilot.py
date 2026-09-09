@@ -98,6 +98,18 @@ def scrub(value, secrets):
     return value
 
 
+def mounts_confined(requested, root) -> bool:
+    """Whether every mount source is the cell's own tree, its caches or its home."""
+    root = str(root)
+    home = str(Path(root).parent / "homes" / Path(root).name)
+    for mount in requested:
+        source = str(mount).split(":")[0]
+        if source.startswith(root) or source.startswith(home):
+            continue
+        return False
+    return bool(requested)
+
+
 def checks_of(document) -> list:
     """Each check's name and verdict, with nothing that identifies a repository."""
     return [{"check": check.get("check"), "passed": check.get("passed")}
@@ -139,7 +151,14 @@ def summarize(root, secrets) -> dict:
             "forbidden_paths_examined": next(
                 (c.get("examined") for c in pre.get("checks", [])
                  if str(c.get("check", "")).startswith("forbidden paths")), None),
-            "mount_count": len(mounts.get("requested_mounts", [])),
+            # Deliberately not the mount count. The number of mounts is one plus the
+            # number of toolchain caches the target needs, and those counts differ by
+            # target, so publishing it identifies the slot as precisely as naming it -
+            # which, with the public selection rule, discloses the clean control. The
+            # full mount list is in the sealed archive; what is publishable is the
+            # assertion it supports.
+            "mounts_limited_to_cell_tree_caches_and_home": mounts_confined(
+                mounts.get("requested_mounts", []), root),
         },
         "disposition": dispatched.get("disposition"),
         "completion": settled.get("completion") or dispatched.get("completion"),

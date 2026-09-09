@@ -1,13 +1,13 @@
 {
-  "ciphertext_bytes": 4303008,
-  "ciphertext_sha256": "b684d49359b42da2c4ec8e11237afd063cf4fff1d58b5bce07c3a1c5ccd6ecdd",
+  "ciphertext_bytes": 4305248,
+  "ciphertext_sha256": "b26570e1728e1363abf17b1347492a5fe0e1fe4dc3242bd585907f9b17accc78",
   "excluded_file_count": 0,
   "invalidated_attempts_sealed": [
     "position-03-attempt-1",
     "position-03-attempt-1-home"
   ],
   "ledger_included": true,
-  "plaintext_sha256": "abc7fbfc40cdab107370cf13c993a53f83e954a64e32aa5d0c481f955ee37f72",
+  "plaintext_sha256": "729874429cec1cbe0f8253ba80caef9f2a17f6ef514175c8937bdd36c6ddb668",
   "positions": [
     1,
     2,
