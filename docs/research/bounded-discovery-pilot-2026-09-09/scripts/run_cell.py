@@ -910,6 +910,37 @@ def audit_reads(root, transcripts, permitted) -> dict:
             "passed": not suspects}
 
 
+def without_synthetic(transcripts, destination) -> tuple:
+    """Copies of the transcripts with the harness's own synthetic lines removed.
+
+    When a session hits an API error the harness writes an assistant line with model
+    ``<synthetic>``. ``transcript_usage.py`` drops it, but ``meter_split.py`` counts
+    it as a second model and refuses the transcript as mixed-model, which costs the
+    attempt its per-role split. Rather than edit a script the manifest pins by
+    digest, the input is filtered into a copy and the filtering is recorded: the
+    removed lines carry no usage, so no cost moves.
+    """
+    destination.mkdir(parents=True, exist_ok=True)
+    copies = []
+    removed = 0
+    for transcript in transcripts:
+        kept = []
+        for line in Path(transcript).read_text(encoding="utf-8").splitlines():
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                kept.append(line)
+                continue
+            if (entry.get("message") or {}).get("model") == "<synthetic>":
+                removed += 1
+                continue
+            kept.append(line)
+        copy = destination / Path(transcript).name
+        copy.write_text("\n".join(kept) + "\n", encoding="utf-8")
+        copies.append(str(copy))
+    return copies, removed
+
+
 def settle(config, position, attempt=1):
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
@@ -953,8 +984,23 @@ def settle(config, position, attempt=1):
         # cell to differ - it names the cause - so the split is kept and the
         # difference is decomposed below rather than failing the settlement.
         if split.returncode and not (root / "artifacts" / "usage-split.json").is_file():
-            problems.append("meter_split.py exited %s and wrote no split; see logs/meter.log"
-                            % split.returncode)
+            log = (split.stdout or "") + (split.stderr or "")
+            if "<synthetic>" in log:
+                filtered, removed = without_synthetic(
+                    transcripts, root / "artifacts" / "filtered-transcripts")
+                record["metering_filtered_synthetic_lines"] = removed
+                split = run(sys.executable,
+                            str(Path(config["bundle"]) / "scripts" / "meter_split.py"),
+                            "--rates", str(Path(config["bundle"]) / "rates.json"),
+                            "--out", str(root / "artifacts" / "usage-split.json"),
+                            "--label", row["attempt_id"],
+                            "--self-report", "%.7f" % self_report,
+                            *filtered, check=False)
+                (root / "logs" / "meter-filtered.log").write_text(
+                    (split.stdout or "") + (split.stderr or ""), encoding="utf-8")
+            if not (root / "artifacts" / "usage-split.json").is_file():
+                problems.append("meter_split.py exited %s and wrote no split; see logs/meter.log"
+                                % split.returncode)
 
     audit = audit_reads(root, transcripts, spec["permitted_roots"])
     write(root / "artifacts" / "read-audit.json", audit)
@@ -989,28 +1035,36 @@ def settle(config, position, attempt=1):
     except Failed:
         problems.append("no usage split was produced")
 
-    untranscripted = 0.0
     envelope_models = {}
     for result_file in sorted((root / "artifacts").glob("*-result.json")):
         for model, usage in (load(result_file).get("modelUsage") or {}).items():
             envelope_models[model] = envelope_models.get(model, 0.0) + (usage.get("costUSD") or 0.0)
-    for model, cost in envelope_models.items():
-        if model not in (split_document.get("per_model", {}) if transcript_total is not None else {}):
-            untranscripted += cost
     record["envelope_per_model_usd"] = {m: "%.7f" % c for m, c in sorted(envelope_models.items())}
     record["self_report_usd"] = "%.7f" % self_report
     record["settled_usd"] = "%.7f" % metered
-    residual = self_report - (transcript_total if transcript_total is not None else self_report)
-    unexplained = residual - untranscripted
-    record["reconciliation_residual_usd"] = "%.7f" % residual
-    record["residual_untranscripted_models_usd"] = "%.7f" % untranscripted
-    record["residual_unexplained_usd"] = "%.7f" % unexplained
-    # One per cent of the attempt is this runner's reporting threshold, not a frozen
-    # value: below it the residual is noted, above it a researcher should look.
-    if metered and abs(unexplained) > 0.01 * metered:
-        problems.append("%.7f of the reconciliation residual is unexplained, above one per "
-                        "cent of the settled cost; meter by hand before trusting this cell"
-                        % unexplained)
+    if transcript_total is None:
+        # Without a transcript total there is nothing to reconcile against, so the
+        # residual is undetermined rather than zero, and saying zero would claim the
+        # two sources agree when one of them is missing.
+        record["reconciliation_residual_usd"] = None
+        record["residual_note"] = ("no transcript split was produced, so the settlement rests "
+                                   "on the runtime self-report alone and the residual is "
+                                   "undetermined")
+    else:
+        priced = set(split_document.get("per_model", {}))
+        untranscripted = sum(cost for model, cost in envelope_models.items()
+                             if model not in priced)
+        residual = self_report - transcript_total
+        unexplained = residual - untranscripted
+        record["reconciliation_residual_usd"] = "%.7f" % residual
+        record["residual_untranscripted_models_usd"] = "%.7f" % untranscripted
+        record["residual_unexplained_usd"] = "%.7f" % unexplained
+        # One per cent of the attempt is this runner's reporting threshold, not a
+        # frozen value: below it the residual is noted, above it a researcher looks.
+        if metered and abs(unexplained) > 0.01 * metered:
+            problems.append("%.7f of the reconciliation residual is unexplained, above one "
+                            "per cent of the settled cost; meter by hand before trusting "
+                            "this cell" % unexplained)
 
     # Re-settlement is prohibited by the ledger and rightly so, but this stage has to
     # be re-runnable to correct a record without charging twice, so an existing
