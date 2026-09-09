@@ -1,5 +1,9 @@
 ## Agent skills
 
+### Subagent model selection
+
+Unless the user requests otherwise, default subagents of a top-tier immediate parent to its provider's next lower capability tier. Resolve tiers from the current model catalog or provider docs. Preserve reasoning effort where supported. For other parents, keep harness defaults. If model selection is unsupported or the target tier is unavailable or unclear, keep harness defaults and briefly report the limitation.
+
 ### Issue tracker
 
 Issues and specs live in GitHub Issues. See `docs/agents/issue-tracker.md`.
