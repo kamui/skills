@@ -914,6 +914,11 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
             result["disposition"] = "stopped-runtime"
             raise DispatchStopped()
 
+        if completion_of([phase1]) != "complete":
+            problems.append("primary phase 1 ended with an error envelope")
+            result["disposition"] = "stopped-runtime"
+            raise DispatchStopped()
+
         if arm == "C":
             spent = phase1["cost_usd"] or 0.0
             freeze = Path(paths_for(root)["FREEZE"])
@@ -925,6 +930,7 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
             finder_envelope = load(root / "artifacts" / "finder-result.json", {})
             claims, finder_problems = finder_claims(finder_envelope.get("result", ""))
             finder_cost = result["finder"]["cost_usd"]
+            finder_problems.extend(result["finder"]["problems"])
             result["finder"]["problems"] = finder_problems
             if finder_problems or claims is None:
                 problems.extend(finder_problems)
@@ -1002,6 +1008,8 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
         except subprocess.TimeoutExpired:
             proxy.kill()
             proxy.wait()
+        from datetime import datetime, timezone
+        result["ended_at"] = datetime.now(timezone.utc).isoformat()
         result["elapsed_seconds"] = round(time.time() - started, 3)
         result["completion"] = attempt_completion(result)
         if result["completion"] == "complete":
@@ -1040,10 +1048,22 @@ def collect_finder(root, process, result, wait=0):
     found = envelope(output)
     if found:
         write(root / "artifacts" / "finder-result.json", found)
-    result["finder"] = {"cost_usd": float((found or {}).get("total_cost_usd") or 0),
+    import math
+    problems = [] if found else ["finder produced no result envelope"]
+    cost = (found or {}).get("total_cost_usd")
+    try:
+        if isinstance(cost, bool):
+            raise ValueError("boolean cost")
+        cost = float(cost)
+        if not math.isfinite(cost) or cost < 0:
+            raise ValueError("nonfinite or negative cost")
+    except (TypeError, ValueError):
+        cost = None
+        problems.append("finder reported no valid nonnegative finite cost")
+    result["finder"] = {"cost_usd": cost, "reported_cost_valid": cost is not None,
                         "exit_code": process.returncode, "envelope": bool(found),
                         "envelope_subtype": (found or {}).get("subtype"),
-                        "problems": [] if found else ["finder produced no result envelope"]}
+                        "problems": problems}
 
 
 def attempt_completion(dispatched):
@@ -1213,15 +1233,12 @@ def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
 
 
 def audit_network(transcripts, egress, decisions=()):
-    """Flag network commands for evidence-based review against the proxy log.
+    """Require a network-evidence judgment for every retained shell command.
 
-    This is an audit, not a claim to prevent arbitrary interpreter networking.
-    Every candidate remains invalid until a recorded judgment either establishes
-    no traffic occurred or binds it to concrete retained proxy events.
+    Arbitrary interpreters can hide networking behind imports, aliases or child
+    processes. No command gets an automatic pass based on its spelling. A recorded
+    judgment must establish no traffic occurred or bind it to retained proxy events.
     """
-    import re
-    pattern = re.compile(r"\b(socket|create_connection|connect|connect_ex|urlopen|urlretrieve|"
-                         r"requests|httpx|aiohttp|urllib|http\.client|curl|wget|fetch)\b")
     judged = {entry["command_sha256"]: entry for entry in decisions}
     events_hash = hashlib.sha256(json.dumps(egress, sort_keys=True).encode()).hexdigest()
     candidates = []
@@ -1238,8 +1255,10 @@ def audit_network(transcripts, egress, decisions=()):
                 name = block.get("name", "")
                 arguments = block.get("input") or {}
                 command = arguments.get("command", "")
-                if name != "Bash" or not isinstance(command, str) or not pattern.search(command):
+                if name != "Bash":
                     continue
+                if not isinstance(command, str):
+                    command = json.dumps(arguments, sort_keys=True)
                 identity = hashlib.sha256(command.encode()).hexdigest()
                 decision = judged.get(identity, {})
                 indices = decision.get("egress_event_indices") or []
@@ -1252,7 +1271,7 @@ def audit_network(transcripts, egress, decisions=()):
                                    "accepted": accepted, "decision": decision})
     return {"egress_sha256": events_hash, "candidates": candidates,
             "passed": all(entry["accepted"] for entry in candidates),
-            "limitation": "Static command audit; indirect network calls may need manual transcript review."}
+            "limitation": "Every shell command requires a recorded evidence judgment; tool spelling cannot prove absence of network traffic."}
 
 
 def without_synthetic(transcripts, destination) -> tuple:
@@ -1364,6 +1383,7 @@ def settle(config, position, attempt=1):
     if dispatched["attempt_id"] != row["attempt_id"]:
         raise Failed("dispatch record belongs to a different attempt")
     problems = list(dispatched.get("problems") or [])
+    problems.extend((dispatched.get("finder") or {}).get("problems") or [])
     record = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
               "target_slot": slot, "dispatch_disposition": dispatched.get("disposition"),
@@ -1522,6 +1542,9 @@ def settle(config, position, attempt=1):
             problems.append("the ledger settled %s for this attempt but metering now says "
                             "%.7f; the ledger is append-only and stands"
                             % (already["actual_delta_usd"], metered))
+    elif (dispatched.get("finder") or {}).get("reported_cost_valid") is False:
+        problems.append("finder cost is unavailable; retain the reservation until billing is reconciled")
+        record["reservation_retained"] = True
     else:
         budget = Path(config["targets"]).parent / "scripts" / "budget.py"
         settled = run(sys.executable, str(budget), config["ledger"], "settle",
@@ -1550,6 +1573,26 @@ def settle(config, position, attempt=1):
             problems.append("could not close the attempt on the ledger: %s" % exc)
     if problems and record["completion"] == "complete":
         record["completion"] = "stopped-invalid"
+    if record["completion"] != "complete":
+        from datetime import datetime, timezone
+        timing_path = root / "work" / "timing.json"
+        sidecar = load(timing_path, {})
+        if not record.get("stopped_at"):
+            record["stopped_at"] = (dispatched.get("ended_at") or sidecar.get("completed_at")
+                                    or datetime.now(timezone.utc).isoformat())
+            record["stop_timestamp_source"] = ("dispatch end" if dispatched.get("ended_at") else
+                                               "completion event" if sidecar.get("completed_at") else
+                                               "settlement closeout observation")
+        record["duration_censored"] = True
+        if sidecar.get("root_dispatched_at"):
+            record["elapsed_seconds"] = max(0, (datetime.fromisoformat(record["stopped_at"])
+                - datetime.fromisoformat(sidecar["root_dispatched_at"])).total_seconds())
+        if sidecar.get("completed_at"):
+            original = root / "artifacts" / "timing-before-settlement.json"
+            if not original.exists():
+                write(original, sidecar)
+            sidecar["completed_at"] = None
+            write(timing_path, sidecar)
     record["problems"] = problems
     write(root / "artifacts" / "settle.json", record)
     for problem in problems:

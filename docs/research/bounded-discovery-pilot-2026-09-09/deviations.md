@@ -119,9 +119,10 @@ assumption still needs validation against the actual runtime records.
 
 The workers now mount separate session homes and stores. The finder reads a private immutable
 clone copy, so primary build output cannot carry discoveries across the barrier. An unpaid Python
-probe checks both worker mount sets before dispatch. Static transcript network auditing remains an
-audit, not a firewall: a suspected network command requires a recorded explanation tied to proxy
-events, or evidence that no traffic occurred. Indirect calls still need manual transcript review.
+probe checks both worker mount sets before dispatch. Transcript network auditing requires a recorded judgment for every shell command, including
+commands that invoke scripts or indirect networking APIs. The judgment must refer to retained proxy
+events, or establish from evidence that no traffic occurred. Command spelling alone never passes
+the audit. This is an audit requirement, not a firewall.
 
 Dispatch now collects the finder and retains its output before closeout on early returns and launch
 errors. Terminal reasons survive settlement. Completion requires a recorded final validation event

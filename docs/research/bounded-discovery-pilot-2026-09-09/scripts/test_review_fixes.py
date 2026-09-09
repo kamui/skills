@@ -131,6 +131,22 @@ class ReviewFixes(unittest.TestCase):
         self.assertEqual(record["completion"], "complete")
         self.assertIsNotNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
 
+    def test_malformed_finder_cost_cannot_interrupt_cleanup(self):
+        for cost in ("not-a-number", None, -1, True, float("nan")):
+            with self.subTest(cost=cost):
+                for path in (self.root / "artifacts" / "dispatch.json", self.root / "work" / "timing.json"):
+                    path.unlink(missing_ok=True)
+                process = self.fake_finder()
+                envelope = json.loads(process.communicate.return_value[0])
+                envelope["total_cost_usd"] = cost
+                process.communicate.return_value = (json.dumps(envelope), None)
+                with patch.object(self, "fake_finder", return_value=process):
+                    record, _, _, _, isolation = self.dispatch([self.phase()])
+                self.assertEqual(record["completion"], "stopped-finder")
+                self.assertFalse(record["finder"]["reported_cost_valid"])
+                self.assertEqual(isolation.call_count, 2)
+                self.assertTrue((self.root / "artifacts" / "finder-result.json").is_file())
+
     def test_missing_primary_envelope_retains_finder_and_post_check(self):
         record, finder, _, _, isolation = self.dispatch([self.phase(envelope=False, code=1)])
         self.assertEqual(record["completion"], "stopped-runtime")
@@ -139,6 +155,15 @@ class ReviewFixes(unittest.TestCase):
         finder.communicate.assert_called_once()
         self.assertEqual(isolation.call_count, 2)
         self.assertIn("stopped_at", record)
+        self.assertIsNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
+
+    def test_primary_error_envelope_stops_before_resume(self):
+        record, finder, launches, _, isolation = self.dispatch([
+            self.phase(subtype="error_during_execution", code=1), self.phase()])
+        self.assertEqual(record["completion"], "stopped-runtime")
+        self.assertEqual(len(launches), 1)
+        finder.communicate.assert_called_once()
+        self.assertEqual(isolation.call_count, 2)
         self.assertIsNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
 
     def test_primary_launch_exception_retains_finder(self):
@@ -212,6 +237,19 @@ class ReviewFixes(unittest.TestCase):
         decision = {"command_sha256": hashlib.sha256(command.encode()).hexdigest(),
                     "reason": "synthetic test acceptance", "egress_event_indices": [0], "egress_sha256": "wrong"}
         self.assertFalse(runner.audit_network([str(transcript)], [], [decision])["passed"])
+
+    def test_indirect_network_and_ordinary_shell_both_require_review(self):
+        transcript = self.base / "indirect.jsonl"
+        for command in ("python3 -c 'import asyncio; asyncio.run(asyncio.open_connection(\"192.0.2.1\",443))'",
+                        "python3 opaque_script.py", "git status --short"):
+            transcript.write_text(json.dumps({"message": {"content": [{"type": "tool_use", "name": "Bash",
+                                                 "input": {"command": command}}]}}) + "\n", encoding="utf-8")
+            audit = runner.audit_network([str(transcript)], [])
+            self.assertFalse(audit["passed"])
+            self.assertEqual(len(audit["candidates"]), 1)
+        decision = {"command_sha256": hashlib.sha256(command.encode()).hexdigest(),
+                    "no_network_occurred": True, "reason": "retained command and output show only local status"}
+        self.assertTrue(runner.audit_network([str(transcript)], [], [decision])["passed"])
 
     def test_replacement_preserves_predecessor_and_uses_only_own_transcripts(self):
         runner.write(self.root / "artifacts" / "settle.json", {"completion": "stopped-invalid"})
@@ -313,6 +351,29 @@ class ReviewFixes(unittest.TestCase):
         self.assertEqual(events[-1]["operation"], "attempt-close")
         self.assertEqual(events[-1]["disposition"], "stopped-invalid")
         self.assertEqual(saved["settled_usd"], "3.0000000")
+
+    def test_settlement_invalidates_completed_timing_with_censored_stop(self):
+        self.fresh_ledger()
+        self.config["bundle"] = str(self.base)
+        self.row["arm"] = "A"
+        runner.claim_attempt(self.config, self.row, runner.cell_contexts(self.root, self.row))
+        self.assertEqual(runner.reserve(self.config, self.row, "10.00", "test").returncode, 0)
+        runner.write(self.root / "artifacts" / "dispatch.json", {
+            "attempt_id": self.row["attempt_id"], "arm": "A", "disposition": "dispatched",
+            "phases": [self.phase()], "problems": [], "ended_at": "2026-01-01T00:01:00+00:00"})
+        runner.write(self.root / "artifacts" / "cell-env-dispatch.json", {"permitted_roots": []})
+        sidecar = self.root / "work" / "timing.json"
+        runner.write(sidecar, {"root_dispatched_at": "2026-01-01T00:00:00+00:00",
+                               "completed_at": "2026-01-01T00:01:00+00:00"})
+        with patch.object(runner, "schedule_row", return_value=self.row):
+            runner.settle(self.config, 99)
+        record = runner.load(self.root / "artifacts" / "settle.json")
+        self.assertEqual(record["completion"], "stopped-invalid")
+        self.assertEqual(record["stopped_at"], "2026-01-01T00:01:00+00:00")
+        self.assertEqual(record["elapsed_seconds"], 60)
+        self.assertTrue(record["duration_censored"])
+        self.assertIsNone(runner.load(sidecar)["completed_at"])
+        self.assertIsNotNone(runner.load(self.root / "artifacts" / "timing-before-settlement.json")["completed_at"])
 
     def test_final_payload_change_requires_revalidation(self):
         script = SCRIPTS / "mark_event.py"
