@@ -1,6 +1,6 @@
 {
   "artifact_id": "issue-151-fidelity-assessment",
-  "assessed_at": "2026-09-10T07:43:33.704200+00:00",
+  "assessed_at": "2026-09-10T07:50:22.754947+00:00",
   "attempts": [
     {
       "arm": "A",
@@ -533,7 +533,7 @@
               "expected_model": "claude-sonnet-5",
               "observed_verified": true,
               "problems": [],
-              "provider_error_lines_dropped": 0,
+              "provider_error_lines_dropped": 1,
               "requested_evidence": "not retained; see missing_evidence",
               "sessions": 1
             }
