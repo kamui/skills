@@ -1,0 +1,96 @@
+{
+  "all_reviewers_stopped": true,
+  "artifact_id": "issue-151-stop-gate",
+  "attempt_dispositions": {
+    "by_disposition": {
+      "complete": 5,
+      "stopped-budget": 1,
+      "stopped-invalid": 2
+    },
+    "count": 8
+  },
+  "checks": [
+    {
+      "check": "no reviewer or coordinator process is running",
+      "command": [
+        "ps",
+        "-eo",
+        "pid=,ppid=,command="
+      ],
+      "detail": "no process outside this gate's own ancestry names a cell container, the coordinator or a cell workspace; 2 process(es) in the ancestry of this closeout session matched and were excluded, because the gate repeats the cell root on its own command line",
+      "exit_code": 0,
+      "match_count": 0,
+      "output_sha256": "3790677ee43436fd2465cd74e89619b48f5d7cae43c73e814fafdd547cc6ba66",
+      "own_ancestry_match_count": 2,
+      "passed": true
+    },
+    {
+      "check": "no cell container is running",
+      "command": [
+        "docker",
+        "ps",
+        "-a",
+        "--no-trunc",
+        "--format",
+        "{{.Names}}\t{{.Status}}"
+      ],
+      "detail": "the container runtime is not running, so no cell container can be executing; because cells run under `docker run --rm` a terminated cell leaves nothing to list, and this establishes no cell is live rather than how each one exited",
+      "exit_code": 1,
+      "match_count": 0,
+      "output_sha256": "e90af6b84c50d45322cfde00d0a8a0a18a11c0b0107ea23418efad546a87dac0",
+      "passed": true
+    },
+    {
+      "check": "no live cell workspace remains",
+      "configured_root_exists": false,
+      "detail": "the configured cell root does not exist and a sweep of the user's home found no surviving attempt workspace: every workspace was archived into the seal and removed, so the sealed archive is the only surviving copy of the raw evidence",
+      "passed": true,
+      "sweep_command": [
+        "find",
+        "/Users/jack",
+        "-maxdepth",
+        "5",
+        "-type",
+        "d",
+        "-name",
+        "position-0*"
+      ],
+      "sweep_match_count": 0,
+      "sweep_output_sha256": "551b57cb6901ea0e5a5448e5a6aca5d25b9a905ca8bfd7f82939cf5eaeb565c3",
+      "sweep_ran": true
+    },
+    {
+      "attempts_closed": 8,
+      "attempts_opened": 8,
+      "check": "every opened attempt is closed on the ledger",
+      "detail": "8 attempt-open events, 8 attempt-close events, 0 unclosed",
+      "passed": true,
+      "unclosed_count": 0
+    },
+    {
+      "check": "no budget reservation is outstanding",
+      "detail": "reservation deltas sum to 0.00 and the ledger header carries reserved_usd 0.00; an in-flight dispatch would hold a live reservation",
+      "header_reserved_usd": "0.00",
+      "passed": true,
+      "reservation_delta_sum_usd": "0.00"
+    },
+    {
+      "check": "the ledger chain is unbroken through its last event",
+      "detail": "80 events chain from the open event",
+      "event_count": 80,
+      "passed": true
+    },
+    {
+      "check": "no ledger event was appended after the last attempt closed",
+      "detail": "the newest ledger event is 2026-09-09T08:50:09.887559+00:00, before this gate at 2026-09-10T07:03:56.304298+00:00",
+      "latest_event_at": "2026-09-09T08:50:09.887559+00:00",
+      "passed": true
+    }
+  ],
+  "note": "Recorded before any sealed outcome was opened. #151 launches no further experimental reviewer run under the stopped handoff; this gate is what permits the sealed pilot evidence to be read for closeout.",
+  "observed_at": "2026-09-10T07:03:56.304298+00:00",
+  "probes_captured_at": "2026-09-10T07:03:47.302136+00:00",
+  "raw_capture": "retained outside the repository and sealed with the closeout evidence: a process command line or a container name can contain a slot",
+  "schema_version": "bounded-discovery-v1",
+  "seal_may_be_opened": true
+}
