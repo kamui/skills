@@ -1,0 +1,1488 @@
+{
+  "artifact_id": "issue-151-fidelity-assessment",
+  "assessed_at": "2026-09-10T19:00:24.477589+00:00",
+  "attempts": [
+    {
+      "arm": "A",
+      "attempt_ref": "position-01-attempt-1",
+      "block": "pilot",
+      "completion": "stopped-runtime",
+      "dimensions": {
+        "common_allowances": {
+          "detail": "nothing was allowed to run",
+          "verdict": "not applicable"
+        },
+        "completion_and_stop": {
+          "detail": "the aborted dispatch record and its timing file were retained; the attempt never reached a root dispatch, so it has no root elapsed and no #130 completion sidecar",
+          "elapsed_seconds": 1.482,
+          "phases": [
+            {
+              "cost_usd": 0.0,
+              "elapsed_seconds": 0.329,
+              "envelope": false,
+              "exit_code": 1,
+              "is_error": null,
+              "label": "primary-phase-1",
+              "num_turns": null,
+              "subtype": null
+            }
+          ],
+          "root_elapsed_seconds": null,
+          "timing_sidecar_fields": [
+            "completed_at",
+            "completion_mode",
+            "payload_validated_at",
+            "root_dispatched_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "detail": "no session was created",
+          "verdict": "not applicable"
+        },
+        "frozen_inputs": {
+          "detail": "the prompts of the attempt that replaced this one carry the frozen-input chain",
+          "verdict": "not applicable"
+        },
+        "isolation": {
+          "detail": "the cell never dispatched",
+          "verdict": "not applicable"
+        },
+        "requested_and_observed_settings": {
+          "detail": "no model request was issued: the launch was refused before any session started, so there is no setting to observe",
+          "verdict": "not applicable"
+        },
+        "usage_completeness": {
+          "detail": "settled at zero: the runtime issued no request, and the ledger carries a reserve and a settle for the attempt",
+          "verdict": "established"
+        }
+      },
+      "invalidated_by": "recorded basis",
+      "ledger_closed_as": "stopped-invalid",
+      "missing_evidence": [
+        "no transcript was retained: the launch failed before any model request, so there is nothing to verify settings against"
+      ],
+      "notes": [
+        "A replacement was consumed although nothing was measured: the ledger's own rule counts any second attempt at a cell as a replacement, and that rule governs over a narrative judgment that it should not."
+      ],
+      "operational_validity": "invalid",
+      "ordinal": 1,
+      "position": 1,
+      "produced_claims": false,
+      "replacement_consumed": true,
+      "replacement_eligible": false,
+      "settled_usd": "0.0000000",
+      "validity_basis": "documented coordinator invalidity, recorded when it happened"
+    },
+    {
+      "arm": "A",
+      "attempt_ref": "position-01-attempt-2",
+      "block": "pilot",
+      "completion": "complete",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 6,
+          "root_elapsed_seconds": 1864.592,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "3.8595330",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 33,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": "complete",
+          "completion_mode": "render-only",
+          "duration_censored": false,
+          "phases": [
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 6,
+              "phase": "primary-phase-1",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            }
+          ],
+          "root_elapsed_seconds": 1864.592,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "payload_validated_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "distinct_session_identities": 2,
+          "fresh_context_verified": true,
+          "passed": true,
+          "problems": [],
+          "sessions_scanned": 2,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "established"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "agents.json",
+                "dispatch.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 2,
+              "note": null,
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
+          "attestation_ready": true,
+          "passed": true,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [],
+          "protocol_invalidity": false,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 4,
+          "shell_commands": 33,
+          "tool_calls": 81,
+          "verdict": "established"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": true,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": true,
+          "roles": {
+            "primary": {
+              "assistant_lines": 126,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            },
+            "worker": {
+              "assistant_lines": 26,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 2,
+            "resolved": 0,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": null,
+          "per_model_split_recorded": [
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "3.845633",
+          "per_role_recovered_usd": {
+            "primary": "3.221167",
+            "worker": "0.624466"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "3.845633",
+          "reconciliation_residual_usd": "0.0139000",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "0.0103500",
+          "residual_untranscripted_models_usd": "0.0035500",
+          "self_report_usd": "3.8595330",
+          "settled_usd": "3.8595330",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0139000",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": false
+        }
+      },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
+      ],
+      "operational_validity": "unresolved",
+      "ordinal": 2,
+      "position": 1,
+      "problems_recorded_at_settlement": [],
+      "produced_claims": true,
+      "replacement_eligible": false,
+      "settled_usd": "3.8595330",
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "violations": []
+    },
+    {
+      "arm": "B",
+      "attempt_ref": "position-02-attempt-1",
+      "block": "pilot",
+      "completion": "complete",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 11,
+          "root_elapsed_seconds": 1214.654,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "3.8777270",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 36,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": "complete",
+          "completion_mode": "render-only",
+          "duration_censored": false,
+          "phases": [
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 11,
+              "phase": "primary-phase-1",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            }
+          ],
+          "root_elapsed_seconds": 1214.654,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "payload_validated_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "distinct_session_identities": 2,
+          "fresh_context_verified": true,
+          "passed": true,
+          "problems": [],
+          "sessions_scanned": 2,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "established"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "agents.json",
+                "dispatch.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 2,
+              "note": null,
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
+          "attestation_ready": true,
+          "passed": true,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [],
+          "protocol_invalidity": false,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 4,
+          "shell_commands": 36,
+          "tool_calls": 85,
+          "verdict": "established"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": true,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": true,
+          "roles": {
+            "primary": {
+              "assistant_lines": 135,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            },
+            "worker": {
+              "assistant_lines": 22,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 2,
+            "resolved": 0,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": null,
+          "per_model_split_recorded": [
+            "claude-opus-5",
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "3.874185",
+          "per_role_recovered_usd": {
+            "primary": "3.377537",
+            "worker": "0.496648"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "3.874185",
+          "reconciliation_residual_usd": "0.0035420",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "0.0000000",
+          "residual_untranscripted_models_usd": "0.0035420",
+          "self_report_usd": "3.8777270",
+          "settled_usd": "3.8777270",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0035420",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": true
+        }
+      },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
+      ],
+      "operational_validity": "unresolved",
+      "ordinal": 1,
+      "position": 2,
+      "problems_recorded_at_settlement": [],
+      "produced_claims": true,
+      "replacement_eligible": false,
+      "settled_usd": "3.8777270",
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "violations": []
+    },
+    {
+      "arm": "C",
+      "attempt_ref": "position-03-attempt-1",
+      "block": "pilot",
+      "completion": "stopped-runtime",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 7,
+          "root_elapsed_seconds": 493.267,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "1.5838690",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 25,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": null,
+          "completion_mode": "render-only",
+          "duration_censored": false,
+          "phases": [
+            {
+              "api_error_status": 502,
+              "envelope_retained": true,
+              "exit_code": 1,
+              "permission_denials": 7,
+              "phase": "primary-phase-1",
+              "stop_reason": "stop_sequence",
+              "subtype": "success",
+              "terminal_reason": "api_error"
+            }
+          ],
+          "root_elapsed_seconds": 493.267,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "admission_prompt_retained": false,
+          "barrier_freeze_recorded": false,
+          "distinct_session_identities": 2,
+          "finder_ran_in_its_own_store": true,
+          "fresh_context_verified": true,
+          "passed": false,
+          "problems": [
+            "no barrier freeze artifact was written before admission"
+          ],
+          "sessions_scanned": 2,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "violated"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "admission.md",
+                "agents.json",
+                "dispatch.md",
+                "finder-prompt.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 0,
+              "note": "no commitment was published for this attempt: the public summary commits to the attempt that settled at this position",
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
+          "attestation_ready": true,
+          "passed": true,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [],
+          "protocol_invalidity": false,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 4,
+          "shell_commands": 25,
+          "tool_calls": 53,
+          "verdict": "established"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": false,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": false,
+          "roles": {
+            "finder": {
+              "assistant_lines": 23,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            },
+            "primary": {
+              "assistant_lines": 72,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 1,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 0,
+            "resolved": 2,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": 1,
+          "per_model_split_recorded": [
+            "claude-opus-5",
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "1.558580",
+          "per_role_recovered_usd": {
+            "finder": "0.680374",
+            "primary": "0.878206"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "1.558580",
+          "reconciliation_residual_usd": "0.0252890",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "0.0213740",
+          "residual_untranscripted_models_usd": "0.0039150",
+          "self_report_usd": "1.5838690",
+          "settled_usd": "1.5838690",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0252890",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": false
+        }
+      },
+      "invalidated_by": "recorded basis",
+      "ledger_closed_as": "stopped-runtime",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
+        "no model-verification record was written for this attempt; the settings below are verified by this closeout from the retained transcripts instead",
+        "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained"
+      ],
+      "operational_validity": "invalid",
+      "ordinal": 1,
+      "position": 3,
+      "problems_recorded_at_settlement": [
+        "0.0213740 of the reconciliation residual is unexplained, above one per cent of the settled cost; meter by hand before trusting this cell"
+      ],
+      "produced_claims": false,
+      "replacement_eligible": false,
+      "settled_usd": "1.5838690",
+      "validity_basis": "documented infrastructure invalidity, recorded when it happened",
+      "violations": [
+        "no barrier freeze artifact was written before admission"
+      ]
+    },
+    {
+      "arm": "C",
+      "attempt_ref": "position-03-attempt-2",
+      "block": "pilot",
+      "completion": "complete",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 10,
+          "root_elapsed_seconds": 1880.859,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "7.0003047",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 43,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": "complete",
+          "completion_mode": "render-only",
+          "duration_censored": false,
+          "phases": [
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 7,
+              "phase": "primary-phase-1",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            },
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 3,
+              "phase": "primary-phase-2",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            }
+          ],
+          "root_elapsed_seconds": 1880.859,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "payload_validated_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "admission_prompt_retained": true,
+          "barrier_freeze_recorded": true,
+          "distinct_session_identities": 3,
+          "finder_ran_in_its_own_store": true,
+          "fresh_context_verified": true,
+          "passed": true,
+          "problems": [],
+          "sessions_scanned": 3,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "established"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "admission.md",
+                "agents.json",
+                "dispatch.md",
+                "finder-prompt.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 5,
+              "note": null,
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
+          "attestation_ready": true,
+          "passed": true,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [],
+          "protocol_invalidity": false,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 4,
+          "shell_commands": 43,
+          "tool_calls": 110,
+          "verdict": "established"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": true,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": true,
+          "roles": {
+            "finder": {
+              "assistant_lines": 20,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            },
+            "primary": {
+              "assistant_lines": 155,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            },
+            "worker": {
+              "assistant_lines": 38,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 3,
+            "resolved": 0,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": null,
+          "per_model_split_recorded": [
+            "claude-opus-5",
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "6.994659",
+          "per_role_recovered_usd": {
+            "finder": "0.663775",
+            "primary": "5.304207",
+            "worker": "1.026677"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "6.994658",
+          "reconciliation_residual_usd": "0.0056467",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "0.0017317",
+          "residual_untranscripted_models_usd": "0.0039150",
+          "self_report_usd": "7.0003047",
+          "settled_usd": "7.0003047",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0056457",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": true
+        }
+      },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
+      ],
+      "operational_validity": "unresolved",
+      "ordinal": 2,
+      "position": 3,
+      "problems_recorded_at_settlement": [],
+      "produced_claims": true,
+      "replacement_eligible": false,
+      "settled_usd": "7.0003047",
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "violations": []
+    },
+    {
+      "arm": "A",
+      "attempt_ref": "position-04-attempt-1",
+      "block": "pilot",
+      "completion": "complete",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 18,
+          "root_elapsed_seconds": 1110.633,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "4.5304828",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 70,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": "complete",
+          "completion_mode": "render-only",
+          "duration_censored": false,
+          "phases": [
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 18,
+              "phase": "primary-phase-1",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            }
+          ],
+          "root_elapsed_seconds": 1110.633,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "payload_validated_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "distinct_session_identities": 1,
+          "fresh_context_verified": true,
+          "passed": true,
+          "problems": [],
+          "sessions_scanned": 1,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "established"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "agents.json",
+                "dispatch.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 2,
+              "note": null,
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
+          "attestation_ready": true,
+          "passed": true,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [],
+          "protocol_invalidity": false,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 3,
+          "shell_commands": 70,
+          "tool_calls": 100,
+          "verdict": "established"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": true,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": true,
+          "roles": {
+            "primary": {
+              "assistant_lines": 183,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 1,
+            "resolved": 0,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": null,
+          "per_model_split_recorded": [
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "4.526997",
+          "per_role_recovered_usd": {
+            "primary": "4.526997"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "4.526997",
+          "reconciliation_residual_usd": "0.0034858",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "-0.0000002",
+          "residual_untranscripted_models_usd": "0.0034860",
+          "self_report_usd": "4.5304828",
+          "settled_usd": "4.5304828",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0034858",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": true
+        }
+      },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
+        "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained"
+      ],
+      "operational_validity": "unresolved",
+      "ordinal": 1,
+      "position": 4,
+      "problems_recorded_at_settlement": [],
+      "produced_claims": true,
+      "replacement_eligible": false,
+      "settled_usd": "4.5304828",
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "violations": []
+    },
+    {
+      "arm": "B",
+      "attempt_ref": "position-05-attempt-1",
+      "block": "pilot",
+      "completion": "complete",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 16,
+          "root_elapsed_seconds": 1667.18,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "6.3671277",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 58,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": "complete",
+          "completion_mode": "render-only",
+          "duration_censored": false,
+          "phases": [
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 16,
+              "phase": "primary-phase-1",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            }
+          ],
+          "root_elapsed_seconds": 1667.18,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "payload_validated_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "distinct_session_identities": 2,
+          "fresh_context_verified": true,
+          "passed": true,
+          "problems": [],
+          "sessions_scanned": 2,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "established"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "agents.json",
+                "dispatch.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 2,
+              "note": null,
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [
+            {
+              "note": "the recorded judgment quotes the path the cell read, which is inside the target's own source tree, so it stays in the seal",
+              "reason_retained_in_sealed_evidence": true,
+              "via": "Bash"
+            }
+          ],
+          "accepted_reads_outside_permitted_roots": 1,
+          "attestation_ready": true,
+          "passed": false,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [
+            "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance"
+          ],
+          "protocol_invalidity": true,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 3,
+          "shell_commands": 58,
+          "tool_calls": 137,
+          "verdict": "violated"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": true,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": true,
+          "roles": {
+            "primary": {
+              "assistant_lines": 205,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            },
+            "worker": {
+              "assistant_lines": 45,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 2,
+            "resolved": 0,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": null,
+          "per_model_split_recorded": [
+            "claude-opus-5",
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "6.335596",
+          "per_role_recovered_usd": {
+            "primary": "5.055498",
+            "worker": "1.280098"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "6.335596",
+          "reconciliation_residual_usd": "0.0315317",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "0.0280687",
+          "residual_untranscripted_models_usd": "0.0034630",
+          "self_report_usd": "6.3671277",
+          "settled_usd": "6.3671277",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0315317",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": false
+        }
+      },
+      "invalidated_by": "this assessment",
+      "ledger_closed_as": "complete",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
+      ],
+      "operational_validity": "invalid",
+      "ordinal": 1,
+      "position": 5,
+      "problems_recorded_at_settlement": [],
+      "produced_claims": true,
+      "replacement_eligible": true,
+      "settled_usd": "6.3671277",
+      "validity_basis": "a read outside the permitted roots, invalid on protocol grounds under preregistration section 5; the acceptance recorded at settlement is preserved as history and does not amend the frozen rule",
+      "violations": [
+        "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance"
+      ]
+    },
+    {
+      "arm": "C",
+      "attempt_ref": "position-06-attempt-1",
+      "block": "pilot",
+      "completion": "stopped-budget",
+      "dimensions": {
+        "common_allowances": {
+          "ceiling_usd": "9.00",
+          "detail": "the enforced ceilings cannot be read back. What is retained: the rendered dispatch prompt with its execution allowance, the permission denials the restricted layer produced, and a settled cost inside the frozen ceiling.",
+          "one_call_headroom_usd": "1.00",
+          "permission_denials_observed": 15,
+          "root_elapsed_seconds": 2148.942,
+          "root_wall_ceiling_seconds": 5400,
+          "settled_usd": "9.0040632",
+          "settled_within_ceiling": true,
+          "shell_command_ceiling": 120,
+          "shell_commands": 75,
+          "verdict": "unresolved"
+        },
+        "completion_and_stop": {
+          "completion": "stopped-budget",
+          "completion_mode": "render-only",
+          "duration_censored": true,
+          "phases": [
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 0,
+              "permission_denials": 13,
+              "phase": "primary-phase-1",
+              "stop_reason": "end_turn",
+              "subtype": "success",
+              "terminal_reason": "completed"
+            },
+            {
+              "api_error_status": null,
+              "envelope_retained": true,
+              "exit_code": 1,
+              "permission_denials": 2,
+              "phase": "primary-phase-2",
+              "stop_reason": "tool_use",
+              "subtype": "error_max_budget_usd",
+              "terminal_reason": "budget_exhausted"
+            }
+          ],
+          "root_elapsed_seconds": 2148.942,
+          "timing_sidecar_fields": [
+            "completion_mode",
+            "root_dispatched_at",
+            "completed_at"
+          ],
+          "verdict": "established"
+        },
+        "context_separation": {
+          "admission_prompt_retained": true,
+          "barrier_freeze_recorded": true,
+          "distinct_session_identities": 3,
+          "finder_ran_in_its_own_store": true,
+          "fresh_context_verified": true,
+          "passed": true,
+          "problems": [],
+          "sessions_scanned": 3,
+          "sessions_without_a_single_root_message": [],
+          "verdict": "established"
+        },
+        "frozen_inputs": {
+          "checks": [
+            {
+              "check": "the dispatch template is the frozen one",
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt still matches the digest sealed with it",
+              "files": [
+                "admission.md",
+                "agents.json",
+                "dispatch.md",
+                "finder-prompt.md"
+              ],
+              "passed": true
+            },
+            {
+              "check": "every rendered prompt matches the HMAC published in the cell summary",
+              "commitments_checked": 5,
+              "note": null,
+              "passed": true
+            },
+            {
+              "check": "the source packet is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the selected scope is the frozen one for this attempt's target",
+              "passed": true
+            },
+            {
+              "check": "the policy snapshot is the pinned commit and tree",
+              "passed": true
+            }
+          ],
+          "passed": true,
+          "problems": [],
+          "verdict": "established"
+        },
+        "isolation": {
+          "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
+          "attestation_ready": true,
+          "passed": true,
+          "post_dispatch_ready": true,
+          "pre_dispatch_ready": true,
+          "problems": [],
+          "protocol_invalidity": false,
+          "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
+          "reads_outside_permitted_roots": 0,
+          "requested_mount_count": 3,
+          "shell_commands": 75,
+          "tool_calls": 149,
+          "verdict": "established"
+        },
+        "requested_and_observed_settings": {
+          "agrees_with_historical_record": true,
+          "detail": "observed settings recomputed by this closeout from every retained transcript, not taken from the attempt's own verification record",
+          "historical_record_present": true,
+          "roles": {
+            "finder": {
+              "assistant_lines": 34,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            },
+            "primary": {
+              "assistant_lines": 187,
+              "expected_effort": "high",
+              "expected_model": "claude-sonnet-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "not retained; see missing_evidence",
+              "sessions": 1
+            },
+            "worker": {
+              "assistant_lines": 51,
+              "expected_effort": "high",
+              "expected_model": "claude-opus-5",
+              "observed_verified": true,
+              "problems": [],
+              "provider_error_lines_dropped": 0,
+              "requested_evidence": "the startup agent definition retained with the attempt",
+              "sessions": 1
+            }
+          },
+          "verdict": "established"
+        },
+        "usage_completeness": {
+          "metered_sessions": {
+            "original": 3,
+            "resolved": 0,
+            "unresolved": 0
+          },
+          "metering_filtered_synthetic_lines": null,
+          "per_model_split_recorded": [
+            "claude-opus-5",
+            "claude-sonnet-5"
+          ],
+          "per_role_recovered_total_usd": "8.998486",
+          "per_role_recovered_usd": {
+            "finder": "1.215919",
+            "primary": "5.971694",
+            "worker": "1.810873"
+          },
+          "per_role_split_recorded": [
+            "unassigned"
+          ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
+          "recomputed_usd": "8.998486",
+          "reconciliation_residual_usd": "0.0055772",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
+          "residual_unexplained_usd": "0.0017312",
+          "residual_untranscripted_models_usd": "0.0038460",
+          "self_report_usd": "9.0040632",
+          "settled_usd": "9.0040632",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0055772",
+          "unassigned_role_usd": null,
+          "verdict": "established",
+          "within_tolerance": true
+        }
+      },
+      "invalidated_by": null,
+      "ledger_closed_as": "stopped-budget",
+      "missing_evidence": [
+        "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
+      ],
+      "operational_validity": "unresolved",
+      "ordinal": 1,
+      "position": 6,
+      "problems_recorded_at_settlement": [],
+      "produced_claims": true,
+      "replacement_eligible": false,
+      "settled_usd": "9.0040632",
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "violations": []
+    }
+  ],
+  "attempts_assessed": 8,
+  "decision": "Unresolved, with the missing evidence named. position-03-attempt-1 shows an observed violation - no barrier freeze artifact was written before admission - and it is already closed as invalid on its recorded basis. position-05-attempt-1 shows an observed violation - 1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance - and this assessment invalidates it under the frozen rule, and it is replacement-eligible. No other attempt shows one: every retained transcript verifies to the frozen model and effort for its role, every absence gate and attestation passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established for any attempt is that each cell was launched under the identical frozen allowances, because the launch argv was never retained. Under the frozen rule an unobservable setting is not a pass, so those attempts are carried as unresolved rather than valid.",
+  "effect_on_grading": "An unresolved attempt is not a valid completed outcome, and an invalid attempt is not scored as a substantive result; under section 8 both count as missing rather than present. That join is #153's, made after #152's rulings freeze: the adjudicator receives the packets without validity, completion, cost or fidelity labels, and #152's coordinator keeps this assessment beside the ruling table, not inside it. Raw claims from invalid attempts are still graded for correctness.",
+  "finding_id": "pilot/actual-fidelity",
+  "gate": {
+    "all_reviewers_stopped": true,
+    "observed_at": "2026-09-10T07:03:56.304298+00:00"
+  },
+  "invalid": [
+    "position-01-attempt-1",
+    "position-03-attempt-1",
+    "position-05-attempt-1"
+  ],
+  "invalidation_rule": {
+    "affected_positions": [
+      5
+    ],
+    "applied": true,
+    "detail": "The frozen rule invalidates exactly the comparison cells a change affects. position-05-attempt-1 is invalidated by this assessment on protocol grounds: a read outside the permitted roots, which preregistration section 5 makes invalidating with no exception for where the bytes came from. Such a read changes nothing another cell consumed, so no other member is contaminated; what it does is leave every comparison that needed position 5 without a member. It is replacement-eligible under the allowance, and the stopped path dispatches no replacement. The two attempts closed as invalid on their recorded basis failed before producing a comparable outcome and share no input with any other cell, so they invalidate no further member; each was already replaced within the frozen allowance. No budget stop is treated as infrastructure invalidity: position 6's stop is a measured result and is not replacement-eligible.",
+    "invalidated_by_this_assessment": [
+      "position-05-attempt-1"
+    ]
+  },
+  "missing_evidence": [
+    "no model-verification record was written for this attempt; the settings below are verified by this closeout from the retained transcripts instead",
+    "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
+    "no transcript was retained: the launch failed before any model request, so there is nothing to verify settings against",
+    "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained",
+    "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact"
+  ],
+  "observed_violations": [
+    "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance",
+    "no barrier freeze artifact was written before admission"
+  ],
+  "replacement_eligible": [
+    "position-05-attempt-1"
+  ],
+  "schema_version": "bounded-discovery-v1",
+  "status": "unresolved",
+  "unresolved": [
+    "position-01-attempt-2",
+    "position-02-attempt-1",
+    "position-03-attempt-2",
+    "position-04-attempt-1",
+    "position-06-attempt-1"
+  ],
+  "valid": []
+}
