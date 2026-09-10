@@ -74,6 +74,7 @@ def cell_records(bundle) -> list:
             "disposition": summary.get("disposition"),
             "completion": summary.get("completion"),
             "operational_validity": summary.get("operational_validity"),
+            "stop_reason": summary.get("stop_reason"),
             "valid_completed": completed and not summary.get("problems")
                                and summary.get("operational_validity") != "invalid",
             "elapsed_seconds": summary.get("elapsed_seconds"),

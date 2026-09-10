@@ -204,6 +204,15 @@ class ReviewFixes(unittest.TestCase):
         saved = runner.load(self.root / "artifacts" / "settle.json")
         self.assertEqual(saved["operational_validity"], "valid")
         self.assertEqual(saved["settled_usd"], "0.0000000")
+        self.assertEqual(saved["dispatch_stop_reason"], record["stop_reason"])
+        runner.write(self.root / "artifacts" / "prepare.json",
+                     dict(self.row, replicate=1, block="pilot", problems=[]))
+        public = archive.summarize(self.root, [], b"synthetic-salt")
+        self.assertEqual(public["stop_reason"], record["stop_reason"])
+        target = self.base / "public" / "cells" / "position-01"
+        target.mkdir(parents=True)
+        runner.write(target / "summary.json", public)
+        self.assertEqual(handoff.cell_records(self.base / "public")[0]["stop_reason"], record["stop_reason"])
 
     def test_primary_error_envelope_stops_before_resume(self):
         record, finder, launches, _, isolation = self.dispatch([
