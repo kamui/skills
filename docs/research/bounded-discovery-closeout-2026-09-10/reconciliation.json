@@ -13,7 +13,8 @@
       "reconciliation_residual_usd": "0.0000000",
       "residual_unexplained_usd": null,
       "residual_untranscripted_models_usd": null,
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": false,
       "self_report_usd": "0.0000000"
     },
     {
@@ -25,15 +26,21 @@
         "claude-sonnet-5"
       ],
       "ordinal": 2,
+      "per_role_recovered_usd": {
+        "primary": "3.221167",
+        "worker": "0.624466"
+      },
       "position": 1,
       "recomputed_usage_usd": "3.845633",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0139000",
       "residual_unexplained_usd": "0.0103500",
       "residual_untranscripted_models_usd": "0.0035500",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "3.8595330",
-      "settlement_problems": []
+      "settlement_problems": [],
+      "unassigned_residual_usd": "0.0139000"
     },
     {
       "arm": "B",
@@ -45,15 +52,21 @@
         "claude-sonnet-5"
       ],
       "ordinal": 1,
+      "per_role_recovered_usd": {
+        "primary": "3.377537",
+        "worker": "0.496648"
+      },
       "position": 2,
       "recomputed_usage_usd": "3.874185",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0035420",
       "residual_unexplained_usd": "0.0000000",
       "residual_untranscripted_models_usd": "0.0035420",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "3.8777270",
-      "settlement_problems": []
+      "settlement_problems": [],
+      "unassigned_residual_usd": "0.0035420"
     },
     {
       "arm": "C",
@@ -65,17 +78,22 @@
         "claude-sonnet-5"
       ],
       "ordinal": 1,
+      "per_role_recovered_usd": {
+        "primary": "1.558580"
+      },
       "position": 3,
       "recomputed_usage_usd": "1.558580",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0252890",
       "residual_unexplained_usd": "0.0213740",
       "residual_untranscripted_models_usd": "0.0039150",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "1.5838690",
       "settlement_problems": [
         "0.0213740 of the reconciliation residual is unexplained, above one per cent of the settled cost; meter by hand before trusting this cell"
-      ]
+      ],
+      "unassigned_residual_usd": "0.0252890"
     },
     {
       "arm": "C",
@@ -87,15 +105,22 @@
         "claude-sonnet-5"
       ],
       "ordinal": 2,
+      "per_role_recovered_usd": {
+        "finder": "0.663775",
+        "primary": "5.304207",
+        "worker": "1.026677"
+      },
       "position": 3,
       "recomputed_usage_usd": "6.994658",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0056467",
       "residual_unexplained_usd": "0.0017317",
       "residual_untranscripted_models_usd": "0.0039150",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "7.0003047",
-      "settlement_problems": []
+      "settlement_problems": [],
+      "unassigned_residual_usd": "0.0056457"
     },
     {
       "arm": "A",
@@ -106,15 +131,20 @@
         "claude-sonnet-5"
       ],
       "ordinal": 1,
+      "per_role_recovered_usd": {
+        "primary": "4.526997"
+      },
       "position": 4,
       "recomputed_usage_usd": "4.526997",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0034858",
       "residual_unexplained_usd": "-0.0000002",
       "residual_untranscripted_models_usd": "0.0034860",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "4.5304828",
-      "settlement_problems": []
+      "settlement_problems": [],
+      "unassigned_residual_usd": "0.0034858"
     },
     {
       "arm": "B",
@@ -126,15 +156,21 @@
         "claude-sonnet-5"
       ],
       "ordinal": 1,
+      "per_role_recovered_usd": {
+        "primary": "5.055498",
+        "worker": "1.280098"
+      },
       "position": 5,
       "recomputed_usage_usd": "6.335596",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0315317",
       "residual_unexplained_usd": "0.0280687",
       "residual_untranscripted_models_usd": "0.0034630",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "6.3671277",
-      "settlement_problems": []
+      "settlement_problems": [],
+      "unassigned_residual_usd": "0.0315317"
     },
     {
       "arm": "C",
@@ -146,15 +182,22 @@
         "claude-sonnet-5"
       ],
       "ordinal": 1,
+      "per_role_recovered_usd": {
+        "finder": "1.215919",
+        "primary": "5.971694",
+        "worker": "1.810873"
+      },
       "position": 6,
       "recomputed_usage_usd": "8.998486",
       "reconciles": true,
       "reconciliation_residual_usd": "0.0055772",
       "residual_unexplained_usd": "0.0017312",
       "residual_untranscripted_models_usd": "0.0038460",
-      "role_split_available": false,
+      "role_split_recorded_at_settlement": false,
+      "role_split_recovered": true,
       "self_report_usd": "9.0040632",
-      "settlement_problems": []
+      "settlement_problems": [],
+      "unassigned_residual_usd": "0.0055772"
     }
   ],
   "columns": {
@@ -206,10 +249,25 @@
       "what": "position-03-attempt-1 carries an unexplained reconciliation residual above one per cent of the settled cost"
     },
     {
-      "effect": "primary, finder and verifier spend cannot be separated where one arm runs a single model. Per-model splits survive and are reported instead.",
+      "effect": "the split is recovered in this closeout for 7 attempt(s) from the retained per-transcript costs, each session's role read from its path; the settled charge no transcript accounts for stays unassigned. The historical artifacts are unchanged.",
       "id": "ledger/no-per-role-split",
+      "recovered_for": [
+        "position-01-attempt-2",
+        "position-02-attempt-1",
+        "position-03-attempt-1",
+        "position-03-attempt-2",
+        "position-04-attempt-1",
+        "position-05-attempt-1",
+        "position-06-attempt-1"
+      ],
       "repaired": false,
-      "what": "no attempt carries the per-role cost split preregistration section 7 asks settlement to take from the transcripts"
+      "what": "no attempt recorded the per-role cost split preregistration section 7 asks settlement to take from the transcripts"
+    },
+    {
+      "effect": "the ledger's close is left as written, because the chain is append-only; the assessment governs validity and the manifest carries its verdict",
+      "id": "ledger/attempt-close-differs-from-assessment",
+      "repaired": false,
+      "what": "the ledger closes position-05-attempt-1 as `complete`; this assessment finds it invalid: a read outside the permitted roots, invalid on protocol grounds under preregistration section 5; the acceptance recorded at settlement is preserved as history and does not amend the frozen rule"
     }
   ],
   "ledger": {
@@ -225,12 +283,13 @@
     "published_digest_sha256": "8470b46872339b3f7e44752b51f3c0993825a64ab1924bbb01ed1d48e025cabd",
     "reserved_usd": "0.00"
   },
-  "reconciled_at": "2026-09-10T07:43:13.117442+00:00",
+  "reconciled_at": "2026-09-10T08:35:00.372785+00:00",
   "repair": {
     "attempt_limit": 27,
     "attempts_remaining": 19,
     "attempts_used": 8,
     "binding_constraint": "the replacement allowance: 1 replacement(s) remain against 6 cells that would have to be re-run",
+    "cells_a_repair_would_run": 6,
     "consequence": "Section 6 governs: when required invalidation exceeds the allowance, stop and close out the partial experiment. This ticket therefore delivers closeout and dispatches nothing. The money would fit; the replacement allowance does not, and the allowance is not this ticket's to raise.",
     "dispatched": false,
     "fits_attempt_allowance": true,
@@ -238,8 +297,9 @@
     "fits_money": true,
     "fits_replacement_allowance": false,
     "remaining_under_cap_usd": "92.5220259",
-    "repair_considered": "re-running the 6 attempts this assessment leaves unresolved, under a coordinator that retains the launch argv and meters per role",
+    "repair_considered": "re-running the 5 attempts this assessment leaves unresolved and the 1 it invalidates on protocol grounds, under a coordinator that retains the launch argv and meters per role",
     "repair_cost_at_measured_rates_usd": "34.6392384",
+    "replacement_eligible_invalid": 1,
     "replacement_limit": 3,
     "replacements_remaining": 1,
     "replacements_used": 2
