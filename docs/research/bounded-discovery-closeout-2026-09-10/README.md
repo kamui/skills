@@ -34,8 +34,9 @@ as: no process outside this session's own ancestry names a cell container, the c
 workspace; no cell container is live; all eight attempts opened on the ledger are closed; no
 reservation is outstanding; the eighty-event chain is unbroken; and nothing was appended after the
 last attempt closed. All six pass. The seventh — that no attempt workspace survives on disk — is
-**corroborating**: a workspace is where a run could be hosted, not evidence of one, so it is reported
-as established or unestablished and decides nothing.
+**corroborating**: a workspace is where a run could be hosted, not evidence of one. When that check
+cannot establish absence it decides nothing and the required evidence governs; when it positively
+finds a workspace, that is evidence, and it shuts the gate.
 
 That classification, and a stricter scoring rule, were introduced after review and applied by
 re-scoring the gate's own captured probes at its original instant rather than by running it again,

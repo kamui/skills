@@ -23,6 +23,10 @@ evidence into a result:
 Subcommands::
 
     closeout.py gate --ledger L --out gate.json [--probes-from F] [--raw-out F]
+    closeout.py gate-re-evaluate --gate gate.json --raw-capture F --ledger L \\
+        --cells-root R --out gate.json
+    closeout.py gate-supplement --gate gate.json --ledger L --cells-root R... \\
+        [--sweep P...] [--exclude PREFIX] --out gate-supplement.json
     closeout.py open-seal --gate gate.json --seal S --key K --archive A --into D
     closeout.py fidelity --gate gate.json --evidence D --bundle B --out F
     closeout.py reconcile --ledger L --evidence D --bundle B --out R
@@ -261,9 +265,11 @@ def latest_event_time(ledger) -> str:
 
 # What the gate is for is establishing that no reviewer run is still executing.
 # A run shows up as a process, as a container, and as an open attempt or a live
-# reservation on the ledger; those checks are required. A workspace on disk is
-# where a run *could* be hosted, not evidence of one, so its check corroborates
-# and is reported as established or unestablished without deciding the gate.
+# reservation on the ledger; those checks are required and every one must pass.
+# A workspace on disk is where a run *could* be hosted, not evidence of one, so
+# its check corroborates: when it cannot establish absence - the sweep did not
+# complete - it decides nothing and the required evidence governs; when it
+# positively finds a workspace, that is evidence, and it shuts the gate.
 REQUIRED_CHECKS = ("no reviewer or coordinator process is running",
                    "no cell container is running",
                    "every opened attempt is closed on the ledger",
@@ -329,21 +335,25 @@ def build_gate(ledger, probes, cells_root, observed_at=None) -> dict:
     workspaces_present = root_present or bool(stray)
     swept = probe_completed(sweep)
     if workspaces_present:
+        workspace_outcome = "detected"
         workspace_detail = (("the configured cell root exists" if root_present else "")
                             + ("%s%d stray attempt workspace(s) were found"
                                % ("; " if root_present else "", len(stray)) if stray else ""))
     elif not swept:
+        workspace_outcome = "unestablished"
         workspace_detail = ("the configured cell root does not exist, but the sweep did not "
                             "complete (exit %s): directories it could not enter were not "
                             "swept, so absence beyond that root is unestablished"
                             % sweep.get("exit_code"))
     else:
+        workspace_outcome = "passed"
         workspace_detail = ("the configured cell root does not exist and a completed sweep of "
                             "the swept paths found no surviving attempt workspace: every "
                             "workspace was archived into the seal and removed, so the sealed "
                             "archive is the only surviving copy of the raw evidence")
     checks.append({"check": "no live cell workspace remains",
-                   "passed": (not workspaces_present) and swept,
+                   "passed": workspace_outcome == "passed",
+                   "outcome": workspace_outcome,
                    "detail": workspace_detail,
                    "configured_root_exists": root_present,
                    "sweep_ran": bool(sweep.get("ran")),
@@ -388,23 +398,33 @@ def build_gate(ledger, probes, cells_root, observed_at=None) -> dict:
 
     for check in checks:
         check["class"] = "required" if check["check"] in REQUIRED_CHECKS else "corroborating"
+        check.setdefault("outcome", "passed" if check["passed"] else "failed")
     required_passed = all(check["passed"] for check in checks if check["class"] == "required")
+    # A corroborating check that positively found something is evidence of a
+    # live workspace; one that could not establish absence is not evidence of
+    # anything, and the required checks decide.
+    detected = [check["check"] for check in checks
+                if check["class"] == "corroborating" and check["outcome"] == "detected"]
+    gate_open = required_passed and not detected
     every_check = all(check["passed"] for check in checks)
     return {
         "schema_version": "bounded-discovery-v1",
         "artifact_id": "issue-151-stop-gate",
         "observed_at": observed_at,
         "probes_captured_at": probes.get("captured_at"),
-        "all_reviewers_stopped": required_passed,
-        "seal_may_be_opened": required_passed,
+        "all_reviewers_stopped": gate_open,
+        "seal_may_be_opened": gate_open,
         "every_check_established": every_check,
+        "corroboration_detected": detected,
         "unestablished_corroboration": [check["check"] for check in checks
                                         if check["class"] == "corroborating"
-                                        and not check["passed"]],
+                                        and check["outcome"] == "unestablished"],
         "check_classes": ("required checks are the ones that show a reviewer run - a process, "
                           "a container, an open attempt or a live reservation on the ledger - "
-                          "and every one must pass for the seal to open; a corroborating check "
-                          "is reported as established or unestablished and decides nothing"),
+                          "and every one must pass for the seal to open. A corroborating check "
+                          "that could not establish absence decides nothing and the required "
+                          "evidence governs; one that positively found a workspace is evidence "
+                          "and shuts the gate"),
         "checks": checks,
         "attempt_dispositions": state["dispositions"] and {
             # Dispositions are carried by position, never by attempt id: an
@@ -430,9 +450,7 @@ def command_gate(args) -> int:
     write(args.out, gate)
     for check in gate["checks"]:
         if not check["passed"]:
-            print("gate check %s: %s - %s"
-                  % ("failed" if check["class"] == "required" else "unestablished",
-                     check["check"], check["detail"]))
+            print("gate check %s: %s - %s" % (check["outcome"], check["check"], check["detail"]))
     return 0 if gate["all_reviewers_stopped"] else 1
 
 
@@ -457,16 +475,17 @@ def command_gate_re_evaluate(args) -> int:
         if previous.get("passed") != check["passed"]:
             changed.append({"check": check["check"], "class": check["class"],
                             "was": "passed" if previous.get("passed") else "failed",
-                            "now": "passed" if check["passed"] else
-                                   ("failed" if check["class"] == "required" else "unestablished"),
+                            "now": check["outcome"],
                             "why": check["detail"]})
     rescored["probes_captured_at"] = gate.get("probes_captured_at")
     rescored["re_evaluation"] = {
         "re_evaluated_at": now(),
         "original_all_reviewers_stopped": gate.get("all_reviewers_stopped"),
         "rule_change": ("a probe that did not run or exited non-zero no longer passes its check "
-                        "on empty output; checks are classed as required or corroborating, and "
-                        "only the required ones decide whether the seal may open"),
+                        "on empty output; checks are classed as required or corroborating; the "
+                        "required ones must all pass, a corroborating check that could not "
+                        "establish absence decides nothing, and one that positively detected a "
+                        "workspace shuts the gate"),
         "checks_changed": changed,
         "note": ("Scored from the probes captured at %s, at the original instant. The "
                  "timestamps are the original ones; only the scoring rule moved."
@@ -2423,10 +2442,10 @@ def self_test() -> int:
                                "--cells-root", str(tmp / "present-cells"),
                                "--out", str(tmp / "gate6.json")],
                               capture_output=True, text=True, encoding="utf-8")
-        check("a surviving cell workspace is reported as unestablished corroboration",
-              code.returncode == 0
-              and json.loads((tmp / "gate6.json").read_text(encoding="utf-8"))[
-                  "unestablished_corroboration"] == ["no live cell workspace remains"])
+        gate6 = json.loads((tmp / "gate6.json").read_text(encoding="utf-8"))
+        check("a surviving configured cell root shuts the gate",
+              code.returncode == 1 and gate6["all_reviewers_stopped"] is False
+              and gate6["corroboration_detected"] == ["no live cell workspace remains"])
 
         # A probe that did not complete establishes nothing, whatever it printed.
         for name, field, probe, expect_required in (
@@ -2497,10 +2516,10 @@ def self_test() -> int:
                                "--cells-root", str(tmp / "absent-cells"),
                                "--out", str(tmp / "gate7.json")],
                               capture_output=True, text=True, encoding="utf-8")
-        check("a stray attempt workspace is reported, and does not itself shut the gate",
-              code.returncode == 0
-              and not [c for c in json.loads((tmp / "gate7.json").read_text(
-                  encoding="utf-8"))["checks"] if c["check"].startswith("no live cell")][0]["passed"])
+        gate7 = json.loads((tmp / "gate7.json").read_text(encoding="utf-8"))
+        check("a stray attempt workspace found by a completed sweep shuts the gate",
+              code.returncode == 1 and gate7["all_reviewers_stopped"] is False
+              and gate7["corroboration_detected"] == ["no live cell workspace remains"])
 
         # An uncaptured sweep cannot establish absence.
         unswept = json.loads(json.dumps(quiet_probes))
@@ -2513,10 +2532,12 @@ def self_test() -> int:
                                "--cells-root", str(tmp / "absent-cells"),
                                "--out", str(tmp / "gate8.json")],
                               capture_output=True, text=True, encoding="utf-8")
-        check("an uncaptured workspace sweep is reported as unestablished corroboration",
-              code.returncode == 0
-              and json.loads((tmp / "gate8.json").read_text(encoding="utf-8"))[
-                  "every_check_established"] is False)
+        gate8 = json.loads((tmp / "gate8.json").read_text(encoding="utf-8"))
+        check("an uncaptured workspace sweep is unestablished and does not decide the gate",
+              code.returncode == 0 and gate8["all_reviewers_stopped"] is True
+              and gate8["every_check_established"] is False
+              and gate8["unestablished_corroboration"] == ["no live cell workspace remains"]
+              and gate8["corroboration_detected"] == [])
 
         # --- the fidelity assessment ---------------------------------------
         # A provider error writes an assistant line under `<synthetic>`. It must
