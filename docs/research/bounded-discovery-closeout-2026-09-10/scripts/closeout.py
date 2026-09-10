@@ -1610,6 +1610,62 @@ def command_manifest(args) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------
+# Sealing what may not be published in the clear
+# --------------------------------------------------------------------------
+
+def command_seal(args) -> int:
+    """Seal a directory under #148's key, in #149's parameters.
+
+    The grading packets cannot be committed in the clear however well the arm
+    labels are masked. Their prose has to keep file paths and symbol names for
+    the grading to mean anything, and those name the target - so publishing the
+    six pilot packets would name the two slots the pilot ran on, and the public
+    selection rule turns that pair into the clean slot."""
+    source = Path(os.path.expanduser(args.source))
+    out = Path(os.path.expanduser(args.out_dir))
+    if not source.is_dir():
+        print("nothing to seal at %s" % source)
+        return 1
+    out.mkdir(parents=True, exist_ok=True)
+    plaintext = out / (args.name + ".tar.gz")
+    ciphertext = out / (args.name + ".tar.gz.enc")
+
+    files = sorted(entry.name for entry in source.iterdir() if entry.is_file())
+    if not files:
+        print("nothing to seal: %s holds no file" % source)
+        return 1
+    archive = capture(["tar", "-czf", str(plaintext), "-C", str(source)] + files, timeout=900)
+    if archive["exit_code"] != 0:
+        sys.stderr.write("tar failed: %s\n" % archive["stderr"][:400])
+        return 2
+    plaintext_sha = hashlib.sha256(plaintext.read_bytes()).hexdigest()
+    encrypt = capture(["openssl", "enc", "-aes-256-cbc", "-pbkdf2", "-iter", "200000", "-salt",
+                       "-pass", "file:%s" % os.path.expanduser(args.key),
+                       "-in", str(plaintext), "-out", str(ciphertext)], timeout=900)
+    if encrypt["exit_code"] != 0:
+        sys.stderr.write("openssl enc failed: %s\n" % encrypt["stderr"][:400])
+        return 2
+    ciphertext_bytes = ciphertext.read_bytes()
+    plaintext.unlink()
+
+    (out / "SHA256SUMS").write_text("%s  %s\n" % (plaintext_sha, plaintext.name), encoding="utf-8")
+    seal = {
+        "schema_version": "bounded-discovery-v1",
+        "artifact_id": "issue-151-%s-seal" % args.name,
+        "sealed_at": now(),
+        "ciphertext_bytes": len(ciphertext_bytes),
+        "ciphertext_sha256": hashlib.sha256(ciphertext_bytes).hexdigest(),
+        "plaintext_sha256": plaintext_sha,
+        "files_sealed": files,
+        "cipher": "openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt, under #148's key",
+        "why_sealed": args.why,
+    }
+    write(out / "seal.json", seal)
+    print(json.dumps({"files": len(files), "ciphertext_bytes": seal["ciphertext_bytes"]}))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--self-test", action="store_true",
@@ -1664,6 +1720,14 @@ def build_parser() -> argparse.ArgumentParser:
                                                                    "slot-4"])
     cell_manifest.add_argument("--out", required=True)
     cell_manifest.set_defaults(handler=command_manifest)
+
+    seal_cmd = sub.add_parser("seal", help="seal a directory under #148's key")
+    seal_cmd.add_argument("--source", required=True)
+    seal_cmd.add_argument("--key", required=True)
+    seal_cmd.add_argument("--name", required=True)
+    seal_cmd.add_argument("--why", required=True)
+    seal_cmd.add_argument("--out-dir", required=True)
+    seal_cmd.set_defaults(handler=command_seal)
     return parser
 
 
