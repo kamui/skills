@@ -125,7 +125,10 @@ events, or establish from evidence that no traffic occurred. Command spelling al
 the audit. This is an audit requirement, not a firewall.
 
 Dispatch now collects the finder and retains its output before closeout on early returns and launch
-errors. Terminal reasons survive settlement. Completion requires a recorded final validation event
+errors. Terminal reasons survive settlement. Operational validity is recorded separately: a budget-stopped
+attempt with a fidelity or isolation violation closes on the ledger as `stopped-invalid`, while its
+budget completion and censored timing remain visible. A faithful budget stop is not replacement-eligible.
+Completion requires a recorded final validation event
 whose payload digest still matches. Actual verifier identities are registered at phase validation
 and settlement in an append-only `context_claims` list under the live ledger's lock. Existing money
 and attempt events are not rewritten, and the frozen budget module remains unchanged.

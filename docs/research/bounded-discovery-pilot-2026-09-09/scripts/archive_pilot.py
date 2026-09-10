@@ -190,6 +190,7 @@ def summarize(root, secrets, salt) -> dict:
         },
         "disposition": dispatched.get("disposition"),
         "completion": settled.get("completion") or dispatched.get("completion"),
+        "operational_validity": settled.get("operational_validity"),
         "elapsed_seconds": dispatched.get("elapsed_seconds"),
         "phases": [{"label": phase.get("label"), "exit_code": phase.get("exit_code"),
                     "subtype": phase.get("subtype"), "is_error": phase.get("is_error"),

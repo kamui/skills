@@ -375,6 +375,50 @@ class ReviewFixes(unittest.TestCase):
         self.assertIsNone(runner.load(sidecar)["completed_at"])
         self.assertIsNotNone(runner.load(self.root / "artifacts" / "timing-before-settlement.json")["completed_at"])
 
+    def test_budget_completion_does_not_override_operational_invalidity(self):
+        for failure in (None, "model", "read"):
+            with self.subTest(failure=failure):
+                self.fresh_ledger()
+                self.config.update(bundle=str(self.base), tools=str(self.base))
+                self.row["arm"] = "A"
+                transcript = runner.session_home(self.root, "primary") / ".claude" / "projects" / (runner.session_id(self.row["attempt_id"]) + ".jsonl")
+                transcript.parent.mkdir(parents=True, exist_ok=True)
+                transcript.write_text("{}\n", encoding="utf-8")
+                runner.claim_attempt(self.config, self.row, runner.cell_contexts(self.root, self.row))
+                self.assertEqual(runner.reserve(self.config, self.row, "10.00", "test").returncode, 0)
+                runner.write(self.root / "artifacts" / "dispatch.json", {
+                    "attempt_id": self.row["attempt_id"], "arm": "A", "disposition": "stopped-budget",
+                    "phases": [self.phase(subtype="error_max_budget_usd")], "problems": [],
+                    "stopped_at": "2026-01-01T00:01:00+00:00"})
+                runner.write(self.root / "artifacts" / "cell-env-dispatch.json", {"permitted_roots": []})
+                real_run = runner.run
+                def run(*command, **kwargs):
+                    if len(command) > 1 and Path(command[1]).name == "agent_effort.py":
+                        return result()
+                    if len(command) > 1 and Path(command[1]).name == "meter_split.py":
+                        runner.write(self.root / "artifacts" / "usage-split.json", {
+                            "total_cost_usd": "1", "per_model": {}, "within_tolerance": True})
+                        return result()
+                    return real_run(*command, **kwargs)
+                with patch.object(runner, "schedule_row", return_value=self.row), \
+                     patch.object(runner, "run", side_effect=run), \
+                     patch.object(runner, "verify_models", return_value=(
+                         {"primary": {"verified": failure != "model"}},
+                         ["model mismatch"] if failure == "model" else [])), \
+                     patch.object(runner, "audit_reads", return_value={"passed": failure != "read"}):
+                    runner.settle(self.config, 99)
+                record = runner.load(self.root / "artifacts" / "settle.json")
+                self.assertEqual(record["completion"], "stopped-budget")
+                self.assertEqual(record["stopped_at"], "2026-01-01T00:01:00+00:00")
+                self.assertEqual(record["operational_validity"], "invalid" if failure else "valid")
+                self.assertEqual(runner.load(self.config["ledger"])["events"][-1]["disposition"],
+                                 "stopped-invalid" if failure else "stopped-budget")
+                _, blockers, incomplete = handoff.decide([
+                    dict(record, disposition="stopped-budget", isolation_ready=True,
+                         read_audit_passed=failure != "read")], Decimal("100"))
+                self.assertEqual(bool(blockers), bool(failure))
+                self.assertEqual("not replacement-eligible" in incomplete[0]["effect"], failure is None)
+
     def test_final_payload_change_requires_revalidation(self):
         script = SCRIPTS / "mark_event.py"
         sidecar = self.root / "work" / "timing.json"

@@ -73,7 +73,9 @@ def cell_records(bundle) -> list:
             "worker_model": summary.get("worker_model"),
             "disposition": summary.get("disposition"),
             "completion": summary.get("completion"),
-            "valid_completed": completed and not summary.get("problems"),
+            "operational_validity": summary.get("operational_validity"),
+            "valid_completed": completed and not summary.get("problems")
+                               and summary.get("operational_validity") != "invalid",
             "elapsed_seconds": summary.get("elapsed_seconds"),
             "settled_usd": (summary.get("accounting") or {}).get("settled_usd"),
             "isolation_ready": bool((summary.get("isolation") or {}).get("pre_dispatch_ready")
@@ -135,10 +137,19 @@ def decide(cells, remaining) -> tuple:
         if cell.get("read_audit_passed") is False:
             blockers.append("position %d has a read outside its permitted roots that was "
                             "not ruled on" % position)
+        invalid = (cell.get("operational_validity") == "invalid" or bool(cell.get("problems"))
+                   or cell.get("isolation_ready") is False or cell.get("read_audit_passed") is False)
+        if cell.get("operational_validity") == "invalid" and not cell.get("problems"):
+            blockers.append("position %d is operationally invalid" % position)
         if cell.get("completion") != "complete":
+            effect = ("counts as missing in the screen, not as present; protocol invalidity "
+                      "requires the documented replacement policy and remaining allowance"
+                      if invalid else
+                      "counts as missing in the screen, not as present; "
+                      "it is a measured result and not replacement-eligible")
             incomplete.append({"position": position, "completion": cell.get("completion"),
-                               "effect": "counts as missing in the screen, not as present; "
-                                         "it is a measured result and not replacement-eligible"})
+                               "operational_validity": "invalid" if invalid else "valid",
+                               "effect": effect})
     if remaining <= 0:
         blockers.append("no allowance remains under the frozen cap after the protected reserve")
     if not blockers:
