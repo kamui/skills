@@ -871,8 +871,11 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
                                       "detail": "nothing was allowed to run"},
                 "completion_and_stop": {
                     "verdict": "established",
-                    "detail": "the aborted dispatch record and its timing sidecar were retained",
+                    "detail": "the aborted dispatch record and its timing file were retained; "
+                              "the attempt never reached a root dispatch, so it has no root "
+                              "elapsed and no #130 completion sidecar",
                     "elapsed_seconds": aborted.get("elapsed_seconds"),
+                    "root_elapsed_seconds": None,
                     "timing_sidecar_fields": sorted(timing.keys()),
                     "phases": aborted.get("phases")},
                 "usage_completeness": {
@@ -1016,6 +1019,41 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
     }
 
 
+def decision_text(status, attempts, observed_violations) -> str:
+    """The headline decision, written from what the assessment actually found.
+
+    It has to name any observed violation rather than deny one: #151 forbids a
+    false certification of fidelity, and a reader who takes only this field is
+    exactly the reader that would be misled."""
+    violating = sorted(attempt["attempt_ref"] for attempt in attempts
+                       if attempt.get("violations"))
+    if violating:
+        where = ("%s shows an observed violation" % violating[0] if len(violating) == 1
+                 else "%s show observed violations" % ", ".join(violating))
+        also_invalid = all(attempt["operational_validity"] == "invalid" for attempt in attempts
+                           if attempt.get("violations"))
+        observed = ("%s - %s%s. No other attempt shows one: "
+                    % (where, "; ".join(observed_violations),
+                       (", and it is" if len(violating) == 1 else ", and each is")
+                       + " already closed as invalid on its recorded basis"
+                       if also_invalid else ""))
+    else:
+        observed = ("No attempt shows an observed fidelity, isolation, context-separation or "
+                    "frozen-input violation: ")
+    established = ("every retained transcript verifies to the frozen model and effort for its "
+                   "role, every absence gate and read audit passed, every session is a fresh "
+                   "context, and every rendered prompt still matches both the digest sealed "
+                   "beside it and the commitment published for it.")
+    if status != "unresolved":
+        return ("Resolved. " + observed + established)
+    return ("Unresolved, with the missing evidence named. " + observed + established
+            + " What cannot be established for any attempt is that each cell was launched under "
+              "the identical frozen allowances, or how its spend divides between its roles, "
+              "because neither record was ever retained. Under the frozen rule an unobservable "
+              "setting is not a pass, so those attempts are carried as unresolved rather than "
+              "valid.")
+
+
 def build_assessment(gate, evidence: Path, manifest, bundle: Path, salt) -> dict:
     published_by_position = {}
     for position in range(1, PILOT_CELLS + 1):
@@ -1047,19 +1085,7 @@ def build_assessment(gate, evidence: Path, manifest, bundle: Path, salt) -> dict
         "assessed_at": now(),
         "gate": {"observed_at": gate.get("observed_at"),
                  "all_reviewers_stopped": gate.get("all_reviewers_stopped")},
-        "decision": (
-            "Unresolved, with the missing evidence named. No attempt shows an observed fidelity, "
-            "isolation, context-separation or frozen-input violation: every retained transcript "
-            "verifies to the frozen model and effort for its role, every absence gate and read "
-            "audit passed, every session is a fresh context, and every rendered prompt still "
-            "matches both the digest sealed beside it and the commitment published for it. What "
-            "cannot be established is that each cell was launched under the identical frozen "
-            "allowances, and how each attempt's spend divides between its roles, because neither "
-            "record was ever retained. Under the frozen rule an unobservable setting is not a "
-            "pass, so these attempts are carried as unresolved rather than valid."
-            if status == "unresolved" else
-            "Resolved: every attempt's settings, isolation, context separation and usage are "
-            "established from retained evidence."),
+        "decision": decision_text(status, attempts, observed_violations),
         "attempts_assessed": len(attempts),
         "valid": valid,
         "unresolved": unresolved,
@@ -1485,6 +1511,28 @@ def command_reconcile(args) -> int:
 # The manifest for all twenty-four planned cells
 # --------------------------------------------------------------------------
 
+def timing_availability(attempt, censored) -> str:
+    """What timing this attempt actually left, not what its completion implies.
+
+    An attempt whose launch was refused never reached a root dispatch, so it has
+    no root elapsed and no sidecar however its completion reads; saying it has
+    one would be the manifest overstating its own evidence."""
+    record = attempt["dimensions"].get("completion_and_stop", {})
+    root_elapsed = record.get("root_elapsed_seconds")
+    sidecar = record.get("timing_sidecar_fields") or []
+    if root_elapsed is None:
+        measured = record.get("elapsed_seconds")
+        return ("no root dispatch: the launch was refused before any model request%s, so there "
+                "is no root elapsed and no #130 sidecar"
+                % ("; %s s of coordinator elapsed was recorded" % measured
+                   if measured is not None else ""))
+    if censored:
+        return "root elapsed recorded; duration censored at the stop, not completed"
+    if sidecar:
+        return "root elapsed and the #130 sidecar recorded, with %d of its fields" % len(sidecar)
+    return "root elapsed recorded; no #130 sidecar was written"
+
+
 def build_manifest(assessment, reconciliation, bundle: Path, frozen) -> dict:
     """One row per planned cell, attempted or not, keyed by schedule position.
 
@@ -1520,15 +1568,11 @@ def build_manifest(assessment, reconciliation, bundle: Path, frozen) -> dict:
                 "settled_usd": charge.get("ledger_settled_usd") or attempt.get("settled_usd"),
                 "reconciles_with_ledger": charge.get("reconciles"),
                 "produced_claims": attempt.get("produced_claims", False),
-                "timing_availability": (
-                    "root elapsed recorded; duration censored at the stop, not completed"
-                    if censored else
-                    "root elapsed and the #130 sidecar recorded"
-                    if attempt["dimensions"].get("completion_and_stop", {}).get(
-                        "timing_sidecar_fields") else
-                    "no timing sidecar: the attempt ended before one was written"),
+                "timing_availability": timing_availability(attempt, censored),
                 "root_elapsed_seconds": attempt["dimensions"].get(
                     "completion_and_stop", {}).get("root_elapsed_seconds"),
+                "elapsed_seconds": attempt["dimensions"].get(
+                    "completion_and_stop", {}).get("elapsed_seconds"),
                 "raw_evidence": "sealed with this closeout; see packets/README.md",
             })
         cells.append({
@@ -1769,21 +1813,29 @@ def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
             ],
         },
         "blockers": (
-            ["Historical pilot fidelity is assessed and remains unresolved: no violation was "
-             "observed, and the launch argv and per-role usage split that would establish "
-             "equal allowances and role-level spend were never retained. The eighteen grid "
-             "cells are unattempted and the frozen replacement allowance cannot fund a repair, "
-             "so the grid cannot be completed or repaired under the frozen limits."]
+            ["Historical pilot fidelity is assessed and remains unresolved. %s The launch argv "
+             "and the per-role usage split that would establish equal allowances and role-level "
+             "spend were never retained. The eighteen grid cells are unattempted and the frozen "
+             "replacement allowance cannot fund a repair, so the grid cannot be completed or "
+             "repaired under the frozen limits."
+             % ("%d observed violation%s recorded in the assessment: %s."
+                % (len(assessment["observed_violations"]),
+                   " is" if len(assessment["observed_violations"]) == 1 else "s are",
+                   "; ".join(assessment["observed_violations"]))
+                if assessment["observed_violations"] else
+                "No violation was observed.")]
             if assessment["status"] != "resolved" else []),
     }
 
 
 def command_handoff(args) -> int:
+    frozen = load(args.frozen) if args.frozen else {}
     handoff = build_handoff(load(args.gate), load(args.fidelity), load(args.reconciliation),
                             load(args.manifest), load(args.packet_index), load(args.no_packet),
                             load(args.seal),
                             load(args.gate_supplement) if args.gate_supplement else None)
-    leaked = leak_scan(handoff, args.slot_names)
+    forbidden, allowed = disclosive_values(frozen)
+    leaked = leak_scan(handoff, sorted(set(list(args.slot_names) + forbidden)), allowed)
     if leaked:
         for line in leaked:
             print(line)
@@ -1954,6 +2006,7 @@ def build_parser() -> argparse.ArgumentParser:
     handoff = sub.add_parser("handoff", help="write the stage record #152 reads")
     handoff.add_argument("--gate", required=True)
     handoff.add_argument("--gate-supplement")
+    handoff.add_argument("--frozen", required=True, help="#149's frozen manifest.json")
     handoff.add_argument("--fidelity", required=True)
     handoff.add_argument("--reconciliation", required=True)
     handoff.add_argument("--manifest", required=True, help="this closeout's 24-cell manifest")
@@ -2296,6 +2349,46 @@ def self_test() -> int:
                               capture_output=True, text=True, encoding="utf-8")
         check("a surviving cell root fails the supplementary check", code.returncode == 1)
 
+        # --- the decision text, which must never deny what was found -----------
+        clean = [{"attempt_ref": "position-01-attempt-1", "violations": [],
+                  "operational_validity": "unresolved"}]
+        check("with nothing found, the decision says no violation was observed",
+              "No attempt shows an observed" in decision_text("unresolved", clean, []))
+        dirty = [{"attempt_ref": "position-03-attempt-1",
+                  "violations": ["no barrier freeze artifact was written before admission"],
+                  "operational_validity": "invalid"},
+                 {"attempt_ref": "position-04-attempt-1", "violations": [],
+                  "operational_validity": "unresolved"}]
+        spoken = decision_text("unresolved", dirty,
+                               ["no barrier freeze artifact was written before admission"])
+        check("an observed violation is named in the decision, not denied",
+              "position-03-attempt-1" in spoken and "barrier freeze" in spoken)
+        check("the decision does not claim no attempt shows a violation when one does",
+              "No attempt shows an observed" not in spoken)
+        check("a violation on an already-invalid attempt says so",
+              "already closed as invalid" in spoken)
+
+        # --- timing availability reports what the record holds ------------------
+        refused = {"dimensions": {"completion_and_stop": {
+            "root_elapsed_seconds": None, "elapsed_seconds": 1.482,
+            "timing_sidecar_fields": ["completion_mode"]}}}
+        check("a refused launch is not credited with root elapsed",
+              "no root dispatch" in timing_availability(refused, True)
+              and "1.482" in timing_availability(refused, True))
+        stopped = {"dimensions": {"completion_and_stop": {
+            "root_elapsed_seconds": 2148.9, "timing_sidecar_fields": ["completion_mode"]}}}
+        check("a stopped attempt reports censored duration",
+              "censored at the stop" in timing_availability(stopped, True))
+        finished = {"dimensions": {"completion_and_stop": {
+            "root_elapsed_seconds": 1110.6,
+            "timing_sidecar_fields": ["completion_mode", "completed_at"]}}}
+        check("a completed attempt reports its sidecar",
+              "sidecar recorded" in timing_availability(finished, False))
+        bare = {"dimensions": {"completion_and_stop": {"root_elapsed_seconds": 10.0,
+                                                       "timing_sidecar_fields": []}}}
+        check("an attempt with no sidecar does not claim one",
+              "no #130 sidecar" in timing_availability(bare, False))
+
         # --- the handoff ------------------------------------------------------
         stub_gate = {"all_reviewers_stopped": True, "observed_at": "2026-09-10T00:00:00Z",
                      "checks": [{"passed": True}]}
@@ -2318,6 +2411,16 @@ def self_test() -> int:
         check("a stopped closeout does not authorise dispatch",
               handoff["dispatch_authorized"] is False)
         check("an unresolved fidelity status carries a blocker", bool(handoff["blockers"]))
+        check("a blocker with no observed violation says so",
+              "No violation was observed" in handoff["blockers"][0])
+        noisy = build_handoff(stub_gate,
+                              dict(stub_assessment, observed_violations=["a barrier gap"]),
+                              stub_reconciliation, stub_cells, {"packet_count": 6},
+                              {"attempts": []},
+                              {"ciphertext_sha256": "x", "plaintext_sha256": "y"})
+        check("a blocker names the observed violations rather than denying them",
+              "a barrier gap" in noisy["blockers"][0]
+              and "No violation was observed" not in noisy["blockers"][0])
         check("the handoff names what the next stage must not do",
               any("valid completed outcome" in line for line in handoff["next_stage"]["must_not"]))
         check("the handoff reports no arm comparison", "better or worse" in handoff["claims_note"])
@@ -2336,7 +2439,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (55, len(failures)))
+    print("%d checks, %d failures" % (66, len(failures)))
     return 1 if failures else 0
 
 

@@ -97,9 +97,14 @@ the acceptance.
   legitimately dispatch none, but the design asks for the reason and it was not kept.
 
 Under the frozen rule an unobservable setting is not a pass, so the six settled attempts carry
-`unresolved`: **no violation was observed, and none is certified faithful either.** The two attempts
-already closed as invalid stay invalid on their recorded basis — one launch refused before any model
-request, one primary lost to a provider 502 before it wrote its arm C freeze artifact.
+`unresolved`: **nothing about them is certified faithful, and no violation was observed in any of
+them either.**
+
+One violation *was* observed, in an attempt that was already invalid: `position-03-attempt-1` wrote
+no arm C barrier freeze artifact before admission. That is the same fact as its recorded basis for
+invalidity — its primary was lost to a provider 502 before it could write one — and the assessment
+names it rather than reporting a blanket absence of violations. The other invalid attempt had its
+launch refused before any model request, so it has nothing to observe.
 
 The budget stop at position 6 stays a measured result. It is not infrastructure invalidity and is
 not replacement-eligible.
