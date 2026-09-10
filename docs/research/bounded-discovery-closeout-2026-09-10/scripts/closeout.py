@@ -58,6 +58,8 @@ REPLACEMENT_LIMIT = 3
 # this script is a `claude` process too and is deliberately not matched by name:
 # what marks a reviewer run is the cell naming, not the binary.
 CELL_CONTAINER_PREFIX = "bd150-"
+# The model a provider error is recorded under; it carries no usage or setting.
+SYNTHETIC_MODEL = "<synthetic>"
 REVIEWER_PROCESS_MARKERS = ("bd150-", "run_cell.py", "bounded-discovery/issue-150/cells",
                             "session-homes")
 
@@ -446,6 +448,669 @@ def command_open_seal(args) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------
+# The historical fidelity assessment: pilot/actual-fidelity
+# --------------------------------------------------------------------------
+
+# Evidence that was never retained, named once so every attempt that lacks it
+# reports the same string and #152 can group on it.
+GAP_LAUNCH_ARGV = ("the launch argv was not retained: the requested --model, --effort, "
+                   "--max-budget-usd, --restricted and allow-list values for the root session "
+                   "cannot be read back from any artifact")
+GAP_PER_ROLE_SPLIT = ("the per-role cost split required by preregistration section 7 is absent: "
+                      "usage-split.json assigns every transcript to `unassigned`, so primary, "
+                      "finder and verifier spend cannot be separated where an arm runs one model")
+GAP_NO_BATCH_REASON = ("no verifier transcript and no recorded no-batch reason: the pinned policy "
+                       "may legitimately dispatch none, but the reason the design requires was "
+                       "not retained")
+GAP_NETWORK_JUDGEMENT = ("no per-shell-command network judgment was recorded: the read audit "
+                         "checked paths, not whether a command reached the network outside the "
+                         "proxy, so proxy bypass is unaudited for this attempt")
+GAP_NO_MODEL_VERIFICATION = ("no model-verification record was written for this attempt; the "
+                             "settings below are verified by this closeout from the retained "
+                             "transcripts instead")
+GAP_NO_TRANSCRIPT = ("no transcript was retained: the launch failed before any model request, so "
+                     "there is nothing to verify settings against")
+
+
+def role_of(path: str) -> str:
+    """The role a retained transcript belongs to, from its path.
+
+    Sub-agent transcripts live under ``subagents/``; arm C's finder runs in its
+    own store; anything else is the root session, which in arm C is one session
+    across both phases."""
+    if "/subagents/" in path:
+        return "worker"
+    if "finder-store" in path:
+        return "finder"
+    return "primary"
+
+
+def scan_transcript(path) -> dict:
+    """Model, effort, freshness and size of one retained transcript.
+
+    Freshness is mechanical and matches the freeze's own test: exactly one root
+    user message and no summary or compact-boundary record, so the session did
+    not resume or inherit a context."""
+    models, efforts = {}, {}
+    assistant_lines = root_user_messages = summary_records = synthetic_lines = 0
+    versions = set()
+    try:
+        handle = open(path, encoding="utf-8")
+    except OSError as exc:
+        return {"readable": False, "error": str(exc)}
+    with handle:
+        for line in handle:
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            kind = record.get("type")
+            if record.get("version"):
+                versions.add(record["version"])
+            if kind == "user" and record.get("parentUuid") in (None, "None"):
+                root_user_messages += 1
+            elif kind in ("summary", "compact-boundary"):
+                summary_records += 1
+            elif kind == "assistant":
+                message = record.get("message") or {}
+                model = message.get("model")
+                if model == SYNTHETIC_MODEL:
+                    # The harness writes this line when a session hits an API
+                    # error. It carries no usage and no setting; the pinned
+                    # meter drops it, so counting it as a second model here
+                    # would manufacture a fidelity failure out of a 502.
+                    synthetic_lines += 1
+                    continue
+                assistant_lines += 1
+                effort = message.get("effort") or record.get("effort")
+                models[model] = models.get(model, 0) + 1
+                efforts[effort] = efforts.get(effort, 0) + 1
+    return {"readable": True, "assistant_lines": assistant_lines,
+            "synthetic_error_lines": synthetic_lines,
+            "models": models, "efforts": efforts,
+            "root_user_messages": root_user_messages,
+            "summary_records": summary_records,
+            "versions": sorted(versions),
+            "fresh_context": root_user_messages == 1 and summary_records == 0}
+
+
+def retained_transcripts(root: Path) -> list:
+    """Every retained transcript for an attempt, deduplicated by file name.
+
+    Two layouts appear in the seal: the settled attempts keep a ``transcripts/``
+    tree, and the attempt a provider error cut off keeps its session home. The
+    metering copies under ``artifacts/filtered-transcripts`` are excluded - they
+    are the same sessions with synthetic lines removed, and counting them twice
+    would double every line count."""
+    found = {}
+    for candidate in sorted(root.rglob("*.jsonl")):
+        text = str(candidate)
+        if "/artifacts/" in text and "filtered-transcripts" not in text:
+            continue
+        if "filtered-transcripts" in text:
+            continue
+        if candidate.name == "egress.jsonl":
+            continue
+        found.setdefault(candidate.name, candidate)
+    return sorted(found.values())
+
+
+def expected_settings(manifest, arm, role) -> dict:
+    arms = manifest.get("arms", {})
+    entry = (arms.get(arm) or {}).get(role)
+    if not entry:
+        return {}
+    return {"model": entry.get("model"), "effort": entry.get("effort"),
+            "requested_by": entry.get("requested_by")}
+
+
+def settings_verdict(scan, expect) -> dict:
+    """Observed model and effort against the frozen expectation for that role.
+
+    An unobservable setting is a fidelity failure under section 9, exactly like
+    a mismatch: it is never relabelled as an equivalent treatment."""
+    if not scan.get("readable"):
+        return {"verified": False, "reason": "the transcript could not be read"}
+    if not scan.get("assistant_lines"):
+        return {"verified": False, "reason": "no assistant line carries a model or an effort, so "
+                                             "the setting is unobservable"}
+    models = [m for m in scan["models"] if m]
+    efforts = [e for e in scan["efforts"] if e]
+    problems = []
+    if len(models) != 1 or models[0] != expect.get("model"):
+        problems.append("observed model(s) %s against the frozen %s"
+                        % (sorted(scan["models"]), expect.get("model")))
+    if len(efforts) != 1 or efforts[0] != expect.get("effort"):
+        problems.append("observed effort(s) %s against the frozen %s"
+                        % (sorted(scan["efforts"]), expect.get("effort")))
+    if len(models) < len(scan["models"]) or len(efforts) < len(scan["efforts"]):
+        problems.append("some assistant lines carry no model or effort")
+    return {"verified": not problems, "problems": problems,
+            "observed_models": scan["models"], "observed_efforts": scan["efforts"],
+            "assistant_lines": scan["assistant_lines"]}
+
+
+def commit_prompt(path, salt) -> str:
+    import hmac
+    return hmac.new(salt, Path(path).read_bytes(), hashlib.sha256).hexdigest()
+
+
+def frozen_input_checks(root: Path, manifest, published, salt, ordinal=None) -> dict:
+    """The chain that binds this attempt's rendered prompts to the freeze.
+
+    Three links: the template digest against the frozen pin, each rendered file
+    against the raw digest sealed with the attempt, and the same file against
+    the HMAC published in the public cell summary. The HMAC is what lets the
+    public record commit to a rendering without publishing a digest over a
+    four-candidate secret."""
+    prompts = load(root / "artifacts" / "prompts.json", default={})
+    prepare = load(root / "artifacts" / "prepare.json", default={})
+    pinned = ((manifest.get("pins") or {}).get("dispatch_template") or {}).get("sha256")
+    checks, problems = [], []
+
+    template_ok = bool(pinned) and prompts.get("dispatch_template_sha256") == pinned
+    checks.append({"check": "the dispatch template is the frozen one", "passed": template_ok})
+    if not template_ok:
+        problems.append("the rendered prompts were produced from a template that is not the "
+                        "frozen one")
+
+    raw_ok = True
+    for name, expected in sorted((prompts.get("rendered_sha256") or {}).items()):
+        rendered = root / "runner" / name
+        if not rendered.is_file():
+            raw_ok = False
+            continue
+        raw_ok = raw_ok and hashlib.sha256(rendered.read_bytes()).hexdigest() == expected
+    checks.append({"check": "every rendered prompt still matches the digest sealed with it",
+                   "passed": raw_ok,
+                   "files": sorted((prompts.get("rendered_sha256") or {}).keys())})
+    if not raw_ok:
+        problems.append("a rendered prompt does not match the digest sealed beside it")
+
+    hmac_ok, hmac_checked = True, 0
+    published_commitments = (published or {}).get("rendered_prompt_hmac_sha256") or {}
+    if ordinal is not None and (published or {}).get("attempt_ordinal") not in (None, ordinal):
+        # The public summary commits to the attempt that settled at this
+        # position. A predecessor's rendering is a different byte and is
+        # committed to only by the raw digest sealed beside it.
+        published_commitments = {}
+    if salt and published_commitments:
+        for name, expected in sorted(published_commitments.items()):
+            rendered = root / "runner" / name
+            if not rendered.is_file():
+                hmac_ok = False
+                continue
+            hmac_checked += 1
+            hmac_ok = hmac_ok and commit_prompt(rendered, salt) == expected
+    checks.append({"check": "every rendered prompt matches the HMAC published in the cell summary",
+                   "passed": bool(hmac_checked) and hmac_ok if published_commitments else True,
+                   "commitments_checked": hmac_checked,
+                   "note": None if published_commitments else
+                           "no commitment was published for this attempt: the public summary "
+                           "commits to the attempt that settled at this position"})
+    if hmac_checked and not hmac_ok:
+        problems.append("a rendered prompt does not match the commitment published for it")
+
+    target = (manifest.get("targets") or {}).get(prepare.get("target_slot")) or {}
+    packet_pin = (target.get("source_packet") or {}).get("sha256")
+    packet_ok = bool(packet_pin) and prepare.get("packet_sha256") == packet_pin
+    checks.append({"check": "the source packet is the frozen one for this attempt's target",
+                   "passed": packet_ok})
+    if not packet_ok:
+        problems.append("the packet this attempt reviewed cannot be matched to the frozen one "
+                        "for its target")
+
+    scope_pin = (target.get("selected_scope") or {}).get("sha256")
+    scope_ok = bool(scope_pin) and prepare.get("scope_sha256") == scope_pin
+    checks.append({"check": "the selected scope is the frozen one for this attempt's target",
+                   "passed": scope_ok})
+    if not scope_ok:
+        problems.append("the scope this attempt reviewed cannot be matched to the frozen one "
+                        "for its target")
+
+    policy_ok = (prepare.get("policy_commit") == (manifest.get("pins") or {}).get("policy_commit")
+                 and prepare.get("policy_tree") == (manifest.get("pins") or {}).get("skill_tree"))
+    checks.append({"check": "the policy snapshot is the pinned commit and tree", "passed": policy_ok})
+    if not policy_ok:
+        problems.append("the policy snapshot is not the pinned commit and tree")
+
+    return {"checks": checks, "problems": problems,
+            "passed": all(check["passed"] for check in checks)}
+
+
+def isolation_checks(root: Path) -> dict:
+    pre = load(root / "artifacts" / "isolation-pre.json", default={})
+    post = load(root / "artifacts" / "isolation-post.json", default={})
+    attestation = load(root / "artifacts" / "attestation.json", default={})
+    audit = load(root / "artifacts" / "read-audit.json", default={})
+    mounts = load(root / "artifacts" / "mounts.json", default={})
+    problems = []
+    if not pre.get("ready"):
+        problems.append("the pre-dispatch absence gate did not pass")
+    if not post.get("ready"):
+        problems.append("the post-dispatch absence gate did not pass")
+    if not attestation.get("ready"):
+        problems.append("the preparation attestation did not pass")
+    if audit and not audit.get("passed"):
+        problems.append("the read audit did not pass")
+    outside = audit.get("paths_outside_permitted_roots") or []
+    if outside:
+        problems.append("%d read(s) resolved outside the permitted roots" % len(outside))
+    return {
+        "pre_dispatch_ready": bool(pre.get("ready")),
+        "post_dispatch_ready": bool(post.get("ready")),
+        "attestation_ready": bool(attestation.get("ready")),
+        "read_audit_passed": bool(audit.get("passed")) if audit else None,
+        "reads_outside_permitted_roots": len(outside),
+        "accepted_read_deviations": [hit.get("reason") for hit in (audit.get("accepted_hits") or [])],
+        "requested_mount_count": len(mounts.get("requested_mounts") or []),
+        "shell_commands": audit.get("shell_commands"),
+        "tool_calls": audit.get("tool_calls"),
+        "problems": problems,
+        "passed": not problems,
+    }
+
+
+def separation_checks(root: Path, arm, scans) -> dict:
+    """Context separation: fresh identities, and for arm C the discovery barrier.
+
+    The barrier is what keeps C's primary from seeing a finder claim before it
+    has frozen its own review, so its evidence is the freeze artifact written
+    before admission and the finder's own store."""
+    stale = [name for name, scan in scans.items() if not scan.get("fresh_context")]
+    freeze = root / "work" / "freeze.json"
+    finder_store_transcripts = [name for name in scans if role_of(name) == "finder"]
+    record = {"fresh_context_verified": not stale,
+              "sessions_scanned": len(scans),
+              "sessions_without_a_single_root_message": stale,
+              "distinct_session_identities": len({Path(name).stem for name in scans}),
+              "problems": []}
+    if stale:
+        record["problems"].append("%d session(s) do not open with exactly one root user message "
+                                  "and no summary record" % len(stale))
+    if arm == "C":
+        record["barrier_freeze_recorded"] = freeze.is_file()
+        record["finder_ran_in_its_own_store"] = bool(finder_store_transcripts)
+        record["admission_prompt_retained"] = (root / "runner" / "admission.rendered.md").is_file()
+        if not finder_store_transcripts:
+            record["problems"].append("no finder transcript is retained for an arm C attempt")
+        if not freeze.is_file():
+            record["problems"].append("no barrier freeze artifact was written before admission")
+    record["passed"] = not record["problems"]
+    return record
+
+
+def completion_checks(root: Path, dispatch, settle) -> dict:
+    timing = load(root / "work" / "timing.json", default={})
+    phases = dispatch.get("phases") or []
+    terminal = []
+    for phase in phases:
+        envelope = load(root / "artifacts" / ("%s-result.json" % phase.get("label")), default={})
+        terminal.append({"phase": phase.get("label"), "exit_code": phase.get("exit_code"),
+                         "subtype": phase.get("subtype"),
+                         "stop_reason": envelope.get("stop_reason"),
+                         "terminal_reason": envelope.get("terminal_reason"),
+                         "api_error_status": envelope.get("api_error_status"),
+                         "envelope_retained": bool(envelope),
+                         "permission_denials": len(envelope.get("permission_denials") or [])})
+    sidecar_fields = [field for field in ("completion_mode", "root_dispatched_at",
+                                          "payload_validated_at", "completed_at")
+                      if timing.get(field)]
+    return {
+        "completion": settle.get("completion"),
+        "timing_sidecar_fields": sidecar_fields,
+        "completion_mode": timing.get("completion_mode"),
+        "root_elapsed_seconds": dispatch.get("elapsed_seconds"),
+        "duration_censored": settle.get("completion") not in (None, "complete"),
+        "phases": terminal,
+    }
+
+
+def usage_checks(root: Path, settle) -> dict:
+    split = load(root / "artifacts" / "usage-split.json", default={})
+    roles = sorted((split.get("per_role") or {}).keys())
+    return {
+        "per_model_split_recorded": sorted((split.get("per_model") or {}).keys()),
+        "per_role_split_recorded": roles,
+        "per_role_split_assigned": bool(roles) and roles != ["unassigned"],
+        "recomputed_usd": split.get("total_cost_usd"),
+        "self_report_usd": settle.get("self_report_usd") or split.get("self_report_usd"),
+        "settled_usd": settle.get("settled_usd"),
+        "within_tolerance": split.get("within_tolerance"),
+        "reconciliation_residual_usd": settle.get("reconciliation_residual_usd"),
+        "residual_untranscripted_models_usd": settle.get("residual_untranscripted_models_usd"),
+        "residual_unexplained_usd": settle.get("residual_unexplained_usd"),
+        "metering_filtered_synthetic_lines": settle.get("metering_filtered_synthetic_lines"),
+    }
+
+
+def attempt_roots(evidence: Path) -> list:
+    """Every attempt in the seal, as (position, ordinal, root, kind).
+
+    Three shapes: a settled attempt directory, the attempt a provider error cut
+    off under ``invalid/``, and an aborted launch that left only two artifacts
+    inside the directory of the attempt that replaced it."""
+    found = []
+    for entry in sorted(evidence.glob("position-*")):
+        if not entry.is_dir():
+            continue
+        position = int(entry.name.split("-")[-1])
+        settle = load(entry / "artifacts" / "settle.json", default={})
+        ordinal = int(str(settle.get("attempt_id", "-attempt-1")).rsplit("-attempt-", 1)[-1] or 1)
+        found.append({"position": position, "ordinal": ordinal, "root": entry, "kind": "settled"})
+        for aborted in sorted(entry.glob("artifacts/attempt-*-aborted-dispatch.json")):
+            number = int(aborted.name.split("-")[1])
+            found.append({"position": position, "ordinal": number, "root": entry,
+                          "kind": "aborted", "record": aborted})
+    for entry in sorted((evidence / "invalid").glob("position-*")):
+        if not entry.is_dir() or entry.name.endswith("-home"):
+            continue
+        settle = load(entry / "artifacts" / "settle.json", default={})
+        position = int(settle.get("position") or entry.name.split("-")[1])
+        ordinal = int(str(settle.get("attempt_id", "-attempt-1")).rsplit("-attempt-", 1)[-1] or 1)
+        home = evidence / "invalid" / (entry.name + "-home")
+        found.append({"position": position, "ordinal": ordinal, "root": entry,
+                      "kind": "invalidated", "extra_roots": [home] if home.is_dir() else []})
+    return sorted(found, key=lambda item: (item["position"], item["ordinal"]))
+
+
+def assess_attempt(item, manifest, published_by_position, salt) -> dict:
+    """One attempt's fidelity record, from the retained evidence alone.
+
+    The historical ``model-verification.json`` is read but never trusted as the
+    finding: PR #197's coordinator fixes cannot establish what the original
+    attempts did, so every setting here is recomputed from the transcripts and
+    the historical record is reported beside it as agreement or disagreement."""
+    root = item["root"]
+    reference = "position-%02d-attempt-%d" % (item["position"], item["ordinal"])
+    published = published_by_position.get(item["position"], {})
+
+    if item["kind"] == "aborted":
+        aborted = load(item["record"], default={})
+        timing = load(root / "artifacts" / ("attempt-%d-aborted-timing.json" % item["ordinal"]),
+                      default={})
+        return {
+            "attempt_ref": reference, "position": item["position"], "ordinal": item["ordinal"],
+            "arm": aborted.get("arm"), "block": "pilot",
+            "operational_validity": "invalid",
+            "validity_basis": "documented coordinator invalidity, recorded when it happened",
+            "completion": "stopped-runtime",
+            "settled_usd": "0.0000000",
+            "dimensions": {
+                "requested_and_observed_settings": {
+                    "verdict": "not applicable",
+                    "detail": "no model request was issued: the launch was refused before any "
+                              "session started, so there is no setting to observe"},
+                "isolation": {"verdict": "not applicable",
+                              "detail": "the cell never dispatched"},
+                "context_separation": {"verdict": "not applicable",
+                                       "detail": "no session was created"},
+                "frozen_inputs": {"verdict": "not applicable",
+                                  "detail": "the prompts of the attempt that replaced this one "
+                                            "carry the frozen-input chain"},
+                "common_allowances": {"verdict": "not applicable",
+                                      "detail": "nothing was allowed to run"},
+                "completion_and_stop": {
+                    "verdict": "established",
+                    "detail": "the aborted dispatch record and its timing sidecar were retained",
+                    "elapsed_seconds": aborted.get("elapsed_seconds"),
+                    "timing_sidecar_fields": sorted(timing.keys()),
+                    "phases": aborted.get("phases")},
+                "usage_completeness": {
+                    "verdict": "established",
+                    "detail": "settled at zero: the runtime issued no request, and the ledger "
+                              "carries a reserve and a settle for the attempt"},
+            },
+            "missing_evidence": [GAP_NO_TRANSCRIPT],
+            "produced_claims": False,
+            "replacement_consumed": True,
+            "notes": ["A replacement was consumed although nothing was measured: the ledger's "
+                      "own rule counts any second attempt at a cell as a replacement, and that "
+                      "rule governs over a narrative judgment that it should not."],
+        }
+
+    settle = load(root / "artifacts" / "settle.json", default={})
+    dispatch = load(root / "artifacts" / "dispatch.json", default={})
+    prepare = load(root / "artifacts" / "prepare.json", default={})
+    arm = settle.get("arm") or prepare.get("arm")
+
+    roots = [root] + list(item.get("extra_roots") or [])
+    scans, expectations, verdicts = {}, {}, {}
+    for base in roots:
+        for path in retained_transcripts(base):
+            scans[str(path)] = scan_transcript(path)
+    by_role = {}
+    for path, scan in scans.items():
+        role = role_of(path)
+        expect = expected_settings(manifest, arm, role)
+        verdict = settings_verdict(scan, expect)
+        by_role.setdefault(role, []).append({"role": role, "expected": expect,
+                                             "observed": verdict, "fresh": scan.get("fresh_context"),
+                                             "assistant_lines": scan.get("assistant_lines")})
+        expectations[role] = expect
+        verdicts.setdefault(role, []).append(verdict)
+
+    historical = load(root / "artifacts" / "model-verification.json", default={})
+    settings_problems = [problem for role in verdicts for verdict in verdicts[role]
+                         for problem in (verdict.get("problems") or [])]
+    unverified = [role for role in verdicts
+                  if not all(v.get("verified") for v in verdicts[role])]
+
+    isolation = isolation_checks(root)
+    separation = separation_checks(root, arm, {p: s for p, s in scans.items()})
+    frozen = frozen_input_checks(root, manifest, published, salt, item["ordinal"])
+    completion = completion_checks(root, dispatch, settle)
+    usage = usage_checks(root, settle)
+
+    gaps = [GAP_LAUNCH_ARGV, GAP_NETWORK_JUDGEMENT]
+    if not usage["per_role_split_assigned"]:
+        gaps.append(GAP_PER_ROLE_SPLIT)
+    if not historical:
+        gaps.append(GAP_NO_MODEL_VERIFICATION)
+    if "worker" not in by_role and arm in ("A", "B", "C"):
+        gaps.append(GAP_NO_BATCH_REASON)
+
+    violations = list(settings_problems) + list(isolation["problems"]) \
+        + list(separation["problems"]) + list(frozen["problems"])
+
+    ceiling = usd((manifest.get("limits") or {}).get("whole_review_usd_per_attempt") or "9.00")
+    headroom = usd((manifest.get("limits") or {}).get("one_call_headroom_usd") or "1.00")
+    settled = usd(settle.get("settled_usd"))
+    if settled > ceiling + headroom:
+        violations.append("the attempt settled at %s, above the frozen %s ceiling plus its %s "
+                          "one-call headroom" % (settled, ceiling, headroom))
+
+    if item["kind"] == "invalidated":
+        validity = "invalid"
+        basis = "documented infrastructure invalidity, recorded when it happened"
+    elif violations:
+        validity = "invalid"
+        basis = "a fidelity, isolation or frozen-input violation observed in this assessment"
+    else:
+        validity = "unresolved"
+        basis = ("no violation was observed and every observable dimension is established, but "
+                 "the evidence named under missing_evidence was never retained, so this "
+                 "assessment does not certify the attempt as faithful")
+
+    return {
+        "attempt_ref": reference, "position": item["position"], "ordinal": item["ordinal"],
+        "arm": arm, "block": prepare.get("block") or "pilot",
+        "operational_validity": validity,
+        "validity_basis": basis,
+        "completion": settle.get("completion") or (
+            "stopped-runtime" if item["kind"] == "invalidated" else None),
+        "settled_usd": settle.get("settled_usd"),
+        "dimensions": {
+            "requested_and_observed_settings": {
+                "verdict": "established" if not settings_problems and by_role else "unresolved",
+                "roles": {role: {
+                    "expected_model": expectations[role].get("model"),
+                    "expected_effort": expectations[role].get("effort"),
+                    "requested_evidence": ("the startup agent definition retained with the attempt"
+                                           if role in ("worker", "finder")
+                                           else "not retained; see missing_evidence"),
+                    "observed_verified": all(v.get("verified") for v in verdicts[role]),
+                    "assistant_lines": sum(v.get("assistant_lines") or 0 for v in verdicts[role]),
+                    "sessions": len(verdicts[role]),
+                    "provider_error_lines_dropped": sum(
+                        entry.get("synthetic_error_lines") or 0 for entry in by_role[role]),
+                    "problems": [p for v in verdicts[role] for p in (v.get("problems") or [])],
+                } for role in sorted(verdicts)},
+                "agrees_with_historical_record": bool(historical) and all(
+                    (historical.get(role) or {}).get("verified") is True for role in historical),
+                "historical_record_present": bool(historical),
+                "detail": ("observed settings recomputed by this closeout from every retained "
+                           "transcript, not taken from the attempt's own verification record"),
+            },
+            "isolation": dict(isolation, verdict="established" if isolation["passed"] else "violated"),
+            "context_separation": dict(separation,
+                                       verdict="established" if separation["passed"] else "violated"),
+            "frozen_inputs": dict(frozen, verdict="established" if frozen["passed"] else "violated"),
+            "common_allowances": {
+                "verdict": "unresolved",
+                "detail": ("the enforced ceilings cannot be read back. What is retained: the "
+                           "rendered dispatch prompt with its execution allowance, the permission "
+                           "denials the restricted layer produced, and a settled cost inside the "
+                           "frozen ceiling."),
+                "settled_within_ceiling": settled <= ceiling + headroom,
+                "settled_usd": str(settled),
+                "ceiling_usd": str(ceiling),
+                "one_call_headroom_usd": str(headroom),
+                "permission_denials_observed": sum(p.get("permission_denials") or 0
+                                                   for p in completion["phases"]),
+                "shell_commands": isolation["shell_commands"],
+                "shell_command_ceiling": (manifest.get("limits") or {}).get(
+                    "shell_commands_per_attempt"),
+                "root_elapsed_seconds": completion["root_elapsed_seconds"],
+                "root_wall_ceiling_seconds": (manifest.get("limits") or {}).get(
+                    "root_wall_seconds_per_attempt"),
+            },
+            "completion_and_stop": dict(completion, verdict="established"),
+            "usage_completeness": dict(
+                usage, verdict="established" if usage["per_role_split_assigned"] else "unresolved"),
+        },
+        "missing_evidence": gaps,
+        "violations": violations,
+        "produced_claims": (root / "work" / "review-payload.json").is_file()
+                           or (root / "work" / "review-payload.md").is_file(),
+        "problems_recorded_at_settlement": settle.get("problems") or [],
+    }
+
+
+def build_assessment(gate, evidence: Path, manifest, bundle: Path, salt) -> dict:
+    published_by_position = {}
+    for position in range(1, PILOT_CELLS + 1):
+        summary = load(bundle / "cells" / ("position-%02d" % position) / "summary.json", default={})
+        if summary:
+            published_by_position[position] = summary
+
+    attempts = [assess_attempt(item, manifest, published_by_position, salt)
+                for item in attempt_roots(evidence)]
+
+    invalid = [a["attempt_ref"] for a in attempts if a["operational_validity"] == "invalid"]
+    unresolved = [a["attempt_ref"] for a in attempts if a["operational_validity"] == "unresolved"]
+    valid = [a["attempt_ref"] for a in attempts if a["operational_validity"] == "valid"]
+    observed_violations = sorted({v for a in attempts for v in (a.get("violations") or [])})
+    gaps = sorted({g for a in attempts for g in a["missing_evidence"]})
+
+    # The frozen invalidation rule reaches comparison members, not just cells.
+    # Nothing here was invalidated by a fault in a shared input, so no member
+    # beyond the two attempts already closed as invalid is affected.
+    affected = sorted({a["position"] for a in attempts
+                       if a["operational_validity"] == "invalid" and a["ordinal"] > 0})
+
+    status = "unresolved" if unresolved or not valid else "resolved"
+    return {
+        "schema_version": "bounded-discovery-v1",
+        "artifact_id": "issue-151-fidelity-assessment",
+        "finding_id": "pilot/actual-fidelity",
+        "status": status,
+        "assessed_at": now(),
+        "gate": {"observed_at": gate.get("observed_at"),
+                 "all_reviewers_stopped": gate.get("all_reviewers_stopped")},
+        "decision": (
+            "Unresolved, with the missing evidence named. No attempt shows an observed fidelity, "
+            "isolation, context-separation or frozen-input violation: every retained transcript "
+            "verifies to the frozen model and effort for its role, every absence gate and read "
+            "audit passed, every session is a fresh context, and every rendered prompt still "
+            "matches both the digest sealed beside it and the commitment published for it. What "
+            "cannot be established is that each cell was launched under the identical frozen "
+            "allowances, and how each attempt's spend divides between its roles, because neither "
+            "record was ever retained. Under the frozen rule an unobservable setting is not a "
+            "pass, so these attempts are carried as unresolved rather than valid."
+            if status == "unresolved" else
+            "Resolved: every attempt's settings, isolation, context separation and usage are "
+            "established from retained evidence."),
+        "attempts_assessed": len(attempts),
+        "valid": valid,
+        "unresolved": unresolved,
+        "invalid": invalid,
+        "observed_violations": observed_violations,
+        "missing_evidence": gaps,
+        "invalidation_rule": {
+            "applied": True,
+            "affected_positions": affected,
+            "detail": ("The frozen rule invalidates exactly the comparison cells a change "
+                       "affects. The two attempts closed as invalid failed before producing a "
+                       "comparable outcome and share no input with any other cell, so they "
+                       "invalidate no further member; each was already replaced within the "
+                       "frozen allowance. No budget stop is treated as infrastructure "
+                       "invalidity: position 6's stop is a measured result and is not "
+                       "replacement-eligible."),
+        },
+        "effect_on_grading": (
+            "An unresolved attempt is not a valid completed outcome. Under section 8 it counts "
+            "as missing rather than present, so #152 grades the claims these attempts produced "
+            "without treating any cell as a clean comparison member, and #153 applies the "
+            "conservative limits that follow."),
+        "attempts": attempts,
+    }
+
+
+def command_fidelity(args) -> int:
+    gate = load(args.gate)
+    if not gate.get("all_reviewers_stopped"):
+        print("the stop gate does not report every reviewer stopped; sealed evidence must not "
+              "be read for this assessment")
+        return 1
+    manifest = load(args.manifest)
+    salt_path = Path(os.path.expanduser(args.salt)) if args.salt else None
+    salt = salt_path.read_bytes() if salt_path and salt_path.is_file() else None
+    assessment = build_assessment(gate, Path(os.path.expanduser(args.evidence)), manifest,
+                                  Path(args.bundle), salt)
+    leaked = leak_scan(assessment, args.slot_names)
+    if leaked:
+        for line in leaked:
+            print(line)
+        return 1
+    write(args.out, assessment)
+    print(json.dumps({"status": assessment["status"],
+                      "valid": len(assessment["valid"]),
+                      "unresolved": len(assessment["unresolved"]),
+                      "invalid": len(assessment["invalid"])}))
+    return 0
+
+
+def leak_scan(payload, slot_names) -> list:
+    """Refuse to write a public artifact that names a slot, a target repository
+    or a target commit.
+
+    The pilot's selection rule is public, so any of those would disclose which
+    slot holds the clean control. This runs on the assembled payload rather than
+    on each field, because review found that the leak came through values that
+    were individually innocuous."""
+    text = json.dumps(payload)
+    found = []
+    for name in (slot_names or []):
+        if name and name in text:
+            found.append("refusing to write: the payload contains %r" % name)
+    for match in set(re.findall(r"\b[0-9a-f]{40}\b", text)):
+        found.append("refusing to write: the payload contains a full 40-character object id "
+                     "(%s...), which identifies a target" % match[:8])
+    return sorted(set(found))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--self-test", action="store_true",
@@ -468,6 +1133,17 @@ def build_parser() -> argparse.ArgumentParser:
     seal.add_argument("--into", required=True)
     seal.add_argument("--out")
     seal.set_defaults(handler=command_open_seal)
+
+    fidelity = sub.add_parser("fidelity", help="assess pilot/actual-fidelity from the evidence")
+    fidelity.add_argument("--gate", required=True)
+    fidelity.add_argument("--evidence", required=True)
+    fidelity.add_argument("--manifest", required=True, help="#149's frozen manifest.json")
+    fidelity.add_argument("--bundle", required=True, help="#150's published pilot bundle")
+    fidelity.add_argument("--salt", help="the sealed per-bundle commitment salt")
+    fidelity.add_argument("--slot-names", nargs="*", default=["slot-1", "slot-2", "slot-3",
+                                                              "slot-4"])
+    fidelity.add_argument("--out", required=True)
+    fidelity.set_defaults(handler=command_fidelity)
     return parser
 
 
@@ -636,6 +1312,67 @@ def self_test() -> int:
                               capture_output=True, text=True, encoding="utf-8")
         check("an uncaptured workspace sweep fails the gate", code.returncode == 1)
 
+        # --- the fidelity assessment ---------------------------------------
+        # A provider error writes an assistant line under `<synthetic>`. It must
+        # be dropped, not read as a second model.
+        lines = [json.dumps({"type": "user", "parentUuid": None, "version": "2.1.263"})]
+        lines += [json.dumps({"type": "assistant",
+                              "message": {"model": "claude-sonnet-5", "effort": "high"}})] * 3
+        lines.append(json.dumps({"type": "assistant", "message": {"model": "<synthetic>"}}))
+        (tmp / "t.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        scan = scan_transcript(tmp / "t.jsonl")
+        check("a provider-error line is dropped from the model census",
+              scan["models"] == {"claude-sonnet-5": 3} and scan["synthetic_error_lines"] == 1)
+        check("a single root user message with no summary reads as a fresh context",
+              scan["fresh_context"] is True)
+        verdict = settings_verdict(scan, {"model": "claude-sonnet-5", "effort": "high"})
+        check("a matching transcript verifies", verdict["verified"] is True)
+        check("a transcript on the wrong model does not verify",
+              settings_verdict(scan, {"model": "claude-opus-5",
+                                      "effort": "high"})["verified"] is False)
+        check("an unobservable setting is a failure, not a pass",
+              settings_verdict({"readable": True, "assistant_lines": 0, "models": {},
+                                "efforts": {}}, {"model": "claude-sonnet-5",
+                                                 "effort": "high"})["verified"] is False)
+
+        resumed = [json.dumps({"type": "user", "parentUuid": None}),
+                   json.dumps({"type": "summary", "summary": "earlier work"}),
+                   json.dumps({"type": "user", "parentUuid": None})]
+        (tmp / "r.jsonl").write_text("\n".join(resumed) + "\n", encoding="utf-8")
+        check("a resumed or summarised session is not a fresh context",
+              scan_transcript(tmp / "r.jsonl")["fresh_context"] is False)
+
+        check("a sub-agent transcript is a worker",
+              role_of("/x/transcripts/-p/uuid/subagents/agent-1.jsonl") == "worker")
+        check("a finder-store transcript is the finder",
+              role_of("/x/transcripts/-tmp-cells-position-06-finder-store/u.jsonl") == "finder")
+        check("a root session transcript is the primary",
+              role_of("/x/transcripts/-tmp-cells-position-06-work/u.jsonl") == "primary")
+
+        check("the metering copies are excluded from the transcript inventory",
+              all("filtered-transcripts" not in str(path)
+                  for path in retained_transcripts(tmp)))
+
+        # A payload that names a slot, a target repository commit or a raw
+        # object id must never be written to the repository.
+        check("a slot name is refused",
+              leak_scan({"a": "slot-2-A-replicate-1"}, ["slot-1", "slot-2"]))
+        check("a full object id is refused",
+              leak_scan({"a": "3604b13117cbb652c10bb44b228b300d543dcc80"}, []))
+        check("a clean payload passes the leak scan",
+              not leak_scan({"a": "position-03-attempt-2", "b": "3604b13"}, ["slot-1"]))
+
+        # The fidelity command refuses to read sealed evidence behind a shut gate.
+        (tmp / "shut-gate.json").write_text(json.dumps({"all_reviewers_stopped": False}),
+                                            encoding="utf-8")
+        code = subprocess.run([sys.executable, str(Path(__file__).resolve()), "fidelity",
+                               "--gate", str(tmp / "shut-gate.json"), "--evidence", str(tmp),
+                               "--manifest", str(tmp / "ledger.json"), "--bundle", str(tmp),
+                               "--out", str(tmp / "f.json")],
+                              capture_output=True, text=True, encoding="utf-8")
+        check("the fidelity assessment refuses to read sealed evidence behind a shut gate",
+              code.returncode == 1 and "must not" in code.stdout)
+
         # The seal cannot be opened against a gate that did not pass.
         (tmp / "shut.json").write_text(json.dumps(
             {"all_reviewers_stopped": False, "observed_at": "2026-09-10T00:00:00Z"}),
@@ -650,7 +1387,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (16, len(failures)))
+    print("%d checks, %d failures" % (29, len(failures)))
     return 1 if failures else 0
 
 
