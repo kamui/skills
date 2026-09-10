@@ -178,3 +178,21 @@ finder claims, transcripts and the reconciled ledger — are **sealed** under #1
 until every reviewer run has stopped. #152 scores; this ticket only ran the cells and proved they were
 run faithfully.
 
+
+### Regenerating the handoff and settling interrupted usage
+
+[write_handoff.py](scripts/write_handoff.py) reads the recorded historical fidelity judgment from
+[fidelity-review.json](fidelity-review.json), or the file named by `--fidelity-review`. The preserved
+judgment is blocked. Missing or unresolved judgments produce `stopped-incomplete` and retain the
+#151 dispatch hold. A researcher may record `status: cleared` only after reviewing permitted evidence,
+with a nonempty `evidence` list and a `rationale`. The helper checks those fields and carries the
+judgment into the handoff; it does not inspect seals or make the fidelity judgment.
+
+[run_cell.py](scripts/run_cell.py) treats missing, malformed and nonfinite primary costs as unknown.
+When a single primary phase or finder has no self-report, settlement charges each worker group's
+larger observed subtotal and retains one extra request at each affected transcript's largest observed
+request cost. Streamed records are grouped before the retained usage helper prices them. Missing
+transcripts or prices keep the full reservation. A resumed primary with any missing phase report also
+keeps the reservation because its shared transcript cannot separate the billed phases. Such records
+report `settled_usd: null` until reconciliation establishes a bound. None of these coordinator changes
+recomputes or clears the preserved pilot's historical accounting or fidelity.

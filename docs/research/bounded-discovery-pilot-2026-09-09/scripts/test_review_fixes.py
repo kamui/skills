@@ -366,6 +366,128 @@ class ReviewFixes(unittest.TestCase):
                         "phase": "pre-freeze", "attempt_id": None, "actual_delta_usd": "0", "reservation_delta_usd": "0",
                         "uncertainty_usd": "0"}]})
 
+    def usage_fixture(self, role, requests=(100000, 200000)):
+        name = ("agent-verifier" if role == "worker" else
+                runner.session_id(self.row["attempt_id"], "finder" if role == "finder" else "primary"))
+        path = runner.session_home(self.root, "finder" if role == "finder" else "primary") / ".claude" / "projects" / (name + ".jsonl")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lines = []
+        for index, tokens in enumerate(requests):
+            entry = {"type": "assistant", "requestId": "request-%d" % index,
+                     "message": {"model": "claude-sonnet-5", "usage": {"input_tokens": tokens}, "content": []}}
+            # Repeated streamed lines must count once, including in the bound.
+            lines.extend([json.dumps(entry), json.dumps(entry)])
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return path
+
+    def settle_usage(self, phases, finder=None, roles=()):
+        self.fresh_ledger()
+        self.config.update(bundle=str(SCRIPTS.parents[1] / "bounded-discovery-runs-2026-09-08"),
+                           tools=str(SCRIPTS.parents[1] / "tools"))
+        for role in roles:
+            self.usage_fixture(role)
+        runner.claim_attempt(self.config, self.row, runner.cell_contexts(self.root, self.row))
+        self.assertEqual(runner.reserve(self.config, self.row, "11.00" if self.row["arm"] == "C" else "10.00", "test").returncode, 0)
+        runner.write(self.root / "artifacts" / "dispatch.json", {
+            "attempt_id": self.row["attempt_id"], "arm": self.row["arm"], "disposition": "stopped-runtime",
+            "phases": phases, "finder": finder, "problems": []})
+        runner.write(self.root / "artifacts" / "cell-env-dispatch.json", {"permitted_roots": []})
+        with patch.object(runner, "schedule_row", return_value=self.row), \
+             patch.object(runner, "verify_models", return_value=({}, [])), \
+             patch.object(runner, "audit_reads", return_value={"passed": True}):
+            runner.settle(self.config, 99)
+        return runner.load(self.root / "artifacts" / "settle.json"), runner.load(self.config["ledger"])
+
+    def test_missing_primary_without_transcript_keeps_entire_reservation(self):
+        self.row["arm"] = "A"
+        record, ledger = self.settle_usage([self.phase(cost=0, envelope=False)])
+        self.assertEqual(Decimal(ledger["reserved_usd"]), 10)
+        self.assertEqual(Decimal(ledger["actual_usd"]), 0)
+        self.assertIsNone(record["settled_usd"])
+        self.assertTrue(record["reservation_retained"])
+        self.assertFalse(any(e["operation"] == "settle" for e in ledger["events"]))
+
+    def test_missing_reports_retain_one_extra_request_per_worker(self):
+        record, ledger = self.settle_usage([self.phase(cost=0, envelope=False)],
+                                           finder={"cost_usd": None}, roles=("primary", "finder", "worker"))
+        # Each worker has $0.60 observed and a largest $0.40 request at frozen $2/M.
+        self.assertEqual(Decimal(ledger["actual_usd"]), Decimal("1.8"))
+        self.assertEqual(Decimal(ledger["uncertainty_usd"]), Decimal("1.2"))
+        self.assertEqual(Decimal(ledger["reserved_usd"]), 0)
+        self.assertFalse(record["reservation_retained"])
+        with patch.object(runner, "schedule_row", return_value=self.row), \
+             patch.object(runner, "verify_models", return_value=({}, [])), \
+             patch.object(runner, "audit_reads", return_value={"passed": True}):
+            runner.settle(self.config, 99)
+        self.assertEqual(runner.load(self.config["ledger"]), ledger)
+        self.assertFalse(any("existing settlement" in p for p in runner.load(self.root / "artifacts" / "settle.json")["problems"]))
+
+    def test_missing_finder_cost_cannot_be_offset_by_primary_report(self):
+        record, ledger = self.settle_usage([self.phase(cost=2)],
+                                           finder={"cost_usd": None}, roles=("primary", "finder"))
+        self.assertEqual(Decimal(ledger["actual_usd"]), Decimal("2.6"))
+        self.assertEqual(Decimal(ledger["uncertainty_usd"]), Decimal("0.4"))
+        self.assertFalse(record["reservation_retained"])
+
+    def test_missing_resume_usage_keeps_reservation_until_phases_reconcile(self):
+        record, ledger = self.settle_usage([self.phase(), self.phase(cost=0, envelope=False)],
+                                           finder={"cost_usd": 2}, roles=("primary", "finder"))
+        self.assertEqual(Decimal(ledger["reserved_usd"]), 11)
+        self.assertTrue(record["reservation_retained"])
+
+    def test_valid_zero_report_releases_reservation(self):
+        self.row["arm"] = "A"
+        record, ledger = self.settle_usage([self.phase(cost=0)])
+        self.assertEqual(Decimal(ledger["reserved_usd"]), 0)
+        self.assertEqual(Decimal(ledger["uncertainty_usd"]), 0)
+        self.assertFalse(record["reservation_retained"])
+
+    def test_primary_envelope_missing_cost_is_unknown(self):
+        for cost in (None, "bad", -1, float("nan"), float("inf"), True):
+            with self.subTest(cost=cost), patch.object(runner, "docker_argv", return_value=["synthetic"]), \
+                 patch.object(runner, "run", return_value=result(json.dumps({"type": "result", "total_cost_usd": cost}))):
+                record = runner.run_phase(self.config, self.root, "slot-9", self.row, "primary", [])
+                self.assertIsNone(record["cost_usd"])
+                self.assertFalse(record["reported_cost_valid"])
+
+    def test_regenerated_public_handoff_preserves_fidelity_hold(self):
+        source = SCRIPTS.parent
+        preserved = runner.load(source / "handoff.json")
+        public = self.base / "public"
+        shutil.copytree(source / "cells", public / "cells")
+        shutil.copyfile(source / "fidelity-review.json", public / "fidelity-review.json")
+        extra = [entry for entry in preserved["attempts"] if entry.get("ordinal") == 1
+                 and entry.get("position") in (1, 3)]
+        self.assertEqual(len(extra), 2)
+        runner.write(self.base / "extra.json", extra)
+        setup = preserved["setup_charges"]["items"]
+        ledger = dict(preserved["accounting"], pre_freeze_actual_usd=preserved["reconciliation"]["pre_freeze_actual_usd"],
+                      events=[{"operation": "settle", "phase": "review", "attempt_id": None,
+                               "actual_delta_usd": item["usd"], "reservation_id": item["reservation_id"],
+                               "request_refs": [item["why"]]} for item in setup])
+        runner.write(self.base / "ledger.json", ledger)
+        runner.write(self.base / "config.json", self.config)
+        command = [sys.executable, str(SCRIPTS / "write_handoff.py"), "--config", str(self.base / "config.json"),
+                   "--bundle", str(public), "--extra-attempts", str(self.base / "extra.json"),
+                   "--out", str(self.base / "handoff.json")]
+        for judgment in (preserved["fidelity_review"], None, {"status": "cleared"},
+                         {"status": "cleared", "evidence": ["synthetic://operational-extract"],
+                          "rationale": "Synthetic test judgment only; this does not clear the preserved pilot."}):
+            with self.subTest(judgment=judgment):
+                state = public / "fidelity-review.json"
+                if judgment is None:
+                    state.unlink()
+                else:
+                    runner.write(state, judgment)
+                completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                document = runner.load(self.base / "handoff.json")
+                self.assertTrue(document["reconciliation"]["reconciles"], document["reconciliation"])
+                cleared = judgment and judgment.get("evidence")
+                self.assertEqual(document["disposition"], "continue" if cleared else "stopped-incomplete")
+                self.assertEqual(bool(document["blockers"]), not bool(cleared))
+                self.assertIn("fidelity_review", document)
+
     def test_actual_worker_registration_is_append_only_and_rejects_reuse(self):
         self.fresh_ledger()
         contexts = {"primary": "primary-id", "finder": "finder-id"}
