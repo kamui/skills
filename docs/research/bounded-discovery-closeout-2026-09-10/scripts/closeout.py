@@ -1671,7 +1671,7 @@ def command_seal(args) -> int:
 # --------------------------------------------------------------------------
 
 def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
-                  no_packet, seal) -> dict:
+                  no_packet, seal, supplement=None) -> dict:
     """#151's stage record.
 
     It has to be readable as a stop: the closeout is delivered, the experiment
@@ -1694,6 +1694,13 @@ def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
             "observed_at": gate["observed_at"],
             "checks": len(gate["checks"]),
             "recorded_before_the_seal_was_opened": True,
+            "supplement": ({
+                "observed_at": supplement.get("observed_at"),
+                "passed": supplement.get("passed"),
+                "recorded_after_the_seal_was_opened": True,
+                "why": supplement.get("why"),
+                "standing": supplement.get("standing"),
+            } if supplement else None),
         },
         "fidelity": {
             "finding_id": assessment["finding_id"],
@@ -1764,7 +1771,8 @@ def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
 def command_handoff(args) -> int:
     handoff = build_handoff(load(args.gate), load(args.fidelity), load(args.reconciliation),
                             load(args.manifest), load(args.packet_index), load(args.no_packet),
-                            load(args.seal))
+                            load(args.seal),
+                            load(args.gate_supplement) if args.gate_supplement else None)
     leaked = leak_scan(handoff, args.slot_names)
     if leaked:
         for line in leaked:
@@ -1783,6 +1791,78 @@ def command_handoff(args) -> int:
     print(json.dumps({"disposition": handoff["disposition"],
                       "fidelity": handoff["fidelity"]["status"],
                       "dispatch_authorized": handoff["dispatch_authorized"]}))
+    return 0
+
+
+def command_gate_supplement(args) -> int:
+    """Re-run the workspace absence check against roots learned after the gate.
+
+    The gate has to be recorded before anything sealed is opened, which means it
+    is recorded before the evidence can say where the cells actually ran. The
+    pilot's configuration file was not committed and did not survive, so the
+    first gate checked a plausible cell root rather than the real one, and its
+    sweep of the user's home could not have reached a root under ``/tmp``.
+
+    This records the corrected check and states its ordering plainly: it was
+    observed after the seal was opened, and it is corroboration, not the gate.
+    The checks that establish no reviewer is running - the process table, the
+    container runtime and the ledger - were all made before the seal and are
+    unaffected. The ledger digest is recorded on both sides so that "nothing ran
+    in between" is a checkable claim rather than an assurance."""
+    gate = load(args.gate)
+    ledger_path = Path(os.path.expanduser(args.ledger))
+    ledger_digest = hashlib.sha256(ledger_path.read_bytes()).hexdigest()
+    observed_at = now()
+
+    roots, present = [], []
+    for root in args.cells_root:
+        expanded = Path(os.path.expanduser(root))
+        exists = expanded.exists()
+        roots.append({"root": str(root), "exists": exists})
+        if exists:
+            present.append(str(root))
+    sweep = capture(["find"] + [os.path.expanduser(path) for path in args.sweep]
+                    + ["-maxdepth", "4", "-type", "d", "-name", args.pattern], timeout=600)
+    # The evidence this closeout extracted for reading is not a live workspace.
+    excluded = os.path.expanduser(args.exclude) if args.exclude else None
+    stray = [line for line in sweep.get("stdout", "").splitlines()
+             if line.strip() and not (excluded and line.startswith(excluded))]
+
+    passed = not present and not stray and bool(sweep.get("ran"))
+    record = {
+        "schema_version": "bounded-discovery-v1",
+        "artifact_id": "issue-151-stop-gate-supplement",
+        "supplements": gate.get("artifact_id"),
+        "gate_observed_at": gate.get("observed_at"),
+        "observed_at": observed_at,
+        "recorded_after_the_seal_was_opened": True,
+        "why": ("the pilot's cell root was only readable from the evidence the gate released, so "
+                "the gate checked a plausible root and a sweep that could not have reached the "
+                "real one"),
+        "standing": ("corroboration, not the gate. The checks that establish no reviewer is "
+                     "running - the process table, the container runtime and the ledger - were "
+                     "made before the seal was opened and are unchanged."),
+        "roots_checked": roots,
+        "roots_present": present,
+        "sweep_command": sweep.get("command"),
+        "sweep_ran": bool(sweep.get("ran")),
+        "sweep_match_count": len(stray),
+        "sweep_output_sha256": digest(sweep.get("stdout", "") + sweep.get("stderr", "")),
+        "excluded_prefix": ("this closeout's own read-only extract of the sealed evidence"
+                            if excluded else None),
+        "ledger_sha256_now": ledger_digest,
+        "ledger_unchanged_since_the_gate": ledger_digest == args.ledger_sha256
+                                           if args.ledger_sha256 else None,
+        "passed": passed,
+        "detail": ("no configured cell root exists and no attempt workspace survives under the "
+                   "swept paths" if passed else
+                   "a cell root or an attempt workspace still exists"),
+    }
+    write(args.out, record)
+    if not passed:
+        print("supplementary workspace check failed: %s" % record["detail"])
+        return 1
+    print(json.dumps({"passed": passed, "observed_at": observed_at}))
     return 0
 
 
@@ -1808,6 +1888,18 @@ def build_parser() -> argparse.ArgumentParser:
     seal.add_argument("--into", required=True)
     seal.add_argument("--out")
     seal.set_defaults(handler=command_open_seal)
+
+    supplement = sub.add_parser("gate-supplement",
+                                help="re-check workspace absence at roots learned after the gate")
+    supplement.add_argument("--gate", required=True)
+    supplement.add_argument("--ledger", required=True)
+    supplement.add_argument("--ledger-sha256", help="the digest the gate saw, to show nothing ran")
+    supplement.add_argument("--cells-root", nargs="+", required=True)
+    supplement.add_argument("--sweep", nargs="+", default=["/tmp", "~"])
+    supplement.add_argument("--pattern", default="position-0*")
+    supplement.add_argument("--exclude", help="a path prefix that is this closeout's own extract")
+    supplement.add_argument("--out", required=True)
+    supplement.set_defaults(handler=command_gate_supplement)
 
     fidelity = sub.add_parser("fidelity", help="assess pilot/actual-fidelity from the evidence")
     fidelity.add_argument("--gate", required=True)
@@ -1851,6 +1943,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     handoff = sub.add_parser("handoff", help="write the stage record #152 reads")
     handoff.add_argument("--gate", required=True)
+    handoff.add_argument("--gate-supplement")
     handoff.add_argument("--fidelity", required=True)
     handoff.add_argument("--reconciliation", required=True)
     handoff.add_argument("--manifest", required=True, help="this closeout's 24-cell manifest")
@@ -2164,6 +2257,32 @@ def self_test() -> int:
               and attempt_ordinal("issue-138-x-attempt-3") == 3)
         check("no repair is dispatched from the stopped path", feasible["dispatched"] is False)
 
+        # --- the supplementary workspace check ------------------------------
+        (tmp / "gate-for-supplement.json").write_text(
+            json.dumps({"artifact_id": "issue-151-stop-gate",
+                        "observed_at": "2026-09-10T07:03:56Z"}), encoding="utf-8")
+        code = subprocess.run([sys.executable, str(Path(__file__).resolve()), "gate-supplement",
+                               "--gate", str(tmp / "gate-for-supplement.json"),
+                               "--ledger", str(tmp / "ledger.json"),
+                               "--cells-root", str(tmp / "absent-a"), str(tmp / "absent-b"),
+                               "--sweep", str(tmp / "absent-a"),
+                               "--out", str(tmp / "supplement.json")],
+                              capture_output=True, text=True, encoding="utf-8")
+        check("an absent cell root passes the supplementary check", code.returncode == 0)
+        supplement = json.loads((tmp / "supplement.json").read_text(encoding="utf-8"))
+        check("the supplement says it was recorded after the seal was opened",
+              supplement["recorded_after_the_seal_was_opened"] is True)
+        check("the supplement is corroboration, not the gate",
+              "not the gate" in supplement["standing"])
+        code = subprocess.run([sys.executable, str(Path(__file__).resolve()), "gate-supplement",
+                               "--gate", str(tmp / "gate-for-supplement.json"),
+                               "--ledger", str(tmp / "ledger.json"),
+                               "--cells-root", str(tmp / "present-cells"),
+                               "--sweep", str(tmp / "present-cells"),
+                               "--out", str(tmp / "supplement2.json")],
+                              capture_output=True, text=True, encoding="utf-8")
+        check("a surviving cell root fails the supplementary check", code.returncode == 1)
+
         # --- the handoff ------------------------------------------------------
         stub_gate = {"all_reviewers_stopped": True, "observed_at": "2026-09-10T00:00:00Z",
                      "checks": [{"passed": True}]}
@@ -2204,7 +2323,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (49, len(failures)))
+    print("%d checks, %d failures" % (53, len(failures)))
     return 1 if failures else 0
 
 

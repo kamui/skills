@@ -15,6 +15,7 @@ closeout is complete; the experiment is not, and this bundle does not pretend ot
 | Artifact | What it settles |
 | --- | --- |
 | [gate.json](gate.json) | that every reviewer run that ever started has terminated, recorded before anything sealed was opened |
+| [gate-supplement.json](gate-supplement.json) | the workspace check re-run against the cell root the evidence named, after the seal was opened |
 | [seal-open.json](seal-open.json) | when the pilot evidence was decrypted, and against which digests |
 | [fidelity-assessment.json](fidelity-assessment.json) | `pilot/actual-fidelity`: what is established for each of the eight attempts, and what was never retained |
 | [reconciliation.json](reconciliation.json) | every charge in the epic against the single ledger, with five discrepancies and two retained bounds |
@@ -42,6 +43,19 @@ chain, and reports how many processes that excluded rather than matching itself.
 
 The raw `ps` and `find` captures stay outside the repository: a command line can name a slot. Only
 counts and digests reach [gate.json](gate.json).
+
+**One check needed correcting, and the correction is recorded rather than folded in.** The gate has
+to run before anything sealed is opened, which means it runs before the evidence can say where the
+cells actually ran. The pilot's configuration file was never committed and did not survive, so the
+gate checked a plausible cell root and swept the user's home — and the real root turned out to be
+`/tmp/bd150/cells`, which that sweep could not have reached.
+[gate-supplement.json](gate-supplement.json) records the corrected check at
+**2026-09-10T07:30:35Z**: none of the four candidate roots exists, and a sweep of `/tmp` and the
+home finds no surviving attempt workspace outside this closeout's own read-only extract. It is
+**corroboration, not the gate** — it was observed after the seal was opened, and it says so. The
+three checks that actually establish that no reviewer is running (the process table, the container
+runtime and the ledger) were all made before the seal and are unaffected, and the ledger's digest is
+recorded on both sides so that "nothing ran in between" is checkable rather than asserted.
 
 ## Historical fidelity: unresolved, with the missing evidence named
 

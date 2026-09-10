@@ -1,0 +1,48 @@
+{
+  "artifact_id": "issue-151-stop-gate-supplement",
+  "detail": "no configured cell root exists and no attempt workspace survives under the swept paths",
+  "excluded_prefix": "this closeout's own read-only extract of the sealed evidence",
+  "gate_observed_at": "2026-09-10T07:03:56.304298+00:00",
+  "ledger_sha256_now": "842c8100fe29728ed46691e079ab89342e62f61696a956dffe77795e1f0e8c98",
+  "ledger_unchanged_since_the_gate": true,
+  "observed_at": "2026-09-10T07:30:35.171806+00:00",
+  "passed": true,
+  "recorded_after_the_seal_was_opened": true,
+  "roots_checked": [
+    {
+      "exists": false,
+      "root": "/tmp/bd150/cells"
+    },
+    {
+      "exists": false,
+      "root": "/tmp/bd150"
+    },
+    {
+      "exists": false,
+      "root": "/tmp/bd150-cells"
+    },
+    {
+      "exists": false,
+      "root": "/Users/jack/.config/bounded-discovery/issue-150/cells"
+    }
+  ],
+  "roots_present": [],
+  "schema_version": "bounded-discovery-v1",
+  "standing": "corroboration, not the gate. The checks that establish no reviewer is running - the process table, the container runtime and the ledger - were made before the seal was opened and are unchanged.",
+  "supplements": "issue-151-stop-gate",
+  "sweep_command": [
+    "find",
+    "/tmp",
+    "/Users/jack",
+    "-maxdepth",
+    "4",
+    "-type",
+    "d",
+    "-name",
+    "position-0*"
+  ],
+  "sweep_match_count": 0,
+  "sweep_output_sha256": "2d5230e6b196741f5db1f5ae91eedb86d62fc2adb86ec099ba9e8761ccd068ad",
+  "sweep_ran": true,
+  "why": "the pilot's cell root was only readable from the evidence the gate released, so the gate checked a plausible root and a sweep that could not have reached the real one"
+}
