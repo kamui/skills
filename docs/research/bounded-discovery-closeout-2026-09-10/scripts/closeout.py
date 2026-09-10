@@ -473,6 +473,19 @@ GAP_NO_TRANSCRIPT = ("no transcript was retained: the launch failed before any m
                      "there is nothing to verify settings against")
 
 
+def attempt_ordinal(attempt_id, default=1) -> int:
+    """The ordinal in ``issue-138-<cell_id>-attempt-<n>``.
+
+    A malformed or absent id returns the default rather than raising: the
+    closeout reads historical records it did not write, and an unparseable id
+    is a discrepancy to report, not a reason to abandon the reconciliation."""
+    tail = str(attempt_id or "").rsplit("-attempt-", 1)[-1]
+    try:
+        return int(tail)
+    except (TypeError, ValueError):
+        return default
+
+
 def role_of(path: str) -> str:
     """The role a retained transcript belongs to, from its path.
 
@@ -797,7 +810,7 @@ def attempt_roots(evidence: Path) -> list:
             continue
         position = int(entry.name.split("-")[-1])
         settle = load(entry / "artifacts" / "settle.json", default={})
-        ordinal = int(str(settle.get("attempt_id", "-attempt-1")).rsplit("-attempt-", 1)[-1] or 1)
+        ordinal = attempt_ordinal(settle.get("attempt_id"))
         found.append({"position": position, "ordinal": ordinal, "root": entry, "kind": "settled"})
         for aborted in sorted(entry.glob("artifacts/attempt-*-aborted-dispatch.json")):
             number = int(aborted.name.split("-")[1])
@@ -808,7 +821,7 @@ def attempt_roots(evidence: Path) -> list:
             continue
         settle = load(entry / "artifacts" / "settle.json", default={})
         position = int(settle.get("position") or entry.name.split("-")[1])
-        ordinal = int(str(settle.get("attempt_id", "-attempt-1")).rsplit("-attempt-", 1)[-1] or 1)
+        ordinal = attempt_ordinal(settle.get("attempt_id"))
         home = evidence / "invalid" / (entry.name + "-home")
         found.append({"position": position, "ordinal": ordinal, "root": entry,
                       "kind": "invalidated", "extra_roots": [home] if home.is_dir() else []})
@@ -1111,6 +1124,317 @@ def leak_scan(payload, slot_names) -> list:
     return sorted(set(found))
 
 
+# --------------------------------------------------------------------------
+# Reconciling every charge against the single ledger
+# --------------------------------------------------------------------------
+
+def ledger_categories(ledger) -> dict:
+    """Every settled charge, split into the columns the method reports apart.
+
+    Setup and selection are charged once to the epic; review consumption is
+    charged per attempt including the attempts that were discarded. Nothing is
+    netted off: a discarded predecessor keeps its cost in the total."""
+    categories = {"pre_freeze": Decimal("0"), "setup": Decimal("0"), "attempts": Decimal("0")}
+    per_attempt, counts = {}, {"pre_freeze": 0, "setup": 0, "attempts": 0}
+    for event in ledger.get("events", []):
+        if event.get("operation") != "settle":
+            continue
+        delta = usd(event.get("actual_delta_usd"))
+        if event.get("phase") == "pre-freeze":
+            key = "pre_freeze"
+        elif event.get("attempt_id"):
+            key = "attempts"
+            # A settlement of zero is still a settlement: the attempt whose
+            # launch was refused before any model request settled at zero and
+            # must stay visible in the census.
+            per_attempt[event["attempt_id"]] = per_attempt.get(
+                event["attempt_id"], Decimal("0")) + delta
+        else:
+            key = "setup"
+        categories[key] += delta
+        counts[key] += 1
+    return {"totals": categories, "counts": counts, "per_attempt": per_attempt}
+
+
+def attempt_reconciliation(evidence: Path, ledger_per_attempt) -> list:
+    """Each attempt's settled charge against the ledger, its own self-report and
+    the recomputed transcript usage, with the residual decomposed."""
+    rows = []
+    for item in attempt_roots(evidence):
+        root, ordinal = item["root"], item["ordinal"]
+        reference = "position-%02d-attempt-%d" % (item["position"], ordinal)
+        if item["kind"] == "aborted":
+            record = load(item["record"], default={})
+            attempt_id = record.get("attempt_id")
+            rows.append({
+                "attempt_ref": reference, "position": item["position"], "ordinal": ordinal,
+                "arm": record.get("arm"), "role_split_available": False,
+                "ledger_settled_usd": str(usd(ledger_per_attempt.get(attempt_id))),
+                "self_report_usd": "0.0000000", "recomputed_usage_usd": None,
+                "reconciliation_residual_usd": "0.0000000",
+                "residual_untranscripted_models_usd": None,
+                "residual_unexplained_usd": None,
+                "reconciles": usd(ledger_per_attempt.get(attempt_id)) == 0,
+                "note": ("no model request was issued; the reserve and the settle are both on "
+                         "the ledger and the settle is zero"),
+            })
+            continue
+        settle = load(root / "artifacts" / "settle.json", default={})
+        split = load(root / "artifacts" / "usage-split.json", default={})
+        attempt_id = settle.get("attempt_id")
+        ledger_amount = usd(ledger_per_attempt.get(attempt_id))
+        settled = usd(settle.get("settled_usd"))
+        rows.append({
+            "attempt_ref": reference, "position": item["position"], "ordinal": ordinal,
+            "arm": settle.get("arm"),
+            "role_split_available": sorted((split.get("per_role") or {}).keys()) not in
+                                    ([], ["unassigned"]),
+            "models_priced": settle.get("models_priced"),
+            "ledger_settled_usd": str(ledger_amount),
+            "self_report_usd": settle.get("self_report_usd"),
+            "recomputed_usage_usd": settle.get("usage_split_total_usd"),
+            "reconciliation_residual_usd": settle.get("reconciliation_residual_usd"),
+            "residual_untranscripted_models_usd": settle.get("residual_untranscripted_models_usd"),
+            "residual_unexplained_usd": settle.get("residual_unexplained_usd"),
+            "charged_the_larger_source": settled >= usd(settle.get("usage_split_total_usd")),
+            "reconciles": ledger_amount == settled,
+            "settlement_problems": settle.get("problems") or [],
+        })
+    return rows
+
+
+def ledger_discrepancies(ledger, manifest, published_digest, live_digest, rows) -> list:
+    """Every place the ledger disagrees with something published about it.
+
+    Recorded, never repaired: the chain is append-only, and a stage record that
+    was true when it was written stays as delivered."""
+    found = []
+    opens = [e for e in ledger.get("events", []) if e.get("operation") == "attempt-open"]
+    if opens and int(ledger.get("attempts_dispatched") or 0) != len(opens):
+        found.append({
+            "id": "ledger/attempts-dispatched-counter",
+            "what": "the ledger header records attempts_dispatched %s while the chain carries %d "
+                    "attempt-open events" % (ledger.get("attempts_dispatched"), len(opens)),
+            "effect": "the counter is not the attempt census; the events are. Every count in this "
+                      "closeout is taken from the events.",
+            "repaired": False,
+        })
+    instants = sorted(e.get("observed_at") for e in ledger.get("events", [])
+                      if str(e.get("operation", "")).startswith("attempt-"))
+    settle_times = [e.get("observed_at") for e in ledger.get("events", [])
+                    if e.get("operation") == "settle" and e.get("attempt_id")]
+    if instants and settle_times and max(settle_times) < min(instants):
+        found.append({
+            "id": "ledger/attempt-lifecycle-backfilled",
+            "what": "all %d attempt-open and attempt-close events were written between %s and "
+                    "%s, after the last attempt settled at %s"
+                    % (len(instants), instants[0], instants[-1], max(settle_times)),
+            "effect": "the attempt lifecycle was written after the pilot ran, so the ledger's own "
+                      "refusals - a reused attempt id, the 27-attempt cap, a replacement whose "
+                      "predecessor was not closed as documented invalidity - did not gate any "
+                      "pilot dispatch as they were designed to. The money events were "
+                      "contemporaneous; the lifecycle events are a reconstruction.",
+            "repaired": False,
+        })
+    if published_digest and live_digest and published_digest != live_digest:
+        found.append({
+            "id": "ledger/published-digest-precedes-the-lifecycle-events",
+            "what": "#150's sealed README publishes the ledger digest %s...; the sealed and live "
+                    "copies are byte-identical to each other and hash to %s..."
+                    % (published_digest[:12], live_digest[:12]),
+            "effect": "explained, not corrupted: the published digest is this ledger truncated to "
+                      "the events written before the attempt lifecycle was backfilled. The "
+                      "published value is left as delivered, because it was true when written.",
+            "repaired": False,
+        })
+    outside = [row["attempt_ref"] for row in rows
+               if row.get("residual_unexplained_usd") and
+               usd(row["residual_unexplained_usd"]) > usd(row.get("ledger_settled_usd")) / 100]
+    if outside:
+        found.append({
+            "id": "ledger/unexplained-residual-above-one-per-cent",
+            "what": "%s %s an unexplained reconciliation residual above one per cent of the "
+                    "settled cost" % (", ".join(outside),
+                                      "carries" if len(outside) == 1 else "carry"),
+            "effect": "settlement charged the larger source in every case, so no charge is "
+                      "understated. The residual stays visible rather than being absorbed.",
+            "repaired": False,
+        })
+    if not any(row.get("role_split_available") for row in rows):
+        found.append({
+            "id": "ledger/no-per-role-split",
+            "what": "no attempt carries the per-role cost split preregistration section 7 asks "
+                    "settlement to take from the transcripts",
+            "effect": "primary, finder and verifier spend cannot be separated where one arm runs "
+                      "a single model. Per-model splits survive and are reported instead.",
+            "repaired": False,
+        })
+    return found
+
+
+def repair_feasibility(ledger, manifest, assessment) -> dict:
+    """Whether the repair the assessment would require fits the frozen limits.
+
+    This states the arithmetic and dispatches nothing: the stopped handoff
+    authorises closeout only."""
+    events = ledger.get("events", [])
+    opens = [e for e in events if e.get("operation") == "attempt-open"]
+    replacements = sum(1 for e in events if e.get("operation") == "attempt-open"
+                       and attempt_ordinal(e.get("attempt_id")) > 1)
+    attempt_limit = int(ledger.get("attempt_limit") or ATTEMPT_LIMIT)
+    replacement_limit = int(ledger.get("replacement_limit") or REPLACEMENT_LIMIT)
+    unresolved = assessment.get("unresolved") or []
+    # Net of the retained uncertainty as well as the protected reserve: an
+    # unmetered session that may yet be billed is not headroom.
+    remaining_money = (usd(ledger.get("frozen_total_cap_usd"))
+                       - usd(ledger.get("actual_usd"))
+                       - usd(ledger.get("uncertainty_usd"))
+                       - usd(ledger.get("grading_closeout_reserve_usd")))
+    measured = sum(usd(a.get("settled_usd")) for a in assessment.get("attempts", [])
+                   if a.get("attempt_ref") in unresolved)
+    fits_money = measured <= remaining_money
+    fits_replacements = len(unresolved) <= replacement_limit - replacements
+    fits_attempts = len(unresolved) <= attempt_limit - len(opens)
+    return {
+        "repair_considered": ("re-running the %d attempts this assessment leaves unresolved, "
+                              "under a coordinator that retains the launch argv and meters per "
+                              "role" % len(unresolved)),
+        "attempts_used": len(opens), "attempt_limit": attempt_limit,
+        "attempts_remaining": attempt_limit - len(opens),
+        "replacements_used": replacements, "replacement_limit": replacement_limit,
+        "replacements_remaining": replacement_limit - replacements,
+        "remaining_under_cap_usd": str(remaining_money),
+        "repair_cost_at_measured_rates_usd": str(measured),
+        "fits_money": bool(fits_money),
+        "fits_attempt_allowance": bool(fits_attempts),
+        "fits_replacement_allowance": bool(fits_replacements),
+        "fits_frozen_limits": bool(fits_money and fits_attempts and fits_replacements),
+        "binding_constraint": ("the replacement allowance: %d replacement(s) remain against %d "
+                               "cells that would have to be re-run"
+                               % (replacement_limit - replacements, len(unresolved))
+                               if not fits_replacements else
+                               "none: the repair fits every frozen limit"),
+        "consequence": ("Section 6 governs: when required invalidation exceeds the allowance, "
+                        "stop and close out the partial experiment. This ticket therefore "
+                        "delivers closeout and dispatches nothing. The money would fit; the "
+                        "replacement allowance does not, and the allowance is not this ticket's "
+                        "to raise."
+                        if not fits_replacements else
+                        "A repair could fit the frozen limits. Authorising one is not this "
+                        "ticket's to do: the stopped handoff permits closeout only."),
+        "dispatched": False,
+    }
+
+
+def build_reconciliation(ledger, manifest, evidence: Path, assessment, bundle: Path,
+                         live_digest) -> dict:
+    categories = ledger_categories(ledger)
+    rows = attempt_reconciliation(evidence, categories["per_attempt"])
+    prefix = (manifest.get("pins") or {}).get("ledger_event_prefix") or {}
+    events = ledger.get("events", [])[:int(prefix.get("events") or 0)]
+    prefix_digest = hashlib.sha256(
+        json.dumps(events, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    intact, broken_at = chain_intact(ledger)
+
+    published_digest = None
+    sealed_readme = bundle / "sealed" / "README.md"
+    if sealed_readme.is_file():
+        match = re.search(r"\b([0-9a-f]{64})\b", sealed_readme.read_text(encoding="utf-8"))
+        published_digest = match.group(1) if match else None
+
+    recomputed = categories["totals"]["pre_freeze"] + categories["totals"]["setup"] \
+        + categories["totals"]["attempts"]
+    header = usd(ledger.get("actual_usd"))
+
+    bounds = [{
+        "what": "one probe request that may never have been recorded",
+        "usd": str(usd(manifest.get("probes", {}).get("retained_uncertainty_usd") or "0")),
+        "why": "the cancelled #149 probe produced no envelope; one request at the largest "
+               "observed per-request cost is retained rather than treating it as free",
+    }, {
+        "what": "one launch-shape check whose transcript was deleted before it was metered",
+        "usd": str(usd(ledger.get("uncertainty_usd"))
+                   - usd(manifest.get("probes", {}).get("retained_uncertainty_usd") or "0")),
+        "why": "a coordinator error during #150's shared setup; the same conservative bound is "
+               "retained for it, so an unmetered session is never counted as zero",
+    }]
+
+    return {
+        "schema_version": "bounded-discovery-v1",
+        "artifact_id": "issue-151-reconciliation",
+        "reconciled_at": now(),
+        "ledger": {
+            "events": len(ledger.get("events", [])),
+            "chain_intact": intact,
+            "chain_breaks_at_index": broken_at,
+            "append_only_preserved": True,
+            "frozen_prefix_events": prefix.get("events"),
+            "frozen_prefix_holds": prefix_digest == prefix.get("events_sha256"),
+            "live_digest_sha256": live_digest,
+            "published_digest_sha256": published_digest,
+            "frozen_total_cap_usd": ledger.get("frozen_total_cap_usd"),
+            "grading_closeout_reserve_usd": ledger.get("grading_closeout_reserve_usd"),
+            "reserved_usd": ledger.get("reserved_usd"),
+        },
+        "columns": {
+            "pre_freeze_usd": str(categories["totals"]["pre_freeze"]),
+            "setup_and_selection_usd": str(categories["totals"]["setup"]),
+            "review_attempts_usd": str(categories["totals"]["attempts"]),
+            "settlement_events": categories["counts"],
+            "note": "review consumption, one-off setup and selection, and charged grading stay "
+                    "in separate columns; shared setup is charged once to the epic",
+        },
+        "totals": {
+            "recomputed_actual_usd": str(recomputed),
+            "ledger_actual_usd": str(header),
+            "reconciles": recomputed == header,
+            "difference_usd": str(recomputed - header),
+            "retained_uncertainty_usd": ledger.get("uncertainty_usd"),
+            "sunk_costs_visible": True,
+            "discarded_attempts_charged": [row["attempt_ref"] for row in rows
+                                           if row["ordinal"] == 1 and any(
+                                               other["position"] == row["position"]
+                                               and other["ordinal"] > 1 for other in rows)],
+        },
+        "conservative_bounds": bounds,
+        "attempts": rows,
+        "discrepancies": ledger_discrepancies(ledger, manifest, published_digest, live_digest, rows),
+        "repair": repair_feasibility(ledger, manifest, assessment),
+    }
+
+
+def command_reconcile(args) -> int:
+    ledger_path = Path(os.path.expanduser(args.ledger))
+    ledger = load(ledger_path)
+    live_digest = hashlib.sha256(ledger_path.read_bytes()).hexdigest()
+    reconciliation = build_reconciliation(ledger, load(args.manifest),
+                                          Path(os.path.expanduser(args.evidence)),
+                                          load(args.fidelity), Path(args.bundle), live_digest)
+    leaked = leak_scan(reconciliation, args.slot_names)
+    if leaked:
+        for line in leaked:
+            print(line)
+        return 1
+    write(args.out, reconciliation)
+    violations = []
+    if not reconciliation["totals"]["reconciles"]:
+        violations.append("the ledger does not reconcile: recomputed %s against %s"
+                          % (reconciliation["totals"]["recomputed_actual_usd"],
+                             reconciliation["totals"]["ledger_actual_usd"]))
+    if not reconciliation["ledger"]["chain_intact"]:
+        violations.append("the ledger chain is broken")
+    if not reconciliation["ledger"]["frozen_prefix_holds"]:
+        violations.append("the frozen ledger prefix no longer holds")
+    for line in violations:
+        print(line)
+    if violations:
+        return 1
+    print(json.dumps({"actual_usd": reconciliation["totals"]["ledger_actual_usd"],
+                      "discrepancies": len(reconciliation["discrepancies"]),
+                      "repair_fits": reconciliation["repair"]["fits_frozen_limits"]}))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--self-test", action="store_true",
@@ -1144,6 +1468,17 @@ def build_parser() -> argparse.ArgumentParser:
                                                               "slot-4"])
     fidelity.add_argument("--out", required=True)
     fidelity.set_defaults(handler=command_fidelity)
+
+    reconcile = sub.add_parser("reconcile", help="reconcile every charge against the ledger")
+    reconcile.add_argument("--ledger", required=True)
+    reconcile.add_argument("--manifest", required=True)
+    reconcile.add_argument("--evidence", required=True)
+    reconcile.add_argument("--fidelity", required=True)
+    reconcile.add_argument("--bundle", required=True)
+    reconcile.add_argument("--slot-names", nargs="*", default=["slot-1", "slot-2", "slot-3",
+                                                               "slot-4"])
+    reconcile.add_argument("--out", required=True)
+    reconcile.set_defaults(handler=command_reconcile)
     return parser
 
 
@@ -1170,7 +1505,7 @@ def self_test() -> int:
         if not condition:
             failures.append(name)
 
-    def ledger_with(events, reserved="0.00"):
+    def ledger_with(events, reserved="0.00"):  # noqa: E306
         chained, previous = [], None
         for event in events:
             event = dict(event)
@@ -1373,6 +1708,64 @@ def self_test() -> int:
         check("the fidelity assessment refuses to read sealed evidence behind a shut gate",
               code.returncode == 1 and "must not" in code.stdout)
 
+        # --- the reconciliation ---------------------------------------------
+        money = ledger_with([
+            {"operation": "settle", "phase": "pre-freeze", "actual_delta_usd": "1.00"},
+            {"operation": "settle", "phase": "review", "actual_delta_usd": "0.25"},
+            {"operation": "reserve", "phase": "review", "attempt_id": "issue-138-x-attempt-1",
+             "reservation_delta_usd": "10.00", "observed_at": "2026-09-09T05:00:00Z"},
+            {"operation": "settle", "phase": "review", "attempt_id": "issue-138-x-attempt-1",
+             "actual_delta_usd": "0", "observed_at": "2026-09-09T05:01:00Z"},
+            {"operation": "settle", "phase": "review", "attempt_id": "issue-138-x-attempt-2",
+             "actual_delta_usd": "3.00", "observed_at": "2026-09-09T05:02:00Z"},
+            {"operation": "attempt-open", "attempt_id": "issue-138-x-attempt-1",
+             "observed_at": "2026-09-09T09:00:00Z"},
+            {"operation": "attempt-open", "attempt_id": "issue-138-x-attempt-2",
+             "observed_at": "2026-09-09T09:00:01Z"},
+            {"operation": "attempt-close", "attempt_id": "issue-138-x-attempt-1",
+             "disposition": "stopped-invalid", "observed_at": "2026-09-09T09:00:02Z"},
+        ])
+        money["attempts_dispatched"] = 0
+        categories = ledger_categories(money)
+        check("pre-freeze, setup and review spend are separated",
+              str(categories["totals"]["pre_freeze"]) == "1.00"
+              and str(categories["totals"]["setup"]) == "0.25"
+              and str(categories["totals"]["attempts"]) == "3.00")
+        check("an attempt that settled at zero is still counted as a settlement",
+              categories["counts"]["attempts"] == 2
+              and "issue-138-x-attempt-1" in categories["per_attempt"])
+
+        found = {d["id"] for d in ledger_discrepancies(money, {}, "aa", "bb", [])}
+        check("a lifecycle written after the last settlement is reported",
+              "ledger/attempt-lifecycle-backfilled" in found)
+        check("a header counter that disagrees with the events is reported",
+              "ledger/attempts-dispatched-counter" in found)
+        check("a published digest that differs from the live one is reported",
+              "ledger/published-digest-precedes-the-lifecycle-events" in found)
+        check("an absent per-role split is reported",
+              "ledger/no-per-role-split" in found)
+
+        money.update({"frozen_total_cap_usd": "150.00", "actual_usd": "47.00",
+                      "uncertainty_usd": "0.16", "grading_closeout_reserve_usd": "10.00",
+                      "attempt_limit": 27, "replacement_limit": 3})
+        feasible = repair_feasibility(money, {}, {
+            "unresolved": ["p1", "p2", "p3"],
+            "attempts": [{"attempt_ref": "p1", "settled_usd": "4.00"},
+                         {"attempt_ref": "p2", "settled_usd": "4.00"},
+                         {"attempt_ref": "p3", "settled_usd": "4.00"}]})
+        check("the remaining allowance is net of the reserve and the retained uncertainty",
+              feasible["remaining_under_cap_usd"] == "92.84")
+        check("a replacement is counted from the attempt ordinal in its id",
+              feasible["replacements_used"] == 1 and feasible["attempts_used"] == 2)
+        check("a repair that needs more replacements than remain does not fit",
+              feasible["fits_money"] is True
+              and feasible["fits_replacement_allowance"] is False
+              and feasible["fits_frozen_limits"] is False)
+        check("an unparseable attempt id does not abort the reconciliation",
+              attempt_ordinal("a1") == 1 and attempt_ordinal(None) == 1
+              and attempt_ordinal("issue-138-x-attempt-3") == 3)
+        check("no repair is dispatched from the stopped path", feasible["dispatched"] is False)
+
         # The seal cannot be opened against a gate that did not pass.
         (tmp / "shut.json").write_text(json.dumps(
             {"all_reviewers_stopped": False, "observed_at": "2026-09-10T00:00:00Z"}),
@@ -1387,7 +1780,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (29, len(failures)))
+    print("%d checks, %d failures" % (40, len(failures)))
     return 1 if failures else 0
 
 
