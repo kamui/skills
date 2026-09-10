@@ -1,6 +1,6 @@
 {
   "artifact_id": "issue-151-fidelity-assessment",
-  "assessed_at": "2026-09-10T07:32:40.362134+00:00",
+  "assessed_at": "2026-09-10T07:43:33.704200+00:00",
   "attempts": [
     {
       "arm": "A",
@@ -13,7 +13,7 @@
           "verdict": "not applicable"
         },
         "completion_and_stop": {
-          "detail": "the aborted dispatch record and its timing sidecar were retained",
+          "detail": "the aborted dispatch record and its timing file were retained; the attempt never reached a root dispatch, so it has no root elapsed and no #130 completion sidecar",
           "elapsed_seconds": 1.482,
           "phases": [
             {
@@ -27,6 +27,7 @@
               "subtype": null
             }
           ],
+          "root_elapsed_seconds": null,
           "timing_sidecar_fields": [
             "completed_at",
             "completion_mode",
@@ -1290,7 +1291,7 @@
     }
   ],
   "attempts_assessed": 8,
-  "decision": "Unresolved, with the missing evidence named. No attempt shows an observed fidelity, isolation, context-separation or frozen-input violation: every retained transcript verifies to the frozen model and effort for its role, every absence gate and read audit passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established is that each cell was launched under the identical frozen allowances, and how each attempt's spend divides between its roles, because neither record was ever retained. Under the frozen rule an unobservable setting is not a pass, so these attempts are carried as unresolved rather than valid.",
+  "decision": "Unresolved, with the missing evidence named. position-03-attempt-1 shows an observed violation - no barrier freeze artifact was written before admission, and it is already closed as invalid on its recorded basis. No other attempt shows one: every retained transcript verifies to the frozen model and effort for its role, every absence gate and read audit passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established for any attempt is that each cell was launched under the identical frozen allowances, or how its spend divides between its roles, because neither record was ever retained. Under the frozen rule an unobservable setting is not a pass, so those attempts are carried as unresolved rather than valid.",
   "effect_on_grading": "An unresolved attempt is not a valid completed outcome. Under section 8 it counts as missing rather than present, so #152 grades the claims these attempts produced without treating any cell as a clean comparison member, and #153 applies the conservative limits that follow.",
   "finding_id": "pilot/actual-fidelity",
   "gate": {
