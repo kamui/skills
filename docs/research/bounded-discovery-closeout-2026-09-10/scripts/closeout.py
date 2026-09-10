@@ -716,7 +716,12 @@ def isolation_checks(root: Path) -> dict:
         "attestation_ready": bool(attestation.get("ready")),
         "read_audit_passed": bool(audit.get("passed")) if audit else None,
         "reads_outside_permitted_roots": len(outside),
-        "accepted_read_deviations": [hit.get("reason") for hit in (audit.get("accepted_hits") or [])],
+        "accepted_read_deviations": [
+            {"via": hit.get("via"),
+             "reason_retained_in_sealed_evidence": bool(hit.get("reason")),
+             "note": "the recorded judgment quotes the path the cell read, which is inside the "
+                     "target's own source tree, so it stays in the seal"}
+            for hit in (audit.get("accepted_hits") or [])],
         "requested_mount_count": len(mounts.get("requested_mounts") or []),
         "shell_commands": audit.get("shell_commands"),
         "tool_calls": audit.get("tool_calls"),
@@ -1129,6 +1134,11 @@ def disclosive_values(frozen) -> tuple:
         for key in ("repository", "url", "head_oid", "base_oid_recorded", "merge_base_oid"):
             if target.get(key):
                 forbidden.add(str(target[key]))
+        if target.get("repository"):
+            # A source path names the project without naming "owner/name", which
+            # is how the pilot's one recorded read deviation would have leaked
+            # its target. Both components are refused on their own.
+            forbidden.update(part for part in str(target["repository"]).split("/") if part)
         if target.get("pr"):
             forbidden.add("%s#%s" % (target.get("repository", ""), target["pr"]))
     return sorted(forbidden), sorted(allowed)
@@ -2167,10 +2177,9 @@ def self_test() -> int:
         # object id must never be written to the repository.
         check("a slot name is refused",
               leak_scan({"a": "slot-2-A-replicate-1"}, ["slot-1", "slot-2"]))
-        check("a full object id is refused",
-              leak_scan({"a": "3604b13117cbb652c10bb44b228b300d543dcc80"}, []))
+        check("a full object id is refused", leak_scan({"a": "d" * 40}, []))
         check("a clean payload passes the leak scan",
-              not leak_scan({"a": "position-03-attempt-2", "b": "3604b13"}, ["slot-1"]))
+              not leak_scan({"a": "position-03-attempt-2", "b": "abc1234"}, ["slot-1"]))
         check("an allow-listed public pin is not refused",
               not leak_scan({"a": "0" * 40}, [], allowed_ids=["0" * 40]))
         check("an object id outside the allow-list is refused",
@@ -2178,15 +2187,19 @@ def self_test() -> int:
         frozen_fixture = {
             "pins": {"policy_commit": "a" * 40, "skill_tree": "b" * 40},
             "repository_commit_read": "c" * 40,
-            "targets": {"slot-1": {"target": {"repository": "clap-rs/clap", "pr": 5044,
+            "targets": {"slot-1": {"target": {"repository": "acme/widget", "pr": 5044,
                                               "head_oid": "d" * 40}}}}
         forbidden_fixture, allowed_fixture = disclosive_values(frozen_fixture)
         check("the frozen manifest's own pins are allowed",
               set(allowed_fixture) == {"a" * 40, "b" * 40, "c" * 40})
         check("every value that identifies a target is forbidden",
-              {"slot-1", "clap-rs/clap", "d" * 40, "clap-rs/clap#5044"} <= set(forbidden_fixture))
+              {"slot-1", "acme/widget", "d" * 40, "acme/widget#5044"} <= set(forbidden_fixture))
         check("a target repository name is refused even without an object id",
-              leak_scan({"a": "found in clap-rs/clap"}, forbidden_fixture, allowed_fixture))
+              leak_scan({"a": "found in acme/widget"}, forbidden_fixture, allowed_fixture))
+        check("a source path that names the project without its owner is refused",
+              leak_scan({"a": "read widget/src/main.rs"}, forbidden_fixture, allowed_fixture))
+        check("both components of a target repository are forbidden",
+              {"acme", "widget"} <= set(forbidden_fixture))
 
         # The fidelity command refuses to read sealed evidence behind a shut gate.
         (tmp / "shut-gate.json").write_text(json.dumps({"all_reviewers_stopped": False}),
@@ -2323,7 +2336,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (53, len(failures)))
+    print("%d checks, %d failures" % (55, len(failures)))
     return 1 if failures else 0
 
 
