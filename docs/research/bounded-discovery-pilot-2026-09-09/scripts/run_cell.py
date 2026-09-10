@@ -965,8 +965,8 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
                 remaining_wall = ROOT_WALL_SECONDS - (time.time() - dispatched)
                 remaining_usd = float(ATTEMPT_CEILING) - spent - finder_cost
                 if remaining_wall < 60 or remaining_usd <= 0:
-                    problems.append("arm C had no allowance left to resume: %.0f s and $%.4f"
-                                    % (remaining_wall, remaining_usd))
+                    result["stop_reason"] = ("arm C had no allowance left to resume: %.0f s and $%.4f"
+                                             % (remaining_wall, remaining_usd))
                     result["disposition"] = "stopped-budget"
                     raise DispatchStopped()
                 phase2 = run_phase(config, root, slot, row, "primary-phase-2",
@@ -1398,7 +1398,6 @@ def settle(config, position, attempt=1):
         record["contexts_registered"] = register_contexts(config, row, cell_contexts(root, row))
     except (Failed, OSError, ValueError) as exc:
         problems.append("worker context validation failed: %s" % exc)
-        record["completion"] = "stopped-invalid"
     if not transcripts:
         problems.append("no transcript was retained, so nothing can be metered from it")
 
@@ -1474,7 +1473,6 @@ def settle(config, position, attempt=1):
     record["network_audit_passed"] = network["passed"]
     if not network["passed"]:
         problems.append("network-use evidence lacks a reviewed explanation against the egress log")
-        record["completion"] = "stopped-invalid"
     record["egress_attempts"] = len(egress)
     record["egress_refused"] = sum(1 for entry in egress
                                    if entry.get("decision") not in ("allow", "allowed"))
@@ -1562,8 +1560,7 @@ def settle(config, position, attempt=1):
     closed = any(e.get("attempt_id") == row["attempt_id"]
                  and e.get("operation") == "attempt-close" for e in ledger_now["events"])
     if opened and not closed:
-        disposition = ("stopped-invalid" if problems and record["completion"] == "complete"
-                       else record["completion"])
+        disposition = "stopped-invalid" if problems else record["completion"]
         if disposition in ("stopped-runtime", "stopped-finder", "stopped-isolation"):
             disposition = "stopped-invalid"
         try:
@@ -1593,6 +1590,8 @@ def settle(config, position, attempt=1):
                 write(original, sidecar)
             sidecar["completed_at"] = None
             write(timing_path, sidecar)
+    record["operational_validity"] = ("invalid" if problems or record["completion"] not in
+                                      ("complete", "stopped-budget") else "valid")
     record["problems"] = problems
     write(root / "artifacts" / "settle.json", record)
     for problem in problems:
