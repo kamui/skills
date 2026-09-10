@@ -1092,7 +1092,8 @@ def command_fidelity(args) -> int:
     salt = salt_path.read_bytes() if salt_path and salt_path.is_file() else None
     assessment = build_assessment(gate, Path(os.path.expanduser(args.evidence)), manifest,
                                   Path(args.bundle), salt)
-    leaked = leak_scan(assessment, args.slot_names)
+    forbidden, allowed = disclosive_values(manifest)
+    leaked = leak_scan(assessment, sorted(set(list(args.slot_names) + forbidden)), allowed)
     if leaked:
         for line in leaked:
             print(line)
@@ -1105,22 +1106,55 @@ def command_fidelity(args) -> int:
     return 0
 
 
-def leak_scan(payload, slot_names) -> list:
-    """Refuse to write a public artifact that names a slot, a target repository
-    or a target commit.
+def disclosive_values(frozen) -> tuple:
+    """What must never reach a public artifact, and what may.
 
-    The pilot's selection rule is public, so any of those would disclose which
-    slot holds the clean control. This runs on the assembled payload rather than
-    on each field, because review found that the leak came through values that
-    were individually innocuous."""
+    Forbidden: every slot name, and every value that identifies one of the four
+    targets - its repository, its url, its pull-request number and each of its
+    object ids. Allowed: this repository's own frozen pins, which are public and
+    identify no target.
+
+    The two lists are derived from #149's frozen manifest rather than typed out,
+    so a target added or repinned there cannot quietly fall outside the scan."""
+    forbidden, allowed = set(), set()
+    pins = (frozen or {}).get("pins") or {}
+    for key in ("policy_commit", "skill_tree"):
+        if pins.get(key):
+            allowed.add(pins[key])
+    if (frozen or {}).get("repository_commit_read"):
+        allowed.add(frozen["repository_commit_read"])
+    for slot, entry in sorted(((frozen or {}).get("targets") or {}).items()):
+        forbidden.add(slot)
+        target = (entry or {}).get("target") or {}
+        for key in ("repository", "url", "head_oid", "base_oid_recorded", "merge_base_oid"):
+            if target.get(key):
+                forbidden.add(str(target[key]))
+        if target.get("pr"):
+            forbidden.add("%s#%s" % (target.get("repository", ""), target["pr"]))
+    return sorted(forbidden), sorted(allowed)
+
+
+def leak_scan(payload, slot_names, allowed_ids=()) -> list:
+    """Refuse to write a public artifact that discloses the pilot's pairing.
+
+    Two layers, because review found that the leak came through values that were
+    individually innocuous. The first refuses a known disclosive string. The
+    second refuses any full object id that is not on the allow-list of this
+    repository's own public pins, on the reasoning that an unrecognised object
+    id is far likelier to be a target's than not - a whitelist of harmless
+    fields is exactly what failed to catch the digest leak before."""
     text = json.dumps(payload)
+    allowed = set(allowed_ids or ())
     found = []
     for name in (slot_names or []):
         if name and name in text:
-            found.append("refusing to write: the payload contains %r" % name)
+            found.append("refusing to write: the payload contains %r, which identifies a target"
+                         % name)
     for match in set(re.findall(r"\b[0-9a-f]{40}\b", text)):
-        found.append("refusing to write: the payload contains a full 40-character object id "
-                     "(%s...), which identifies a target" % match[:8])
+        if match in allowed:
+            continue
+        found.append("refusing to write: the payload contains the object id %s..., which is not "
+                     "one of this repository's public pins and may identify a target" % match[:8])
     return sorted(set(found))
 
 
@@ -1407,10 +1441,12 @@ def command_reconcile(args) -> int:
     ledger_path = Path(os.path.expanduser(args.ledger))
     ledger = load(ledger_path)
     live_digest = hashlib.sha256(ledger_path.read_bytes()).hexdigest()
-    reconciliation = build_reconciliation(ledger, load(args.manifest),
+    frozen = load(args.manifest)
+    reconciliation = build_reconciliation(ledger, frozen,
                                           Path(os.path.expanduser(args.evidence)),
                                           load(args.fidelity), Path(args.bundle), live_digest)
-    leaked = leak_scan(reconciliation, args.slot_names)
+    forbidden, allowed = disclosive_values(frozen)
+    leaked = leak_scan(reconciliation, sorted(set(list(args.slot_names) + forbidden)), allowed)
     if leaked:
         for line in leaked:
             print(line)
@@ -1432,6 +1468,145 @@ def command_reconcile(args) -> int:
     print(json.dumps({"actual_usd": reconciliation["totals"]["ledger_actual_usd"],
                       "discrepancies": len(reconciliation["discrepancies"]),
                       "repair_fits": reconciliation["repair"]["fits_frozen_limits"]}))
+    return 0
+
+
+# --------------------------------------------------------------------------
+# The manifest for all twenty-four planned cells
+# --------------------------------------------------------------------------
+
+def build_manifest(assessment, reconciliation, bundle: Path, frozen) -> dict:
+    """One row per planned cell, attempted or not, keyed by schedule position.
+
+    Positions, never cell ids: the pilot's selection rule is public, so naming
+    the slot behind any position would disclose which slot holds the clean
+    control - and naming the eighteen unattempted cells would disclose the same
+    thing by elimination."""
+    by_position = {}
+    for attempt in assessment.get("attempts", []):
+        by_position.setdefault(attempt["position"], []).append(attempt)
+    charges = {row["attempt_ref"]: row for row in reconciliation.get("attempts", [])}
+
+    cells = []
+    for position in range(1, PLANNED_CELLS + 1):
+        pilot = position <= PILOT_CELLS
+        attempts = sorted(by_position.get(position, []), key=lambda a: a["ordinal"])
+        summary_path = ("docs/research/bounded-discovery-pilot-2026-09-09/cells/position-%02d/"
+                        "summary.json" % position)
+        rows = []
+        for attempt in attempts:
+            charge = charges.get(attempt["attempt_ref"], {})
+            completion = attempt.get("completion")
+            censored = completion not in (None, "complete")
+            rows.append({
+                "attempt_ref": attempt["attempt_ref"],
+                "ordinal": attempt["ordinal"],
+                "predecessor_ref": ("position-%02d-attempt-%d" % (position, attempt["ordinal"] - 1)
+                                    if attempt["ordinal"] > 1 else None),
+                "is_replacement": attempt["ordinal"] > 1,
+                "operational_validity": attempt["operational_validity"],
+                "validity_basis": attempt["validity_basis"],
+                "completion": completion,
+                "settled_usd": charge.get("ledger_settled_usd") or attempt.get("settled_usd"),
+                "reconciles_with_ledger": charge.get("reconciles"),
+                "produced_claims": attempt.get("produced_claims", False),
+                "timing_availability": (
+                    "root elapsed recorded; duration censored at the stop, not completed"
+                    if censored else
+                    "root elapsed and the #130 sidecar recorded"
+                    if attempt["dimensions"].get("completion_and_stop", {}).get(
+                        "timing_sidecar_fields") else
+                    "no timing sidecar: the attempt ended before one was written"),
+                "root_elapsed_seconds": attempt["dimensions"].get(
+                    "completion_and_stop", {}).get("root_elapsed_seconds"),
+                "raw_evidence": "sealed with this closeout; see packets/README.md",
+            })
+        cells.append({
+            "position": position,
+            "block": "pilot" if pilot else "grid",
+            "owner_ticket": 150 if pilot else 151,
+            "status": "attempted" if rows else "unattempted",
+            "attempts": rows,
+            "attempt_count": len(rows),
+            "arm": attempts[0].get("arm") if attempts else None,
+            "public_summary_path": summary_path if pilot else None,
+            "outputs": ("the public per-cell summary above; every raw artifact is sealed"
+                        if rows else
+                        "unavailable: this cell was never attempted, and an unattempted cell has "
+                        "no output to recover"),
+            "charges_usd": str(sum(usd(row["settled_usd"]) for row in rows)) if rows else "0.0000000",
+        })
+
+    attempted = [cell for cell in cells if cell["status"] == "attempted"]
+    total_attempts = sum(cell["attempt_count"] for cell in cells)
+    ledger_opens = reconciliation.get("columns", {}).get("settlement_events", {}).get("attempts")
+    return {
+        "schema_version": "bounded-discovery-v1",
+        "artifact_id": "issue-151-cell-manifest",
+        "built_at": now(),
+        "planned_cells": PLANNED_CELLS,
+        "pilot_cells": PILOT_CELLS,
+        "grid_cells": PLANNED_CELLS - PILOT_CELLS,
+        "attempted_cells": len(attempted),
+        "unattempted_cells": PLANNED_CELLS - len(attempted),
+        "attempts_recorded": total_attempts,
+        "attempt_limit": ATTEMPT_LIMIT,
+        "reconciles_with_ledger": total_attempts == ledger_opens,
+        "ledger_settlement_events_for_attempts": ledger_opens,
+        "pins": {
+            "dispatch_template_sha256": ((frozen.get("pins") or {}).get("dispatch_template")
+                                         or {}).get("sha256"),
+            "policy_commit": (frozen.get("pins") or {}).get("policy_commit"),
+            "policy_tree": (frozen.get("pins") or {}).get("skill_tree"),
+            "workflow": "v5b-10",
+            "frozen_manifest": "docs/research/bounded-discovery-runs-2026-09-08/manifest.json",
+            "per_attempt_packet_and_scope": (
+                "each attempted cell's packet and selected scope were re-checked against the "
+                "frozen pin for its target in fidelity-assessment.json; the digests themselves "
+                "stay sealed, because a packet digest names a target"),
+        },
+        "keying": ("Every row is keyed by schedule position. The mapping from position to cell id "
+                   "stays sealed: the pilot pair is the adjudicated clean slot and the "
+                   "lowest-numbered buggy slot, so naming either the six attempted cells or the "
+                   "eighteen unattempted ones would disclose which slot holds the clean control."),
+        "unattempted_note": ("The eighteen grid cells were never dispatched. Their outputs are "
+                             "unavailable and stay unavailable: an unattempted cell counts as "
+                             "missing in the screen, never as present."),
+        "censored_note": ("A stopped attempt reports its root elapsed time with the duration "
+                          "censored at the stop. Censored duration is not completion, and no row "
+                          "converts one into the other."),
+        "cells": cells,
+    }
+
+
+def command_manifest(args) -> int:
+    frozen = load(args.frozen)
+    manifest = build_manifest(load(args.fidelity), load(args.reconciliation),
+                              Path(args.bundle), frozen)
+    forbidden, allowed = disclosive_values(frozen)
+    leaked = leak_scan(manifest, sorted(set(list(args.slot_names) + forbidden)), allowed)
+    if leaked:
+        for line in leaked:
+            print(line)
+        return 1
+    violations = []
+    if len(manifest["cells"]) != PLANNED_CELLS:
+        violations.append("the manifest must carry all %d planned cells" % PLANNED_CELLS)
+    if manifest["attempts_recorded"] > ATTEMPT_LIMIT:
+        violations.append("the manifest records %d attempts, above the frozen limit of %d"
+                          % (manifest["attempts_recorded"], ATTEMPT_LIMIT))
+    if not manifest["reconciles_with_ledger"]:
+        violations.append("the manifest records %d attempts against %s settled on the ledger"
+                          % (manifest["attempts_recorded"],
+                             manifest["ledger_settlement_events_for_attempts"]))
+    for line in violations:
+        print(line)
+    if violations:
+        return 1
+    write(args.out, manifest)
+    print(json.dumps({"cells": len(manifest["cells"]),
+                      "attempted": manifest["attempted_cells"],
+                      "attempts": manifest["attempts_recorded"]}))
     return 0
 
 
@@ -1479,6 +1654,16 @@ def build_parser() -> argparse.ArgumentParser:
                                                                "slot-4"])
     reconcile.add_argument("--out", required=True)
     reconcile.set_defaults(handler=command_reconcile)
+
+    cell_manifest = sub.add_parser("manifest", help="the manifest for all 24 planned cells")
+    cell_manifest.add_argument("--fidelity", required=True)
+    cell_manifest.add_argument("--reconciliation", required=True)
+    cell_manifest.add_argument("--bundle", required=True)
+    cell_manifest.add_argument("--frozen", required=True, help="#149's frozen manifest.json")
+    cell_manifest.add_argument("--slot-names", nargs="*", default=["slot-1", "slot-2", "slot-3",
+                                                                   "slot-4"])
+    cell_manifest.add_argument("--out", required=True)
+    cell_manifest.set_defaults(handler=command_manifest)
     return parser
 
 
@@ -1696,6 +1881,22 @@ def self_test() -> int:
               leak_scan({"a": "3604b13117cbb652c10bb44b228b300d543dcc80"}, []))
         check("a clean payload passes the leak scan",
               not leak_scan({"a": "position-03-attempt-2", "b": "3604b13"}, ["slot-1"]))
+        check("an allow-listed public pin is not refused",
+              not leak_scan({"a": "0" * 40}, [], allowed_ids=["0" * 40]))
+        check("an object id outside the allow-list is refused",
+              leak_scan({"a": "0" * 40}, [], allowed_ids=["1" * 40]))
+        frozen_fixture = {
+            "pins": {"policy_commit": "a" * 40, "skill_tree": "b" * 40},
+            "repository_commit_read": "c" * 40,
+            "targets": {"slot-1": {"target": {"repository": "clap-rs/clap", "pr": 5044,
+                                              "head_oid": "d" * 40}}}}
+        forbidden_fixture, allowed_fixture = disclosive_values(frozen_fixture)
+        check("the frozen manifest's own pins are allowed",
+              set(allowed_fixture) == {"a" * 40, "b" * 40, "c" * 40})
+        check("every value that identifies a target is forbidden",
+              {"slot-1", "clap-rs/clap", "d" * 40, "clap-rs/clap#5044"} <= set(forbidden_fixture))
+        check("a target repository name is refused even without an object id",
+              leak_scan({"a": "found in clap-rs/clap"}, forbidden_fixture, allowed_fixture))
 
         # The fidelity command refuses to read sealed evidence behind a shut gate.
         (tmp / "shut-gate.json").write_text(json.dumps({"all_reviewers_stopped": False}),
@@ -1780,7 +1981,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (40, len(failures)))
+    print("%d checks, %d failures" % (45, len(failures)))
     return 1 if failures else 0
 
 
