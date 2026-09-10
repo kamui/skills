@@ -1,0 +1,18 @@
+{
+  "artifact_id": "issue-151-no-packet-manifest",
+  "attempts": [
+    {
+      "attempt_ref": "position-01-attempt-1",
+      "raw_final_claims": null,
+      "why": "the launch was refused before any model request, so the attempt made no claim of any kind"
+    },
+    {
+      "attempt_ref": "position-03-attempt-1",
+      "raw_final_claims": null,
+      "why": "the attempt ended before it published a review, so it left no final claim to grade"
+    }
+  ],
+  "built_at": "2026-09-10T07:26:20.794238+00:00",
+  "note": "An attempt with no packet still appears in the cell manifest and still carries its cost. No output is fabricated for it, and neither invalid attempt left a raw final claim to retain: one was refused before any model request, and the other lost its primary to a provider error before it published.",
+  "schema_version": "bounded-discovery-v1"
+}
