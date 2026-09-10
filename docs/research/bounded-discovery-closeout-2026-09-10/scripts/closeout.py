@@ -1666,6 +1666,126 @@ def command_seal(args) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------
+# The stage record #152 reads
+# --------------------------------------------------------------------------
+
+def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
+                  no_packet, seal) -> dict:
+    """#151's stage record.
+
+    It has to be readable as a stop: the closeout is delivered, the experiment
+    is not. Nothing here releases the dispatch hold, and nothing converts an
+    unresolved attempt into a valid one."""
+    unattempted = cell_manifest["unattempted_cells"]
+    return {
+        "schema_version": "bounded-discovery-v1",
+        "artifact_id": "issue-151-closeout-handoff",
+        "stage": "closeout",
+        "created_at": now(),
+        "disposition": "closeout-delivered",
+        "experiment_disposition": "stopped-incomplete",
+        "dispatch_authorized": False,
+        "dispatch_hold": ("held. This closeout authorises nothing to run. #151 launched no "
+                          "experimental reviewer run, and the eighteen unattempted cells stay "
+                          "unattempted."),
+        "gate": {
+            "all_reviewers_stopped": gate["all_reviewers_stopped"],
+            "observed_at": gate["observed_at"],
+            "checks": len(gate["checks"]),
+            "recorded_before_the_seal_was_opened": True,
+        },
+        "fidelity": {
+            "finding_id": assessment["finding_id"],
+            "status": assessment["status"],
+            "decision": assessment["decision"],
+            "valid": len(assessment["valid"]),
+            "unresolved": len(assessment["unresolved"]),
+            "invalid": len(assessment["invalid"]),
+            "observed_violations": assessment["observed_violations"],
+            "missing_evidence": assessment["missing_evidence"],
+            "effect_on_grading": assessment["effect_on_grading"],
+        },
+        "accounting": {
+            "actual_usd": reconciliation["totals"]["ledger_actual_usd"],
+            "reconciles": reconciliation["totals"]["reconciles"],
+            "retained_uncertainty_usd": reconciliation["totals"]["retained_uncertainty_usd"],
+            "frozen_total_cap_usd": reconciliation["ledger"]["frozen_total_cap_usd"],
+            "remaining_under_cap_usd": reconciliation["repair"]["remaining_under_cap_usd"],
+            "discrepancies": [item["id"] for item in reconciliation["discrepancies"]],
+            "repair_fits_frozen_limits": reconciliation["repair"]["fits_frozen_limits"],
+            "repair_binding_constraint": reconciliation["repair"]["binding_constraint"],
+        },
+        "cells": {
+            "planned": cell_manifest["planned_cells"],
+            "attempted": cell_manifest["attempted_cells"],
+            "unattempted": unattempted,
+            "attempts_recorded": cell_manifest["attempts_recorded"],
+            "attempt_limit": cell_manifest["attempt_limit"],
+            "manifest": "manifest.json",
+        },
+        "packets": {
+            "packets": packet_index["packet_count"],
+            "no_packet_attempts": len(no_packet["attempts"]),
+            "sealed": True,
+            "ciphertext_sha256": seal["ciphertext_sha256"],
+            "plaintext_sha256": seal["plaintext_sha256"],
+            "path": "packets/",
+            "blinding": "label masking, not guaranteed blinding; see packets/README.md",
+        },
+        "claims_note": ("No quality, recall or cost comparison appears in this closeout. No arm "
+                        "is described as better or worse, and the arm mapping stays sealed until "
+                        "#152 freezes its rulings."),
+        "next_stage": {
+            "tickets": [152, 153],
+            "work": ("#152 grades the available claims from the sealed packets and may finish "
+                     "even though zero further cells ran. It must carry the unresolved fidelity "
+                     "status and the accounting discrepancies into its rulings rather than "
+                     "treating any attempt as a valid completed outcome. #153 applies "
+                     "conservative decision limits and opens the redaction map at reveal."),
+            "must_not": [
+                "dispatch any of the eighteen unattempted cells from this handoff",
+                "treat an unresolved attempt as a valid completed outcome",
+                "read a budget stop as infrastructure invalidity, or reset an attempt count",
+                "open the redaction map before rulings are frozen",
+                "grade this closeout's own outcomes",
+            ],
+        },
+        "blockers": (
+            ["Historical pilot fidelity is assessed and remains unresolved: no violation was "
+             "observed, and the launch argv and per-role usage split that would establish "
+             "equal allowances and role-level spend were never retained. The eighteen grid "
+             "cells are unattempted and the frozen replacement allowance cannot fund a repair, "
+             "so the grid cannot be completed or repaired under the frozen limits."]
+            if assessment["status"] != "resolved" else []),
+    }
+
+
+def command_handoff(args) -> int:
+    handoff = build_handoff(load(args.gate), load(args.fidelity), load(args.reconciliation),
+                            load(args.manifest), load(args.packet_index), load(args.no_packet),
+                            load(args.seal))
+    leaked = leak_scan(handoff, args.slot_names)
+    if leaked:
+        for line in leaked:
+            print(line)
+        return 1
+    violations = []
+    if handoff["dispatch_authorized"]:
+        violations.append("a stopped closeout must not authorise dispatch")
+    if handoff["fidelity"]["status"] != "resolved" and not handoff["blockers"]:
+        violations.append("an unresolved fidelity status must carry a blocker")
+    for line in violations:
+        print(line)
+    if violations:
+        return 1
+    write(args.out, handoff)
+    print(json.dumps({"disposition": handoff["disposition"],
+                      "fidelity": handoff["fidelity"]["status"],
+                      "dispatch_authorized": handoff["dispatch_authorized"]}))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--self-test", action="store_true",
@@ -1728,6 +1848,19 @@ def build_parser() -> argparse.ArgumentParser:
     seal_cmd.add_argument("--why", required=True)
     seal_cmd.add_argument("--out-dir", required=True)
     seal_cmd.set_defaults(handler=command_seal)
+
+    handoff = sub.add_parser("handoff", help="write the stage record #152 reads")
+    handoff.add_argument("--gate", required=True)
+    handoff.add_argument("--fidelity", required=True)
+    handoff.add_argument("--reconciliation", required=True)
+    handoff.add_argument("--manifest", required=True, help="this closeout's 24-cell manifest")
+    handoff.add_argument("--packet-index", required=True)
+    handoff.add_argument("--no-packet", required=True)
+    handoff.add_argument("--seal", required=True)
+    handoff.add_argument("--slot-names", nargs="*", default=["slot-1", "slot-2", "slot-3",
+                                                             "slot-4"])
+    handoff.add_argument("--out", required=True)
+    handoff.set_defaults(handler=command_handoff)
     return parser
 
 
@@ -2031,6 +2164,32 @@ def self_test() -> int:
               and attempt_ordinal("issue-138-x-attempt-3") == 3)
         check("no repair is dispatched from the stopped path", feasible["dispatched"] is False)
 
+        # --- the handoff ------------------------------------------------------
+        stub_gate = {"all_reviewers_stopped": True, "observed_at": "2026-09-10T00:00:00Z",
+                     "checks": [{"passed": True}]}
+        stub_assessment = {"finding_id": "pilot/actual-fidelity", "status": "unresolved",
+                           "decision": "d", "valid": [], "unresolved": ["p1"], "invalid": [],
+                           "observed_violations": [], "missing_evidence": ["m"],
+                           "effect_on_grading": "e"}
+        stub_reconciliation = {
+            "totals": {"ledger_actual_usd": "1.00", "reconciles": True,
+                       "retained_uncertainty_usd": "0.00"},
+            "ledger": {"frozen_total_cap_usd": "150.00"},
+            "repair": {"remaining_under_cap_usd": "1.00", "fits_frozen_limits": False,
+                       "binding_constraint": "b"},
+            "discrepancies": [{"id": "x"}]}
+        stub_cells = {"planned_cells": 24, "attempted_cells": 6, "unattempted_cells": 18,
+                      "attempts_recorded": 8, "attempt_limit": 27}
+        handoff = build_handoff(stub_gate, stub_assessment, stub_reconciliation, stub_cells,
+                                {"packet_count": 6}, {"attempts": [1, 2]},
+                                {"ciphertext_sha256": "x", "plaintext_sha256": "y"})
+        check("a stopped closeout does not authorise dispatch",
+              handoff["dispatch_authorized"] is False)
+        check("an unresolved fidelity status carries a blocker", bool(handoff["blockers"]))
+        check("the handoff names what the next stage must not do",
+              any("valid completed outcome" in line for line in handoff["next_stage"]["must_not"]))
+        check("the handoff reports no arm comparison", "better or worse" in handoff["claims_note"])
+
         # The seal cannot be opened against a gate that did not pass.
         (tmp / "shut.json").write_text(json.dumps(
             {"all_reviewers_stopped": False, "observed_at": "2026-09-10T00:00:00Z"}),
@@ -2045,7 +2204,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (45, len(failures)))
+    print("%d checks, %d failures" % (49, len(failures)))
     return 1 if failures else 0
 
 
