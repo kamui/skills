@@ -1,6 +1,6 @@
 {
   "artifact_id": "issue-151-fidelity-assessment",
-  "assessed_at": "2026-09-10T07:50:22.754947+00:00",
+  "assessed_at": "2026-09-10T08:35:00.315479+00:00",
   "attempts": [
     {
       "arm": "A",
@@ -57,6 +57,8 @@
           "verdict": "established"
         }
       },
+      "invalidated_by": "recorded basis",
+      "ledger_closed_as": "stopped-invalid",
       "missing_evidence": [
         "no transcript was retained: the launch failed before any model request, so there is nothing to verify settings against"
       ],
@@ -68,6 +70,7 @@
       "position": 1,
       "produced_claims": false,
       "replacement_consumed": true,
+      "replacement_eligible": false,
       "settled_usd": "0.0000000",
       "validity_basis": "documented coordinator invalidity, recorded when it happened"
     },
@@ -163,12 +166,15 @@
         },
         "isolation": {
           "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
           "attestation_ready": true,
           "passed": true,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
           "problems": [],
+          "protocol_invalidity": false,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 4,
           "shell_commands": 33,
@@ -208,30 +214,41 @@
           "per_model_split_recorded": [
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "3.845633",
+          "per_role_recovered_usd": {
+            "primary": "3.221167",
+            "worker": "0.624466"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "3.845633",
           "reconciliation_residual_usd": "0.0139000",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "0.0103500",
           "residual_untranscripted_models_usd": "0.0035500",
           "self_report_usd": "3.8595330",
           "settled_usd": "3.8595330",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0139000",
+          "verdict": "established",
           "within_tolerance": false
         }
       },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
       ],
       "operational_validity": "unresolved",
       "ordinal": 2,
       "position": 1,
       "problems_recorded_at_settlement": [],
       "produced_claims": true,
+      "replacement_eligible": false,
       "settled_usd": "3.8595330",
       "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
       "violations": []
@@ -328,12 +345,15 @@
         },
         "isolation": {
           "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
           "attestation_ready": true,
           "passed": true,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
           "problems": [],
+          "protocol_invalidity": false,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 4,
           "shell_commands": 36,
@@ -374,30 +394,41 @@
             "claude-opus-5",
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "3.874185",
+          "per_role_recovered_usd": {
+            "primary": "3.377537",
+            "worker": "0.496648"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "3.874185",
           "reconciliation_residual_usd": "0.0035420",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "0.0000000",
           "residual_untranscripted_models_usd": "0.0035420",
           "self_report_usd": "3.8777270",
           "settled_usd": "3.8777270",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0035420",
+          "verdict": "established",
           "within_tolerance": true
         }
       },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
       ],
       "operational_validity": "unresolved",
       "ordinal": 1,
       "position": 2,
       "problems_recorded_at_settlement": [],
       "produced_claims": true,
+      "replacement_eligible": false,
       "settled_usd": "3.8777270",
       "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
       "violations": []
@@ -500,12 +531,15 @@
         },
         "isolation": {
           "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
           "attestation_ready": true,
           "passed": true,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
           "problems": [],
+          "protocol_invalidity": false,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 4,
           "shell_commands": 25,
@@ -546,24 +580,33 @@
             "claude-opus-5",
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "1.558580",
+          "per_role_recovered_usd": {
+            "primary": "1.558580"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "1.558580",
           "reconciliation_residual_usd": "0.0252890",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "0.0213740",
           "residual_untranscripted_models_usd": "0.0039150",
           "self_report_usd": "1.5838690",
           "settled_usd": "1.5838690",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0252890",
+          "verdict": "established",
           "within_tolerance": false
         }
       },
+      "invalidated_by": "recorded basis",
+      "ledger_closed_as": "stopped-runtime",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
         "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model",
         "no model-verification record was written for this attempt; the settings below are verified by this closeout from the retained transcripts instead",
         "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained"
       ],
@@ -574,6 +617,7 @@
         "0.0213740 of the reconciliation residual is unexplained, above one per cent of the settled cost; meter by hand before trusting this cell"
       ],
       "produced_claims": false,
+      "replacement_eligible": false,
       "settled_usd": "1.5838690",
       "validity_basis": "documented infrastructure invalidity, recorded when it happened",
       "violations": [
@@ -687,12 +731,15 @@
         },
         "isolation": {
           "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
           "attestation_ready": true,
           "passed": true,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
           "problems": [],
+          "protocol_invalidity": false,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 4,
           "shell_commands": 43,
@@ -743,30 +790,42 @@
             "claude-opus-5",
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "6.994659",
+          "per_role_recovered_usd": {
+            "finder": "0.663775",
+            "primary": "5.304207",
+            "worker": "1.026677"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "6.994658",
           "reconciliation_residual_usd": "0.0056467",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "0.0017317",
           "residual_untranscripted_models_usd": "0.0039150",
           "self_report_usd": "7.0003047",
           "settled_usd": "7.0003047",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0056457",
+          "verdict": "established",
           "within_tolerance": true
         }
       },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
       ],
       "operational_validity": "unresolved",
       "ordinal": 2,
       "position": 3,
       "problems_recorded_at_settlement": [],
       "produced_claims": true,
+      "replacement_eligible": false,
       "settled_usd": "7.0003047",
       "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
       "violations": []
@@ -863,12 +922,15 @@
         },
         "isolation": {
           "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
           "attestation_ready": true,
           "passed": true,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
           "problems": [],
+          "protocol_invalidity": false,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 3,
           "shell_commands": 70,
@@ -898,24 +960,33 @@
           "per_model_split_recorded": [
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "4.526997",
+          "per_role_recovered_usd": {
+            "primary": "4.526997"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "4.526997",
           "reconciliation_residual_usd": "0.0034858",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "-0.0000002",
           "residual_untranscripted_models_usd": "0.0034860",
           "self_report_usd": "4.5304828",
           "settled_usd": "4.5304828",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0034858",
+          "verdict": "established",
           "within_tolerance": true
         }
       },
+      "invalidated_by": null,
+      "ledger_closed_as": "complete",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
         "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model",
         "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained"
       ],
       "operational_validity": "unresolved",
@@ -923,6 +994,7 @@
       "position": 4,
       "problems_recorded_at_settlement": [],
       "produced_claims": true,
+      "replacement_eligible": false,
       "settled_usd": "4.5304828",
       "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
       "violations": []
@@ -1025,17 +1097,22 @@
               "via": "Bash"
             }
           ],
+          "accepted_reads_outside_permitted_roots": 1,
           "attestation_ready": true,
-          "passed": true,
+          "passed": false,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
-          "problems": [],
+          "problems": [
+            "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance"
+          ],
+          "protocol_invalidity": true,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 3,
           "shell_commands": 58,
           "tool_calls": 137,
-          "verdict": "established"
+          "verdict": "violated"
         },
         "requested_and_observed_settings": {
           "agrees_with_historical_record": true,
@@ -1071,33 +1148,46 @@
             "claude-opus-5",
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "6.335596",
+          "per_role_recovered_usd": {
+            "primary": "5.055498",
+            "worker": "1.280098"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "6.335596",
           "reconciliation_residual_usd": "0.0315317",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "0.0280687",
           "residual_untranscripted_models_usd": "0.0034630",
           "self_report_usd": "6.3671277",
           "settled_usd": "6.3671277",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0315317",
+          "verdict": "established",
           "within_tolerance": false
         }
       },
+      "invalidated_by": "this assessment",
+      "ledger_closed_as": "complete",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
       ],
-      "operational_validity": "unresolved",
+      "operational_validity": "invalid",
       "ordinal": 1,
       "position": 5,
       "problems_recorded_at_settlement": [],
       "produced_claims": true,
+      "replacement_eligible": true,
       "settled_usd": "6.3671277",
-      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
-      "violations": []
+      "validity_basis": "a read outside the permitted roots, invalid on protocol grounds under preregistration section 5; the acceptance recorded at settlement is preserved as history and does not amend the frozen rule",
+      "violations": [
+        "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance"
+      ]
     },
     {
       "arm": "C",
@@ -1205,12 +1295,15 @@
         },
         "isolation": {
           "accepted_read_deviations": [],
+          "accepted_reads_outside_permitted_roots": 0,
           "attestation_ready": true,
           "passed": true,
           "post_dispatch_ready": true,
           "pre_dispatch_ready": true,
           "problems": [],
+          "protocol_invalidity": false,
           "read_audit_passed": true,
+          "read_audit_passed_as_recorded": true,
           "reads_outside_permitted_roots": 0,
           "requested_mount_count": 3,
           "shell_commands": 75,
@@ -1261,38 +1354,50 @@
             "claude-opus-5",
             "claude-sonnet-5"
           ],
-          "per_role_split_assigned": false,
+          "per_role_recovered_total_usd": "8.998486",
+          "per_role_recovered_usd": {
+            "finder": "1.215919",
+            "primary": "5.971694",
+            "worker": "1.810873"
+          },
           "per_role_split_recorded": [
             "unassigned"
           ],
+          "per_role_split_recorded_at_settlement": false,
+          "per_role_split_recovered": true,
           "recomputed_usd": "8.998486",
           "reconciliation_residual_usd": "0.0055772",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
           "residual_unexplained_usd": "0.0017312",
           "residual_untranscripted_models_usd": "0.0038460",
           "self_report_usd": "9.0040632",
           "settled_usd": "9.0040632",
-          "verdict": "unresolved",
+          "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
+          "unassigned_residual_usd": "0.0055772",
+          "verdict": "established",
           "within_tolerance": true
         }
       },
+      "invalidated_by": null,
+      "ledger_closed_as": "stopped-budget",
       "missing_evidence": [
         "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
-        "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+        "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt"
       ],
       "operational_validity": "unresolved",
       "ordinal": 1,
       "position": 6,
       "problems_recorded_at_settlement": [],
       "produced_claims": true,
+      "replacement_eligible": false,
       "settled_usd": "9.0040632",
       "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
       "violations": []
     }
   ],
   "attempts_assessed": 8,
-  "decision": "Unresolved, with the missing evidence named. position-03-attempt-1 shows an observed violation - no barrier freeze artifact was written before admission, and it is already closed as invalid on its recorded basis. No other attempt shows one: every retained transcript verifies to the frozen model and effort for its role, every absence gate and read audit passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established for any attempt is that each cell was launched under the identical frozen allowances, or how its spend divides between its roles, because neither record was ever retained. Under the frozen rule an unobservable setting is not a pass, so those attempts are carried as unresolved rather than valid.",
-  "effect_on_grading": "An unresolved attempt is not a valid completed outcome. Under section 8 it counts as missing rather than present, so #152 grades the claims these attempts produced without treating any cell as a clean comparison member, and #153 applies the conservative limits that follow.",
+  "decision": "Unresolved, with the missing evidence named. position-03-attempt-1 shows an observed violation - no barrier freeze artifact was written before admission - and it is already closed as invalid on its recorded basis. position-05-attempt-1 shows an observed violation - 1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance - and this assessment invalidates it under the frozen rule, and it is replacement-eligible. No other attempt shows one: every retained transcript verifies to the frozen model and effort for its role, every absence gate and attestation passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established for any attempt is that each cell was launched under the identical frozen allowances, because the launch argv was never retained. Under the frozen rule an unobservable setting is not a pass, so those attempts are carried as unresolved rather than valid.",
+  "effect_on_grading": "An unresolved attempt is not a valid completed outcome, and an invalid attempt is not scored as a substantive result; under section 8 both count as missing rather than present. That join is #153's, made after #152's rulings freeze: the adjudicator receives the packets without validity, completion, cost or fidelity labels, and #152's coordinator keeps this assessment beside the ruling table, not inside it. Raw claims from invalid attempts are still graded for correctness.",
   "finding_id": "pilot/actual-fidelity",
   "gate": {
     "all_reviewers_stopped": true,
@@ -1300,26 +1405,32 @@
   },
   "invalid": [
     "position-01-attempt-1",
-    "position-03-attempt-1"
+    "position-03-attempt-1",
+    "position-05-attempt-1"
   ],
   "invalidation_rule": {
     "affected_positions": [
-      1,
-      3
+      5
     ],
     "applied": true,
-    "detail": "The frozen rule invalidates exactly the comparison cells a change affects. The two attempts closed as invalid failed before producing a comparable outcome and share no input with any other cell, so they invalidate no further member; each was already replaced within the frozen allowance. No budget stop is treated as infrastructure invalidity: position 6's stop is a measured result and is not replacement-eligible."
+    "detail": "The frozen rule invalidates exactly the comparison cells a change affects. position-05-attempt-1 is invalidated by this assessment on protocol grounds: a read outside the permitted roots, which preregistration section 5 makes invalidating with no exception for where the bytes came from. Such a read changes nothing another cell consumed, so no other member is contaminated; what it does is leave every comparison that needed position 5 without a member. It is replacement-eligible under the allowance, and the stopped path dispatches no replacement. The two attempts closed as invalid on their recorded basis failed before producing a comparable outcome and share no input with any other cell, so they invalidate no further member; each was already replaced within the frozen allowance. No budget stop is treated as infrastructure invalidity: position 6's stop is a measured result and is not replacement-eligible.",
+    "invalidated_by_this_assessment": [
+      "position-05-attempt-1"
+    ]
   },
   "missing_evidence": [
     "no model-verification record was written for this attempt; the settings below are verified by this closeout from the retained transcripts instead",
     "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
     "no transcript was retained: the launch failed before any model request, so there is nothing to verify settings against",
     "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained",
-    "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-    "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+    "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact"
   ],
   "observed_violations": [
+    "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance",
     "no barrier freeze artifact was written before admission"
+  ],
+  "replacement_eligible": [
+    "position-05-attempt-1"
   ],
   "schema_version": "bounded-discovery-v1",
   "status": "unresolved",
@@ -1328,7 +1439,6 @@
     "position-02-attempt-1",
     "position-03-attempt-2",
     "position-04-attempt-1",
-    "position-05-attempt-1",
     "position-06-attempt-1"
   ],
   "valid": []

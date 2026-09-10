@@ -6,7 +6,8 @@
       "ledger/attempt-lifecycle-backfilled",
       "ledger/published-digest-precedes-the-lifecycle-events",
       "ledger/unexplained-residual-above-one-per-cent",
-      "ledger/no-per-role-split"
+      "ledger/no-per-role-split",
+      "ledger/attempt-close-differs-from-assessment"
     ],
     "frozen_total_cap_usd": "150.00",
     "reconciles": true,
@@ -17,7 +18,7 @@
   },
   "artifact_id": "issue-151-closeout-handoff",
   "blockers": [
-    "Historical pilot fidelity is assessed and remains unresolved. 1 observed violation is recorded in the assessment: no barrier freeze artifact was written before admission. The launch argv and the per-role usage split that would establish equal allowances and role-level spend were never retained. The eighteen grid cells are unattempted and the frozen replacement allowance cannot fund a repair, so the grid cannot be completed or repaired under the frozen limits."
+    "Historical pilot fidelity is assessed and remains unresolved. 2 observed violations are recorded in the assessment: 1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance; no barrier freeze artifact was written before admission. The launch argv and the per-role usage split that would establish equal allowances and role-level spend were never retained. The eighteen grid cells are unattempted and the frozen replacement allowance cannot fund a repair, so the grid cannot be completed or repaired under the frozen limits."
   ],
   "cells": {
     "attempt_limit": 27,
@@ -28,29 +29,32 @@
     "unattempted": 18
   },
   "claims_note": "No quality, recall or cost comparison appears in this closeout. No arm is described as better or worse, and the arm mapping stays sealed until #152 freezes its rulings.",
-  "created_at": "2026-09-10T07:50:22.812053+00:00",
+  "created_at": "2026-09-10T08:35:00.480091+00:00",
   "dispatch_authorized": false,
   "dispatch_hold": "held. This closeout authorises nothing to run. #151 launched no experimental reviewer run, and the eighteen unattempted cells stay unattempted.",
   "disposition": "closeout-delivered",
   "experiment_disposition": "stopped-incomplete",
   "fidelity": {
-    "decision": "Unresolved, with the missing evidence named. position-03-attempt-1 shows an observed violation - no barrier freeze artifact was written before admission, and it is already closed as invalid on its recorded basis. No other attempt shows one: every retained transcript verifies to the frozen model and effort for its role, every absence gate and read audit passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established for any attempt is that each cell was launched under the identical frozen allowances, or how its spend divides between its roles, because neither record was ever retained. Under the frozen rule an unobservable setting is not a pass, so those attempts are carried as unresolved rather than valid.",
-    "effect_on_grading": "An unresolved attempt is not a valid completed outcome. Under section 8 it counts as missing rather than present, so #152 grades the claims these attempts produced without treating any cell as a clean comparison member, and #153 applies the conservative limits that follow.",
+    "decision": "Unresolved, with the missing evidence named. position-03-attempt-1 shows an observed violation - no barrier freeze artifact was written before admission - and it is already closed as invalid on its recorded basis. position-05-attempt-1 shows an observed violation - 1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance - and this assessment invalidates it under the frozen rule, and it is replacement-eligible. No other attempt shows one: every retained transcript verifies to the frozen model and effort for its role, every absence gate and attestation passed, every session is a fresh context, and every rendered prompt still matches both the digest sealed beside it and the commitment published for it. What cannot be established for any attempt is that each cell was launched under the identical frozen allowances, because the launch argv was never retained. Under the frozen rule an unobservable setting is not a pass, so those attempts are carried as unresolved rather than valid.",
+    "effect_on_grading": "An unresolved attempt is not a valid completed outcome, and an invalid attempt is not scored as a substantive result; under section 8 both count as missing rather than present. That join is #153's, made after #152's rulings freeze: the adjudicator receives the packets without validity, completion, cost or fidelity labels, and #152's coordinator keeps this assessment beside the ruling table, not inside it. Raw claims from invalid attempts are still graded for correctness.",
     "finding_id": "pilot/actual-fidelity",
-    "invalid": 2,
+    "invalid": 3,
     "missing_evidence": [
       "no model-verification record was written for this attempt; the settings below are verified by this closeout from the retained transcripts instead",
       "no per-shell-command network judgment was recorded: the read audit checked paths, not whether a command reached the network outside the proxy, so proxy bypass is unaudited for this attempt",
       "no transcript was retained: the launch failed before any model request, so there is nothing to verify settings against",
       "no verifier transcript and no recorded no-batch reason: the pinned policy may legitimately dispatch none, but the reason the design requires was not retained",
-      "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact",
-      "the per-role cost split required by preregistration section 7 is absent: usage-split.json assigns every transcript to `unassigned`, so primary, finder and verifier spend cannot be separated where an arm runs one model"
+      "the launch argv was not retained: the requested --model, --effort, --max-budget-usd, --restricted and allow-list values for the root session cannot be read back from any artifact"
     ],
     "observed_violations": [
+      "1 read(s) outside the permitted roots were accepted at settlement; under preregistration section 5 a read outside the permitted roots invalidates the attempt on protocol grounds, and the frozen rule has no exception for the acceptance",
       "no barrier freeze artifact was written before admission"
     ],
+    "replacement_eligible": [
+      "position-05-attempt-1"
+    ],
     "status": "unresolved",
-    "unresolved": 6,
+    "unresolved": 5,
     "valid": 0
   },
   "gate": {
@@ -59,7 +63,7 @@
     "observed_at": "2026-09-10T07:03:56.304298+00:00",
     "recorded_before_the_seal_was_opened": true,
     "supplement": {
-      "observed_at": "2026-09-10T07:30:35.171806+00:00",
+      "observed_at": "2026-09-10T08:32:05.382377+00:00",
       "passed": true,
       "recorded_after_the_seal_was_opened": true,
       "standing": "corroboration, not the gate. The checks that establish no reviewer is running - the process table, the container runtime and the ledger - were made before the seal was opened and are unchanged.",
@@ -72,13 +76,14 @@
       "treat an unresolved attempt as a valid completed outcome",
       "read a budget stop as infrastructure invalidity, or reset an attempt count",
       "open the redaction map before rulings are frozen",
+      "supply the fidelity status, validity labels, costs or accounting discrepancies to the adjudicator before its rulings freeze",
       "grade this closeout's own outcomes"
     ],
     "tickets": [
       152,
       153
     ],
-    "work": "#152 grades the available claims from the sealed packets and may finish even though zero further cells ran. It must carry the unresolved fidelity status and the accounting discrepancies into its rulings rather than treating any attempt as a valid completed outcome. #153 applies conservative decision limits and opens the redaction map at reveal."
+    "work": "#152 grades the available claims from the sealed packets and may finish even though zero further cells ran. Its adjudicator receives the packets and nothing operational - no arm, model, replicate, validity, completion, cost or fidelity status, and no accounting discrepancy - until every ruling is frozen and hashed. Its coordinator keeps this closeout's fidelity assessment and reconciliation beside the ruling table, not inside it. #153 joins operational validity and cost to the frozen rulings, applies the conservative decision limits, and opens the redaction map at reveal."
   },
   "packets": {
     "blinding": "label masking, not guaranteed blinding; see packets/README.md",

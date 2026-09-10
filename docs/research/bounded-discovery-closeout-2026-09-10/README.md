@@ -14,11 +14,11 @@ closeout is complete; the experiment is not, and this bundle does not pretend ot
 
 | Artifact | What it settles |
 | --- | --- |
-| [gate.json](gate.json) | that every reviewer run that ever started has terminated, recorded before anything sealed was opened |
-| [gate-supplement.json](gate-supplement.json) | the workspace check re-run against the cell root the evidence named, after the seal was opened |
+| [gate.json](gate.json) | that every reviewer run that ever started has terminated, recorded before anything sealed was opened and re-scored afterwards under a stricter rule at its original instant |
+| [gate-supplement.json](gate-supplement.json) | the workspace check re-run against the cell root the evidence named, after the seal was opened, with a sweep that had to complete |
 | [seal-open.json](seal-open.json) | when the pilot evidence was decrypted, and against which digests |
 | [fidelity-assessment.json](fidelity-assessment.json) | `pilot/actual-fidelity`: what is established for each of the eight attempts, and what was never retained |
-| [reconciliation.json](reconciliation.json) | every charge in the epic against the single ledger, with five discrepancies and two retained bounds |
+| [reconciliation.json](reconciliation.json) | every charge in the epic against the single ledger, with the per-role split recovered, six discrepancies and two retained bounds |
 | [manifest.json](manifest.json) | all twenty-four planned cells, attempted and unattempted |
 | [packets/](packets/) | #152's anonymous grading packets, sealed, plus the no-packet manifest |
 | [handoff.json](handoff.json) | the stage record #152 reads |
@@ -29,11 +29,21 @@ Nothing may read the pilot's sealed outcomes until every reviewer run has stoppe
 recorded at **2026-09-10T07:03:56Z** and committed on its own, thirty seconds before the seal was
 opened at 07:04:26Z, so the ordering is in the history rather than asserted inside a later file.
 
-Seven checks pass. No process outside this session's own ancestry names a cell container, the
-coordinator or a cell workspace; no cell container is live; no attempt workspace survives anywhere
-under the user's home; all eight attempts opened on the ledger are closed; no reservation is
-outstanding; the eighty-event chain is unbroken; and nothing was appended after the last attempt
-closed.
+Seven checks were recorded. Six are **required**, because they are what a reviewer run shows up
+as: no process outside this session's own ancestry names a cell container, the coordinator or a cell
+workspace; no cell container is live; all eight attempts opened on the ledger are closed; no
+reservation is outstanding; the eighty-event chain is unbroken; and nothing was appended after the
+last attempt closed. All six pass. The seventh — that no attempt workspace survives on disk — is
+**corroborating**: a workspace is where a run could be hosted, not evidence of one, so it is reported
+as established or unestablished and decides nothing.
+
+That classification, and a stricter scoring rule, were introduced after review and applied by
+re-scoring the gate's own captured probes at its original instant rather than by running it again,
+which would have given it a timestamp after the seal was opened. The rule is that **a probe that did
+not run or exited non-zero has inspected nothing it can vouch for, and its empty output is not an
+absence**. Under it one verdict moved: the original workspace sweep exited 1 on directories it was
+not permitted to enter, so that check is `unestablished` at capture, and [gate.json](gate.json)
+says so in its `re_evaluation` block. The required checks were unaffected.
 
 Two limits are stated rather than smoothed. The container runtime is not running, which establishes
 that no cell is executing and nothing at all about how each one exited — the cells ran under
@@ -44,18 +54,17 @@ chain, and reports how many processes that excluded rather than matching itself.
 The raw `ps` and `find` captures stay outside the repository: a command line can name a slot. Only
 counts and digests reach [gate.json](gate.json).
 
-**One check needed correcting, and the correction is recorded rather than folded in.** The gate has
-to run before anything sealed is opened, which means it runs before the evidence can say where the
-cells actually ran. The pilot's configuration file was never committed and did not survive, so the
-gate checked a plausible cell root and swept the user's home — and the real root turned out to be
-`/tmp/bd150/cells`, which that sweep could not have reached.
+**The workspace check was then established properly, after the seal was opened, and the record
+says so.** The gate has to run before anything sealed is opened, which means it runs before the
+evidence can say where the cells actually ran. The pilot's configuration file was never committed
+and did not survive, so the gate checked a plausible cell root and swept the user's home — and the
+real root turned out to be `/tmp/bd150/cells`, which that sweep could not have reached.
 [gate-supplement.json](gate-supplement.json) records the corrected check at
-**2026-09-10T07:30:35Z**: none of the four candidate roots exists, and a sweep of `/tmp` and the
-home finds no surviving attempt workspace outside this closeout's own read-only extract. It is
-**corroboration, not the gate** — it was observed after the seal was opened, and it says so. The
-three checks that actually establish that no reviewer is running (the process table, the container
-runtime and the ledger) were all made before the seal and are unaffected, and the ledger's digest is
-recorded on both sides so that "nothing ran in between" is checkable rather than asserted.
+**2026-09-10T08:32:05Z**: none of the four candidate roots exists, and a sweep of `/tmp` and the
+configuration directory **completed with exit 0** and found no surviving attempt workspace outside
+this closeout's own read-only extract. It is **corroboration, not the gate** — it was observed after
+the seal was opened, and it says so. The ledger's digest is recorded on both sides so that "nothing
+ran in between" is checkable rather than asserted.
 
 ## Historical fidelity: unresolved, with the missing evidence named
 
@@ -68,19 +77,26 @@ about itself.
 for its role — primary at `claude-sonnet-5`/`high` in every arm, verifiers and arm C's finder at
 `claude-opus-5`/`high` where the arm calls for them. Every session opens with exactly one root user
 message and carries no summary or compact record, so no context was inherited or resumed. Every
-absence gate, preparation attestation and read audit passed, with no read outside the permitted
-roots. And the frozen-input chain holds three links deep: the dispatch template against #149's pin,
-each rendered prompt against the raw digest sealed beside it, and the same file against the HMAC
-published in the public cell summary.
+absence gate and preparation attestation passed. The frozen-input chain holds three links deep: the
+dispatch template against #149's pin, each rendered prompt against the raw digest sealed beside it,
+and the same file against the HMAC published in the public cell summary. And the per-role cost split
+settlement never recorded is **recovered** for every settled attempt from the retained
+per-transcript costs, each session's role read from its transcript path, with the part of the
+settled charge no transcript accounts for left explicitly unassigned.
 
-One attempt carries a recorded read deviation, accepted at the time and preserved here: the cell
-redirected a `git show` of a file **from its own pinned clone** into a container-local scratch path
-and read it back, instead of writing it under its work directory as the rule requires. It is a
-breach of the sandbox's tidiness rather than of its purpose — the content came from that cell's own
-clone, the path was inside the container, and no host path was reachable. The recorded judgment
-quotes the file's path, which is inside the target's own source tree, so **the prose stays in the
-seal** and only the fact, the tool it came through and that pointer are public. #152 may overrule
-the acceptance.
+**One attempt read outside the permitted roots, and the frozen rule invalidates it.** Position 5's
+cell redirected a `git show` of a file from its own pinned clone into a container-local scratch
+path outside its permitted roots and read it back. The pilot's coordinator accepted that at
+settlement as a breach of the sandbox's tidiness rather than its purpose, and the read audit was
+recorded as passed. That acceptance is preserved as history — and it does not amend the rule.
+Preregistration section 5 makes a read outside the permitted roots invalidating on protocol grounds
+with no exception for where the bytes came from, and dispatch rule 7 told every cell so; a rule
+cannot be relaxed after the attempt it governs. `position-05-attempt-1` is therefore **invalid**,
+replacement-eligible under the allowance, and its ledger close of `complete` is recorded as a
+discrepancy rather than rewritten. The read changed nothing another cell consumed, so no other
+member is contaminated; what it does is leave every comparison that needed position 5 without a
+member. The recorded judgment quotes the file's path, which is inside the target's own source tree,
+so the prose stays in the seal.
 
 **Not established, and named rather than smoothed.**
 
@@ -89,22 +105,21 @@ the acceptance.
   indirect: the rendered dispatch prompt with its execution allowance, the permission denials the
   restricted layer actually produced, and a settled cost inside the frozen ceiling. That is not the
   same as establishing that every arm received identical allowances.
-- **No per-role cost split exists.** Every transcript metered as `unassigned`, so primary, finder
-  and verifier spend cannot be separated in an arm that runs one model — which is exactly arm A.
 - **No per-command network judgment was recorded.** The read audit checked paths, not whether a
   command reached the network outside the proxy.
 - **Position 4 dispatched no verifier and recorded no no-batch reason.** The pinned policy may
   legitimately dispatch none, but the design asks for the reason and it was not kept.
 
-Under the frozen rule an unobservable setting is not a pass, so the six settled attempts carry
-`unresolved`: **nothing about them is certified faithful, and no violation was observed in any of
-them either.**
+Under the frozen rule an unobservable setting is not a pass, so the five settled attempts that show
+no violation carry `unresolved`: **nothing about them is certified faithful, and no violation was
+observed in any of them either.**
 
-One violation *was* observed, in an attempt that was already invalid: `position-03-attempt-1` wrote
-no arm C barrier freeze artifact before admission. That is the same fact as its recorded basis for
-invalidity — its primary was lost to a provider 502 before it could write one — and the assessment
-names it rather than reporting a blanket absence of violations. The other invalid attempt had its
-launch refused before any model request, so it has nothing to observe.
+Two violations *were* observed. `position-03-attempt-1`, already invalid on its recorded basis,
+wrote no arm C barrier freeze artifact before admission — the same fact as its recorded invalidity,
+its primary having been lost to a provider 502 before it could write one. `position-05-attempt-1`
+read outside its permitted roots, as described above, and this assessment invalidates it. The
+remaining invalid attempt had its launch refused before any model request, so it has nothing to
+observe.
 
 The budget stop at position 6 stays a measured result. It is not infrastructure invalidity and is
 not replacement-eligible.
@@ -117,13 +132,16 @@ not replacement-eligible.
 | position-03-attempt-1 | C | invalid | stopped-runtime | 1.5838690 |
 | position-03-attempt-2 | C | unresolved | complete | 7.0003047 |
 | position-04-attempt-1 | A | unresolved | complete | 4.5304828 |
-| position-05-attempt-1 | B | unresolved | complete | 6.3671277 |
+| position-05-attempt-1 | B | invalid | complete | 6.3671277 |
 | position-06-attempt-1 | C | unresolved | stopped-budget | 9.0040632 |
 
-**What this does to the grading.** An unresolved attempt is not a valid completed outcome, so under
-preregistration section 8 it counts as missing rather than present. #152 grades the claims these
-attempts produced without treating any cell as a clean comparison member; #153 applies the
-conservative limits that follow.
+**What this does to the grading, and when.** An unresolved attempt is not a valid completed
+outcome and an invalid one is not scored as a substantive result; under preregistration section 8
+both count as missing rather than present. That join is **#153's**, made after #152's rulings
+freeze. #152's adjudicator receives the sealed packets and nothing operational — no arm, model,
+replicate, validity, completion, cost or fidelity status, and none of the accounting discrepancies
+below — until every ruling is frozen and hashed; its coordinator keeps this assessment beside the
+ruling table, not inside it. Raw claims from invalid attempts are still graded for correctness.
 
 ## The accounting
 
@@ -138,7 +156,7 @@ probe that may never have recorded a request, and the #150 launch-shape check wh
 deleted before it could be metered. They come off the remaining allowance too — a session that may
 yet be billed is not headroom.
 
-Five discrepancies are recorded and **none is repaired**, because the chain is append-only and a
+Six discrepancies are recorded and **none is repaired**, because the chain is append-only and a
 stage record that was true when it was written stays as delivered:
 
 1. The ledger header's `attempts_dispatched` counter reads 0 against eight `attempt-open` events.
@@ -152,13 +170,19 @@ stage record that was true when it was written stays as delivered:
    byte-identical to each other.
 4. One attempt carries an unexplained residual above one per cent of its settled cost, already
    settled at the larger source, so no charge is understated.
-5. No attempt carries the per-role split settlement was asked to take from the transcripts.
+5. No attempt recorded the per-role split settlement was asked to take from the transcripts. It is
+   recovered here for all seven attempts that ran, from the retained per-transcript costs; the
+   historical artifacts are unchanged and the unaccounted residual stays unassigned.
+6. The ledger closes `position-05-attempt-1` as `complete`; this assessment finds it invalid on
+   protocol grounds. The close stays as written, the assessment governs validity, and the manifest
+   carries its verdict.
 
-**Could a repair fit?** Re-running the six unresolved cells would cost **$34.6392384** at measured
-rates against **$92.5220259** available, so the money fits. It would need **six replacements against
-the one that remains**. Preregistration section 6 governs that case — when required invalidation
-exceeds the allowance, stop and close out the partial experiment — so this ticket closes out and
-dispatches nothing. Raising the allowance is not this ticket's to do.
+**Could a repair fit?** Re-running the five unresolved cells and the one this assessment invalidates
+would cost **$34.6392384** at measured rates against **$92.5220259** available, so the money fits. It
+would need **six replacements against the one that remains** — the protocol-invalid attempt alone
+would consume it. Preregistration section 6 governs that case — when required invalidation exceeds
+the allowance, stop and close out the partial experiment — so this ticket closes out and dispatches
+nothing. Raising the allowance is not this ticket's to do.
 
 ## The twenty-four-cell manifest
 

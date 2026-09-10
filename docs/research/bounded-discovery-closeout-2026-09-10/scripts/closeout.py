@@ -119,18 +119,34 @@ def capture(argv, timeout=120) -> dict:
 # The stop gate
 # --------------------------------------------------------------------------
 
-def live_probes() -> dict:
+def live_probes(cells_root=None) -> dict:
     """Capture the host state the gate reads. Raw output is retained separately
-    and sealed: a process command line can name a slot."""
+    and sealed: a process command line can name a slot.
+
+    The workspace sweep covers ``/tmp`` and the parent of the configured cell
+    root rather than the whole home directory: a sweep that hits a directory
+    it may not enter exits non-zero and has not established absence, and on
+    this platform a whole-home sweep always does."""
+    parents = ["/tmp"]
+    if cells_root:
+        parent = str(Path(os.path.expanduser(cells_root)).parent)
+        if parent not in parents:
+            parents.append(parent)
     return {
         "captured_at": now(),
         "processes": capture(["ps", "-eo", "pid=,ppid=,command="]),
         "containers": capture(["docker", "ps", "-a", "--no-trunc",
                                "--format", "{{.Names}}\t{{.Status}}"]),
-        "workspaces": capture(["find", os.path.expanduser("~"), "-maxdepth", "5",
-                               "-type", "d", "-name", "position-0*"], timeout=600),
+        "workspaces": capture(["find"] + parents + ["-maxdepth", "4", "-type", "d",
+                                                    "-name", "position-0*"], timeout=600),
         "self_pid": os.getpid(),
     }
+
+
+def probe_completed(probe) -> bool:
+    """A probe that did not run, or exited non-zero, has inspected nothing it
+    can vouch for. Its empty output is not an absence."""
+    return bool(probe.get("ran")) and probe.get("exit_code") == 0
 
 
 def probe_evidence(name, probe, passed, detail, count=None) -> dict:
@@ -138,6 +154,7 @@ def probe_evidence(name, probe, passed, detail, count=None) -> dict:
     digest and the counts derived from it do."""
     record = {"check": name, "passed": bool(passed), "detail": detail,
               "command": probe.get("command"), "exit_code": probe.get("exit_code"),
+              "probe_completed": probe_completed(probe),
               "output_sha256": digest(probe.get("stdout", "") + probe.get("stderr", ""))}
     if count is not None:
         record["match_count"] = count
@@ -200,11 +217,15 @@ def live_containers(probe) -> dict:
             name, _, status = line.partition("\t")
             if name.strip().startswith(CELL_CONTAINER_PREFIX):
                 running.append(status.strip().split()[0] if status.strip() else "unknown")
-    daemon_down = ("Cannot connect to the Docker daemon" in text
-                   or "failed to connect to the docker API" in text
-                   or not probe.get("ran"))
+    # Only the daemon's own connection refusal counts as the runtime being
+    # down. A missing binary, a permission-denied socket or any other failure
+    # inspected nothing and is reported as such, never as an empty list.
+    daemon_down = bool(probe.get("ran")) and (
+        "Cannot connect to the Docker daemon" in text
+        or "failed to connect to the docker API" in text)
     return {"reachable": bool(reachable), "daemon_unreachable": bool(daemon_down),
-            "cell_containers": running}
+            "cell_containers": running,
+            "inspected": bool(reachable) or bool(daemon_down)}
 
 
 def ledger_attempt_state(ledger) -> dict:
@@ -238,18 +259,37 @@ def latest_event_time(ledger) -> str:
     return max(times) if times else ""
 
 
-def build_gate(ledger, probes, cells_root) -> dict:
-    """The all-reviewers-stopped gate. Every check must pass before any sealed
-    outcome may be opened; a failure names what is still live."""
-    observed_at = now()
+# What the gate is for is establishing that no reviewer run is still executing.
+# A run shows up as a process, as a container, and as an open attempt or a live
+# reservation on the ledger; those checks are required. A workspace on disk is
+# where a run *could* be hosted, not evidence of one, so its check corroborates
+# and is reported as established or unestablished without deciding the gate.
+REQUIRED_CHECKS = ("no reviewer or coordinator process is running",
+                   "no cell container is running",
+                   "every opened attempt is closed on the ledger",
+                   "no budget reservation is outstanding",
+                   "the ledger chain is unbroken through its last event",
+                   "no ledger event was appended after the last attempt closed")
+
+
+def build_gate(ledger, probes, cells_root, observed_at=None) -> dict:
+    """The all-reviewers-stopped gate. Every required check must pass before any
+    sealed outcome may be opened; a failure names what is still live, and a
+    probe that did not complete fails its check rather than passing on an
+    empty result."""
+    observed_at = observed_at or now()
     state = ledger_attempt_state(ledger)
     checks = []
 
     process_probe = probes["processes"]
     processes = reviewer_processes(process_probe, probes.get("self_pid", os.getpid()))
     live_pids = processes["live"]
+    process_ok = probe_completed(process_probe)
     check = probe_evidence(
-        "no reviewer or coordinator process is running", process_probe, not live_pids,
+        "no reviewer or coordinator process is running", process_probe,
+        process_ok and not live_pids,
+        ("the process probe did not complete (exit %s), so whether a reviewer process is "
+         "running is unestablished" % process_probe.get("exit_code")) if not process_ok else
         ("no process outside this gate's own ancestry names a cell container, the "
          "coordinator or a cell workspace; %d process(es) in the ancestry of this closeout "
          "session matched and were excluded, because the gate repeats the cell root on its "
@@ -267,6 +307,11 @@ def build_gate(ledger, probes, cells_root) -> dict:
                             "cell leaves nothing to list, and this establishes no cell is live "
                             "rather than how each one exited")
         container_passed = True
+    elif not containers["inspected"]:
+        container_passed = False
+        container_detail = ("the container probe did not complete (exit %s) and did not report "
+                            "the daemon as down, so whether a cell container is running is "
+                            "unestablished" % container_probe.get("exit_code"))
     else:
         container_passed = not containers["cell_containers"]
         container_detail = ("the runtime lists no container named %s*" % CELL_CONTAINER_PREFIX
@@ -282,21 +327,28 @@ def build_gate(ledger, probes, cells_root) -> dict:
                                          "stdout": "", "stderr": "not captured"}
     stray = [line for line in sweep.get("stdout", "").splitlines() if line.strip()]
     workspaces_present = root_present or bool(stray)
-    swept = bool(sweep.get("ran"))
+    swept = probe_completed(sweep)
+    if workspaces_present:
+        workspace_detail = (("the configured cell root exists" if root_present else "")
+                            + ("%s%d stray attempt workspace(s) were found"
+                               % ("; " if root_present else "", len(stray)) if stray else ""))
+    elif not swept:
+        workspace_detail = ("the configured cell root does not exist, but the sweep did not "
+                            "complete (exit %s): directories it could not enter were not "
+                            "swept, so absence beyond that root is unestablished"
+                            % sweep.get("exit_code"))
+    else:
+        workspace_detail = ("the configured cell root does not exist and a completed sweep of "
+                            "the swept paths found no surviving attempt workspace: every "
+                            "workspace was archived into the seal and removed, so the sealed "
+                            "archive is the only surviving copy of the raw evidence")
     checks.append({"check": "no live cell workspace remains",
                    "passed": (not workspaces_present) and swept,
-                   "detail": ("the configured cell root does not exist and a sweep of the user's "
-                              "home found no surviving attempt workspace: every workspace was "
-                              "archived into the seal and removed, so the sealed archive is the "
-                              "only surviving copy of the raw evidence")
-                             if not workspaces_present and swept else
-                             ("the workspace sweep did not run, so absence is unestablished"
-                              if not swept else "")
-                             + ("the configured cell root exists" if root_present else "")
-                             + ("%s%d stray attempt workspace(s) were found"
-                                % ("; " if root_present else "", len(stray)) if stray else ""),
+                   "detail": workspace_detail,
                    "configured_root_exists": root_present,
-                   "sweep_ran": swept,
+                   "sweep_ran": bool(sweep.get("ran")),
+                   "sweep_exit_code": sweep.get("exit_code"),
+                   "probe_completed": swept,
                    "sweep_command": sweep.get("command"),
                    "sweep_match_count": len(stray),
                    "sweep_output_sha256": digest(sweep.get("stdout", "") + sweep.get("stderr", ""))})
@@ -334,14 +386,25 @@ def build_gate(ledger, probes, cells_root) -> dict:
                              % (last_event, observed_at),
                    "latest_event_at": last_event})
 
-    passed = all(check["passed"] for check in checks)
+    for check in checks:
+        check["class"] = "required" if check["check"] in REQUIRED_CHECKS else "corroborating"
+    required_passed = all(check["passed"] for check in checks if check["class"] == "required")
+    every_check = all(check["passed"] for check in checks)
     return {
         "schema_version": "bounded-discovery-v1",
         "artifact_id": "issue-151-stop-gate",
         "observed_at": observed_at,
         "probes_captured_at": probes.get("captured_at"),
-        "all_reviewers_stopped": passed,
-        "seal_may_be_opened": passed,
+        "all_reviewers_stopped": required_passed,
+        "seal_may_be_opened": required_passed,
+        "every_check_established": every_check,
+        "unestablished_corroboration": [check["check"] for check in checks
+                                        if check["class"] == "corroborating"
+                                        and not check["passed"]],
+        "check_classes": ("required checks are the ones that show a reviewer run - a process, "
+                          "a container, an open attempt or a live reservation on the ledger - "
+                          "and every one must pass for the seal to open; a corroborating check "
+                          "is reported as established or unestablished and decides nothing"),
         "checks": checks,
         "attempt_dispositions": state["dispositions"] and {
             # Dispositions are carried by position, never by attempt id: an
@@ -360,17 +423,63 @@ def build_gate(ledger, probes, cells_root) -> dict:
 
 def command_gate(args) -> int:
     ledger = load(args.ledger)
-    probes = load(args.probes_from) if args.probes_from else live_probes()
+    probes = load(args.probes_from) if args.probes_from else live_probes(args.cells_root)
     gate = build_gate(ledger, probes, args.cells_root)
     if args.raw_out:
         write(args.raw_out, probes)
     write(args.out, gate)
-    if not gate["all_reviewers_stopped"]:
-        for check in gate["checks"]:
-            if not check["passed"]:
-                print("gate check failed: %s - %s" % (check["check"], check["detail"]))
-        return 1
-    return 0
+    for check in gate["checks"]:
+        if not check["passed"]:
+            print("gate check %s: %s - %s"
+                  % ("failed" if check["class"] == "required" else "unestablished",
+                     check["check"], check["detail"]))
+    return 0 if gate["all_reviewers_stopped"] else 1
+
+
+def command_gate_re_evaluate(args) -> int:
+    """Re-score a recorded gate's own captured probes under the current rules.
+
+    The rules changed after the first gate was recorded: a probe that did not
+    complete used to pass on its empty output. Re-running the gate would give
+    it a timestamp after the seal was opened and make the ordering the closeout
+    rests on untrue, so the original capture is re-scored at its original
+    instant instead, and every check whose verdict moved is listed with why."""
+    gate = load(args.gate)
+    probes = load(args.raw_capture)
+    ledger = load(args.ledger)
+    rescored = build_gate(ledger, probes, args.cells_root, observed_at=gate.get("observed_at"))
+    before = {check["check"]: check for check in gate.get("checks", [])}
+    changed = []
+    for check in rescored["checks"]:
+        if check["check"] not in before:
+            continue
+        previous = before[check["check"]]
+        if previous.get("passed") != check["passed"]:
+            changed.append({"check": check["check"], "class": check["class"],
+                            "was": "passed" if previous.get("passed") else "failed",
+                            "now": "passed" if check["passed"] else
+                                   ("failed" if check["class"] == "required" else "unestablished"),
+                            "why": check["detail"]})
+    rescored["probes_captured_at"] = gate.get("probes_captured_at")
+    rescored["re_evaluation"] = {
+        "re_evaluated_at": now(),
+        "original_all_reviewers_stopped": gate.get("all_reviewers_stopped"),
+        "rule_change": ("a probe that did not run or exited non-zero no longer passes its check "
+                        "on empty output; checks are classed as required or corroborating, and "
+                        "only the required ones decide whether the seal may open"),
+        "checks_changed": changed,
+        "note": ("Scored from the probes captured at %s, at the original instant. The "
+                 "timestamps are the original ones; only the scoring rule moved."
+                 % gate.get("probes_captured_at")),
+    }
+    for key in ("note", "raw_capture", "attempt_dispositions"):
+        if key in gate and key not in rescored:
+            rescored[key] = gate[key]
+    write(args.out, rescored)
+    print(json.dumps({"all_reviewers_stopped": rescored["all_reviewers_stopped"],
+                      "every_check_established": rescored["every_check_established"],
+                      "checks_changed": len(changed)}))
+    return 0 if rescored["all_reviewers_stopped"] else 1
 
 
 # --------------------------------------------------------------------------
@@ -457,9 +566,9 @@ def command_open_seal(args) -> int:
 GAP_LAUNCH_ARGV = ("the launch argv was not retained: the requested --model, --effort, "
                    "--max-budget-usd, --restricted and allow-list values for the root session "
                    "cannot be read back from any artifact")
-GAP_PER_ROLE_SPLIT = ("the per-role cost split required by preregistration section 7 is absent: "
-                      "usage-split.json assigns every transcript to `unassigned`, so primary, "
-                      "finder and verifier spend cannot be separated where an arm runs one model")
+GAP_PER_ROLE_SPLIT = ("the per-role cost split required by preregistration section 7 was not "
+                      "recorded at settlement and cannot be recovered: no per-transcript cost "
+                      "record survives for this attempt")
 GAP_NO_BATCH_REASON = ("no verifier transcript and no recorded no-batch reason: the pinned policy "
                        "may legitimately dispatch none, but the reason the design requires was "
                        "not retained")
@@ -710,7 +819,21 @@ def isolation_checks(root: Path) -> dict:
     outside = audit.get("paths_outside_permitted_roots") or []
     if outside:
         problems.append("%d read(s) resolved outside the permitted roots" % len(outside))
+    accepted = audit.get("accepted_hits") or []
+    if accepted:
+        # The pilot's coordinator accepted these at settlement as a breach of
+        # tidiness rather than purpose. Preregistration section 5 and dispatch
+        # rule 7 make a read outside the permitted roots invalidating on
+        # protocol grounds, with no exception for where the bytes came from,
+        # and a rule cannot be amended after the attempt it governs.
+        problems.append("%d read(s) outside the permitted roots were accepted at settlement; "
+                        "under preregistration section 5 a read outside the permitted roots "
+                        "invalidates the attempt on protocol grounds, and the frozen rule has no "
+                        "exception for the acceptance" % len(accepted))
     return {
+        "read_audit_passed_as_recorded": bool(audit.get("passed")) if audit else None,
+        "accepted_reads_outside_permitted_roots": len(accepted),
+        "protocol_invalidity": bool(outside or accepted),
         "pre_dispatch_ready": bool(pre.get("ready")),
         "post_dispatch_ready": bool(post.get("ready")),
         "attestation_ready": bool(attestation.get("ready")),
@@ -785,13 +908,42 @@ def completion_checks(root: Path, dispatch, settle) -> dict:
     }
 
 
+def recover_role_costs(split) -> dict:
+    """The per-role split settlement did not record, read back from what it did.
+
+    The meter labelled every session ``unassigned`` but kept each session's
+    cost under its transcript path, and the path carries the role: a sub-agent
+    transcript sits under ``subagents/``, arm C's finder in its own store, and
+    the root session is whatever remains. Summing by that rule gives the split
+    section 7 asks for. What it cannot give is the part of the settled charge
+    no transcript accounts for, which stays unassigned and is reported as such."""
+    recovered = {}
+    for path, entry in sorted((split.get("per_transcript") or {}).items()):
+        role = role_of(path)
+        recovered[role] = recovered.get(role, Decimal("0")) + usd((entry or {}).get("cost_usd"))
+    return recovered
+
+
 def usage_checks(root: Path, settle) -> dict:
     split = load(root / "artifacts" / "usage-split.json", default={})
     roles = sorted((split.get("per_role") or {}).keys())
+    recovered = recover_role_costs(split)
+    recovered_total = sum(recovered.values(), Decimal("0"))
+    settled = usd(settle.get("settled_usd"))
     return {
         "per_model_split_recorded": sorted((split.get("per_model") or {}).keys()),
         "per_role_split_recorded": roles,
-        "per_role_split_assigned": bool(roles) and roles != ["unassigned"],
+        "per_role_split_recorded_at_settlement": bool(roles) and roles != ["unassigned"],
+        "per_role_split_recovered": bool(recovered),
+        "per_role_recovered_usd": {role: str(amount) for role, amount in sorted(recovered.items())},
+        "per_role_recovered_total_usd": str(recovered_total) if recovered else None,
+        "recovered_from": ("the retained per-transcript costs, each session's role read from its "
+                           "transcript path" if recovered else None),
+        "unassigned_residual_usd": str(settled - recovered_total) if recovered and settled else None,
+        "unassigned_residual_note": ("the settled charge no transcript accounts for: the request "
+                                     "the runtime bills to a model it never writes to the "
+                                     "transcript, plus any unexplained remainder; it belongs to "
+                                     "no role" if recovered else None),
         "recomputed_usd": split.get("total_cost_usd"),
         "self_report_usd": settle.get("self_report_usd") or split.get("self_report_usd"),
         "settled_usd": settle.get("settled_usd"),
@@ -884,6 +1036,9 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
                               "carries a reserve and a settle for the attempt"},
             },
             "missing_evidence": [GAP_NO_TRANSCRIPT],
+            "invalidated_by": "recorded basis",
+            "ledger_closed_as": "stopped-invalid",
+            "replacement_eligible": False,
             "produced_claims": False,
             "replacement_consumed": True,
             "notes": ["A replacement was consumed although nothing was measured: the ledger's "
@@ -930,7 +1085,7 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
     usage = usage_checks(root, settle)
 
     gaps = [GAP_LAUNCH_ARGV, GAP_NETWORK_JUDGEMENT]
-    if not usage["per_role_split_assigned"]:
+    if not usage["per_role_split_recovered"]:
         gaps.append(GAP_PER_ROLE_SPLIT)
     if not historical:
         gaps.append(GAP_NO_MODEL_VERIFICATION)
@@ -950,10 +1105,17 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
     if item["kind"] == "invalidated":
         validity = "invalid"
         basis = "documented infrastructure invalidity, recorded when it happened"
+        invalidated_by = "recorded basis"
     elif violations:
         validity = "invalid"
-        basis = "a fidelity, isolation or frozen-input violation observed in this assessment"
+        invalidated_by = "this assessment"
+        basis = (("a read outside the permitted roots, invalid on protocol grounds under "
+                  "preregistration section 5; the acceptance recorded at settlement is preserved "
+                  "as history and does not amend the frozen rule")
+                 if isolation.get("protocol_invalidity") else
+                 "a fidelity, isolation or frozen-input violation observed in this assessment")
     else:
+        invalidated_by = None
         validity = "unresolved"
         basis = ("no violation was observed and every observable dimension is established, but "
                  "the evidence named under missing_evidence was never retained, so this "
@@ -964,6 +1126,13 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
         "arm": arm, "block": prepare.get("block") or "pilot",
         "operational_validity": validity,
         "validity_basis": basis,
+        "invalidated_by": invalidated_by,
+        "ledger_closed_as": settle.get("completion") or (
+            "stopped-runtime" if item["kind"] == "invalidated" else None),
+        # Protocol invalidity found here earns a replacement under section 5;
+        # whether one is ever dispatched is not this closeout's to decide.
+        "replacement_eligible": bool(validity == "invalid" and invalidated_by == "this assessment"
+                                     and isolation.get("protocol_invalidity")),
         "completion": settle.get("completion") or (
             "stopped-runtime" if item["kind"] == "invalidated" else None),
         "settled_usd": settle.get("settled_usd"),
@@ -1014,7 +1183,7 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
             },
             "completion_and_stop": dict(completion, verdict="established"),
             "usage_completeness": dict(
-                usage, verdict="established" if usage["per_role_split_assigned"] else "unresolved"),
+                usage, verdict="established" if usage["per_role_split_recovered"] else "unresolved"),
         },
         "missing_evidence": gaps,
         "violations": violations,
@@ -1030,33 +1199,33 @@ def decision_text(status, attempts, observed_violations) -> str:
     It has to name any observed violation rather than deny one: #151 forbids a
     false certification of fidelity, and a reader who takes only this field is
     exactly the reader that would be misled."""
-    violating = sorted(attempt["attempt_ref"] for attempt in attempts
-                       if attempt.get("violations"))
+    violating = sorted((attempt for attempt in attempts if attempt.get("violations")),
+                       key=lambda attempt: attempt["attempt_ref"])
     if violating:
-        where = ("%s shows an observed violation" % violating[0] if len(violating) == 1
-                 else "%s show observed violations" % ", ".join(violating))
-        also_invalid = all(attempt["operational_validity"] == "invalid" for attempt in attempts
-                           if attempt.get("violations"))
-        observed = ("%s - %s%s. No other attempt shows one: "
-                    % (where, "; ".join(observed_violations),
-                       (", and it is" if len(violating) == 1 else ", and each is")
-                       + " already closed as invalid on its recorded basis"
-                       if also_invalid else ""))
+        clauses = []
+        for attempt in violating:
+            fate = ("it is already closed as invalid on its recorded basis"
+                    if attempt.get("invalidated_by") == "recorded basis" else
+                    "this assessment invalidates it under the frozen rule"
+                    + (", and it is replacement-eligible" if attempt.get("replacement_eligible")
+                       else ""))
+            clauses.append("%s shows an observed violation - %s - and %s"
+                           % (attempt["attempt_ref"], "; ".join(attempt["violations"]), fate))
+        observed = ". ".join(clauses) + ". No other attempt shows one: "
     else:
         observed = ("No attempt shows an observed fidelity, isolation, context-separation or "
                     "frozen-input violation: ")
     established = ("every retained transcript verifies to the frozen model and effort for its "
-                   "role, every absence gate and read audit passed, every session is a fresh "
+                   "role, every absence gate and attestation passed, every session is a fresh "
                    "context, and every rendered prompt still matches both the digest sealed "
                    "beside it and the commitment published for it.")
     if status != "unresolved":
         return ("Resolved. " + observed + established)
     return ("Unresolved, with the missing evidence named. " + observed + established
             + " What cannot be established for any attempt is that each cell was launched under "
-              "the identical frozen allowances, or how its spend divides between its roles, "
-              "because neither record was ever retained. Under the frozen rule an unobservable "
-              "setting is not a pass, so those attempts are carried as unresolved rather than "
-              "valid.")
+              "the identical frozen allowances, because the launch argv was never retained. Under "
+              "the frozen rule an unobservable setting is not a pass, so those attempts are "
+              "carried as unresolved rather than valid.")
 
 
 def build_assessment(gate, evidence: Path, manifest, bundle: Path, salt) -> dict:
@@ -1076,10 +1245,12 @@ def build_assessment(gate, evidence: Path, manifest, bundle: Path, salt) -> dict
     gaps = sorted({g for a in attempts for g in a["missing_evidence"]})
 
     # The frozen invalidation rule reaches comparison members, not just cells.
-    # Nothing here was invalidated by a fault in a shared input, so no member
-    # beyond the two attempts already closed as invalid is affected.
-    affected = sorted({a["position"] for a in attempts
-                       if a["operational_validity"] == "invalid" and a["ordinal"] > 0})
+    # A read outside the roots by one cell changes nothing another cell
+    # consumed, so it contaminates no other member; what it does is remove
+    # its own position from every comparison that needed it.
+    newly = [a for a in attempts if a.get("invalidated_by") == "this assessment"]
+    affected = sorted({a["position"] for a in newly})
+    eligible = sorted(a["attempt_ref"] for a in attempts if a.get("replacement_eligible"))
 
     status = "unresolved" if unresolved or not valid else "resolved"
     return {
@@ -1097,22 +1268,40 @@ def build_assessment(gate, evidence: Path, manifest, bundle: Path, salt) -> dict
         "invalid": invalid,
         "observed_violations": observed_violations,
         "missing_evidence": gaps,
+        "replacement_eligible": eligible,
         "invalidation_rule": {
             "applied": True,
             "affected_positions": affected,
-            "detail": ("The frozen rule invalidates exactly the comparison cells a change "
-                       "affects. The two attempts closed as invalid failed before producing a "
-                       "comparable outcome and share no input with any other cell, so they "
-                       "invalidate no further member; each was already replaced within the "
-                       "frozen allowance. No budget stop is treated as infrastructure "
-                       "invalidity: position 6's stop is a measured result and is not "
-                       "replacement-eligible."),
+            "invalidated_by_this_assessment": [a["attempt_ref"] for a in newly],
+            "detail": (
+                (("The frozen rule invalidates exactly the comparison cells a change affects. "
+                  "%s %s invalidated by this assessment on protocol grounds: a read outside the "
+                 "permitted roots, which preregistration section 5 makes invalidating with no "
+                 "exception for where the bytes came from. Such a read changes nothing another "
+                 "cell consumed, so no other member is contaminated; what it does is leave every "
+                 "comparison that needed position%s %s without a member. %s replacement-eligible "
+                 "under the allowance, and the stopped path dispatches no replacement. "
+                 % (", ".join(a["attempt_ref"] for a in newly),
+                    "is" if len(newly) == 1 else "are",
+                    "" if len(affected) == 1 else "s",
+                    ", ".join(str(p) for p in affected),
+                    "It is" if len(newly) == 1 else "They are"))
+                if newly else
+                "The frozen rule invalidates exactly the comparison cells a change affects. "
+                "This assessment invalidates no attempt beyond those already closed as invalid. ")
+                + "The two attempts closed as invalid on their recorded basis failed before "
+                  "producing a comparable outcome and share no input with any other cell, so they "
+                  "invalidate no further member; each was already replaced within the frozen "
+                  "allowance. No budget stop is treated as infrastructure invalidity: position "
+                  "6's stop is a measured result and is not replacement-eligible."),
         },
         "effect_on_grading": (
-            "An unresolved attempt is not a valid completed outcome. Under section 8 it counts "
-            "as missing rather than present, so #152 grades the claims these attempts produced "
-            "without treating any cell as a clean comparison member, and #153 applies the "
-            "conservative limits that follow."),
+            "An unresolved attempt is not a valid completed outcome, and an invalid attempt is "
+            "not scored as a substantive result; under section 8 both count as missing rather "
+            "than present. That join is #153's, made after #152's rulings freeze: the "
+            "adjudicator receives the packets without validity, completion, cost or fidelity "
+            "labels, and #152's coordinator keeps this assessment beside the ruling table, not "
+            "inside it. Raw claims from invalid attempts are still graded for correctness."),
         "attempts": attempts,
     }
 
@@ -1243,7 +1432,8 @@ def attempt_reconciliation(evidence: Path, ledger_per_attempt) -> list:
             attempt_id = record.get("attempt_id")
             rows.append({
                 "attempt_ref": reference, "position": item["position"], "ordinal": ordinal,
-                "arm": record.get("arm"), "role_split_available": False,
+                "arm": record.get("arm"), "role_split_recorded_at_settlement": False,
+                "role_split_recovered": False,
                 "ledger_settled_usd": str(usd(ledger_per_attempt.get(attempt_id))),
                 "self_report_usd": "0.0000000", "recomputed_usage_usd": None,
                 "reconciliation_residual_usd": "0.0000000",
@@ -1262,8 +1452,14 @@ def attempt_reconciliation(evidence: Path, ledger_per_attempt) -> list:
         rows.append({
             "attempt_ref": reference, "position": item["position"], "ordinal": ordinal,
             "arm": settle.get("arm"),
-            "role_split_available": sorted((split.get("per_role") or {}).keys()) not in
-                                    ([], ["unassigned"]),
+            "role_split_recorded_at_settlement": sorted((split.get("per_role") or {}).keys())
+                                                 not in ([], ["unassigned"]),
+            "role_split_recovered": bool(recover_role_costs(split)),
+            "per_role_recovered_usd": {role: str(amount) for role, amount
+                                       in sorted(recover_role_costs(split).items())},
+            "unassigned_residual_usd": str(usd(settle.get("settled_usd"))
+                                           - sum(recover_role_costs(split).values(), Decimal("0")))
+                                       if recover_role_costs(split) else None,
             "models_priced": settle.get("models_priced"),
             "ledger_settled_usd": str(ledger_amount),
             "self_report_usd": settle.get("self_report_usd"),
@@ -1335,13 +1531,41 @@ def ledger_discrepancies(ledger, manifest, published_digest, live_digest, rows) 
                       "understated. The residual stays visible rather than being absorbed.",
             "repaired": False,
         })
-    if not any(row.get("role_split_available") for row in rows):
+    if not any(row.get("role_split_recorded_at_settlement") for row in rows):
+        recovered = [row["attempt_ref"] for row in rows if row.get("role_split_recovered")]
         found.append({
             "id": "ledger/no-per-role-split",
-            "what": "no attempt carries the per-role cost split preregistration section 7 asks "
+            "what": "no attempt recorded the per-role cost split preregistration section 7 asks "
                     "settlement to take from the transcripts",
-            "effect": "primary, finder and verifier spend cannot be separated where one arm runs "
-                      "a single model. Per-model splits survive and are reported instead.",
+            "effect": ("the split is recovered in this closeout for %d attempt(s) from the "
+                       "retained per-transcript costs, each session's role read from its path; "
+                       "the settled charge no transcript accounts for stays unassigned. The "
+                       "historical artifacts are unchanged." % len(recovered)
+                       if recovered else
+                       "primary, finder and verifier spend cannot be separated where one arm runs "
+                       "a single model. Per-model splits survive and are reported instead."),
+            "recovered_for": recovered,
+            "repaired": False,
+        })
+    return found
+
+
+def assessment_discrepancies(assessment) -> list:
+    """Where the ledger's close and this assessment's verdict disagree.
+
+    The chain is append-only and is not rewritten. The assessment is the record
+    that governs validity; the ledger's close stays as written beside it."""
+    found = []
+    for attempt in assessment.get("attempts", []):
+        if attempt.get("invalidated_by") != "this assessment":
+            continue
+        found.append({
+            "id": "ledger/attempt-close-differs-from-assessment",
+            "what": "the ledger closes %s as `%s`; this assessment finds it invalid: %s"
+                    % (attempt["attempt_ref"], attempt.get("ledger_closed_as"),
+                       attempt.get("validity_basis")),
+            "effect": "the ledger's close is left as written, because the chain is append-only; "
+                      "the assessment governs validity and the manifest carries its verdict",
             "repaired": False,
         })
     return found
@@ -1359,6 +1583,8 @@ def repair_feasibility(ledger, manifest, assessment) -> dict:
     attempt_limit = int(ledger.get("attempt_limit") or ATTEMPT_LIMIT)
     replacement_limit = int(ledger.get("replacement_limit") or REPLACEMENT_LIMIT)
     unresolved = assessment.get("unresolved") or []
+    eligible = assessment.get("replacement_eligible") or []
+    needing = sorted(set(unresolved) | set(eligible))
     # Net of the retained uncertainty as well as the protected reserve: an
     # unmetered session that may yet be billed is not headroom.
     remaining_money = (usd(ledger.get("frozen_total_cap_usd"))
@@ -1366,14 +1592,17 @@ def repair_feasibility(ledger, manifest, assessment) -> dict:
                        - usd(ledger.get("uncertainty_usd"))
                        - usd(ledger.get("grading_closeout_reserve_usd")))
     measured = sum(usd(a.get("settled_usd")) for a in assessment.get("attempts", [])
-                   if a.get("attempt_ref") in unresolved)
+                   if a.get("attempt_ref") in needing)
     fits_money = measured <= remaining_money
-    fits_replacements = len(unresolved) <= replacement_limit - replacements
-    fits_attempts = len(unresolved) <= attempt_limit - len(opens)
+    fits_replacements = len(needing) <= replacement_limit - replacements
+    fits_attempts = len(needing) <= attempt_limit - len(opens)
     return {
-        "repair_considered": ("re-running the %d attempts this assessment leaves unresolved, "
-                              "under a coordinator that retains the launch argv and meters per "
-                              "role" % len(unresolved)),
+        "repair_considered": ("re-running the %d attempts this assessment leaves unresolved and "
+                              "the %d it invalidates on protocol grounds, under a coordinator "
+                              "that retains the launch argv and meters per role"
+                              % (len(unresolved), len(eligible))),
+        "cells_a_repair_would_run": len(needing),
+        "replacement_eligible_invalid": len(eligible),
         "attempts_used": len(opens), "attempt_limit": attempt_limit,
         "attempts_remaining": attempt_limit - len(opens),
         "replacements_used": replacements, "replacement_limit": replacement_limit,
@@ -1386,7 +1615,7 @@ def repair_feasibility(ledger, manifest, assessment) -> dict:
         "fits_frozen_limits": bool(fits_money and fits_attempts and fits_replacements),
         "binding_constraint": ("the replacement allowance: %d replacement(s) remain against %d "
                                "cells that would have to be re-run"
-                               % (replacement_limit - replacements, len(unresolved))
+                               % (replacement_limit - replacements, len(needing))
                                if not fits_replacements else
                                "none: the repair fits every frozen limit"),
         "consequence": ("Section 6 governs: when required invalidation exceeds the allowance, "
@@ -1473,7 +1702,8 @@ def build_reconciliation(ledger, manifest, evidence: Path, assessment, bundle: P
         },
         "conservative_bounds": bounds,
         "attempts": rows,
-        "discrepancies": ledger_discrepancies(ledger, manifest, published_digest, live_digest, rows),
+        "discrepancies": ledger_discrepancies(ledger, manifest, published_digest, live_digest, rows)
+                         + assessment_discrepancies(assessment),
         "repair": repair_feasibility(ledger, manifest, assessment),
     }
 
@@ -1569,6 +1799,8 @@ def build_manifest(assessment, reconciliation, bundle: Path, frozen) -> dict:
                 "is_replacement": attempt["ordinal"] > 1,
                 "operational_validity": attempt["operational_validity"],
                 "validity_basis": attempt["validity_basis"],
+                "invalidated_by": attempt.get("invalidated_by"),
+                "replacement_eligible": attempt.get("replacement_eligible", False),
                 "completion": completion,
                 "settled_usd": charge.get("ledger_settled_usd") or attempt.get("settled_usd"),
                 "reconciles_with_ledger": charge.get("reconciles"),
@@ -1768,6 +2000,7 @@ def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
             "valid": len(assessment["valid"]),
             "unresolved": len(assessment["unresolved"]),
             "invalid": len(assessment["invalid"]),
+            "replacement_eligible": assessment.get("replacement_eligible") or [],
             "observed_violations": assessment["observed_violations"],
             "missing_evidence": assessment["missing_evidence"],
             "effect_on_grading": assessment["effect_on_grading"],
@@ -1805,15 +2038,21 @@ def build_handoff(gate, assessment, reconciliation, cell_manifest, packet_index,
         "next_stage": {
             "tickets": [152, 153],
             "work": ("#152 grades the available claims from the sealed packets and may finish "
-                     "even though zero further cells ran. It must carry the unresolved fidelity "
-                     "status and the accounting discrepancies into its rulings rather than "
-                     "treating any attempt as a valid completed outcome. #153 applies "
-                     "conservative decision limits and opens the redaction map at reveal."),
+                     "even though zero further cells ran. Its adjudicator receives the packets "
+                     "and nothing operational - no arm, model, replicate, validity, completion, "
+                     "cost or fidelity status, and no accounting discrepancy - until every "
+                     "ruling is frozen and hashed. Its coordinator keeps this closeout's "
+                     "fidelity assessment and reconciliation beside the ruling table, not "
+                     "inside it. #153 joins operational validity and cost to the frozen "
+                     "rulings, applies the conservative decision limits, and opens the "
+                     "redaction map at reveal."),
             "must_not": [
                 "dispatch any of the eighteen unattempted cells from this handoff",
                 "treat an unresolved attempt as a valid completed outcome",
                 "read a budget stop as infrastructure invalidity, or reset an attempt count",
                 "open the redaction map before rulings are frozen",
+                "supply the fidelity status, validity labels, costs or accounting discrepancies "
+                "to the adjudicator before its rulings freeze",
                 "grade this closeout's own outcomes",
             ],
         },
@@ -1895,7 +2134,8 @@ def command_gate_supplement(args) -> int:
     stray = [line for line in sweep.get("stdout", "").splitlines()
              if line.strip() and not (excluded and line.startswith(excluded))]
 
-    passed = not present and not stray and bool(sweep.get("ran"))
+    swept = probe_completed(sweep)
+    passed = not present and not stray and swept
     record = {
         "schema_version": "bounded-discovery-v1",
         "artifact_id": "issue-151-stop-gate-supplement",
@@ -1913,6 +2153,8 @@ def command_gate_supplement(args) -> int:
         "roots_present": present,
         "sweep_command": sweep.get("command"),
         "sweep_ran": bool(sweep.get("ran")),
+        "sweep_exit_code": sweep.get("exit_code"),
+        "sweep_completed": swept,
         "sweep_match_count": len(stray),
         "sweep_output_sha256": digest(sweep.get("stdout", "") + sweep.get("stderr", "")),
         "excluded_prefix": ("this closeout's own read-only extract of the sealed evidence"
@@ -1921,8 +2163,10 @@ def command_gate_supplement(args) -> int:
         "ledger_unchanged_since_the_gate": ledger_digest == args.ledger_sha256
                                            if args.ledger_sha256 else None,
         "passed": passed,
-        "detail": ("no configured cell root exists and no attempt workspace survives under the "
-                   "swept paths" if passed else
+        "detail": ("no configured cell root exists and a completed sweep found no attempt "
+                   "workspace under the swept paths" if passed else
+                   ("the sweep did not complete (exit %s), so absence beyond the configured "
+                    "roots is unestablished" % sweep.get("exit_code")) if not swept else
                    "a cell root or an attempt workspace still exists"),
     }
     write(args.out, record)
@@ -1946,6 +2190,15 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--raw-out", help="write the raw probe capture here (not for the repository)")
     gate.add_argument("--out", required=True)
     gate.set_defaults(handler=command_gate)
+
+    rescore = sub.add_parser("gate-re-evaluate",
+                             help="re-score a recorded gate's captured probes under current rules")
+    rescore.add_argument("--gate", required=True)
+    rescore.add_argument("--raw-capture", required=True)
+    rescore.add_argument("--ledger", required=True)
+    rescore.add_argument("--cells-root", required=True)
+    rescore.add_argument("--out", required=True)
+    rescore.set_defaults(handler=command_gate_re_evaluate)
 
     seal = sub.add_parser("open-seal", help="decrypt the pilot evidence after the gate")
     seal.add_argument("--gate", required=True)
@@ -2075,6 +2328,14 @@ def self_test() -> int:
                     "workspaces": {"command": ["find"], "exit_code": 0, "ran": True,
                                    "stdout": "", "stderr": ""}}
 
+    def run_gate(probes_name, ledger_name="ledger.json", root="absent-cells", out="g.json"):
+        return subprocess.run([sys.executable, str(Path(__file__).resolve()), "gate",
+                               "--ledger", str(tmp / ledger_name),
+                               "--probes-from", str(tmp / probes_name),
+                               "--cells-root", str(tmp / root),
+                               "--out", str(tmp / out)],
+                              capture_output=True, text=True, encoding="utf-8")
+
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         ledger = ledger_with([
@@ -2162,7 +2423,68 @@ def self_test() -> int:
                                "--cells-root", str(tmp / "present-cells"),
                                "--out", str(tmp / "gate6.json")],
                               capture_output=True, text=True, encoding="utf-8")
-        check("a surviving cell workspace fails the gate", code.returncode == 1)
+        check("a surviving cell workspace is reported as unestablished corroboration",
+              code.returncode == 0
+              and json.loads((tmp / "gate6.json").read_text(encoding="utf-8"))[
+                  "unestablished_corroboration"] == ["no live cell workspace remains"])
+
+        # A probe that did not complete establishes nothing, whatever it printed.
+        for name, field, probe, expect_required in (
+                ("ps-missing", "processes",
+                 {"command": ["ps"], "exit_code": None, "ran": False, "stdout": "",
+                  "stderr": "command not found"}, True),
+                ("docker-denied", "containers",
+                 {"command": ["docker", "ps"], "exit_code": 1, "ran": True, "stdout": "",
+                  "stderr": "permission denied while trying to connect to the Docker daemon "
+                            "socket"}, True),
+                ("find-partial", "workspaces",
+                 {"command": ["find"], "exit_code": 1, "ran": True, "stdout": "",
+                  "stderr": "find: /Users/x/Music: Operation not permitted"}, False)):
+            broken = json.loads(json.dumps(quiet_probes))
+            broken[field] = probe
+            (tmp / (name + ".json")).write_text(json.dumps(broken), encoding="utf-8")
+            code = run_gate(name + ".json", out=name + "-gate.json")
+            result = json.loads((tmp / (name + "-gate.json")).read_text(encoding="utf-8"))
+            failed = [c for c in result["checks"] if not c["passed"]]
+            check("%s: the check whose probe did not complete does not pass" % name,
+                  len(failed) == 1 and failed[0]["probe_completed"] is False)
+            check("%s: a required probe failing shuts the gate; a corroborating one is "
+                  "reported unestablished" % name,
+                  (code.returncode == 1 and result["all_reviewers_stopped"] is False)
+                  if expect_required else
+                  (code.returncode == 0 and result["all_reviewers_stopped"] is True
+                   and result["every_check_established"] is False
+                   and result["unestablished_corroboration"] == ["no live cell workspace remains"]))
+        check("a daemon-refused container probe still counts as the runtime being down",
+              live_containers({"ran": True, "exit_code": 1, "stdout": "",
+                               "stderr": "failed to connect to the docker API"})["daemon_unreachable"])
+        check("a missing docker binary is not read as the runtime being down",
+              not live_containers({"ran": False, "exit_code": None, "stdout": "",
+                                   "stderr": "command not found"})["inspected"])
+
+        # Re-scoring a recorded gate keeps its instant and lists what moved.
+        (tmp / "old-gate.json").write_text(json.dumps({
+            "artifact_id": "issue-151-stop-gate", "observed_at": "2026-09-10T07:03:56Z",
+            "probes_captured_at": "2026-09-10T07:02:41Z", "all_reviewers_stopped": True,
+            "checks": [{"check": "no live cell workspace remains", "passed": True}]}),
+            encoding="utf-8")
+        code = subprocess.run([sys.executable, str(Path(__file__).resolve()),
+                               "gate-re-evaluate", "--gate", str(tmp / "old-gate.json"),
+                               "--raw-capture", str(tmp / "find-partial.json"),
+                               "--ledger", str(tmp / "ledger.json"),
+                               "--cells-root", str(tmp / "absent-cells"),
+                               "--out", str(tmp / "rescored.json")],
+                              capture_output=True, text=True, encoding="utf-8")
+        rescored = json.loads((tmp / "rescored.json").read_text(encoding="utf-8"))
+        check("re-scoring keeps the original timestamps",
+              rescored["observed_at"] == "2026-09-10T07:03:56Z"
+              and rescored["probes_captured_at"] == "2026-09-10T07:02:41Z")
+        check("re-scoring lists the check whose verdict moved",
+              [c["check"] for c in rescored["re_evaluation"]["checks_changed"]]
+              == ["no live cell workspace remains"]
+              and rescored["re_evaluation"]["checks_changed"][0]["now"] == "unestablished")
+        check("re-scoring with the required evidence intact still opens the gate",
+              code.returncode == 0 and rescored["all_reviewers_stopped"] is True)
 
         # A stray attempt workspace fails the gate even when the configured root is gone.
         stray_probes = json.loads(json.dumps(quiet_probes))
@@ -2175,7 +2497,10 @@ def self_test() -> int:
                                "--cells-root", str(tmp / "absent-cells"),
                                "--out", str(tmp / "gate7.json")],
                               capture_output=True, text=True, encoding="utf-8")
-        check("a stray attempt workspace fails the gate", code.returncode == 1)
+        check("a stray attempt workspace is reported, and does not itself shut the gate",
+              code.returncode == 0
+              and not [c for c in json.loads((tmp / "gate7.json").read_text(
+                  encoding="utf-8"))["checks"] if c["check"].startswith("no live cell")][0]["passed"])
 
         # An uncaptured sweep cannot establish absence.
         unswept = json.loads(json.dumps(quiet_probes))
@@ -2188,7 +2513,10 @@ def self_test() -> int:
                                "--cells-root", str(tmp / "absent-cells"),
                                "--out", str(tmp / "gate8.json")],
                               capture_output=True, text=True, encoding="utf-8")
-        check("an uncaptured workspace sweep fails the gate", code.returncode == 1)
+        check("an uncaptured workspace sweep is reported as unestablished corroboration",
+              code.returncode == 0
+              and json.loads((tmp / "gate8.json").read_text(encoding="utf-8"))[
+                  "every_check_established"] is False)
 
         # --- the fidelity assessment ---------------------------------------
         # A provider error writes an assistant line under `<synthetic>`. It must
@@ -2243,6 +2571,72 @@ def self_test() -> int:
         check("the surviving lines are still counted",
               assessed["dimensions"]["requested_and_observed_settings"]["roles"]["primary"][
                   "assistant_lines"] == 2)
+
+        # The per-role split is recovered from per-transcript costs by path.
+        split = {"per_role": {"unassigned": {"cost_usd": "3.845633"}},
+                 "per_transcript": {
+                     "/h/.claude/projects/-tmp-cells-position-01-work/root.jsonl":
+                         {"cost_usd": "3.221167"},
+                     "/h/.claude/projects/-tmp-cells-position-01-work/root/subagents/a.jsonl":
+                         {"cost_usd": "0.624466"},
+                     "/h/.claude/projects/-tmp-cells-position-01-finder-store/f.jsonl":
+                         {"cost_usd": "0.5"}}}
+        recovered = recover_role_costs(split)
+        check("per-role costs are recovered from the transcript paths",
+              {k: str(v) for k, v in recovered.items()}
+              == {"primary": "3.221167", "worker": "0.624466", "finder": "0.5"})
+        (evidence / "artifacts" / "usage-split.json").write_text(json.dumps(split),
+                                                                 encoding="utf-8")
+        assessed = assess_attempt({"position": 9, "ordinal": 1, "root": evidence,
+                                   "kind": "settled"},
+                                  {"arms": {"A": {"primary": {"model": "claude-sonnet-5",
+                                                              "effort": "high"}}},
+                                   "limits": {}}, {}, None)
+        usage = assessed["dimensions"]["usage_completeness"]
+        check("a recovered split makes usage completeness established, with the residual "
+              "unassigned",
+              usage["verdict"] == "established"
+              and usage["per_role_recovered_usd"]["primary"] == "3.221167"
+              and usage["unassigned_residual_usd"] is not None
+              and GAP_PER_ROLE_SPLIT not in assessed["missing_evidence"])
+
+        # A read outside the permitted roots that settlement accepted is still a
+        # violation under the frozen rule, and earns a replacement.
+        strict = tmp / "synthetic-evidence" / "position-10"
+        (strict / "artifacts").mkdir(parents=True)
+        (strict / "transcripts" / "-p").mkdir(parents=True)
+        (strict / "transcripts" / "-p" / "root.jsonl").write_text(
+            "\n".join(lines[:3]) + "\n", encoding="utf-8")
+        (strict / "artifacts" / "settle.json").write_text(json.dumps(
+            {"attempt_id": "issue-138-y-attempt-1", "position": 10, "arm": "B",
+             "settled_usd": "1.00", "completion": "complete"}), encoding="utf-8")
+        for name in ("isolation-pre", "isolation-post", "attestation"):
+            (strict / "artifacts" / (name + ".json")).write_text(json.dumps({"ready": True}),
+                                                                  encoding="utf-8")
+        (strict / "artifacts" / "read-audit.json").write_text(json.dumps(
+            {"passed": True, "paths_outside_permitted_roots": [],
+             "accepted_hits": [{"path": "/tmp/scratch.txt", "via": "Bash",
+                                "reason": "content came from the clone"}]}), encoding="utf-8")
+        assessed = assess_attempt({"position": 10, "ordinal": 1, "root": strict,
+                                   "kind": "settled"},
+                                  {"arms": {"B": {"primary": {"model": "claude-sonnet-5",
+                                                              "effort": "high"}}},
+                                   "limits": {}}, {}, None)
+        check("an accepted out-of-root read is invalidating under the frozen rule",
+              assessed["operational_validity"] == "invalid"
+              and assessed["invalidated_by"] == "this assessment"
+              and "section 5" in assessed["validity_basis"])
+        check("protocol invalidity found here is replacement-eligible",
+              assessed["replacement_eligible"] is True)
+        check("the recorded acceptance is preserved, not erased",
+              assessed["dimensions"]["isolation"]["read_audit_passed_as_recorded"] is True
+              and assessed["dimensions"]["isolation"]["accepted_reads_outside_permitted_roots"] == 1)
+        spoken = decision_text("unresolved", [assessed], assessed["violations"])
+        check("the decision says this assessment invalidated it",
+              "this assessment invalidates it" in spoken and "replacement-eligible" in spoken)
+        check("the ledger disagreement is recorded as a discrepancy",
+              [d["id"] for d in assessment_discrepancies({"attempts": [assessed]})]
+              == ["ledger/attempt-close-differs-from-assessment"])
 
         check("a sub-agent transcript is a worker",
               role_of("/x/transcripts/-p/uuid/subagents/agent-1.jsonl") == "worker")
@@ -2335,7 +2729,7 @@ def self_test() -> int:
                       "uncertainty_usd": "0.16", "grading_closeout_reserve_usd": "10.00",
                       "attempt_limit": 27, "replacement_limit": 3})
         feasible = repair_feasibility(money, {}, {
-            "unresolved": ["p1", "p2", "p3"],
+            "unresolved": ["p1", "p2"], "replacement_eligible": ["p3"],
             "attempts": [{"attempt_ref": "p1", "settled_usd": "4.00"},
                          {"attempt_ref": "p2", "settled_usd": "4.00"},
                          {"attempt_ref": "p3", "settled_usd": "4.00"}]})
@@ -2343,6 +2737,9 @@ def self_test() -> int:
               feasible["remaining_under_cap_usd"] == "92.84")
         check("a replacement is counted from the attempt ordinal in its id",
               feasible["replacements_used"] == 1 and feasible["attempts_used"] == 2)
+        check("a repair counts the replacement-eligible invalid attempts too",
+              feasible["cells_a_repair_would_run"] == 3
+              and feasible["replacement_eligible_invalid"] == 1)
         check("a repair that needs more replacements than remain does not fit",
               feasible["fits_money"] is True
               and feasible["fits_replacement_allowance"] is False
@@ -2356,11 +2753,12 @@ def self_test() -> int:
         (tmp / "gate-for-supplement.json").write_text(
             json.dumps({"artifact_id": "issue-151-stop-gate",
                         "observed_at": "2026-09-10T07:03:56Z"}), encoding="utf-8")
+        (tmp / "sweep-root").mkdir()
         code = subprocess.run([sys.executable, str(Path(__file__).resolve()), "gate-supplement",
                                "--gate", str(tmp / "gate-for-supplement.json"),
                                "--ledger", str(tmp / "ledger.json"),
                                "--cells-root", str(tmp / "absent-a"), str(tmp / "absent-b"),
-                               "--sweep", str(tmp / "absent-a"),
+                               "--sweep", str(tmp / "sweep-root"),
                                "--out", str(tmp / "supplement.json")],
                               capture_output=True, text=True, encoding="utf-8")
         check("an absent cell root passes the supplementary check", code.returncode == 0)
@@ -2377,6 +2775,16 @@ def self_test() -> int:
                                "--out", str(tmp / "supplement2.json")],
                               capture_output=True, text=True, encoding="utf-8")
         check("a surviving cell root fails the supplementary check", code.returncode == 1)
+        code = subprocess.run([sys.executable, str(Path(__file__).resolve()), "gate-supplement",
+                               "--gate", str(tmp / "gate-for-supplement.json"),
+                               "--ledger", str(tmp / "ledger.json"),
+                               "--cells-root", str(tmp / "absent-a"),
+                               "--sweep", str(tmp / "sweep-root"), "/nonexistent-sweep-root",
+                               "--out", str(tmp / "supplement3.json")],
+                              capture_output=True, text=True, encoding="utf-8")
+        check("a sweep that did not complete fails the supplementary check",
+              code.returncode == 1 and json.loads((tmp / "supplement3.json").read_text(
+                  encoding="utf-8"))["sweep_completed"] is False)
 
         # --- the decision text, which must never deny what was found -----------
         clean = [{"attempt_ref": "position-01-attempt-1", "violations": [],
@@ -2385,7 +2793,7 @@ def self_test() -> int:
               "No attempt shows an observed" in decision_text("unresolved", clean, []))
         dirty = [{"attempt_ref": "position-03-attempt-1",
                   "violations": ["no barrier freeze artifact was written before admission"],
-                  "operational_validity": "invalid"},
+                  "operational_validity": "invalid", "invalidated_by": "recorded basis"},
                  {"attempt_ref": "position-04-attempt-1", "violations": [],
                   "operational_validity": "unresolved"}]
         spoken = decision_text("unresolved", dirty,
@@ -2423,6 +2831,7 @@ def self_test() -> int:
                      "checks": [{"passed": True}]}
         stub_assessment = {"finding_id": "pilot/actual-fidelity", "status": "unresolved",
                            "decision": "d", "valid": [], "unresolved": ["p1"], "invalid": [],
+                           "replacement_eligible": [],
                            "observed_violations": [], "missing_evidence": ["m"],
                            "effect_on_grading": "e"}
         stub_reconciliation = {
@@ -2453,6 +2862,10 @@ def self_test() -> int:
         check("the handoff names what the next stage must not do",
               any("valid completed outcome" in line for line in handoff["next_stage"]["must_not"]))
         check("the handoff reports no arm comparison", "better or worse" in handoff["claims_note"])
+        check("the handoff keeps operational metadata out of the adjudicator's inputs",
+              "beside the ruling table, not inside it" in handoff["next_stage"]["work"]
+              and any("before its rulings freeze" in line
+                      for line in handoff["next_stage"]["must_not"]))
 
         # The seal cannot be opened against a gate that did not pass.
         (tmp / "shut.json").write_text(json.dumps(
@@ -2468,7 +2881,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (68, len(failures)))
+    print("%d checks, %d failures" % (87, len(failures)))
     return 1 if failures else 0
 
 
