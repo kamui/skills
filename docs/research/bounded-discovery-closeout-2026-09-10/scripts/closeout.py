@@ -906,9 +906,14 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
         role = role_of(path)
         expect = expected_settings(manifest, arm, role)
         verdict = settings_verdict(scan, expect)
-        by_role.setdefault(role, []).append({"role": role, "expected": expect,
-                                             "observed": verdict, "fresh": scan.get("fresh_context"),
-                                             "assistant_lines": scan.get("assistant_lines")})
+        by_role.setdefault(role, []).append({
+            "role": role, "expected": expect, "observed": verdict,
+            "fresh": scan.get("fresh_context"),
+            "assistant_lines": scan.get("assistant_lines"),
+            # Carried so the count of dropped provider-error lines is reported
+            # rather than silently read as zero: a document whose purpose is to
+            # say what was excluded cannot have a counter that never moves.
+            "synthetic_error_lines": scan.get("synthetic_error_lines") or 0})
         expectations[role] = expect
         verdicts.setdefault(role, []).append(verdict)
 
@@ -2215,6 +2220,30 @@ def self_test() -> int:
         check("a resumed or summarised session is not a fresh context",
               scan_transcript(tmp / "r.jsonl")["fresh_context"] is False)
 
+        lines = [json.dumps({"type": "user", "parentUuid": None})]
+        lines += [json.dumps({"type": "assistant",
+                              "message": {"model": "claude-sonnet-5", "effort": "high"}})] * 2
+        lines.append(json.dumps({"type": "assistant", "message": {"model": "<synthetic>"}}))
+        evidence = tmp / "synthetic-evidence" / "position-09"
+        (evidence / "artifacts").mkdir(parents=True)
+        (evidence / "transcripts" / "-p").mkdir(parents=True)
+        (evidence / "transcripts" / "-p" / "root.jsonl").write_text("\n".join(lines) + "\n",
+                                                                    encoding="utf-8")
+        (evidence / "artifacts" / "settle.json").write_text(json.dumps(
+            {"attempt_id": "issue-138-x-attempt-1", "position": 9, "arm": "A",
+             "settled_usd": "1.00", "completion": "complete"}), encoding="utf-8")
+        assessed = assess_attempt({"position": 9, "ordinal": 1, "root": evidence,
+                                   "kind": "settled"},
+                                  {"arms": {"A": {"primary": {"model": "claude-sonnet-5",
+                                                              "effort": "high"}}},
+                                   "limits": {}}, {}, None)
+        check("dropped provider-error lines reach the assessment, not just the scanner",
+              assessed["dimensions"]["requested_and_observed_settings"]["roles"]["primary"][
+                  "provider_error_lines_dropped"] == 1)
+        check("the surviving lines are still counted",
+              assessed["dimensions"]["requested_and_observed_settings"]["roles"]["primary"][
+                  "assistant_lines"] == 2)
+
         check("a sub-agent transcript is a worker",
               role_of("/x/transcripts/-p/uuid/subagents/agent-1.jsonl") == "worker")
         check("a finder-store transcript is the finder",
@@ -2439,7 +2468,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (66, len(failures)))
+    print("%d checks, %d failures" % (68, len(failures)))
     return 1 if failures else 0
 
 
