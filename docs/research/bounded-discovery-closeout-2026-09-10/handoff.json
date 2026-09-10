@@ -28,7 +28,7 @@
     "unattempted": 18
   },
   "claims_note": "No quality, recall or cost comparison appears in this closeout. No arm is described as better or worse, and the arm mapping stays sealed until #152 freezes its rulings.",
-  "created_at": "2026-09-10T07:28:15.823454+00:00",
+  "created_at": "2026-09-10T07:31:01.359545+00:00",
   "dispatch_authorized": false,
   "dispatch_hold": "held. This closeout authorises nothing to run. #151 launched no experimental reviewer run, and the eighteen unattempted cells stay unattempted.",
   "disposition": "closeout-delivered",
@@ -57,7 +57,14 @@
     "all_reviewers_stopped": true,
     "checks": 7,
     "observed_at": "2026-09-10T07:03:56.304298+00:00",
-    "recorded_before_the_seal_was_opened": true
+    "recorded_before_the_seal_was_opened": true,
+    "supplement": {
+      "observed_at": "2026-09-10T07:30:35.171806+00:00",
+      "passed": true,
+      "recorded_after_the_seal_was_opened": true,
+      "standing": "corroboration, not the gate. The checks that establish no reviewer is running - the process table, the container runtime and the ledger - were made before the seal was opened and are unchanged.",
+      "why": "the pilot's cell root was only readable from the evidence the gate released, so the gate checked a plausible root and a sweep that could not have reached the real one"
+    }
   },
   "next_stage": {
     "must_not": [
