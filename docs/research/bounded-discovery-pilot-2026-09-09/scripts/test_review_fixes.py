@@ -429,6 +429,27 @@ class ReviewFixes(unittest.TestCase):
         self.assertEqual(Decimal(ledger["uncertainty_usd"]), Decimal("0.4"))
         self.assertFalse(record["reservation_retained"])
 
+    def test_missing_report_with_worker_launch_keeps_reservation(self):
+        original_fixture = self.usage_fixture
+        def fixture(role):
+            path = original_fixture(role)
+            if role == "primary":
+                lines = path.read_text(encoding="utf-8").splitlines()
+                entry = json.loads(lines[0])
+                # A launch record can itself lack usage while other requests survive.
+                entry["message"].pop("usage")
+                entry["message"]["content"] = [{"type": "tool_use", "name": "Agent",
+                                                "id": "launched-verifier", "input": {}}]
+                lines[0] = json.dumps(entry)
+                path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            return path
+        with patch.object(self, "usage_fixture", side_effect=fixture):
+            record, ledger = self.settle_usage([self.phase(cost=0, envelope=False)],
+                                               finder={"cost_usd": 2}, roles=("primary", "finder"))
+        self.assertEqual(Decimal(ledger["reserved_usd"]), 11)
+        self.assertIsNone(record["settled_usd"])
+        self.assertTrue(record["reservation_retained"])
+
     def test_missing_resume_usage_keeps_reservation_until_phases_reconcile(self):
         record, ledger = self.settle_usage([self.phase(), self.phase(cost=0, envelope=False)],
                                            finder={"cost_usd": 2}, roles=("primary", "finder"))

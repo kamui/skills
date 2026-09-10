@@ -1414,6 +1414,11 @@ def largest_request(config, transcript, model):
         message = entry.get("message") or {}
         if not isinstance(message, dict):
             raise ValueError("malformed transcript message")
+        if any(block.get("type") == "tool_use" and block.get("name") in ("Agent", "Task")
+               for block in message.get("content", []) if isinstance(block, dict)):
+            # Without a parent envelope, retained child files cannot establish that
+            # every launched worker survived archival. Keep the reservation.
+            raise ValueError("worker launches need complete billing reconciliation")
         if (entry.get("type") != "assistant" or not isinstance(message.get("usage"), dict)
                 or entry.get("isApiErrorMessage") or message.get("model") == "<synthetic>"):
             continue

@@ -192,7 +192,9 @@ judgment into the handoff; it does not inspect seals or make the fidelity judgme
 When a single primary phase or finder has no self-report, settlement charges each worker group's
 larger observed subtotal and retains one extra request at each affected transcript's largest observed
 request cost. Streamed records are grouped before the retained usage helper prices them. Missing
-transcripts or prices keep the full reservation. A resumed primary with any missing phase report also
+transcripts or prices keep the full reservation. A worker with no self-report that launched other
+workers also keeps the reservation, since retained files cannot establish that every child survived
+archival. A resumed primary with any missing phase report also
 keeps the reservation because its shared transcript cannot separate the billed phases. Such records
 report `settled_usd: null` until reconciliation establishes a bound. None of these coordinator changes
 recomputes or clears the preserved pilot's historical accounting or fidelity.
