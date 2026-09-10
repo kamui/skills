@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import math
 import json
 import os
 import shutil
@@ -1105,7 +1106,8 @@ def run_phase(config, root, slot, row, label, argv) -> dict:
             "elapsed_seconds": round(time.time() - started, 3),
             "subtype": (found or {}).get("subtype"),
             "is_error": (found or {}).get("is_error"),
-            "cost_usd": float((found or {}).get("total_cost_usd") or 0.0),
+            "cost_usd": reported_cost({"cost_usd": (found or {}).get("total_cost_usd")}),
+            "reported_cost_valid": reported_cost({"cost_usd": (found or {}).get("total_cost_usd")}) is not None,
             "num_turns": (found or {}).get("num_turns"),
             "envelope": bool(found)}
 
@@ -1378,6 +1380,106 @@ def verify_models(config, root, row, transcripts) -> tuple:
     return results, problems
 
 
+def reported_cost(record):
+    """A missing or malformed envelope cost is unknown, including legacy records."""
+    value = record.get("cost_usd")
+    if record.get("envelope") is False or record.get("reported_cost_valid") is False:
+        return None
+    try:
+        cost = float(value)
+        return cost if not isinstance(value, bool) and math.isfinite(cost) and cost >= 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def largest_request(config, transcript, model):
+    """Group streamed records, then let the retained usage helper price each request."""
+    import importlib.util
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location(
+        "pilot_transcript_usage", Path(config["tools"]) / "transcript_usage.py")
+    usage = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(usage)
+    rate = load(Path(config["bundle"]) / "rates.json")["models"][model]
+    rates = usage.Rates((float(rate["input_usd_per_mtok"]), float(rate["output_usd_per_mtok"])),
+                        float(rate.get("cache_write_5m_mult", 1.25)),
+                        float(rate.get("cache_write_1h_mult", 2)),
+                        float(rate.get("cache_read_mult", 0.1)))
+    requests = {}
+    for index, line in enumerate(Path(transcript).read_text(encoding="utf-8").splitlines()):
+        entry = json.loads(line)
+        if not isinstance(entry, dict):
+            raise ValueError("malformed transcript entry")
+        message = entry.get("message") or {}
+        if not isinstance(message, dict):
+            raise ValueError("malformed transcript message")
+        if (entry.get("type") != "assistant" or not isinstance(message.get("usage"), dict)
+                or entry.get("isApiErrorMessage") or message.get("model") == "<synthetic>"):
+            continue
+        if message.get("model") != model:
+            raise ValueError("request model differs from the metered model")
+        requests.setdefault(entry.get("requestId") or ("line", index), []).append(line)
+    if not requests:
+        raise ValueError("no priced requests for missing usage")
+    costs = []
+    with tempfile.TemporaryDirectory(prefix="pilot-request-") as temp:
+        path = Path(temp) / "request.jsonl"
+        for lines in requests.values():
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            costs.append(usage.read_transcript(str(path)).cost_summary(rates)["high"])
+    return max(costs)
+
+
+def missing_usage_accounting(config, row, dispatched, split_document):
+    """Bound each worker independently, or keep the reservation for reconciliation.
+
+    A resumed primary has one cumulative transcript. Without every phase's report
+    it cannot be separated into billed phases, so that case retains its reservation.
+    Verifier usage belongs to the primary envelope; without it each retained worker
+    needs its own extra-request uncertainty.
+    """
+    phases = dispatched.get("phases", [])
+    finder = dispatched.get("finder") or {}
+    primary_missing = not phases or any(reported_cost(phase) is None for phase in phases)
+    finder_missing = row["arm"] == "C" and reported_cost(finder) is None
+    missing = (["primary"] if primary_missing else []) + (["finder"] if finder_missing else [])
+    answer = {"missing_usage": missing, "uncertainty_usd": "0.0000000",
+              "reservation_retained": bool(missing)}
+    if not missing or not phases or (primary_missing and len(phases) != 1) or not split_document:
+        return answer
+    groups = {"primary": [], "finder": []}
+    for path, entry in split_document.get("per_transcript", {}).items():
+        role = role_of(path, row)
+        if role == "unattributed":
+            return answer
+        groups["finder" if role == "finder" else "primary"].append((path, entry))
+    if primary_missing and not any(role_of(path, row) == "primary" for path, _ in groups["primary"]):
+        return answer
+    if finder_missing and not groups["finder"]:
+        return answer
+    from decimal import Decimal, ROUND_CEILING
+    cost, uncertainty = 0.0, Decimal(0)
+    try:
+        for role, members in groups.items():
+            observed = sum(float(entry["cost_usd"]) for _, entry in members)
+            reports = (sum(reported_cost(phase) or 0 for phase in phases) if role == "primary"
+                       else reported_cost(finder) or 0)
+            cost += max(reports, observed)
+            if role in missing:
+                uncertainty += sum(Decimal(str(largest_request(config, path, entry["model"])))
+                                   for path, entry in members)
+        if not math.isfinite(cost) or not uncertainty.is_finite() or cost < 0 or uncertainty <= 0:
+            return answer
+    except (Failed, OSError, ValueError, KeyError, TypeError, SystemExit):
+        return answer
+    # Round the bound upward so decimal serialization cannot release a fraction.
+    answer.update(reservation_retained=False, metered_usd=cost,
+                  uncertainty_usd=str(uncertainty.quantize(
+                      Decimal("0.0000001"), rounding=ROUND_CEILING)))
+    return answer
+
+
 def settle(config, position, attempt=1):
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
@@ -1446,8 +1548,9 @@ def settle(config, position, attempt=1):
         problems.extend(fidelity_problems)
 
     # Price each transcript at its own model's rate and sum the groups.
-    self_report = sum(phase.get("cost_usd") or 0.0 for phase in dispatched.get("phases", []))
-    self_report += float((dispatched.get("finder") or {}).get("cost_usd") or 0.0)
+    (root / "artifacts" / "usage-split.json").unlink(missing_ok=True)
+    self_report = sum(reported_cost(phase) or 0.0 for phase in dispatched.get("phases", []))
+    self_report += reported_cost(dispatched.get("finder") or {}) or 0.0
     if transcripts:
         split = run(sys.executable,
                     str(Path(config["bundle"]) / "scripts" / "meter_split.py"),
@@ -1511,6 +1614,7 @@ def settle(config, position, attempt=1):
     # untranscripted model, and whatever is left unexplained.
     metered = self_report
     transcript_total = None
+    split_document = None
     try:
         split_document = load(root / "artifacts" / "usage-split.json")
         transcript_total = float(split_document.get("total_cost_usd") or 0.0)
@@ -1520,6 +1624,10 @@ def settle(config, position, attempt=1):
         record["models_priced"] = sorted(split_document.get("per_model", {}))
     except Failed:
         problems.append("no usage split was produced")
+
+    missing = missing_usage_accounting(config, row, dispatched, split_document)
+    record.update(missing)
+    metered = max(metered, missing.get("metered_usd", 0))
 
     envelope_models = {}
     for result_file in sorted((root / "artifacts").glob("*-result.json")):
@@ -1563,22 +1671,30 @@ def settle(config, position, attempt=1):
     if already:
         record["ledger_already_settled_usd"] = already["actual_delta_usd"]
         record["ledger_settled_at"] = already["observed_at"]
+        if (missing["reservation_retained"]
+                or abs(float(already.get("uncertainty_usd", 0)) - float(missing["uncertainty_usd"])) > 0.00000005):
+            problems.append("existing settlement does not cover the current missing-usage bound; reconcile the ledger")
         if abs(float(already["actual_delta_usd"]) - metered) > 0.0000005:
             problems.append("the ledger settled %s for this attempt but metering now says "
                             "%.7f; the ledger is append-only and stands"
                             % (already["actual_delta_usd"], metered))
-    elif (dispatched.get("finder") or {}).get("reported_cost_valid") is False:
-        problems.append("finder cost is unavailable; retain the reservation until billing is reconciled")
-        record["reservation_retained"] = True
+    elif missing["reservation_retained"]:
+        problems.append("worker or phase usage cannot establish a bound; retain the reservation until billing is reconciled")
+        record["observed_cost_usd"] = record["settled_usd"]
+        record["settled_usd"] = None
     else:
         budget = Path(config["targets"]).parent / "scripts" / "budget.py"
         settled = run(sys.executable, str(budget), config["ledger"], "settle",
                       "--id", reservation_id,
                       "--amount", "%.7f" % metered, "--phase", "review",
+                      "--uncertainty", missing["uncertainty_usd"],
                       "--attempt", row["attempt_id"], "--ticket", "150",
                       "--evidence", "metered from the retained per-request records and the "
                                     "result envelopes of cell %s" % row["cell_id"], check=False)
         if settled.returncode:
+            record["reservation_retained"] = True
+            record["observed_cost_usd"] = record["settled_usd"]
+            record["settled_usd"] = None
             problems.append("ledger settlement refused: %s"
                             % (settled.stdout or settled.stderr).strip())
     ledger_now = load(config["ledger"])

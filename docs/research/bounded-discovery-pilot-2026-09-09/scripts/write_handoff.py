@@ -12,6 +12,11 @@ covers the rest of the grid. Anything else is a ``stopped-*`` disposition naming
 the reason, because a partial pilot reported as a success would authorise eighteen
 more cells on evidence that does not support them.
 
+The fidelity input records a researcher judgment. Clearance requires status
+``cleared``, a nonempty list of ``evidence`` references and a ``rationale``. Missing
+or unresolved judgments stop dispatch. The helper does not inspect sealed evidence
+or decide whether fidelity has been established.
+
 Like every other public artifact here, cells are named by schedule position and
 never by slot: the selection rule is public, so naming the pilot's slots would
 disclose which slot holds the clean control.
@@ -19,7 +24,7 @@ disclose which slot holds the clean control.
 Usage::
 
     python3 write_handoff.py --config pilot-config.json --bundle BUNDLE \\
-        [--seal BUNDLE/sealed/seal.json] --out BUNDLE/handoff.json
+        [--fidelity-review BUNDLE/fidelity-review.json] [--seal BUNDLE/sealed/seal.json] --out BUNDLE/handoff.json
     python3 write_handoff.py --self-test
 
 Exit: 0 on success, 1 on a content violation with one line per violation on
@@ -252,6 +257,8 @@ def main(argv=None):
     parser.add_argument("--out")
     parser.add_argument("--extra-attempts",
                         help="JSON list of attempts with no summary, such as an aborted launch")
+    parser.add_argument("--fidelity-review",
+                        help="recorded fidelity judgment; defaults to BUNDLE/fidelity-review.json")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
     if args.self_test:
@@ -271,6 +278,15 @@ def main(argv=None):
     occupied = usd(ledger["actual_usd"]) + usd(ledger["reserved_usd"]) + usd(ledger["uncertainty_usd"])
     remaining = cap - protected - occupied
     disposition, blockers, incomplete = decide(cells, remaining)
+    fidelity = load(args.fidelity_review or Path(args.bundle) / "fidelity-review.json",
+                    {"status": "blocked", "reason": "historical fidelity has not been verified"})
+    cleared = (fidelity.get("status") == "cleared"
+               and isinstance(fidelity.get("evidence"), list) and bool(fidelity["evidence"])
+               and all(isinstance(ref, str) and ref.strip() for ref in fidelity["evidence"])
+               and isinstance(fidelity.get("rationale"), str) and bool(fidelity["rationale"].strip()))
+    if not cleared:
+        blockers.append("historical fidelity remains unverified; #151 must not dispatch until an evidence-backed clearance is recorded")
+        disposition = "stopped-incomplete"
     money = affordability(cells, remaining)
     attempt_rows = attempt_records(args.bundle, extra)
     setup = setup_charges(ledger)
@@ -287,6 +303,7 @@ def main(argv=None):
         "created_at": datetime.now(timezone.utc).isoformat(),
         "disposition": disposition,
         "blockers": blockers,
+        "fidelity_review": fidelity,
         "available_claims": [],
         "claims_note": "No quality, recall or cost comparison is reported here. The pilot's "
                        "outcomes stay sealed until every reviewer run has stopped, and no arm "
@@ -309,11 +326,12 @@ def main(argv=None):
         "sealed_evidence": seal,
         "next_stage": {
             "tickets": [151, 152],
-            "work": "#151 runs the grid cells under the same frozen rules and the same "
-                    "container isolation deviation, appending to the same ledger chain, which "
-                    "now lives in evaluator storage because its attempt IDs name slots. #152 "
-                    "adjudicates and scores once every reviewer run has stopped. Neither may "
-                    "read the sealed pilot outcomes before then.",
+            "work": ("#151 may run grid cells under the frozen rules and container isolation deviation, "
+                     "appending to the same ledger chain in evaluator storage. " if cleared else
+                     "#151 must assemble stopped closeout until an evidence-backed historical fidelity clearance is recorded. ")
+                    + "#152 adjudicates and scores once every reviewer run has stopped. Neither may read "
+                    "sealed pilot outcomes before then. Operational verification may use an extract "
+                    "that reveals no comparative outcomes.",
             "budget_warning": money["warning"],
         },
     }
