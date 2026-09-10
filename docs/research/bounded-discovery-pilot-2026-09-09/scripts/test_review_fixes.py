@@ -157,6 +157,54 @@ class ReviewFixes(unittest.TestCase):
         self.assertIn("stopped_at", record)
         self.assertIsNone(runner.load(self.root / "work" / "timing.json")["completed_at"])
 
+    def test_finder_budget_envelope_does_not_require_claims(self):
+        process = self.fake_finder()
+        envelope = {"type": "result", "subtype": "error_max_budget_usd", "is_error": True,
+                    "total_cost_usd": 2.01, "result": "unfinished"}
+        process.communicate.return_value = (json.dumps(envelope), None)
+        with patch.object(self, "fake_finder", return_value=process):
+            record, _, launches, _, _ = self.dispatch([self.phase()])
+        self.assertEqual(record["completion"], "stopped-budget")
+        self.assertEqual(len(launches), 1)
+        self.assertFalse(record["problems"])
+        self.assertFalse(record["finder"]["problems"])
+        self.assertIn("exhausted", record["stop_reason"])
+
+    def test_refused_reservation_closes_budget_without_worker_usage(self):
+        self.fresh_ledger()
+        self.row["arm"] = "A"
+        # Exhaust the spendable allowance with another reservation.
+        budget = runner.budget_module(self.config)
+        budget.transact(self.config["ledger"], "reserve", "occupied", "140", evidence="test")
+        # dispatch needs this synthetic slot's manifest; the frozen budget module
+        # location is supplied separately while using the real claim and reserve.
+        self.config["targets"] = str(self.base / "targets")
+        real_run = runner.run
+        def run(*command, **kwargs):
+            if len(command) > 1 and Path(command[1]).name == "budget.py":
+                command = (command[0], str(SCRIPTS.parents[1] / "bounded-discovery-prototype" / "scripts" / "budget.py"), *command[2:])
+            return real_run(*command, **kwargs)
+        with patch.object(runner, "schedule_row", return_value=self.row), \
+             patch.object(runner, "budget_module", return_value=budget), \
+             patch.object(runner, "run", side_effect=run), \
+             patch.object(runner, "specs", return_value=({}, {"permitted_roots": []})), \
+             patch.object(runner, "proxy_start", return_value=(Mock(), None)), \
+             patch.object(runner, "record_mounts", return_value=True), \
+             patch.object(runner, "isolation_phase", return_value=result()), \
+             patch.object(runner, "run_phase") as phase:
+            self.assertEqual(runner.dispatch(self.config, 99), 0)
+            record = runner.load(self.root / "artifacts" / "dispatch.json")
+            self.assertTrue(record["reservation_refused"])
+            self.assertFalse(record["problems"])
+            phase.assert_not_called()
+            self.assertEqual(runner.settle(self.config, 99), 0)
+        closed = runner.load(self.config["ledger"])["events"][-1]
+        self.assertEqual(closed["operation"], "attempt-close")
+        self.assertEqual(closed["disposition"], "stopped-budget")
+        saved = runner.load(self.root / "artifacts" / "settle.json")
+        self.assertEqual(saved["operational_validity"], "valid")
+        self.assertEqual(saved["settled_usd"], "0.0000000")
+
     def test_primary_error_envelope_stops_before_resume(self):
         record, finder, launches, _, isolation = self.dispatch([
             self.phase(subtype="error_during_execution", code=1), self.phase()])
