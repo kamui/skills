@@ -868,8 +868,9 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
                               "ceilings, reserved before launch"
                               % (row["cell_id"], row["attempt_id"]))
         if reservation.returncode:
-            problems.append("ledger reservation refused: %s"
-                            % (reservation.stdout or reservation.stderr).strip())
+            result["stop_reason"] = ("ledger reservation refused: %s"
+                                     % (reservation.stdout or reservation.stderr).strip())
+            result["reservation_refused"] = True
             result["disposition"] = "stopped-budget"
             raise DispatchStopped()
         result["reservation"] = (reservation.stdout or "").strip()
@@ -928,6 +929,11 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
                 0, FINDER_WALL_SECONDS - (time.time() - dispatched)))
             finder = None
             finder_envelope = load(root / "artifacts" / "finder-result.json", {})
+            if finder_envelope.get("subtype") == "error_max_budget_usd":
+                result["stop_reason"] = "the finder exhausted its frozen dollar allowance"
+                result["disposition"] = "stopped-budget"
+                problems.extend(result["finder"]["problems"])
+                raise DispatchStopped()
             claims, finder_problems = finder_claims(finder_envelope.get("result", ""))
             finder_cost = result["finder"]["cost_usd"]
             finder_problems.extend(result["finder"]["problems"])
@@ -939,8 +945,7 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
                 result["disposition"] = "stopped-finder"
                 raise DispatchStopped()
             if finder_envelope.get("subtype") != "success" or finder_envelope.get("is_error"):
-                result["disposition"] = ("stopped-budget" if finder_envelope.get("subtype") ==
-                                         "error_max_budget_usd" else "stopped-finder")
+                result["disposition"] = "stopped-finder"
                 problems.append("the finder did not complete successfully")
                 raise DispatchStopped()
             if claims.get("packet_sha256") != prepared["packet_sha256"]:
@@ -1390,7 +1395,29 @@ def settle(config, position, attempt=1):
               # Derived here as well as at dispatch, so a record written before this
               # rule existed is still classified by it.
               "completion": attempt_completion(dispatched),
-              "stopped_at": dispatched.get("stopped_at")}
+              "stopped_at": dispatched.get("stopped_at"),
+              "dispatch_stop_reason": dispatched.get("stop_reason")}
+
+    if dispatched.get("reservation_refused"):
+        # No worker was launched and no reservation exists to settle. This still
+        # closes the claimed attempt without treating absent usage as a defect.
+        if dispatched.get("phases") or transcripts_for(root):
+            raise Failed("reservation refusal contains worker evidence; reconcile before closeout")
+        closure = "stopped-invalid" if problems else "stopped-budget"
+        ledger = load(config["ledger"])
+        closed = next((event for event in ledger["events"]
+                       if event.get("operation") == "attempt-close"
+                       and event.get("attempt_id") == row["attempt_id"]), None)
+        if closed is None:
+            close_attempt(config, row, closure)
+        elif closed["disposition"] != closure:
+            raise Failed("the existing attempt closure differs from this refusal record")
+        record.update(operational_validity="invalid" if problems else "valid",
+                      attempt_closed_as=closure, transcript_count=0, self_report_usd="0.0000000",
+                      settled_usd="0.0000000", reservation_refused=True,
+                      duration_censored=True, elapsed_seconds=0, problems=problems)
+        write(root / "artifacts" / "settle.json", record)
+        return 1 if problems else 0
 
     transcripts = transcripts_for(root)
     record["transcript_count"] = len(transcripts)
