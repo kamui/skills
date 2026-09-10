@@ -113,10 +113,18 @@
   "probes_captured_at": "2026-09-10T07:03:47.302136+00:00",
   "raw_capture": "retained outside the repository and sealed with the closeout evidence: a process command line or a container name can contain a slot",
   "re_evaluation": {
-    "checks_changed": [],
+    "checks_changed": [
+      {
+        "check": "no live cell workspace remains",
+        "class": "corroborating",
+        "now": "unestablished",
+        "was": "passed",
+        "why": "the configured cell root does not exist, but the sweep did not complete (exit 1): directories it could not enter were not swept, so absence beyond that root is unestablished"
+      }
+    ],
     "note": "Scored from the probes captured at 2026-09-10T07:03:47.302136+00:00, at the original instant. The timestamps are the original ones; only the scoring rule moved.",
     "original_all_reviewers_stopped": true,
-    "re_evaluated_at": "2026-09-10T08:50:44.600104+00:00",
+    "re_evaluated_at": "2026-09-10T08:57:16.595339+00:00",
     "rule_change": "a probe that did not run or exited non-zero no longer passes its check on empty output; checks are classed as required or corroborating; the required ones must all pass, a corroborating check that could not establish absence decides nothing, and one that positively detected a workspace shuts the gate"
   },
   "schema_version": "bounded-discovery-v1",
