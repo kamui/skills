@@ -927,26 +927,59 @@ def completion_checks(root: Path, dispatch, settle) -> dict:
     }
 
 
-def recover_role_costs(split) -> dict:
+def resolve_metered_path(path, roots) -> tuple:
+    """The retained session a metered transcript path stands for.
+
+    An attempt a provider error cut off was metered from filtered copies under
+    ``artifacts/filtered-transcripts/``, one per session, named by session id
+    and stripped of the synthetic error line. Those paths carry no store name,
+    so the role cannot be read from them; it can be read from the retained
+    original of the same session id. Returns ``(resolved_path, how)`` where
+    ``how`` is ``original``, ``resolved`` or ``unresolved``."""
+    if "filtered-transcripts" not in str(path):
+        return path, "original"
+    name = Path(path).name
+    for root in roots or ():
+        for candidate in retained_transcripts(Path(root)):
+            if candidate.name == name:
+                return str(candidate), "resolved"
+    return path, "unresolved"
+
+
+def recover_role_costs(split, roots=()) -> dict:
     """The per-role split settlement did not record, read back from what it did.
 
     The meter labelled every session ``unassigned`` but kept each session's
     cost under its transcript path, and the path carries the role: a sub-agent
     transcript sits under ``subagents/``, arm C's finder in its own store, and
-    the root session is whatever remains. Summing by that rule gives the split
-    section 7 asks for. What it cannot give is the part of the settled charge
-    no transcript accounts for, which stays unassigned and is reported as such."""
+    the root session is whatever remains. A filtered copy carries no such
+    path, so it is resolved to its retained original first, and a copy whose
+    original cannot be found stays ``unassigned`` rather than defaulting to
+    the root session. What the recovery cannot give is the part of the
+    settled charge no transcript accounts for, which is reported separately."""
     recovered = {}
     for path, entry in sorted((split.get("per_transcript") or {}).items()):
-        role = role_of(path)
+        resolved, how = resolve_metered_path(path, roots)
+        role = role_of(resolved) if how != "unresolved" else "unassigned"
         recovered[role] = recovered.get(role, Decimal("0")) + usd((entry or {}).get("cost_usd"))
     return recovered
 
 
-def usage_checks(root: Path, settle) -> dict:
+def recovery_provenance(split, roots=()) -> dict:
+    """How many metered sessions were read directly, resolved from a filtered
+    copy, or left unassigned because no original could be found."""
+    counts = {"original": 0, "resolved": 0, "unresolved": 0}
+    for path in (split.get("per_transcript") or {}):
+        counts[resolve_metered_path(path, roots)[1]] += 1
+    return counts
+
+
+def usage_checks(root: Path, settle, roots=None) -> dict:
     split = load(root / "artifacts" / "usage-split.json", default={})
     roles = sorted((split.get("per_role") or {}).keys())
-    recovered = recover_role_costs(split)
+    roots = list(roots or [root])
+    recovered = recover_role_costs(split, roots)
+    provenance = recovery_provenance(split, roots)
     recovered_total = sum(recovered.values(), Decimal("0"))
     settled = usd(settle.get("settled_usd"))
     return {
@@ -957,7 +990,10 @@ def usage_checks(root: Path, settle) -> dict:
         "per_role_recovered_usd": {role: str(amount) for role, amount in sorted(recovered.items())},
         "per_role_recovered_total_usd": str(recovered_total) if recovered else None,
         "recovered_from": ("the retained per-transcript costs, each session's role read from its "
-                           "transcript path" if recovered else None),
+                           "transcript path; a filtered metering copy is resolved to its retained "
+                           "original by session id first" if recovered else None),
+        "metered_sessions": provenance,
+        "unassigned_role_usd": str(recovered["unassigned"]) if "unassigned" in recovered else None,
         "unassigned_residual_usd": str(settled - recovered_total) if recovered and settled else None,
         "unassigned_residual_note": ("the settled charge no transcript accounts for: the request "
                                      "the runtime bills to a model it never writes to the "
@@ -1101,7 +1137,7 @@ def assess_attempt(item, manifest, published_by_position, salt) -> dict:
     separation = separation_checks(root, arm, {p: s for p, s in scans.items()})
     frozen = frozen_input_checks(root, manifest, published, salt, item["ordinal"])
     completion = completion_checks(root, dispatch, settle)
-    usage = usage_checks(root, settle)
+    usage = usage_checks(root, settle, roots)
 
     gaps = [GAP_LAUNCH_ARGV, GAP_NETWORK_JUDGEMENT]
     if not usage["per_role_split_recovered"]:
@@ -1465,6 +1501,8 @@ def attempt_reconciliation(evidence: Path, ledger_per_attempt) -> list:
             continue
         settle = load(root / "artifacts" / "settle.json", default={})
         split = load(root / "artifacts" / "usage-split.json", default={})
+        roots = [root] + list(item.get("extra_roots") or [])
+        recovered = recover_role_costs(split, roots)
         attempt_id = settle.get("attempt_id")
         ledger_amount = usd(ledger_per_attempt.get(attempt_id))
         settled = usd(settle.get("settled_usd"))
@@ -1473,12 +1511,13 @@ def attempt_reconciliation(evidence: Path, ledger_per_attempt) -> list:
             "arm": settle.get("arm"),
             "role_split_recorded_at_settlement": sorted((split.get("per_role") or {}).keys())
                                                  not in ([], ["unassigned"]),
-            "role_split_recovered": bool(recover_role_costs(split)),
+            "role_split_recovered": bool(recovered),
             "per_role_recovered_usd": {role: str(amount) for role, amount
-                                       in sorted(recover_role_costs(split).items())},
+                                       in sorted(recovered.items())},
+            "metered_sessions": recovery_provenance(split, roots),
             "unassigned_residual_usd": str(usd(settle.get("settled_usd"))
-                                           - sum(recover_role_costs(split).values(), Decimal("0")))
-                                       if recover_role_costs(split) else None,
+                                           - sum(recovered.values(), Decimal("0")))
+                                       if recovered else None,
             "models_priced": settle.get("models_priced"),
             "ledger_settled_usd": str(ledger_amount),
             "self_report_usd": settle.get("self_report_usd"),
@@ -2606,6 +2645,39 @@ def self_test() -> int:
         check("per-role costs are recovered from the transcript paths",
               {k: str(v) for k, v in recovered.items()}
               == {"primary": "3.221167", "worker": "0.624466", "finder": "0.5"})
+
+        cut = tmp / "synthetic-evidence" / "position-11"
+        home = tmp / "synthetic-evidence" / "position-11-home"
+        (cut / "artifacts" / "filtered-transcripts").mkdir(parents=True)
+        finder_dir = home / ".claude" / "projects" / "-tmp-cells-position-11-finder-store"
+        work_dir = home / ".claude" / "projects" / "-tmp-cells-position-11-work"
+        finder_dir.mkdir(parents=True)
+        work_dir.mkdir(parents=True)
+        for directory in (finder_dir, work_dir, cut / "artifacts" / "filtered-transcripts"):
+            for name in ("f1.jsonl", "p1.jsonl"):
+                if directory == finder_dir and name != "f1.jsonl":
+                    continue
+                if directory == work_dir and name != "p1.jsonl":
+                    continue
+                (directory / name).write_text("\n".join(lines[:3]) + "\n", encoding="utf-8")
+        filtered = {"per_role": {"unassigned": {"cost_usd": "1.5"}},
+                    "per_transcript": {
+                        "/tmp/cells/position-11/artifacts/filtered-transcripts/f1.jsonl":
+                            {"cost_usd": "0.68"},
+                        "/tmp/cells/position-11/artifacts/filtered-transcripts/p1.jsonl":
+                            {"cost_usd": "0.87"},
+                        "/tmp/cells/position-11/artifacts/filtered-transcripts/gone.jsonl":
+                            {"cost_usd": "0.05"}}}
+        recovered = recover_role_costs(filtered, [cut, home])
+        check("a filtered finder copy is resolved to its retained original before roles are read",
+              str(recovered.get("finder")) == "0.68" and str(recovered.get("primary")) == "0.87")
+        check("a filtered copy with no retained original stays unassigned, not primary",
+              str(recovered.get("unassigned")) == "0.05")
+        check("the recovery reports how each metered session was resolved",
+              recovery_provenance(filtered, [cut, home])
+              == {"original": 0, "resolved": 2, "unresolved": 1})
+        check("without the retained roots a filtered copy is never guessed as primary",
+              "primary" not in recover_role_costs(filtered, []))
         (evidence / "artifacts" / "usage-split.json").write_text(json.dumps(split),
                                                                  encoding="utf-8")
         assessed = assess_attempt({"position": 9, "ordinal": 1, "root": evidence,
@@ -2902,7 +2974,7 @@ def self_test() -> int:
 
     for failure in failures:
         print("self-test failure: %s" % failure)
-    print("%d checks, %d failures" % (87, len(failures)))
+    print("%d checks, %d failures" % (91, len(failures)))
     return 1 if failures else 0
 
 

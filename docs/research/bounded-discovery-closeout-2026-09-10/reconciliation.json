@@ -22,6 +22,11 @@
       "attempt_ref": "position-01-attempt-2",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "3.8595330",
+      "metered_sessions": {
+        "original": 2,
+        "resolved": 0,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-sonnet-5"
       ],
@@ -47,6 +52,11 @@
       "attempt_ref": "position-02-attempt-1",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "3.8777270",
+      "metered_sessions": {
+        "original": 2,
+        "resolved": 0,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-opus-5",
         "claude-sonnet-5"
@@ -73,13 +83,19 @@
       "attempt_ref": "position-03-attempt-1",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "1.5838690",
+      "metered_sessions": {
+        "original": 0,
+        "resolved": 2,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-opus-5",
         "claude-sonnet-5"
       ],
       "ordinal": 1,
       "per_role_recovered_usd": {
-        "primary": "1.558580"
+        "finder": "0.680374",
+        "primary": "0.878206"
       },
       "position": 3,
       "recomputed_usage_usd": "1.558580",
@@ -100,6 +116,11 @@
       "attempt_ref": "position-03-attempt-2",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "7.0003047",
+      "metered_sessions": {
+        "original": 3,
+        "resolved": 0,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-opus-5",
         "claude-sonnet-5"
@@ -127,6 +148,11 @@
       "attempt_ref": "position-04-attempt-1",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "4.5304828",
+      "metered_sessions": {
+        "original": 1,
+        "resolved": 0,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-sonnet-5"
       ],
@@ -151,6 +177,11 @@
       "attempt_ref": "position-05-attempt-1",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "6.3671277",
+      "metered_sessions": {
+        "original": 2,
+        "resolved": 0,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-opus-5",
         "claude-sonnet-5"
@@ -177,6 +208,11 @@
       "attempt_ref": "position-06-attempt-1",
       "charged_the_larger_source": true,
       "ledger_settled_usd": "9.0040632",
+      "metered_sessions": {
+        "original": 3,
+        "resolved": 0,
+        "unresolved": 0
+      },
       "models_priced": [
         "claude-opus-5",
         "claude-sonnet-5"
@@ -283,7 +319,7 @@
     "published_digest_sha256": "8470b46872339b3f7e44752b51f3c0993825a64ab1924bbb01ed1d48e025cabd",
     "reserved_usd": "0.00"
   },
-  "reconciled_at": "2026-09-10T08:35:00.372785+00:00",
+  "reconciled_at": "2026-09-10T19:00:24.554407+00:00",
   "repair": {
     "attempt_limit": 27,
     "attempts_remaining": 19,

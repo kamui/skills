@@ -1,6 +1,6 @@
 {
   "artifact_id": "issue-151-fidelity-assessment",
-  "assessed_at": "2026-09-10T08:35:00.315479+00:00",
+  "assessed_at": "2026-09-10T19:00:24.477589+00:00",
   "attempts": [
     {
       "arm": "A",
@@ -210,6 +210,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 2,
+            "resolved": 0,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": null,
           "per_model_split_recorded": [
             "claude-sonnet-5"
@@ -226,13 +231,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "3.845633",
           "reconciliation_residual_usd": "0.0139000",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "0.0103500",
           "residual_untranscripted_models_usd": "0.0035500",
           "self_report_usd": "3.8595330",
           "settled_usd": "3.8595330",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0139000",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": false
         }
@@ -389,6 +395,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 2,
+            "resolved": 0,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": null,
           "per_model_split_recorded": [
             "claude-opus-5",
@@ -406,13 +417,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "3.874185",
           "reconciliation_residual_usd": "0.0035420",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "0.0000000",
           "residual_untranscripted_models_usd": "0.0035420",
           "self_report_usd": "3.8777270",
           "settled_usd": "3.8777270",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0035420",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": true
         }
@@ -575,6 +587,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 0,
+            "resolved": 2,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": 1,
           "per_model_split_recorded": [
             "claude-opus-5",
@@ -582,7 +599,8 @@
           ],
           "per_role_recovered_total_usd": "1.558580",
           "per_role_recovered_usd": {
-            "primary": "1.558580"
+            "finder": "0.680374",
+            "primary": "0.878206"
           },
           "per_role_split_recorded": [
             "unassigned"
@@ -591,13 +609,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "1.558580",
           "reconciliation_residual_usd": "0.0252890",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "0.0213740",
           "residual_untranscripted_models_usd": "0.0039150",
           "self_report_usd": "1.5838690",
           "settled_usd": "1.5838690",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0252890",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": false
         }
@@ -785,6 +804,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 3,
+            "resolved": 0,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": null,
           "per_model_split_recorded": [
             "claude-opus-5",
@@ -803,13 +827,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "6.994658",
           "reconciliation_residual_usd": "0.0056467",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "0.0017317",
           "residual_untranscripted_models_usd": "0.0039150",
           "self_report_usd": "7.0003047",
           "settled_usd": "7.0003047",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0056457",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": true
         }
@@ -956,6 +981,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 1,
+            "resolved": 0,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": null,
           "per_model_split_recorded": [
             "claude-sonnet-5"
@@ -971,13 +1001,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "4.526997",
           "reconciliation_residual_usd": "0.0034858",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "-0.0000002",
           "residual_untranscripted_models_usd": "0.0034860",
           "self_report_usd": "4.5304828",
           "settled_usd": "4.5304828",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0034858",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": true
         }
@@ -1143,6 +1174,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 2,
+            "resolved": 0,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": null,
           "per_model_split_recorded": [
             "claude-opus-5",
@@ -1160,13 +1196,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "6.335596",
           "reconciliation_residual_usd": "0.0315317",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "0.0280687",
           "residual_untranscripted_models_usd": "0.0034630",
           "self_report_usd": "6.3671277",
           "settled_usd": "6.3671277",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0315317",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": false
         }
@@ -1349,6 +1386,11 @@
           "verdict": "established"
         },
         "usage_completeness": {
+          "metered_sessions": {
+            "original": 3,
+            "resolved": 0,
+            "unresolved": 0
+          },
           "metering_filtered_synthetic_lines": null,
           "per_model_split_recorded": [
             "claude-opus-5",
@@ -1367,13 +1409,14 @@
           "per_role_split_recovered": true,
           "recomputed_usd": "8.998486",
           "reconciliation_residual_usd": "0.0055772",
-          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path",
+          "recovered_from": "the retained per-transcript costs, each session's role read from its transcript path; a filtered metering copy is resolved to its retained original by session id first",
           "residual_unexplained_usd": "0.0017312",
           "residual_untranscripted_models_usd": "0.0038460",
           "self_report_usd": "9.0040632",
           "settled_usd": "9.0040632",
           "unassigned_residual_note": "the settled charge no transcript accounts for: the request the runtime bills to a model it never writes to the transcript, plus any unexplained remainder; it belongs to no role",
           "unassigned_residual_usd": "0.0055772",
+          "unassigned_role_usd": null,
           "verdict": "established",
           "within_tolerance": true
         }
