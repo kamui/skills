@@ -73,6 +73,15 @@ roots. And the frozen-input chain holds three links deep: the dispatch template 
 each rendered prompt against the raw digest sealed beside it, and the same file against the HMAC
 published in the public cell summary.
 
+One attempt carries a recorded read deviation, accepted at the time and preserved here: the cell
+redirected a `git show` of a file **from its own pinned clone** into a container-local scratch path
+and read it back, instead of writing it under its work directory as the rule requires. It is a
+breach of the sandbox's tidiness rather than of its purpose — the content came from that cell's own
+clone, the path was inside the container, and no host path was reachable. The recorded judgment
+quotes the file's path, which is inside the target's own source tree, so **the prose stays in the
+seal** and only the fact, the tool it came through and that pointer are public. #152 may overrule
+the acceptance.
+
 **Not established, and named rather than smoothed.**
 
 - **The launch argv was never retained.** The requested `--model`, `--effort`, `--max-budget-usd`,

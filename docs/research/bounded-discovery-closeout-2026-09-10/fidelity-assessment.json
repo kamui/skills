@@ -1,6 +1,6 @@
 {
   "artifact_id": "issue-151-fidelity-assessment",
-  "assessed_at": "2026-09-10T07:22:00.661614+00:00",
+  "assessed_at": "2026-09-10T07:32:40.362134+00:00",
   "attempts": [
     {
       "arm": "A",
@@ -1018,7 +1018,11 @@
         },
         "isolation": {
           "accepted_read_deviations": [
-            "The cell redirected `git show master:clap_builder/src/parser/parser.rs` from its own pinned clone into a container-local /tmp scratch file and read it back, instead of writing it under its work directory as rule 7 requires. It is a breach of the sandbox's tidiness, not of its purpose: the content originated in this cell's own clone, the path is inside the container where none of the forbidden material exists, and no host path was reachable. Recorded rather than widened away, and open to #152 overruling."
+            {
+              "note": "the recorded judgment quotes the path the cell read, which is inside the target's own source tree, so it stays in the seal",
+              "reason_retained_in_sealed_evidence": true,
+              "via": "Bash"
+            }
           ],
           "attestation_ready": true,
           "passed": true,
