@@ -1,0 +1,17 @@
+{
+  "artifact_id": "issue-152-launch-target-B",
+  "dispatched_at": "2026-09-11T05:10:38Z",
+  "finished_at": "2026-09-11T05:17:11Z",
+  "launch_argv_masked": "#!/bin/sh\n# Launch argv for #152's adjudicator on target-B, retained verbatim (a #199 gap the closeout named).\ncd \"<work>\" || exit 2\ndate -u +%Y-%m-%dT%H:%M:%SZ > dispatched_at.txt\ntimeout 3600 claude -p --session-id \"2df6af6f-31b0-45d0-b7dc-7d4853207277\" \\\n  --model claude-sonnet-5 --effort high --restricted \\\n  --tools \"Bash,Read,Write,Edit,Glob,Grep\" \\\n  --allowedTools \"Write\" \"Edit\" \"Bash(git:*)\" \"Bash(go:*)\" \"Bash(cargo:*)\" \"Bash(python3:*)\" \"Bash(cat:*)\" \"Bash(ls:*)\" \"Bash(head:*)\" \"Bash(tail:*)\" \"Bash(wc:*)\" \"Bash(sed:*)\" \"Bash(grep:*)\" \"Bash(find:*)\" \"Bash(diff:*)\" \\\n  --add-dir \"<clone>\" --add-dir \"<inputs>\" \\\n  --permission-prompts none --max-budget-usd 2.50 --output-format json \\\n  \"$(cat prompt.md)\" < /dev/null > result.json 2> stderr.log\necho \"exit $?\" > exit.txt\ndate -u +%Y-%m-%dT%H:%M:%SZ > finished_at.txt",
+  "note": "the launch argv verbatim, with the work, clone, inputs and cache paths masked because a clone directory is named after its target; the unmasked script is in sealed/; the exported build-cache environment lines are omitted because they name the toolchain",
+  "prompt_sha256": "398be44e4d0eb64507f07075d4a8ef62e0e7ce3ecbced1cc9f47473c8120cba9",
+  "resume": {
+    "dispatched_at": "2026-09-11T05:18:13Z",
+    "finished_at": "2026-09-11T05:18:44Z",
+    "launch_argv_masked": "#!/bin/sh\n# Resume argv for #152's adjudicator on target-B (schema extension only), retained verbatim.\ncd \"<work>\" || exit 2\ndate -u +%Y-%m-%dT%H:%M:%SZ > resume-dispatched_at.txt\ntimeout 1200 claude -p --resume \"2df6af6f-31b0-45d0-b7dc-7d4853207277\" \\\n  --model claude-sonnet-5 --effort high --restricted \\\n  --tools \"Bash,Read,Write,Edit,Glob,Grep\" \\\n  --allowedTools \"Write\" \"Edit\" \"Bash(git:*)\" \"Bash(cargo:*)\" \"Bash(python3:*)\" \"Bash(cat:*)\" \"Bash(ls:*)\" \"Bash(head:*)\" \"Bash(tail:*)\" \"Bash(wc:*)\" \"Bash(sed:*)\" \"Bash(grep:*)\" \\\n  --add-dir \"<clone>\" --add-dir \"<inputs>\" \\\n  --permission-prompts none --max-budget-usd 1.00 --output-format json \\\n  \"$(cat resume-prompt.md)\" < /dev/null > result-resume.json 2> stderr-resume.log\necho \"exit $?\" > exit-resume.txt\ndate -u +%Y-%m-%dT%H:%M:%SZ > resume-finished_at.txt",
+    "prompt_sha256": "1414eb309e45771473110ef7b5d46688029c30b5532d4329c4d11eb60c8edddc",
+    "why": "one schema extension after the first segment: an item bundling two confirmed concepts records the second under additional_concepts; no ruling was re-graded and the diff against the first segment is one added field on one item (the pre-resume table is sealed beside the final one)"
+  },
+  "session_id": "2df6af6f-31b0-45d0-b7dc-7d4853207277",
+  "target_ref": "<target-B>"
+}

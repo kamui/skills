@@ -1,0 +1,10 @@
+{
+  "artifact_id": "issue-152-launch-target-A",
+  "dispatched_at": "2026-09-11T05:10:36Z",
+  "finished_at": "2026-09-11T05:15:58Z",
+  "launch_argv_masked": "#!/bin/sh\n# Launch argv for #152's adjudicator on target-A, retained verbatim (a #199 gap the closeout named).\ncd \"<work>\" || exit 2\ndate -u +%Y-%m-%dT%H:%M:%SZ > dispatched_at.txt\ntimeout 3600 claude -p --session-id \"deb66501-9404-4af9-8bda-b9e3e03a4047\" \\\n  --model claude-sonnet-5 --effort high --restricted \\\n  --tools \"Bash,Read,Write,Edit,Glob,Grep\" \\\n  --allowedTools \"Write\" \"Edit\" \"Bash(git:*)\" \"Bash(go:*)\" \"Bash(cargo:*)\" \"Bash(python3:*)\" \"Bash(cat:*)\" \"Bash(ls:*)\" \"Bash(head:*)\" \"Bash(tail:*)\" \"Bash(wc:*)\" \"Bash(sed:*)\" \"Bash(grep:*)\" \"Bash(find:*)\" \"Bash(diff:*)\" \\\n  --add-dir \"<clone>\" --add-dir \"<inputs>\" \\\n  --permission-prompts none --max-budget-usd 2.50 --output-format json \\\n  \"$(cat prompt.md)\" < /dev/null > result.json 2> stderr.log\necho \"exit $?\" > exit.txt\ndate -u +%Y-%m-%dT%H:%M:%SZ > finished_at.txt",
+  "note": "the launch argv verbatim, with the work, clone, inputs and cache paths masked because a clone directory is named after its target; the unmasked script is in sealed/; the exported build-cache environment lines are omitted because they name the toolchain",
+  "prompt_sha256": "37778b324687f1cc44ca2c46a24e42d466eecd586400f2d1b83de90e21ad6000",
+  "session_id": "deb66501-9404-4af9-8bda-b9e3e03a4047",
+  "target_ref": "<target-A>"
+}

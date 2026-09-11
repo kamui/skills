@@ -1,0 +1,98 @@
+{
+  "artifact_id": "issue-152-ledger-events",
+  "events": [
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0",
+      "attempt_id": null,
+      "event_id": "73e67d50-cdd9-4b66-a763-2a9d5b2426bb",
+      "helper_id": null,
+      "observed_at": "2026-09-11T05:10:29.670332+00:00",
+      "operation": "reserve",
+      "phase": "grading",
+      "previous_event_id": "f53da793-bf49-4042-8c84-4992860860bd",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage.json"
+      ],
+      "reason": "Conservative reservation",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage.json"
+      ],
+      "reservation_delta_usd": "3.50",
+      "reservation_id": "issue-152-adjudicator-target-A",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0",
+      "attempt_id": null,
+      "event_id": "6c53a937-a423-4539-a07c-f7999528f5a7",
+      "helper_id": null,
+      "observed_at": "2026-09-11T05:10:29.710997+00:00",
+      "operation": "reserve",
+      "phase": "grading",
+      "previous_event_id": "73e67d50-cdd9-4b66-a763-2a9d5b2426bb",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage.json"
+      ],
+      "reason": "Conservative reservation",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage.json"
+      ],
+      "reservation_delta_usd": "3.50",
+      "reservation_id": "issue-152-adjudicator-target-B",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0.7084362",
+      "attempt_id": null,
+      "event_id": "a924a344-3660-415e-bdec-d59e95b62cba",
+      "helper_id": null,
+      "observed_at": "2026-09-11T05:20:54.994544+00:00",
+      "operation": "settle",
+      "phase": "grading",
+      "previous_event_id": "6c53a937-a423-4539-a07c-f7999528f5a7",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage.json"
+      ],
+      "reason": "Usage settlement",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage.json"
+      ],
+      "reservation_delta_usd": "-3.50",
+      "reservation_id": "issue-152-adjudicator-target-A",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "1.1246248",
+      "attempt_id": null,
+      "event_id": "c6981b77-b66d-444d-85ca-39193a5953a0",
+      "helper_id": null,
+      "observed_at": "2026-09-11T05:20:55.037032+00:00",
+      "operation": "settle",
+      "phase": "grading",
+      "previous_event_id": "a924a344-3660-415e-bdec-d59e95b62cba",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage.json"
+      ],
+      "reason": "Usage settlement",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage.json"
+      ],
+      "reservation_delta_usd": "-3.50",
+      "reservation_id": "issue-152-adjudicator-target-B",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    }
+  ],
+  "grading_closeout_reserve_usd": "10.00",
+  "ledger_actual_usd_after": "49.1467191",
+  "ledger_reserved_usd_after": "0.00",
+  "note": "the four #152 events on the live epic ledger, copied verbatim; the ledger itself stays outside the repository because its attempt ids name slots",
+  "protected_reserve_remaining_usd": "8.1669390"
+}

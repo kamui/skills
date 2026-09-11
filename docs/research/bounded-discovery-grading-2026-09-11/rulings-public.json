@@ -1,0 +1,292 @@
+{
+  "artifact_id": "issue-152-rulings-public",
+  "blinding": "label masking, not guaranteed blinding; every cue is listed, none is resolved, and the arm mapping stays sealed until #153 opens it",
+  "note": "Counts only. Paths, symbols, quotes and citations are in the sealed ruling tables. Defect IDs are renumbered per target so that a register's own lettering names nothing.",
+  "published_at": "2026-09-11T05:20:25.645895+00:00",
+  "schema_version": "bounded-discovery-v1",
+  "targets": {
+    "<target-A>": {
+      "confirmed_truth_revisions": 0,
+      "defect_count_after_grading": 0,
+      "defect_count_v1": 0,
+      "outstanding_count": 0,
+      "packets": [
+        {
+          "action_errors": 0,
+          "bundled_concept_items": 0,
+          "clean_claim": true,
+          "honest_incomplete": false,
+          "packet_id": "1d3416e2-b657-4498-ae26-f0c0f504bc1d",
+          "partial_fix_defect_ids": [],
+          "priority_errors": 0,
+          "raw_false_finding_items": 0,
+          "raw_false_non_finding_items": 0,
+          "raw_finding_items": 0,
+          "raw_items": 0,
+          "raw_items_by_kind": {
+            "finding": 0,
+            "hygiene": 0,
+            "observation": 0,
+            "question": 0
+          },
+          "raw_sub_threshold_items": 0,
+          "raw_supported_material_items": 0,
+          "raw_supported_material_items_on_truth": 0,
+          "recovered_defect_ids": [],
+          "safety_claims": 4,
+          "status": "Approved",
+          "sufficient_fix_defect_ids": [],
+          "unique_false_claims": 0,
+          "unique_false_non_finding_claims": 0,
+          "unique_unresolved_concepts": 0,
+          "unmasking_cues": 1,
+          "unresolved_adjudications": 0,
+          "unresolved_safety_claims": 0,
+          "unsupported_safety_claims": 0
+        },
+        {
+          "action_errors": 0,
+          "bundled_concept_items": 0,
+          "clean_claim": true,
+          "honest_incomplete": false,
+          "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+          "partial_fix_defect_ids": [],
+          "priority_errors": 0,
+          "raw_false_finding_items": 0,
+          "raw_false_non_finding_items": 1,
+          "raw_finding_items": 0,
+          "raw_items": 1,
+          "raw_items_by_kind": {
+            "finding": 0,
+            "hygiene": 0,
+            "observation": 1,
+            "question": 0
+          },
+          "raw_sub_threshold_items": 0,
+          "raw_supported_material_items": 0,
+          "raw_supported_material_items_on_truth": 0,
+          "recovered_defect_ids": [],
+          "safety_claims": 2,
+          "status": "Approved",
+          "sufficient_fix_defect_ids": [],
+          "unique_false_claims": 0,
+          "unique_false_non_finding_claims": 1,
+          "unique_unresolved_concepts": 0,
+          "unmasking_cues": 2,
+          "unresolved_adjudications": 0,
+          "unresolved_safety_claims": 0,
+          "unsupported_safety_claims": 0
+        },
+        {
+          "action_errors": 0,
+          "bundled_concept_items": 0,
+          "clean_claim": true,
+          "honest_incomplete": false,
+          "packet_id": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6",
+          "partial_fix_defect_ids": [],
+          "priority_errors": 0,
+          "raw_false_finding_items": 0,
+          "raw_false_non_finding_items": 0,
+          "raw_finding_items": 0,
+          "raw_items": 1,
+          "raw_items_by_kind": {
+            "finding": 0,
+            "hygiene": 0,
+            "observation": 1,
+            "question": 0
+          },
+          "raw_sub_threshold_items": 0,
+          "raw_supported_material_items": 0,
+          "raw_supported_material_items_on_truth": 0,
+          "recovered_defect_ids": [],
+          "safety_claims": 2,
+          "status": "Approved",
+          "sufficient_fix_defect_ids": [],
+          "unique_false_claims": 0,
+          "unique_false_non_finding_claims": 0,
+          "unique_unresolved_concepts": 0,
+          "unmasking_cues": 1,
+          "unresolved_adjudications": 0,
+          "unresolved_safety_claims": 0,
+          "unsupported_safety_claims": 0
+        }
+      ],
+      "public_defect_ids": [],
+      "raw_false_finding_items_total": 0,
+      "raw_finding_items_total": 0,
+      "raw_items_total": 2,
+      "register_status": "clean",
+      "status_after_grading": "clean",
+      "truth_version_after_grading": "v1",
+      "unique_false_claims_total": 0
+    },
+    "<target-B>": {
+      "confirmed_truth_revisions": 1,
+      "defect_count_after_grading": 2,
+      "defect_count_v1": 1,
+      "outstanding_count": 0,
+      "packets": [
+        {
+          "action_errors": 0,
+          "bundled_concept_items": 0,
+          "clean_claim": false,
+          "honest_incomplete": true,
+          "packet_id": "48d5db81-a8ca-47cc-b018-461fde3ac88d",
+          "partial_fix_defect_ids": [],
+          "priority_errors": 0,
+          "raw_false_finding_items": 0,
+          "raw_false_non_finding_items": 0,
+          "raw_finding_items": 2,
+          "raw_items": 2,
+          "raw_items_by_kind": {
+            "finding": 2,
+            "hygiene": 0,
+            "observation": 0,
+            "question": 0
+          },
+          "raw_sub_threshold_items": 0,
+          "raw_supported_material_items": 2,
+          "raw_supported_material_items_on_truth": 2,
+          "recovered_defect_ids": [
+            "D1",
+            "D2"
+          ],
+          "safety_claims": 0,
+          "status": "Changes Requested",
+          "sufficient_fix_defect_ids": [
+            "D1",
+            "D2"
+          ],
+          "unique_false_claims": 0,
+          "unique_false_non_finding_claims": 0,
+          "unique_unresolved_concepts": 0,
+          "unmasking_cues": 1,
+          "unresolved_adjudications": 0,
+          "unresolved_safety_claims": 0,
+          "unsupported_safety_claims": 0
+        },
+        {
+          "action_errors": 0,
+          "bundled_concept_items": 0,
+          "clean_claim": true,
+          "honest_incomplete": false,
+          "packet_id": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643",
+          "partial_fix_defect_ids": [],
+          "priority_errors": 0,
+          "raw_false_finding_items": 0,
+          "raw_false_non_finding_items": 0,
+          "raw_finding_items": 0,
+          "raw_items": 2,
+          "raw_items_by_kind": {
+            "finding": 0,
+            "hygiene": 0,
+            "observation": 2,
+            "question": 0
+          },
+          "raw_sub_threshold_items": 0,
+          "raw_supported_material_items": 0,
+          "raw_supported_material_items_on_truth": 0,
+          "recovered_defect_ids": [],
+          "safety_claims": 1,
+          "status": "Approved",
+          "sufficient_fix_defect_ids": [],
+          "unique_false_claims": 0,
+          "unique_false_non_finding_claims": 0,
+          "unique_unresolved_concepts": 0,
+          "unmasking_cues": 1,
+          "unresolved_adjudications": 0,
+          "unresolved_safety_claims": 0,
+          "unsupported_safety_claims": 1
+        },
+        {
+          "action_errors": 0,
+          "bundled_concept_items": 1,
+          "clean_claim": false,
+          "honest_incomplete": false,
+          "packet_id": "d5fbbc87-30af-45cd-8daa-02d0f0b78097",
+          "partial_fix_defect_ids": [
+            "D1"
+          ],
+          "priority_errors": 0,
+          "raw_false_finding_items": 0,
+          "raw_false_non_finding_items": 0,
+          "raw_finding_items": 1,
+          "raw_items": 1,
+          "raw_items_by_kind": {
+            "finding": 1,
+            "hygiene": 0,
+            "observation": 0,
+            "question": 0
+          },
+          "raw_sub_threshold_items": 0,
+          "raw_supported_material_items": 1,
+          "raw_supported_material_items_on_truth": 1,
+          "recovered_defect_ids": [
+            "D1",
+            "D2"
+          ],
+          "safety_claims": 0,
+          "status": "Changes Requested",
+          "sufficient_fix_defect_ids": [
+            "D2"
+          ],
+          "unique_false_claims": 0,
+          "unique_false_non_finding_claims": 0,
+          "unique_unresolved_concepts": 0,
+          "unmasking_cues": 0,
+          "unresolved_adjudications": 0,
+          "unresolved_safety_claims": 0,
+          "unsupported_safety_claims": 0
+        }
+      ],
+      "public_defect_ids": [
+        "D1",
+        "D2"
+      ],
+      "raw_false_finding_items_total": 0,
+      "raw_finding_items_total": 3,
+      "raw_items_total": 5,
+      "register_status": "buggy",
+      "status_after_grading": "buggy",
+      "truth_version_after_grading": "v2",
+      "unique_false_claims_total": 0
+    }
+  },
+  "unmasking_cues": [
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "1d3416e2-b657-4498-ae26-f0c0f504bc1d",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "48d5db81-a8ca-47cc-b018-461fde3ac88d",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "Known before grading and recorded rather than discovered: in this pilot only one arm published structured items beside its review body, so a populated items array correlates with that arm. Two of the six packets carry items. The packets name this as label masking, not blinding.",
+      "packet_id": null,
+      "source": "coordinator"
+    }
+  ]
+}

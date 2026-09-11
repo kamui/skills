@@ -1,0 +1,197 @@
+{
+  "charged_from": "self-report",
+  "charged_usd": "1.1246248",
+  "difference_usd": "0.0039638",
+  "envelopes": [
+    {
+      "duration_ms": 392147,
+      "is_error": false,
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "canonicalModel": "claude-haiku-4-5",
+          "contextWindow": 200000,
+          "costBasis": "list",
+          "costUSD": 0.003964,
+          "inputTokens": 3884,
+          "maxOutputTokens": 32000,
+          "outputTokens": 16,
+          "provider": "firstParty",
+          "thinkingTokens": 0,
+          "webSearchRequests": 0
+        },
+        "claude-sonnet-5": {
+          "cacheCreationInputTokens": 76990,
+          "cacheReadInputTokens": 1470079,
+          "canonicalModel": "claude-sonnet-5",
+          "contextWindow": 1000000,
+          "costBasis": "list",
+          "costUSD": 0.9588057999999998,
+          "inputTokens": 70,
+          "maxOutputTokens": 64000,
+          "outputTokens": 35669,
+          "provider": "firstParty",
+          "thinkingTokens": 19827,
+          "webSearchRequests": 0
+        }
+      },
+      "num_turns": 39,
+      "subtype": "success",
+      "total_cost_usd": 0.9627697999999999
+    },
+    {
+      "duration_ms": 30594,
+      "is_error": false,
+      "modelUsage": {
+        "claude-sonnet-5": {
+          "cacheCreationInputTokens": 14063,
+          "cacheReadInputTokens": 356235,
+          "canonicalModel": "claude-sonnet-5",
+          "contextWindow": 1000000,
+          "costBasis": "list",
+          "costUSD": 0.161855,
+          "inputTokens": 8,
+          "maxOutputTokens": 64000,
+          "outputTokens": 3434,
+          "provider": "firstParty",
+          "thinkingTokens": 1426,
+          "webSearchRequests": 0
+        }
+      },
+      "num_turns": 4,
+      "subtype": "success",
+      "total_cost_usd": 0.161855
+    }
+  ],
+  "helper": "transcript_usage.py",
+  "helper_prices": [
+    "--prices",
+    "2,10",
+    "--cache-write-mult",
+    "1.25",
+    "--cache-write-1h-mult",
+    "2.0",
+    "--cache-read-mult",
+    "0.1",
+    "--json"
+  ],
+  "model": "claude-sonnet-5",
+  "rates": {
+    "cache_read_mult": "0.1",
+    "cache_write_1h_mult": "2.0",
+    "cache_write_5m_mult": "1.25",
+    "input_usd_per_mtok": "2",
+    "output_usd_per_mtok": "10"
+  },
+  "segments": 2,
+  "self_report_usd": "1.1246248",
+  "target_ref": "<target-B>",
+  "transcript_usage": {
+    "prices": {
+      "cache_read_mult": 0.1,
+      "cache_write_1h_mult": 2.0,
+      "cache_write_mult": 1.25,
+      "input": 2.0,
+      "output": 10.0,
+      "unknown_tier_fallback": "unknown-tier cache writes are priced at cache_write_mult (5m) in cost; cost_bounds price them at the lower and the higher of the two multipliers"
+    },
+    "timing": {
+      "completed_at": null,
+      "completion_mode": null,
+      "elapsed_to_completion_seconds": null,
+      "elapsed_to_payload_seconds": null,
+      "payload_validated_at": null,
+      "root_dispatched_at": null
+    },
+    "total": {
+      "agent_span_sum_seconds": 484.0,
+      "cache_read": 1826314,
+      "cache_write": 91053,
+      "cache_write_1h": 91053,
+      "cache_write_5m": 0,
+      "cache_write_unknown": 0,
+      "cache_write_unknown_by_cause": {
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "cost": 1.120661,
+      "cost_bounds": {
+        "assumption": "all cache-write tiers known",
+        "high": 1.120661,
+        "low": 1.120661,
+        "tiers_known": true,
+        "unknown_tier_tokens": 0
+      },
+      "input": 78,
+      "label": "TOTAL",
+      "lines": 71,
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "output": 39103,
+      "text_only_turns": 2,
+      "thinking": 21253,
+      "tool_calls": 41,
+      "turns": 39,
+      "wall": "0:08:04",
+      "wall_seconds": 484.0
+    },
+    "transcripts": [
+      {
+        "cache_read": 1826314,
+        "cache_write": 91053,
+        "cache_write_1h": 91053,
+        "cache_write_5m": 0,
+        "cache_write_unknown": 0,
+        "cache_write_unknown_by_cause": {
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "cost": 1.120661,
+        "cost_bounds": {
+          "assumption": "all cache-write tiers known",
+          "high": 1.120661,
+          "low": 1.120661,
+          "tiers_known": true,
+          "unknown_tier_tokens": 0
+        },
+        "input": 78,
+        "label": "2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl",
+        "lines": 71,
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "output": 39103,
+        "path": "/Users/jack/.claude/projects/-Users-jack--config-bounded-discovery-issue-152-adjudication-target-B/2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl",
+        "text_only_turns": 2,
+        "thinking": 21253,
+        "tool_calls": 41,
+        "turns": 39,
+        "wall": "0:08:04",
+        "wall_seconds": 484.0
+      }
+    ]
+  },
+  "transcript_usd": "1.120661"
+}

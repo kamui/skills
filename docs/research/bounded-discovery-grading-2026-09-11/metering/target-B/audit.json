@@ -1,0 +1,32 @@
+{
+  "assistant_lines": 71,
+  "efforts": {
+    "high": 71
+  },
+  "fresh_context": true,
+  "models": {
+    "claude-sonnet-5": 71
+  },
+  "paths_named": 8,
+  "paths_outside_permitted_roots": [],
+  "permitted_roots": [
+    "work",
+    "clone",
+    "inputs",
+    "registry-cache",
+    "build-cache"
+  ],
+  "permitted_roots_note": "labels, not paths: a clone directory is named after its target and this record is public",
+  "read_outside_permitted_roots": false,
+  "root_user_messages": 1,
+  "summary_records": 0,
+  "synthetic_error_lines": 0,
+  "tool_calls": {
+    "Bash": 28,
+    "Edit": 4,
+    "Grep": 2,
+    "Read": 6,
+    "Write": 1
+  },
+  "transcript": "2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl"
+}
