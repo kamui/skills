@@ -279,10 +279,11 @@ with the frozen table left read-only and the mapping still closed. Both adjudica
 their ruling on the evidence and wrote an amendment naming what the original missed:
 
 - **`<target-A>`, one observation, false → supported and sub-threshold.** The original refutation
-  assumed the shutdown path could never lose the mutex to the update goroutine; the code gives no
-  such ordering guarantee, a timer's stop does not rescue a callback that has already started, and
-  a standard-library reproduction of the same primitives showed the interleaving five times out of
-  five. The observation is true about the pre-fix defect's scope and non-material at the head.
+  assumed the shutdown path could never lose the contended resource to the worker it was racing;
+  the code gives no such ordering guarantee, cancelling a deferred callback does not stop one that
+  has already started, and a standard-library reproduction of the same primitives showed the
+  interleaving five times out of five. The observation is true about the pre-fix defect's scope
+  and non-material at the head.
 - **`<target-B>`, one fix ruling, sufficient → partial.** The requested edit sits in an arm that a
   guard fires before, when the terminating positional is itself the final one. The adjudicator
   reproduced that case failing at the head and passing at the merge-base, so it is a manifestation
