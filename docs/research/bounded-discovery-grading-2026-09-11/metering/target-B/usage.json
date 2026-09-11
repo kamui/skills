@@ -1,7 +1,7 @@
 {
   "charged_from": "self-report",
-  "charged_usd": "1.1246248",
-  "difference_usd": "0.0039638",
+  "charged_usd": "1.7439840",
+  "difference_usd": "0.0039640",
   "envelopes": [
     {
       "duration_ms": 392147,
@@ -62,6 +62,29 @@
       "num_turns": 4,
       "subtype": "success",
       "total_cost_usd": 0.161855
+    },
+    {
+      "duration_ms": 129258,
+      "is_error": false,
+      "modelUsage": {
+        "claude-sonnet-5": {
+          "cacheCreationInputTokens": 26370,
+          "cacheReadInputTokens": 1962536,
+          "canonicalModel": "claude-sonnet-5",
+          "contextWindow": 1000000,
+          "costBasis": "list",
+          "costUSD": 0.6193591999999999,
+          "inputTokens": 36,
+          "maxOutputTokens": 64000,
+          "outputTokens": 12130,
+          "provider": "firstParty",
+          "thinkingTokens": 4879,
+          "webSearchRequests": 0
+        }
+      },
+      "num_turns": 20,
+      "subtype": "success",
+      "total_cost_usd": 0.6193591999999999
     }
   ],
   "helper": "transcript_usage.py",
@@ -84,8 +107,8 @@
     "input_usd_per_mtok": "2",
     "output_usd_per_mtok": "10"
   },
-  "segments": 2,
-  "self_report_usd": "1.1246248",
+  "segments": 3,
+  "self_report_usd": "1.7439840",
   "target_ref": "<target-B>",
   "transcript_usage": {
     "prices": {
@@ -105,10 +128,10 @@
       "root_dispatched_at": null
     },
     "total": {
-      "agent_span_sum_seconds": 484.0,
-      "cache_read": 1826314,
-      "cache_write": 91053,
-      "cache_write_1h": 91053,
+      "agent_span_sum_seconds": 3424.985,
+      "cache_read": 3788850,
+      "cache_write": 117423,
+      "cache_write_1h": 117423,
       "cache_write_5m": 0,
       "cache_write_unknown": 0,
       "cache_write_unknown_by_cause": {
@@ -125,33 +148,33 @@
           "turns": 0
         }
       },
-      "cost": 1.120661,
+      "cost": 1.74002,
       "cost_bounds": {
         "assumption": "all cache-write tiers known",
-        "high": 1.120661,
-        "low": 1.120661,
+        "high": 1.74002,
+        "low": 1.74002,
         "tiers_known": true,
         "unknown_tier_tokens": 0
       },
-      "input": 78,
+      "input": 114,
       "label": "TOTAL",
-      "lines": 71,
+      "lines": 101,
       "models": [
         "claude-sonnet-5"
       ],
-      "output": 39103,
-      "text_only_turns": 2,
-      "thinking": 21253,
-      "tool_calls": 41,
-      "turns": 39,
-      "wall": "0:08:04",
-      "wall_seconds": 484.0
+      "output": 51233,
+      "text_only_turns": 3,
+      "thinking": 26132,
+      "tool_calls": 60,
+      "turns": 57,
+      "wall": "0:57:05",
+      "wall_seconds": 3424.985
     },
     "transcripts": [
       {
-        "cache_read": 1826314,
-        "cache_write": 91053,
-        "cache_write_1h": 91053,
+        "cache_read": 3788850,
+        "cache_write": 117423,
+        "cache_write_1h": 117423,
         "cache_write_5m": 0,
         "cache_write_unknown": 0,
         "cache_write_unknown_by_cause": {
@@ -168,30 +191,30 @@
             "turns": 0
           }
         },
-        "cost": 1.120661,
+        "cost": 1.74002,
         "cost_bounds": {
           "assumption": "all cache-write tiers known",
-          "high": 1.120661,
-          "low": 1.120661,
+          "high": 1.74002,
+          "low": 1.74002,
           "tiers_known": true,
           "unknown_tier_tokens": 0
         },
-        "input": 78,
-        "label": "2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl",
-        "lines": 71,
+        "input": 114,
+        "label": "transcript-target-B.jsonl",
+        "lines": 101,
         "models": [
           "claude-sonnet-5"
         ],
-        "output": 39103,
-        "path": "2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl",
-        "text_only_turns": 2,
-        "thinking": 21253,
-        "tool_calls": 41,
-        "turns": 39,
-        "wall": "0:08:04",
-        "wall_seconds": 484.0
+        "output": 51233,
+        "path": "transcript-target-B.jsonl",
+        "text_only_turns": 3,
+        "thinking": 26132,
+        "tool_calls": 60,
+        "turns": 57,
+        "wall": "0:57:05",
+        "wall_seconds": 3424.985
       }
     ]
   },
-  "transcript_usd": "1.120661"
+  "transcript_usd": "1.74002"
 }

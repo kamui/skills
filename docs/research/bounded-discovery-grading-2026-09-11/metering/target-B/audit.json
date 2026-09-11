@@ -1,14 +1,16 @@
 {
-  "assistant_lines": 71,
+  "assistant_lines": 101,
+  "classification": "a file tool's path is classified against the recorded roots whether or not it still exists; a shell token that does not resolve today is unresolved, never counted as inside",
   "efforts": {
-    "high": 71
+    "high": 101
   },
   "fresh_context": true,
   "models": {
-    "claude-sonnet-5": 71
+    "claude-sonnet-5": 101
   },
-  "paths_named": 8,
+  "paths_named": 10,
   "paths_outside_permitted_roots": [],
+  "paths_unresolved": [],
   "permitted_roots": [
     "work",
     "clone",
@@ -22,11 +24,12 @@
   "summary_records": 0,
   "synthetic_error_lines": 0,
   "tool_calls": {
-    "Bash": 28,
-    "Edit": 4,
+    "Bash": 40,
+    "Edit": 7,
     "Grep": 2,
-    "Read": 6,
-    "Write": 1
+    "Read": 9,
+    "Write": 2
   },
-  "transcript": "2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl"
+  "transcript": "transcript-target-B.jsonl",
+  "unresolved_shell_paths": false
 }
