@@ -224,6 +224,10 @@ def validate(rulings: dict, packets: dict) -> list:
     proposed = confirmed_revisions(rulings)
     seen_packets = set()
     status_by_packet = {p["packet_id"]: p["status"] for p in packets["packets"]}
+    for pid, status in sorted(status_by_packet.items()):
+        if status not in STATUSES:
+            problems.append("packet %s has status %r in the packet file, not one of %s"
+                            % (pid, status, ", ".join(STATUSES)))
     for packet in rulings.get("packets") or []:
         pid = packet.get("packet_id")
         if pid not in expected_ids:
@@ -232,6 +236,9 @@ def validate(rulings: dict, packets: dict) -> list:
         if pid in seen_packets:
             problems.append("packet %s ruled twice" % pid)
         seen_packets.add(pid)
+        if packet.get("status") not in STATUSES:
+            problems.append("packet %s status %r is not one of %s"
+                            % (pid, packet.get("status"), ", ".join(STATUSES)))
         if packet.get("status") != status_by_packet[pid]:
             problems.append("packet %s status %r differs from the packet's %r"
                             % (pid, packet.get("status"), status_by_packet[pid]))
@@ -470,11 +477,13 @@ def leak_scan(payload, forbidden, allowed=()) -> list:
     # A source path names the project as surely as its name does. Source
     # extensions are refused outright; a slash path is refused unless it is
     # rooted in this repository or the evaluator's own working tree.
-    for match in set(re.findall(r"[A-Za-z0-9_.~$/-]+\.(?:go|rs|py|md|toml|mod|lock|json|txt|sh)\b",
+    for match in set(re.findall(r"[A-Za-z0-9_.~$/-]+\.(?:go|rs|py|md|toml|mod|lock|jsonl|json|txt|sh)\b",
                                 text)):
         extension = match.rsplit(".", 1)[-1]
         if extension in SOURCE_EXTENSIONS:
             found.append("refusing to write: the payload contains the source path %r" % match)
+        elif match.startswith(("/Users/", "/home/", "/private/", "/tmp/")):
+            found.append("refusing to write: the payload contains the local path %r" % match)
         elif "/" in match and not match.lstrip("$~/").startswith(PUBLIC_PATH_ROOTS):
             found.append("refusing to write: the payload contains the path-shaped value %r" % match)
     return sorted(set(found))
@@ -662,6 +671,21 @@ def audit(transcript, roots: list, labels: list = ()) -> dict:
 # meter: the transcript at frozen rates against the runtime's self-report
 # --------------------------------------------------------------------------
 
+def strip_local_paths(value):
+    """Replace every absolute path in a record with its base name.
+
+    The metering helper echoes the transcript's full path, which names the
+    operator's home directory and the evaluator's working layout; a public
+    record needs the file name only."""
+    if isinstance(value, dict):
+        return {k: strip_local_paths(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [strip_local_paths(v) for v in value]
+    if isinstance(value, str) and value.startswith("/"):
+        return os.path.basename(value)
+    return value
+
+
 def meter(transcript, envelopes: list, rates: dict, tools_dir) -> dict:
     scan = audit(transcript, [])
     models = [m for m in scan["models"] if m]
@@ -681,7 +705,7 @@ def meter(transcript, envelopes: list, rates: dict, tools_dir) -> dict:
     if run.returncode:
         sys.stderr.write("transcript_usage.py failed: %s\n" % run.stderr[:400])
         raise SystemExit(2)
-    usage = json.loads(run.stdout)
+    usage = strip_local_paths(json.loads(run.stdout))
     total = usage.get("total") or usage
     from decimal import Decimal
     transcript_usd = Decimal(str(total["cost"]))
@@ -920,6 +944,16 @@ def self_test() -> int:
     check("validate accepts a packet listed as outstanding",
           not any("no rulings" in p for p in validate(listed, packets)))
 
+    # 9b. A status outside the contract's four values is refused on either side.
+    typo_packets = {"target_ref": "<target-T>", "packets": [{"packet_id": "p", "status": "Aproved"}]}
+    typo_doc = dict(doc, packets=[dict(base, status="Aproved", items=[item("p/r1")])])
+    check("validate refuses a status outside the contract",
+          sum("not one of" in p for p in validate(typo_doc, typo_packets)) == 2)
+
+    # 9c. The metering record keeps file names only.
+    check("local paths are stripped from metering records",
+          strip_local_paths({"a": ["/x/y/z.jsonl"], "b": "name"}) == {"a": ["z.jsonl"], "b": "name"})
+
     # 10. The public scan refuses a path, a slot name and an unknown object id.
     frozen = {"targets": {"slot-9": {"target": {"repository": "acme/widget", "pr": 7,
                                                 "head_oid": "d" * 40}}}}
@@ -934,6 +968,38 @@ def self_test() -> int:
     check("scan refuses an object id", leak_scan({"a": "e" * 40}, forbidden, allowed))
     check("scan passes counts", not leak_scan({"a": 3, "b": "<target-A>"}, forbidden, allowed))
 
+    check("scan refuses a transcript path under a home directory",
+          leak_scan({"a": "/Users/someone/.claude/projects/x/y.jsonl"}, forbidden, allowed))
+    check("scan refuses a temporary-directory path",
+          leak_scan({"a": "/tmp/work/notes.txt"}, forbidden, allowed))
+
+    # 10b. The command line itself: exit codes through subprocess.
+    with tempfile.TemporaryDirectory() as scratch:
+        bad_doc = Path(scratch) / "rulings.json"
+        bad_doc.write_text(json.dumps(dict(doc, packets=[dict(base, items=[bad_item])])),
+                           encoding="utf-8")
+        pk = Path(scratch) / "packets.json"
+        pk.write_text(json.dumps(packets), encoding="utf-8")
+        run = subprocess.run([sys.executable, __file__, "validate", "--rulings", str(bad_doc),
+                              "--packets", str(pk)], capture_output=True, text=True,
+                             encoding="utf-8")
+        check("validate exits 1 on a content violation through the CLI",
+              run.returncode == 1 and "does not follow" in run.stdout)
+        run = subprocess.run([sys.executable, __file__, "validate", "--rulings",
+                              str(Path(scratch) / "missing.json", ), "--packets", str(pk)],
+                             capture_output=True, text=True, encoding="utf-8")
+        check("validate exits 2 on an unreadable input through the CLI", run.returncode == 2)
+        tpl = Path(scratch) / "t.md"
+        tpl.write_text("{A} {B}", encoding="utf-8")
+        run = subprocess.run([sys.executable, __file__, "render", "--template", str(tpl),
+                              "--target-ref", "x", "--packets", "x", "--register", "x", "--clone",
+                              "x", "--base-branch", "x", "--work", "x", "--out", "x",
+                              "--exec-note", "x", "--budget", "x", "--out-prompt",
+                              str(Path(scratch) / "p.md")], capture_output=True, text=True,
+                             encoding="utf-8")
+        check("render exits 1 on an unfilled placeholder through the CLI",
+              run.returncode == 1 and "unfilled" in run.stdout)
+
     # 11. render refuses an unfilled placeholder.
     try:
         render("x {A} {B}", {"A": 1})
@@ -944,7 +1010,7 @@ def self_test() -> int:
 
     for name in failures:
         print("FAIL " + name)
-    print("self-test: %d checks, %d failures" % (40, len(failures)))
+    print("self-test: %d checks, %d failures" % (47, len(failures)))
     return 1 if failures else 0
 
 

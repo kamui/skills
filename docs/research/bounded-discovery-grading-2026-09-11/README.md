@@ -114,7 +114,8 @@ Standard-library Python 3.9+, macOS and Linux, one script with `--self-test`:
 
 The public scan refuses every slot name, repository component, url, pinned object id and
 pull-request reference derived from the frozen manifest, any other full object id, and — new here —
-any path-shaped value, because a file path names the project as surely as its name does.
+any source path, any slash path outside this repository's own roots, and any path under a home or
+temporary directory, because a file path names the project as surely as its name does.
 
 ## What was graded
 
@@ -199,7 +200,8 @@ question #153 answers, not this bundle. **No comparison, no arm, no ranking appe
 ## Unmasking cues
 
 Seven cues are recorded and none is resolved. Six are the adjudicator's, one per packet except one
-packet with two, kept verbatim in the sealed tables and listed by packet id in the public summary:
+packet with two, kept verbatim in the sealed tables; the public summary lists only that a cue exists
+and which packet it concerns, because a cue quotes the packet's prose:
 they concern the presence or absence of an `items` array, phrasing that suggests a verification
 step in the pipeline, and terminology in a status line. The seventh is the coordinator's, known
 before grading and recorded rather than discovered: only one arm in this pilot published
@@ -247,8 +249,9 @@ as two reservations of $3.50 each followed by two settlements
 Settled at the larger of the two figures, as the preregistration's settlement rule says; the
 self-report exceeds the transcript by about $0.004 on each, the untranscripted small-model
 request the probes identified. Headless sessions write the one-hour cache tier, priced ×2.0. The
-ledger stands at **$49.1467191** actual with $0.164316 of retained uncertainty; **$8.1669390** of
-the $10.00 protected reserve remains for #153's synthesis. No reservation is outstanding.
+ledger stands at **$49.1467191** actual with $0.164316 of retained uncertainty carried unchanged
+from the closeout (this stage retains none of its own); **$8.1669390** of the $10.00 protected
+reserve remains for #153's synthesis. No reservation is outstanding.
 
 ## What this bundle does not do
 
