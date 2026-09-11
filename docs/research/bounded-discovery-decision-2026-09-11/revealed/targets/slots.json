@@ -1,0 +1,28 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "written_at": "2026-09-08T08:46:30.282566+00:00",
+  "truth_version": "v1",
+  "slots": {
+    "slot-1": {
+      "label": "clap-6212",
+      "register": "slot-1-register.md",
+      "leak_set": "slot-1-leak-set.json"
+    },
+    "slot-3": {
+      "label": "nats-server-6593",
+      "register": "slot-3-register.md",
+      "leak_set": "slot-3-leak-set.json"
+    },
+    "slot-4": {
+      "label": "nats-server-7395",
+      "register": "slot-4-register.md",
+      "leak_set": "slot-4-leak-set.json"
+    },
+    "slot-2": {
+      "label": "grpc-go-7417",
+      "register": "slot-2-register.md",
+      "leak_set": "slot-2-leak-set.json"
+    }
+  },
+  "note": "categories and clean/buggy status are in each slot's register; this map only joins slots to labels and registers"
+}

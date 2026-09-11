@@ -1,0 +1,898 @@
+{
+  "arm_role_spend": {
+    "A": {
+      "attempts": 3,
+      "by_role_usd": {
+        "primary": "7.7481640",
+        "worker": "0.6244660"
+      },
+      "settled_usd": "8.3900158",
+      "unassigned_residual_usd": "0.0173858"
+    },
+    "B": {
+      "attempts": 2,
+      "by_role_usd": {
+        "primary": "8.4330350",
+        "worker": "1.7767460"
+      },
+      "settled_usd": "10.2448547",
+      "unassigned_residual_usd": "0.0350737"
+    },
+    "C": {
+      "attempts": 3,
+      "by_role_usd": {
+        "finder": "2.5600680",
+        "primary": "12.1541070",
+        "worker": "2.8375500"
+      },
+      "settled_usd": "17.5882369",
+      "unassigned_residual_usd": "0.0365119"
+    }
+  },
+  "artifact_id": "issue-153-comparison",
+  "attempted_cells": [
+    "slot-1-A-replicate-1",
+    "slot-1-B-replicate-1",
+    "slot-1-C-replicate-1",
+    "slot-2-A-replicate-1",
+    "slot-2-B-replicate-1",
+    "slot-2-C-replicate-1"
+  ],
+  "attempts": [
+    {
+      "action_errors": 0,
+      "arm": "A",
+      "attempt_id": "issue-138-slot-2-A-replicate-1-attempt-1",
+      "attempt_ref": "position-01-attempt-1",
+      "cell_id": "slot-2-A-replicate-1",
+      "clean_claim": false,
+      "completed": false,
+      "completion": "stopped-runtime",
+      "defects_v1": [],
+      "defects_v2": [],
+      "duration_censored": true,
+      "false_clean": false,
+      "fix_sufficiency": null,
+      "honest_incomplete": null,
+      "invalidated_by": "recorded basis",
+      "is_replacement": false,
+      "operational_validity": "invalid",
+      "ordinal": 1,
+      "packet_id": null,
+      "partial_fix_defect_ids": [],
+      "per_role_usd": {},
+      "position": 1,
+      "predecessor_ref": null,
+      "priority_errors": 0,
+      "produced_claims": false,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 0,
+      "raw_items": 0,
+      "recall_v1": null,
+      "recall_v2": null,
+      "recomputed_usage_usd": null,
+      "recovered_defect_ids": [],
+      "recovered_v1": [],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": null,
+      "safety_claims": 0,
+      "self_report_usd": "0.0000000",
+      "settled_usd": "0.0000000",
+      "status": "Incomplete",
+      "sufficient_fix_defect_ids": [],
+      "sufficient_outcome_recall_v2": null,
+      "sufficient_v1": [],
+      "target_slot": "slot-2",
+      "target_status": "clean",
+      "timing": null,
+      "timing_availability": "no root dispatch: the launch was refused before any model request; 1.482 s of coordinator elapsed was recorded, so there is no root elapsed and no #130 sidecar",
+      "unassigned_residual_usd": null,
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "documented coordinator invalidity, recorded when it happened",
+      "verifier": null
+    },
+    {
+      "action_errors": 0,
+      "arm": "A",
+      "attempt_id": "issue-138-slot-2-A-replicate-1-attempt-2",
+      "attempt_ref": "position-01-attempt-2",
+      "cell_id": "slot-2-A-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "defects_v1": [],
+      "defects_v2": [],
+      "duration_censored": false,
+      "false_clean": false,
+      "fix_sufficiency": null,
+      "honest_incomplete": false,
+      "invalidated_by": null,
+      "is_replacement": true,
+      "operational_validity": "unresolved",
+      "ordinal": 2,
+      "packet_id": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6",
+      "partial_fix_defect_ids": [],
+      "per_role_usd": {
+        "primary": "3.221167",
+        "worker": "0.624466"
+      },
+      "position": 1,
+      "predecessor_ref": "position-01-attempt-1",
+      "priority_errors": 0,
+      "produced_claims": true,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 0,
+      "raw_items": 1,
+      "recall_v1": null,
+      "recall_v2": null,
+      "recomputed_usage_usd": "3.845633",
+      "recovered_defect_ids": [],
+      "recovered_v1": [],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": 1864.592,
+      "safety_claims": 2,
+      "self_report_usd": "3.8595330",
+      "settled_usd": "3.8595330",
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "sufficient_outcome_recall_v2": null,
+      "sufficient_v1": [],
+      "target_slot": "slot-2",
+      "target_status": "clean",
+      "timing": {
+        "completed_at": "2026-09-09T05:33:54.122662+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 1862.568,
+        "elapsed_to_payload_seconds": 1790.693,
+        "payload_validated_at": "2026-09-09T05:32:42.248003+00:00",
+        "root_dispatched_at": "2026-09-09T05:02:51.554662+00:00"
+      },
+      "timing_availability": "root elapsed and the #130 sidecar recorded, with 4 of its fields",
+      "unassigned_residual_usd": "0.0139000",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "verifier": {
+        "arm": "A",
+        "attempt_ref": "position-01-attempt-2",
+        "batch": "clean-verdict",
+        "candidates_received": 0,
+        "finder_origin_received": 0,
+        "worker_model": "claude-sonnet-5"
+      }
+    },
+    {
+      "action_errors": 0,
+      "arm": "B",
+      "attempt_id": "issue-138-slot-2-B-replicate-1-attempt-1",
+      "attempt_ref": "position-02-attempt-1",
+      "cell_id": "slot-2-B-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "defects_v1": [],
+      "defects_v2": [],
+      "duration_censored": false,
+      "false_clean": false,
+      "fix_sufficiency": null,
+      "honest_incomplete": false,
+      "invalidated_by": null,
+      "is_replacement": false,
+      "operational_validity": "unresolved",
+      "ordinal": 1,
+      "packet_id": "1d3416e2-b657-4498-ae26-f0c0f504bc1d",
+      "partial_fix_defect_ids": [],
+      "per_role_usd": {
+        "primary": "3.377537",
+        "worker": "0.496648"
+      },
+      "position": 2,
+      "predecessor_ref": null,
+      "priority_errors": 0,
+      "produced_claims": true,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 0,
+      "raw_items": 0,
+      "recall_v1": null,
+      "recall_v2": null,
+      "recomputed_usage_usd": "3.874185",
+      "recovered_defect_ids": [],
+      "recovered_v1": [],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": 1214.654,
+      "safety_claims": 4,
+      "self_report_usd": "3.8777270",
+      "settled_usd": "3.8777270",
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "sufficient_outcome_recall_v2": null,
+      "sufficient_v1": [],
+      "target_slot": "slot-2",
+      "target_status": "clean",
+      "timing": {
+        "completed_at": "2026-09-09T05:57:35.972431+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 1212.451,
+        "elapsed_to_payload_seconds": 1142.993,
+        "payload_validated_at": "2026-09-09T05:56:26.515062+00:00",
+        "root_dispatched_at": "2026-09-09T05:37:23.521899+00:00"
+      },
+      "timing_availability": "root elapsed and the #130 sidecar recorded, with 4 of its fields",
+      "unassigned_residual_usd": "0.0035420",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "verifier": {
+        "arm": "B",
+        "attempt_ref": "position-02-attempt-1",
+        "batch": "clean-verdict",
+        "candidates_received": 0,
+        "finder_origin_received": 0,
+        "worker_model": "claude-opus-5"
+      }
+    },
+    {
+      "action_errors": 0,
+      "arm": "C",
+      "attempt_id": "issue-138-slot-2-C-replicate-1-attempt-1",
+      "attempt_ref": "position-03-attempt-1",
+      "cell_id": "slot-2-C-replicate-1",
+      "clean_claim": false,
+      "completed": false,
+      "completion": "stopped-runtime",
+      "defects_v1": [],
+      "defects_v2": [],
+      "duration_censored": true,
+      "false_clean": false,
+      "fix_sufficiency": null,
+      "honest_incomplete": null,
+      "invalidated_by": "recorded basis",
+      "is_replacement": false,
+      "operational_validity": "invalid",
+      "ordinal": 1,
+      "packet_id": null,
+      "partial_fix_defect_ids": [],
+      "per_role_usd": {
+        "finder": "0.680374",
+        "primary": "0.878206"
+      },
+      "position": 3,
+      "predecessor_ref": null,
+      "priority_errors": 0,
+      "produced_claims": false,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 0,
+      "raw_items": 0,
+      "recall_v1": null,
+      "recall_v2": null,
+      "recomputed_usage_usd": "1.558580",
+      "recovered_defect_ids": [],
+      "recovered_v1": [],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": 493.267,
+      "safety_claims": 0,
+      "self_report_usd": "1.5838690",
+      "settled_usd": "1.5838690",
+      "status": "Incomplete",
+      "sufficient_fix_defect_ids": [],
+      "sufficient_outcome_recall_v2": null,
+      "sufficient_v1": [],
+      "target_slot": "slot-2",
+      "target_status": "clean",
+      "timing": {
+        "completed_at": "2026-09-09T06:06:28.893804+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 491.206,
+        "elapsed_to_payload_seconds": null,
+        "payload_validated_at": null,
+        "root_dispatched_at": "2026-09-09T05:58:17.688135+00:00"
+      },
+      "timing_availability": "root elapsed recorded; duration censored at the stop, not completed",
+      "unassigned_residual_usd": "0.0252890",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "documented infrastructure invalidity, recorded when it happened",
+      "verifier": null
+    },
+    {
+      "action_errors": 0,
+      "arm": "C",
+      "attempt_id": "issue-138-slot-2-C-replicate-1-attempt-2",
+      "attempt_ref": "position-03-attempt-2",
+      "cell_id": "slot-2-C-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "defects_v1": [],
+      "defects_v2": [],
+      "duration_censored": false,
+      "false_clean": false,
+      "fix_sufficiency": null,
+      "honest_incomplete": false,
+      "invalidated_by": null,
+      "is_replacement": true,
+      "operational_validity": "unresolved",
+      "ordinal": 2,
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+      "partial_fix_defect_ids": [],
+      "per_role_usd": {
+        "finder": "0.663775",
+        "primary": "5.304207",
+        "worker": "1.026677"
+      },
+      "position": 3,
+      "predecessor_ref": "position-03-attempt-1",
+      "priority_errors": 0,
+      "produced_claims": true,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 0,
+      "raw_items": 1,
+      "recall_v1": null,
+      "recall_v2": null,
+      "recomputed_usage_usd": "6.994658",
+      "recovered_defect_ids": [],
+      "recovered_v1": [],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": 1880.859,
+      "safety_claims": 2,
+      "self_report_usd": "7.0003047",
+      "settled_usd": "7.0003047",
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "sufficient_outcome_recall_v2": null,
+      "sufficient_v1": [],
+      "target_slot": "slot-2",
+      "target_status": "clean",
+      "timing": {
+        "completed_at": "2026-09-09T06:53:32.271660+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 1877.309,
+        "elapsed_to_payload_seconds": 1558.788,
+        "payload_validated_at": "2026-09-09T06:48:13.750806+00:00",
+        "root_dispatched_at": "2026-09-09T06:22:14.962674+00:00"
+      },
+      "timing_availability": "root elapsed and the #130 sidecar recorded, with 4 of its fields",
+      "unassigned_residual_usd": "0.0056457",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "verifier": {
+        "arm": "C",
+        "attempt_ref": "position-03-attempt-2",
+        "batch": "clean-verdict",
+        "candidates_received": 0,
+        "finder_origin_received": 0,
+        "note": "the two finder claims were rejected by the primary before the batch; the batch attacked the whole disposition ledger including those rejections",
+        "worker_model": "claude-opus-5"
+      }
+    },
+    {
+      "action_errors": 0,
+      "arm": "A",
+      "attempt_id": "issue-138-slot-1-A-replicate-1-attempt-1",
+      "attempt_ref": "position-04-attempt-1",
+      "cell_id": "slot-1-A-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "defects_v1": [
+        "GT-p1"
+      ],
+      "defects_v2": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "duration_censored": false,
+      "false_clean": true,
+      "fix_sufficiency": null,
+      "honest_incomplete": false,
+      "invalidated_by": null,
+      "is_replacement": false,
+      "operational_validity": "unresolved",
+      "ordinal": 1,
+      "packet_id": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643",
+      "partial_fix_defect_ids": [],
+      "per_role_usd": {
+        "primary": "4.526997"
+      },
+      "position": 4,
+      "predecessor_ref": null,
+      "priority_errors": 0,
+      "produced_claims": true,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 0,
+      "raw_items": 2,
+      "recall_v1": 0.0,
+      "recall_v2": 0.0,
+      "recomputed_usage_usd": "4.526997",
+      "recovered_defect_ids": [],
+      "recovered_v1": [],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": 1110.633,
+      "safety_claims": 1,
+      "self_report_usd": "4.5304828",
+      "settled_usd": "4.5304828",
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "sufficient_outcome_recall_v2": 0.0,
+      "sufficient_v1": [],
+      "target_slot": "slot-1",
+      "target_status": "buggy",
+      "timing": {
+        "completed_at": "2026-09-09T07:12:45.604841+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 1109.426,
+        "elapsed_to_payload_seconds": 861.248,
+        "payload_validated_at": "2026-09-09T07:08:37.426535+00:00",
+        "root_dispatched_at": "2026-09-09T06:54:16.178982+00:00"
+      },
+      "timing_availability": "root elapsed and the #130 sidecar recorded, with 4 of its fields",
+      "unassigned_residual_usd": "0.0034858",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 1,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "verifier": {
+        "arm": "A",
+        "attempt_ref": "position-04-attempt-1",
+        "batch": "none",
+        "candidates_received": 0,
+        "finder_origin_received": 0,
+        "note": "zero survivors on a surface outside the zero-survivor vocabulary: the policy permits no batch",
+        "worker_model": null
+      }
+    },
+    {
+      "action_errors": 0,
+      "arm": "B",
+      "attempt_id": "issue-138-slot-1-B-replicate-1-attempt-1",
+      "attempt_ref": "position-05-attempt-1",
+      "cell_id": "slot-1-B-replicate-1",
+      "clean_claim": false,
+      "completed": true,
+      "completion": "complete",
+      "defects_v1": [
+        "GT-p1"
+      ],
+      "defects_v2": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "duration_censored": false,
+      "false_clean": false,
+      "fix_sufficiency": 0.5,
+      "honest_incomplete": false,
+      "invalidated_by": "this assessment",
+      "is_replacement": false,
+      "operational_validity": "invalid",
+      "ordinal": 1,
+      "packet_id": "d5fbbc87-30af-45cd-8daa-02d0f0b78097",
+      "partial_fix_defect_ids": [
+        "GT-p1"
+      ],
+      "per_role_usd": {
+        "primary": "5.055498",
+        "worker": "1.280098"
+      },
+      "position": 5,
+      "predecessor_ref": null,
+      "priority_errors": 0,
+      "produced_claims": true,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 1,
+      "raw_items": 1,
+      "recall_v1": 1.0,
+      "recall_v2": 1.0,
+      "recomputed_usage_usd": "6.335596",
+      "recovered_defect_ids": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "recovered_v1": [
+        "GT-p1"
+      ],
+      "replacement_eligible": true,
+      "replicate": 1,
+      "root_elapsed_seconds": 1667.18,
+      "safety_claims": 0,
+      "self_report_usd": "6.3671277",
+      "settled_usd": "6.3671277",
+      "status": "Changes Requested",
+      "sufficient_fix_defect_ids": [
+        "GT-p2"
+      ],
+      "sufficient_outcome_recall_v2": 0.5,
+      "sufficient_v1": [],
+      "target_slot": "slot-1",
+      "target_status": "buggy",
+      "timing": {
+        "completed_at": "2026-09-09T07:40:56.743690+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 1665.945,
+        "elapsed_to_payload_seconds": 1428.179,
+        "payload_validated_at": "2026-09-09T07:36:58.977384+00:00",
+        "root_dispatched_at": "2026-09-09T07:13:10.798801+00:00"
+      },
+      "timing_availability": "root elapsed and the #130 sidecar recorded, with 4 of its fields",
+      "unassigned_residual_usd": "0.0315317",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "a read outside the permitted roots, invalid on protocol grounds under preregistration section 5; the acceptance recorded at settlement is preserved as history and does not amend the frozen rule",
+      "verifier": {
+        "arm": "B",
+        "attempt_ref": "position-05-attempt-1",
+        "batch": "candidate",
+        "candidates_received": 1,
+        "finder_origin_received": 0,
+        "worker_model": "claude-opus-5"
+      }
+    },
+    {
+      "action_errors": 0,
+      "arm": "C",
+      "attempt_id": "issue-138-slot-1-C-replicate-1-attempt-1",
+      "attempt_ref": "position-06-attempt-1",
+      "cell_id": "slot-1-C-replicate-1",
+      "clean_claim": false,
+      "completed": false,
+      "completion": "stopped-budget",
+      "defects_v1": [
+        "GT-p1"
+      ],
+      "defects_v2": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "duration_censored": true,
+      "false_clean": false,
+      "fix_sufficiency": 0.5,
+      "honest_incomplete": true,
+      "invalidated_by": null,
+      "is_replacement": false,
+      "operational_validity": "unresolved",
+      "ordinal": 1,
+      "packet_id": "48d5db81-a8ca-47cc-b018-461fde3ac88d",
+      "partial_fix_defect_ids": [
+        "GT-p1"
+      ],
+      "per_role_usd": {
+        "finder": "1.215919",
+        "primary": "5.971694",
+        "worker": "1.810873"
+      },
+      "position": 6,
+      "predecessor_ref": null,
+      "priority_errors": 0,
+      "produced_claims": true,
+      "raw_false_finding_items": 0,
+      "raw_false_non_finding_items": 0,
+      "raw_finding_items": 2,
+      "raw_items": 2,
+      "recall_v1": 1.0,
+      "recall_v2": 1.0,
+      "recomputed_usage_usd": "8.998486",
+      "recovered_defect_ids": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "recovered_v1": [
+        "GT-p1"
+      ],
+      "replacement_eligible": false,
+      "replicate": 1,
+      "root_elapsed_seconds": 2148.942,
+      "safety_claims": 0,
+      "self_report_usd": "9.0040632",
+      "settled_usd": "9.0040632",
+      "status": "Changes Requested",
+      "sufficient_fix_defect_ids": [
+        "GT-p2"
+      ],
+      "sufficient_outcome_recall_v2": 0.5,
+      "sufficient_v1": [],
+      "target_slot": "slot-1",
+      "target_status": "buggy",
+      "timing": {
+        "completed_at": "2026-09-09T08:19:23.608045+00:00",
+        "completion_mode": "render-only",
+        "elapsed_to_completion_seconds": 2147.047,
+        "elapsed_to_payload_seconds": null,
+        "payload_validated_at": null,
+        "root_dispatched_at": "2026-09-09T07:43:36.560968+00:00"
+      },
+      "timing_availability": "root elapsed recorded; duration censored at the stop, not completed",
+      "unassigned_residual_usd": "0.0055772",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "unsupported_safety_claims": 0,
+      "valid": false,
+      "valid_completed": false,
+      "validity_basis": "no violation was observed and every observable dimension is established, but the evidence named under missing_evidence was never retained, so this assessment does not certify the attempt as faithful",
+      "verifier": {
+        "arm": "C",
+        "attempt_ref": "position-06-attempt-1",
+        "batch": "candidate",
+        "candidates_received": 2,
+        "finder_origin_received": 1,
+        "worker_model": "claude-opus-5"
+      }
+    }
+  ],
+  "cells": [
+    {
+      "arm": "A",
+      "attempts": [
+        "position-04-attempt-1"
+      ],
+      "cell_id": "slot-1-A-replicate-1",
+      "charges_usd": "4.5304828",
+      "replicate": 1,
+      "target_slot": "slot-1",
+      "valid_completed": false
+    },
+    {
+      "arm": "B",
+      "attempts": [
+        "position-05-attempt-1"
+      ],
+      "cell_id": "slot-1-B-replicate-1",
+      "charges_usd": "6.3671277",
+      "replicate": 1,
+      "target_slot": "slot-1",
+      "valid_completed": false
+    },
+    {
+      "arm": "C",
+      "attempts": [
+        "position-06-attempt-1"
+      ],
+      "cell_id": "slot-1-C-replicate-1",
+      "charges_usd": "9.0040632",
+      "replicate": 1,
+      "target_slot": "slot-1",
+      "valid_completed": false
+    },
+    {
+      "arm": "A",
+      "attempts": [
+        "position-01-attempt-1",
+        "position-01-attempt-2"
+      ],
+      "cell_id": "slot-2-A-replicate-1",
+      "charges_usd": "3.8595330",
+      "replicate": 1,
+      "target_slot": "slot-2",
+      "valid_completed": false
+    },
+    {
+      "arm": "B",
+      "attempts": [
+        "position-02-attempt-1"
+      ],
+      "cell_id": "slot-2-B-replicate-1",
+      "charges_usd": "3.8777270",
+      "replicate": 1,
+      "target_slot": "slot-2",
+      "valid_completed": false
+    },
+    {
+      "arm": "C",
+      "attempts": [
+        "position-03-attempt-1",
+        "position-03-attempt-2"
+      ],
+      "cell_id": "slot-2-C-replicate-1",
+      "charges_usd": "8.5841737",
+      "replicate": 1,
+      "target_slot": "slot-2",
+      "valid_completed": false
+    }
+  ],
+  "closeout": {
+    "fidelity_assessment": "docs/research/bounded-discovery-closeout-2026-09-10/fidelity-assessment.json",
+    "manifest": "docs/research/bounded-discovery-closeout-2026-09-10/manifest.json",
+    "reconciliation": "docs/research/bounded-discovery-closeout-2026-09-10/reconciliation.json"
+  },
+  "derived_fields": "revealed/amendment-1/derived-fields-amended-1.json",
+  "expected_clean_targets": [
+    "slot-2"
+  ],
+  "joined_at": "2026-09-11T15:54:36.205440+00:00",
+  "matched_pairs": {
+    "medians": {
+      "B/A": 1.205055605268156,
+      "C/A": 2.1057941933358055,
+      "C/B": 1.8139305552846687
+    },
+    "pair_counts": {
+      "B/A": 2,
+      "C/A": 2,
+      "C/B": 2
+    },
+    "pairs": [
+      {
+        "B/A": 1.4053971687079354,
+        "C/A": 1.9874401024102772,
+        "C/B": 1.4141483608063963,
+        "cost_usd": {
+          "A": "4.5304828",
+          "B": "6.3671277",
+          "C": "9.0040632"
+        },
+        "replicate": 1,
+        "target_slot": "slot-1"
+      },
+      {
+        "B/A": 1.0047140418283766,
+        "C/A": 2.224148284261334,
+        "C/B": 2.213712749762941,
+        "cost_usd": {
+          "A": "3.8595330",
+          "B": "3.8777270",
+          "C": "8.5841737"
+        },
+        "replicate": 1,
+        "target_slot": "slot-2"
+      }
+    ]
+  },
+  "planned_cells": [
+    "slot-1-A-replicate-1",
+    "slot-1-A-replicate-2",
+    "slot-1-B-replicate-1",
+    "slot-1-B-replicate-2",
+    "slot-1-C-replicate-1",
+    "slot-1-C-replicate-2",
+    "slot-2-A-replicate-1",
+    "slot-2-A-replicate-2",
+    "slot-2-B-replicate-1",
+    "slot-2-B-replicate-2",
+    "slot-2-C-replicate-1",
+    "slot-2-C-replicate-2",
+    "slot-3-A-replicate-1",
+    "slot-3-A-replicate-2",
+    "slot-3-B-replicate-1",
+    "slot-3-B-replicate-2",
+    "slot-3-C-replicate-1",
+    "slot-3-C-replicate-2",
+    "slot-4-A-replicate-1",
+    "slot-4-A-replicate-2",
+    "slot-4-B-replicate-1",
+    "slot-4-B-replicate-2",
+    "slot-4-C-replicate-1",
+    "slot-4-C-replicate-2"
+  ],
+  "schema_version": "bounded-discovery-v1",
+  "spend_columns": {
+    "conservative_bounds": [
+      {
+        "usd": "0.082158",
+        "what": "one probe request that may never have been recorded",
+        "why": "the cancelled #149 probe produced no envelope; one request at the largest observed per-request cost is retained rather than treating it as free"
+      },
+      {
+        "usd": "0.082158",
+        "what": "one launch-shape check whose transcript was deleted before it was metered",
+        "why": "a coordinator error during #150's shared setup; the same conservative bound is retained for it, so an unmetered session is never counted as zero"
+      }
+    ],
+    "decision_usd": "0",
+    "grading_usd": "3.0168006",
+    "note": "review consumption, one-off setup and selection, charged grading and this decision stay in separate columns; shared setup is charged once to the epic",
+    "pre_freeze_usd": "10.9378407",
+    "retained_uncertainty_usd": "0.164316",
+    "review_attempts_usd": "36.2231074",
+    "setup_and_selection_usd": "0.1527100"
+  },
+  "truth": {
+    "slot-1": {
+      "amendments_applied": 1,
+      "attempted": true,
+      "confirmed_truth_revisions": [
+        "GT-p2"
+      ],
+      "defect_ids_v1": [
+        "GT-p1"
+      ],
+      "defect_ids_v2": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "status": "buggy",
+      "status_after_grading": "buggy",
+      "truth_version_after_grading": "v2",
+      "verdict": "1 material defect."
+    },
+    "slot-2": {
+      "amendments_applied": 1,
+      "attempted": true,
+      "confirmed_truth_revisions": [],
+      "defect_ids_v1": [],
+      "defect_ids_v2": [],
+      "status": "clean",
+      "status_after_grading": "clean",
+      "truth_version_after_grading": "v1",
+      "verdict": "adjudicated clean (D_u = 0)"
+    },
+    "slot-3": {
+      "attempted": false,
+      "confirmed_truth_revisions": [],
+      "defect_ids_v1": [
+        "GT-r1"
+      ],
+      "defect_ids_v2": [
+        "GT-r1"
+      ],
+      "status": "buggy",
+      "truth_version_after_grading": "v1",
+      "verdict": "1 material defect (confirmed) \u2014 plus one closely related but pre-existing item excluded from the count (see Category fit)."
+    },
+    "slot-4": {
+      "attempted": false,
+      "confirmed_truth_revisions": [],
+      "defect_ids_v1": [
+        "GT-s1"
+      ],
+      "defect_ids_v2": [
+        "GT-s1"
+      ],
+      "status": "buggy",
+      "truth_version_after_grading": "v1",
+      "verdict": "1 material defect."
+    }
+  },
+  "unattempted_cells": [
+    "slot-1-A-replicate-2",
+    "slot-1-B-replicate-2",
+    "slot-1-C-replicate-2",
+    "slot-2-A-replicate-2",
+    "slot-2-B-replicate-2",
+    "slot-2-C-replicate-2",
+    "slot-3-A-replicate-1",
+    "slot-3-A-replicate-2",
+    "slot-3-B-replicate-1",
+    "slot-3-B-replicate-2",
+    "slot-3-C-replicate-1",
+    "slot-3-C-replicate-2",
+    "slot-4-A-replicate-1",
+    "slot-4-A-replicate-2",
+    "slot-4-B-replicate-1",
+    "slot-4-B-replicate-2",
+    "slot-4-C-replicate-1",
+    "slot-4-C-replicate-2"
+  ]
+}
