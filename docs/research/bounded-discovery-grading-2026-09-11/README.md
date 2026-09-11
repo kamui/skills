@@ -12,14 +12,20 @@ unattempted grid cells stay unattempted; [`handoff.json`](handoff.json) carries
 
 **The arm mapping was not opened.** The rulings were frozen and hashed
 ([`rulings-freeze.json`](rulings-freeze.json)) and sealed ([`sealed/`](sealed/)) with the redaction
-map still closed. #153 opens it. Nothing in this bundle names an arm, a model, a replicate, a
+map still closed. After the pull-request review disputed two rulings, the same adjudicators
+re-examined them on the evidence and amended both; the amendments are a versioned layer over the
+untouched frozen tables, frozen again as [`rulings-freeze-2.json`](rulings-freeze-2.json) and
+sealed under [`sealed/amendment-1/`](sealed/amendment-1/), still with the map closed (see
+*Amendments after review* below). #153 opens it. Nothing in this bundle names an arm, a model, a replicate, a
 validity label or a cost of any attempt, and no ruling was joined to one.
 
 | Artifact | What it settles |
 | --- | --- |
 | [rulings-public.json](rulings-public.json) | the anonymous ruling summary: per packet and per masked target, every axis as counts, raw against concept, with every unmasking cue listed |
-| [rulings-freeze.json](rulings-freeze.json) | the digest of each full ruling table and of the derived scoring fields, recorded before the mapping was opened |
+| [rulings-freeze.json](rulings-freeze.json) | the digest of each full ruling table and of the derived scoring fields, recorded before the mapping was opened; untouched by the amendments |
+| [rulings-freeze-2.json](rulings-freeze-2.json) | the current freeze: the same tables, the two amendments and the amended derived fields, recorded with the mapping still closed |
 | [sealed/](sealed/) | the full ruling tables with their quotes, citations and basis, under #148's key; the plaintext digests are beside the ciphertext |
+| [sealed/amendment-1/](sealed/amendment-1/) | the two amendments, the amended derived fields, the prompts and launch argv that produced them, the reproduction program and the full transcripts |
 | [metering/](metering/) | each adjudicator session's cost, model, effort, freshness and read audit, and its retained launch argv |
 | [prompts/adjudicator-template.md](prompts/adjudicator-template.md) | the adjudicator's instructions, public because they carry no truth |
 | [handoff.json](handoff.json) | the stage record #153 reads |
@@ -134,17 +140,18 @@ lettering names nothing.
 | Packet | Status | Raw items | Findings | False findings | False non-finding items | Unresolved | Safety claims (unsupported) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `1d3416e2…` | Approved | 0 | 0 | 0 | 0 | 0 | 4 (0) |
-| `c838196b…` | Approved | 1 observation | 0 | 0 | **1** | 0 | 2 (0) |
+| `c838196b…` | Approved | 1 observation | 0 | 0 | 0 (1 before amendment 1) | 0 | 2 (0) |
 | `d34ed404…` | Approved | 1 observation | 0 | 0 | 0 | 0 | 2 (0) |
 
 All three return Approved on an adjudicated clean target, which is the correct verdict; recall is
-N/A on a clean target. One observation asserts a further consequence of the pre-fix defect that the code does not
-have, and the adjudicator refuted it by tracing the code at the pinned head rather than leaving it
-unresolved. It is an **observation**,
-not a finding: the packet did not file it, prioritise it or rest any action on it. The method's
-false-finding count is over findings, so it is reported apart as a false non-finding item and
-counted as one false concept; #153 decides what weight the observation channel carries. The other
-observation states a true coverage fact and asserts no defect. Every explicit safety claim in the
+N/A on a clean target. One observation asserts a further consequence of the pre-fix defect. The
+adjudicator first ruled it false, tracing the shutdown path at the pinned head; the pull-request
+review disputed that with a concrete interleaving, and on re-examination the adjudicator found the
+interleaving real, reproduced it with a standard-library program using the same primitives, and
+amended the ruling to **supported and sub-threshold**: a true statement about the scope of the
+pre-fix defect, already foreclosed by the change under review, filed as a non-blocking observation.
+It is an observation, not a finding, and earns no recovery credit either way. The other observation
+states a true coverage fact and asserts no defect. Every explicit safety claim in the
 three summaries is supported; one packet misstates a test count, which the adjudicator recorded and did
 not treat as a claim about the code.
 
@@ -152,7 +159,7 @@ not treat as a claim about the code.
 
 | Packet | Status | Raw items | Findings | Recovered | Sufficient fix | Partial fix | False findings | Unresolved | Action / priority errors | Unsupported safety claims |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `48d5db81…` | Changes Requested | 2 findings | 2 | D1, D2 | D1, D2 | — | 0 | 0 | 0 / 0 | 0 |
+| `48d5db81…` | Changes Requested | 2 findings | 2 | D1, D2 | D2 (D1 before amendment 1) | D1 | 0 | 0 | 0 / 0 | 0 |
 | `d5fbbc87…` | Changes Requested | 1 finding | 1 | D1, D2 | D2 | D1 | 0 | 0 | 0 / 0 | 0 |
 | `8814c28e…` | Approved | 2 observations | 0 | — | — | — | 0 | 0 | 0 / 0 | **1** |
 
@@ -170,26 +177,29 @@ its defect count moves from one to two, which changes the recall denominator for
 it, and that is disclosed here rather than applied silently. `D1` is the register's original
 defect, reproduced by the adjudicator at the pinned head with the register's own trigger.
 
-Two packets recover both defects. One does so in two separate findings, each with a fix the
-adjudicator judged sufficient against the required corrective outcome. The other bundles both
-under one finding with one proposed fix; the fix restores `D2`'s outcome and not `D1`'s, so that
-packet recovers both concepts and earns sufficiency credit for one — the table records the bundled
-second concept explicitly, with its own fix ruling, because a partial fix recovers a concept and
-earns no full credit. The third packet returns Approved with zero findings on a target carrying a
+Two packets recover both defects, and each earns sufficiency credit for `D2` only. One raises them
+as two separate findings; its `D1` fix was first judged sufficient, and the pull-request review
+pointed at a manifestation the request does not reach — the terminating positional being itself
+the final one — which the adjudicator reproduced at the head and the merge-base and traced through
+the guard that fires before the edited arm, amending that fix ruling to **partial**. The other
+bundles both defects under one finding with one proposed fix that restores `D2`'s outcome and not
+`D1`'s; the table records the bundled second concept explicitly, with its own fix ruling. A partial
+fix recovers a concept and earns no full credit, so both packets recover two concepts and hold one
+sufficiency credit each. The third packet returns Approved with zero findings on a target carrying a
 material, maintainer-confirmed regression; its two observations are true and sub-threshold, and
 its Approved line is an **unsupported explicit clean claim**. Under the preregistration's section
 8 that status is false clean on a buggy target whatever else the packet says; the join is #153's.
 
 Raw against concept, on this target: five raw items, three of them findings, recover two concepts
-across two packets — four recovery credits from three findings, because one finding carries two.
-Zero raw false findings, zero false concepts, zero unresolved rulings, zero action or priority
-errors.
+across two packets — four recovery credits from three findings, because one finding carries two —
+and two sufficiency credits. Zero raw false findings, zero false concepts, zero unresolved rulings,
+zero action or priority errors.
 
 ### Across both targets
 
 | | Packets | Raw items | Raw findings | Raw false findings | False concepts (findings) | False non-finding items | Unresolved | Outstanding |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `<target-A>` | 3 | 2 | 0 | 0 | 0 | 1 | 0 | 0 |
+| `<target-A>` | 3 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
 | `<target-B>` | 3 | 5 | 3 | 0 | 0 | 0 | 0 | 0 |
 
 No packet published a raw false finding. The screen's zero-false-finding gate is therefore not
@@ -216,13 +226,16 @@ nothing about the arm.
 
 ## Fidelity of the adjudicators
 
-Both sessions verified on every assistant line to `claude-sonnet-5` at `high` — 59 lines on
-`<target-A>`, 71 on `<target-B>` including the resume — with one root user message and no
+Both sessions verified on every assistant line to `claude-sonnet-5` at `high` — 81 lines on
+`<target-A>`, 101 on `<target-B>` across every segment — with one root user message and no
 summary or compact record, and no path outside the permitted roots named by any tool call
-([`metering/`](metering/)). The `<target-B>` session was resumed once, for thirty seconds, to add
-one field to one item: the schema had allowed one concept per item and its own basis already said
-that item covered two. The pre-resume table is sealed beside the final one; the diff is that one
-field. Nothing was re-graded and the mapping was closed throughout.
+([`metering/`](metering/)); the audit classifies a file tool's path against the recorded roots
+whether or not the file still exists, and reports a shell token that no longer resolves as
+unresolved rather than inside (none occurred). The `<target-B>` session was resumed once, for
+thirty seconds, to add one field to one item: the schema had allowed one concept per item and its
+own basis already said that item covered two. The pre-resume table is sealed beside the final one;
+the diff is that one field. Both sessions were resumed once more for the amendments below. The
+mapping was closed throughout.
 
 The `<target-B>` adjudicator temporarily appended tests to a file in the clone and switched its
 branch to run one at the merge-base, then restored the file and returned to the pinned head; the
@@ -237,21 +250,59 @@ registers, and it saw one ledger line naming a slot and an arm for one attempt.
 ## Cost
 
 Charged to the epic ledger's protected grading and closeout reserve, phase `grading`, ticket 152,
-as two reservations of $3.50 each followed by two settlements
-([`metering/ledger-events.json`](metering/ledger-events.json)):
+as two reservations of $3.50 for the grading sessions and two of $1.50 for the amendment
+sessions, each followed by its settlement ([`metering/ledger-events.json`](metering/ledger-events.json)):
 
-| Session | Turns | Wall | Transcript at frozen rates | Runtime self-report | Charged |
-| --- | --- | --- | --- | --- | --- |
-| `<target-A>` | 33 | 5 m 22 s | $0.704448 | $0.7084362 | **$0.7084362** |
-| `<target-B>` | 39 + 4 (resume) | 6 m 32 s + 31 s | $1.120661 | $1.1246248 | **$1.1246248** |
-| **Total** | | | | | **$1.8330610** |
+| Session | Turns | Transcript at frozen rates | Runtime self-report | Charged |
+| --- | --- | --- | --- | --- |
+| `<target-A>` grading | 33 | | $0.7084362 | **$0.7084362** |
+| `<target-A>` amendment 1 | 13 | | $0.5643804 | **$0.5643804** |
+| `<target-B>` grading, with the 4-turn resume | 39 + 4 | | $1.1246248 | **$1.1246248** |
+| `<target-B>` amendment 1 | 20 | | $0.6193592 | **$0.6193592** |
+| `<target-A>` all segments | | $1.268829 | $1.2728166 | |
+| `<target-B>` all segments | | $1.740020 | $1.7439840 | |
+| **Total** | | | | **$3.0168006** |
 
 Settled at the larger of the two figures, as the preregistration's settlement rule says; the
 self-report exceeds the transcript by about $0.004 on each, the untranscripted small-model
 request the probes identified. Headless sessions write the one-hour cache tier, priced ×2.0. The
-ledger stands at **$49.1467191** actual with $0.164316 of retained uncertainty carried unchanged
-from the closeout (this stage retains none of its own); **$8.1669390** of the $10.00 protected
+ledger stands at **$50.3304587** actual with $0.164316 of retained uncertainty carried unchanged
+from the closeout (this stage retains none of its own); **$6.9831994** of the $10.00 protected
 reserve remains for #153's synthesis. No reservation is outstanding.
+
+## Amendments after review
+
+The pull-request review of this bundle, itself a fresh context without the arm mapping, disputed
+two rulings with concrete arguments. Neither was accepted on authority: each argument was relayed
+verbatim to the adjudicator that made the ruling, as an unproven claim to check against the code,
+with the frozen table left read-only and the mapping still closed. Both adjudicators changed
+their ruling on the evidence and wrote an amendment naming what the original missed:
+
+- **`<target-A>`, one observation, false → supported and sub-threshold.** The original refutation
+  assumed the shutdown path could never lose the mutex to the update goroutine; the code gives no
+  such ordering guarantee, a timer's stop does not rescue a callback that has already started, and
+  a standard-library reproduction of the same primitives showed the interleaving five times out of
+  five. The observation is true about the pre-fix defect's scope and non-material at the head.
+- **`<target-B>`, one fix ruling, sufficient → partial.** The requested edit sits in an arm that a
+  guard fires before, when the terminating positional is itself the final one. The adjudicator
+  reproduced that case failing at the head and passing at the merge-base, so it is a manifestation
+  of `D1`, and the request restores the other manifestations but not this one.
+
+An amendment replaces whole item records by `item_ref` and may add concepts; `grade.py derive`
+lays it over the frozen table and records what it applied. The frozen tables and
+[`rulings-freeze.json`](rulings-freeze.json) are byte-unchanged and still verify;
+[`rulings-freeze-2.json`](rulings-freeze-2.json) covers the tables, both amendments and the amended
+derived fields together, and is the freeze #153 checks. The amendments, the prompts and launch argv
+that produced them, the reproduction program and the full transcripts are sealed under
+[`sealed/amendment-1/`](sealed/amendment-1/).
+
+The same review found three defects in the script, all fixed with regression cases: recovery and
+fix credit now come from supported material **findings** only, so a question, observation or
+hygiene note ruled material is counted where it is and earns neither; `freeze --check` now requires
+the supplied set to match the freeze record exactly, refusing an omitted or duplicated file, so an
+incomplete verification cannot pass the gate; and the read audit now classifies a file tool's path
+against the recorded roots regardless of whether the file still exists, reporting a shell token
+that no longer resolves as unresolved rather than inside.
 
 ## What this bundle does not do
 
@@ -263,11 +314,14 @@ reserve remains for #153's synthesis. No reservation is outstanding.
 
 ## For #153
 
-Verify the freeze first: decrypt [`sealed/`](sealed/), check `SHA256SUMS`, then run
-`grade.py freeze --check` against [`rulings-freeze.json`](rulings-freeze.json). Then open #151's
-redaction map and join, per packet: arm, replicate, completion and cost from the map; operational
-validity from the closeout's fidelity assessment; and the per-attempt fields from the sealed
-`derived-fields.json`, which are in the shape `score_attempts.py` reads. Score against `v2` for
+Verify the freeze first: decrypt [`sealed/`](sealed/) and [`sealed/amendment-1/`](sealed/amendment-1/),
+check each `SHA256SUMS`, then run `grade.py freeze --check` against
+[`rulings-freeze-2.json`](rulings-freeze-2.json) with the two tables, the two amendments and
+`derived-fields-amended-1.json`, and against [`rulings-freeze.json`](rulings-freeze.json) with the
+tables and `derived-fields.json`. Then open #151's redaction map and join, per packet: arm,
+replicate, completion and cost from the map; operational validity from the closeout's fidelity
+assessment; and the per-attempt fields from the sealed `derived-fields-amended-1.json`, which are
+in the shape `score_attempts.py` reads. Score against `v2` for
 `<target-B>` and report the `v1` figures beside it. Treat the two no-packet attempts and every
 unattempted cell as missing, never as clean.
 
@@ -295,6 +349,12 @@ python3 $BUNDLE/scripts/grade.py derive --rulings $WORK/final/rulings-target-A.j
   $WORK/final/rulings-target-B.json --out $WORK/final/derived-fields.json
 python3 $BUNDLE/scripts/grade.py freeze --rulings $WORK/final/rulings-target-*.json \
   --derived $WORK/final/derived-fields.json --out $BUNDLE/rulings-freeze.json
+# after the review: the amendments as a layer, and a second freeze over the whole set
+python3 $BUNDLE/scripts/grade.py derive --rulings $WORK/final/rulings-target-*.json \
+  --amendment $WORK/final/amendment-1-target-*.json --out $WORK/final/derived-fields-amended-1.json
+python3 $BUNDLE/scripts/grade.py freeze --rulings $WORK/final/rulings-target-*.json \
+  --amendment $WORK/final/amendment-1-target-*.json --derived $WORK/final/derived-fields-amended-1.json \
+  --out $BUNDLE/rulings-freeze-2.json
 python3 $BUNDLE/scripts/grade.py seal --key ~/.config/bounded-discovery/issue-148/truth.key \
   --out-dir $BUNDLE/sealed $WORK/final/*
 python3 $BUNDLE/scripts/grade.py publish --derived $WORK/final/derived-fields.json \

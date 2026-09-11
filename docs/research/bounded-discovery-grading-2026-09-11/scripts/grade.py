@@ -14,9 +14,10 @@ script does everything around those judgments that must not depend on them:
                   in its vocabulary, every concept described, every ruling
                   consistent with its two supporting axes;
 * ``derive``    - the per-attempt scoring fields the frozen scorer consumes
-                  (``score_attempts.py``), mapped from the rulings and shown
-                  beside the raw item counts they collapse - the only place
-                  the raw-versus-concept arithmetic happens;
+                  (``score_attempts.py``), mapped from the rulings - with any
+                  versioned amendment laid over the frozen table by item_ref -
+                  and shown beside the raw item counts they collapse; the only
+                  place the raw-versus-concept arithmetic happens;
 * ``freeze``    - the digest of every ruling file and of the derived fields,
                   recorded before the arm mapping is opened, and ``--check``
                   to prove a later copy is byte-identical;
@@ -46,9 +47,9 @@ Usage::
     grade.py render --template T --target-ref R --packets F --register F \\
         --clone D --base-branch B --work D --out F --exec-note S --budget S \\
         --out-prompt F
-    grade.py validate --rulings F --packets F
-    grade.py derive --rulings F... --out F
-    grade.py freeze --rulings F... --derived F --out F [--check]
+    grade.py validate --rulings F [--amendment F...] --packets F
+    grade.py derive --rulings F... [--amendment F...] --out F
+    grade.py freeze --rulings F... [--amendment F...] --derived F --out F [--check]
     grade.py publish --derived F --rulings F... --frozen manifest.json \\
         --known-cue S --out F
     grade.py seal --key K --out-dir D FILE...
@@ -331,7 +332,11 @@ def derive_packet(packet: dict, register_ids: set, proposed_ids: set) -> dict:
     findings = [i for i in items if i["kind"] == "finding"]
     truth = register_ids | proposed_ids
     material = [i for i in items if i["ruling"] == "supported" and i["materiality"] == "material"]
-    pairs = [(c, f) for i in material for c, f in item_concepts(i) if c in truth]
+    # Only a finding recovers a defect. A question, observation or hygiene
+    # note ruled supported and material is counted where it is, and earns
+    # neither recovery nor fix credit (method section 4; issue #152).
+    material_findings = [i for i in material if i["kind"] == "finding"]
+    pairs = [(c, f) for i in material_findings for c, f in item_concepts(i) if c in truth]
     recovered = sorted({c for c, _ in pairs})
     # A concept is sufficiently fixed when at least one item recovering it
     # requests a sufficient fix; a partial or absent request never credits.
@@ -349,11 +354,13 @@ def derive_packet(packet: dict, register_ids: set, proposed_ids: set) -> dict:
         "raw_items_by_kind": kinds,
         "raw_finding_items": len(findings),
         "raw_supported_material_items": len(material),
+        "raw_supported_material_findings": len(material_findings),
+        "raw_supported_material_non_findings": len(material) - len(material_findings),
         "raw_supported_material_items_on_truth": len([i for i in material if i["concept"] in truth]),
         "recovered_defect_ids": recovered,
         "sufficient_fix_defect_ids": sufficient,
         "partial_fix_defect_ids": sorted({c for c, f in pairs if f == "partial"} - set(sufficient)),
-        "bundled_concept_items": sum(1 for i in material if i.get("additional_concepts")),
+        "bundled_concept_items": sum(1 for i in material_findings if i.get("additional_concepts")),
         "raw_false_finding_items": len(false_findings),
         "unique_false_claims": len({i["concept"] for i in false_findings}),
         "raw_false_non_finding_items": len(false_non_findings),
@@ -373,10 +380,46 @@ def derive_packet(packet: dict, register_ids: set, proposed_ids: set) -> dict:
     }
 
 
-def derive(ruling_files: list) -> dict:
+def apply_amendments(rulings: dict, amendments: list) -> tuple:
+    """Lay each versioned amendment over the frozen table, by item_ref.
+
+    The frozen table is never edited; an amendment replaces whole item records
+    and may add concepts. The result is a new document, and the list of
+    (amendment number, item_ref) pairs applied is returned beside it so the
+    derived record can say what changed."""
+    doc = json.loads(json.dumps(rulings))
+    applied = []
+    by_ref = {i["item_ref"]: (p, n) for p in doc.get("packets") or []
+              for n, i in enumerate(p.get("items") or [])}
+    for amendment in sorted(amendments, key=lambda a: a.get("amendment", 0)):
+        if target_token(amendment.get("target_ref")) != target_token(doc.get("target_ref")):
+            raise Failed("amendment %s is for %s, not %s" % (amendment.get("amendment"),
+                                                             amendment.get("target_ref"),
+                                                             doc.get("target_ref")))
+        if not amendment.get("changed"):
+            continue
+        for item in amendment.get("items") or []:
+            ref = item.get("item_ref")
+            if ref not in by_ref:
+                raise Failed("amendment %s names unknown item %s" % (amendment.get("amendment"), ref))
+            packet, index = by_ref[ref]
+            packet["items"][index] = item
+            applied.append({"amendment": amendment.get("amendment"), "item_ref": ref})
+        for cid, concept in (amendment.get("concepts") or {}).items():
+            doc.setdefault("concepts", {})[cid] = concept
+    return doc, applied
+
+
+def derive(ruling_files: list, amendment_files: list = ()) -> dict:
     targets = {}
+    amendments_by_target = {}
+    for path in amendment_files or ():
+        amendment = load(path)
+        amendments_by_target.setdefault(target_token(amendment.get("target_ref")), []).append(amendment)
     for path in ruling_files:
         rulings = load(path)
+        rulings, applied = apply_amendments(
+            rulings, amendments_by_target.get(target_token(rulings.get("target_ref")), []))
         register_ids = set(rulings.get("register_defect_ids") or [])
         proposed_ids = confirmed_revisions(rulings)
         target_ref = target_token(rulings["target_ref"])
@@ -391,6 +434,7 @@ def derive(ruling_files: list) -> dict:
             "packets": [],
             "outstanding": rulings.get("outstanding") or [],
             "rulings_file": os.path.basename(str(path)),
+            "amendments_applied": applied,
         })
         for packet in rulings.get("packets") or []:
             entry["packets"].append(derive_packet(packet, register_ids, proposed_ids))
@@ -422,12 +466,23 @@ def freeze(ruling_files: list, derived_file) -> dict:
 
 
 def check_freeze(record: dict, ruling_files: list, derived_file) -> list:
+    """Every frozen file, no more and no fewer, must be supplied and must hash.
+
+    A check that verified only the files it was handed would let an
+    incomplete verification pass the gate before the mapping is opened."""
     problems = []
+    supplied = {}
     for path in list(ruling_files) + [derived_file]:
         name = os.path.basename(str(path))
-        if name not in record["files"]:
-            problems.append("%s is not in the freeze record" % name)
-        elif sha256_file(path) != record["files"][name]:
+        if name in supplied:
+            problems.append("%s was supplied twice" % name)
+        supplied[name] = path
+    for name in sorted(set(supplied) - set(record["files"])):
+        problems.append("%s is not in the freeze record" % name)
+    for name in sorted(set(record["files"]) - set(supplied)):
+        problems.append("%s is in the freeze record but was not supplied" % name)
+    for name, path in sorted(supplied.items()):
+        if name in record["files"] and sha256_file(path) != record["files"][name]:
             problems.append("%s does not hash to its frozen digest" % name)
     return problems
 
@@ -512,6 +567,7 @@ def publish(derived: dict, ruling_docs: list, frozen: dict, known_cues: list) ->
             packets.append(public)
         targets[target_ref] = {
             "register_status": entry["register_status"],
+            "amendments_applied": len(entry.get("amendments_applied") or []),
             "defect_count_v1": len(entry["register_defect_ids"]),
             "confirmed_truth_revisions": len(entry["confirmed_truth_revisions"]),
             "truth_version_after_grading": entry["truth_version_after_grading"],
@@ -615,11 +671,11 @@ def audit(transcript, roots: list, labels: list = ()) -> dict:
     labels = list(labels) or ["root-%d" % (n + 1) for n in range(len(roots))]
     if len(labels) != len(roots):
         raise Failed("one label per root is required")
-    roots = [os.path.realpath(os.path.expanduser(r)) for r in roots]
+    roots = [os.path.normpath(os.path.expanduser(r)) for r in roots]
     models, efforts = {}, {}
     assistant = root_user = summaries = synthetic = 0
     tool_calls = {}
-    inside, outside = set(), set()
+    inside, outside, unresolved = set(), set(), set()
     with open(os.path.expanduser(str(transcript)), encoding="utf-8") as handle:
         for line in handle:
             try:
@@ -643,20 +699,27 @@ def audit(transcript, roots: list, labels: list = ()) -> dict:
                 for block in message.get("content") or []:
                     if isinstance(block, dict) and block.get("type") == "tool_use":
                         tool_calls[block.get("name")] = tool_calls.get(block.get("name"), 0) + 1
+                        direct = block.get("name") in ("Read", "Write", "Edit", "Glob", "Grep")
                         for path in paths_in_tool_use(block):
                             if path.startswith("/dev/"):
                                 # A redirect to the null device reads nothing.
                                 continue
-                            real = os.path.realpath(os.path.expanduser(path))
+                            real = os.path.normpath(os.path.expanduser(path))
                             if any(real == r or real.startswith(r + os.sep) for r in roots):
                                 inside.add(path)
+                            elif direct:
+                                # A file tool named it, so it was accessed; whether
+                                # the file still exists today is irrelevant.
+                                outside.add(path)
                             elif os.path.exists(real):
                                 outside.add(path)
                             else:
-                                # A path that does not exist on this machine
-                                # (a clone-relative citation, a placeholder in a
-                                # quoted command) reads nothing.
-                                inside.add(path)
+                                # A shell token that no longer resolves: it may be a
+                                # clone-relative citation or a placeholder in a
+                                # quoted command, or a file read and since deleted.
+                                # The transcript alone cannot say, so it is neither
+                                # inside nor outside; it is reported as unresolved.
+                                unresolved.add(path)
     return {"transcript": os.path.basename(str(transcript)), "assistant_lines": assistant,
             "synthetic_error_lines": synthetic, "models": models, "efforts": efforts,
             "fresh_context": root_user == 1 and summaries == 0,
@@ -664,9 +727,14 @@ def audit(transcript, roots: list, labels: list = ()) -> dict:
             "tool_calls": tool_calls, "permitted_roots": labels,
             "permitted_roots_note": "labels, not paths: a clone directory is named after its "
                                     "target and this record is public",
-            "paths_named": len(inside | outside),
+            "paths_named": len(inside | outside | unresolved),
             "paths_outside_permitted_roots": sorted(outside),
-            "read_outside_permitted_roots": bool(outside)}
+            "paths_unresolved": sorted(unresolved),
+            "read_outside_permitted_roots": bool(outside),
+            "unresolved_shell_paths": bool(unresolved),
+            "classification": "a file tool's path is classified against the recorded roots "
+                              "whether or not it still exists; a shell token that does not "
+                              "resolve today is unresolved, never counted as inside"}
 
 
 # --------------------------------------------------------------------------
@@ -734,7 +802,8 @@ def meter(transcript, envelopes: list, rates: dict, tools_dir) -> dict:
 # --------------------------------------------------------------------------
 
 def handoff(public: dict, freeze_record: dict, seal_record: dict, derived: dict,
-            metering: list, audits: list, frozen: dict) -> dict:
+            metering: list, audits: list, frozen: dict, prior_freezes: list = (),
+            amendment_seals: list = ()) -> dict:
     from decimal import Decimal
     charged = sum((Decimal(m["charged_usd"]) for m in metering), Decimal("0"))
     targets = {}
@@ -749,10 +818,12 @@ def handoff(public: dict, freeze_record: dict, seal_record: dict, derived: dict,
             "truth_version_after_grading": entry["truth_version_after_grading"],
             "confirmed_truth_revisions": len(entry["confirmed_truth_revisions"]),
             "status_after_grading": entry["status_after_grading"],
+            "amendments_applied": len(entry.get("amendments_applied") or []),
         }
     fidelity = [{"transcript": a["transcript"], "models": a["models"], "efforts": a["efforts"],
                  "fresh_context": a["fresh_context"],
-                 "read_outside_permitted_roots": a["read_outside_permitted_roots"]}
+                 "read_outside_permitted_roots": a["read_outside_permitted_roots"],
+                 "unresolved_shell_paths": a.get("paths_unresolved", [])}
                 for a in audits]
     complete = outstanding == 0
     record = {
@@ -775,6 +846,14 @@ def handoff(public: dict, freeze_record: dict, seal_record: dict, derived: dict,
             "public_summary": "rulings-public.json",
             "redaction_map_opened": False,
             "arm_mapping_seen_by_adjudicator": False,
+            "prior_freezes": [{"frozen_at": f["frozen_at"], "combined_sha256": f["combined_sha256"],
+                               "files": f["files"]} for f in prior_freezes],
+            "amendment_seals": [{"sealed_at": a["sealed_at"], "ciphertext_sha256": a["ciphertext_sha256"],
+                                 "plaintext_sha256": a["plaintext_sha256"]} for a in amendment_seals],
+            "amendments": "a versioned amendment lays a corrected item over the frozen table by "
+                          "item_ref; the frozen table and its freeze record are never edited, and "
+                          "the current freeze covers the table, every amendment and the derived "
+                          "fields together",
         },
         "targets": targets,
         "packets_ruled": sum(t["packets_ruled"] for t in targets.values()),
@@ -905,6 +984,97 @@ def self_test() -> int:
                                             {"proposed_id": "GT-x8", "status": "unresolved"}]}
     check("revision without a status is confirmed", confirmed_revisions(doc_rev) == {"GT-x9"})
 
+    # 5d. A question, observation or hygiene note ruled supported and material
+    #     earns neither recovery nor fix credit, and is still counted raw.
+    for kind in ("question", "observation", "hygiene"):
+        non_finding = dict(base, items=[item("p/r1", kind=kind)])
+        d = derive_packet(non_finding, register, set())
+        check("%s earns no recovery credit" % kind, d["recovered_defect_ids"] == [])
+        check("%s earns no fix credit" % kind, d["sufficient_fix_defect_ids"] == [])
+        check("%s is still counted raw" % kind,
+              d["raw_items"] == 1 and d["raw_supported_material_non_findings"] == 1)
+
+    # 5e. freeze --check needs the whole frozen set, exactly once each.
+    with tempfile.TemporaryDirectory() as scratch:
+        files = {}
+        for name in ("rulings-a.json", "rulings-b.json", "derived.json"):
+            path = Path(scratch) / name
+            path.write_text(name, encoding="utf-8")
+            files[name] = str(path)
+        record = freeze([files["rulings-a.json"], files["rulings-b.json"]], files["derived.json"])
+        check("freeze --check passes the complete set",
+              check_freeze(record, [files["rulings-a.json"], files["rulings-b.json"]],
+                           files["derived.json"]) == [])
+        check("freeze --check refuses an omitted frozen file",
+              any("not supplied" in p for p in
+                  check_freeze(record, [files["rulings-a.json"]], files["derived.json"])))
+        check("freeze --check refuses a duplicate",
+              any("twice" in p for p in
+                  check_freeze(record, [files["rulings-a.json"], files["rulings-a.json"]],
+                               files["derived.json"])))
+        extra = Path(scratch) / "extra.json"
+        extra.write_text("x", encoding="utf-8")
+        check("freeze --check refuses a file outside the record",
+              any("not in the freeze record" in p for p in
+                  check_freeze(record, [files["rulings-a.json"], files["rulings-b.json"],
+                                        str(extra)], files["derived.json"])))
+
+    # 5f. The audit classifies a file tool's path against the recorded roots
+    #     whether or not the file still exists, and never counts a vanished
+    #     shell token as inside.
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch) / "root"
+        root.mkdir()
+        gone = Path(scratch) / "elsewhere" / "secret.txt"
+        lines = [
+            {"type": "user", "parentUuid": None},
+            {"type": "assistant", "message": {"model": "m", "effort": "high", "content": [
+                {"type": "tool_use", "name": "Read", "input": {"file_path": str(gone)}},
+                {"type": "tool_use", "name": "Bash", "input": {"command": "cat " + str(gone)}},
+                {"type": "tool_use", "name": "Read", "input": {"file_path": str(root / "ok.md")}},
+            ]}},
+        ]
+        transcript = Path(scratch) / "t.jsonl"
+        transcript.write_text("\n".join(json.dumps(l) for l in lines) + "\n", encoding="utf-8")
+        record = audit(transcript, [str(root)])
+        check("a file-tool read outside the roots stays outside after the file is gone",
+              record["read_outside_permitted_roots"] and str(gone) in
+              record["paths_outside_permitted_roots"])
+        check("a vanished shell token is unresolved, not inside",
+              str(gone) in record["paths_unresolved"])
+        check("a file-tool path inside the roots is inside whether or not it exists",
+              str(root / "ok.md") not in record["paths_outside_permitted_roots"]
+              and str(root / "ok.md") not in record["paths_unresolved"])
+
+    # 5g. An amendment replaces one item by item_ref over the frozen table and
+    #     is refused for an unknown item or another target.
+    frozen_doc = {"target_ref": "<target-T>", "register_defect_ids": ["GT-x1"], "concepts": {},
+                  "packets": [dict(base, items=[item("p/r1", defect="false", concept="F1")])]}
+    amended, applied = apply_amendments(frozen_doc, [
+        {"target_ref": "target-T", "amendment": 1, "changed": True,
+         "items": [item("p/r1", kind="observation", materiality="sub-threshold", concept="N9")],
+         "concepts": {"N9": {"description": "d", "source": "adjudicator"}}}])
+    check("amendment replaces the item", amended["packets"][0]["items"][0]["concept"] == "N9")
+    check("amendment leaves the frozen document untouched",
+          frozen_doc["packets"][0]["items"][0]["concept"] == "F1")
+    check("amendment records what it applied", applied == [{"amendment": 1, "item_ref": "p/r1"}])
+    check("amendment adds its concept", "N9" in amended["concepts"])
+    try:
+        apply_amendments(frozen_doc, [{"target_ref": "<target-T>", "amendment": 2, "changed": True,
+                                       "items": [item("p/r9")]}])
+        check("amendment refuses an unknown item", False)
+    except Failed:
+        pass
+    try:
+        apply_amendments(frozen_doc, [{"target_ref": "<target-U>", "amendment": 1, "changed": True,
+                                       "items": []}])
+        check("amendment refuses another target", False)
+    except Failed:
+        pass
+    unchanged, applied = apply_amendments(frozen_doc, [{"target_ref": "<target-T>", "amendment": 1,
+                                                        "changed": False, "items": []}])
+    check("an unchanged amendment applies nothing", applied == [] and unchanged == frozen_doc)
+
     # 6. Approved is a clean claim whatever the body says; recovery never cancels it.
     approved = dict(base, status="Approved", explicit_clean_claim=True, items=[item("p/r1")])
     d = derive_packet(approved, register, set())
@@ -1016,7 +1186,7 @@ def self_test() -> int:
 
     for name in failures:
         print("FAIL " + name)
-    print("self-test: %d checks, %d failures" % (49, len(failures)))
+    print("self-test: %d checks, %d failures" % (72, len(failures)))
     return 1 if failures else 0
 
 
@@ -1039,14 +1209,17 @@ def main(argv=None) -> int:
 
     p = sub.add_parser("validate")
     p.add_argument("--rulings", required=True)
+    p.add_argument("--amendment", nargs="*", default=[])
     p.add_argument("--packets", required=True)
 
     p = sub.add_parser("derive")
     p.add_argument("--rulings", nargs="+", required=True)
+    p.add_argument("--amendment", nargs="*", default=[])
     p.add_argument("--out", required=True)
 
     p = sub.add_parser("freeze")
     p.add_argument("--rulings", nargs="+", required=True)
+    p.add_argument("--amendment", nargs="*", default=[])
     p.add_argument("--derived", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--check", action="store_true")
@@ -1086,6 +1259,8 @@ def main(argv=None) -> int:
         p.add_argument("--" + name, required=True)
     p.add_argument("--metering", nargs="+", required=True)
     p.add_argument("--audit", nargs="+", required=True)
+    p.add_argument("--prior-freeze", nargs="*", default=[])
+    p.add_argument("--amendment-seal", nargs="*", default=[])
 
     args = parser.parse_args(argv)
     if args.self_test:
@@ -1113,22 +1288,26 @@ def main(argv=None) -> int:
             target.write_text(text, encoding="utf-8")
             print("%s sha256 %s" % (args.out_prompt, sha256_file(target)))
         elif args.command == "validate":
-            problems = validate(load(args.rulings), load(args.packets))
+            rulings = load(args.rulings)
+            if args.amendment:
+                rulings, _ = apply_amendments(rulings, [load(a) for a in args.amendment])
+            problems = validate(rulings, load(args.packets))
             for problem in problems:
                 print(problem)
             return 1 if problems else 0
         elif args.command == "derive":
-            write(args.out, derive(args.rulings))
+            write(args.out, derive(args.rulings, args.amendment))
             print("wrote " + args.out)
         elif args.command == "freeze":
+            frozen_set = list(args.rulings) + list(args.amendment)
             if args.check:
-                problems = check_freeze(load(args.out), args.rulings, args.derived)
+                problems = check_freeze(load(args.out), frozen_set, args.derived)
                 for problem in problems:
                     print(problem)
                 if not problems:
                     print("freeze holds: every file hashes to its frozen digest")
                 return 1 if problems else 0
-            write(args.out, freeze(args.rulings, args.derived))
+            write(args.out, freeze(frozen_set, args.derived))
             print("wrote " + args.out)
         elif args.command == "publish":
             payload = publish(load(args.derived), [load(p) for p in args.rulings],
@@ -1148,6 +1327,8 @@ def main(argv=None) -> int:
                      len(record["paths_outside_permitted_roots"])))
             for path in record["paths_outside_permitted_roots"]:
                 print("read outside the permitted roots: " + path)
+            for path in record["paths_unresolved"]:
+                print("unresolved shell path (does not resolve on this machine): " + path)
             return 1 if record["read_outside_permitted_roots"] else 0
         elif args.command == "meter":
             record = meter(args.transcript, args.envelope, load(args.rates), args.tools)
@@ -1171,7 +1352,9 @@ def main(argv=None) -> int:
         elif args.command == "handoff":
             record = handoff(load(args.public), load(args.freeze), load(args.seal),
                              load(args.derived), [load(m) for m in args.metering],
-                             [load(a) for a in args.audit], load(args.frozen))
+                             [load(a) for a in args.audit], load(args.frozen),
+                             [load(f) for f in args.prior_freeze],
+                             [load(a) for a in args.amendment_seal])
             write(args.out, record)
             print("wrote %s: %s" % (args.out, record["disposition"]))
         else:

@@ -88,11 +88,99 @@
       "reservation_id": "issue-152-adjudicator-target-B",
       "ticket": 152,
       "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0",
+      "attempt_id": null,
+      "event_id": "c6442eb3-378b-4098-a2d4-482c3075767c",
+      "helper_id": null,
+      "observed_at": "2026-09-11T06:05:14.048256+00:00",
+      "operation": "reserve",
+      "phase": "grading",
+      "previous_event_id": "c6981b77-b66d-444d-85ca-39193a5953a0",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage-amendment.json"
+      ],
+      "reason": "Conservative reservation",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage-amendment.json"
+      ],
+      "reservation_delta_usd": "1.50",
+      "reservation_id": "issue-152-adjudicator-target-A-amendment",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0",
+      "attempt_id": null,
+      "event_id": "922cf820-5316-43ec-9ecd-2fd10e4a4020",
+      "helper_id": null,
+      "observed_at": "2026-09-11T06:05:35.348200+00:00",
+      "operation": "reserve",
+      "phase": "grading",
+      "previous_event_id": "c6442eb3-378b-4098-a2d4-482c3075767c",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage-amendment.json"
+      ],
+      "reason": "Conservative reservation",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage-amendment.json"
+      ],
+      "reservation_delta_usd": "1.50",
+      "reservation_id": "issue-152-adjudicator-target-B-amendment",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0.5643804",
+      "attempt_id": null,
+      "event_id": "4ed5b94d-0fbd-42b2-a173-cdd22fa423d3",
+      "helper_id": null,
+      "observed_at": "2026-09-11T06:11:00.983483+00:00",
+      "operation": "settle",
+      "phase": "grading",
+      "previous_event_id": "922cf820-5316-43ec-9ecd-2fd10e4a4020",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage.json"
+      ],
+      "reason": "Usage settlement",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-A/usage.json"
+      ],
+      "reservation_delta_usd": "-1.50",
+      "reservation_id": "issue-152-adjudicator-target-A-amendment",
+      "ticket": 152,
+      "uncertainty_usd": "0"
+    },
+    {
+      "actor": "kamui",
+      "actual_delta_usd": "0.6193592",
+      "attempt_id": null,
+      "event_id": "d70feab8-cce7-4d6e-865f-48e34563ca44",
+      "helper_id": null,
+      "observed_at": "2026-09-11T06:11:01.024823+00:00",
+      "operation": "settle",
+      "phase": "grading",
+      "previous_event_id": "4ed5b94d-0fbd-42b2-a173-cdd22fa423d3",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage.json"
+      ],
+      "reason": "Usage settlement",
+      "request_refs": [
+        "docs/research/bounded-discovery-grading-2026-09-11/metering/target-B/usage.json"
+      ],
+      "reservation_delta_usd": "-1.50",
+      "reservation_id": "issue-152-adjudicator-target-B-amendment",
+      "ticket": 152,
+      "uncertainty_usd": "0"
     }
   ],
   "grading_closeout_reserve_usd": "10.00",
-  "ledger_actual_usd_after": "49.1467191",
+  "ledger_actual_usd_after": "50.3304587",
   "ledger_reserved_usd_after": "0.00",
-  "note": "the four #152 events on the live epic ledger, copied verbatim; the ledger itself stays outside the repository because its attempt ids name slots",
-  "protected_reserve_remaining_usd": "8.1669390"
+  "note": "the #152 events on the live epic ledger, copied verbatim; the ledger itself stays outside the repository because its attempt ids name slots",
+  "protected_reserve_remaining_usd": "6.9831994"
 }
