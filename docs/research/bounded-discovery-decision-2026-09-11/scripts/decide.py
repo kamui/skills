@@ -41,6 +41,33 @@ Usage::
     decide.py scan FILE...
     decide.py --self-test
 
+Input schema (UTF-8 JSON, every file an earlier stage wrote and this bundle
+verifies before reading):
+
+    revealed/schedule.json            #149: {"ordered_cells": [{"position", "cell_id",
+                                      "target_slot", "arm", "replicate", ...}]}
+    revealed/packets/redaction-map.json
+                                      #151: {"target_masks": {slot: target_ref},
+                                      "mapping": [{"attempt_ref", "packet_id", "arm",
+                                      "position", "target_slot", "settled_usd", ...}]}
+    revealed/amendment-1/derived-fields-amended-1.json
+                                      #152: {"targets": {target_ref: {"register_status",
+                                      "register_defect_ids", "defect_ids_after_grading",
+                                      "truth_version_after_grading", "status_after_grading",
+                                      "packets": [score_attempts.py's per-attempt fields
+                                      keyed by "packet_id"]}}}
+    revealed/targets/slot-N-register.md
+                                      #148: a "# Verdict" section and "## GT-..." headings
+                                      under "# Defect register"
+    <closeout>/manifest.json, fidelity-assessment.json, reconciliation.json,
+    packets/no-packet-manifest.json   #151's cell manifest (attempts with validity,
+                                      completion, settled_usd, root_elapsed_seconds), the
+                                      per-attempt assessment, the per-role cost split, and
+                                      the attempts that published nothing
+    loss-stages.json                  this bundle: {"rows": [{"attempt_ref", "defect_id",
+                                      "outcome", "stage" | "origin", "evidence": [...]}],
+                                      "verifier_exposure": [...], "scope_selector": {...}}
+
 Exit: 0 on success, 1 on a content violation with one line per violation on
 stdout, 2 when an input cannot be read or a subprocess fails.
 """
