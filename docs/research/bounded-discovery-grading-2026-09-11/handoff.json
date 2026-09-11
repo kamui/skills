@@ -28,7 +28,7 @@
   "artifact_id": "issue-152-grading-handoff",
   "blinding": "label masking, not guaranteed blinding; every cue is listed, none is resolved, and the arm mapping stays sealed until #153 opens it",
   "claims_note": "No quality, recall or cost comparison appears here. No arm is named, no arm is described as better or worse, and no validity, completion or cost label was joined to any ruling. The scorer's per-attempt fields are derived without arm, validity or cost; #153 joins those.",
-  "created_at": "2026-09-11T06:12:27.017961+00:00",
+  "created_at": "2026-09-11T06:12:58.123787+00:00",
   "dispatch_authorized": false,
   "dispatch_hold": "held. Grading launched no reviewer run and authorises none; the eighteen unattempted cells stay unattempted.",
   "disposition": "grading-delivered",
@@ -72,9 +72,9 @@
   "rulings": {
     "amendment_seals": [
       {
-        "ciphertext_sha256": "7dcaca7f3d8f29ff87aba82c65216da95dcb25afcbdd12ee6103fb8dd1cd213e",
-        "plaintext_sha256": "4f32a7aa375f353a1ec1e53daf2b6f584d1196f4738d2106d484795dc9f7888d",
-        "sealed_at": "2026-09-11T06:12:26.963884+00:00"
+        "ciphertext_sha256": "3e3391165597c6663f0d1cf0388d29b57e4ac32069913dd60239e6f540aa7280",
+        "plaintext_sha256": "ac4e109c57d211c6b4f48bbd2f4842356020546d5446fb796e030b1b7326fe7f",
+        "sealed_at": "2026-09-11T06:12:58.070343+00:00"
       }
     ],
     "amendments": "a versioned amendment lays a corrected item over the frozen table by item_ref; the frozen table and its freeze record are never edited, and the current freeze covers the table, every amendment and the derived fields together",
