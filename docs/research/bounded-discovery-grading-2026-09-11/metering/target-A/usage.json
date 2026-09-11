@@ -160,7 +160,7 @@
           "claude-sonnet-5"
         ],
         "output": 29775,
-        "path": "/Users/jack/.claude/projects/-Users-jack--config-bounded-discovery-issue-152-adjudication-target-A/deb66501-9404-4af9-8bda-b9e3e03a4047.jsonl",
+        "path": "deb66501-9404-4af9-8bda-b9e3e03a4047.jsonl",
         "text_only_turns": 1,
         "thinking": 18302,
         "tool_calls": 32,
