@@ -1,0 +1,12 @@
+{
+  "artifact_id": "issue-152-rulings-freeze",
+  "combined_sha256": "31395be0ddfdef31182c2f146e2c26df0e914500041c042de902ea5550b79d28",
+  "files": {
+    "derived-fields.json": "4beb993d1cda6bfda69ccfdddd4dee1e91adcf8b3a821852709628c247a0011e",
+    "rulings-target-A.json": "873a42166fdfebd88089313d9cb2a456ab40dbc4e72eb1b6ba350d84fdb5a597",
+    "rulings-target-B.json": "f42f3b1a4c58d67157a3e7f5ae6d1a5f1209bdb0d936bde500d0d2f21af7034d"
+  },
+  "frozen_at": "2026-09-11T05:19:49.308651+00:00",
+  "note": "Recorded before the redaction map was opened. A later copy of any file listed here that does not hash to the value recorded is not the frozen ruling; grade.py freeze --check verifies.",
+  "schema_version": "bounded-discovery-v1"
+}
