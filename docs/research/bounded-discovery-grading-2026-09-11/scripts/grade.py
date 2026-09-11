@@ -482,10 +482,12 @@ def leak_scan(payload, forbidden, allowed=()) -> list:
         extension = match.rsplit(".", 1)[-1]
         if extension in SOURCE_EXTENSIONS:
             found.append("refusing to write: the payload contains the source path %r" % match)
-        elif match.startswith(("/Users/", "/home/", "/private/", "/tmp/")):
-            found.append("refusing to write: the payload contains the local path %r" % match)
         elif "/" in match and not match.lstrip("$~/").startswith(PUBLIC_PATH_ROOTS):
             found.append("refusing to write: the payload contains the path-shaped value %r" % match)
+    # A home or temporary directory path names the operator's machine and the
+    # evaluator's layout, whatever it ends in.
+    for match in set(re.findall(r"(?:/Users|/home|/private|/tmp)/[^\s\"'\\]+", text)):
+        found.append("refusing to write: the payload contains the local path %r" % match)
     return sorted(set(found))
 
 
@@ -972,6 +974,10 @@ def self_test() -> int:
           leak_scan({"a": "/Users/someone/.claude/projects/x/y.jsonl"}, forbidden, allowed))
     check("scan refuses a temporary-directory path",
           leak_scan({"a": "/tmp/work/notes.txt"}, forbidden, allowed))
+    check("scan refuses a home path without an extension",
+          leak_scan({"a": "/Users/someone/.config/bounded-discovery/issue-152"}, forbidden, allowed))
+    check("scan refuses a home path with an unlisted extension",
+          leak_scan({"a": "/home/someone/run.log"}, forbidden, allowed))
 
     # 10b. The command line itself: exit codes through subprocess.
     with tempfile.TemporaryDirectory() as scratch:
@@ -1010,7 +1016,7 @@ def self_test() -> int:
 
     for name in failures:
         print("FAIL " + name)
-    print("self-test: %d checks, %d failures" % (47, len(failures)))
+    print("self-test: %d checks, %d failures" % (49, len(failures)))
     return 1 if failures else 0
 
 
