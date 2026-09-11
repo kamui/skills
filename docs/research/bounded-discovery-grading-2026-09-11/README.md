@@ -346,21 +346,25 @@ python3 $BUNDLE/scripts/grade.py render --template $BUNDLE/prompts/adjudicator-t
 # launch: each target's launch record under metering/ carries the exact argv with paths masked
 python3 $BUNDLE/scripts/grade.py validate --rulings $WORK/final/rulings-target-B.json \
   --packets $WORK/inputs/packets-target-B.json
-python3 $BUNDLE/scripts/grade.py derive --rulings $WORK/final/rulings-target-A.json \
-  $WORK/final/rulings-target-B.json --out $WORK/final/derived-fields.json
-python3 $BUNDLE/scripts/grade.py freeze --rulings $WORK/final/rulings-target-*.json \
+# rulings-target-[AB].json names the two final tables and nothing else: the sealed set also
+# holds the pre-resume table for target-B, which rulings-target-*.json would pick up
+python3 $BUNDLE/scripts/grade.py derive --rulings $WORK/final/rulings-target-[AB].json --out $WORK/final/derived-fields.json
+python3 $BUNDLE/scripts/grade.py freeze --rulings $WORK/final/rulings-target-[AB].json \
   --derived $WORK/final/derived-fields.json --out $BUNDLE/rulings-freeze.json
 # after the review: the amendments as a layer, and a second freeze over the whole set
-python3 $BUNDLE/scripts/grade.py derive --rulings $WORK/final/rulings-target-*.json \
+python3 $BUNDLE/scripts/grade.py derive --rulings $WORK/final/rulings-target-[AB].json \
   --amendment $WORK/final/amendment-1-target-*.json --out $WORK/final/derived-fields-amended-1.json
-python3 $BUNDLE/scripts/grade.py freeze --rulings $WORK/final/rulings-target-*.json \
+python3 $BUNDLE/scripts/grade.py freeze --rulings $WORK/final/rulings-target-[AB].json \
   --amendment $WORK/final/amendment-1-target-*.json --derived $WORK/final/derived-fields-amended-1.json \
   --out $BUNDLE/rulings-freeze-2.json
 python3 $BUNDLE/scripts/grade.py seal --key ~/.config/bounded-discovery/issue-148/truth.key \
   --out-dir $BUNDLE/sealed $WORK/final/*
-python3 $BUNDLE/scripts/grade.py publish --derived $WORK/final/derived-fields.json \
-  --rulings $WORK/final/rulings-target-*.json --frozen $FROZEN --known-cue '…' \
-  --out $BUNDLE/rulings-public.json
+# the public summary is published from the amended derived fields; the original derived file
+# exists only to check the original freeze
+python3 $BUNDLE/scripts/grade.py publish --derived $WORK/final/derived-fields-amended-1.json \
+  --rulings $WORK/final/rulings-target-[AB].json --frozen $FROZEN --known-cue '…' --out $WORK/rulings-public.json
+python3 -c 'import json,sys; a,b=[json.load(open(p)) for p in sys.argv[1:]]; a.pop("published_at"); b.pop("published_at"); sys.exit(a!=b)' \
+  $WORK/rulings-public.json $BUNDLE/rulings-public.json   # exit 0: the reproduced counts match
 python3 $BUNDLE/scripts/grade.py audit --transcript <session>.jsonl --root … --out …
 python3 $BUNDLE/scripts/grade.py meter --transcript <session>.jsonl --envelope result.json \
   --rates $RATES --tools docs/research/tools --out …
