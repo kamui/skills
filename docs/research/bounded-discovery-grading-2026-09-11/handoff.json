@@ -1,0 +1,144 @@
+{
+  "adjudicator_fidelity": [
+    {
+      "efforts": {
+        "high": 59
+      },
+      "fresh_context": true,
+      "models": {
+        "claude-sonnet-5": 59
+      },
+      "read_outside_permitted_roots": false,
+      "transcript": "deb66501-9404-4af9-8bda-b9e3e03a4047.jsonl"
+    },
+    {
+      "efforts": {
+        "high": 71
+      },
+      "fresh_context": true,
+      "models": {
+        "claude-sonnet-5": 71
+      },
+      "read_outside_permitted_roots": false,
+      "transcript": "2df6af6f-31b0-45d0-b7dc-7d4853207277.jsonl"
+    }
+  ],
+  "artifact_id": "issue-152-grading-handoff",
+  "blinding": "label masking, not guaranteed blinding; every cue is listed, none is resolved, and the arm mapping stays sealed until #153 opens it",
+  "claims_note": "No quality, recall or cost comparison appears here. No arm is named, no arm is described as better or worse, and no validity, completion or cost label was joined to any ruling. The scorer's per-attempt fields are derived without arm, validity or cost; #153 joins those.",
+  "created_at": "2026-09-11T05:21:29.685384+00:00",
+  "dispatch_authorized": false,
+  "dispatch_hold": "held. Grading launched no reviewer run and authorises none; the eighteen unattempted cells stay unattempted.",
+  "disposition": "grading-delivered",
+  "experiment_disposition": "stopped-incomplete",
+  "grading_cost": {
+    "charged_usd": "1.8330610",
+    "per_session": [
+      {
+        "charged_from": "self-report",
+        "charged_usd": "0.7084362",
+        "self_report_usd": "0.7084362",
+        "target_ref": "<target-A>",
+        "transcript_usd": "0.704448"
+      },
+      {
+        "charged_from": "self-report",
+        "charged_usd": "1.1246248",
+        "self_report_usd": "1.1246248",
+        "target_ref": "<target-B>",
+        "transcript_usd": "1.120661"
+      }
+    ],
+    "sessions": 2
+  },
+  "next_stage": {
+    "must_not": [
+      "dispatch any reviewer run from this handoff",
+      "alter a frozen ruling; a disagreement is recorded beside the table, not inside it",
+      "treat an unresolved attempt as a valid completed outcome",
+      "treat a sub-threshold or unresolved item as a recovery",
+      "read the count of packets that recovered a defect as a comparison before the arm mapping is joined"
+    ],
+    "tickets": [
+      153
+    ],
+    "work": "#153 verifies the freeze against the sealed tables, opens the redaction map, joins arm, replicate, completion and cost from it and operational validity from the closeout's fidelity assessment to the derived per-attempt fields, runs the frozen scorer, and records reject or inconclusive."
+  },
+  "no_packet_attempts": 2,
+  "packets_outstanding": 0,
+  "packets_ruled": 6,
+  "rulings": {
+    "arm_mapping_seen_by_adjudicator": false,
+    "ciphertext_sha256": "20e9a9cec8484d1d81462b1fb74c8f5bceb2bd4aab010e45460cb49536784e84",
+    "combined_sha256": "31395be0ddfdef31182c2f146e2c26df0e914500041c042de902ea5550b79d28",
+    "files": {
+      "derived-fields.json": "4beb993d1cda6bfda69ccfdddd4dee1e91adcf8b3a821852709628c247a0011e",
+      "rulings-target-A.json": "873a42166fdfebd88089313d9cb2a456ab40dbc4e72eb1b6ba350d84fdb5a597",
+      "rulings-target-B.json": "f42f3b1a4c58d67157a3e7f5ae6d1a5f1209bdb0d936bde500d0d2f21af7034d"
+    },
+    "frozen_at": "2026-09-11T05:19:49.308651+00:00",
+    "plaintext_sha256": "3734eda783e0a5ca76b8eb1438c1cba8ac24572c634e6946db8aa957302b063c",
+    "public_summary": "rulings-public.json",
+    "redaction_map_opened": false,
+    "sealed": true
+  },
+  "schema_version": "bounded-discovery-v1",
+  "stage": "grading",
+  "targets": {
+    "<target-A>": {
+      "confirmed_truth_revisions": 0,
+      "packets_outstanding": 0,
+      "packets_ruled": 3,
+      "raw_items": 2,
+      "status_after_grading": "clean",
+      "truth_version_after_grading": "v1",
+      "truth_version_graded": "v1"
+    },
+    "<target-B>": {
+      "confirmed_truth_revisions": 1,
+      "packets_outstanding": 0,
+      "packets_ruled": 3,
+      "raw_items": 5,
+      "status_after_grading": "buggy",
+      "truth_version_after_grading": "v2",
+      "truth_version_graded": "v1"
+    }
+  },
+  "unmasking_cues": [
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "1d3416e2-b657-4498-ae26-f0c0f504bc1d",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "48d5db81-a8ca-47cc-b018-461fde3ac88d",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "recorded in the sealed ruling table",
+      "packet_id": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643",
+      "source": "adjudicator"
+    },
+    {
+      "cue": "Known before grading and recorded rather than discovered: in this pilot only one arm published structured items beside its review body, so a populated items array correlates with that arm. Two of the six packets carry items. The packets name this as label masking, not blinding.",
+      "packet_id": null,
+      "source": "coordinator"
+    }
+  ]
+}

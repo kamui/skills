@@ -1,0 +1,29 @@
+{
+  "assistant_lines": 59,
+  "efforts": {
+    "high": 59
+  },
+  "fresh_context": true,
+  "models": {
+    "claude-sonnet-5": 59
+  },
+  "paths_named": 9,
+  "paths_outside_permitted_roots": [],
+  "permitted_roots": [
+    "work",
+    "clone",
+    "inputs",
+    "module-cache",
+    "build-cache"
+  ],
+  "permitted_roots_note": "labels, not paths: a clone directory is named after its target and this record is public",
+  "read_outside_permitted_roots": false,
+  "root_user_messages": 1,
+  "summary_records": 0,
+  "synthetic_error_lines": 0,
+  "tool_calls": {
+    "Bash": 31,
+    "Write": 1
+  },
+  "transcript": "deb66501-9404-4af9-8bda-b9e3e03a4047.jsonl"
+}
