@@ -1,0 +1,31 @@
+{
+  "artifact_id": "issue-152-usage-amendment-target-B",
+  "envelope": {
+    "duration_ms": 129258,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5": {
+        "cacheCreationInputTokens": 26370,
+        "cacheReadInputTokens": 1962536,
+        "canonicalModel": "claude-sonnet-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.6193591999999999,
+        "inputTokens": 36,
+        "maxOutputTokens": 64000,
+        "outputTokens": 12130,
+        "provider": "firstParty",
+        "thinkingTokens": 4879,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 20,
+    "subtype": "success"
+  },
+  "note": "this segment settles at the runtime self-report for the segment; the transcript-based figure cannot be split by segment and is reported for the whole session in usage.json, which charges the larger of the transcript total and the sum of every segment self-report",
+  "reservation_id": "issue-152-adjudicator-target-B-amendment",
+  "segment": "amendment 1 (a resume of the grading session)",
+  "self_report_usd": "0.6193592",
+  "settled_usd": "0.6193592",
+  "target_ref": "<target-B>"
+}
