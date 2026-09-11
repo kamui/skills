@@ -1,0 +1,258 @@
+{
+  "experiment_id": "issue-138",
+  "ordered_cells": [
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-2-A-replicate-1-attempt-1",
+      "block": "pilot",
+      "cell_id": "slot-2-A-replicate-1",
+      "position": 1,
+      "replicate": 1,
+      "target_slot": "slot-2",
+      "ticket": 150
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-2-B-replicate-1-attempt-1",
+      "block": "pilot",
+      "cell_id": "slot-2-B-replicate-1",
+      "position": 2,
+      "replicate": 1,
+      "target_slot": "slot-2",
+      "ticket": 150
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-2-C-replicate-1-attempt-1",
+      "block": "pilot",
+      "cell_id": "slot-2-C-replicate-1",
+      "position": 3,
+      "replicate": 1,
+      "target_slot": "slot-2",
+      "ticket": 150
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-1-A-replicate-1-attempt-1",
+      "block": "pilot",
+      "cell_id": "slot-1-A-replicate-1",
+      "position": 4,
+      "replicate": 1,
+      "target_slot": "slot-1",
+      "ticket": 150
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-1-B-replicate-1-attempt-1",
+      "block": "pilot",
+      "cell_id": "slot-1-B-replicate-1",
+      "position": 5,
+      "replicate": 1,
+      "target_slot": "slot-1",
+      "ticket": 150
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-1-C-replicate-1-attempt-1",
+      "block": "pilot",
+      "cell_id": "slot-1-C-replicate-1",
+      "position": 6,
+      "replicate": 1,
+      "target_slot": "slot-1",
+      "ticket": 150
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-3-A-replicate-1-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-3-A-replicate-1",
+      "position": 7,
+      "replicate": 1,
+      "target_slot": "slot-3",
+      "ticket": 151
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-3-B-replicate-1-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-3-B-replicate-1",
+      "position": 8,
+      "replicate": 1,
+      "target_slot": "slot-3",
+      "ticket": 151
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-3-C-replicate-1-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-3-C-replicate-1",
+      "position": 9,
+      "replicate": 1,
+      "target_slot": "slot-3",
+      "ticket": 151
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-4-A-replicate-1-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-4-A-replicate-1",
+      "position": 10,
+      "replicate": 1,
+      "target_slot": "slot-4",
+      "ticket": 151
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-4-B-replicate-1-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-4-B-replicate-1",
+      "position": 11,
+      "replicate": 1,
+      "target_slot": "slot-4",
+      "ticket": 151
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-4-C-replicate-1-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-4-C-replicate-1",
+      "position": 12,
+      "replicate": 1,
+      "target_slot": "slot-4",
+      "ticket": 151
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-1-A-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-1-A-replicate-2",
+      "position": 13,
+      "replicate": 2,
+      "target_slot": "slot-1",
+      "ticket": 151
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-1-B-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-1-B-replicate-2",
+      "position": 14,
+      "replicate": 2,
+      "target_slot": "slot-1",
+      "ticket": 151
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-1-C-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-1-C-replicate-2",
+      "position": 15,
+      "replicate": 2,
+      "target_slot": "slot-1",
+      "ticket": 151
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-2-A-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-2-A-replicate-2",
+      "position": 16,
+      "replicate": 2,
+      "target_slot": "slot-2",
+      "ticket": 151
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-2-B-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-2-B-replicate-2",
+      "position": 17,
+      "replicate": 2,
+      "target_slot": "slot-2",
+      "ticket": 151
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-2-C-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-2-C-replicate-2",
+      "position": 18,
+      "replicate": 2,
+      "target_slot": "slot-2",
+      "ticket": 151
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-3-A-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-3-A-replicate-2",
+      "position": 19,
+      "replicate": 2,
+      "target_slot": "slot-3",
+      "ticket": 151
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-3-B-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-3-B-replicate-2",
+      "position": 20,
+      "replicate": 2,
+      "target_slot": "slot-3",
+      "ticket": 151
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-3-C-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-3-C-replicate-2",
+      "position": 21,
+      "replicate": 2,
+      "target_slot": "slot-3",
+      "ticket": 151
+    },
+    {
+      "arm": "A",
+      "attempt_id": "issue-138-slot-4-A-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-4-A-replicate-2",
+      "position": 22,
+      "replicate": 2,
+      "target_slot": "slot-4",
+      "ticket": 151
+    },
+    {
+      "arm": "B",
+      "attempt_id": "issue-138-slot-4-B-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-4-B-replicate-2",
+      "position": 23,
+      "replicate": 2,
+      "target_slot": "slot-4",
+      "ticket": 151
+    },
+    {
+      "arm": "C",
+      "attempt_id": "issue-138-slot-4-C-replicate-2-attempt-1",
+      "block": "grid",
+      "cell_id": "slot-4-C-replicate-2",
+      "position": 24,
+      "replicate": 2,
+      "target_slot": "slot-4",
+      "ticket": 151
+    }
+  ],
+  "pilot_slots": [
+    "slot-2",
+    "slot-1"
+  ],
+  "register_sums": {
+    "slot-1": "ac64e1d2deb8e298faaca784bd87a9b02ae3e4986fa13590bceaac6d4caf47cd",
+    "slot-2": "b9f1bd9504769530c9c120d8794b0b2cabc31ac53ced0e46f4db1c0060fdbe80",
+    "slot-3": "361801531f10227c95bb84b63791dc6e37f586abfe0b73d2b79169084047ce90",
+    "slot-4": "a96e8027b4d907ee95e8a8a26a6004f85c421d022a2e80a13ff12230a023eb23"
+  },
+  "rule": "pilot = the adjudicated clean slot and the lowest-numbered buggy slot, replicate 1, arms A/B/C per slot, clean slot first; then replicate 1 of the remaining slots and all of replicate 2, slots in numeric order, arms A/B/C within each slot",
+  "schema_version": "bounded-discovery-v1",
+  "written_at": "2026-09-08T09:31:57.739582+00:00"
+}
