@@ -671,7 +671,10 @@ def audit(transcript, roots: list, labels: list = ()) -> dict:
     labels = list(labels) or ["root-%d" % (n + 1) for n in range(len(roots))]
     if len(labels) != len(roots):
         raise Failed("one label per root is required")
-    roots = [os.path.normpath(os.path.expanduser(r)) for r in roots]
+    # realpath canonicalises symlinks on both sides (macOS links /tmp to
+    # /private/tmp); for a path that no longer exists it still resolves the
+    # existing prefix, so classification does not depend on the file's fate.
+    roots = [os.path.realpath(os.path.expanduser(r)) for r in roots]
     models, efforts = {}, {}
     assistant = root_user = summaries = synthetic = 0
     tool_calls = {}
@@ -704,7 +707,7 @@ def audit(transcript, roots: list, labels: list = ()) -> dict:
                             if path.startswith("/dev/"):
                                 # A redirect to the null device reads nothing.
                                 continue
-                            real = os.path.normpath(os.path.expanduser(path))
+                            real = os.path.realpath(os.path.expanduser(path))
                             if any(real == r or real.startswith(r + os.sep) for r in roots):
                                 inside.add(path)
                             elif direct:
@@ -823,7 +826,8 @@ def handoff(public: dict, freeze_record: dict, seal_record: dict, derived: dict,
     fidelity = [{"transcript": a["transcript"], "models": a["models"], "efforts": a["efforts"],
                  "fresh_context": a["fresh_context"],
                  "read_outside_permitted_roots": a["read_outside_permitted_roots"],
-                 "unresolved_shell_paths": a.get("paths_unresolved", [])}
+                 "unresolved_shell_paths": bool(a.get("paths_unresolved")),
+                 "paths_unresolved": a.get("paths_unresolved", [])}
                 for a in audits]
     complete = outstanding == 0
     record = {
@@ -1045,6 +1049,16 @@ def self_test() -> int:
         check("a file-tool path inside the roots is inside whether or not it exists",
               str(root / "ok.md") not in record["paths_outside_permitted_roots"]
               and str(root / "ok.md") not in record["paths_unresolved"])
+        # A root registered through a symlink and a path logged through the
+        # real directory are the same place.
+        link = Path(scratch) / "link"
+        link.symlink_to(root)
+        lines[1]["message"]["content"] = [
+            {"type": "tool_use", "name": "Read", "input": {"file_path": str(root / "gone.md")}}]
+        transcript.write_text("\n".join(json.dumps(l) for l in lines) + "\n", encoding="utf-8")
+        record = audit(transcript, [str(link)])
+        check("a symlinked root matches a path through the real directory",
+              not record["read_outside_permitted_roots"] and not record["paths_unresolved"])
 
     # 5g. An amendment replaces one item by item_ref over the frozen table and
     #     is refused for an unknown item or another target.
@@ -1186,7 +1200,7 @@ def self_test() -> int:
 
     for name in failures:
         print("FAIL " + name)
-    print("self-test: %d checks, %d failures" % (72, len(failures)))
+    print("self-test: %d checks, %d failures" % (73, len(failures)))
     return 1 if failures else 0
 
 

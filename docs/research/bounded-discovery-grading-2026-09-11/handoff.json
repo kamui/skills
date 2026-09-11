@@ -8,9 +8,10 @@
       "models": {
         "claude-sonnet-5": 81
       },
+      "paths_unresolved": [],
       "read_outside_permitted_roots": false,
       "transcript": "transcript-target-A.jsonl",
-      "unresolved_shell_paths": []
+      "unresolved_shell_paths": false
     },
     {
       "efforts": {
@@ -20,15 +21,16 @@
       "models": {
         "claude-sonnet-5": 101
       },
+      "paths_unresolved": [],
       "read_outside_permitted_roots": false,
       "transcript": "transcript-target-B.jsonl",
-      "unresolved_shell_paths": []
+      "unresolved_shell_paths": false
     }
   ],
   "artifact_id": "issue-152-grading-handoff",
   "blinding": "label masking, not guaranteed blinding; every cue is listed, none is resolved, and the arm mapping stays sealed until #153 opens it",
   "claims_note": "No quality, recall or cost comparison appears here. No arm is named, no arm is described as better or worse, and no validity, completion or cost label was joined to any ruling. The scorer's per-attempt fields are derived without arm, validity or cost; #153 joins those.",
-  "created_at": "2026-09-11T06:12:58.123787+00:00",
+  "created_at": "2026-09-11T06:22:38.504649+00:00",
   "dispatch_authorized": false,
   "dispatch_hold": "held. Grading launched no reviewer run and authorises none; the eighteen unattempted cells stay unattempted.",
   "disposition": "grading-delivered",
