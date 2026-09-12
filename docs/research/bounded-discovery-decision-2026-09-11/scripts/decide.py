@@ -423,22 +423,32 @@ def concept_counts(items: list) -> dict:
     is a count over the ruled items, never an omission."""
     per_concept = {}
     per_concept_false = {}
-    bundled = 0
+    per_concept_false_findings = {}
+    bundled = bundled_material_findings = 0
     for item in items:
         concepts = [item.get("concept")] + [extra.get("concept") for extra in item.get("additional_concepts") or []]
         concepts = [c for c in concepts if c]
+        finding = item.get("kind") == "finding"
+        material = finding and item.get("ruling") == "supported" and item.get("materiality") == "material"
         if len(concepts) > 1:
             bundled += 1
+            bundled_material_findings += 1 if material else 0
         for concept in concepts:
             per_concept[concept] = per_concept.get(concept, 0) + 1
             if item.get("ruling") == "false":
                 per_concept_false[concept] = per_concept_false.get(concept, 0) + 1
+                if finding:
+                    per_concept_false_findings[concept] = per_concept_false_findings.get(concept, 0) + 1
     return {
         "items_ruled": len(items),
         "concepts_claimed": len(per_concept),
         "duplicate_items_on_a_concept": sum(n - 1 for n in per_concept.values()),
         "duplicate_false_items": sum(n - 1 for n in per_concept_false.values()),
         "bundled_concept_items": bundled,
+        # The grading stage's derived fields count bundling over supported material findings and
+        # false claims over findings only; these two are what the join cross-checks against them.
+        "bundled_material_findings": bundled_material_findings,
+        "duplicate_false_finding_items": sum(n - 1 for n in per_concept_false_findings.values()),
         "items_per_concept": dict(sorted(per_concept.items())),
     }
 
@@ -537,12 +547,12 @@ def build_join(schedule: dict, manifest: dict, fidelity: dict, reconciliation: d
                 if counts["items_ruled"] != packet["raw_items"]:
                     problems.append("%s: %d ruled items against %d raw items in the derived fields"
                                     % (ref, counts["items_ruled"], packet["raw_items"]))
-                if counts["bundled_concept_items"] != packet.get("bundled_concept_items", 0):
-                    problems.append("%s: bundled items %d against the derived fields' %d"
-                                    % (ref, counts["bundled_concept_items"], packet.get("bundled_concept_items", 0)))
-                if packet["raw_false_finding_items"] - packet["unique_false_claims"] != counts["duplicate_false_items"]:
-                    problems.append("%s: duplicate false items %d against the derived fields' raw-minus-unique %d"
-                                    % (ref, counts["duplicate_false_items"],
+                if counts["bundled_material_findings"] != packet.get("bundled_concept_items", 0):
+                    problems.append("%s: bundled material findings %d against the derived fields' %d"
+                                    % (ref, counts["bundled_material_findings"], packet.get("bundled_concept_items", 0)))
+                if packet["raw_false_finding_items"] - packet["unique_false_claims"] != counts["duplicate_false_finding_items"]:
+                    problems.append("%s: duplicate false findings %d against the derived fields' raw-minus-unique %d"
+                                    % (ref, counts["duplicate_false_finding_items"],
                                        packet["raw_false_finding_items"] - packet["unique_false_claims"]))
             else:
                 counts = concept_counts([])
@@ -1205,8 +1215,9 @@ def synthetic() -> dict:
         "slot-3": "# Target\n\n# Verdict\n\n1 material defect.\n\n# Defect register\n\n## GT-y1: something\n"}
     no_packet = {"attempts": [{"attempt_ref": "position-01-attempt-1"}]}
     frozen = {"experiment_id": "synthetic", "cells": {"cell_ids": [c["cell_id"] for c in schedule["ordered_cells"]] + ["slot-3-A-replicate-1"]}}
-    def item(ref, concept, ruling="supported", extra=None):
-        record = {"item_ref": ref, "kind": "finding", "ruling": ruling, "concept": concept}
+    def item(ref, concept, ruling="supported", extra=None, kind="finding"):
+        record = {"item_ref": ref, "kind": kind, "ruling": ruling, "concept": concept,
+                  "materiality": "material" if ruling == "supported" and kind == "finding" else "not-applicable"}
         if extra:
             record["additional_concepts"] = [{"concept": e} for e in extra]
         return record
@@ -1284,6 +1295,18 @@ def self_test() -> int:
     amended = amended_items({"packets": [{"packet_id": "p", "items": [{"item_ref": "p/r1", "ruling": "false", "concept": "F1"}]}]},
                             [{"items": [{"item_ref": "p/r1", "ruling": "supported", "concept": "N2"}]}])
     check("2n an amendment replaces the item by item_ref before counting", amended["p"][0]["concept"] == "N2" and amended["p"][0]["ruling"] == "supported")
+    # 2p. A false observation naming two concepts is bundled in the published count and not in the
+    # cross-checked one, which is scoped like the grading stage's: the join must not trip on it.
+    scoped = synthetic()
+    scoped["items_by_packet"]["p3"] = [
+        {"item_ref": "p3/r1", "kind": "observation", "ruling": "false", "concept": "N1", "materiality": "not-applicable",
+         "additional_concepts": [{"concept": "N2"}]},
+        {"item_ref": "p3/r2", "kind": "observation", "ruling": "false", "concept": "N1", "materiality": "not-applicable"}]
+    scoped["derived"]["targets"]["<target-B>"]["packets"][0]["raw_items"] = 2
+    row = {a["attempt_ref"]: a for a in build_join(**scoped)["attempts"]}["position-03-attempt-1"]
+    check("2p bundled and duplicate counts over non-findings are published and not cross-checked against finding-scoped fields",
+          row["bundled_concept_items"] == 1 and row["duplicate_items_on_a_concept"] == 1 and row["duplicate_false_items"] == 1
+          and row["raw_false_finding_items"] == 0)
     bad = synthetic()
     bad["items_by_packet"]["p4"].append(item_dup := {"item_ref": "p4/r3", "kind": "finding", "ruling": "supported", "concept": "GT-x1"})
     try:

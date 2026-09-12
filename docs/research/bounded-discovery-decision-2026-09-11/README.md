@@ -57,7 +57,9 @@ nothing runs from this handoff.** [`evaluation.md`](evaluation.md) is the argume
    cost and elapsed time from the manifest and reconciliation, including the per-role split; and the
    per-attempt scoring fields from the sealed `derived-fields-amended-1.json`; the duplicate-concept
    and bundled-item counts come from the revealed ruling tables' item-to-concept mapping with the
-   amendments laid over by item reference, cross-checked against the derived fields. Truth for the two
+   amendments laid over by item reference, and are counted over every ruled item; the join
+   cross-checks the finding-scoped subset of them against the derived fields' `bundled_concept_items`
+   and unique false claims, which the grading stage counted over findings only. Truth for the two
    attempted slots comes from the derived fields (register status, `v1` ids, ids after grading) and
    for the two unattempted slots from their registers; the join refuses any disagreement.
 4. **Score.** The pinned `score_attempts.py`, its digest checked against the frozen manifest, over
@@ -118,7 +120,7 @@ stage's reviews have been.
 
 ## Scripts
 
-Standard-library Python 3.9+, macOS and Linux, with `--self-test` (52 checks, including CLI exit
+Standard-library Python 3.9+, macOS and Linux, with `--self-test` (53 checks, including CLI exit
 codes through `subprocess`):
 
 | Command | What it does |
