@@ -36,7 +36,8 @@ which may contain spaces. A candidate id starts with its axis (`code/` or
 `requirements/`) and is unique across both reports; a ledger row id is the
 axis name, a dash, and a positive integer (`code-3`, `requirements-1`),
 unique within its report. `kind` is one of bug, concurrency, invariant,
-security, performance, maintainability, requirement.
+security, performance, maintainability, requirement; a Requirements
+candidate or row uses `requirement` and a Code one uses the other six.
 When supplied, suite-results is a UTF-8 file containing one result-summary
 line per suite. On a re-review, `--prior` names a report holding one
 ```candidates block of the prior findings whose fate turns on the code, in
@@ -82,6 +83,7 @@ KINDS = (
 )
 LEDGER_FIELD_COUNT = 6
 AXES = ("Code", "Requirements")
+KINDS_BY_AXIS = {"Code": KINDS[:-1], "Requirements": ("requirement",)}
 FIELD_RE = re.compile(
     r"^(?:-\s+)?(?:\*\*)?("
     + "|".join(CANDIDATE_FIELDS)
@@ -200,12 +202,17 @@ def parse_candidate_section(label: str, lines: list[str]) -> Candidate:
     for field in VERIFIER_FIELDS:
         if not fields[field].strip():
             raise ReportError(f"{label} has an empty {field}")
-    kind = fields["kind"].strip()
-    if kind not in KINDS:
-        raise ReportError(f"{label} has kind {kind!r}; expected one of {', '.join(KINDS)}")
     axis = fields["axis"].strip()
     if axis not in AXES:
         raise ReportError(f"{label} has axis {axis!r}; expected Code or Requirements")
+    kind = fields["kind"].strip()
+    if kind not in KINDS:
+        raise ReportError(f"{label} has kind {kind!r}; expected one of {', '.join(KINDS)}")
+    if kind not in KINDS_BY_AXIS[axis]:
+        raise ReportError(
+            f"{label} has kind {kind!r}; a {axis} candidate uses "
+            + ", ".join(KINDS_BY_AXIS[axis])
+        )
     candidate_id = fields["id"].strip()
     id_match = CANDIDATE_ID_RE.match(candidate_id)
     if not id_match or id_match.group("axis") != axis.lower():
@@ -312,6 +319,11 @@ def parse_ledger(report: str, axis_label: str) -> list[LedgerRow]:
             raise ReportError(
                 f"{axis_label} ledger row {row_number} has kind {kind!r}; expected one of "
                 + ", ".join(KINDS)
+            )
+        if kind not in KINDS_BY_AXIS[axis_label]:
+            raise ReportError(
+                f"{axis_label} ledger row {row_number} has kind {kind!r}; a {axis_label} row uses "
+                + ", ".join(KINDS_BY_AXIS[axis_label])
             )
         if disposition == "acquitted":
             rows.append(

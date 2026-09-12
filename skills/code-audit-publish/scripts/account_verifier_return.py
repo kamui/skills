@@ -59,6 +59,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -240,7 +241,7 @@ def check_records(
     expected: list[str],
     kind_label: str,
     vocabulary: tuple[str, ...],
-    check_third: "callable[[str, str, str], str | None]",
+    check_third: Callable[[str, str, str], str | None],
 ) -> tuple[dict[str, tuple[str, str]], list[Violation]]:
     """Parse one block's rows and account them against the expected ids.
 
