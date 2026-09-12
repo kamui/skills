@@ -489,8 +489,8 @@ against) and the #199 controls on a real runtime and real targets (P17â€“P26) â€
 establish, what refuses it, and whether it needs paid model sessions.
 
 **No probe has been run and none may be run from this document.** A paid probe needs its own
-reservation on the study's ledger, inside a pre-freeze subtotal a freeze has not yet set. The pilot's
-#149 capability probes cost $1.0418428 and retained $0.082158 of uncertainty; that is the closed
+reservation on the study's ledger, inside a pre-freeze subtotal a freeze has not yet set. #149's
+thirteen capability probes cost $1.0418428 and retained $0.082158 of uncertainty; that is the closed
 grid's figure, offered as an order of magnitude and not as a budget.
 
 **A probe that did not complete establishes nothing.** Any non-zero exit blocks its step: retain the
