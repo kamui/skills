@@ -153,10 +153,13 @@ def freshness(bundle: Path, out: Path):
             continue
         scan = scan_transcript(transcript)
         scan["session_id"] = record["requested"]["session_id"]
-        report[directory.name] = scan
+        # Keyed by the path a launch lives at, not its basename: nested launches share
+        # basenames (every superseded run is `run-1`), and a basename key would let one
+        # overwrite another.
+        report[relative_name(bundle, directory)] = scan
         if (scan["opening_user_text_messages"] != 1 or scan["summary_records"]
                 or scan["resumed_or_forked"]):
-            violations.append(directory.name + " is not a fresh context")
+            violations.append(relative_name(bundle, directory) + " is not a fresh context")
     body = {
         "probe": "P02",
         "rule": ("a worker's context is fresh when its transcript opens with exactly one user "
@@ -187,7 +190,7 @@ def reconcile(bundle: Path, out: Path):
         data = json.loads(metering.read_text(encoding="utf-8"))
         if data.get("charged_usd") is None:
             continue
-        rows[directory.name] = {
+        rows[relative_name(bundle, directory)] = {
             "session_id": data["session_id"],
             "transcripts": data["transcripts"],
             "recomputed_usd": data["recomputed_usd"],
@@ -200,7 +203,8 @@ def reconcile(bundle: Path, out: Path):
         }
         residual = data.get("residual_usd")
         if residual and abs(residual) > 1e-7 and not data.get("residual_named_by"):
-            violations.append(directory.name + " has an unnamed reconciliation residual")
+            violations.append(relative_name(bundle, directory) +
+                              " has an unnamed reconciliation residual")
     body = {
         "probe": "P10",
         "rule": ("settle from the runtime self-report and from the retained per-request records; "
@@ -438,9 +442,9 @@ def self_test():
         check("a one-prompt transcript is fresh", freshness(bundle, out) == 0)
         body = json.loads(out.read_text(encoding="utf-8"))
         check("the attached context is reported",
-              body["sessions"]["PX"]["attached_context_types"] == ["budget_usd"])
+              body["sessions"]["probes/PX"]["attached_context_types"] == ["budget_usd"])
         check("the opening prompt is counted alone",
-              body["sessions"]["PX"]["opening_user_text_messages"] == 1)
+              body["sessions"]["probes/PX"]["opening_user_text_messages"] == 1)
 
         with open(transcript, "a", encoding="utf-8") as stream:
             stream.write(json.dumps({"type": "user", "message": {"role": "user",
@@ -448,7 +452,7 @@ def self_test():
         check("an injected completion is not a second prompt", freshness(bundle, out) == 0)
         body = json.loads(out.read_text(encoding="utf-8"))
         check("the injected message is reported",
-              body["sessions"]["PX"]["harness_injected_user_text_messages"] == 1)
+              body["sessions"]["probes/PX"]["harness_injected_user_text_messages"] == 1)
 
         with open(transcript, "a", encoding="utf-8") as stream:
             stream.write(json.dumps({"type": "summary", "summary": "s"}) + "\n")

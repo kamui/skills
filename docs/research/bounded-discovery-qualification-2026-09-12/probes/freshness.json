@@ -1,352 +1,10 @@
 {
   "attached_context_note": "attached_context_types lists the non-prompt context the runtime itself put into the session. It is reported, not judged: these must be identical across arms or they are a confound, and a freeze names them rather than discovering them at grading.",
   "probe": "P02",
-  "recorded_at": "2026-09-12T21:21:39.842284+00:00",
+  "recorded_at": "2026-09-12T21:38:35.795668+00:00",
   "rule": "a worker's context is fresh when its transcript opens with exactly one user text message before its first assistant line, carries no summary record and was not resumed or forked. Checked mechanically; the model is never asked whether it is fresh. A later user text message is the harness injecting a background worker's completion, counted separately and reported.",
   "sessions": {
-    "A-clean": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "7c0fc216-35e3-4278-9c21-2f5c7fef9679",
-      "summary_records": 0
-    },
-    "A-clean-attempt-1": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "d344ef08-c1de-470e-8278-89822aeca9a2",
-      "summary_records": 0
-    },
-    "A-clean-attempt-2": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "8273536d-2ebb-4436-9763-53e0e1bcc122",
-      "summary_records": 0
-    },
-    "A-clean-attempt-3": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "5d4acf91-7cb0-494c-972a-f4b84778e565",
-      "summary_records": 0
-    },
-    "A-findings": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "304cb623-6692-4be9-98f9-9cbc251ff0d9",
-      "summary_records": 0
-    },
-    "A-findings-attempt-1": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "3fbda135-8589-461a-870c-c6310fdbf6cd",
-      "summary_records": 0
-    },
-    "B-clean": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "202627d6-9ee3-4700-9ddc-bf4f7e6d8bbc",
-      "summary_records": 0
-    },
-    "B-clean-attempt-1": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "b2d74191-a498-45ba-81c2-d1e589734263",
-      "summary_records": 0
-    },
-    "B-clean-attempt-2": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "1512c921-e5ca-4d72-aead-dfe2021b2425",
-      "summary_records": 0
-    },
-    "B-clean-attempt-3": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "c43bdfe8-11c8-4eaf-a33d-47b07e32edfd",
-      "summary_records": 0
-    },
-    "B-findings": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "49878d8c-dbf9-475e-b723-0cadc316ef70",
-      "summary_records": 0
-    },
-    "B-findings-attempt-1": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "3d195991-13a8-4558-aeae-d97db84f099d",
-      "summary_records": 0
-    },
-    "C-clean": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "5e57eec0-3677-4c16-9de2-7823cfe00c96",
-      "summary_records": 0
-    },
-    "C-clean-attempt-1": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "207c657e-d3eb-4bbb-8325-8624410b83ab",
-      "summary_records": 0
-    },
-    "C-clean-attempt-2": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "a1431110-3d46-465e-bc93-e84569ac6d60",
-      "summary_records": 0
-    },
-    "C-clean-attempt-3": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "89ae1b77-be01-43a1-99e5-0a17fe7b753d",
-      "summary_records": 0
-    },
-    "C-findings": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "43964683-8472-409f-901e-c678d1d9adca",
-      "summary_records": 0
-    },
-    "C-findings-attempt-1": {
-      "attached_context_types": [
-        "environment",
-        "model",
-        "agent_listing_delta",
-        "total_tokens_reminder",
-        "budget_usd",
-        "session_context",
-        "date",
-        "remote_session_change",
-        "prompt_snapshot"
-      ],
-      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
-      "harness_injected_user_text_messages": 0,
-      "opening_user_text_messages": 1,
-      "resumed_or_forked": false,
-      "session_id": "db7544bc-d57d-47bf-ab5c-8e04c10a62c2",
-      "summary_records": 0
-    },
-    "P01-P04-P11-cell-configuration": {
+    "probes/P01-P04-P11-cell-configuration": {
       "attached_context_types": [
         "environment",
         "model",
@@ -365,7 +23,7 @@
       "session_id": "453e9c86-d7c5-49e1-b373-be811df086ea",
       "summary_records": 0
     },
-    "P03-finder-confinement": {
+    "probes/P03-finder-confinement": {
       "attached_context_types": [
         "environment",
         "model",
@@ -382,7 +40,7 @@
       "session_id": "0e7877bb-7e75-48f8-b5a3-5d1a07420358",
       "summary_records": 0
     },
-    "P06-P14-egress": {
+    "probes/P06-P14-egress": {
       "attached_context_types": [
         "environment",
         "model",
@@ -401,7 +59,7 @@
       "session_id": "a9af4382-4cd8-4c87-a6c8-0b11f33c8f59",
       "summary_records": 0
     },
-    "P07-cancellation": {
+    "probes/P07-cancellation": {
       "attached_context_types": [
         "environment",
         "model",
@@ -420,7 +78,7 @@
       "session_id": "69b13839-307b-40b5-97c4-f0c0c70313e8",
       "summary_records": 0
     },
-    "P08a-bounded-allowance-self-limited": {
+    "probes/P08a-bounded-allowance-self-limited": {
       "attached_context_types": [
         "environment",
         "model",
@@ -439,7 +97,7 @@
       "session_id": "9e58bfc6-c997-48d1-8abf-c5a25131cb6d",
       "summary_records": 0
     },
-    "P08b-bounded-allowance": {
+    "probes/P08b-bounded-allowance": {
       "attached_context_types": [
         "environment",
         "model",
@@ -458,7 +116,7 @@
       "session_id": "c5e9b72a-4be8-4ef6-8841-3479122a6d3d",
       "summary_records": 0
     },
-    "P12-background-verification": {
+    "probes/P12-background-verification": {
       "attached_context_types": [
         "environment",
         "model",
@@ -477,7 +135,7 @@
       "session_id": "1cd4dc2b-831c-4742-8fc7-8ffde4d9155d",
       "summary_records": 0
     },
-    "P13-shell-filesystem-reach": {
+    "probes/P13-shell-filesystem-reach": {
       "attached_context_types": [
         "environment",
         "model",
@@ -496,7 +154,7 @@
       "session_id": "43c87454-60c3-4d52-9f32-e1796ac4ee85",
       "summary_records": 0
     },
-    "P15a-restricted-with-tools-bash": {
+    "probes/P15a-restricted-with-tools-bash": {
       "attached_context_types": [
         "environment",
         "model",
@@ -515,7 +173,7 @@
       "session_id": "a181baed-a118-437a-bd07-8bf4e0f71eb5",
       "summary_records": 0
     },
-    "P15b-restricted-without-tools-bash": {
+    "probes/P15b-restricted-without-tools-bash": {
       "attached_context_types": [
         "environment",
         "model",
@@ -535,7 +193,349 @@
       "session_id": "fd3eda59-92de-4464-ac1e-7058e71b123d",
       "summary_records": 0
     },
-    "local-session": {
+    "probes/P22-uniform-payloads/A-clean": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "7c0fc216-35e3-4278-9c21-2f5c7fef9679",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/A-clean-attempt-1": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "d344ef08-c1de-470e-8278-89822aeca9a2",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/A-clean-attempt-2": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "8273536d-2ebb-4436-9763-53e0e1bcc122",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/A-clean-attempt-3": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "5d4acf91-7cb0-494c-972a-f4b84778e565",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/A-findings": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "304cb623-6692-4be9-98f9-9cbc251ff0d9",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/A-findings-attempt-1": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "3fbda135-8589-461a-870c-c6310fdbf6cd",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/B-clean": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "202627d6-9ee3-4700-9ddc-bf4f7e6d8bbc",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/B-clean-attempt-1": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "b2d74191-a498-45ba-81c2-d1e589734263",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/B-clean-attempt-2": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "1512c921-e5ca-4d72-aead-dfe2021b2425",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/B-clean-attempt-3": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "c43bdfe8-11c8-4eaf-a33d-47b07e32edfd",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/B-findings": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "49878d8c-dbf9-475e-b723-0cadc316ef70",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/B-findings-attempt-1": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "3d195991-13a8-4558-aeae-d97db84f099d",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/C-clean": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "5e57eec0-3677-4c16-9de2-7823cfe00c96",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/C-clean-attempt-1": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "207c657e-d3eb-4bbb-8325-8624410b83ab",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/C-clean-attempt-2": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "a1431110-3d46-465e-bc93-e84569ac6d60",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/C-clean-attempt-3": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "89ae1b77-be01-43a1-99e5-0a17fe7b753d",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/C-findings": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "43964683-8472-409f-901e-c678d1d9adca",
+      "summary_records": 0
+    },
+    "probes/P22-uniform-payloads/C-findings-attempt-1": {
+      "attached_context_types": [
+        "environment",
+        "model",
+        "agent_listing_delta",
+        "total_tokens_reminder",
+        "budget_usd",
+        "session_context",
+        "date",
+        "remote_session_change",
+        "prompt_snapshot"
+      ],
+      "first_user_message_prefix": "You are reviewing one small change. The whole diff is in the",
+      "harness_injected_user_text_messages": 0,
+      "opening_user_text_messages": 1,
+      "resumed_or_forked": false,
+      "session_id": "db7544bc-d57d-47bf-ab5c-8e04c10a62c2",
+      "summary_records": 0
+    },
+    "probes/P23-network-judgments/local-session": {
       "attached_context_types": [
         "environment",
         "model",

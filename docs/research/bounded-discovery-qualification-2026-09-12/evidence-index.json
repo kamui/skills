@@ -109,7 +109,7 @@
     {
       "probe": "P02",
       "directory": "probes/P02-fresh-context",
-      "purpose": "Is every worker's context fresh, checked mechanically from the transcripts rather than by asking the model? This is the run that produced the committed probes/freshness.json; the earlier run, over the ten sessions that existed when it ran, is retained under run-1/.",
+      "purpose": "Is every worker's context fresh, checked mechanically from the transcripts rather than by asking the model? This is the run that produced the committed probes/freshness.json, keyed by each launch's bundle-relative path; the earlier run, over the ten sessions that existed when it ran, is retained under run-1/.",
       "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py freshness --bundle docs/research/bounded-discovery-qualification-2026-09-12",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
       "requested": {
@@ -134,11 +134,11 @@
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-        "launch.json": "83290726479c334163a1a6e867f99568059ab6539a0d94c77e509b9edc15f52e",
+        "launch.json": "7e94ce7ade8f2b4ca79ab70747f14655735055873b1cf574b18647eec9f2c93b",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "bddd9accf91ed11e62bd1984eee0df20dfeff2e007a56b4f2bbc7115ed6b2068",
-        "timing.json": "8f32c013db546e92a2e6add387ff4db631add41de231540d7eb767125ac2c772",
-        "verdict.json": "59c8c10ab548eb73d0bfe730b703d8aed4896150d2161daca562111d40eb185d"
+        "timing.json": "11bf2fc6d7ce792fb9e0481bbbe131bd83f7faa7c564c51ca0ff7bfd5eb57f7f",
+        "verdict.json": "dd5d388e0412f3ab4c74f02e007c2b779568b0209aa9bdad3a1224ea81be0ce6"
       }
     },
     {
@@ -527,7 +527,7 @@
     {
       "probe": "P10",
       "directory": "probes/P10-billed-totals",
-      "purpose": "Does the runtime self-report reproduce from the per-request records, with every residual named? This is the run that produced the committed probes/reconciliation.json; the earlier run, over the nine sessions metered when it ran, is retained under run-1/.",
+      "purpose": "Does the runtime self-report reproduce from the per-request records, with every residual named? This is the run that produced the committed probes/reconciliation.json, keyed by each launch's bundle-relative path; the earlier run, over the nine sessions metered when it ran, is retained under run-1/.",
       "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py reconcile --bundle docs/research/bounded-discovery-qualification-2026-09-12",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
       "requested": {
@@ -552,11 +552,11 @@
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-        "launch.json": "a88e881684d8471515bedd670475d0067c219443a530e279ec065387229a6119",
+        "launch.json": "96e50f7e975c1cca8329cf34a006037a650a3a98948f89b7b0675bb1919e458d",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "ff19f0097f0d1e9031c5bafb44148a31203820a56fbba0161545ed59652e7e3a",
-        "timing.json": "30c7f57f74190caf476f8c7a836aa53b49786935ebe5ecea95fad62b89808f20",
-        "verdict.json": "93702a8c5a0f307381ae2288042b15bf428d79037022e68761054721d5ae7009"
+        "timing.json": "6bc109518f57256dc23ddc4d28d538cb8416c8658b9608904562b0a61dddde09",
+        "verdict.json": "b3b1995bae6be1373aa5e223b61aee16d910d3c6ff8aa535994f69e0b9c8ee70"
       }
     },
     {
@@ -913,15 +913,15 @@
       },
       "observed_exit": "0",
       "status": "established",
-      "summary": "Every one of the bundle's 64 launches retained its exact argv and its requested model, effort, dollar allowance, restriction flag, tool list and allow list in an exclusively created, flushed and fsynced record written before the process was created (probes/retention.json, written by this launch, which ran last and counted itself). One launch never started at all - P17a names a binary that does not exist - and its record is there with the full request, exit recorded as launch-failed and the OS error retained.",
+      "summary": "Every one of the bundle's 65 launches retained its exact argv and its requested model, effort, dollar allowance, restriction flag, tool list and allow list in an exclusively created, flushed and fsynced record written before the process was created (probes/retention.json, written by this launch, which ran last and counted itself). One launch never started at all - P17a names a binary that does not exist - and its record is there with the full request, exit recorded as launch-failed and the OS error retained.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-        "launch.json": "a3e90db513c957072b03d860e94b993e1bff25b490d166937a405c36896d99f0",
+        "launch.json": "1d0f115a048ae2cdafdbfbf05f30399b74c8d19584a2a2c35d50409f40adce0f",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout.txt": "4d3e1bb8aaace08c09d1835785a67ce9486ff6d772e1269ab9976b949784a20a",
-        "timing.json": "6b1f63b0cad835f0fa3c57b1c8cd4ffc133883377eaeec4345d83ae57bd4dc96",
-        "verdict.json": "9044b6936dec2c398c70551dcdf8152ae4a07447b884829898e5bb5e7bfa1987"
+        "stdout.txt": "bfb71cd7ea796881c837cb0b4aec276d3fc36f0be520103332066c8168afba87",
+        "timing.json": "556734dfe0e84c1b3401974ba5485170958f06321310244b00b3e1406e401656",
+        "verdict.json": "386484eb9de0ade362d12b6b105c9324dd67b145857152d8b81687f2085c5ceb"
       }
     },
     {
@@ -948,7 +948,7 @@
       },
       "observed_exit": "0",
       "status": "established",
-      "summary": "The first run of P17, at 10:20 UTC, over the nineteen launches the bundle held then: all nineteen retained before process creation, one of them a launch that never started. Superseded by the parent directory's run, which covers all 64 launches and wrote the committed probes/retention.json; this run's own report was overwritten by later regenerations and is not retained.",
+      "summary": "The first run of P17, at 10:20 UTC, over the nineteen launches the bundle held then: all nineteen retained before process creation, one of them a launch that never started. Superseded by the parent directory's run, which covers all 65 launches and wrote the committed probes/retention.json; this run's own report was overwritten by later regenerations and is not retained.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
@@ -956,7 +956,7 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "b2c396d617a77b2c1340fe60b3dd558bd063ef3a68b5663e1e31760e46d0d6a9",
         "timing.json": "35515638116647a1a4a395d3ed6e67c5cba34593d2f02eba954ece7f53c4f22d",
-        "verdict.json": "edf1fce655c03d303362b0419fb72af21cd277810cffd43b3131445ef7de61c7"
+        "verdict.json": "8f580b43e8b46ce0bb5917308694a55e1f0219c7bc33d7c9110bd18abe6c6439"
       }
     },
     {
@@ -996,7 +996,7 @@
     {
       "probe": "P18",
       "directory": "probes/P18-per-role-settlement",
-      "purpose": "Do per-role totals reconcile to the settled charge over real transcripts, for the primary, finder and verifier roles?",
+      "purpose": "Do per-role totals reconcile to the settled charge over real transcripts, for the primary, finder and verifier roles? Re-run with the identical command against the reconciliation report now keyed by each launch's bundle-relative path; the earlier run, published at the reviewed head, is retained under run-1/.",
       "command": "python3 -c '\nimport json\nfrom decimal import Decimal\nreport = json.load(open('\"'\"'docs/research/bounded-discovery-qualification-2026-09-12/probes/reconciliation.json'\"'\"'))\nroles = {}\nfor name, row in sorted(report['\"'\"'probes'\"'\"'].items()):\n    per_role = row.get('\"'\"'per_role_usd'\"'\"') or {}\n    if not per_role:\n        continue\n    total = sum(Decimal(v) for v in per_role.values())\n    recomputed = Decimal(str(row['\"'\"'recomputed_usd'\"'\"']))\n    print('\"'\"'%-34s %s  roles %s  sum %s  recomputed %s  %s'\"'\"'\n          % (name, row['\"'\"'charged_usd'\"'\"'], '\"'\"','\"'\"'.join(sorted(per_role)), total, recomputed,\n             '\"'\"'reconciles'\"'\"' if total == recomputed else '\"'\"'DOES NOT RECONCILE'\"'\"'))\n    for role in per_role:\n        roles[role] = roles.get(role, 0) + 1\n    assert total == recomputed, name\nprint()\nprint('\"'\"'roles observed across the bundle:'\"'\"', dict(sorted(roles.items())))\nprint('\"'\"'unassigned roles:'\"'\"', roles.get('\"'\"'unassigned'\"'\"', 0))\n'",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
       "requested": {
@@ -1021,11 +1021,46 @@
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "8e1f206bab58077161b853803e8aebbd2272ae2cf6fe20c9c200a44f3c0dfe92",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "b2c5ebc0a944ae1661cf9b5ece49d384e73d01cd77af3c091e7232276ac4f02c",
+        "timing.json": "4b192b18adb4bbdb9d7cc12ebfb5e0fb2ac4cf00c50f25927adefdbb61b7ea38",
+        "verdict.json": "281f30267426d93d282230cafba779726636fa288042be7eb3cbe59125bcf05c"
+      }
+    },
+    {
+      "probe": "P18",
+      "directory": "probes/P18-per-role-settlement/run-1",
+      "purpose": "Do per-role totals reconcile to the settled charge over real transcripts, for the primary, finder and verifier roles?",
+      "command": "python3 -c '\nimport json\nfrom decimal import Decimal\nreport = json.load(open('\"'\"'docs/research/bounded-discovery-qualification-2026-09-12/probes/reconciliation.json'\"'\"'))\nroles = {}\nfor name, row in sorted(report['\"'\"'probes'\"'\"'].items()):\n    per_role = row.get('\"'\"'per_role_usd'\"'\"') or {}\n    if not per_role:\n        continue\n    total = sum(Decimal(v) for v in per_role.values())\n    recomputed = Decimal(str(row['\"'\"'recomputed_usd'\"'\"']))\n    print('\"'\"'%-34s %s  roles %s  sum %s  recomputed %s  %s'\"'\"'\n          % (name, row['\"'\"'charged_usd'\"'\"'], '\"'\"','\"'\"'.join(sorted(per_role)), total, recomputed,\n             '\"'\"'reconciles'\"'\"' if total == recomputed else '\"'\"'DOES NOT RECONCILE'\"'\"'))\n    for role in per_role:\n        roles[role] = roles.get(role, 0) + 1\n    assert total == recomputed, name\nprint()\nprint('\"'\"'roles observed across the bundle:'\"'\"', dict(sorted(roles.items())))\nprint('\"'\"'unassigned roles:'\"'\"', roles.get('\"'\"'unassigned'\"'\"', 0))\n'",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "unestablished",
+      "summary": "The run of P18 published at the reviewed head. Its per-role reconciliation over the 28 metered sessions is the same as the parent run's; its printed session names were directory basenames, from the reconciliation report as it was keyed then. Superseded by the parent run, which ran the identical command against the report as it is now committed.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
         "launch.json": "a59b7180ad7519007e034faf16e42ae851b40c215100a504956cca7cc99710b5",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "5fa0a4e461f33d2d2ae482368021bffb031df8afb30cfe2c38f4c33a327a140f",
         "timing.json": "a5a761fa25136abbd462fe617d032466d4790a7a65f67a320d0c19b8acab702c",
-        "verdict.json": "d4e49de7b9ba569b49c557be6564b8d9bbbc447333d0b2b056da63b67f0a185c"
+        "verdict.json": "779fe10f1336523e9aeeda516a6351edeb34a30cf2a84adcbcae3441478190f1"
       }
     },
     {
@@ -2796,5 +2831,5 @@
       }
     }
   ],
-  "recorded_at": "2026-09-12T21:25:21.871678+00:00"
+  "recorded_at": "2026-09-12T21:41:28.931455+00:00"
 }

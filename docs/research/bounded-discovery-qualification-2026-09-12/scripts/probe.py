@@ -345,7 +345,9 @@ def verdict(args):
         raise Violation("exit " + observed + " is not the expected " + str(expected) +
                         "; an unexpected exit establishes nothing until it is explained")
     body = {
-        "probe": record.get("probe", args.probe_dir),
+        # With no launch record, name the probe by its directory, never by the path the
+        # directory happened to have on the machine that wrote it.
+        "probe": record.get("probe", directory.name),
         "status": args.status,
         "summary": args.summary,
         "establishes": args.establishes,

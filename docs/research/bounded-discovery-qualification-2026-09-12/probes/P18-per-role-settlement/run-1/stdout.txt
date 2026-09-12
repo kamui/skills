@@ -1,0 +1,31 @@
+A-clean                            0.023621199999999995  roles primary  sum 0.021902  recomputed 0.021902  reconciles
+A-clean-attempt-1                  0.049201600000000005  roles primary  sum 0.047605  recomputed 0.047605  reconciles
+A-clean-attempt-2                  0.0427296  roles primary  sum 0.041132  recomputed 0.041132  reconciles
+A-clean-attempt-3                  0.0459114  roles primary  sum 0.044192  recomputed 0.044192  reconciles
+A-findings                         0.0664354  roles primary  sum 0.064721  recomputed 0.064721  reconciles
+A-findings-attempt-1               0.0933332  roles primary  sum 0.091736  recomputed 0.091736  reconciles
+B-clean                            0.023654799999999997  roles primary  sum 0.021941  recomputed 0.021941  reconciles
+B-clean-attempt-1                  0.073125  roles primary  sum 0.071528  recomputed 0.071528  reconciles
+B-clean-attempt-2                  0.0378932  roles primary  sum 0.0363  recomputed 0.0363  reconciles
+B-clean-attempt-3                  0.0380374  roles primary  sum 0.036318  recomputed 0.036318  reconciles
+B-findings                         0.062182  roles primary  sum 0.060468  recomputed 0.060468  reconciles
+B-findings-attempt-1               0.0518432  roles primary  sum 0.050246  recomputed 0.050246  reconciles
+C-clean                            0.0239952  roles primary  sum 0.022281  recomputed 0.022281  reconciles
+C-clean-attempt-1                  0.057881  roles primary  sum 0.056289  recomputed 0.056289  reconciles
+C-clean-attempt-2                  0.0439816  roles primary  sum 0.042384  recomputed 0.042384  reconciles
+C-clean-attempt-3                  0.042977  roles primary  sum 0.041258  recomputed 0.041258  reconciles
+C-findings                         0.08742520000000001  roles primary  sum 0.085711  recomputed 0.085711  reconciles
+C-findings-attempt-1               0.054259600000000005  roles primary  sum 0.052663  recomputed 0.052663  reconciles
+P01-P04-P11-cell-configuration     0.05071915  roles primary,worker  sum 0.049438  recomputed 0.049438  reconciles
+P03-finder-confinement             0.0705595  roles finder  sum 0.069195  recomputed 0.069195  reconciles
+P06-P14-egress                     0.0271792  roles primary  sum 0.025898  recomputed 0.025898  reconciles
+P08a-bounded-allowance-self-limited 0.012423799999999999  roles primary  sum 0.011398  recomputed 0.011398  reconciles
+P08b-bounded-allowance             0.058664  roles primary  sum 0.057588  recomputed 0.057588  reconciles
+P12-background-verification        0.06445864999999999  roles primary,worker  sum 0.063285  recomputed 0.063285  reconciles
+P13-shell-filesystem-reach         0.024979800000000003  roles primary  sum 0.023669  recomputed 0.023669  reconciles
+P15a-restricted-with-tools-bash    0.040819999999999995  roles primary  sum 0.039634  recomputed 0.039634  reconciles
+P15b-restricted-without-tools-bash 0.06158879999999999  roles primary  sum 0.060413  recomputed 0.060413  reconciles
+local-session                      0.013081600000000002  roles primary  sum 0.012031  recomputed 0.012031  reconciles
+
+roles observed across the bundle: {'finder': 1, 'primary': 27, 'worker': 2}
+unassigned roles: 0

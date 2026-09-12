@@ -1,12 +1,12 @@
 {
   "probe": "P17",
   "status": "established",
-  "summary": "The first run of P17, at 10:20 UTC, over the nineteen launches the bundle held then: all nineteen retained before process creation, one of them a launch that never started. Superseded by the parent directory's run, which covers all 64 launches and wrote the committed probes/retention.json; this run's own report was overwritten by later regenerations and is not retained.",
+  "summary": "The first run of P17, at 10:20 UTC, over the nineteen launches the bundle held then: all nineteen retained before process creation, one of them a launch that never started. Superseded by the parent directory's run, which covers all 65 launches and wrote the committed probes/retention.json; this run's own report was overwritten by later regenerations and is not retained.",
   "establishes": null,
   "residual": null,
   "refuted_by": null,
   "observed_exit": "0",
   "expected_exit": 0,
   "read_from": "the probe's own retained output, not asserted beside it",
-  "recorded_at": "2026-09-12T21:24:50.595326+00:00"
+  "recorded_at": "2026-09-12T21:41:28.844595+00:00"
 }
