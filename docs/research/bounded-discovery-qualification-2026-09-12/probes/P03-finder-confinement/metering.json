@@ -20,5 +20,13 @@
     "claude-haiku-4-5-20251001": 0.001364
   },
   "settlement_rule": "charge the larger of the runtime self-report and the recomputed per-request total, and name the difference",
-  "metered_at": "2026-09-12T10:02:53.173925+00:00"
+  "fidelity": {
+    "checked": "/Users/jack/.claude/projects/-private-tmp-bd207-probes-p03-store/0e7877bb-7e75-48f8-b5a3-5d1a07420358.jsonl",
+    "expected_model": "claude-opus-5",
+    "expected_effort": "high",
+    "children_not_checked_here": 0,
+    "exit": 0
+  },
+  "metered_at": "2026-09-12T11:35:20.241582+00:00",
+  "problems": []
 }

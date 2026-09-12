@@ -51,6 +51,7 @@ with no approval surface. **D7 does not trigger and no launch-shape decision is 
 | Control | Probe | Result |
 | --- | --- | --- |
 | runtime inventory | [P00](probes/P00-runtime-inventory/) | 2.1.269 pinned with 21 tooling digests, all still matching |
+| requested settings observed | every metered probe | each root transcript checked against the model and effort **its own launch record asked for**: 29 verified, no mismatch |
 | distinct child model and effort | [P01](probes/P01-P04-P11-cell-configuration/) | `claude-sonnet-5`/high on all 8 root lines, `claude-opus-5`/high on the child's, from a startup `--agents` definition |
 | fresh context per worker | [P02](probes/P02-fresh-context/) | all 29 sessions open with exactly one user message, no summary, no resume |
 | finder file confinement | [P03](probes/P03-finder-confinement/) | relative escape, absolute path, symlink resolving outside, out-of-root search and the evaluator directory all denied; tools were exactly `Glob, Grep, Read` |
@@ -121,18 +122,21 @@ cite the wrong event and pass ([P23 attempt 1](probes/P23-network-judgments/judg
 No target was selected. What is delivered is the part of #199 gap 8 that is decidable without
 spending, and the reason the rest was not attempted.
 
-- [`targets/reservations.json`](targets/reservations.json) — the extended reservation set **derived
-  by rule**, as the specification requires, from the files that publish it: #148 section 7, #148's
-  exclusion log, the four revealed slot registers, the two revealed excluded registers, and every
-  pull request named in the revealed candidate inventory. **87 pull requests**, from 28 inventory
-  candidate rows and the registers' own citations, each with its reason and the source that names
-  it, and every source digested so a later freeze can tell whether the set it applies is the set
-  these files still publish. Only a backticked reference counts in a list or a table, because these
-  files also cite this project's own tickets in prose and a rule that read every bare `#1234` would
-  invent reservations in the wrong repository. A register is about one repository, so every number
-  in it resolves there — **11 entries are marked `conservative`** because the file cites them as
-  bare prose numbers that no rule can separate from a project citation. They are reserved anyway:
-  over-reserving costs a future hunt one candidate, under-reserving costs the study its blind.
+- [`targets/reservations.json`](targets/reservations.json) — the extended reservation set
+  **derived by rule**, as the specification requires, from the ten files that publish it: #148
+  section 7, #148's exclusion log, the sealed slot map, the four revealed slot registers, the two
+  revealed excluded registers, and every pull request named in the revealed candidate inventory.
+  **102 pull requests**, from 33 inventory rows and the registers' own citations, each with its
+  reason and the source that names it, and every source digested so a later freeze can tell
+  whether the set it applies is the set these files still publish.
+
+  Every bare number resolves to its scope's repository and is marked by how the file evidences
+  it — **77 `strong`** (backticked, linked, or written out in full) and **25 `conservative`** (a
+  bare number in running prose). Both are reserved. These files write genuine same-repository
+  references in prose as well as in code spans, and they cite this project's own tickets in prose
+  too, and no rule separates the two. The errors are not symmetric: over-reserving costs a future
+  hunt one candidate, under-reserving costs the study its blind. So the rule reserves what it
+  cannot prove and marks it, rather than asserting it or dropping it.
 - [`scripts/eligibility.py`](scripts/eligibility.py) — E1, E2, E3 and E5 applied by rule against the
   live forge. Exercised in [P24](probes/P24-fresh-targets/machinery/): the four revealed #138 pull
   requests were excluded by E1, and two of this repository's own pull requests by E2 and E3. An

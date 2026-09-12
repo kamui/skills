@@ -10,14 +10,20 @@ from those files rather than transcribing it, so this script is that derivation.
 
 How a reference is read, and why it matters:
 
-- **Only a code span counts** in a Markdown source. These files cite this project's own
-  tickets in running prose — "(#124 hunt", "#137 record" — and a rule that read every bare
-  ``#1234`` would invent reservations in the wrong repository for each one. Every genuine
-  pull-request reference in these files is backticked; every project citation is not.
-- A code span is a **qualified** reference (``owner/repo#123``), a **repository** on its own
-  (``owner/repo``, as in "``traefik/traefik`` (via ``#10244``)"), or a **bare** number
-  (``#123``) that belongs to the repository most recently named in its own scope — the row,
-  for a table; the running text, for section 7's comma list.
+- A **qualified** reference (``owner/repo#123``) names its own repository. A **bare** number
+  (``#123``) belongs to the repository most recently named in its own scope — the row, for a
+  table; the running text, for section 7's comma list; the whole file, for a register. A
+  code span may also be a **repository** on its own (``owner/repo``, as in
+  "``traefik/traefik`` (via ``#10244``)"), which anchors the bare numbers after it.
+- **Every bare number resolves, and the ones the file does not evidence are marked rather
+  than dropped.** These files cite genuine same-repository pull requests both inside code
+  spans (``#7716``) and in plain prose ("reverted by #15316"), and they also cite this
+  project's own tickets in prose ("#137 hunt"). No mechanical rule separates the last from
+  the middle, and the two errors are not symmetric: reserving a pull request that never
+  needed it costs a future hunt one candidate, while failing to reserve one the revealed
+  material published costs the study its blind. So a backticked or linked bare number is
+  recorded ``strong`` and an unbackticked one ``conservative``, and **both are reserved**.
+  An entry is only ``conservative`` overall when no source evidences it strongly.
 - A span that is plainly a path rather than a repository is not allowed to set the scope's
   repository. Two segments only, and not something ending in a file extension a repository
   name cannot have, so ``sealed/excluded-grpc-go-8519-register.md.enc`` is skipped while
@@ -59,6 +65,7 @@ QUALIFIED = re.compile(r"^([A-Za-z0-9][\w.-]*/[\w.-]+)#(\d+)$")
 REPOSITORY = re.compile(r"^([A-Za-z0-9][\w.-]*/[\w.-]+)$")
 BARE = re.compile(r"^#(\d+)$")
 ANY_NUMBER = re.compile(r"#(\d+)\b")
+LINKED = re.compile(r"\[#(\d+)\]\(https://github\.com/")
 # Extensions a repository name cannot end in. Without this, a backticked path such as
 # `sealed/excluded-grpc-go-8519-register.md.enc` would set the scope's repository and every
 # bare number after it would be reserved in a repository that does not exist.
@@ -76,21 +83,50 @@ def looks_like_a_repository(span: str) -> bool:
 
 
 def references(text: str, repository=None):
-    """Yield ``(repository, number, kind)`` for every reference in one scope."""
+    """Yield ``(repository, number, kind)`` for every reference in one scope, in order.
+
+    ``kind`` is ``qualified`` (the reference named its own repository), ``bare`` (backticked
+    or linked, so the file evidences it as a reference) or ``prose`` (a bare number the file
+    does not mark as one, which is reserved conservatively rather than dropped).
+    """
     current = repository
+    evidenced = set()
     for span in CODE_SPAN.findall(text):
         qualified = QUALIFIED.match(span)
         if qualified:
             current = qualified.group(1)
+            evidenced.add(qualified.group(2))
             yield current, qualified.group(2), "qualified"
             continue
         bare = BARE.match(span)
         if bare:
+            evidenced.add(bare.group(1))
             if current:
                 yield current, bare.group(1), "bare"
             continue
         if looks_like_a_repository(span):
             current = span
+    for number in LINKED.findall(text):
+        evidenced.add(number)
+    # Second pass for the numbers the file wrote in plain prose. The scope's repository is
+    # whatever the scope named; a scope that named none has nothing to resolve them against.
+    anchor = last_repository(text) or repository
+    if anchor:
+        for number in ANY_NUMBER.findall(text):
+            if number not in evidenced:
+                yield anchor, number, "prose"
+
+
+def last_repository(text: str):
+    """The repository a scope names, for resolving the bare numbers it wrote in prose."""
+    current = None
+    for span in CODE_SPAN.findall(text):
+        qualified = QUALIFIED.match(span)
+        if qualified:
+            return qualified.group(1)
+        if looks_like_a_repository(span) and current is None:
+            current = span
+    return current
 
 
 def per_line(text: str):
@@ -98,27 +134,6 @@ def per_line(text: str):
     for line in text.splitlines():
         for reference in references(line):
             yield reference
-
-
-def register_numbers(text: str, repository: str):
-    """Every number in a register, split by how well the file evidences it.
-
-    ``strong``: backticked, qualified, or inside a link to this register's own repository.
-    ``conservative``: any other bare number in the file. Both are reserved; only the first
-    is asserted.
-    """
-    strong = set()
-    for span in CODE_SPAN.findall(text):
-        qualified = QUALIFIED.match(span)
-        if qualified and qualified.group(1) == repository:
-            strong.add(qualified.group(2))
-        elif BARE.match(span):
-            strong.add(BARE.match(span).group(1))
-    for number in re.findall(r"\[#(\d+)\]\(https://github\.com/" +
-                             re.escape(repository) + r"/", text):
-        strong.add(number)
-    everything = set(ANY_NUMBER.findall(text))
-    return sorted(strong, key=int), sorted(everything - strong, key=int)
 
 
 def register_repository(text: str):
@@ -153,10 +168,19 @@ def derive(research: Path):
         return None, violations
     reserved: dict = {}
 
-    def reserve(repository, number, reason, source):
+    def reserve(repository, number, reason, source, kind="qualified"):
         key = repository + "#" + number
         entry = reserved.setdefault(key, {"repository": repository, "number": int(number),
+                                          "confidence": "conservative",
                                           "reasons": [], "named_by": []})
+        # One strongly evidenced citation settles it: an entry is conservative only when no
+        # source evidenced it, not when one source out of two wrote it in prose.
+        if kind != "prose":
+            entry["confidence"] = "strong"
+        if kind == "prose":
+            reason += (", read conservatively: the file writes it as a bare number in prose, "
+                       "which no rule separates from a citation of this project's own tickets, "
+                       "so it is reserved rather than asserted")
         if reason not in entry["reasons"]:
             entry["reasons"].append(reason)
         if source not in entry["named_by"]:
@@ -166,12 +190,13 @@ def derive(research: Path):
     section = criteria.partition("## 7. Reservation list")[2].partition("## 8.")[0]
     if not section.strip():
         violations.append("criteria.md section 7 could not be located")
-    for repository, number, _ in references(section):
+    for repository, number, kind in references(section):
         reserve(repository, number, "used or reserved by an earlier grid (#148 section 7)",
-                "targets/criteria.md section 7")
+                "targets/criteria.md section 7", kind)
 
-    for repository, number, _ in per_line(sources["exclusions"].read_text(encoding="utf-8")):
-        reserve(repository, number, "named in #148's exclusion log", "targets/exclusions.md")
+    for repository, number, kind in per_line(sources["exclusions"].read_text(encoding="utf-8")):
+        reserve(repository, number, "named in #148's exclusion log", "targets/exclusions.md",
+                kind)
 
     for repository, number in QUALIFIED_IN_TEXT.findall(
             sources["slots"].read_text(encoding="utf-8")):
@@ -188,16 +213,8 @@ def derive(research: Path):
         reason = ("a revealed #138 target's register, or a pull request it names"
                   if path.name.startswith("slot-") else
                   "a revealed excluded register, or a pull request it names")
-        strong, conservative = register_numbers(text, repository)
-        for number in strong:
-            reserve(repository, number, reason, "revealed/targets/" + path.name)
-        for number in conservative:
-            reserve(repository, number,
-                    reason + ", read conservatively: the file cites it as a bare number in "
-                    "prose, which no rule can separate from a citation of this project's own "
-                    "tickets, so it is reserved rather than asserted",
-                    "revealed/targets/" + path.name)
-            reserved[repository + "#" + number]["confidence"] = "conservative"
+        for found, number, kind in references(text, repository=repository):
+            reserve(found, number, reason, "revealed/targets/" + path.name, kind)
 
     inventory = sources["inventory"].read_text(encoding="utf-8")
     rows = 0
@@ -214,7 +231,7 @@ def derive(research: Path):
                      "result published" if index == 0 and kind == "qualified" else
                      "named in a revealed inventory row as a later fix, a confirming report or "
                      "a related change"),
-                    "revealed/targets/inventory.md")
+                    "revealed/targets/inventory.md", kind)
     if not rows:
         violations.append("the revealed inventory yielded no candidate rows")
 
@@ -253,9 +270,9 @@ def self_test():
     check("a qualified reference is read", found[0] == ("owner/repo", "12", "qualified"))
     check("a bare reference follows its repository",
           [f[:2] for f in found[1:]] == [("owner/repo", "13"), ("owner/repo", "14")])
-    check("an unbackticked project citation is ignored",
+    check("an unbackticked project citation is reserved conservatively, not dropped",
           list(references("`a/b#1` E9 fail (#124 hunt: nothing of its own)")) ==
-          [("a/b", "1", "qualified")])
+          [("a/b", "1", "qualified"), ("a/b", "124", "prose")])
     check("a repository span alone anchors a bare number",
           [f[:2] for f in references("`traefik/traefik` (via `#10244`)")] ==
           [("traefik/traefik", "10244")])
@@ -265,7 +282,7 @@ def self_test():
     check("a sealed path does not anchor",
           list(references("`golang-jwt/jwt#456` sealed `sealed/x-register.md.enc` then `#484`"))
           == [("golang-jwt/jwt", "456", "qualified"), ("golang-jwt/jwt", "484", "bare")])
-    check("a bare number with no repository yet is dropped",
+    check("a bare number with no repository at all is dropped",
           list(references("`#99` with nothing before it")) == [])
     rows = list(per_line("| `a/b#7` | `#99` |\nnot a row\n| `c/d#8` | `#100` |"))
     check("a row's bare number does not leak into the next row",
@@ -276,15 +293,23 @@ def self_test():
           "clap-rs/clap")
     check("a register with only a path names no repository",
           register_repository("see `sealed/x.md.enc`") is None)
-    strong, conservative = register_numbers(
+    register = list(references(
         "- Pull request: [#456](https://github.com/golang-jwt/jwt/pull/456)\n"
-        "- see `#510` and later commits #484, and clean per #137 hunt\n", "golang-jwt/jwt")
-    check("a linked and a backticked number are strong", strong == ["456", "510"])
-    check("a bare prose number is reserved conservatively", conservative == ["137", "484"])
+        "- see `#510` and later commits #484, and clean per #137 hunt\n",
+        repository="golang-jwt/jwt"))
+    check("a linked or backticked number in a register is evidenced",
+          [r for r in register if r[2] != "prose"] == [("golang-jwt/jwt", "510", "bare")])
+    check("a prose number in a register is still reserved",
+          sorted(r[1] for r in register if r[2] == "prose") == ["137", "484"])
+    check("a linked number is not also read as prose",
+          "456" not in [r[1] for r in register if r[2] == "prose"])
+    prose = list(references("| `a/b#7` reverted by #99 |"))
+    check("an unbackticked same-row number is reserved as prose",
+          prose == [("a/b", "7", "qualified"), ("a/b", "99", "prose")])
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 12 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: 14 checks")
     return 1 if failures else 0
 
 
