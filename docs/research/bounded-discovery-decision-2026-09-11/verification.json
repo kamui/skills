@@ -80,6 +80,18 @@
       "source": "#149 sealed schedule"
     },
     {
+      "file": "grading-packets.json",
+      "matches": true,
+      "sha256": "e4824da780e16390a1ed0e70e12cc3fb9b0f892fcfd386e2c8dc3ef154e498d2",
+      "source": "#151 sealed packet archive"
+    },
+    {
+      "file": "redaction-map.json",
+      "matches": true,
+      "sha256": "140a5188d7149454d3037b3c318112ca3cc0a0caec38b997deaf6c897a9c6e9d",
+      "source": "#151 sealed packet archive"
+    },
+    {
       "file": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6",
       "matches": true,
       "sha256": "4ee2f9af04e652359f4d116d40b14aae371b9bb01027dadadfcc5f5560d56c18",
@@ -190,5 +202,5 @@
   },
   "schema_version": "bounded-discovery-v1",
   "verified": true,
-  "verified_at": "2026-09-11T15:53:23.542810+00:00"
+  "verified_at": "2026-09-12T00:42:35.283584+00:00"
 }
