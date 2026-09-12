@@ -45,6 +45,8 @@ Choose the anchor in order, taking the first that applies:
 3. Otherwise, the diff line that most directly **demonstrates** it — a test that looks like it covers the case and does not, a call site that breaks.
 4. Otherwise the finding has no honest anchor, and it goes in the review body. Do not attach it to an unrelated line merely to make it a line comment.
 
+A finding about a guarantee this change removed is the ordinary case for rung 2. The defect is observable at a consumer the diff never touched, and the line that makes it true is the one in the diff that dropped the lock, the ordering, the ownership rule, or the validated invariant — so the comment attaches there and the consumer is recorded as the `fix` site. Do not describe the consumer's line as one the diff touches, and do not re-attribute the finding to some nearer touched line, in order to manufacture an anchor: the anchor asserts that the diff changed that line, the forge will reject it where it did not, and a reader who follows it finds a claim the code does not make. A removed-guarantee finding with no diff line to attach to goes in the body like any other, with both coordinates in its prose.
+
 Where the two differ, `Change` names the fix site in prose **and** the trailer carries it as `fix=`:
 
 ```markdown

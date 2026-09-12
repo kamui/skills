@@ -23,13 +23,13 @@ Flag an issue only when **all** of these hold:
 1. It meaningfully affects the accuracy, performance, security, or maintainability of the code.
 2. It is discrete and actionable — one problem with one fix, not a general observation about the codebase or several issues bundled together.
 3. Fixing it does not demand a level of rigor absent from the rest of the codebase.
-4. **It was introduced by this change.** Pre-existing issues are out of scope even when they are real and even when the diff touches the line.
+4. **It was introduced by this change.** Pre-existing issues are out of scope even when they are real and even when the diff touches the line. Introduction has two shapes — behavior that changed, and a relied-on guarantee that changed — and § Guarantees removed from unchanged code decides which one you have.
 5. The author would likely fix it if they were told about it.
 6. It does not rest on unstated assumptions about the codebase or the author's intent.
 7. If the claim is that this breaks something elsewhere, you have identified the specific other code that is provably affected. Speculating that a change *may* disrupt something is not a candidate.
 8. It is clearly not an intentional change by the author.
 
-Criterion 4 is a deliberate call, and the alternative is defensible: a case can be made that a bug on an untouched line of a function this pull request rewrites is in scope, because the change re-exposes it. This skill takes the strict reading, because every finding it publishes becomes a work request against the author of *this* change.
+Criterion 4 is a deliberate call, and the alternative is defensible: a case can be made that a bug on an untouched line of a function this pull request rewrites is in scope, because the change re-exposes it. This skill takes the strict reading, because every finding it publishes becomes a work request against the author of *this* change. Re-exposure is not introduction, and the exception below does not soften that — it admits a different thing, evidenced rather than assumed: unchanged code that this change made unsafe by taking away what kept it safe.
 
 Apply the bar asymmetrically:
 
@@ -40,7 +40,7 @@ Apply the bar asymmetrically:
 ## What is not a candidate
 
 - Anything a linter, typechecker, formatter, or compiler catches. Assume CI runs them; do not run them yourself and do not report what they would say — except when the diff already shows the tool did not run or did not catch it: a generated artifact in the diff whose content contradicts its source in the same diff, or a lint-enforced convention the diff already violates, is a candidate. "A tool would catch this" is a hypothesis; a diff that contains the stale artifact falsifies it.
-- Pre-existing issues, including real ones on lines the change did not modify.
+- Pre-existing issues, including real ones on lines the change did not modify — unless the change removed the guarantee that made the path safe, which § Guarantees removed from unchanged code admits on evidence.
 - Something that looks like a bug and is not.
 - Pedantic nitpicks a senior engineer would not raise in review.
 - General code-quality observations — thin test coverage, sparse documentation, unspecific security posture — unless a documented repository standard requires otherwise.
@@ -49,9 +49,30 @@ Apply the bar asymmetrically:
 - Adding docstrings, comments, or type hints; removing unused imports or variables; adding missing imports; narrowing an exception type. These are noise at review time.
 - Style with no observable effect on behavior, unless a documented standard names it.
 
+## Guarantees removed from unchanged code
+
+There are two ways this change can have introduced a defect. **Behavior changed**: the diff rewrote what a path does. **A guarantee changed**: the diff removed or weakened something other code relied on — a lock or its scope, an ordering constraint, an ownership or lifetime rule, a validated invariant, an authorization or authentication check, a bound or a quota — and a consumer that was safe *because* of it is not safe any more. Decide which one you have before you decide scope. A byte-identical path that was safe at the merge-base and is unsafe at the head was introduced by this change; that its line is untouched settles nothing either way.
+
+The test is a comparison of two revisions, and a candidate of this shape carries all four parts of it in its `claim`:
+
+1. **The guarantee at base** — quote the base line that established it, and say what it guaranteed.
+2. **The removal or weakening at head** — quote the diff line that dropped, narrowed, or conditioned it.
+3. **The affected consumer** — the `file:line` that relied on it, whether or not the diff touches that file.
+4. **The trigger** — the concrete inputs, state, interleaving, or call order under which that consumer now misbehaves.
+
+A path that was already unsafe at the merge-base under the same conditions is **pre-existing** and stays out of scope. Run the trigger you named against the base: if it produces the same wrong outcome there, you have found an old bug, not this change's. Record it as an acquitted ledger row and move on.
+
+Neither proximity nor unease substitutes for the comparison. That the diff touches the function, that it is a large refactor, that the new code is harder to follow, that some caller *might* have depended on something — none of those is a candidate. A refactor that preserves the guarantee introduces nothing, however much it moved. Name the guarantee and name the consumer, or you have nothing to report.
+
+Where the consumer is untouched, the honest anchor is the changed line that removed the protection, and the consumer is the `fix` site; `finding-format.md` § Anchor and fix site picks between them. Do not present an unchanged consumer's line as one the diff touches in order to anchor there.
+
+This is a scope rule, not an instruction to audit the repository. The consumers you owe an inspection are the ones that reach the guarantee this diff changed, found the way you would find any caller.
+
+This is also a Code-axis rule. The Requirements axis measures against the issue rather than the diff, so an explicit unmet obligation is this change's responsibility even when the missing work belongs entirely to unchanged or pre-existing code (`verify.md` § refuted).
+
 ## Sync drift from a changed rule
 
-When the diff changes a rule, vocabulary, enum, schema field, or normative enumeration that other files restate — documentation, sibling skills or modules, templates, prose in fixtures — a copy left carrying the old text is a defect this change introduced: the peer matched at base, and the diff made it stale, so criterion 4 is satisfied even though the stale line itself is untouched. A change that retires a closed list in favor of an open rule counts the same way; the stale copy is the one still carrying the retired list. A generated artifact and its source are a peer pair under this section; treat a generator that was not re-run as a stale peer.
+Documentation has its own case of the comparison above, and this one keeps its own evidence rule: the peer pair, the paired old/new searches, and the ledger row for every live result. When the diff changes a rule, vocabulary, enum, schema field, or normative enumeration that other files restate — documentation, sibling skills or modules, templates, prose in fixtures — a copy left carrying the old text is a defect this change introduced: the peer matched at base, and the diff made it stale, so criterion 4 is satisfied even though the stale line itself is untouched. A change that retires a closed list in favor of an open rule counts the same way; the stale copy is the one still carrying the retired list. A generated artifact and its source are a peer pair under this section; treat a generator that was not re-run as a stale peer.
 
 Before treating any of these changes as clean, establish the peer set. First list every qualifying contract the diff touches — each changed rule, vocabulary, enum, schema field, or normative enumeration, counting any closed list that was opened or retired — and sweep each one separately; sweeping one contract does not discharge another. Per contract, search the whole repository, case-insensitively, twice: once for the new vocabulary, and once for the old wording the change replaced or retired. Key the old-wording search to a short distinctive fragment — two or three consecutive members of the retired list, or one rare phrase from the old rule — never to a whole sentence, because consumers restate a rule in their own words and keep only fragments of the old phrasing. A sweep confined to the changed file's directory does not establish that no consumer exists. Inspect every live result, record each in the disposition ledger, and compare surviving peers against their base versions to tell a file that is intentionally distinct from one that normally moves in lockstep.
 
@@ -88,7 +109,7 @@ Per candidate:
 - `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site.
 - `fix` — where the edit actually goes; write `(same as anchor)` when they are the same.
 - `title` — 80 characters or fewer, naming the defect.
-- `claim` — a flat, falsifiable statement of what is wrong, with the quoted code and the quoted rule. Written to be checked, not to persuade. This is what the verifier receives.
+- `claim` — a flat, falsifiable statement of what is wrong, with the quoted code and the quoted rule. Written to be checked, not to persuade. This is what the verifier receives. A removed-guarantee candidate quotes both revisions here and names the consumer, per § Guarantees removed from unchanged code; the verifier sees no `support`, so a comparison left out of the `claim` is a comparison it has to rebuild alone.
 - `support` — what you ran, what you read, and what you remain unsure of. First person is fine here and nowhere else. The verifier never sees this, so do not put anything load-bearing in it.
 - `trigger` — the concrete inputs, state, or environment producing the wrong behavior. Required. If you cannot write one, you do not have a candidate; if the mechanism is real but the trigger is uncertain, say so here and let the verifier route it.
 - `change` — the concrete edit: file, site, what to do.
