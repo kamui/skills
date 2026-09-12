@@ -59,6 +59,8 @@ For every related finder ledger row supplied after the candidates, follow this p
 4. Either construct the complete failing state transition from trigger to observable consequence, or cite the specific step that is impossible.
 5. Re-reading the ledger's own reasoning and agreeing with it is not a verdict. A `holds` ruling on a fully attacked row must cite at least one line the ledger row did not cite.
 
+One row shape has no premise to attack: a Code-axis row whose claim says a consequence was never established, rather than naming a fact the acquittal rests on. The procedure above has nothing to bite on there, so run it the other way round — try to establish the consequence yourself from the code. Where you can, that is `re-open`, citing what you found. Where you cannot, rule `holds` and say in one line that the row records an open consequence rather than a disproved one; `holds` on such a row means the record stands as written, never that the code is safe.
+
 Rule `holds` or `re-open` on each related row. An incidental fact that contradicts the decisive premise of any related row the verifier was given is **not** an observation. Return it as `re-open` on that row, citing the contradicted premise and the decisive `path:line`. Use an observation only for facts that contradict no related row.
 
 ## The asymmetry

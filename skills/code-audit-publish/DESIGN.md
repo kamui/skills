@@ -681,10 +681,11 @@ no available source can settle remains, **record it** otherwise — with materia
 and checks nobody finished leaving the ladder at coverage instead. Outcome-changing is defined there
 as the ladder's own verdict test: the answer moves a decision this merge settles rather than one
 somebody makes later, which covers present correctness, what the change releases, what consumers may
-then depend on, and whether the change's stated justification holds. Priority moves nothing between rungs,
-so a proven `P3` defect is a `consider` finding rather than an observation, and a published question
-carries no priority and asks for no code change. `verify.md` names five refutation evidence bases —
-contradiction, prevention, established intent, pre-existing behavior, no qualifying consequence —
+then depend on, and whether the change's stated justification holds. Priority moves nothing between
+rungs, so a proven `P3` defect is a `consider` finding rather than an observation, and a published
+question carries no priority and asks for no code change. `verify.md` names five refutation evidence
+bases — contradiction, prevention, established intent, pre-existing behavior, no qualifying
+consequence —
 each with the citation it requires, adds § Finish the legwork before any `plausible` ruling, makes
 `plausible` carry which of trigger or impact is unsettled, the smallest settling fact, and where
 that fact must come from, and bars an aside that asserts a consequence the verifier never checked.
@@ -720,10 +721,13 @@ cross-axis deduplication, and the `observation (unpublished, cap)` record in the
 specified; the only addition is dropping an item that asserts what nobody established.
 
 Replayed against the corpus as instructions, not as measurements: no run was executed for this
-change, and it claims no recall gain. On (d) the deferral still publishes as a question — the
-`prefer-*` values reached users in `0.2.14` four days after the merge, so the merge released the
-name and rule 1 governs, whatever the author called the surface in the thread. Test 4's
-`removeCookies` deferral publishes for the same reason, so C13's paper check is unchanged. On (e) the
+change, and it claims no recall gain. On (d) the deferral still publishes as a question, and the
+conjunct that decides it is the named gate: "I'm fine adjusting this later if we need to since it's
+in preview" postpones without naming where, so the recorded rule cannot apply and rule 1 governs —
+consistent with the `prefer-*` values reaching users in `0.2.14` four days after the merge. Test 4's
+`removeCookies` deferral publishes on a different conjunct: its gate is named ("the pre-release api
+review"), but playwright marks the surface no differently from the rest of its public API, so the
+exemption fails and rule 1 governs. C13's paper check is unchanged. On (e) the
 benchmark question still publishes: whether the change's stated justification holds is one of the
 verdict-moving decisions the definition names, which is the ground truth's own reason for
 designating it. On (a) the retry premise is settled by reading rather than left in the middle
@@ -737,10 +741,21 @@ priority stays a finding rather than sinking into the channel beside it.
 
 The gate can bite in the wrong direction, and the (d) cells show how: read "preview" as the author's
 word in the thread and the question disappears, which is the outcome the holdout scored `under`. The
-preview row therefore keys on what the repository marks and what the merge releases, never on how a
-participant described the surface, and the briefs say that already discussed and already deferred
-are not the test. Expected cost is ≈0: the added work is a read the investigator should already have
-made, and the new refusals remove output rather than adding it. Specified by
+recorded rule therefore keys on what the repository marks, what its compatibility policy promises,
+and whether the record names the later gate — never on how a participant described the surface — and
+the briefs say that already discussed and already deferred are not the test.
+
+Two known softnesses, recorded rather than papered over. The `question` disposition now covers both
+a published question and a recorded one, so which of the two a row is lives in the row's claim and
+not in a mechanical field, while the axis outcome turns on that difference; the alternative was
+`acquitted`, which the orchestrator forwards to the verifier as a related acquittal and a later
+round reads as tried and killed, so the softness is the better trade. And the Code axis has no
+`question` disposition to record an open consequence with, so such a row is `acquitted` with the
+openness carried in its claim; `verify.md` § Related acquittals gains the ruling for a row that
+names no premise, which is what keeps that record from being attacked as an acquittal it is not.
+
+Expected cost is ≈0: the added work is a read the investigator should already have made, and the new
+refusals remove output rather than adding it. Specified by
 [issue #163](https://github.com/kamui/skills/issues/163). The workflow identifier advances to
 `v2b-3` with this change.
 
