@@ -44,9 +44,13 @@ only when that future ticket supplies the evidence its probes require.
   source. `accept` is the production gate for one attempt: it refuses a second payload
   form rather than converting or discarding it, validates what the arm wrote, writes the
   stopped payload itself when the arm produced none, refuses to invent one for a complete
-  attempt, and refuses a payload that changed after acceptance. `uniformity` runs before
-  masking over the acceptance receipts and checks one schema, one validator, one file form
-  and the outcome coverage a freeze probes, reporting any field only one arm carries.
+  attempt, and refuses a payload that changed after acceptance. A payload it had to write
+  gets a `review-payload-origin.json` beside it, so a re-run — settlement is re-runnable —
+  still records who produced it instead of inferring it from the file already being there.
+  `uniformity` runs before masking over the acceptance receipts and checks one schema, one
+  validator, one file form and the outcome coverage a freeze probes. A field only one arm
+  carries blocks masking until a freeze rules on that field by name with
+  `--allow-shape-correlation`; the ruling is recorded in the report.
   `--contract-validator` runs the study's own pinned output-contract program over the same
   review in every arm; it is not run against a stopped payload, which holds no review.
 - The coordinator binds that contract at dispatch. A new dispatch requires `payload_contract`

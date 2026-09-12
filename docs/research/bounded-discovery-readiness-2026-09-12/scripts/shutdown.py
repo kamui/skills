@@ -30,7 +30,10 @@ for replay; it never turns an incomplete capture into a pass.
 recorded gate and exits 0 only when that gate cleared and is still fresh.
 
 Exit: 0 the gate cleared, 1 a check refused clearance with one line each on
-stdout, 2 an input cannot be read or an output cannot be written.
+stdout, 2 an input cannot be read or an output cannot be written. A probe that
+did not run, timed out or failed is a refused check and exits 1, not 2: whether
+the probe completed is the very thing this gate adjudicates, and the recorded
+gate has to say so rather than crash.
 """
 from __future__ import annotations
 
