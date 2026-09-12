@@ -48,6 +48,9 @@ Usage::
 Config schema (UTF-8 JSON): ``repo``, ``bundle``, ``targets``, ``tools``,
 ``ledger``, ``schedule``, ``leak_sets``, ``cells_root``, ``image``,
 ``auth_env_file``, ``proxy_port``, ``policy_tree``, ``policy_commit``.
+New dispatches also require ``roots_record``: the unsealed record produced by
+the prospective roots.py before launch. ``budget_script`` selects a future
+freeze's ledger implementation; historical settlement defaults to #147's pin.
 
 Exit: 0 on success, 1 on a content or protocol violation with one line per
 violation on stdout, 2 when an input cannot be read or a subprocess fails,
@@ -637,11 +640,17 @@ def finder_claims(result: str) -> tuple:
     return (document, problems) if not problems else (None, problems)
 
 
+def budget_path(config):
+    """An explicit prospective ledger implementation; historical default stays pinned."""
+    return Path(config.get("budget_script") or
+                Path(config["targets"]).parent / "scripts" / "budget.py")
+
+
 def budget_module(config):
     """#147's ledger module, loaded by path because it is pinned, not installed."""
     import importlib.util
 
-    path = Path(config["targets"]).parent / "scripts" / "budget.py"
+    path = budget_path(config)
     spec = importlib.util.spec_from_file_location("bd_budget", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -741,7 +750,7 @@ def attempt_exposure(arm="A") -> str:
 
 
 def reserve(config, row, amount, evidence):
-    budget = Path(config["targets"]).parent / "scripts" / "budget.py"
+    budget = budget_path(config)
     return run(sys.executable, str(budget), config["ledger"], "reserve",
                "--id", "%s-reservation" % row["attempt_id"], "--amount", str(amount),
                "--phase", "review", "--attempt", row["attempt_id"],
@@ -801,10 +810,29 @@ def attempt_id_for(row, attempt) -> str:
     return "%s-attempt-%d" % (base, int(attempt))
 
 
+def dispatch_roots(config):
+    """Bind dispatch to the actual cell root retained outside its evidence seal."""
+    if not config.get("roots_record"):
+        raise Failed("new dispatch requires an unsealed roots_record")
+    path = Path(config["roots_record"]).expanduser().resolve()
+    document = load(path)
+    roots = document.get("roots")
+    if not document.get("recorded_at") or not isinstance(roots, list) or not roots:
+        raise Failed("invalid roots_record")
+    if any(not isinstance(value, str) or not Path(value).is_absolute() for value in roots):
+        raise Failed("roots_record requires absolute roots")
+    actual = Path(config["cells_root"]).expanduser().resolve()
+    recorded = [Path(value).resolve() for value in roots]
+    if actual not in recorded or any(path == root or root in path.parents for root in recorded):
+        raise Failed("roots_record must name cells_root and survive outside every cell root")
+    return {"path": str(path), "sha256": digest(path)}
+
+
 def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
              replacement_evidence=None):
     import time
 
+    roots_record = dispatch_roots(config)
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
     if attempt > 1 and not predecessor:
@@ -838,7 +866,8 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
     started = time.time()
     result = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
-              "target_slot": slot, "phases": [], "problems": problems}
+              "target_slot": slot, "phases": [], "problems": problems,
+              "roots_record": roots_record}
     finder = None
     try:
         if not record_mounts(config, root, slot, root / "artifacts" / "mounts.json", arm):
@@ -889,11 +918,13 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
         prompt = (root / "runner" / "dispatch.md").read_text(encoding="utf-8")
         if arm == "C":
             finder_prompt = (root / "runner" / "finder-prompt.md").read_text(encoding="utf-8")
+            finder_command = docker_argv(
+                config, root, slot, "bd150-%s-finder" % root.name,
+                finder_argv(root, session_id(row["attempt_id"], "finder"), finder_prompt),
+                root / "finder-store", role="finder")
+            retain_launch(root, row, "finder", finder_command)
             finder = subprocess.Popen(
-                docker_argv(config, root, slot, "bd150-%s-finder" % root.name,
-                            finder_argv(root, session_id(row["attempt_id"], "finder"),
-                                        finder_prompt),
-                            root / "finder-store", role="finder"),
+                finder_command,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                 encoding="utf-8")
 
@@ -1087,14 +1118,30 @@ def attempt_completion(dispatched):
     return outcome
 
 
+def retain_launch(root, row, label, command):
+    """Persist the exact invocation before launch; seal it with the private evidence."""
+    from datetime import datetime, timezone
+
+    path = root / "artifacts" / (label + "-launch.json")
+    # Exclusive creation prevents a retry from overwriting the original request.
+    with open(path, "x", encoding="utf-8") as stream:
+        json.dump({"attempt_id": row["attempt_id"], "phase": label,
+                   "recorded_at": datetime.now(timezone.utc).isoformat(),
+                   "argv": [str(part) for part in command]}, stream, indent=2)
+        stream.write("\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
 def run_phase(config, root, slot, row, label, argv) -> dict:
     """One container invocation of the primary, with its envelope retained."""
     import time
 
     name = "bd150-%s-%s" % (root.name, label)
     started = time.time()
-    observed = run(*docker_argv(config, root, slot, name, argv, root / "work"),
-                   check=False)
+    command = docker_argv(config, root, slot, name, argv, root / "work")
+    retain_launch(root, row, label, command)
+    observed = run(*command, check=False)
     (root / "logs" / ("%s.log" % label)).write_text(
         (observed.stdout or "") + "\n--- stderr ---\n" + (observed.stderr or ""),
         encoding="utf-8")
@@ -1169,11 +1216,11 @@ def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
     string anywhere in the transcript. Tool output quotes paths constantly; treating
     those as reads produces enough false positives to hide a true one.
 
-    It reports evidence, not a verdict: whether a hit is a real escape stays a
-    judgment for the researcher, which is why each one is recorded with the tool
-    that made it.
+    Every detected out-of-root access fails. A future scratch allowance belongs
+    in the frozen permitted roots; a settlement acceptance cannot grant one.
     """
     import re
+    import posixpath
 
     suspects = {}
     # Only a path that starts a token is an absolute path. Without the lookbehind
@@ -1182,22 +1229,14 @@ def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
     # glob characters are excluded too: find's -not -path '*/target/*' names a
     # pattern, not a path, and matching inside it manufactured a false hit.
     absolute = re.compile(r"(?<![A-Za-z0-9_.:/@+~*?\]\[-])(/[A-Za-z0-9_][A-Za-z0-9_./@+-]*)")
-    allowed = tuple(str(Path(entry)) for entry in permitted) + IMAGE_ROOTS
+    allowed = tuple(posixpath.normpath(str(entry)) for entry in (*permitted, *IMAGE_ROOTS))
     commands = 0
     tool_calls = 0
 
-    # An acceptance is a recorded judgment that one hit is not an escape, with its
-    # reason. It keeps the hit visible instead of widening the pattern until the
-    # check stops firing, and #152 can overrule every one of them.
-    acceptances = {entry["path"]: entry.get("reason", "") for entry in accepted}
-    ruled = []
-
     def suspicious(candidate, transcript, origin):
-        if candidate.startswith(allowed) or candidate in ("/", "/tmp"):
-            return
-        if candidate in acceptances:
-            ruled.append({"path": candidate, "via": origin,
-                          "reason": acceptances[candidate]})
+        candidate = posixpath.normpath(candidate)
+        if any(candidate == entry or candidate.startswith(entry.rstrip("/") + "/")
+               for entry in allowed) or candidate in ("/", "/tmp"):
             return
         suspects.setdefault(transcript, []).append({"path": candidate, "via": origin})
 
@@ -1235,7 +1274,7 @@ def audit_reads(root, transcripts, permitted, accepted=()) -> dict:
     return {"transcripts": len(transcripts), "tool_calls": tool_calls,
             "shell_commands": commands,
             "paths_outside_permitted_roots": suspects,
-            "accepted_hits": ruled,
+            "accepted_hits": [], "ignored_acceptances": list(accepted),
             "passed": not suspects}
 
 
@@ -1294,7 +1333,8 @@ def without_synthetic(transcripts, destination) -> tuple:
     destination.mkdir(parents=True, exist_ok=True)
     copies = []
     removed = 0
-    for transcript in transcripts:
+    provenance = []
+    for index, transcript in enumerate(transcripts):
         kept = []
         for line in Path(transcript).read_text(encoding="utf-8").splitlines():
             try:
@@ -1306,9 +1346,13 @@ def without_synthetic(transcripts, destination) -> tuple:
                 removed += 1
                 continue
             kept.append(line)
-        copy = destination / Path(transcript).name
+        copy = destination / str(index) / Path(transcript).name
+        copy.parent.mkdir(parents=True, exist_ok=True)
         copy.write_text("\n".join(kept) + "\n", encoding="utf-8")
         copies.append(str(copy))
+        provenance.append({"source": str(transcript), "source_sha256": digest(transcript),
+                           "copy": str(copy), "copy_sha256": digest(copy)})
+    write(destination / "sources.json", provenance)
     return copies, removed
 
 
@@ -1322,6 +1366,20 @@ def role_of(transcript, row) -> str:
     if name.startswith("agent-"):
         return "worker"
     return "unattributed"
+
+
+def meter_roles(transcripts, row, sources=None):
+    """Label every metering input from its original session identity."""
+    sources = transcripts if sources is None else sources
+    if len(sources) != len(transcripts):
+        raise Failed("metering copies do not match their original transcripts")
+    arguments = []
+    for transcript, source in zip(transcripts, sources):
+        role = role_of(source, row)
+        if role == "unattributed":
+            raise Failed("no session role for metering input: " + str(source))
+        arguments.extend(["--role", role + "=" + str(transcript)])
+    return arguments
 
 
 def verify_models(config, root, row, transcripts) -> tuple:
@@ -1563,6 +1621,7 @@ def settle(config, position, attempt=1):
                     "--out", str(root / "artifacts" / "usage-split.json"),
                     "--label", row["attempt_id"],
                     "--self-report", "%.7f" % self_report,
+                    *meter_roles(transcripts, row),
                     *transcripts, check=False)
         (root / "logs" / "meter.log").write_text(
             (split.stdout or "") + (split.stderr or ""), encoding="utf-8")
@@ -1582,6 +1641,7 @@ def settle(config, position, attempt=1):
                             "--out", str(root / "artifacts" / "usage-split.json"),
                             "--label", row["attempt_id"],
                             "--self-report", "%.7f" % self_report,
+                            *meter_roles(filtered, row, sources=transcripts),
                             *filtered, check=False)
                 (root / "logs" / "meter-filtered.log").write_text(
                     (split.stdout or "") + (split.stderr or ""), encoding="utf-8")
@@ -1594,8 +1654,7 @@ def settle(config, position, attempt=1):
     write(root / "artifacts" / "read-audit.json", audit)
     if not audit["passed"]:
         problems.append("the transcripts name paths outside the permitted roots; "
-                        "the attempt is invalid on protocol grounds unless the "
-                        "researcher rules each one a false positive")
+                        "the attempt is invalid on protocol grounds")
     try:
         egress = [json.loads(line) for line
                   in (root / "artifacts" / "egress.jsonl").read_text(
@@ -1627,6 +1686,7 @@ def settle(config, position, attempt=1):
         record["usage_split_total_usd"] = split_document.get("total_cost_usd")
         record["usage_within_tolerance"] = split_document.get("within_tolerance")
         record["models_priced"] = sorted(split_document.get("per_model", {}))
+        record["usage_per_role"] = split_document.get("per_role", {})
     except Failed:
         problems.append("no usage split was produced")
 
@@ -1688,7 +1748,7 @@ def settle(config, position, attempt=1):
         record["observed_cost_usd"] = record["settled_usd"]
         record["settled_usd"] = None
     else:
-        budget = Path(config["targets"]).parent / "scripts" / "budget.py"
+        budget = budget_path(config)
         settled = run(sys.executable, str(budget), config["ledger"], "settle",
                       "--id", reservation_id,
                       "--amount", "%.7f" % metered, "--phase", "review",
@@ -1909,9 +1969,9 @@ def audit_self_test() -> list:
                    not audit_reads(root, scratch, permitted)["passed"]))
     ruled = audit_reads(root, scratch, permitted,
                         [{"path": "/elsewhere/view.txt", "reason": "its own clone's content"}])
-    checks.append(("an accepted hit passes but stays visible with its reason",
-                   ruled["passed"] and len(ruled["accepted_hits"]) == 1
-                   and ruled["accepted_hits"][0]["reason"]))
+    checks.append(("a settlement acceptance cannot permit an out-of-root path",
+                   not ruled["passed"] and not ruled["accepted_hits"]
+                   and len(ruled["ignored_acceptances"]) == 1))
     escaped = transcript(("Read", {"file_path": "/elsewhere/checkout/AGENTS.md"}))
     result = audit_reads(root, escaped, permitted)
     checks.append(("a read outside the permitted roots is a hit",

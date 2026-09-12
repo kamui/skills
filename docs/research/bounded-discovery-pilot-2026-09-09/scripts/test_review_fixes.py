@@ -46,6 +46,8 @@ class ReviewFixes(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
+        self.evidence = tempfile.TemporaryDirectory()
+        self.addCleanup(self.evidence.cleanup)
         self.root = self.base / "position-99"
         for name in ("artifacts", "runner", "logs", "work", "clone", "finder-clone",
                      "finder-store", "packet", "snapshot"):
@@ -55,6 +57,9 @@ class ReviewFixes(unittest.TestCase):
         self.config = {"cells_root": str(self.base), "targets": str(self.base / "targets"),
                        "auth_env_file": str(self.base / "auth"), "proxy_port": 19876,
                        "image": DOCKER_IMAGE or "test", "ledger": str(self.base / "ledger.json")}
+        self.config["roots_record"] = str(Path(self.evidence.name) / "roots.json")
+        runner.write(self.config["roots_record"], {"recorded_at": "synthetic",
+                                                  "roots": [str(self.base.resolve())]})
         (self.base / "auth").write_text("# synthetic configuration\n", encoding="utf-8")
         (self.base / "targets" / "slot-9").mkdir(parents=True)
         runner.write(self.base / "targets" / "slot-9" / "manifest.json", {})
@@ -134,7 +139,8 @@ class ReviewFixes(unittest.TestCase):
     def test_malformed_finder_cost_cannot_interrupt_cleanup(self):
         for cost in ("not-a-number", None, -1, True, float("nan")):
             with self.subTest(cost=cost):
-                for path in (self.root / "artifacts" / "dispatch.json", self.root / "work" / "timing.json"):
+                for path in (self.root / "artifacts" / "dispatch.json", self.root / "work" / "timing.json",
+                             self.root / "artifacts" / "finder-launch.json"):
                     path.unlink(missing_ok=True)
                 process = self.fake_finder()
                 envelope = json.loads(process.communicate.return_value[0])
@@ -239,7 +245,8 @@ class ReviewFixes(unittest.TestCase):
     def test_exhausted_allowance_and_phase_two_stop_never_complete(self):
         for phases in ([self.phase(cost=7)], [self.phase(), self.phase(subtype="error_max_budget_usd")]):
             with self.subTest(phases=phases):
-                for path in (self.root / "artifacts" / "dispatch.json", self.root / "work" / "timing.json"):
+                for path in (self.root / "artifacts" / "dispatch.json", self.root / "work" / "timing.json",
+                             self.root / "artifacts" / "finder-launch.json"):
                     path.unlink(missing_ok=True)
                 record, _, _, _, _ = self.dispatch(phases)
                 self.assertEqual(record["completion"], "stopped-budget")
@@ -407,6 +414,78 @@ class ReviewFixes(unittest.TestCase):
         self.assertTrue(record["reservation_retained"])
         self.assertFalse(any(e["operation"] == "settle" for e in ledger["events"]))
 
+    def test_settlement_retains_roles_including_filtered_provider_error(self):
+        original_fixture = self.usage_fixture
+
+        def with_provider_error(role):
+            path = original_fixture(role)
+            with open(path, "a", encoding="utf-8") as stream:
+                stream.write(json.dumps({"type": "assistant", "message": {
+                    "model": "<synthetic>", "content": [], "usage": {}}}) + "\n")
+            return path
+
+        with patch.object(self, "usage_fixture", side_effect=with_provider_error):
+            record, _ = self.settle_usage([self.phase(cost=0, envelope=False)],
+                                          finder={"cost_usd": None},
+                                          roles=("primary", "finder", "worker"))
+        self.assertEqual(set(record["usage_per_role"]), {"primary", "finder", "worker"})
+        self.assertTrue(all(Decimal(value["cost_usd"]) == Decimal("0.6")
+                            for value in record["usage_per_role"].values()))
+        sources = runner.load(self.root / "artifacts" / "filtered-transcripts" / "sources.json")
+        self.assertEqual(len(sources), 3)
+        for source in sources:
+            self.assertEqual(source["source_sha256"], runner.digest(source["source"]))
+            self.assertEqual(source["copy_sha256"], runner.digest(source["copy"]))
+
+    def test_failed_launch_keeps_exact_argv_before_subprocess(self):
+        command = ["example", "--model", "test", "--effort", "high", "--restricted",
+                   "--max-budget-usd", "7", "--allowedTools", "Read", "Bash(git:*)"]
+        path = self.root / "artifacts" / "primary-phase-1-launch.json"
+
+        def failed_run(*args, **kwargs):
+            self.assertEqual(runner.load(path)["argv"], list(args))
+            raise runner.Failed("synthetic launch failure")
+
+        with patch.object(runner, "docker_argv", return_value=command), \
+             patch.object(runner, "run", side_effect=failed_run):
+            with self.assertRaises(runner.Failed):
+                runner.run_phase(self.config, self.root, "slot-9", self.row,
+                                 "primary-phase-1", [])
+        before = path.read_bytes()
+        with self.assertRaises(FileExistsError):
+            runner.retain_launch(self.root, self.row, "primary-phase-1", ["different"])
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_finder_launch_retains_requested_controls(self):
+        self.dispatch([self.phase(), self.phase()])
+        command = runner.load(self.root / "artifacts" / "finder-launch.json")["argv"]
+        self.assertEqual(command[command.index("--model") + 1], "claude-opus-5")
+        self.assertEqual(command[command.index("--max-budget-usd") + 1], runner.FINDER_CEILING)
+        self.assertIn("--restricted", command)
+
+    def test_sandbox_acceptance_and_prefix_or_traversal_cannot_pass(self):
+        permitted = ["/cells/example/clone"]
+        path = self.root / "outside.jsonl"
+        for value in ("/elsewhere/tidy.txt", "/cells/example/clone-sibling/secret",
+                      "/cells/example/clone/../secret", "/cell-home-sibling/secret"):
+            with self.subTest(path=value):
+                path.write_text(json.dumps({"message": {"content": [{"type": "tool_use",
+                    "name": "Read", "input": {"file_path": value}}]}}), encoding="utf-8")
+                audit = runner.audit_reads(self.root, [str(path)], permitted,
+                                            [{"path": value, "reason": "tidiness"}])
+                self.assertFalse(audit["passed"])
+
+    def test_unknown_metering_role_is_refused(self):
+        with self.assertRaises(runner.Failed):
+            runner.meter_roles(["unknown.jsonl"], self.row)
+
+    def test_dispatch_requires_the_actual_unsealed_root(self):
+        self.assertTrue(runner.dispatch_roots(self.config)["sha256"])
+        for value in ({}, {"roots_record": self.config["roots_record"],
+                           "cells_root": str(self.base / "wrong-root")}):
+            with self.assertRaises(runner.Failed):
+                runner.dispatch_roots(value)
+
     def test_missing_reports_retain_one_extra_request_per_worker(self):
         record, ledger = self.settle_usage([self.phase(cost=0, envelope=False)],
                                            finder={"cost_usd": None}, roles=("primary", "finder", "worker"))
@@ -467,6 +546,7 @@ class ReviewFixes(unittest.TestCase):
         for cost in (None, "bad", -1, float("nan"), float("inf"), True):
             with self.subTest(cost=cost), patch.object(runner, "docker_argv", return_value=["synthetic"]), \
                  patch.object(runner, "run", return_value=result(json.dumps({"type": "result", "total_cost_usd": cost}))):
+                (self.root / "artifacts" / "primary-launch.json").unlink(missing_ok=True)
                 record = runner.run_phase(self.config, self.root, "slot-9", self.row, "primary", [])
                 self.assertIsNone(record["cost_usd"])
                 self.assertFalse(record["reported_cost_valid"])
