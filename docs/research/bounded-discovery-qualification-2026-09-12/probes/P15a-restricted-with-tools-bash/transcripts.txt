@@ -1,0 +1,2 @@
+session a181baed-a118-437a-bd07-8bf4e0f71eb5 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p15a/a181baed-a118-437a-bd07-8bf4e0f71eb5.jsonl sha256 532f05f4881f080201fde35fbe75c7ad9dc156462e44f20f5243d96922350077

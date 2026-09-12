@@ -1,0 +1,24 @@
+{
+  "probe": "P08b",
+  "session_id": "c5e9b72a-4be8-4ef6-8841-3479122a6d3d",
+  "transcripts": 1,
+  "recomputed_usd": "0.057588",
+  "per_role_usd": {
+    "primary": "0.057588"
+  },
+  "per_model_usd": {
+    "claude-sonnet-5": "0.057588"
+  },
+  "self_report_usd": 0.058664,
+  "envelope_model_usage_usd": {
+    "claude-haiku-4-5-20251001": 0.001076,
+    "claude-sonnet-5": 0.05758800000000001
+  },
+  "charged_usd": 0.058664,
+  "residual_usd": 0.001076,
+  "residual_named_by": {
+    "claude-haiku-4-5-20251001": 0.001076
+  },
+  "settlement_rule": "charge the larger of the runtime self-report and the recomputed per-request total, and name the difference",
+  "metered_at": "2026-09-12T10:09:03.181110+00:00"
+}

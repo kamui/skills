@@ -1,0 +1,12 @@
+{
+  "probe": "P02",
+  "status": "established",
+  "summary": "All ten model sessions in this bundle open with exactly one user text message, carry no summary record and were not resumed or forked (probes/freshness.json). The check is mechanical over the transcripts; no session was asked whether it was fresh.",
+  "establishes": "P02 on this runtime, and two things the #149 rule did not cover. First, a session that dispatches a background worker receives that worker's completion as a further user message - P12 has one - so 'exactly one user message' has to mean 'opens with one', or the rule fails a fresh session. Second, and more consequential, the runtime attaches context of its own to every session: an environment block naming the working directory, the model identity, the agent roster, a token counter, the remaining dollar allowance, the user's email address, the date and a commit-attribution reminder. A cell's context is not only its prompt.",
+  "residual": "Three of those attachments are freeze business. (1) budget_usd injects the remaining allowance, which is why P08a's session could decline a task as unaffordable - the ceiling is part of what every arm sees and must be identical across arms. (2) agent_listing_delta names the frozen worker without its model, so arms A and B/C see byte-identical rosters and there is no tell there - but it also offers the harness's own built-in agent types, so a primary can dispatch a worker the freeze never defined, at whatever model that type defaults to. Fidelity checking catches it after the fact; a freeze should predeclare it. (3) session_context carried only the operator's email here, with no repository memory, because --restricted ignores user and project settings - which is a property of the launch shape, not of the runtime, and it changes if D7's second route is ever taken.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:15:23.627567+00:00"
+}

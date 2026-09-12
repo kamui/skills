@@ -1,0 +1,133 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "ticket": 207,
+  "precondition_ticket": 199,
+  "status": "not-ready",
+  "what_this_is": "The qualification record for the freeze gate of a possible future bounded-discovery study: which probes in the proposed specification's catalogue were run, what each established, and which of #199's ten requirements are therefore met on the runtime and the targets a study would actually dispatch with. It is not a freeze, it authorizes no dispatch, and a status of not-ready is the finding rather than a placeholder.",
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "ledger": "ledger.json",
+  "evidence_index": "evidence-index.json",
+  "probes": {
+    "catalogue": "../bounded-discovery-proposal-2026-09-12/probes.md",
+    "total": 27,
+    "established": 22,
+    "unestablished": 5,
+    "rows": {
+      "P00": {"status": "established", "evidence": "probes/P00-runtime-inventory/"},
+      "P01": {"status": "established", "evidence": "probes/P01-P04-P11-cell-configuration/"},
+      "P02": {"status": "established", "evidence": "probes/P02-fresh-context/, probes/freshness.json"},
+      "P03": {"status": "established", "evidence": "probes/P03-finder-confinement/"},
+      "P04": {"status": "established", "evidence": "probes/P01-P04-P11-cell-configuration/"},
+      "P05": {"status": "established", "evidence": "probes/P05-unlisted-shell-commands/, from P15a's retained output"},
+      "P06": {"status": "established", "evidence": "probes/P06-P14-egress/"},
+      "P07": {"status": "established", "evidence": "probes/P07-cancellation/"},
+      "P08": {"status": "established", "evidence": "probes/P08b-bounded-allowance/; the first attempt is retained at probes/P08a-bounded-allowance-self-limited/"},
+      "P09": {"status": "established", "evidence": "probes/P09-atomic-contention/"},
+      "P10": {"status": "established", "evidence": "probes/P10-billed-totals/, probes/reconciliation.json"},
+      "P11": {"status": "established", "evidence": "probes/P01-P04-P11-cell-configuration/"},
+      "P12": {"status": "established", "evidence": "probes/P12-background-verification/"},
+      "P13": {"status": "established", "evidence": "probes/P13-shell-filesystem-reach/", "note": "audited, not enforced"},
+      "P14": {"status": "established", "evidence": "probes/P06-P14-egress/", "note": "audited, not enforced"},
+      "P15": {"status": "established", "evidence": "probes/P15a-restricted-with-tools-bash/, probes/P15b-restricted-without-tools-bash/"},
+      "P16": {"status": "unestablished", "evidence": "probes/P16-isolation-regime/", "blocks": "the study", "why": "host absence is unreachable on this host and the container regime cannot authenticate a session, so no isolation regime is established for a cell that must run a model session"},
+      "P17": {"status": "established", "evidence": "probes/P17-launch-retention/, probes/retention.json", "partial": "the per-arm comparison against frozen allowances has no arms and no frozen allowances to compare"},
+      "P18": {"status": "unestablished", "evidence": "probes/P18-per-role-settlement/", "why": "per-role totals reconcile on all 28 metered sessions across primary, finder and verifier, but no provider error occurred, so the filtered-copy path is exercised by synthetic tests only"},
+      "P19": {"status": "established", "evidence": "probes/P19-lifecycle-enforcement/"},
+      "P20": {"status": "unestablished", "evidence": "probes/P20-sandbox-and-scratch/", "why": "the audit's refusal and its absence of an acceptance path are established on real transcripts, but P20 requires every permitted root - including D3's scratch allowance - frozen identically across arms first, and there are no frozen roots"},
+      "P21": {"status": "established", "evidence": "probes/P21-shutdown-gate/"},
+      "P22": {"status": "established", "evidence": "probes/P22-uniform-payloads/", "note": "synthetic scale; the one shape correlation found was ruled on to let the probe complete and must be decided properly by a freeze"},
+      "P23": {"status": "established", "evidence": "probes/P23-network-judgments/"},
+      "P24": {"status": "unestablished", "evidence": "probes/P24-fresh-targets/, targets/reservations.json", "why": "no target was selected. The reservation set and the mechanical criteria are delivered; the selection, adjudication, sealing and selector runs are not"},
+      "P25": {"status": "established", "evidence": "probes/P25-ledger-stop/ and this ledger's own terminal stop"},
+      "P26": {"status": "unestablished", "evidence": "probes/P26-frozen-input-chain/, probes/frozen-inputs.json", "why": "two of the chain's three links hold over this bundle's own rendering; the third needs a public cell summary and no cell ran"}
+    }
+  },
+  "issue_199_gaps": {
+    "gap-1": {
+      "requirement": "Retain the launch argv per attempt",
+      "status": "met-for-what-could-be-probed",
+      "evidence": "probes/P17-launch-retention/, probes/retention.json",
+      "what_holds": "all 55 launches in this bundle retained their exact argv and requested model, effort, dollar allowance, restriction flag, tool list and allow list, written with O_EXCL and fsynced before process creation; one launch that never started kept its record",
+      "what_does_not": "there are no arms and no frozen allowances, so 'every arm received identical allowances' has nothing to compare against"
+    },
+    "gap-2": {
+      "requirement": "Meter per role at settlement, never from unresolved filtered copies",
+      "status": "not-met",
+      "evidence": "probes/P18-per-role-settlement/, probes/reconciliation.json",
+      "what_holds": "per-role totals reconcile exactly to the recomputed charge on all 28 metered sessions across primary, finder and verifier; no session was left unassigned or defaulted to primary",
+      "what_does_not": "no provider error occurred, so the filtered-copy resolution path is untested against a real one; and the open question U5 stands, since every verifier session is metered as 'worker' with no initial/follow-up ordinal"
+    },
+    "gap-3": {
+      "requirement": "Write ledger lifecycle events when they happen",
+      "status": "met",
+      "evidence": "probes/P19-lifecycle-enforcement/",
+      "what_holds": "seventeen claims on a real ledger through a claim-before-launch path; eight refused, each naming its own rule, and the absence of a started worker asserted from the filesystem"
+    },
+    "gap-4": {
+      "requirement": "Apply the sandbox rule mechanically",
+      "status": "not-met",
+      "evidence": "probes/P20-sandbox-and-scratch/",
+      "what_holds": "on real transcripts, four out-of-root reads failed the audit, and offering a settlement acceptance for them changed nothing - both acceptances were recorded as ignored; a session that stayed inside its root passed",
+      "what_does_not": "D3 is undecided and no permitted root is frozen. P20 requires every root, scratch included, frozen identically across arms before probing"
+    },
+    "gap-5": {
+      "requirement": "Stop-gate probes must complete and sweep the real roots",
+      "status": "met",
+      "evidence": "probes/P21-shutdown-gate/",
+      "what_holds": "the root was recorded while it existed, pinned outside the seal, and all eleven gate checks completed and established their conditions over that root and this study's own stopped ledger; authorize then accepted the gate",
+      "carried_forward": "the default two-letter container prefix produced two false process matches and must be replaced by a distinctive one in any freeze"
+    },
+    "gap-6": {
+      "requirement": "Uniform payload shape across arms",
+      "status": "met-at-synthetic-scale",
+      "evidence": "probes/P22-uniform-payloads/, dispatch-payload-contract.md",
+      "what_holds": "nine payloads - findings, clean and stopped in each of three arms - accepted under one seven-key contract from a dispatch block byte-identical across arms, and uniformity refused to let masking proceed until the one real shape correlation was ruled on",
+      "what_does_not": "the block has never been rendered against a real target, and the correlation it found (items[].fix in one arm only) was ruled acceptable to let the probe finish rather than decided"
+    },
+    "gap-7": {
+      "requirement": "Record a per-command network judgment",
+      "status": "met",
+      "evidence": "probes/P23-network-judgments/",
+      "what_holds": "with no judgments, all three of the egress probe's commands were refused; with judgments, the forge request was accepted by binding it to the proxy event that refused it, the environment read was accepted as no-traffic, and the raw socket - which connected and left no proxy event - could not be accepted at all; a session whose commands were local passed the same audit",
+      "carried_forward": "the audit checks that a bound event index is inside the log, not that the event corresponds to the command, so a judgment can cite the wrong event and pass"
+    },
+    "gap-8": {
+      "requirement": "Fresh targets",
+      "status": "not-met",
+      "evidence": "probes/P24-fresh-targets/, targets/reservations.json, targets/eligibility-machinery-check.json",
+      "what_holds": "the extended reservation set is derived by rule from the six files that publish it - 79 pull requests, 28 of them the revealed inventory's candidate rows - and E1, E2, E3 and E5 are implemented as a checker and exercised against the live forge, which excluded the revealed targets by E1 and two recent merges by E2",
+      "what_does_not": "no target was selected, adjudicated, packeted, sealed or scope-selected"
+    },
+    "gap-9": {
+      "requirement": "Re-probe every runtime control before freezing",
+      "status": "not-met",
+      "evidence": "probes/P00-runtime-inventory/ through probes/P16-isolation-regime/",
+      "what_holds": "sixteen of the seventeen group-A probes are established on Claude Code 2.1.269, including the one #153 flagged: under --restricted a Bash allow list does exist when --tools names Bash, so the frozen launch shape runs as written and D7's stop condition does not trigger",
+      "what_does_not": "P16. Host absence is unreachable and the container regime cannot authenticate a session, so no isolation regime is established. The specification's rule is that an unsupported or unobservable control stops the study"
+    },
+    "gap-10": {
+      "requirement": "Implement the ledger's stop operation",
+      "status": "met",
+      "evidence": "probes/P25-ledger-stop/, ledger.json",
+      "what_holds": "the terminal stop preserves outstanding reservations, retained uncertainty and the chain, still accepts settlement, attempt closure and protected closeout, and refuses a new review reservation, a new pre-freeze reservation, a new attempt and a second stop; this study's own ledger carries its terminal stop, and the shutdown gate read it"
+    }
+  },
+  "freeze_evidence_section_11": {
+    "1_runtime_inventory": "present - probes/P00-runtime-inventory/inventory.json",
+    "2_every_probe_completed": "no - five of twenty-seven are unestablished",
+    "3_every_readiness_row_established": "no - this record is the freeze's own, and five rows are not established",
+    "4_four_fresh_targets": "no - none prepared",
+    "5_pins_and_a_verifier_over_them": "no - no policy snapshot, scorer, rate-card-bound projection, payload output-contract validator or manifest verifier",
+    "6_ledger_with_cap_freeze": "no - this ledger carries pre-freeze spend and a terminal stop; no cap was frozen and no protected reserve was set, because no projection exists",
+    "7_roots_record": "present for this qualification's own roots - probes/P21-shutdown-gate/roots-record.json - but not for any cell root",
+    "8_dispatch_template_per_arm": "partial - a payload-contract block rendered identically per arm at synthetic scale, with findings, clean and stopped probed in each; not a study dispatch template against a real target",
+    "9_sealed_schedule": "no - there is nothing to schedule",
+    "10_recorded_dispatch_authorization": "no - and the session that produced this record explicitly withheld it"
+  },
+  "entry_condition": {
+    "requirement": "a recorded decision that a confirmation study is warranted at all",
+    "status": "absent",
+    "detail": "#153 recommended none and nothing since has changed that. The authorization this qualification ran under covers target preparation and capability probes only and explicitly excludes the experimental grid, so it is not the entry condition and is not a dispatch authorization."
+  },
+  "recorded_at": "2026-09-12"
+}

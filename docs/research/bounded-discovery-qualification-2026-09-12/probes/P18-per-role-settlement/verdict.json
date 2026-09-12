@@ -1,0 +1,12 @@
+{
+  "probe": "P18",
+  "status": "unestablished",
+  "summary": "Per-role totals reconcile exactly to the recomputed charge on all 28 metered sessions, across all three role kinds the study needs - primary (27 sessions), finder (1) and verifier, metered as 'worker' (2) - with no session left unassigned. Every charged figure is the larger of the self-report and the recomputed total, and each difference is named by the untranscripted Haiku request. What is missing is the other half P18 asks for.",
+  "establishes": "That settlement supplies a role for every transcript and that the per-role split sums to the total, on real transcripts, at the study's own rate card. No role defaulted to primary and none was priced at zero.",
+  "residual": "Two gaps, and one of them is gap-2's own open question. (1) No provider error occurred in this bundle, so the filtered-copy path - copies carrying explicit labels from their original inputs, a sources.json mapping with source and copy digests, per-copy directories so equal basenames cannot overwrite each other, and resolution to the source before pricing - is exercised only by the synthetic tests. It cannot be forced; a freeze must either wait for one or accept that the path is untested against a real provider error. (2) U5 is still open: every verifier session is metered as 'worker', so a study that wants verification cost by ordinal - initial against follow-up - needs finer attribution than the coordinator currently supplies, and the freeze must either add it or state that the analysis does not distinguish them.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:40:36.979425+00:00"
+}

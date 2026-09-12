@@ -1,0 +1,135 @@
+{
+  "probe": "P24-machinery",
+  "what_this_decides": "E1, E2, E3 and E5 only. E4, E6-E10 stay with the curator and E11 with the adjudicator; a candidate this script passes is not a selected target and no selection is made here.",
+  "freshness_threshold": "2026-03-12T00:00:00Z",
+  "reservations": "targets/reservations.json",
+  "reserved_count": 79,
+  "candidates": [
+    {
+      "candidate": "clap-rs/clap#6212",
+      "title": "Fix value_terminator has no effect when it is the first argument ",
+      "head_sha": "3604b13117cbb652c10bb44b228b300d543dcc80",
+      "base_ref": "master",
+      "checks": {
+        "E1": {
+          "passed": false,
+          "detail": "on the reservation set: a candidate in the revealed inventory, with its category and eligibility result published"
+        },
+        "E2": {
+          "passed": true,
+          "detail": "mergedAt 2026-01-27T20:18:05Z against the threshold 2026-03-12T00:00:00Z"
+        },
+        "E3": {
+          "passed": true,
+          "detail": "2 files, +46/-0 (46) against at most 6 files and 200 lines"
+        },
+        "E5": {
+          "passed": true,
+          "detail": "11 review submission(s), 11 review comment(s)"
+        }
+      },
+      "mechanically_eligible": false
+    },
+    {
+      "candidate": "nats-io/nats-server#7395",
+      "title": "[FIXED] Mirror consumer data race",
+      "head_sha": "b81b039c38afe724534ef6a1b9df490c5cdfaca4",
+      "base_ref": "main",
+      "checks": {
+        "E1": {
+          "passed": false,
+          "detail": "on the reservation set: a candidate in the revealed inventory, with its category and eligibility result published; named in a revealed inventory row as a later fix or confirming report"
+        },
+        "E2": {
+          "passed": true,
+          "detail": "mergedAt 2025-10-06T11:29:49Z against the threshold 2026-03-12T00:00:00Z"
+        },
+        "E3": {
+          "passed": true,
+          "detail": "1 files, +2/-1 (3) against at most 6 files and 200 lines"
+        },
+        "E5": {
+          "passed": true,
+          "detail": "1 review submission(s), 0 review comment(s)"
+        }
+      },
+      "mechanically_eligible": false
+    },
+    {
+      "candidate": "grpc/grpc-go#8519",
+      "title": "transport: ensure header mutex is held while copying trailers in handler_server",
+      "head_sha": "31a6f265a06537ed46d789b2413d233e771e532e",
+      "base_ref": "master",
+      "checks": {
+        "E1": {
+          "passed": false,
+          "detail": "on the reservation set: named in #148's exclusion log; a candidate in the revealed inventory, with its category and eligibility result published; named in a revealed inventory row as a later fix or confirming report"
+        },
+        "E2": {
+          "passed": true,
+          "detail": "mergedAt 2025-08-21T06:50:13Z against the threshold 2026-03-12T00:00:00Z"
+        },
+        "E3": {
+          "passed": true,
+          "detail": "2 files, +99/-7 (106) against at most 6 files and 200 lines"
+        },
+        "E5": {
+          "passed": true,
+          "detail": "4 review submission(s), 8 review comment(s)"
+        }
+      },
+      "mechanically_eligible": false
+    },
+    {
+      "candidate": "sharkdp/bat#3912",
+      "title": "Allow boolean flags to be repeated",
+      "head_sha": "cf72a432acd6cb5c72c5eb2935468a0b0d668d87",
+      "base_ref": "master",
+      "checks": {
+        "E1": {
+          "passed": true,
+          "detail": "not on the reservation set"
+        },
+        "E2": {
+          "passed": false,
+          "detail": "mergedAt 2026-09-04T19:10:30Z against the threshold 2026-03-12T00:00:00Z"
+        },
+        "E3": {
+          "passed": true,
+          "detail": "4 files, +34/-0 (34) against at most 6 files and 200 lines"
+        },
+        "E5": {
+          "passed": true,
+          "detail": "1 review submission(s), 0 review comment(s)"
+        }
+      },
+      "mechanically_eligible": false
+    },
+    {
+      "candidate": "sharkdp/bat#3904",
+      "title": "build(deps): bump bytesize from 2.4.2 to 2.7.0",
+      "head_sha": "7928b4be52cb9192b04fa95567882604df873d60",
+      "base_ref": "master",
+      "checks": {
+        "E1": {
+          "passed": true,
+          "detail": "not on the reservation set"
+        },
+        "E2": {
+          "passed": false,
+          "detail": "mergedAt 2026-09-01T03:10:38Z against the threshold 2026-03-12T00:00:00Z"
+        },
+        "E3": {
+          "passed": true,
+          "detail": "1 files, +2/-2 (4) against at most 6 files and 200 lines"
+        },
+        "E5": {
+          "passed": false,
+          "detail": "0 review submission(s), 0 review comment(s)"
+        }
+      },
+      "mechanically_eligible": false
+    }
+  ],
+  "recorded_at": "2026-09-12T10:42:30.160806+00:00"
+}

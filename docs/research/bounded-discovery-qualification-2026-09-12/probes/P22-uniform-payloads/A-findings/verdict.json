@@ -1,0 +1,12 @@
+{
+  "probe": "P22-A-findings",
+  "status": "established",
+  "summary": "Arm A wrote the one contract payload for the findings outcome under contract revision 2, and it was accepted unchanged at settlement. This launch is evidence for P22, where the verdict is.",
+  "establishes": null,
+  "residual": null,
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:45:25.201578+00:00"
+}

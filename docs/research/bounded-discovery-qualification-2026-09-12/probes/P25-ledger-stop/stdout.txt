@@ -1,0 +1,29 @@
+STEP 01-reserve-outstanding exit=0
+    {"event_id": "4f7e0165-3dd8-46cb-8cbe-8785df6f2d65", "previous_event_id": "a3bdd4ac-d521-49cc-bfbb-51b930a72cb7", "observed_at": "2026-09-12T10:19:39.007979+00:00", "ticket": 207, "actor": "kamui", "phase": "pre-freeze", "operation": "reserve", "attempt_id": null, "helper_id": null, "request_refs": ["probes/P25-ledger-stop"], "reservation_id": "R1", "actual_delta_usd": "0", "reservation_delta_usd": "0.10", "uncertainty_usd": "0", "rate_usage_evidence": ["probes/P25-ledger-stop"], "reason": "Conservative reservation"}
+STEP 02-reserve-to-settle exit=0
+    {"event_id": "1e5e9e0b-83ea-432a-9b36-2a4e9874086b", "previous_event_id": "4f7e0165-3dd8-46cb-8cbe-8785df6f2d65", "observed_at": "2026-09-12T10:19:39.050679+00:00", "ticket": 207, "actor": "kamui", "phase": "pre-freeze", "operation": "reserve", "attempt_id": null, "helper_id": null, "request_refs": ["probes/P25-ledger-stop"], "reservation_id": "R2", "actual_delta_usd": "0", "reservation_delta_usd": "0.10", "uncertainty_usd": "0", "rate_usage_evidence": ["probes/P25-ledger-stop"], "reason": "Conservative reservation"}
+STEP 03-settle-with-uncertainty exit=0
+    {"event_id": "ba04e247-4e15-4485-8062-88885d2480a9", "previous_event_id": "1e5e9e0b-83ea-432a-9b36-2a4e9874086b", "observed_at": "2026-09-12T10:19:39.092723+00:00", "ticket": 207, "actor": "kamui", "phase": "pre-freeze", "operation": "settle", "attempt_id": null, "helper_id": null, "request_refs": ["probes/P25-ledger-stop"], "reservation_id": "R2", "actual_delta_usd": "0.04", "reservation_delta_usd": "-0.10", "uncertainty_usd": "0.02", "rate_usage_evidence": ["probes/P25-ledger-stop"], "reason": "Usage settlement"}
+STEP 04-open-an-attempt exit=0
+    open A accepted
+STEP 05-stop exit=0
+    {"event_id": "554e7410-6f91-4b3c-a043-3d36f80ef00f", "previous_event_id": "d21e3f8c-1736-47c7-9745-1a0b8e97795f", "observed_at": "2026-09-12T10:19:39.168814+00:00", "ticket": 207, "actor": "kamui", "phase": "closeout", "operation": "stop", "attempt_id": null, "helper_id": null, "request_refs": ["probes/P25-ledger-stop/battery-output.txt"], "reservation_id": null, "actual_delta_usd": "0", "reservation_delta_usd": "0", "uncertainty_usd": "0", "rate_usage_evidence": ["probes/P25-ledger-stop/battery-output.txt"], "reason": "P25 probe: terminal stop with an outstanding reservation, retained uncertainty and one open attempt"}
+STEP 06-settle-after-stop exit=0
+    {"event_id": "a8922ddd-6ba9-42ee-8aa1-e8e6a5547fe5", "previous_event_id": "554e7410-6f91-4b3c-a043-3d36f80ef00f", "observed_at": "2026-09-12T10:19:39.214702+00:00", "ticket": 207, "actor": "kamui", "phase": "pre-freeze", "operation": "settle", "attempt_id": null, "helper_id": null, "request_refs": ["probes/P25-ledger-stop"], "reservation_id": "R1", "actual_delta_usd": "0.05", "reservation_delta_usd": "-0.10", "uncertainty_usd": "0.01", "rate_usage_evidence": ["probes/P25-ledger-stop"], "reason": "Usage settlement"}
+STEP 07-close-attempt-after-stop exit=0
+    close A accepted
+STEP 08-new-review-reservation exit=1
+    ledger is stopped; only settlement, attempt closure and protected closeout are allowed
+STEP 09-new-pre-freeze-reserve exit=1
+    ledger is stopped; only settlement, attempt closure and protected closeout are allowed
+STEP 10-protected-grading exit=0
+    {"event_id": "e9ea5544-cb5e-4713-8639-6204c52af907", "previous_event_id": "cc0f6215-8830-4443-9942-42b100339f3e", "observed_at": "2026-09-12T10:19:39.377468+00:00", "ticket": 207, "actor": "kamui", "phase": "grading", "operation": "reserve", "attempt_id": null, "helper_id": null, "request_refs": ["probes/P25-ledger-stop"], "reservation_id": "R5", "actual_delta_usd": "0", "reservation_delta_usd": "0.05", "uncertainty_usd": "0", "rate_usage_evidence": ["probes/P25-ledger-stop"], "reason": "Conservative reservation"}
+STEP 11-new-attempt-after-stop exit=1
+    ledger is stopped; only settlement, attempt closure and protected closeout are allowed
+STEP 12-second-stop exit=1
+    ledger is stopped; only settlement, attempt closure and protected closeout are allowed
+--- retained after the stop ---
+actual 0.09 | reserved 0.05 | uncertainty 0.03
+events 10 | stops 1
+stop ticket 207 | reason retained: P25 probe: terminal stop with an outstanding reservation, re
+stop evidence retained: ['probes/P25-ledger-stop/battery-output.txt']

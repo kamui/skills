@@ -1,0 +1,111 @@
+{
+  "duration_api_ms": 30901,
+  "stop_reason": "end_turn",
+  "session_id": "304cb623-6692-4be9-98f9-9cbc251ff0d9",
+  "total_cost_usd": 0.0664354,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 5921,
+    "cache_read_input_tokens": 35607,
+    "output_tokens": 3390,
+    "output_tokens_details": {
+      "thinking_tokens": 880
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5921,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 295,
+        "cache_read_input_tokens": 11091,
+        "cache_creation_input_tokens": 1359,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1359
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 1654,
+      "outputTokens": 12,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.001714,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5": {
+      "inputTokens": 8,
+      "outputTokens": 3390,
+      "cacheReadInputTokens": 35607,
+      "cacheCreationInputTokens": 5921,
+      "webSearchRequests": 0,
+      "costUSD": 0.06472140000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 880,
+      "canonicalModel": "claude-sonnet-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "I reviewed the diff and found a material defect: the rewritten `last_n` (`items[len(items) - n:]`) breaks exactly the case the PR says it preserves.\n\n- **n > len(items)**: `len(items) - n` goes negative, so the slice starts near the *end* instead of clamping to the start (e.g. `[1,2,3]` with `n=5` \u2192 old returns `[1,2,3]`, new returns `[2,3]`). This directly contradicts the stated PR intent.\n- **n == 0**: old `items[-0:]` returns the whole list; new `items[len(items):]` returns `[]` \u2014 a silent regression.\n\nI wrote the review as `review-payload.json` (outcome: `findings`, one P0 must-fix item with a suggested fix \u2014 clamp with `max(0, len(items) - n)` \u2014 and a request for regression tests on `n=0` and `n > len(items)`).",
+  "ttft_ms": 1595,
+  "type": "result",
+  "duration_ms": 30122,
+  "uuid": "cad3a71b-23ad-49f1-b67a-6f3084e0e431",
+  "ttft_stream_ms": 831,
+  "time_to_request_ms": 35,
+  "first_content_frame_ms": 841,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

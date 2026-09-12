@@ -1,0 +1,9 @@
+workdir listing after cancellation:
+total 8
+drwxr-xr-x  4 jack wheel 128 Sep 12 06:05 .
+drwxr-xr-x 13 jack wheel 416 Sep 12 06:02 ..
+-rw-r--r--  1 jack wheel 294 Sep 12 06:04 prompt.md
+-rw-r--r--  1 jack wheel  41 Sep 12 06:05 sid.txt
+
+processes matching the session id:
+none

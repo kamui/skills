@@ -1,0 +1,15 @@
+{"client_port": 60646, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.667937+00:00", "port": 443, "reason": ""}
+{"client_port": 60647, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.671941+00:00", "port": 443, "reason": ""}
+{"client_port": 60651, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.718916+00:00", "port": 443, "reason": ""}
+{"client_port": 60653, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.718967+00:00", "port": 443, "reason": ""}
+{"client_port": 60652, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.722805+00:00", "port": 443, "reason": ""}
+{"client_port": 60654, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.722875+00:00", "port": 443, "reason": ""}
+{"client_port": 60650, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.722931+00:00", "port": 443, "reason": ""}
+{"client_port": 60660, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.787751+00:00", "port": 443, "reason": ""}
+{"client_port": 60662, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.850656+00:00", "port": 443, "reason": ""}
+{"client_port": 60664, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.939132+00:00", "port": 443, "reason": ""}
+{"client_port": 60666, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.965750+00:00", "port": 443, "reason": ""}
+{"client_port": 60668, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:45.966667+00:00", "port": 443, "reason": ""}
+{"client_port": 60670, "decision": "refused", "host": "api.github.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:48.540903+00:00", "port": 443, "reason": "host or port not on the allow list"}
+{"client_port": 60674, "decision": "refused", "host": "http-intake.logs.us5.datadoghq.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:52.539331+00:00", "port": 443, "reason": "host or port not on the allow list"}
+{"client_port": 60675, "decision": "allowed", "host": "api.anthropic.com", "method": "CONNECT", "observed_at": "2026-09-12T10:03:52.551905+00:00", "port": 443, "reason": ""}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P17",
+  "purpose": "Does a launch that never starts still leave its exact request retained? The command names a binary that does not exist, so the process cannot be created.",
+  "retained_at": "2026-09-12T10:20:00.959834+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
+  "argv": [
+    "/private/tmp/bd207-probes/a-binary-that-does-not-exist",
+    "--model",
+    "claude-sonnet-5",
+    "--effort",
+    "high",
+    "--restricted",
+    "--max-budget-usd",
+    "0.25"
+  ],
+  "command_line": "/private/tmp/bd207-probes/a-binary-that-does-not-exist --model claude-sonnet-5 --effort high --restricted --max-budget-usd 0.25",
+  "env_additions": {},
+  "requested": {
+    "model": "claude-sonnet-5",
+    "effort": "high",
+    "max_budget_usd": "0.25",
+    "restricted": true,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

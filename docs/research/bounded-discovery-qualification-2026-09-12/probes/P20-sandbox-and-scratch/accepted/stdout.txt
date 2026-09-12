@@ -1,0 +1,5 @@
+out of root: /private/tmp/bd207-probes/outside/canary.txt  via Bash
+out of root: /private/tmp/bd207-probes/outside/canary.txt  via Bash
+out of root: /Users/jack/.config/bounded-discovery/issue-207/truth/canary.txt  via Bash
+out of root: /private/tmp/bd207-probes/outside/canary.txt  via Bash
+read audit failed, acceptances offered 2, acceptances honoured 0, acceptances ignored 2

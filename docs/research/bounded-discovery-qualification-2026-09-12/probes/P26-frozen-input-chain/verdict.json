@@ -1,0 +1,12 @@
+{
+  "probe": "P26",
+  "status": "unestablished",
+  "summary": "Two of the chain's three links hold over this bundle's own material. All 18 rendered prompts carry the pinned template block, none has an unfilled placeholder, and once the attempt id and the arm label are normalised they collapse to exactly two shapes - nine prompts at contract revision 1 and nine at revision 2 - so within a revision the arms are byte-identical. The third link has nothing to check.",
+  "establishes": "The template-to-prompt link and the no-unfilled-placeholder precondition, over a real rendering, plus the arm-identity property the payload contract exists to give.",
+  "residual": "P26 asks for three links and this bundle can only supply two. The third - each rendered prompt's digest against the value published in the public cell summary - needs a cell summary, and no cell ran. The template here is also the probe's payload-contract block, not a study dispatch template: the #149 template has not been re-rendered, because that needs a frozen target, a pinned policy snapshot and an authorized dispatch, none of which exist.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:40:10.175616+00:00"
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P23-judged-attempt-1",
+  "purpose": "The first judged run, kept because it shows what the audit does not check: this judgment binds the forge request to egress index 13, which is the runtime's own refused telemetry CONNECT and not the command's.",
+  "retained_at": "2026-09-12T10:38:34.819069+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P23-network-judgments",
+  "argv": [
+    "python3",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/audit_probe.py",
+    "network",
+    "--transcript",
+    "/Users/jack/.claude/projects/-private-tmp-bd207-probes-p06/a9af4382-4cd8-4c87-a6c8-0b11f33c8f59.jsonl",
+    "--egress",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P06-P14-egress/egress.jsonl",
+    "--judgments",
+    "judgments-attempt-1.json",
+    "--out",
+    "judged-attempt-1/judged.json"
+  ],
+  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/audit_probe.py network --transcript /Users/jack/.claude/projects/-private-tmp-bd207-probes-p06/a9af4382-4cd8-4c87-a6c8-0b11f33c8f59.jsonl --egress /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P06-P14-egress/egress.jsonl --judgments judgments-attempt-1.json --out judged-attempt-1/judged.json",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 1
+}

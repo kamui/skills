@@ -1,0 +1,111 @@
+{
+  "duration_api_ms": 22932,
+  "stop_reason": "end_turn",
+  "session_id": "8273536d-2ebb-4436-9763-53e0e1bcc122",
+  "total_cost_usd": 0.0427296,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4269,
+    "cache_read_input_tokens": 24218,
+    "output_tokens": 1920,
+    "output_tokens_details": {
+      "thinking_tokens": 1171
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4269,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 198,
+        "cache_read_input_tokens": 9020,
+        "cache_creation_input_tokens": 1778,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1778
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 1533,
+      "outputTokens": 13,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.001598,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5": {
+      "inputTokens": 6,
+      "outputTokens": 1920,
+      "cacheReadInputTokens": 24218,
+      "cacheCreationInputTokens": 4269,
+      "webSearchRequests": 0,
+      "costUSD": 0.041131600000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 1171,
+      "canonicalModel": "claude-sonnet-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 3,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "I reviewed `packet.md`: the diff only adds a comment to `last_n`, and I verified the claim against Python's slicing semantics \u2014 `items[-n:]` for `n > len(items)` does clamp to return the whole list, so the comment is accurate and matches the stated \"no behaviour change\" intent.\n\nResult: no material defect. I wrote `review-payload.json` with `outcome: \"clean\"` and `items: []`, noting in the summary (as a non-blocking aside) that the comment doesn't cover the `n == 0`/negative-`n` edge cases, but that's outside what it claims to document.",
+  "ttft_ms": 1547,
+  "type": "result",
+  "duration_ms": 22128,
+  "uuid": "de10ab58-8f0b-4ce0-a177-0d0b45fbc112",
+  "ttft_stream_ms": 1080,
+  "time_to_request_ms": 33,
+  "first_content_frame_ms": 1150,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

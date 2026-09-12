@@ -1,0 +1,12 @@
+{
+  "probe": "P25",
+  "status": "established",
+  "summary": "Twelve operations against a real ledger. The stop was recorded with an outstanding $0.10 reservation, $0.02 of retained uncertainty and one open attempt. After it: settling the outstanding reservation was accepted (and retained a further $0.01), closing the open attempt was accepted, and a protected grading reservation was accepted; a new review reservation, a new pre-freeze reservation, a new attempt-open and a second stop were each refused with 'ledger is stopped; only settlement, attempt closure and protected closeout are allowed'. The ledger ends with one stop event, an unbroken ten-event chain, $0.09 actual, $0.05 reserved and $0.03 of uncertainty still retained - the stop released none of it. The producing ticket, the reason and the handoff evidence reference are all retained on the stop event.",
+  "establishes": "P25 and gap-10's mechanical requirement: an atomic, immutable terminal stop that preserves the prior chain, the actual cost, the reservations and the retained uncertainty, refuses restart, and leaves protected closeout reachable.",
+  "residual": "A stop is bookkeeping. It does not terminate workers and it establishes nothing about whether any stopped - that is gap 5's gate, probed separately as P21. Two further behaviours are covered by the same 'ledger is stopped' guard rather than by a distinct step here: cap-freeze after a stop, and a second attempt-open on a different cell.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:19:53.821389+00:00"
+}

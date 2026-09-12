@@ -1,0 +1,33 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P00",
+  "purpose": "Re-check the runtime inventory against the repository it names: every pinned tooling digest still matches, so every probe in this bundle was read against a runtime and a toolchain this record still describes.",
+  "retained_at": "2026-09-12T10:45:58.058727+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+  "argv": [
+    "python3",
+    "-c",
+    "\nimport hashlib, json, sys\ninventory = json.load(open('docs/research/bounded-discovery-qualification-2026-09-12/probes/P00-runtime-inventory/inventory.json'))\ndrift = []\nfor path, expected in sorted(inventory['pinned_tooling_sha256'].items()):\n    digest = hashlib.sha256(open(path, 'rb').read()).hexdigest()\n    if digest != expected:\n        drift.append(path)\nprint('runtime', inventory['runtime']['cli'], inventory['runtime']['version'])\nprint('pinned tooling files:', len(inventory['pinned_tooling_sha256']))\nprint('drifted:', drift or 'none')\nsys.exit(1 if drift else 0)\n"
+  ],
+  "command_line": "python3 -c '\nimport hashlib, json, sys\ninventory = json.load(open('\"'\"'docs/research/bounded-discovery-qualification-2026-09-12/probes/P00-runtime-inventory/inventory.json'\"'\"'))\ndrift = []\nfor path, expected in sorted(inventory['\"'\"'pinned_tooling_sha256'\"'\"'].items()):\n    digest = hashlib.sha256(open(path, '\"'\"'rb'\"'\"').read()).hexdigest()\n    if digest != expected:\n        drift.append(path)\nprint('\"'\"'runtime'\"'\"', inventory['\"'\"'runtime'\"'\"']['\"'\"'cli'\"'\"'], inventory['\"'\"'runtime'\"'\"']['\"'\"'version'\"'\"'])\nprint('\"'\"'pinned tooling files:'\"'\"', len(inventory['\"'\"'pinned_tooling_sha256'\"'\"']))\nprint('\"'\"'drifted:'\"'\"', drift or '\"'\"'none'\"'\"')\nsys.exit(1 if drift else 0)\n'",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}
