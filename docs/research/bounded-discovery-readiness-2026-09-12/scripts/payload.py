@@ -19,8 +19,8 @@ Usage::
         --attempt ID --completion STATE [--stop-detail TEXT]
         [--contract-validator PATH]
     python3 scripts/payload.py uniformity --receipt FILE [--receipt FILE ...]
-        [--require-arm ARM ...] [--require-outcome OUTCOME ...] [--strict-shape]
-        [--out FILE]
+        [--require-arm ARM ...] [--require-outcome OUTCOME ...]
+        [--allow-shape-correlation KEY_PATH ...] [--out FILE]
     python3 scripts/payload.py --self-test
 
 ``validate`` checks one payload against the frozen envelope. ``emit`` writes the
@@ -29,8 +29,9 @@ items and no body. ``accept`` is the coordinator's production gate for one
 attempt: it refuses a second payload form, validates the payload the arm wrote or
 emits the stopped one, refuses a payload that changed after a previous
 acceptance, and retains a receipt. ``uniformity`` checks a set of receipts before
-masking: one schema, one validator, one file form across every arm, and the
-outcome coverage a freeze probe requires.
+masking: one schema, one validator, one file form across every arm, the outcome
+coverage a freeze probe requires, and no field that only one arm carries unless
+that field was ruled on by name.
 
 Input schema (UTF-8 JSON payload)::
 
@@ -68,6 +69,10 @@ SCHEMA_VERSION = "bounded-discovery-payload-v1"
 
 # The one file every arm writes. A second form is what produced the pilot's tell.
 PAYLOAD_NAME = "review-payload.json"
+# Written beside a payload the coordinator had to produce, because acceptance is
+# re-runnable: on a second pass the file exists either way, and "did it exist
+# already" cannot tell an arm's output from one this program invented.
+ORIGIN_NAME = "review-payload-origin.json"
 REJECTED_FORMS = ("review-payload.md", "review-payload.markdown", "review-payload.txt",
                   "review-payload.yaml", "review-payload.yml")
 
@@ -370,6 +375,13 @@ def command_emit(args) -> int:
             print(problem)
         return 1
     write_exclusive(args.out, document)
+    # A payload written into a cell's work directory carries its origin with it,
+    # so a later acceptance does not have to guess who produced it.
+    out = Path(args.out)
+    if out.name == PAYLOAD_NAME:
+        write_exclusive(out.with_name(ORIGIN_NAME),
+                        {"produced_by": "coordinator", "recorded_at": now(),
+                         "payload_sha256": sha256_file(out)})
     return 0
 
 
@@ -395,7 +407,7 @@ def accept(work, receipt_path, arm, attempt, completion, stop_detail=None,
     if problems:
         return None, problems
 
-    produced_by = "arm"
+    origin_path = work / ORIGIN_NAME
     if not payload_path.exists():
         if completion == "complete":
             return None, ["a complete attempt produced no %s; the contract payload is "
@@ -408,9 +420,18 @@ def accept(work, receipt_path, arm, attempt, completion, stop_detail=None,
                                       stop_detail or "the attempt ended as %s and retained "
                                                      "no payload" % completion)
         write_exclusive(payload_path, document)
-        produced_by = "coordinator"
+        write_exclusive(origin_path, {"produced_by": "coordinator",
+                                      "recorded_at": now(),
+                                      "payload_sha256": sha256_file(payload_path)})
 
     document = load_payload(payload_path)
+    produced_by = "arm"
+    # Only a stopped or unavailable payload can have been produced here, so an
+    # origin record beside a review is not evidence of anything.
+    if origin_path.exists() and document.get("outcome") in EMPTY_OUTCOMES:
+        origin = json.loads(origin_path.read_text(encoding="utf-8"))
+        if origin.get("payload_sha256") == sha256_file(payload_path):
+            produced_by = str(origin.get("produced_by") or "coordinator")
     problems = validate_document(document, arm, attempt)
     if not problems and completion == "complete" and document["outcome"] in EMPTY_OUTCOMES:
         problems.append("a complete attempt cannot be masked as %s" % document["outcome"])
@@ -432,7 +453,7 @@ def accept(work, receipt_path, arm, attempt, completion, stop_detail=None,
         "outcome": document["outcome"],
         "produced_by": produced_by,
         "source_form": PAYLOAD_NAME,
-        "items_present": True,
+        "items_present": isinstance(document.get("items"), list),
         "item_count": len(document["items"]),
         "item_types": sorted({item["type"] for item in document["items"]}),
         "body_sha256": sha256_bytes(document["summary"]["body"].encode("utf-8")),
@@ -469,7 +490,7 @@ def command_accept(args) -> int:
     return 0
 
 
-def uniformity(receipts, require_arms=(), require_outcomes=(), strict_shape=False) -> dict:
+def uniformity(receipts, require_arms=(), require_outcomes=(), allowed_correlations=()) -> dict:
     """Compare accepted payloads across arms before anything is masked."""
     problems = []
     documents = []
@@ -525,20 +546,24 @@ def uniformity(receipts, require_arms=(), require_outcomes=(), strict_shape=Fals
                 problems.append("arm %s never produced a %s payload; the freeze probes every "
                                 "outcome in every arm" % (arm, outcome))
 
-    # A field only one arm ever carries is a shape correlation. Under the closed
-    # schema it can only be an omissible field, so it is reported as evidence a
-    # freeze must rule on, and fails the check when the caller asked it to.
+    # A field only one arm ever carries is a shape correlation: a masked packet's
+    # shape would name its arm, which is the tell this contract exists to remove.
+    # Under the closed schema it can only be an omissible field, so a freeze may
+    # rule one acceptable - but it has to say so by name, per field. Silence
+    # blocks masking.
     correlations = []
     if len(arms) > 1:
         for path in sorted(set().union(*(entry["key_paths"] for entry in arms.values()))):
             carrying = sorted(arm for arm, entry in arms.items() if path in entry["key_paths"])
             if len(carrying) == 1:
-                correlations.append({"key_path": path, "only_arm": carrying[0]})
-    if strict_shape and correlations:
-        for correlation in correlations:
-            problems.append("%s appears only in arm %s; a masked packet's shape would "
-                            "correlate with its arm"
-                            % (correlation["key_path"], correlation["only_arm"]))
+                ruled = path in allowed_correlations
+                correlations.append({"key_path": path, "only_arm": carrying[0],
+                                     "ruled_acceptable": ruled})
+                if not ruled:
+                    problems.append("%s appears only in arm %s; a masked packet's shape would "
+                                    "correlate with its arm. Rule on it with "
+                                    "--allow-shape-correlation %s or make the arms uniform"
+                                    % (path, carrying[0], path))
 
     return {"schema_version": SCHEMA_VERSION,
             "artifact_id": "bounded-discovery-payload-uniformity",
@@ -548,13 +573,13 @@ def uniformity(receipts, require_arms=(), require_outcomes=(), strict_shape=Fals
                            "key_paths": sorted(entry["key_paths"])}
                      for arm, entry in sorted(arms.items())},
             "shape_correlations": correlations,
-            "strict_shape": bool(strict_shape),
+            "allowed_shape_correlations": sorted(allowed_correlations),
             "problems": problems, "passed": not problems}
 
 
 def command_uniformity(args) -> int:
     report = uniformity(args.receipt, args.require_arm, args.require_outcome,
-                        args.strict_shape)
+                        args.allow_shape_correlation)
     if args.out:
         write_record(args.out, report)
     for problem in report["problems"]:
@@ -584,8 +609,10 @@ def build_parser() -> argparse.ArgumentParser:
                              "same payload in every arm")
     parser.add_argument("--require-arm", action="append", default=[])
     parser.add_argument("--require-outcome", action="append", default=[], choices=OUTCOMES)
-    parser.add_argument("--strict-shape", action="store_true",
-                        help="fail when a field appears in only one arm")
+    parser.add_argument("--allow-shape-correlation", action="append", default=[],
+                        metavar="KEY_PATH",
+                        help="rule this field acceptable although only one arm carries "
+                             "it; any unruled correlation blocks masking")
     parser.add_argument("--self-test", action="store_true")
     return parser
 

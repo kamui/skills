@@ -239,6 +239,39 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(receipt["item_count"], 0)
         self.assertEqual(receipt["stop"]["reason"], "budget")
 
+    def test_a_coordinator_payload_stays_coordinator_produced_on_re_acceptance(self):
+        self.accept("stopped-budget")
+        first = json.loads(self.receipt.read_text(encoding="utf-8"))
+        self.assertEqual(first["produced_by"], "coordinator")
+        # Settlement is re-runnable: the payload now exists either way, and the
+        # origin record is what keeps "the arm wrote this" from becoming true.
+        self.accept("stopped-budget")
+        again = json.loads(self.receipt.read_text(encoding="utf-8"))
+        self.assertEqual(again["produced_by"], "coordinator")
+        self.assertEqual(again["payload_sha256"], first["payload_sha256"])
+        # An origin record beside a review the arm did write claims nothing.
+        other = self.base / "review-work"
+        other.mkdir()
+        (other / payload.PAYLOAD_NAME).write_text(json.dumps(envelope()), encoding="utf-8")
+        (other / payload.ORIGIN_NAME).write_text(json.dumps(
+            {"produced_by": "coordinator",
+             "payload_sha256": payload.sha256_file(other / payload.PAYLOAD_NAME)}),
+            encoding="utf-8")
+        receipt = self.base / "review-receipt.json"
+        self.call("accept", "--work", other, "--receipt", receipt, "--arm", "A",
+                  "--attempt", "attempt-1", "--completion", "complete")
+        self.assertEqual(json.loads(receipt.read_text(encoding="utf-8"))["produced_by"], "arm")
+
+    def test_emit_into_a_work_directory_records_its_own_origin(self):
+        out = self.work / payload.PAYLOAD_NAME
+        self.call("emit", "--out", out, "--arm", "A", "--attempt", "attempt-1",
+                  "--outcome", "unavailable", "--reason", "launch-failed")
+        origin = json.loads((self.work / payload.ORIGIN_NAME).read_text(encoding="utf-8"))
+        self.assertEqual(origin["payload_sha256"], payload.sha256_file(out))
+        self.accept("stopped-runtime")
+        self.assertEqual(json.loads(self.receipt.read_text(encoding="utf-8"))["produced_by"],
+                         "coordinator")
+
     def test_a_provider_error_is_unavailable_and_a_complete_attempt_must_produce(self):
         self.accept("stopped-runtime")
         self.assertEqual(json.loads(self.receipt.read_text(encoding="utf-8"))["outcome"],
@@ -362,13 +395,15 @@ class UniformityTests(unittest.TestCase):
 
     def test_the_pilot_tell_is_refused(self):
         paths = self.receipts(arms=("A",), outcomes=("findings",))
-        stale = json.loads(paths[0].read_text(encoding="utf-8"))
-        stale.update(arm="B", source_form="review-payload.md", items_present=False)
-        tell = self.base / "tell.json"
-        tell.write_text(json.dumps(stale), encoding="utf-8")
-        result = self.uniformity(paths + [tell], expected=1)
-        self.assertIn("records source form 'review-payload.md'", result.stdout)
-        self.assertIn("records no items array", result.stdout)
+        for field, value, expected in (
+                ("source_form", "review-payload.md", "records source form 'review-payload.md'"),
+                ("items_present", False, "records no items array")):
+            stale = json.loads(paths[0].read_text(encoding="utf-8"))
+            stale.update(arm="B", **{field: value})
+            tell = self.base / ("tell-%s.json" % field)
+            tell.write_text(json.dumps(stale), encoding="utf-8")
+            result = self.uniformity(paths + [tell], expected=1)
+            self.assertIn(expected, result.stdout)
 
     def test_a_second_validator_or_contract_is_refused(self):
         paths = self.receipts(arms=("A",), outcomes=("findings",))
@@ -381,15 +416,21 @@ class UniformityTests(unittest.TestCase):
         self.assertIn("receipts disagree on validator_sha256", result.stdout)
         self.assertIn("different pinned contract validators", result.stdout)
 
-    def test_a_field_only_one_arm_carries_is_reported_and_can_be_made_fatal(self):
+    def test_a_field_only_one_arm_carries_blocks_until_it_is_ruled_on(self):
         paths = self.receipts(arms=("A", "B"), outcomes=("findings",), fix_arm="A")
+        result = self.uniformity(paths, expected=1)
+        self.assertIn("items[].fix appears only in arm A", result.stdout)
         out = self.base / "shape.json"
-        self.uniformity(paths, "--out", out)
+        self.uniformity(paths, "--allow-shape-correlation", "items[].fix", "--out", out)
         report = json.loads(out.read_text(encoding="utf-8"))
         self.assertEqual(report["shape_correlations"],
-                         [{"key_path": "items[].fix", "only_arm": "A"}])
-        result = self.uniformity(paths, "--strict-shape", expected=1)
-        self.assertIn("items[].fix appears only in arm A", result.stdout)
+                         [{"key_path": "items[].fix", "only_arm": "A",
+                           "ruled_acceptable": True}])
+        self.assertEqual(report["allowed_shape_correlations"], ["items[].fix"])
+        # The ruling is per field: one on another field leaves this one blocking.
+        self.assertIn("items[].fix appears only in arm A",
+                      self.uniformity(paths, "--allow-shape-correlation",
+                                      "items[].anchor.side", expected=1).stdout)
 
     def test_a_non_receipt_and_a_missing_receipt_are_refused(self):
         stray = self.base / "stray.json"
