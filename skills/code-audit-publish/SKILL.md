@@ -14,7 +14,7 @@ Independent parallel finders discover candidates, and a fresh-context verifier c
 
 Two properties govern every decision here:
 
-**Never ask the user anything.** This runs unattended to post a review. Where you would ask, publish a `question` finding instead and let the status carry it. The one exception is an operational failure that prevents reviewing at all — stop and report that rather than publishing a review you could not complete.
+**Never ask the user anything.** This runs unattended to post a review. Where you would ask, settle it from the repository if anything there can, and publish a `question` finding for what is left outcome-changing and unanswerable, letting the status carry it (`references/finding-format.md` § Settle, ask, or record). The one exception is an operational failure that prevents reviewing at all — stop and report that rather than publishing a review you could not complete.
 
 **Every finding has two readers.** A human triages it; an agent acts on it. A human reads severity as advice and applies judgment; an agent reads it as an instruction and does the work. So each finding carries a human-facing priority *and* an agent-facing action, and the low band says in words that closing it unactioned is correct. Read [`references/finding-format.md`](references/finding-format.md) before anything else — it is the contract the whole skill exists to produce.
 
@@ -64,7 +64,7 @@ Build each finder prompt as one shared block followed by one axis-specific block
 - the full diff text;
 - the applicable guidance file contents, each with its base-branch provenance;
 - the one-line result summary for each test suite run in step 1, when any;
-- the absolute path to [`references/finding-format.md`](references/finding-format.md), which defines the anchor ladder and claim/support split.
+- the absolute path to [`references/finding-format.md`](references/finding-format.md), which defines the anchor ladder, the claim/support split, and the settle-ask-record ladder every unsettled thing goes through.
 
 Append the axis-specific block last:
 
@@ -97,15 +97,15 @@ Spawn **one sub-agent with a fresh context** and the brief in [`references/verif
 
 Also give it every finder ledger row with disposition `acquitted` that is **related** to a candidate: the row's evidence pointer is in the same file as a candidate's `anchor` or `fix`, or its claim names the same function, branch, state field, or lock as a candidate's claim. Pass each as its compact four-field row, after the candidates. The verifier rules `holds` or `re-open` on each related row in the same report.
 
-One class of item never goes to the verifier: the Requirements axis's **"cannot tell from the code"** bucket. Those resolve to questions at the finder — a question is not a defect claim, and `confirmed`/`refuted` presupposes something the code either does or does not do. Route them straight to publication as questions, each carrying why no static evidence can settle it and what measurement or answer would.
+One class of item never goes to the verifier: the Requirements axis's **"cannot tell from the code"** bucket. Those resolve to questions at the finder — a question is not a defect claim, and `confirmed`/`refuted` presupposes something the code either does or does not do. Route them straight to publication as questions, each carrying why no available source can settle it, who or what measurement would, and the present decision the answer moves. An item that bucket recorded rather than asked — a fact no source settles that changes nothing this merge decides, a deferral on a preview surface postponed to a later gate — publishes nothing and reaches the caller in the run report.
 
 The fresh context is the entire mechanism. A verifier that has already seen why the finder believed something agrees with itself, which checks nothing. A verifier that has only the claim must reconstruct it from the code or fail to. `support` is where a finder's demonstrations and hedging live, and it is withheld for exactly that reason: a verifier told the finder already proved something believes it.
 
 It returns one verdict per candidate — `confirmed`, `plausible`, or `refuted` — and a deduplicated list. Then:
 
-- `refuted` is dropped silently. It never reaches the pull request and is not mentioned in the summary.
-- `confirmed` becomes a finding at its priority and action. The verifier may have recalibrated either — a confirmed fact whose merge consequence is disproved lands as `consider`, still published.
-- `plausible` becomes a **question**, whatever its priority. The mechanism is real but the trigger is not established, and an agent handed that as a finding will change working code to satisfy a scenario nobody has demonstrated. Asking costs a round; a wrong fix costs a round *and* the code.
+- `refuted` is dropped silently. It never reaches the pull request and is not mentioned in the summary. A refutation arrives on one of the five evidence bases with its citation; one that carries neither is not a refutation, and the candidate is `plausible`.
+- `confirmed` becomes a finding at its priority and action. The verifier may have recalibrated either — a confirmed fact whose merge consequence is disproved lands as `consider`, still published. A proven defect stays a finding at `P3` as much as at `P0`; low priority never demotes it to an observation.
+- `plausible` never publishes as a finding — the mechanism is real, the trigger is not, and an agent handed that as a finding will change working code to satisfy a scenario nobody has demonstrated. Route it by `references/finding-format.md` § Settle, ask, or record: a **question**, whatever its priority, where the unsettled fact is outcome-changing and no available source can settle it; a **coverage shortfall** naming what was not settled, where the verifier said it could not reach the material or finish the check; otherwise a recorded row that publishes nothing and reaches the caller in the run report. Asking costs a round, so ask only where the answer moves this merge's decision; but an unresolved candidate is never evidence the code is safe, and the summary says nothing that implies it is.
 
 A `re-open` ruling is returned to the caller in the run report as `acquittal re-opened: <row>` with the verifier's cited evidence, and the summary's status derivation treats it as an open question on that axis (`Waiting for information`), never as a finding: the verifier cannot add findings, and this skill runs no second verifier dispatch. A later round may promote it.
 
@@ -115,7 +115,7 @@ Re-reviewing, add to the verifier's list every prior finding whose fate turns on
 
 Finders that return no candidates on a first review make this step unnecessary; skip it. If the verifier runs and returns nothing, that is a clean review, not a failure.
 
-Carry the Requirements finder's restated requirement list and its met / not-met / unverifiable counts through to step 4. The axis outcome is derived from those, not from how many findings survived verification: an axis whose requirements are all met is `Passed`, and so is one whose every candidate was refuted — unless a review-record deferral question is open, which keeps the axis at `Waiting for information` (`references/requirements-axis.md` § Step 2). On the no-issue path the same ledger is built from the body's claims and non-goals, and the summary carries "issue alignment unavailable" beside the axis outcome.
+Carry the Requirements finder's restated requirement list and its met / not-met / unverifiable counts through to step 4. The axis outcome is derived from those, not from how many findings survived verification: an axis whose requirements are all met is `Passed`, and so is one whose every candidate was refuted — unless a published question is open on the axis's subject, which keeps it at `Waiting for information`. A review-record deferral publishes as a question, and holds the axis, only when its answer moves a decision this merge settles; one the axis recorded instead leaves it free to pass while the record still shows the decision open (`references/requirements-axis.md` § Step 2). On the no-issue path the same ledger is built from the body's claims and non-goals, and the summary carries "issue alignment unavailable" beside the axis outcome.
 
 ### 4. Publish once
 
@@ -129,7 +129,7 @@ Re-reviewing, carry step 3's verdicts onto the prior findings: reply on each exi
 
 Attempt each write once. On an ambiguous result, read the target before a single retry, then report the failure rather than posting again.
 
-Finish with the short form: status, run identity, coverage, counts, questions, observations, the observations dropped at the cap, refuted count, and publication result. Name the files it discusses as rendered coordinate links — observations keep their code spans — including on a retrospective run with publication disabled, where the would-be review is reported instead of a link. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more.
+Finish with the short form: status, run identity, coverage, counts, questions, observations, the observations dropped at the cap, the observations dropped for asserting an unestablished consequence, the unresolved records that published nothing — each with its evidence pointer, and the fact that would settle it wherever the record carries one — refuted count, and publication result. Name the files it discusses as rendered coordinate links — observations keep their code spans — including on a retrospective run with publication disabled, where the would-be review is reported instead of a link. Do not reproduce the finder or verifier reports. A research dispatch may explicitly request more.
 
 ## Why this shape
 
