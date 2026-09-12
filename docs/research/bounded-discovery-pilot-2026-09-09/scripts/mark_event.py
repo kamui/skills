@@ -41,6 +41,23 @@ from pathlib import Path
 EVENTS = ("root_dispatched_at", "payload_validated_at", "completed_at")
 REWRITABLE = ("payload_validated_at",)
 
+# The cell writes one payload file. #199 gap 6: two forms across the arms is what
+# let a masked packet's shape name its arm, so two forms present at once is a
+# violation here rather than a choice this script makes for the cell.
+PAYLOAD_FORMS = ("review-payload.json", "review-payload.md")
+
+
+def payload_of(directory):
+    """The cell's single payload file, or why there is not exactly one."""
+    present = [directory / name for name in PAYLOAD_FORMS
+               if (directory / name).is_file() and (directory / name).stat().st_size]
+    if len(present) > 1:
+        return None, ("%s payload forms are present; the contract is one payload file"
+                      % len(present))
+    if not present:
+        return None, "final payload and research report must both be nonempty"
+    return present[0], None
+
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -108,10 +125,10 @@ def main(argv=None) -> int:
             print("--at %s is not an ISO 8601 instant" % args.at)
             return 1
     if args.event in ("payload_validated_at", "completed_at"):
-        payload = path.parent / "review-payload.md"
+        payload, problem = payload_of(path.parent)
         report = path.parent / "research-report.md"
-        if not payload.is_file() or not payload.stat().st_size or not report.is_file() or not report.stat().st_size:
-            print("final payload and research report must both be nonempty")
+        if problem or not report.is_file() or not report.stat().st_size:
+            print(problem or "final payload and research report must both be nonempty")
             return 1
         payload_hash = hashlib.sha256(payload.read_bytes()).hexdigest()
         if args.event == "payload_validated_at":
@@ -169,6 +186,18 @@ def self_test() -> int:
                    run(str(sidecar), "completed_at").returncode == 0))
     checks.append(("completed_at is written once",
                    run(str(sidecar), "completed_at").returncode == 1))
+
+    contract = root / "contract"
+    contract.mkdir()
+    (contract / "research-report.md").write_text("report", encoding="utf-8")
+    (contract / "review-payload.json").write_text('{"items": []}', encoding="utf-8")
+    json_sidecar = contract / "timing.json"
+    run(str(json_sidecar), "root_dispatched_at", "--create")
+    checks.append(("the contract payload is the payload",
+                   run(str(json_sidecar), "payload_validated_at").returncode == 0))
+    (contract / "review-payload.md").write_text("a second form", encoding="utf-8")
+    checks.append(("two payload forms are a violation, not a choice",
+                   run(str(json_sidecar), "payload_validated_at").returncode == 1))
     checks.append(("an unknown event is a content violation",
                    run(str(sidecar), "finished_at").returncode == 1))
     checks.append(("a missing sidecar is an input error",
