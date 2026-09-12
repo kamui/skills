@@ -1,0 +1,12 @@
+{
+  "archive_sha256": "7d26007be0eb98142fee4e4de536f7addded7cffc4e6f4304e61d576e1a4286d",
+  "archive_sha256_as_sealed": "7d26007be0eb98142fee4e4de536f7addded7cffc4e6f4304e61d576e1a4286d",
+  "artifact_id": "issue-153-packet-reveal",
+  "members": {
+    "grading-packets.json": "e4824da780e16390a1ed0e70e12cc3fb9b0f892fcfd386e2c8dc3ef154e498d2",
+    "redaction-map.json": "140a5188d7149454d3037b3c318112ca3cc0a0caec38b997deaf6c897a9c6e9d"
+  },
+  "revealed_at": "2026-09-12T00:42:35.222834+00:00",
+  "schema_version": "bounded-discovery-v1",
+  "source": "#151 packets/grading-packets.tar.gz.enc, decrypted under #148's key"
+}

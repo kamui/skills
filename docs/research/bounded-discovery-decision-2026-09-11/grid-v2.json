@@ -1,0 +1,260 @@
+{
+  "attempts": [
+    {
+      "action_errors": 0,
+      "arm": "A",
+      "attempt_id": "issue-138-slot-2-A-replicate-1-attempt-1",
+      "attempt_ref": "position-01-attempt-1",
+      "billed_cost_usd": "0.0000000",
+      "cell_id": "slot-2-A-replicate-1",
+      "clean_claim": false,
+      "completed": false,
+      "completion": "stopped-runtime",
+      "operational_validity": "invalid",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [],
+      "replicate": 1,
+      "status": "Incomplete",
+      "sufficient_fix_defect_ids": [],
+      "target_slot": "slot-2",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "A",
+      "attempt_id": "issue-138-slot-2-A-replicate-1-attempt-2",
+      "attempt_ref": "position-01-attempt-2",
+      "billed_cost_usd": "3.8595330",
+      "cell_id": "slot-2-A-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "operational_validity": "unresolved",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [],
+      "replicate": 1,
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "target_slot": "slot-2",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "B",
+      "attempt_id": "issue-138-slot-2-B-replicate-1-attempt-1",
+      "attempt_ref": "position-02-attempt-1",
+      "billed_cost_usd": "3.8777270",
+      "cell_id": "slot-2-B-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "operational_validity": "unresolved",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [],
+      "replicate": 1,
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "target_slot": "slot-2",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "C",
+      "attempt_id": "issue-138-slot-2-C-replicate-1-attempt-1",
+      "attempt_ref": "position-03-attempt-1",
+      "billed_cost_usd": "1.5838690",
+      "cell_id": "slot-2-C-replicate-1",
+      "clean_claim": false,
+      "completed": false,
+      "completion": "stopped-runtime",
+      "operational_validity": "invalid",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [],
+      "replicate": 1,
+      "status": "Incomplete",
+      "sufficient_fix_defect_ids": [],
+      "target_slot": "slot-2",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "C",
+      "attempt_id": "issue-138-slot-2-C-replicate-1-attempt-2",
+      "attempt_ref": "position-03-attempt-2",
+      "billed_cost_usd": "7.0003047",
+      "cell_id": "slot-2-C-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "operational_validity": "unresolved",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [],
+      "replicate": 1,
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "target_slot": "slot-2",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "A",
+      "attempt_id": "issue-138-slot-1-A-replicate-1-attempt-1",
+      "attempt_ref": "position-04-attempt-1",
+      "billed_cost_usd": "4.5304828",
+      "cell_id": "slot-1-A-replicate-1",
+      "clean_claim": true,
+      "completed": true,
+      "completion": "complete",
+      "operational_validity": "unresolved",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [],
+      "replicate": 1,
+      "status": "Approved",
+      "sufficient_fix_defect_ids": [],
+      "target_slot": "slot-1",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "B",
+      "attempt_id": "issue-138-slot-1-B-replicate-1-attempt-1",
+      "attempt_ref": "position-05-attempt-1",
+      "billed_cost_usd": "6.3671277",
+      "cell_id": "slot-1-B-replicate-1",
+      "clean_claim": false,
+      "completed": true,
+      "completion": "complete",
+      "operational_validity": "invalid",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "replicate": 1,
+      "status": "Changes Requested",
+      "sufficient_fix_defect_ids": [
+        "GT-p2"
+      ],
+      "target_slot": "slot-1",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    },
+    {
+      "action_errors": 0,
+      "arm": "C",
+      "attempt_id": "issue-138-slot-1-C-replicate-1-attempt-1",
+      "attempt_ref": "position-06-attempt-1",
+      "billed_cost_usd": "9.0040632",
+      "cell_id": "slot-1-C-replicate-1",
+      "clean_claim": false,
+      "completed": false,
+      "completion": "stopped-budget",
+      "operational_validity": "unresolved",
+      "priority_errors": 0,
+      "raw_false_finding_items": 0,
+      "recovered_defect_ids": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "replicate": 1,
+      "status": "Changes Requested",
+      "sufficient_fix_defect_ids": [
+        "GT-p2"
+      ],
+      "target_slot": "slot-1",
+      "unique_false_claims": 0,
+      "unresolved_adjudications": 0,
+      "valid": false
+    }
+  ],
+  "candidate_arms": [
+    "B",
+    "C"
+  ],
+  "control_arm": "A",
+  "expected_clean_targets": [
+    "slot-2"
+  ],
+  "experiment_id": "issue-138",
+  "planned_cells": [
+    "slot-1-A-replicate-1",
+    "slot-1-A-replicate-2",
+    "slot-1-B-replicate-1",
+    "slot-1-B-replicate-2",
+    "slot-1-C-replicate-1",
+    "slot-1-C-replicate-2",
+    "slot-2-A-replicate-1",
+    "slot-2-A-replicate-2",
+    "slot-2-B-replicate-1",
+    "slot-2-B-replicate-2",
+    "slot-2-C-replicate-1",
+    "slot-2-C-replicate-2",
+    "slot-3-A-replicate-1",
+    "slot-3-A-replicate-2",
+    "slot-3-B-replicate-1",
+    "slot-3-B-replicate-2",
+    "slot-3-C-replicate-1",
+    "slot-3-C-replicate-2",
+    "slot-4-A-replicate-1",
+    "slot-4-A-replicate-2",
+    "slot-4-B-replicate-1",
+    "slot-4-B-replicate-2",
+    "slot-4-C-replicate-1",
+    "slot-4-C-replicate-2"
+  ],
+  "targets": {
+    "slot-1": {
+      "defect_ids": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "status": "buggy",
+      "truth_version": "v2"
+    },
+    "slot-2": {
+      "defect_ids": [],
+      "status": "clean",
+      "truth_version": "v1"
+    },
+    "slot-3": {
+      "defect_ids": [
+        "GT-r1"
+      ],
+      "status": "buggy",
+      "truth_version": "v1"
+    },
+    "slot-4": {
+      "defect_ids": [
+        "GT-s1"
+      ],
+      "status": "buggy",
+      "truth_version": "v1"
+    }
+  },
+  "thresholds": {
+    "matched_cost_ratio": 1.25,
+    "relative_recall_gain": 0.2,
+    "zero_baseline_absolute_gain": 0.1
+  },
+  "truth_version": "v2"
+}

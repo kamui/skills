@@ -1,0 +1,269 @@
+{
+  "target_ref": "target-B",
+  "truth_version": "v1",
+  "register_status": "buggy",
+  "register_defect_ids": ["GT-p1"],
+  "packets": [
+    {
+      "packet_id": "48d5db81-a8ca-47cc-b018-461fde3ac88d",
+      "status": "Changes Requested",
+      "explicit_clean_claim": false,
+      "clean_claim_quote": "",
+      "honest_incomplete": true,
+      "incomplete_quote": "Focused `cargo test`/`cargo run` execution was attempted but unavailable in this sandbox (the offline registry cache path was not accessible under this session's permission layer); the trace is decisive so this does not leave coverage incomplete.",
+      "items": [
+        {
+          "item_ref": "48d5db81-a8ca-47cc-b018-461fde3ac88d/r1",
+          "structured_item_id": "5b227a96-7abc-485f-9ae8-d8fe8b8377db",
+          "kind": "finding",
+          "anchor": "clap_builder/src/parser/parser.rs:135-137",
+          "quote": "Guard the escape/value-terminator check against an active option state",
+          "asserted_defect": "The new escape branch at parser.rs:135-137 tests the pos_counter-indexed positional's value_terminator instead of the option actually being collected (ParseState::Opt), so when a plain option without allow_hyphen_values is awaiting a value and `--` arrives while some not-yet-reached positional has value_terminator(\"--\"), the branch is wrongly taken.",
+          "asserted_consequence": "`--` silently becomes the option's literal value and the next token is misrouted to the positional, e.g. `prog --out -- foo` succeeds with out==[\"--\"], pos==[\"foo\"], whereas the same input errored at merge-base.",
+          "defect_supported": "supported",
+          "consequence_supported": "supported",
+          "ruling": "supported",
+          "materiality": "material",
+          "concept": "GT-p2",
+          "requested_fix": "sufficient",
+          "priority_error": false,
+          "priority_note": "P2 is a defensible ranking below the register's confirmed .last(true) regression (filed P1 by this same packet); not clearly mis-prioritized.",
+          "action_error": false,
+          "action_note": "The defect is confirmed real, introduced by this diff, and silently corrupts parsed values, which justifies a blocking must-fix.",
+          "citations": [
+            "clap_builder/src/parser/parser.rs:130-144",
+            "clap_builder/src/parser/parser.rs:290-308",
+            "command: cargo test --offline --locked --test builder adj_terminator_steals_active_option_value -- --nocapture (review-head) -> ADJ_RESULT ok out=[\"--\"] cmd1=[\"foo\"]",
+            "command: cargo test --offline --locked --test builder adj_terminator_steals -- --nocapture (master/merge-base) -> ADJ_RESULT err kind=InvalidValue msg='a value is required for --out <out> but none was supplied'"
+          ],
+          "basis": "I appended a temporary test reproducing exactly the scenario described (an option `out` with num_args(1) and no allow_hyphen_values, a positional `cmd1` with value_terminator(\"--\"), input `prog --out -- foo`) and ran it at both the pinned head and the merge-base. At head it silently succeeds with out=[\"--\"], cmd1=[\"foo\"] (the escape token is absorbed as a literal option value); at merge-base the identical input correctly errors because `--` unconditionally set trailing_values there. This confirms both the defect (branch selects the wrong argument's terminator) and its consequence (silent data corruption replacing a prior hard error) are real and introduced by this diff. Test file was restored via git checkout before finishing."
+        },
+        {
+          "item_ref": "48d5db81-a8ca-47cc-b018-461fde3ac88d/r2",
+          "structured_item_id": "1acd0336-697c-40aa-a269-b904415ce6b6",
+          "kind": "finding",
+          "anchor": "clap_builder/src/parser/parser.rs:135-138",
+          "quote": "Restore `--`'s escape effect for every token after a consumed value-terminator",
+          "asserted_defect": "When a positional's value_terminator is literally `--`, the new branch at parser.rs:135-138 consumes it without ever setting trailing_values, so every token after it is processed as if `--` had never been typed.",
+          "asserted_consequence": "(a) A later `.last(true)` positional becomes unreachable via a single `--` and hard-errors with unknown_argument where it previously routed correctly; (b) a subcommand name typed after `--` gets dispatched as a subcommand instead of taken literally; (c) a later hyphen-leading value is parsed as an unknown option instead of a positional value.",
+          "defect_supported": "supported",
+          "consequence_supported": "supported",
+          "ruling": "supported",
+          "materiality": "material",
+          "concept": "GT-p1",
+          "requested_fix": "sufficient",
+          "priority_error": false,
+          "priority_note": "P1 is correct for the register's confirmed material regression.",
+          "action_error": false,
+          "action_note": "A real, demonstrated, upstream-confirmed regression; must-fix is justified.",
+          "citations": [
+            "register: GT-p1 trigger and reproduction",
+            "clap_builder/src/parser/parser.rs:391-417",
+            "command: cargo test --offline --locked --test builder adj_terminator_first_token_last_positional -- --nocapture (review-head) -> ADJ_RESULT err kind=UnknownArgument msg=\"unexpected argument 'after' found\"",
+            "command: cargo test --offline --locked --test builder adj_terminator_first_token_subcommand_dispatch -- --nocapture (review-head) -> ADJ_RESULT ok cmd1=[] subcommand=Some(\"sub\")",
+            "clap_builder/src/builder/debug_asserts.rs:567-569"
+          ],
+          "basis": "Consequence (a) is exactly the register's GT-p1 trigger; I independently reproduced it at pinned head (UnknownArgument on 'after'). Consequence (b) I independently confirmed with a new test: a subcommand named 'sub' typed right after a consumed first-token terminator is dispatched as a subcommand instead of remaining a literal positional value. Consequence (c) was not independently executed but follows directly from the same code structure (parser.rs:112-133 gates long/short-flag parsing on `!trailing_values`), so it is a straightforward corollary of the same confirmed root cause. The requested fix (set trailing_values=true in the check_terminator success arm at parser.rs:413-417, gated on is_escape) directly matches the register's required corrective outcome of simultaneously terminating the positional and enabling trailing-values routing for subsequent tokens, and would resolve manifestations (a) and (b) since trailing_values is set within the same iteration, before the next token is examined."
+        }
+      ],
+      "safety_claims": [],
+      "unmasking_cues": [
+        "Body mentions 'Independent verification found ... verifier' and 'independently confirmed against additional argument configurations', suggesting a multi-pass or multi-agent verification workflow distinct from the other two packets' single-pass style."
+      ]
+    },
+    {
+      "packet_id": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643",
+      "status": "Approved",
+      "explicit_clean_claim": true,
+      "clean_claim_quote": "**Approved (advisory)** — 0 must-fix findings, 0 open questions.",
+      "honest_incomplete": false,
+      "incomplete_quote": "",
+      "items": [
+        {
+          "item_ref": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643/r1",
+          "structured_item_id": null,
+          "kind": "observation",
+          "anchor": "tests/builder/multiple_values.rs:1662",
+          "quote": "The pull request body names the added regression test `value_terminator_as_first_argument`, but the test merged into the head is `escape_as_value_terminator_with_empty_list`, renamed once during review.",
+          "asserted_defect": "None; this is a factual naming-mismatch observation, not an alleged runtime failure.",
+          "asserted_consequence": "",
+          "defect_supported": "none",
+          "consequence_supported": "none",
+          "ruling": "not-applicable",
+          "materiality": "not-applicable",
+          "concept": "N2",
+          "requested_fix": "not-applicable",
+          "priority_error": false,
+          "priority_note": "No priority assigned; not filed as a finding.",
+          "action_error": false,
+          "action_note": "Not filed as must-fix; correctly treated as a non-blocking observation.",
+          "citations": [
+            "tests/builder/multiple_values.rs:1662",
+            "register: Preexisting hints (epage, 2026-01-14, suggesting the rename to `escape_as_value_terminator_with_empty_list`)"
+          ],
+          "basis": "The register's Preexisting hints section quotes epage on 2026-01-14 suggesting exactly this rename during review, which is consistent with the observation's premise. I could not directly verify the PR body's original test name from the clone alone (no GitHub PR body text available offline), but the claim is plausible, consistent with register evidence, and is filed as an observation rather than a defect, so it is not itself gradable as true/false against the register's material-defect bar."
+        },
+        {
+          "item_ref": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643/r2",
+          "structured_item_id": null,
+          "kind": "observation",
+          "anchor": "clap_builder/src/parser/parser.rs:136, clap_builder/src/parser/parser.rs:414",
+          "quote": "The new escape-handling branch and the existing positional-consumption branch each call `check_terminator` on the same token once a first-argument terminator matches, evaluating the match twice per occurrence.",
+          "asserted_defect": "None; a true micro-inefficiency observation, not an alleged failure.",
+          "asserted_consequence": "",
+          "defect_supported": "none",
+          "consequence_supported": "none",
+          "ruling": "not-applicable",
+          "materiality": "not-applicable",
+          "concept": "N1",
+          "requested_fix": "not-applicable",
+          "priority_error": false,
+          "priority_note": "No priority assigned; not filed as a finding.",
+          "action_error": false,
+          "action_note": "Not filed as must-fix; correctly treated as a non-blocking observation.",
+          "citations": [
+            "clap_builder/src/parser/parser.rs:135-137",
+            "clap_builder/src/parser/parser.rs:413-417",
+            "register: Not ground truth, item 4 ('check_terminator is called twice for the same token ... wasteful')"
+          ],
+          "basis": "This is factually true (both call sites exist as cited) and is explicitly listed on the register's 'not ground truth' list as a true-but-sub-threshold micro-inefficiency with no demonstrated performance consequence. Filed correctly as a non-blocking observation, not a must-fix finding."
+        }
+      ],
+      "safety_claims": [
+        {
+          "quote": "**Approved (advisory)** — 0 must-fix findings, 0 open questions.",
+          "ruling": "unsupported",
+          "citations": [
+            "register: GT-p1",
+            "command: cargo test --offline --locked --test builder adj_terminator_first_token_last_positional -- --nocapture (review-head) -> ADJ_RESULT err kind=UnknownArgument"
+          ],
+          "basis": "The packet approves the change with zero must-fix findings, but the register's GT-p1 (a maintainer-confirmed, upstream-reported regression breaking `.last(true)` routing when `--` is the first token) is real, material, and demonstrably present at the pinned head, as I independently reproduced. The packet's own 'Coverage' section claims a risk-led trace of `check_terminator`/`pos_counter` correction across merge-base and head yet did not surface this. The Approved status is therefore an unsupported clean claim."
+        }
+      ],
+      "unmasking_cues": [
+        "Coverage note mentions discovering and dismissing 'a num_args minimum-values edge case that proved pre-existing via an unchanged custom-terminator code path' without naming it as a finding — suggests a review pass that explored code paths adjacent to the real defect (custom terminators, pos_counter correction) but stopped short of the `.last(true)`/trailing_values interaction."
+      ]
+    },
+    {
+      "packet_id": "d5fbbc87-30af-45cd-8daa-02d0f0b78097",
+      "status": "Changes Requested",
+      "explicit_clean_claim": false,
+      "clean_claim_quote": "",
+      "honest_incomplete": false,
+      "incomplete_quote": "",
+      "items": [
+        {
+          "item_ref": "d5fbbc87-30af-45cd-8daa-02d0f0b78097/r1",
+          "structured_item_id": null,
+          "kind": "finding",
+          "anchor": "clap_builder/src/parser/parser.rs:135-138",
+          "quote": "Escape-token guard swallows `--` into an unrelated argument or hard-errors it",
+          "asserted_defect": "The branch at parser.rs:135-138 checks the pos_counter positional's terminator regardless of what is actually being collected, so (a) an option mid-collection without its own terminator absorbs `--` as a literal value instead of ending collection, and (b) a `.last(true)` positional preceded by a value-terminated positional rejects `--` as the first token with unknown_argument even though merge-base parsed it successfully.",
+          "asserted_consequence": "(a) the intended positional gets nothing and no error is raised, silently corrupting parsed values; (b) a previously-working invocation now hard-fails.",
+          "defect_supported": "supported",
+          "consequence_supported": "supported",
+          "ruling": "supported",
+          "materiality": "material",
+          "concept": "GT-p1",
+          "requested_fix": "partial",
+          "priority_error": false,
+          "priority_note": "P1 is appropriate; both bundled manifestations are material.",
+          "action_error": false,
+          "action_note": "Both bundled consequences are confirmed real and material, justifying must-fix.",
+          "citations": [
+            "command: cargo test --offline --locked --test builder adj_terminator_steals_active_option_value -- --nocapture (review-head and master) — confirms case (a)",
+            "command: cargo test --offline --locked --test builder adj_terminator_first_token_last_positional -- --nocapture (review-head) -> ADJ_RESULT err kind=UnknownArgument — confirms case (b), matches register GT-p1",
+            "clap_builder/src/parser/parser.rs:391-417"
+          ],
+          "basis": "This single finding bundles two distinct root-cause manifestations under one heading: case (a) matches the novel GT-p2 concept (independently confirmed above under packet 48d5db81/r1) and case (b) matches the register's GT-p1 exactly (independently confirmed above). Both are real, introduced-by-diff, and material. However, the single proposed fix — take the branch only when `!matches!(parse_state, ParseState::Opt(_))` and mirror the existing terminator handling at parser.rs:414-417 to resolve the positional there — addresses case (a) (excludes the Opt state) but does not add a `trailing_values = true` assignment, so it does not fix case (b)/GT-p1's `.last(true)` routing failure by itself, since the mirrored existing code at 414-417 itself never sets trailing_values. The requested fix is therefore only a partial recovery of the concept(s) it raises: sufficient for case (a)/GT-p2 but insufficient for case (b)/GT-p1 as stated."
+        }
+      ],
+      "safety_claims": [],
+      "unmasking_cues": []
+    }
+  ],
+  "concepts": {
+    "GT-p1": {
+      "description": "`value_terminator` consumed as the first token silently drops `trailing_values`, causing spurious `UnknownArgument` for a later `.last(true)` positional (and, per independent verification, also silently allowing a subcommand name to be dispatched instead of taken literally as a positional value). Register-confirmed and maintainer-acknowledged upstream regression.",
+      "source": "register"
+    },
+    "GT-p2": {
+      "description": "The new branch at parser.rs:135-138 tests `self.cmd.get_keymap().get(&pos_counter)` (the positional at the current position counter) rather than the argument actually being collected. When a plain option (no allow_hyphen_values, no terminator of its own) is mid-collection (ParseState::Opt) and `--` arrives while the pos_counter positional happens to have value_terminator(\"--\"), the branch is wrongly taken; `--` then falls through to the option-value-push code path (parser.rs:290-308) and is silently stored as that option's literal value, whereas the identical input correctly hard-errored at the merge-base (missing required option value). Independently confirmed by direct execution at both the pinned head and the merge-base.",
+      "source": "adjudicator"
+    },
+    "N1": {
+      "description": "`check_terminator` is called twice for the same token (once in the new `else if` guard at parser.rs:135-137, once again in the positional-consumption block at parser.rs:413-417) — a true but immaterial micro-inefficiency, explicitly listed on the register's 'not ground truth' list.",
+      "source": "register"
+    },
+    "N2": {
+      "description": "The merged regression test's name (`escape_as_value_terminator_with_empty_list`) differs from the name the PR body allegedly originally used (`value_terminator_as_first_argument`), reflecting an in-review rename. A true, sub-threshold documentation/naming observation, not a code defect.",
+      "source": "adjudicator"
+    }
+  },
+  "proposed_truth_revisions": [
+    {
+      "proposed_id": "GT-p2",
+      "trigger": "A `Command` with (1) an option argument with `num_args(1)` or similar and no `allow_hyphen_values` set, and (2) a positional argument at the current `pos_counter` with `value_terminator(\"--\")`, invoked so that the escape token `--` arrives as the value expected by the option (e.g. `prog --out -- foo` where `out` is the option and `cmd1` is the value-terminated positional).",
+      "consequence": "At the pinned head, `--` is silently absorbed as the literal value of the unrelated option instead of terminating the intended positional's value collection or erroring; a following token (e.g. `foo`) is then misrouted to the positional. The identical input at the merge-base correctly produced a hard error (`a value is required for '--out <out>' but none was supplied`), so this is a silent-corruption regression introduced by this diff, not a pre-existing condition.",
+      "required_corrective_outcome": "The branch at parser.rs:135-138 (or its replacement) must consult the argument actually being collected (the current `ParseState`, e.g. `ParseState::Opt(id)`) rather than unconditionally consulting the pos_counter-indexed positional's terminator, so that `--` is only treated as a positional's value-terminator when a positional is actually what is consuming it; when an option without its own terminator is mid-collection, `--` must retain its ordinary escape/trailing-values effect (as it did at the merge-base) rather than being silently stored as that option's value.",
+      "evidence": [
+        "command: cargo test --offline --locked --test builder adj_terminator_steals_active_option_value -- --nocapture, cwd clones/clap on review-head -> ADJ_RESULT ok out=[\"--\"] cmd1=[\"foo\"]",
+        "command: cargo test --offline --locked --test builder adj_terminator_steals -- --nocapture, cwd clones/clap on master (merge-base) -> ADJ_RESULT err kind=InvalidValue msg='a value is required for --out <out> but none was supplied'",
+        "clap_builder/src/parser/parser.rs:130-144, 290-308"
+      ]
+    }
+  ],
+  "commands_run": [
+    {
+      "command": "git -C /Users/jack/.config/bounded-discovery/issue-152/clones/clap log --oneline -3 review-head; git -C ... log --oneline -3 master; git -C ... status --short",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 0,
+      "seconds": 1,
+      "summary": "Confirmed review-head is pinned at 3604b131 and master is at merge-base 4ecbf54a; working tree clean before edits."
+    },
+    {
+      "command": "git diff master review-head -- clap_builder/src/parser/parser.rs",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 0,
+      "seconds": 1,
+      "summary": "Confirmed the diff is exactly the 4-line `else if` branch at parser.rs:135-138 described by the register and all three packets."
+    },
+    {
+      "command": "cargo test --offline --locked --test builder adj_terminator -- --nocapture",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 101,
+      "seconds": 4,
+      "summary": "On review-head (pinned head), with two temporary tests appended to tests/builder/multiple_values.rs: adj_terminator_steals_active_option_value produced out=[\"--\"] cmd1=[\"foo\"] (confirms GT-p2); adj_terminator_first_token_last_positional produced UnknownArgument on 'after' (confirms GT-p1's exact register trigger)."
+    },
+    {
+      "command": "git stash push -- tests/builder/multiple_values.rs; git switch master; (re-added adj_terminator_steals_active_option_value test); cargo test --offline --locked --test builder adj_terminator_steals -- --nocapture",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 101,
+      "seconds": 6,
+      "summary": "On master (merge-base), the same scenario as GT-p2 produced InvalidValue ('a value is required for --out <out> but none was supplied'), i.e. it correctly errored instead of silently corrupting data, confirming GT-p2 is a regression introduced by the diff, not pre-existing."
+    },
+    {
+      "command": "git checkout -- tests/builder/multiple_values.rs; git switch review-head; git stash pop",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 0,
+      "seconds": 1,
+      "summary": "Restored master's test file, returned to review-head, and restored the two pending temporary test additions."
+    },
+    {
+      "command": "cargo test --offline --locked --test builder adj_terminator_first_token_subcommand -- --nocapture",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 101,
+      "seconds": 6,
+      "summary": "On review-head, a subcommand named 'sub' typed right after a consumed first-token terminator was dispatched as a subcommand (subcommand=Some(\"sub\")) instead of remaining a literal value of cmd1, confirming consequence (b) of packet 48d5db81/r2."
+    },
+    {
+      "command": "git checkout -- tests/builder/multiple_values.rs; git status --short",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 0,
+      "seconds": 1,
+      "summary": "Restored the test file to its pinned-head state; clone left clean (git status --short empty)."
+    }
+  ],
+  "outstanding": [],
+  "notes": "Only 3 packets were present for target-B (packet_count=3), all fully ruled. Packet d5fbbc87's single P1 finding bundles two distinct root-cause manifestations (the novel GT-p2 option-state issue and the register's GT-p1 .last(true) issue) under one heading with one proposed fix; I graded it as one raw item per the body's structure, recorded its primary concept as GT-p1 (the register-anchored, most material manifestation), and reflected the bundling and the fix's partial coverage in requested_fix and basis. Consequence (c) in packet 48d5db81/r2 (hyphen-leading value parsed as unknown option) was judged supported by code-structure inspection rather than a dedicated executed test, given it follows directly from the same confirmed trailing_values gate already exercised by two other executed tests for the same root cause. Packet 8814c28e's two body items are unambiguous non-defect observations (kind=observation) so defect_supported/consequence_supported are 'none' and ruling/materiality are 'not-applicable' per the rubric; the packet's overall Approved status is nonetheless graded as an unsupported explicit clean claim because it filed zero findings against a register-confirmed material defect."
+}
