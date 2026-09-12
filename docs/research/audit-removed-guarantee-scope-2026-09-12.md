@@ -27,7 +27,7 @@ rules this release was required to preserve still decide their own cases.
 
 ## Case 1 — a removed lock races an unchanged reader
 
-Fixture. `snapshot` is byte-identical across the revisions; only `put` is in the diff.
+Fixture. `live` is byte-identical across the revisions; only `put` is in the diff.
 
 ```python
 # cache.py — base
