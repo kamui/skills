@@ -1,0 +1,21 @@
+{
+  "label": "nats-server-7395",
+  "staging": "/tmp/bd148/staging/nats-server.git",
+  "shas": [
+    "166b30d16ef5b53f5b2d7db7cb2b5c5baa49de11",
+    "49e9e7b27ff2da7dc2b38ff38eb3f7810f91a567",
+    "4d12871e1187f97340231015b715ef94e150e56f",
+    "8dd2c5bb33c99eadc6b000ee5f300c465d559268",
+    "a5119debb4d3a936a546310c6f29487a15bf885f",
+    "e5943df84d32f537295f1ff44062ea6832abeb3d",
+    "e680c1a55858ec475b595895ac61df720182f492",
+    "fb7c42e21b690663bfe71d6b2792bfcb01951f95"
+  ],
+  "unresolved_tokens": [],
+  "hidden_numbers": [
+    "7395",
+    "7716"
+  ],
+  "section_chars": 2129,
+  "note": "the target head commit itself is the reviewed object and is omitted from the negative checks"
+}

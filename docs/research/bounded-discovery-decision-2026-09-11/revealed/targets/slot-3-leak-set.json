@@ -1,0 +1,24 @@
+{
+  "label": "nats-server-6593",
+  "staging": "/tmp/bd148/staging/nats-server.git",
+  "shas": [
+    "252ea270fbfaff463f0f5beb4d3911898f1ed088",
+    "63ac68e0dca2c5fed9af68404b36b4706ac62eea",
+    "e8f1ed021e8dbbf2a9aa59e9120ecd222eecce01"
+  ],
+  "unresolved_tokens": [],
+  "hidden_numbers": [
+    "6388",
+    "6581",
+    "6593",
+    "6623"
+  ],
+  "section_chars": 1301,
+  "note": "the target head commit itself is the reviewed object and is omitted from the negative checks",
+  "pre_head_ancestors_named_by_register": [
+    {
+      "sha": "1b610508d730fbd2ecea6e4c55d82abdfaad7b83",
+      "why": "PR #6581 'Don't panic if install snapshot failed in TestNRGChainOfBlocks', merged 2025-02-25, an ancestor of the target head: permitted history by construction, listed by the adjudicator as thematically adjacent, not as a later fix"
+    }
+  ]
+}

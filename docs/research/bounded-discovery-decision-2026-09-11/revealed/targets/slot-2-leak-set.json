@@ -1,0 +1,20 @@
+{
+  "label": "grpc-go-7417",
+  "staging": "/tmp/qual137/staging/grpc-go.git",
+  "shas": [
+    "700ca74d015d3b75431cc2b343fa1ba1ceb1b7f3"
+  ],
+  "unresolved_tokens": [],
+  "hidden_numbers": [
+    "5374",
+    "7417"
+  ],
+  "section_chars": 1324,
+  "note": "the target head commit itself is the reviewed object and is omitted from the negative checks",
+  "pre_head_ancestors_named_by_register": [
+    {
+      "sha": "459729d6672eb555ada1060ceddf470ff8b1ec82",
+      "why": "PR #5374 (2022), the commit that introduced the pattern the target fixes: an ancestor of the target head, permitted history by construction; the adjudicator named it as context, not as a later fix"
+    }
+  ]
+}
