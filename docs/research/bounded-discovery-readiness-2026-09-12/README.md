@@ -57,22 +57,35 @@ only when that future ticket supplies the evidence its probes require.
   review in every arm; it is not run against a stopped payload, which holds no review.
 - The coordinator binds that contract at dispatch. A new dispatch requires `payload_contract`
   in its config, retains the path and digest in the dispatch record, and ships the same
-  program into the cell at `runner/payload.py`. Settlement accepts the attempt under exactly
-  the pinned program: a missing or changed contract, a refused payload and a second payload
-  form all become settlement problems, which make the attempt operationally invalid. A
-  dispatch record that bound no contract — every historical one — settles exactly as before.
-- [shutdown.py](scripts/shutdown.py) is the complete stop gate. Ten checks, all required,
+  program into the cell at `runner/payload.py`. Preparation and dispatch are separate
+  invocations, so dispatch checks that prepared copy against the digest it is about to pin
+  and refuses to launch a worker against a missing or drifted validator — the cell runs the
+  copy, not the configured file. Settlement accepts the attempt under exactly the pinned
+  program: a missing or changed contract, a refused payload and a second payload form all
+  become settlement problems, which make the attempt operationally invalid. A dispatch record
+  that bound no contract — every historical one — settles exactly as before.
+- [shutdown.py](scripts/shutdown.py) is the complete stop gate. Eleven checks, all required,
   none corroborating: the root record is the digest pinned before dispatch, it lies outside
   the seal it would release, every recorded root is absent, no process names a recorded root
   or a cell container or the coordinator, no cell container is present, every attempt is
   closed, no reservation is outstanding, the chain is unbroken, the ledger carries its
-  terminal stop, and no ledger event followed the probe. A check clears only when its probe
-  completed *and* its condition held, so a missing executable, a permission error, a timeout,
-  an unreachable container runtime, an unreadable root parent, an unreadable ledger and a
-  record that is not the pinned one all block clearance. The historical gate's
-  daemon-down and corroborating-workspace exceptions are gone. `authorize` is what the
-  unsealing step calls: it re-reads a recorded gate and exits 0 only when every required
-  check is present and established, and, with `--max-age-seconds`, only while it is fresh.
+  terminal stop, no ledger event followed the probe, and the capture the gate scored is
+  itself recent. A check clears only when its probe completed *and* its condition held, so a
+  missing executable, a permission error, a timeout, an unreachable container runtime, an
+  unreadable root parent, an unreadable ledger and a record that is not the pinned one all
+  block clearance. The historical gate's daemon-down and corroborating-workspace exceptions
+  are gone.
+- The gate reads the ledger **after** the host probes and under the same writer lock
+  `budget.py` appends with, so a reservation taken while the host was being probed is in the
+  snapshot the decision rests on rather than behind it; a lock still held at the timeout is a
+  failed read, not a quiet ledger. The gate retains the ledger's digest. `--probes-from`
+  re-scores a retained capture, and the capture keeps its own age: an unusable timestamp, one
+  stamped after the gate ran, and one older than `--max-probe-age-seconds` all block, so an
+  old process table cannot be replayed into a present-day clearance. `authorize` is what the
+  unsealing step calls. It re-reads the gate *and* the ledger, and exits 0 only when every
+  required check is present and established, the ledger still digests to what the gate
+  cleared, and — with `--max-age-seconds` — the older of the gate and its capture is still
+  within the bound.
 - [budget.py](scripts/budget.py) adds an atomic, immutable `stop`. It preserves the prior
   event chain, actual cost, reservations and uncertainty. It refuses new attempts,
   pre-freeze/review reservations, cap freezing and a second stop. Existing work can settle
@@ -94,7 +107,7 @@ Historical settlement continues to default to the original pinned script.
 | 2. Role metering | At settlement, retain per-role totals reconciling to the total, original session IDs, rates and transcript digests. Exercise primary, finder and verifier costs, including a provider error requiring filtered copies. Resolve every copy to its source before pricing; unknown role or missing usage is unresolved, never all-primary or zero. |
 | 3. Lifecycle enforcement | Use the coordinator's existing claim-before-reservation path. Probe duplicate IDs, concurrency, attempt/replacement caps and an ineligible replacement; assert no worker starts after refusal. Check open precedes launch and close follows actual terminal accounting. Historical `claim-history` is reconstruction only and supplies no evidence of prospective enforcement. |
 | 4. Sandbox rule | Freeze every permitted root, including any scratch and image allowance, identically across arms before probing. Try an actual outside read and a tidiness acceptance: both must fail under the frozen rule. A detector false positive requires correcting the detector and re-probing before freeze, not a settlement exception. |
-| 5. Completed stop probes | Create the unsealed root record before dispatch, bind it to the config, and pin its digest outside the evidence seal. At shutdown run `shutdown.py check` and require every check to be established. Permission denial, timeout, missing executable, inaccessible daemon or wrong/unrecorded roots establish nothing and block clearance. Call `shutdown.py authorize` immediately before opening the seal. The historical closeout gate's corroborating-workspace and daemon-down exceptions are not a future clearance. |
+| 5. Completed stop probes | Create the unsealed root record before dispatch, bind it to the config, and pin its digest outside the evidence seal. At shutdown run `shutdown.py check` and require every check to be established. Permission denial, timeout, missing executable, inaccessible daemon, wrong/unrecorded roots and a stale replayed capture establish nothing and block clearance. Call `shutdown.py authorize --ledger` immediately before opening the seal, and probe the host again rather than re-scoring an old capture or an older gate. The historical closeout gate's corroborating-workspace and daemon-down exceptions are not a future clearance. |
 | 6. Uniform payloads | Freeze `payload.py` and the study's own output-contract validator for A/B/C, and render a dispatch template that writes `{PAYLOAD_CONTRACT}` — the #149 template writes the Markdown form only, and settlement refuses to mask it rather than converting it. Probe finding, clean and stopped outcomes in each arm and run `payload.py uniformity --require-arm ... --require-outcome ...` before masking. The historical packet builder remains unchanged and is not a future uniformity check. |
 | 7. Network judgments | Freeze the coordinator's per-command network audit as a requirement. Retain each shell command's evidence judgment against the proxy log (or affirmative evidence of no traffic), including commands that look local and indirect interpreter traffic. An unreviewed command or unresolved proxy bypass invalidates fidelity. |
 | 8. Fresh targets | Apply #148's selection criteria to newly selected candidates with new leak sets and registers. Exclude all four revealed #138 targets and any candidate whose truth the future reviewers already saw; issue closure or a renamed slot cannot restore blindness. No selection occurs in this PR. |
@@ -138,7 +151,8 @@ python3 scripts/shutdown.py check --ledger <future-ledger.json> \
   --roots-record <unsealed-roots.json> --roots-sha256 <the digest pinned at dispatch> \
   --seal <sealed-evidence-path> --out <gate.json> --raw-out <retained-outside-the-repo.json>
 # Immediately before the seal is opened:
-python3 scripts/shutdown.py authorize --gate <gate.json> --max-age-seconds 3600
+python3 scripts/shutdown.py authorize --gate <gate.json> --ledger <future-ledger.json> \
+  --max-age-seconds 3600
 ```
 
 Verify the pinned root-record digest before shutdown probing. After recording stop, cancel

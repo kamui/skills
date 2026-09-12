@@ -72,6 +72,7 @@ class ReviewFixes(unittest.TestCase):
             (self.root / "runner" / name).write_text("{FINDER_CLAIMS}" if name == "admission.md" else "test",
                                                       encoding="utf-8")
         shutil.copyfile(SCRIPTS / "mark_event.py", self.root / "runner" / "mark_event.py")
+        shutil.copyfile(self.config["payload_contract"], self.root / "runner" / "payload.py")
 
     def fake_finder(self, malformed=False):
         claims = {"context_id": "finder", "packet_sha256": "packet", "scope_id": "scope",
@@ -757,6 +758,24 @@ class ReviewFixes(unittest.TestCase):
         for value in ({}, {"payload_contract": str(self.base / "absent.py")}):
             with self.assertRaises(runner.Failed):
                 runner.payload_contract(value)
+
+    def test_dispatch_requires_the_prepared_contract_to_match_the_pin(self):
+        prepared = self.root / "runner" / "payload.py"
+        contract = runner.payload_contract(self.config, self.root)
+        self.assertEqual(contract["prepared_path"], str(prepared))
+        self.assertEqual(runner.digest(prepared), contract["sha256"])
+        # A copy that drifted from the configured file, and a cell prepared
+        # before one was configured, both refuse before any worker starts.
+        prepared.write_text("# a different validator\n", encoding="utf-8")
+        with self.assertRaises(runner.Failed):
+            runner.payload_contract(self.config, self.root)
+        with patch.object(runner, "schedule_row", return_value=self.row):
+            with self.assertRaises(runner.Failed):
+                runner.dispatch(self.config, 99)
+        prepared.unlink()
+        with self.assertRaises(runner.Failed):
+            runner.payload_contract(self.config, self.root)
+        self.assertFalse((self.root / "artifacts" / "dispatch.json").exists())
 
     def test_every_arm_is_settled_under_one_contract_and_keeps_its_findings(self):
         self.contract_payload(stop={"reason": "runtime-error", "detail": "provider 502"})

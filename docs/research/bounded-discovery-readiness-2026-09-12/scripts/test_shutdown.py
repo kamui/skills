@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import shutdown
 
@@ -144,8 +145,9 @@ class GateTests(unittest.TestCase):
         self.authorize(expected=0)
         self.authorize("--max-age-seconds", "3600", expected=0)
 
-    def authorize(self, *extra, expected=0, gate=None):
-        args = ["authorize", "--gate", gate or self.gate, *extra]
+    def authorize(self, *extra, expected=0, gate=None, ledger=None):
+        args = ["authorize", "--gate", gate or self.gate,
+                "--ledger", ledger or self.ledger, *extra]
         result = subprocess.run([sys.executable, SCRIPT, *map(str, args)],
                                 capture_output=True, text=True, encoding="utf-8", timeout=60)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
@@ -283,9 +285,98 @@ class GateTests(unittest.TestCase):
         self.ledger.write_text("{not json", encoding="utf-8")
         result = self.check(expected=2)
         record = self.gate_record()
-        for name in shutdown.CHECKS[5:]:
+        for name in shutdown.LEDGER_CHECKS:
             self.assertIn(name, record["blocking"])
         self.assertIn("the ledger could not be read", result.stdout)
+
+
+    # -- freshness of the evidence the gate scored ------------------------
+
+    def backdate_ledger(self, seconds):
+        """Age every ledger event, so a stale capture still postdates the ledger."""
+        document = json.loads(self.ledger.read_text(encoding="utf-8"))
+        for event in document["events"]:
+            if event.get("observed_at"):
+                event["observed_at"] = stamp(-seconds)
+        self.ledger.write_text(json.dumps(document), encoding="utf-8")
+
+    def test_a_replayed_capture_keeps_its_own_age(self):
+        # The ledger's own events are older still, so the quiet check passes and
+        # the only thing standing between a January capture and a September
+        # clearance is the capture's age.
+        self.backdate_ledger(172800)
+        self.write_probes(captured_at=stamp(-86400))
+        result = self.check(expected=1)
+        entry = self.assert_blocked(result, shutdown.CHECKS[10], "past the 3600 second bound")
+        self.assertGreater(entry["probe_age_seconds"], 86000)
+        self.check("--max-probe-age-seconds", "172800", remove_root=False)
+        record = self.gate_record()
+        self.assertTrue(record["seal_may_be_opened"])
+        # Cleared or not, authorization measures the age of the capture, not of
+        # the gate that scored it.
+        self.assertIn("the evidence this gate rests on",
+                      self.authorize("--max-age-seconds", "60", expected=1).stdout)
+
+    def test_an_impossible_or_unusable_capture_time_establishes_nothing(self):
+        for captured_at, fragment in ((stamp(600), "after this gate ran"),
+                                      ("yesterday", "no usable timezone-aware timestamp"),
+                                      ("2026-09-12T00:00:00", "no usable timezone-aware")):
+            self.write_probes(captured_at=captured_at)
+            result = self.check(expected=1, remove_root=False)
+            self.assert_blocked(result, shutdown.CHECKS[10], fragment)
+        self.write_probes()
+        del_probes = json.loads(self.probes_file.read_text(encoding="utf-8"))
+        del del_probes["captured_at"]
+        self.probes_file.write_text(json.dumps(del_probes), encoding="utf-8")
+        result = self.check(expected=1, remove_root=False)
+        self.assert_blocked(result, shutdown.CHECKS[10], "no usable timezone-aware")
+
+    # -- the ledger the gate decided on -----------------------------------
+
+    def test_a_reservation_appended_while_the_host_is_probed_is_still_seen(self):
+        self.cells.rmdir()
+
+        def probe_then_reserve(container_cli, timeout):
+            captured = shutdown.now()
+            self.budget("reserve", "--id", "late-closeout", "--amount", "2",
+                        "--phase", "closeout", "--evidence", "closeout")
+            return {"captured_at": captured, "self_pid": os.getpid(),
+                    "processes": probe(), "containers": probe(command=("docker", "ps"))}
+
+        with patch.object(shutdown, "live_probes", side_effect=probe_then_reserve):
+            code = shutdown.main(["check", "--ledger", str(self.ledger), "--roots-record",
+                                  str(self.record), "--roots-sha256", self.pinned,
+                                  "--seal", str(self.seal), "--out", str(self.gate)])
+        self.assertEqual(code, 1)
+        record = self.gate_record()
+        self.assertIn(shutdown.CHECKS[6], record["blocking"])
+        self.assertIn(shutdown.CHECKS[9], record["blocking"])
+
+    def test_a_held_ledger_lock_is_a_failed_read_not_a_quiet_ledger(self):
+        import fcntl
+
+        with open(str(self.ledger) + ".lock", "a", encoding="utf-8") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            with self.assertRaises(OSError):
+                shutdown.read_ledger(self.ledger, timeout=0.3)
+        ledger, digest = shutdown.read_ledger(self.ledger, timeout=0.3)
+        self.assertEqual(digest, hashlib.sha256(self.ledger.read_bytes()).hexdigest())
+
+    def test_authorization_refuses_a_ledger_that_moved_after_clearance(self):
+        self.check()
+        self.assertEqual(self.gate_record()["ledger_sha256"],
+                         hashlib.sha256(self.ledger.read_bytes()).hexdigest())
+        self.authorize()
+        self.budget("reserve", "--id", "post-gate-closeout", "--amount", "2",
+                    "--phase", "closeout", "--evidence", "closeout")
+        self.assertIn("it changed after clearance", self.authorize(expected=1).stdout)
+        record = self.gate_record()
+        del record["ledger_sha256"]
+        path = self.base / "no-digest.json"
+        path.write_text(json.dumps(record), encoding="utf-8")
+        self.assertIn("carries no ledger digest",
+                      self.authorize(gate=path, expected=1).stdout)
+        self.authorize(ledger=self.base / "absent.json", expected=1)
 
     # -- live probing and authorization -----------------------------------
 
@@ -314,7 +405,7 @@ class GateTests(unittest.TestCase):
         stale = dict(record, observed_at=stamp(-7200))
         path = self.base / "stale.json"
         path.write_text(json.dumps(stale), encoding="utf-8")
-        self.assertIn("re-probe before opening the seal",
+        self.assertIn("the evidence this gate rests on is 7200 seconds old",
                       self.authorize("--max-age-seconds", "60", gate=path, expected=1).stdout)
 
         trimmed = dict(record, checks=record["checks"][:2])
