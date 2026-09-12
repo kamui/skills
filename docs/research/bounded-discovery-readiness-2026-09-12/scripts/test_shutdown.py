@@ -281,6 +281,33 @@ class GateTests(unittest.TestCase):
         result = self.check(expected=1)
         self.assert_blocked(result, shutdown.CHECKS[9], "does not precede the probe")
 
+    def test_an_unpriceable_amount_is_recorded_rather_than_raised(self):
+        for field, mutate in (
+                ("reserved_usd",
+                 lambda d: d.update(reserved_usd="not-a-number")),
+                ("reservation_delta_usd",
+                 lambda d: d["events"][-1].update(reservation_delta_usd="oops"))):
+            document = json.loads(self.ledger.read_text(encoding="utf-8"))
+            mutate(document)
+            self.ledger.write_text(json.dumps(document), encoding="utf-8")
+            result = self.check(expected=2, remove_root=self.cells.exists())
+            self.assertNotIn("Traceback", result.stderr)
+            record = self.gate_record()
+            self.assertFalse(record["seal_may_be_opened"])
+            for name in shutdown.LEDGER_CHECKS:
+                self.assertIn(name, record["blocking"])
+                entry = next(c for c in record["checks"] if c["check"] == name)
+                self.assertIn("unreadable USD amount", entry["detail"])
+                self.assertFalse(entry["probe_completed"])
+        # A caller reaching build_gate directly still gets a gate, not a raise.
+        gate = shutdown.build_gate({"reserved_usd": "still-not-a-number", "events": []},
+                                   None, json.loads(self.probes_file.read_text(encoding="utf-8")),
+                                   self.record, self.pinned, self.seal, "bd", [],
+                                   shutdown.load_roots_module())
+        self.assertFalse(gate["seal_may_be_opened"])
+        self.assertEqual(len([c for c in gate["checks"] if c["check"] in shutdown.LEDGER_CHECKS]),
+                         len(shutdown.LEDGER_CHECKS))
+
     def test_an_unreadable_ledger_blocks_every_ledger_check(self):
         self.ledger.write_text("{not json", encoding="utf-8")
         result = self.check(expected=2)

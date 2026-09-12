@@ -146,7 +146,14 @@ def read_ledger(path, timeout=LEDGER_LOCK_TIMEOUT) -> tuple:
             raw = path.read_bytes()
         finally:
             fcntl.flock(lock, fcntl.LOCK_UN)
-    return json.loads(raw.decode("utf-8")), hashlib.sha256(raw).hexdigest()
+    document = json.loads(raw.decode("utf-8"))
+    # An amount the gate cannot price is a ledger it cannot read, and it is
+    # settled here so the caller records it the same way as a missing file
+    # rather than discovering it half way through building the gate.
+    usd(document.get("reserved_usd"))
+    for event in document.get("events", []):
+        usd(event.get("reservation_delta_usd"))
+    return document, hashlib.sha256(raw).hexdigest()
 
 
 def probe_completed(probe) -> bool:
@@ -359,6 +366,50 @@ def record_checks(roots_record, roots_sha256, seal, roots_module) -> list:
     return checks
 
 
+def ledger_checks(ledger, probes, observed_at) -> list:
+    """The five checks the ledger itself decides."""
+    checks = []
+    state = ledger_state(ledger)
+    checks.append({"check": CHECKS[5], "passed": not state["unclosed"],
+                   "probe_completed": True,
+                   "attempts_opened": len(state["opened"]),
+                   "attempts_closed": len(state["closed"]),
+                   "unclosed_count": len(state["unclosed"]),
+                   "detail": "%d attempt-open events, %d attempt-close events, %d unclosed"
+                             % (len(state["opened"]), len(state["closed"]),
+                                len(state["unclosed"]))})
+    header = usd(ledger.get("reserved_usd"))
+    balance = state["reservation_balance"]
+    checks.append({"check": CHECKS[6],
+                   "passed": balance == 0 and header == 0, "probe_completed": True,
+                   "reservation_delta_sum_usd": str(balance),
+                   "header_reserved_usd": str(header),
+                   "detail": "reservation deltas sum to %s and the ledger header carries "
+                             "reserved_usd %s; an in-flight dispatch would hold a live "
+                             "reservation" % (balance, header)})
+    checks.append({"check": CHECKS[7], "passed": state["chain_intact"],
+                   "probe_completed": True, "event_count": state["event_count"],
+                   "detail": ("%d events chain from the open event" % state["event_count"]
+                              if state["chain_intact"] else
+                              "the chain breaks at event index %s" % state["broken_at"])})
+    checks.append({"check": CHECKS[8], "passed": state["stops"] == 1,
+                   "probe_completed": True, "stop_events": state["stops"],
+                   "detail": ("the ledger carries its one terminal stop, so no further "
+                              "dispatch can be reserved" if state["stops"] == 1 else
+                              "the ledger carries %d stop events; a study whose ledger "
+                              "can still dispatch is not stopped" % state["stops"])})
+    latest = state["latest_event_at"]
+    captured = probes.get("captured_at") or observed_at
+    quiet = bool(latest) and latest < captured
+    checks.append({"check": CHECKS[9], "passed": quiet, "probe_completed": True,
+                   "latest_event_at": latest, "probes_captured_at": captured,
+                   "detail": ("the newest ledger event is %s, before the host was probed "
+                              "at %s" % (latest, captured) if quiet else
+                              "the newest ledger event is %r, which does not precede the "
+                              "probe at %s" % (latest, captured))})
+    return checks
+
+
 def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
                container_prefix, markers, roots_module, observed_at=None,
                ledger_digest=None, max_probe_age=DEFAULT_MAX_PROBE_AGE) -> dict:
@@ -400,49 +451,17 @@ def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
     check.update(probe_fields(container_probe))
     checks.append(check)
 
+    if ledger_error is None:
+        try:
+            checks.extend(ledger_checks(ledger, probes, observed_at))
+        except (ValueError, TypeError, AttributeError) as exc:
+            # The gate has to record why it could not decide. Raising here would
+            # leave the refusal with no artifact at all.
+            ledger_error = str(exc)
     if ledger_error is not None:
         for name in LEDGER_CHECKS:
             checks.append({"check": name, "passed": False, "probe_completed": False,
                            "detail": "the ledger could not be read: %s" % ledger_error})
-    else:
-        state = ledger_state(ledger)
-        checks.append({"check": CHECKS[5], "passed": not state["unclosed"],
-                       "probe_completed": True,
-                       "attempts_opened": len(state["opened"]),
-                       "attempts_closed": len(state["closed"]),
-                       "unclosed_count": len(state["unclosed"]),
-                       "detail": "%d attempt-open events, %d attempt-close events, %d unclosed"
-                                 % (len(state["opened"]), len(state["closed"]),
-                                    len(state["unclosed"]))})
-        header = usd(ledger.get("reserved_usd"))
-        balance = state["reservation_balance"]
-        checks.append({"check": CHECKS[6],
-                       "passed": balance == 0 and header == 0, "probe_completed": True,
-                       "reservation_delta_sum_usd": str(balance),
-                       "header_reserved_usd": str(header),
-                       "detail": "reservation deltas sum to %s and the ledger header carries "
-                                 "reserved_usd %s; an in-flight dispatch would hold a live "
-                                 "reservation" % (balance, header)})
-        checks.append({"check": CHECKS[7], "passed": state["chain_intact"],
-                       "probe_completed": True, "event_count": state["event_count"],
-                       "detail": ("%d events chain from the open event" % state["event_count"]
-                                  if state["chain_intact"] else
-                                  "the chain breaks at event index %s" % state["broken_at"])})
-        checks.append({"check": CHECKS[8], "passed": state["stops"] == 1,
-                       "probe_completed": True, "stop_events": state["stops"],
-                       "detail": ("the ledger carries its one terminal stop, so no further "
-                                  "dispatch can be reserved" if state["stops"] == 1 else
-                                  "the ledger carries %d stop events; a study whose ledger "
-                                  "can still dispatch is not stopped" % state["stops"])})
-        latest = state["latest_event_at"]
-        captured = probes.get("captured_at") or observed_at
-        quiet = bool(latest) and latest < captured
-        checks.append({"check": CHECKS[9], "passed": quiet, "probe_completed": True,
-                       "latest_event_at": latest, "probes_captured_at": captured,
-                       "detail": ("the newest ledger event is %s, before the host was probed "
-                                  "at %s" % (latest, captured) if quiet else
-                                  "the newest ledger event is %r, which does not precede the "
-                                  "probe at %s" % (latest, captured))})
 
     checks.append(probe_freshness(probes, observed_at, max_probe_age))
 
