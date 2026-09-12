@@ -685,9 +685,9 @@ then depend on, and whether the change's stated justification holds. Priority mo
 rungs, so a proven `P3` defect is a `consider` finding rather than an observation, and a published
 question carries no priority and asks for no code change. `verify.md` names five refutation evidence
 bases — contradiction, prevention, established intent, pre-existing behavior, no qualifying
-consequence —
-each with the citation it requires, adds § Finish the legwork before any `plausible` ruling, makes
-`plausible` carry which of trigger or impact is unsettled, the smallest settling fact, and where
+consequence — each with the citation it requires, adds § Finish the legwork before any `plausible`
+ruling, makes `plausible` carry which of trigger or impact is unsettled, the smallest settling fact,
+and where
 that fact must come from, and bars an aside that asserts a consequence the verifier never checked.
 The two axis briefs carry the same intent test — an approval establishes exactly what it explicitly
 accepted, a postponement is open evidence rather than acceptance — the Code brief settles a
@@ -708,7 +708,7 @@ Acceptance table. Source, the channel it belongs in, and what it does to the sta
 | A required artifact the spec names that the diff never adds | Requirements finding, `must-fix` | `Changes Requested` |
 | A deployment fact only an operator holds, and the merge decision turns on it | Question naming the operator and the measurement | `Needs Information`; Requirements `Waiting for information` |
 | A benchmark justification nothing this merge decides turns on | Observation where the absence of consequence is established, else a ledger row | unchanged |
-| A preview naming decision the record defers to stabilization, alone | Ledger row carrying the deferral, its author and the decision, counted unverifiable, reported to the caller | unchanged; the axis may pass |
+| A preview naming decision the record defers to a named gate, on a surface the repository's own compatibility policy exempts | Recorded: a `question`-disposition ledger row carrying the deferral, its author and the decision, counted unverifiable, reported to the caller | unchanged; the axis may pass |
 | A deferral whose answer decides what this merge releases, or what consumers may already depend on | Question naming the deferral, its author and the decision | `Needs Information`; Requirements `Waiting for information` |
 | A true, actionable defect at `P3` | `consider` finding at `P3` | unchanged — `consider` holds nothing back |
 | An accurate fact with the absence of consequence established | Observation: pooled, deduplicated, capped at three | unchanged |
@@ -726,10 +726,12 @@ conjunct that decides it is the named gate: "I'm fine adjusting this later if we
 in preview" postpones without naming where, so the recorded rule cannot apply and rule 1 governs —
 consistent with the `prefer-*` values reaching users in `0.2.14` four days after the merge. Test 4's
 `removeCookies` deferral publishes on a different conjunct: its gate is named ("the pre-release api
-review"), but playwright marks the surface no differently from the rest of its public API, so the
-exemption fails and rule 1 governs. C13's paper check is unchanged. On (e) the
-benchmark question still publishes: whether the change's stated justification holds is one of the
-verdict-moving decisions the definition names, which is the ground truth's own reason for
+review"), but no exemption covers the surface — the diff adds the method to the public API docs and
+to the generated `types.d.ts`, and nothing in the packet marks it preview or unstable, which is an
+inference from absence rather than a quoted policy. So the exemption fails on the available evidence
+and rule 1 governs, as it does on its own release trigger. C13's paper check is unchanged. On (e)
+the benchmark question still publishes: whether the change's stated justification holds is one of
+the verdict-moving decisions the definition names, which is the ground truth's own reason for
 designating it. On (a) the retry premise is settled by reading rather than left in the middle
 verdict, seed 3's "correct as merged" is not a refutation on any of the five bases, and seed 2's
 aside fails the observation bar — it asserts a consequence the run never established beside the
