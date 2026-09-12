@@ -65,7 +65,7 @@ QUALIFIED = re.compile(r"^([A-Za-z0-9][\w.-]*/[\w.-]+)#(\d+)$")
 REPOSITORY = re.compile(r"^([A-Za-z0-9][\w.-]*/[\w.-]+)$")
 BARE = re.compile(r"^#(\d+)$")
 ANY_NUMBER = re.compile(r"#(\d+)\b")
-LINKED = re.compile(r"\[#(\d+)\]\(https://github\.com/")
+LINKED = re.compile(r"\[#(\d+)\]\(https://github\.com/([\w.-]+/[\w.-]+)/")
 # Extensions a repository name cannot end in. Without this, a backticked path such as
 # `sealed/excluded-grpc-go-8519-register.md.enc` would set the scope's repository and every
 # bare number after it would be reserved in a repository that does not exist.
@@ -85,9 +85,10 @@ def looks_like_a_repository(span: str) -> bool:
 def references(text: str, repository=None):
     """Yield ``(repository, number, kind)`` for every reference in one scope, in order.
 
-    ``kind`` is ``qualified`` (the reference named its own repository), ``bare`` (backticked
-    or linked, so the file evidences it as a reference) or ``prose`` (a bare number the file
-    does not mark as one, which is reserved conservatively rather than dropped).
+    ``kind`` is ``qualified`` (the reference named its own repository), ``linked`` (a markdown
+    link, which names its repository in the URL), ``bare`` (backticked, so the file marks it
+    as a reference) or ``prose`` (a bare number the file does not mark as one, which is
+    reserved conservatively rather than dropped).
     """
     current = repository
     evidenced = set()
@@ -106,8 +107,12 @@ def references(text: str, repository=None):
             continue
         if looks_like_a_repository(span):
             current = span
-    for number in LINKED.findall(text):
+    # A markdown link names its own repository, which is better evidence than the scope's
+    # anchor. It is yielded, not merely noted: marking it evidenced without reserving it
+    # would suppress the prose fallback and drop the reference entirely.
+    for number, linked_repository in LINKED.findall(text):
         evidenced.add(number)
+        yield linked_repository, number, "linked"
     # Second pass for the numbers the file wrote in plain prose. The scope's repository is
     # whatever the scope named; a scope that named none has nothing to resolve them against.
     anchor = last_repository(text) or repository
@@ -297,8 +302,12 @@ def self_test():
         "- Pull request: [#456](https://github.com/golang-jwt/jwt/pull/456)\n"
         "- see `#510` and later commits #484, and clean per #137 hunt\n",
         repository="golang-jwt/jwt"))
-    check("a linked or backticked number in a register is evidenced",
-          [r for r in register if r[2] != "prose"] == [("golang-jwt/jwt", "510", "bare")])
+    check("a linked or backticked number in a register is evidenced and reserved",
+          sorted(r[:2] for r in register if r[2] != "prose") ==
+          [("golang-jwt/jwt", "456"), ("golang-jwt/jwt", "510")])
+    check("a link-only citation is reserved from the repository its URL names",
+          list(references("- Pull request: [#77](https://github.com/o/r/pull/77)")) ==
+          [("o/r", "77", "linked")])
     check("a prose number in a register is still reserved",
           sorted(r[1] for r in register if r[2] == "prose") == ["137", "484"])
     check("a linked number is not also read as prose",
@@ -309,7 +318,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 14 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: 15 checks")
     return 1 if failures else 0
 
 

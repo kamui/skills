@@ -28,8 +28,9 @@
     "expected_model": "claude-sonnet-5",
     "expected_effort": "high",
     "children_not_checked_here": 1,
-    "exit": 0
+    "exit": 0,
+    "observed_assistant_lines": 8
   },
-  "metered_at": "2026-09-12T11:35:22.137673+00:00",
+  "metered_at": "2026-09-12T11:49:58.697638+00:00",
   "problems": []
 }
