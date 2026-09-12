@@ -15,6 +15,7 @@ Usage::
         [--contract-validator PATH]
     python3 scripts/payload.py emit --out FILE --arm ARM --attempt ID
         --outcome stopped|unavailable --reason REASON [--detail TEXT]
+        [--origin FILE]
     python3 scripts/payload.py accept --work DIR --receipt FILE --arm ARM
         --attempt ID --completion STATE [--stop-detail TEXT]
         [--contract-validator PATH]
@@ -69,10 +70,19 @@ SCHEMA_VERSION = "bounded-discovery-payload-v1"
 
 # The one file every arm writes. A second form is what produced the pilot's tell.
 PAYLOAD_NAME = "review-payload.json"
-# Written beside a payload the coordinator had to produce, because acceptance is
+# Retained for a payload the coordinator had to produce, because acceptance is
 # re-runnable: on a second pass the file exists either way, and "did it exist
-# already" cannot tell an arm's output from one this program invented.
-ORIGIN_NAME = "review-payload-origin.json"
+# already" cannot tell an arm's output from one this program invented. It is
+# written beside the receipt, never in the cell's work directory, which the arm
+# writes to: a record the subject can forge establishes nothing about the subject.
+ORIGIN_SUFFIX = "-origin.json"
+
+
+def origin_for(receipt_path):
+    """The origin record for one receipt, named after it so two attempts sharing
+    a directory cannot collide."""
+    receipt_path = Path(receipt_path)
+    return receipt_path.with_name(receipt_path.stem + ORIGIN_SUFFIX)
 REJECTED_FORMS = ("review-payload.md", "review-payload.markdown", "review-payload.txt",
                   "review-payload.yaml", "review-payload.yml")
 
@@ -375,13 +385,11 @@ def command_emit(args) -> int:
             print(problem)
         return 1
     write_exclusive(args.out, document)
-    # A payload written into a cell's work directory carries its origin with it,
-    # so a later acceptance does not have to guess who produced it.
-    out = Path(args.out)
-    if out.name == PAYLOAD_NAME:
-        write_exclusive(out.with_name(ORIGIN_NAME),
-                        {"produced_by": "coordinator", "recorded_at": now(),
-                         "payload_sha256": sha256_file(out)})
+    # The origin record goes where the caller keeps its own artifacts, so a later
+    # acceptance reads it from a directory the cell never writes to.
+    if args.origin:
+        write_exclusive(args.origin, {"produced_by": "coordinator", "recorded_at": now(),
+                                      "payload_sha256": sha256_file(args.out)})
     return 0
 
 
@@ -394,6 +402,7 @@ def accept(work, receipt_path, arm, attempt, completion, stop_detail=None,
     """
     work = Path(work)
     payload_path = work / PAYLOAD_NAME
+    origin_path = origin_for(receipt_path)
     problems = []
 
     # A second payload form is the tell itself, and it may hold real findings, so
@@ -407,7 +416,6 @@ def accept(work, receipt_path, arm, attempt, completion, stop_detail=None,
     if problems:
         return None, problems
 
-    origin_path = work / ORIGIN_NAME
     if not payload_path.exists():
         if completion == "complete":
             return None, ["a complete attempt produced no %s; the contract payload is "
@@ -604,6 +612,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--reason", choices=sorted(set(STOPPED_REASONS + UNAVAILABLE_REASONS)))
     parser.add_argument("--detail")
     parser.add_argument("--stop-detail")
+    parser.add_argument("--origin", help="retain the coordinator's origin record here, "
+                                         "outside the cell's work directory")
     parser.add_argument("--contract-validator",
                         help="the study's pinned output-contract validator, run over the "
                              "same payload in every arm")
