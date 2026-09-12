@@ -1,0 +1,6 @@
+interface:
+  display_name: "Publish Code Audit"
+  short_description: "Independent audit of affected code and contracts"
+  default_prompt: "Use $code-audit-publish to audit this pull request's requirements and affected code, then publish the verified findings."
+policy:
+  allow_implicit_invocation: false
