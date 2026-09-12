@@ -1,5 +1,9 @@
 # Bounded discovery — the six-cell pilot
 
+For future use of the coordinator, read the [#199 prospective prerequisites](../bounded-discovery-readiness-2026-09-12/README.md).
+They document launch retention, role metering, strict sandbox settlement, the required unsealed
+root record and the prospective ledger stop. The closed pilot's artifacts and freeze remain unchanged.
+
 **Delivered 2026-09-09 (UTC).** This bundle is [#150](https://github.com/kamui/skills/issues/150),
 the first dispatch stage of the [#138](https://github.com/kamui/skills/issues/138) epic. It runs the
 six `pilot` cells of the grid [#149](https://github.com/kamui/skills/issues/149) froze, and records
