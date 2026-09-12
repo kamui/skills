@@ -24,12 +24,15 @@ Exit codes:
     2  the report or the manifest file could not be read, or a self-test
        subprocess failed, named on stderr
 
-Input schema: the report ends with, in this order, one fenced ```ledger
-block, one fenced ```manifest block, and, on the Requirements axis only, one
-fenced ```counts block. No other fenced block may follow them.
+Input schema: the report carries one fenced ```candidates block in the
+grammar `build_verifier_prompt.py` documents (thirteen ordered fields per
+`### Candidate` section, or `None.`), and ends with, in this order, one
+fenced ```ledger block, one fenced ```manifest block, and, on the
+Requirements axis only, one fenced ```counts block. No other fenced block
+may follow them.
 
     ```ledger
-    <one-line claim> | <falsification route> | <evidence> | <disposition>
+    <id> | <kind> | <one-line claim> | <falsification route> | <evidence> | <disposition>
     ```
     ```manifest
     <path> | <reviewed|ignored> | <reason>
@@ -38,14 +41,20 @@ fenced ```counts block. No other fenced block may follow them.
     met=<n> not-met=<n> unverifiable=<n>
     ```
 
-Rows are one per line, pipe-separated, no header row, no blank rows. A
-disposition is `candidate`, `acquitted`, `observation`, or, on the
-Requirements axis only, `question`. Evidence is one whole `path:line`,
-`path:start-end`, or quoted-rule location `` `path` § heading ``, optionally
-in backticks. At least one ledger row is a `candidate` unless the report says
-"no candidates" or its candidates block reads `None.`. Every manifest path
-appears exactly once in the manifest block, with `reviewed` or `ignored` as
-its status and a non-empty reason when ignored.
+Rows are one per line, pipe-separated, no header row, no blank rows. A row
+id is the axis name, a dash, and a positive integer (`code-3`,
+`requirements-1`), unique within the block; it is a per-run handle, never a
+published finding id. A kind is one of bug, concurrency, invariant,
+security, performance, maintainability, requirement. A disposition is
+`candidate`, `acquitted`, `observation`, or, on the Requirements axis only,
+`question`. Evidence is one whole `path:line`, `path:start-end`, or
+quoted-rule location `` `path` § heading ``, optionally in backticks. The
+four-field row grammar that preceded ids and kinds is refused by field
+count, naming the old grammar. At least one ledger row is a `candidate`
+unless the report says "no candidates" or its candidates block reads
+`None.`. Every manifest path appears exactly once in the manifest block,
+with `reviewed` or `ignored` as its status and a non-empty reason when
+ignored.
 """
 
 from __future__ import annotations
@@ -57,6 +66,15 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_verifier_prompt import (  # noqa: E402  (sibling script in this skill)
+    KINDS,
+    LEDGER_FIELD_COUNT,
+    ROW_ID_RE,
+    ReportError,
+    parse_candidates,
+)
 
 AXES = ("code", "requirements")
 DISPOSITIONS = ("candidate", "acquitted", "observation", "question")
@@ -207,32 +225,69 @@ def is_header_row(fields: list[str], first: set[str], last: set[str]) -> bool:
     return is_separator_row(fields) or (lowered[0] in first and lowered[-1] in last)
 
 
+def check_candidates(report: str, axis: str) -> list[Violation]:
+    """Refuse a candidates block the verifier-prompt builder would refuse.
+
+    The builder's parser is the grammar; running it here gives a candidate
+    shape violation the same one-shot re-dispatch a ledger violation gets,
+    instead of surfacing at step 3 where no repair path exists.
+    """
+    try:
+        parse_candidates(report, axis.capitalize())
+    except ReportError as error:
+        return [Violation("candidates", 0, "candidate shape", str(error))]
+    return []
+
+
 def check_ledger(block: Block, axis: str, report: str, blocks: list[Block]) -> list[Violation]:
     violations: list[Violation] = []
     rows = 0
     has_candidate = False
+    seen_ids: dict[str, int] = {}
     for number, line in enumerate(block.lines, start=1):
         if not line.strip():
             violations.append(Violation("ledger", number, "blank row", "ledger rows may not be blank"))
             continue
         fields = [field.strip() for field in line.split("|")]
-        if is_header_row(fields, {"claim"}, {"disposition"}):
+        if is_header_row(fields, {"id"}, {"disposition"}):
             violations.append(
                 Violation("ledger", number, "header row", "the ledger has no header or separator row")
             )
             continue
         rows += 1
-        if len(fields) != 4:
+        if len(fields) != LEDGER_FIELD_COUNT:
+            hint = "; the four-field grammar has no id or kind" if len(fields) == 4 else ""
             violations.append(
                 Violation(
                     "ledger",
                     number,
                     "field count",
-                    f"expected four pipe-separated fields (claim | route | evidence | disposition); found {len(fields)}",
+                    "expected six pipe-separated fields (id | kind | claim | route | evidence | "
+                    f"disposition); found {len(fields)}{hint}",
                 )
             )
             continue
-        claim, route, evidence, disposition = fields
+        row_id, kind, claim, route, evidence, disposition = fields
+        id_match = ROW_ID_RE.match(row_id)
+        if not id_match or id_match.group("axis") != axis:
+            violations.append(
+                Violation("ledger", number, "row id", f"{row_id!r} is not {axis}-<n>")
+            )
+        elif row_id in seen_ids:
+            violations.append(
+                Violation(
+                    "ledger",
+                    number,
+                    "duplicate row id",
+                    f"{row_id} was already used on row {seen_ids[row_id]}",
+                )
+            )
+        else:
+            seen_ids[row_id] = number
+        if kind not in KINDS:
+            violations.append(
+                Violation("ledger", number, "kind", f"{kind!r} is not one of {', '.join(KINDS)}")
+            )
         for name, value in (("claim", claim), ("route", route)):
             if not value:
                 violations.append(Violation("ledger", number, "empty field", f"the {name} field is empty"))
@@ -376,6 +431,7 @@ def check_counts(block: Block) -> list[Violation]:
 def validate(report: str, axis: str, manifest: list[str]) -> list[Violation]:
     blocks = fenced_blocks(report)
     found, violations = locate_blocks(blocks, axis)
+    violations.extend(check_candidates(report, axis))
     if "ledger" in found:
         violations.extend(check_ledger(found["ledger"], axis, report, blocks))
     if "manifest" in found:
@@ -399,12 +455,15 @@ CODE_REPORT = """## Candidates
 ### Candidate
 id: code/app/retry-drops-last-error
 axis: Code
+kind: bug
 anchor: src/app.py:42
 fix: (same as anchor)
 title: retry loop drops the last error
 claim: `retry()` at `src/app.py:42` returns None after the final failure instead of raising.
 support: Read the loop; ran the focused test.
 trigger: Every attempt fails.
+impact: The caller proceeds with None where an exception was promised.
+change: Re-raise the last error after the final attempt at `src/app.py:42`.
 priority: P1
 action: must-fix
 ````
@@ -414,11 +473,11 @@ action: must-fix
 - The guide still shows the old flag name — `docs/guide.md:10`.
 
 ```ledger
-retry() drops the last error | read the loop exit | src/app.py:42 | candidate
-retry() double-counts attempts | trace the counter | src/app.py:30-38 | acquitted
-guide shows the old flag name | compare to the CLI | docs/guide.md:10 | observation
-lockfile drifts from package.json | diff the two | `package-lock.json:1` | acquitted
-naming rule is violated | quote the rule | `CONTRIBUTING.md` § Naming | acquitted
+code-1 | bug | retry() drops the last error | read the loop exit | src/app.py:42 | candidate
+code-2 | bug | retry() double-counts attempts | trace the counter | src/app.py:30-38 | acquitted
+code-3 | maintainability | guide shows the old flag name | compare to the CLI | docs/guide.md:10 | observation
+code-4 | maintainability | lockfile drifts from package.json | diff the two | `package-lock.json:1` | acquitted
+code-5 | maintainability | naming rule is violated | quote the rule | `CONTRIBUTING.md` § Naming | acquitted
 ```
 ```manifest
 src/app.py | reviewed | read in full with its callers
@@ -441,9 +500,9 @@ None.
 ```
 
 ```ledger
-guide documents the new flag | search the guide | docs/guide.md:10 | acquitted
-retry raises after the last attempt | read the loop exit | src/app.py:42 | acquitted
-timeout default is tuned for production | needs a measurement | src/app.py:12 | question
+requirements-1 | requirement | guide documents the new flag | search the guide | docs/guide.md:10 | acquitted
+requirements-2 | requirement | retry raises after the last attempt | read the loop exit | src/app.py:42 | acquitted
+requirements-3 | requirement | timeout default is tuned for production | needs a measurement | src/app.py:12 | question
 ```
 ```manifest
 src/app.py | reviewed | implements requirement 1
@@ -490,11 +549,22 @@ def self_test_cases() -> list[tuple[str, str, str, int, str]]:
         ("ledger field count", "code",
          _replace(code, "| trace the counter | src/app.py:30-38 |", "| src/app.py:30-38 |"),
          1, "ledger:2: field count"),
+        ("old four-field row refused by count", "code",
+         _replace(code, "code-2 | bug | retry() double-counts attempts", "retry() double-counts attempts"),
+         1, "ledger:2: field count: expected six pipe-separated fields (id | kind | claim | route | evidence | disposition); found 4; the four-field grammar has no id or kind"),
+        ("ledger row id shape", "code",
+         _replace(code, "code-2 | bug |", "row-2 | bug |"), 1, "ledger:2: row id: 'row-2' is not code-<n>"),
+        ("ledger row id wrong axis", "code",
+         _replace(code, "code-2 | bug |", "requirements-2 | bug |"), 1, "ledger:2: row id"),
+        ("ledger row id duplicate", "code",
+         _replace(code, "code-2 | bug |", "code-1 | bug |"), 1, "ledger:2: duplicate row id: code-1 was already used on row 1"),
+        ("ledger kind", "code",
+         _replace(code, "code-2 | bug |", "code-2 | race |"), 1, "ledger:2: kind: 'race' is not one of"),
         ("ledger header row", "code",
-         _replace(code, "```ledger\n", "```ledger\nclaim | route | evidence | disposition\n"),
+         _replace(code, "```ledger\n", "```ledger\nid | kind | claim | route | evidence | disposition\n"),
          1, "ledger:1: header row"),
         ("ledger separator row", "code",
-         _replace(code, "```ledger\n", "```ledger\n--- | --- | --- | ---\n"),
+         _replace(code, "```ledger\n", "```ledger\n--- | --- | --- | --- | --- | ---\n"),
          1, "ledger:1: header row"),
         ("ledger blank row", "code",
          _replace(code, "| candidate\n", "| candidate\n\n"), 1, "ledger:2: blank row"),
@@ -509,6 +579,27 @@ def self_test_cases() -> list[tuple[str, str, str, int, str]]:
          1, "ledger:2: evidence"),
         ("ledger evidence bare path", "code",
          _replace(code, "| src/app.py:30-38 |", "| src/app.py |"), 1, "ledger:2: evidence"),
+        ("candidate missing kind", "code",
+         _replace(code, "kind: bug\n", ""), 1, "candidates:0: candidate shape: Code Candidate is missing kind before anchor"),
+        ("candidate old ten-field shape", "code",
+         _replace(_replace(_replace(code, "kind: bug\n", ""),
+                           "impact: The caller proceeds with None where an exception was promised.\n", ""),
+                  "change: Re-raise the last error after the final attempt at `src/app.py:42`.\n", ""),
+         1, "candidates:0: candidate shape: Code Candidate is missing kind before anchor"),
+        ("candidate kind vocabulary", "code",
+         _replace(code, "kind: bug\n", "kind: race\n"), 1, "candidates:0: candidate shape: Code Candidate has kind 'race'"),
+        ("candidate id axis prefix", "code",
+         _replace(code, "id: code/app/retry-drops-last-error\naxis: Code\n",
+                  "id: requirements/app/retry-drops-last-error\naxis: Code\n"),
+         1, "candidates:0: candidate shape: Code Candidate has id 'requirements/app/retry-drops-last-error'"),
+        ("candidate empty change", "code",
+         _replace(code, "change: Re-raise the last error after the final attempt at `src/app.py:42`.\n", "change:\n"),
+         1, "candidates:0: candidate shape: Code Candidate has an empty change"),
+        ("candidate duplicate id", "code",
+         _replace(code, "````candidates\n", "````candidates\n### Candidate\nid: code/app/retry-drops-last-error\naxis: Code\nkind: bug\nanchor: src/app.py:42\nfix: (same as anchor)\ntitle: twin\nclaim: twin claim\nsupport: none\ntrigger: twin\nimpact: twin\nchange: twin\npriority: P2\naction: consider\n"),
+         1, "candidates:0: candidate shape: Code Candidate repeats id 'code/app/retry-drops-last-error'"),
+        ("candidates block missing", "code",
+         code.replace("````candidates", "````proposals"), 1, "candidates:0: candidate shape: Code report must contain exactly one candidates block; found 0"),
         ("no candidate row", "code",
          _replace(code, "| src/app.py:42 | candidate", "| src/app.py:42 | acquitted"),
          1, "ledger:0: no candidate row"),

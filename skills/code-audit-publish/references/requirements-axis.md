@@ -93,28 +93,30 @@ Do not infer requirements from the diff itself — a review that derives require
 
 The restated requirement list, then per candidate:
 
-- `id` — `requirements/<slug>` for compliance, `requirements/unrequested/<slug>` for scope creep. Never a line number.
+- `id` — `requirements/<slug>` for compliance, `requirements/unrequested/<slug>` for scope creep. Never a line number, and never reused within your report: every verdict is matched back to it. A defect the Code finder may also have found keeps its own `requirements/` id here; the verifier's deduplication, not the id, decides that the two are one.
 - `axis` — `Requirements`.
+- `kind` — `requirement`, on every candidate and ledger row of this axis (`finding-format.md` § Vocabularies): a gap against the spec, a claim the body does not support, or scope creep is a requirement-kind claim whatever the code it sits in does.
 - `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site. A wholly missing requirement often has no honest anchor — say so, and it will attach to the change as a whole rather than to an unrelated line.
 - `fix` — where the work belongs; write `(same as anchor)` when it is the anchor. For a missing requirement this is usually the file the work should live in.
 - `title` — 80 characters or fewer.
 - `claim` — a flat, falsifiable statement of the gap: the quoted issue line, and what the diff does or does not do about it. Written to be checked, not to persuade. This is what the verifier receives.
 - `support` — what you ran, what you read, and what you remain unsure of. The verifier never sees this, so do not put anything load-bearing in it.
-- `trigger` — the observable consequence: what a user or caller gets that the issue said they should not, or does not get that the issue said they should.
-- `change` — what would satisfy the requirement.
+- `trigger` — the situation in which the gap shows: the request, input, or reader that reaches the requirement the diff does not meet.
+- `impact` — the observable consequence: what a user or caller gets that the issue said they should not, or does not get that the issue said they should.
+- `change` — what would satisfy the requirement. The verifier reads it to check that the repair matches the requirement's scope.
 - `priority` — `P0` a core requirement of the issue is absent or wrong; `P1` a stated requirement partially met; `P2` a secondary requirement, or scope creep; `P3` a nice-to-have the issue mentioned without requiring. A requirement that is met at its canonical implementation and fails only because a sibling document still carries old wording is `P2` or `P3` per `finding-format.md`, not `P1`.
 - `action` — `must-fix` or `consider`, judged independently of priority by the calibration in `finding-format.md` § Vocabularies: blocking needs a demonstrated merge consequence, not a severity label. A question carries no action judgment beyond `question` itself.
 
 Then end the candidate material with the fenced `candidates` block defined by
-`finding-format.md` § Finder candidate block. It repeats the verifier-input fields, including `axis`,
-and always carries `fix` as specified there; `change` remains in the candidate description for
-publication.
+`finding-format.md` § Finder candidate block. It carries every field above, including `axis`,
+`kind`, `impact`, and `change`, and always carries `fix` as specified there. The verifier receives
+every field except `support`.
 
 Plus, separately, the counts: requirements met, not met, and unverifiable, returned as the fenced `counts` block defined in § Report tail.
 
-Plus your **disposition ledger** — one ledger row per hypothesis you weighed, including those acquitted before returning them and those resolved to questions: claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, `question`, or `observation`). Use `question` for anything that resolved to the "cannot tell" or "Deferred by the review record" bucket, whether you are publishing it or the ladder recorded it; the row's claim says which, because the disposition alone cannot. An unsettled decision is never `acquitted` — that disposition says a hypothesis was tried and killed, which is what the next round will read it as, and it is also the disposition the orchestrator forwards to the verifier as a related acquittal. A later re-review reads this ledger to recognize a hypothesis as already tested; prose records do not survive to that round.
+Plus your **disposition ledger** — one ledger row per hypothesis you weighed, including those acquitted before returning them and those resolved to questions: per-run id, kind, claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, `question`, or `observation`). Use `question` for anything that resolved to the "cannot tell" or "Deferred by the review record" bucket, whether you are publishing it or the ladder recorded it; the row's claim says which, because the disposition alone cannot. An unsettled decision is never `acquitted` — that disposition says a hypothesis was tried and killed, which is what the next round will read it as, and it is also the disposition the orchestrator forwards to the verifier as a related acquittal. A later re-review reads this ledger to recognize a hypothesis as already tested; prose records do not survive to that round.
 
-Each row has four compact fields on one line: a one-line claim, a falsification route of a few words, one decisive evidence pointer (`path:line` or a quoted rule location), and a one-word disposition. Pre-admission acquittals use the same compact shape. Return the ledger as the fenced `ledger` block defined in § Report tail; a ledger written as prose — a changed-contract sweep narrated in paragraphs, however thorough — or as a markdown table is non-conforming and will be sent back.
+Each row has six compact fields on one line: a per-run id `requirements-<n>`, numbered from 1 in the order you list the rows; the kind, `requirement`; a one-line claim; a falsification route of a few words; one decisive evidence pointer (`path:line` or a quoted rule location); and a one-word disposition. The id is a handle for this run only — the verifier's ruling on an acquitted row is matched back to it, and the run report names it — and it is never the durable `requirements/…` finding id. Pre-admission acquittals use the same compact shape. Return the ledger as the fenced `ledger` block defined in § Report tail; a ledger written as prose — a changed-contract sweep narrated in paragraphs, however thorough — or as a markdown table is non-conforming and will be sent back, and so is a row in the earlier four-field shape without its id and kind.
 
 Plus any **observations**: accurate facts that fail the candidate bar, one sentence plus one `file:line` evidence pointer each, stating what is, never what should be. The bar is an absence of consequence you established (`finding-format.md` § Settle, ask, or record): a gap you proved stays a candidate however low its priority, and a consequence you left open is a ledger row saying so. They skip the verifier and publish only in the summary's bounded `Observations` section.
 
@@ -126,7 +128,7 @@ End the report with these three fenced blocks, in this order, each with the exac
 
 `````markdown
 ```ledger
-<one-line claim> | <falsification route> | <path:line or quoted-rule location> | <candidate|acquitted|observation|question>
+requirements-<n> | requirement | <one-line claim> | <falsification route> | <path:line or quoted-rule location> | <candidate|acquitted|observation|question>
 ```
 ```manifest
 <path> | <reviewed|ignored> | <reason>
@@ -136,4 +138,4 @@ met=<n> not-met=<n> unverifiable=<n>
 ```
 `````
 
-Rows are one per line, four (`ledger`) or three (`manifest`) pipe-separated fields, no header row, no blank rows, and no `|` inside a field. The evidence field is one whole pointer: `path:line`, `path:start-end`, or a quoted-rule location written `` `path` § heading ``, optionally in backticks; a row about the issue text points at the diff line or reference section the requirement bears on. An acquittal that rests on an absence — no live peer found, no rule in the guidance — points at the section that would have carried it, not at a sentence of explanation. The disposition is one of `candidate`, `acquitted`, `observation`, or `question`, with `question` for a hypothesis that resolved to the "cannot tell from the code" or "Deferred by the review record" bucket, published or recorded. At least one row is a `candidate` unless the candidate section says "no candidates". Every path in the manifest you were given appears exactly once in the `manifest` block, its status is `reviewed` or `ignored`, and an `ignored` row carries a reason. A renamed or copied entry is listed once, under its new path. The `counts` block carries exactly the three integer keys shown, on the no-issue path counted over the body's claims and non-goals.
+Rows are one per line, six (`ledger`) or three (`manifest`) pipe-separated fields, no header row, no blank rows, and no `|` inside a field. The id is `requirements-` followed by a positive integer, unique within the block, and the kind is `requirement`. The evidence field is one whole pointer: `path:line`, `path:start-end`, or a quoted-rule location written `` `path` § heading ``, optionally in backticks; a row about the issue text points at the diff line or reference section the requirement bears on. An acquittal that rests on an absence — no live peer found, no rule in the guidance — points at the section that would have carried it, not at a sentence of explanation. The disposition is one of `candidate`, `acquitted`, `observation`, or `question`, with `question` for a hypothesis that resolved to the "cannot tell from the code" or "Deferred by the review record" bucket, published or recorded. At least one row is a `candidate` unless the candidate section says "no candidates". Every path in the manifest you were given appears exactly once in the `manifest` block, its status is `reviewed` or `ignored`, and an `ignored` row carries a reason. A renamed or copied entry is listed once, under its new path. The `counts` block carries exactly the three integer keys shown, on the no-issue path counted over the body's claims and non-goals. The validator also checks the `candidates` block against `finding-format.md` § Finder candidate block — thirteen fields in order, a unique `requirements/` id, a known kind — so a candidate in the earlier ten-field shape is sent back rather than carried forward.
