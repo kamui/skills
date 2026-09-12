@@ -248,6 +248,19 @@ def reveal_packets(archive, sums_text: str) -> dict:
             "archive_sha256": actual, "archive_sha256_as_sealed": recorded, "members": members}
 
 
+def check_reveal_record(reveal: dict, sums_text: str, problems: list) -> None:
+    """The reveal record must name the archive #151 sealed and carry both member digests. The
+    members themselves are trusted from the reveal step, which is the one place the key is needed:
+    verify cannot re-derive them without the archive, and says so."""
+    recorded = parse_sums(sums_text).get("grading-packets.tar.gz")
+    if reveal.get("archive_sha256") != recorded or reveal.get("archive_sha256_as_sealed") != recorded:
+        problems.append("#151 packets: the reveal record's archive digest is not the one #151 sealed")
+    members = reveal.get("members") or {}
+    for name in PACKET_MEMBERS:
+        if not re.fullmatch(r"[0-9a-f]{64}", str(members.get(name, ""))):
+            problems.append("#151 packets: the reveal record carries no digest for %s" % name)
+
+
 def check_packets(packets_dir, index: dict, reveal: dict, problems: list, checked: list) -> None:
     """Both revealed packet files against the reveal record's sealed member digests, then the
     packet set against the public index: nothing missing, nothing duplicated, everything hashing
@@ -303,8 +316,7 @@ def verify(args) -> dict:
                "#149 sealed schedule", problems, checked)
     # #151: both packet files against the sealed archive's member digests, then the public index.
     reveal = load(args.reveal)
-    if reveal.get("archive_sha256") != parse_sums(read_text(Path(args.packets_dir) / "SHA256SUMS")).get("grading-packets.tar.gz"):
-        problems.append("#151 packets: the reveal record's archive digest is not the one #151 sealed")
+    check_reveal_record(reveal, read_text(Path(args.packets_dir) / "SHA256SUMS"), problems)
     check_packets(bundle / "revealed" / "packets", load(Path(args.packets_dir) / "packet-index.json"), reveal,
                   problems, checked)
     seal = load(Path(args.packets_dir) / "seal.json")
@@ -1283,6 +1295,16 @@ def self_test() -> int:
         run = subprocess.run([sys.executable, __file__, "reveal", "--archive", str(archive), "--sums", str(root / "missing-sums"),
                               "--out", str(root / "r.json")], capture_output=True, text=True, encoding="utf-8")
         check("5m reveal exits 2 on an unreadable SHA256SUMS", run.returncode == 2)
+        problems = []
+        check_reveal_record(record, sums, problems)
+        check("5o the reveal record verifies against the sealed sums", problems == [])
+        problems = []
+        check_reveal_record(record, "%s  grading-packets.tar.gz\n" % ("1" * 64), problems)
+        check("5p a reveal record naming another archive is refused", any("not the one #151 sealed" in p for p in problems))
+        problems = []
+        check_reveal_record({"archive_sha256": record["archive_sha256"], "archive_sha256_as_sealed": record["archive_sha256"],
+                             "members": {"grading-packets.json": record["members"]["grading-packets.json"]}}, sums, problems)
+        check("5q a reveal record missing a member digest is refused", any("no digest for redaction-map.json" in p for p in problems))
         (root / "sums").write_text(sums, encoding="utf-8")
         run = subprocess.run([sys.executable, __file__, "reveal", "--archive", str(archive), "--sums", str(root / "sums"),
                               "--out", str(root / "r.json")], capture_output=True, text=True, encoding="utf-8")

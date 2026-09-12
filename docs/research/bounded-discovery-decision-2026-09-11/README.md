@@ -42,7 +42,10 @@ nothing runs from this handoff.** [`evaluation.md`](evaluation.md) is the argume
    not its members', so `decide.py reveal` records the two members' digests from the archive once
    it has hashed as sealed ([`reveal.json`](reveal.json)); `verify` checks the revealed packet
    files against that record and the packet set against the public index, refusing a missing,
-   extra or duplicated packet or a changed redaction-map row. The plaintexts the decision reads are committed
+   extra or duplicated packet or a changed redaction-map row. The member digests are trusted from
+   the reveal step, which is the one step that needs the key: `verify` checks that the record names
+   the archive #151 sealed and cannot re-derive the members without it, so anyone holding the key
+   re-runs `reveal` and compares. The plaintexts the decision reads are committed
    verbatim under [`revealed/`](revealed/): the four registers and leak sets, the inventory, the two
    excluded registers, the slot map, the schedule, the grading packets and redaction map, the two
    ruling tables (and the pre-resume table beside the final one), both amendments and both derived
@@ -113,7 +116,7 @@ stage's reviews have been.
 
 ## Scripts
 
-Standard-library Python 3.9+, macOS and Linux, with `--self-test` (45 checks, including CLI exit
+Standard-library Python 3.9+, macOS and Linux, with `--self-test` (48 checks, including CLI exit
 codes through `subprocess`):
 
 | Command | What it does |
