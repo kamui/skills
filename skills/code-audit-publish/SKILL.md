@@ -1,16 +1,16 @@
 ---
-name: code-review-deep-publish
-description: "Run a recall-first panel review with two independent finders and mandatory fresh-context verification of every candidate. Use for large or high-risk changes, including concurrency, failover, data-integrity, security or authorization surfaces, and wide multi-module diffs, where extra recall justifies roughly 1.5× the token cost of code-review-publish; also use as the standing comparator arm in review-skill evaluations. For routine reviews prefer code-review-publish. Invoke only when the caller explicitly asks for code-review-deep-publish."
+name: code-audit-publish
+description: "Audit a pull request's requirements and affected code with independent Code and Requirements finders and fresh-context candidate verification. Use explicitly for requirements completeness, API conformance, and contract propagation beyond the diff. For routine reviews prefer code-review-publish. Invoke only when the caller explicitly asks for code-audit-publish."
 compatibility: Requires git and Python 3.9+ on macOS or Linux
 ---
 
-# Publish deep code review (Panel line)
+# Publish code audit
 
 Review the pull request, verify what the review found, publish what survives.
 
-This is the recall-first Panel-line reviewer. Run it for large or high-risk changes where added recall warrants the cost, and as the standing comparator arm in review-skill evaluations. `code-review-publish` owns the routine path.
+This is the independent-discovery audit, formerly `code-review-deep-publish`. Investigate the requirements and affected contracts of one pull request, including relevant unchanged consumers. `code-review-publish` owns the routine path. The current implementation retains the Panel workflow; the future system-guarantee and executable-evidence work is tracked in `DESIGN.md`.
 
-This skill does the reviewing itself because the finding contract below is its point. Skepticism lives outside the reviewer, in independent parallel finders and a mandatory fresh-context verifier. That architecture costs roughly 1.5× the routine reviewer and must stay intact.
+Independent parallel finders discover candidates, and a fresh-context verifier checks them before publication. Preserve independent discovery while improving verification and publishing. Historical evaluation comparators use pinned snapshots; their purpose does not constrain improvements to this live skill.
 
 Two properties govern every decision here:
 
