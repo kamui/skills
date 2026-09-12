@@ -29,18 +29,22 @@ frozen. `Valid` is #151's operational validity: no attempt is `valid`, because t
 retained (five `unresolved`) or a protocol rule was broken (three `invalid`). False clean is a property of
 the published status on a buggy target. `V` is whether a verifier batch ran and what it received.
 
-| Pos | Attempt | Cell | Arm | Validity | Completion | Status | `D_t` | `R_i` (v2) | Recall v2 | Recall v1 | Sufficient / partial | False findings | False clean | V | Settled |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | position-01-attempt-1 | slot-2-A-replicate-1 | A | invalid | stopped-runtime | Incomplete | 0 (clean) | — | N/A | N/A | — | 0 | N/A | n/a | $0.0000000 |
-| 1 | position-01-attempt-2 | slot-2-A-replicate-1 | A | unresolved | complete | Approved | 0 (clean) | — | N/A | N/A | — | 0 | N/A | clean-verdict batch | $3.8595330 |
-| 2 | position-02-attempt-1 | slot-2-B-replicate-1 | B | unresolved | complete | Approved | 0 (clean) | — | N/A | N/A | — | 0 | N/A | clean-verdict batch | $3.8777270 |
-| 3 | position-03-attempt-1 | slot-2-C-replicate-1 | C | invalid | stopped-runtime | Incomplete | 0 (clean) | — | N/A | N/A | — | 0 | N/A | n/a | $1.5838690 |
-| 3 | position-03-attempt-2 | slot-2-C-replicate-1 | C | unresolved | complete | Approved | 0 (clean) | — | N/A | N/A | — | 0 | N/A | clean-verdict batch | $7.0003047 |
-| 4 | position-04-attempt-1 | slot-1-A-replicate-1 | A | unresolved | complete | Approved | 2 | — | 0.000 | 0.000 | — | 0 | **yes** | none (policy) | $4.5304828 |
-| 5 | position-05-attempt-1 | slot-1-B-replicate-1 | B | invalid | complete | Changes Requested | 2 | GT-p1, GT-p2 | 1.000 | 1.000 | GT-p2 / GT-p1 | 0 | no | candidate batch (1, 0 finder-origin) | $6.3671277 |
-| 6 | position-06-attempt-1 | slot-1-C-replicate-1 | C | unresolved | stopped-budget | Changes Requested | 2 | GT-p1, GT-p2 | 1.000 | 1.000 | GT-p2 / GT-p1 | 0 | no | candidate batch (2, 1 finder-origin) | $9.0040632 |
+Duplicates are items beyond the first on a concept the attempt already claimed (supported or
+false alike); bundled is one item naming more than one concept, which is not a duplicate. Both are
+counted over the ruled items, so a zero is established, not omitted.
 
-Raw items across the six packets: 7, of which 3 findings, 0 false findings, 0 false non-finding items, 0 unresolved rulings, 0 action errors, 0 priority errors, 1 unsupported explicit safety claims.
+| Pos | Attempt | Cell | Arm | Validity | Completion | Status | `D_t` | `R_i` (v2) | Recall v2 | Recall v1 | Sufficient / partial | Raw items | Concepts | Duplicates | Bundled | False findings | False clean | V | Settled |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | position-01-attempt-1 | slot-2-A-replicate-1 | A | invalid | stopped-runtime | Incomplete | 0 (clean) | — | N/A | N/A | — | 0 | 0 | 0 | 0 | 0 | N/A | n/a | $0.0000000 |
+| 1 | position-01-attempt-2 | slot-2-A-replicate-1 | A | unresolved | complete | Approved | 0 (clean) | — | N/A | N/A | — | 1 | 1 | 0 | 0 | 0 | N/A | clean-verdict batch | $3.8595330 |
+| 2 | position-02-attempt-1 | slot-2-B-replicate-1 | B | unresolved | complete | Approved | 0 (clean) | — | N/A | N/A | — | 0 | 0 | 0 | 0 | 0 | N/A | clean-verdict batch | $3.8777270 |
+| 3 | position-03-attempt-1 | slot-2-C-replicate-1 | C | invalid | stopped-runtime | Incomplete | 0 (clean) | — | N/A | N/A | — | 0 | 0 | 0 | 0 | 0 | N/A | n/a | $1.5838690 |
+| 3 | position-03-attempt-2 | slot-2-C-replicate-1 | C | unresolved | complete | Approved | 0 (clean) | — | N/A | N/A | — | 1 | 1 | 0 | 0 | 0 | N/A | clean-verdict batch | $7.0003047 |
+| 4 | position-04-attempt-1 | slot-1-A-replicate-1 | A | unresolved | complete | Approved | 2 | — | 0.000 | 0.000 | — | 2 | 2 | 0 | 0 | 0 | **yes** | none (policy) | $4.5304828 |
+| 5 | position-05-attempt-1 | slot-1-B-replicate-1 | B | invalid | complete | Changes Requested | 2 | GT-p1, GT-p2 | 1.000 | 1.000 | GT-p2 / GT-p1 | 1 | 2 | 0 | 1 | 0 | no | candidate batch (1, 0 finder-origin) | $6.3671277 |
+| 6 | position-06-attempt-1 | slot-1-C-replicate-1 | C | unresolved | stopped-budget | Changes Requested | 2 | GT-p1, GT-p2 | 1.000 | 1.000 | GT-p2 / GT-p1 | 2 | 2 | 0 | 0 | 0 | no | candidate batch (2, 1 finder-origin) | $9.0040632 |
+
+Raw items across the six packets: 7, of which 3 findings, 0 false findings, 0 false non-finding items, 0 unresolved rulings, 0 action errors, 0 priority errors, 1 unsupported explicit safety claims. Concepts claimed: 8 over 7 items; duplicate items on a concept: 0 (of them false: 0); bundled items: 1.
 
 ## 3. Arm scorecards (frozen scorer, graded truth)
 
