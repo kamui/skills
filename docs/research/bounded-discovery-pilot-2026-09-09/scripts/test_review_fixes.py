@@ -22,6 +22,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 SCRIPTS = Path(__file__).resolve().parent
+READINESS = SCRIPTS.parents[1] / "bounded-discovery-readiness-2026-09-12" / "scripts"
 
 
 def module(name):
@@ -58,6 +59,7 @@ class ReviewFixes(unittest.TestCase):
                        "auth_env_file": str(self.base / "auth"), "proxy_port": 19876,
                        "image": DOCKER_IMAGE or "test", "ledger": str(self.base / "ledger.json")}
         self.config["roots_record"] = str(Path(self.evidence.name) / "roots.json")
+        self.config["payload_contract"] = str(READINESS / "payload.py")
         runner.write(self.config["roots_record"], {"recorded_at": "synthetic",
                                                   "roots": [str(self.base.resolve())]})
         (self.base / "auth").write_text("# synthetic configuration\n", encoding="utf-8")
@@ -70,6 +72,7 @@ class ReviewFixes(unittest.TestCase):
             (self.root / "runner" / name).write_text("{FINDER_CLAIMS}" if name == "admission.md" else "test",
                                                       encoding="utf-8")
         shutil.copyfile(SCRIPTS / "mark_event.py", self.root / "runner" / "mark_event.py")
+        shutil.copyfile(self.config["payload_contract"], self.root / "runner" / "payload.py")
 
     def fake_finder(self, malformed=False):
         claims = {"context_id": "finder", "packet_sha256": "packet", "scope_id": "scope",
@@ -710,6 +713,126 @@ class ReviewFixes(unittest.TestCase):
         (sidecar.parent / "review-payload.md").write_text("changed", encoding="utf-8")
         self.assertEqual(runner.run(sys.executable, script, sidecar, "completed_at", check=False).returncode, 1)
         self.assertIsNone(runner.load(sidecar)["completed_at"])
+
+
+    # -- the uniform payload contract (#199 gap 6) -------------------------
+
+    def contract_payload(self, arm="C", items=None, stop=None, outcome="findings"):
+        """One arm's contract payload, in the shape every arm must produce."""
+        if items is None:
+            items = [{"type": "finding", "markdown": "The retry loop never resets.",
+                      "trailer": "<!-- finding id=code/retry head=abc -->",
+                      "anchor": {"type": "line", "path": "src/a.ts", "start_line": 1,
+                                 "end_line": 2, "side": "RIGHT"},
+                      "priority": "P1", "action": "must-fix", "blocking": True,
+                      "kind": "bug"}]
+        runner.write(self.root / "work" / "review-payload.json",
+                     {"schema_version": "bounded-discovery-payload-v1",
+                      "attempt_id": self.row["attempt_id"], "arm": arm, "outcome": outcome,
+                      "summary": {"body": "## Review\n\nMode: retrospective."},
+                      "items": items, "stop": stop})
+
+    def settle_payload(self, disposition="stopped-runtime", contract=True, **extra):
+        self.fresh_ledger()
+        self.config.update(bundle=str(SCRIPTS.parents[1] / "bounded-discovery-runs-2026-09-08"),
+                           tools=str(SCRIPTS.parents[1] / "tools"))
+        runner.claim_attempt(self.config, self.row,
+                             runner.cell_contexts(self.root, self.row))
+        runner.reserve(self.config, self.row, "11.00", "test")
+        record = {"attempt_id": self.row["attempt_id"], "arm": self.row["arm"],
+                  "disposition": disposition, "phases": [], "finder": None, "problems": []}
+        if contract:
+            script = Path(self.config["payload_contract"])
+            record["payload_contract"] = {"path": str(script), "sha256": runner.digest(script)}
+        record.update(extra)
+        runner.write(self.root / "artifacts" / "dispatch.json", record)
+        runner.write(self.root / "artifacts" / "cell-env-dispatch.json", {"permitted_roots": []})
+        with patch.object(runner, "schedule_row", return_value=self.row), \
+             patch.object(runner, "verify_models", return_value=({}, [])), \
+             patch.object(runner, "audit_reads", return_value={"passed": True}):
+            runner.settle(self.config, 99)
+        return runner.load(self.root / "artifacts" / "settle.json")
+
+    def test_dispatch_requires_a_pinned_payload_contract(self):
+        self.assertTrue(runner.payload_contract(self.config)["sha256"])
+        for value in ({}, {"payload_contract": str(self.base / "absent.py")}):
+            with self.assertRaises(runner.Failed):
+                runner.payload_contract(value)
+
+    def test_dispatch_requires_the_prepared_contract_to_match_the_pin(self):
+        prepared = self.root / "runner" / "payload.py"
+        contract = runner.payload_contract(self.config, self.root)
+        self.assertEqual(contract["prepared_path"], str(prepared))
+        self.assertEqual(runner.digest(prepared), contract["sha256"])
+        # A copy that drifted from the configured file, and a cell prepared
+        # before one was configured, both refuse before any worker starts.
+        prepared.write_text("# a different validator\n", encoding="utf-8")
+        with self.assertRaises(runner.Failed):
+            runner.payload_contract(self.config, self.root)
+        with patch.object(runner, "schedule_row", return_value=self.row):
+            with self.assertRaises(runner.Failed):
+                runner.dispatch(self.config, 99)
+        prepared.unlink()
+        with self.assertRaises(runner.Failed):
+            runner.payload_contract(self.config, self.root)
+        self.assertFalse((self.root / "artifacts" / "dispatch.json").exists())
+
+    def test_every_arm_is_settled_under_one_contract_and_keeps_its_findings(self):
+        self.contract_payload(stop={"reason": "runtime-error", "detail": "provider 502"})
+        record = self.settle_payload()
+        self.assertTrue(record["payload_contract_enforced"])
+        self.assertTrue(record["payload_accepted"])
+        self.assertEqual(record["payload_outcome"], "findings")
+        self.assertEqual(record["payload_item_count"], 1)
+        self.assertEqual(record["payload_produced_by"], "arm")
+        receipt = runner.load(self.root / "artifacts" / "payload-receipt.json")
+        self.assertEqual(receipt["arm"], "C")
+        self.assertTrue(receipt["items_present"])
+
+    def test_a_stopped_attempt_gets_a_stopped_payload_and_no_invented_items(self):
+        record = self.settle_payload(stop_reason="arm C had no allowance left to resume")
+        self.assertEqual(record["payload_outcome"], "unavailable")
+        self.assertEqual(record["payload_item_count"], 0)
+        self.assertEqual(record["payload_produced_by"], "coordinator")
+        written = runner.load(self.root / "work" / "review-payload.json")
+        self.assertEqual(written["items"], [])
+        self.assertEqual(written["summary"]["body"], "")
+        self.assertIn("no allowance left", written["stop"]["detail"])
+
+    def test_a_markdown_only_payload_is_refused_rather_than_masked(self):
+        (self.root / "work" / "review-payload.md").write_text(
+            "## Review\n\nA real finding lives here.", encoding="utf-8")
+        record = self.settle_payload()
+        self.assertFalse(record["payload_accepted"])
+        self.assertEqual(record["operational_validity"], "invalid")
+        self.assertTrue(any("second payload form" in problem
+                            for problem in record["problems"]))
+        self.assertFalse((self.root / "work" / "review-payload.json").exists())
+        self.assertIn("A real finding lives here",
+                      (self.root / "work" / "review-payload.md").read_text(encoding="utf-8"))
+
+    def test_an_arm_specific_structure_invalidates_the_attempt(self):
+        self.contract_payload(stop={"reason": "runtime-error", "detail": "d"})
+        document = runner.load(self.root / "work" / "review-payload.json")
+        document["finder_claims"] = ["arm C only"]
+        runner.write(self.root / "work" / "review-payload.json", document)
+        record = self.settle_payload()
+        self.assertFalse(record["payload_accepted"])
+        self.assertTrue(any("finder_claims" in problem for problem in record["problems"]))
+
+    def test_a_contract_that_changed_since_dispatch_accepts_nothing(self):
+        self.contract_payload(stop={"reason": "runtime-error", "detail": "d"})
+        record = self.settle_payload(payload_contract={
+            "path": self.config["payload_contract"], "sha256": "0" * 64})
+        self.assertFalse(record["payload_contract_enforced"])
+        self.assertFalse(record["payload_accepted"])
+        self.assertTrue(any("has changed" in problem for problem in record["problems"]))
+
+    def test_a_historical_dispatch_record_settles_without_the_contract(self):
+        record = self.settle_payload(contract=False)
+        self.assertFalse(record["payload_contract_enforced"])
+        self.assertNotIn("payload_accepted", record)
+        self.assertFalse((self.root / "work" / "review-payload.json").exists())
 
     def test_container_roles_cannot_read_each_others_stores(self):
         if not DOCKER_IMAGE:
