@@ -1,6 +1,0 @@
-interface:
-  display_name: "Publish Deep Code Review"
-  short_description: "Recall-first review for high-risk changes"
-  default_prompt: "Use $code-review-deep-publish to run a recall-first panel review of this high-risk pull request and publish every verified finding."
-policy:
-  allow_implicit_invocation: false

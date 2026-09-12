@@ -1,9 +1,9 @@
-# Design notes — code-review-deep-publish
+# Design notes — code-audit-publish
 
 v2a is the Panel line's second iteration: `code-review-publish-2` (v2, PR #14, seeded at commit
 `f42f708`) with the fixes the three 2026-09-01 test runs proved necessary, and nothing that would
 move it toward the Skeptic line. The evidence base is
-[`docs/research/prototype-runs-2026-09-01-aggregate-analysis.md`](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md)
+[`docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md`](../../docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md)
 and the three v2 run records it synthesizes. v2's original assembly rationale — the survey of
 thirteen published reviewers, the Codex-rubric base, the pr-agent Requirements graft, the
 dual-audience finding contract — is in v2's own `DESIGN.md` on its branch and is inherited here
@@ -11,9 +11,35 @@ unchanged.
 
 ## Positioning
 
-The v2a prototype is now named `code-review-deep-publish`. It runs on two deliberate occasions: as
-the recall-first escalation for large or high-risk changes, and as the standing comparator arm in
-review-skill evaluations. The frequent path belongs to `code-review-publish`.
+The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. Its direction is a
+PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
+change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
+The rename retains the `v2b-1` review protocol and the existing two-finder workflow. It does not
+claim that the planned transition audits, stronger verification or executable experiments have
+shipped. Admission, verification, rendering and state changes receive their own release bumps.
+
+The [assessment](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md) motivates
+three work streams: reliable verification/publication, discovery of affected obligations and
+guarantees, and matched evaluation of incremental findings and operating cost. Preserve independent
+discovery and permit shared reliability mechanisms with the routine skill. Keep historical
+comparators as pinned snapshots rather than freezing the live skill to maintain a contrasting pole.
+
+The implementation roadmap is tracked in GitHub:
+
+- [#156: verification and publication foundations](https://github.com/kamui/skills/issues/156).
+- [#157: affected contracts, guarantees and executable behavior](https://github.com/kamui/skills/issues/157).
+- [#158: usefulness, operating cost and selective routing](https://github.com/kamui/skills/issues/158).
+
+[#159](https://github.com/kamui/skills/issues/159) owns landing this rename. The existing
+[#84](https://github.com/kamui/skills/issues/84) owns the demonstrated deleted-file coordinate repair
+shared with the routine publisher. The bounded discovery-worker prototype was a separate
+experiment under [#138](https://github.com/kamui/skills/issues/138), now closed; its result does not
+change this skill.
+
+The strongest controlled evidence is requirements completeness and external-reference conformance.
+High-risk superiority remains unproven. Historical matched production-shaped cost premiums were
+2.15–2.25× on two targets, a different measure from the older 1.5× token estimate below. Neither
+figure is a general current cost promise.
 
 ## v2b
 
@@ -21,6 +47,11 @@ Workflow identifier: `v2b-1`. A `v2a-1` trailer remains readable because v2b cha
 not the trailer vocabulary.
 
 ### The pole statement
+
+Historical rationale for v2b, superseded as a product constraint by Positioning above. The current
+integrated reviewer has a question channel; the claim below about what those architectures cannot
+express described an earlier design and is not current capability guidance. The retained history
+explains the experiments, not a prohibition on backporting stronger verification or state handling.
 
 v2b keeps v2a's purpose: it exists to be measured against, not to win. The program advanced the
 Skeptic line (v5 → v5a) as the production candidate and kept the Panel line alive as the standing
@@ -237,7 +268,7 @@ Two fixes applied identically in v5a, for comparability:
 
 The clean test-1 comparison put the Panel line at 253.7k tokens versus roughly 175k for the
 single-reviewer-plus-verifier lines
-([aggregate analysis § 8](../../docs/research/prototype-runs-2026-09-01-aggregate-analysis.md#8-economics-what-the-cost-data-actually-supports)).
+([aggregate analysis § 8](../../docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md#8-economics-what-the-cost-data-actually-supports)).
 The trace behind that comparison recorded 118 tool calls: 91.3k and 99.8k tokens in the two finders,
 then 62.5k in the verifier.
 
