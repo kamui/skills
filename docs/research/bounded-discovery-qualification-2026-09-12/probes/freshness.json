@@ -1,7 +1,7 @@
 {
   "attached_context_note": "attached_context_types lists the non-prompt context the runtime itself put into the session. It is reported, not judged: these must be identical across arms or they are a confound, and a freeze names them rather than discovering them at grading.",
   "probe": "P02",
-  "recorded_at": "2026-09-12T11:18:10.138722+00:00",
+  "recorded_at": "2026-09-12T11:36:25.569461+00:00",
   "rule": "a worker's context is fresh when its transcript opens with exactly one user text message before its first assistant line, carries no summary record and was not resumed or forked. Checked mechanically; the model is never asked whether it is fresh. A later user text message is the harness injecting a background worker's completion, counted separately and reported.",
   "sessions": {
     "A-clean": {

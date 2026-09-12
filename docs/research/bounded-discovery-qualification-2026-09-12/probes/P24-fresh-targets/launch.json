@@ -2,15 +2,15 @@
   "schema_version": "bounded-discovery-qualification-v1",
   "probe": "P24",
   "purpose": "The gap-8 requirement: four fresh targets through #148's full checklist. This records what was prepared and why the selection itself was not performed.",
-  "retained_at": "2026-09-12T10:42:55.274976+00:00",
+  "retained_at": "2026-09-12T11:36:03.484895+00:00",
   "retained_before_process_creation": true,
   "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
   "argv": [
     "python3",
     "-c",
-    "\nimport json\nr = json.load(open('targets/reservations.json'))\nprint('reservation set derived by rule: %d pull requests from %d inventory rows'\n      % (r['reserved_count'], r['inventory_rows_read']))\nprint('sources digested:', len(r['sources_sha256']))\ne = json.load(open('targets/eligibility-machinery-check.json'))\nprint('mechanical criteria exercised on %d candidates; selected targets: 0'\n      % len(e['candidates']))\n"
+    "\nimport collections, json\nr = json.load(open('targets/reservations.json'))\nconfidence = collections.Counter(v['confidence'] for v in r['reserved'].values())\nprint('reservation set derived by rule: %d pull requests from %d inventory rows'\n      % (r['reserved_count'], r['inventory_rows_read']))\nprint('evidence: %d strong, %d conservative' % (confidence['strong'], confidence['conservative']))\nprint('sources digested:', len(r['sources_sha256']))\ne = json.load(open('targets/eligibility-machinery-check.json'))\nprint('mechanical criteria exercised on %d candidates; selected targets: 0'\n      % len(e['candidates']))\n"
   ],
-  "command_line": "python3 -c '\nimport json\nr = json.load(open('\"'\"'targets/reservations.json'\"'\"'))\nprint('\"'\"'reservation set derived by rule: %d pull requests from %d inventory rows'\"'\"'\n      % (r['\"'\"'reserved_count'\"'\"'], r['\"'\"'inventory_rows_read'\"'\"']))\nprint('\"'\"'sources digested:'\"'\"', len(r['\"'\"'sources_sha256'\"'\"']))\ne = json.load(open('\"'\"'targets/eligibility-machinery-check.json'\"'\"'))\nprint('\"'\"'mechanical criteria exercised on %d candidates; selected targets: 0'\"'\"'\n      % len(e['\"'\"'candidates'\"'\"']))\n'",
+  "command_line": "python3 -c '\nimport collections, json\nr = json.load(open('\"'\"'targets/reservations.json'\"'\"'))\nconfidence = collections.Counter(v['\"'\"'confidence'\"'\"'] for v in r['\"'\"'reserved'\"'\"'].values())\nprint('\"'\"'reservation set derived by rule: %d pull requests from %d inventory rows'\"'\"'\n      % (r['\"'\"'reserved_count'\"'\"'], r['\"'\"'inventory_rows_read'\"'\"']))\nprint('\"'\"'evidence: %d strong, %d conservative'\"'\"' % (confidence['\"'\"'strong'\"'\"'], confidence['\"'\"'conservative'\"'\"']))\nprint('\"'\"'sources digested:'\"'\"', len(r['\"'\"'sources_sha256'\"'\"']))\ne = json.load(open('\"'\"'targets/eligibility-machinery-check.json'\"'\"'))\nprint('\"'\"'mechanical criteria exercised on %d candidates; selected targets: 0'\"'\"'\n      % len(e['\"'\"'candidates'\"'\"']))\n'",
   "env_additions": {},
   "requested": {
     "model": null,

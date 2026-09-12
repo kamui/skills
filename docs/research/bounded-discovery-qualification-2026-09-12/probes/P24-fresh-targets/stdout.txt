@@ -1,3 +1,4 @@
-reservation set derived by rule: 79 pull requests from 28 inventory rows
-sources digested: 6
-mechanical criteria exercised on 5 candidates; selected targets: 0
+reservation set derived by rule: 102 pull requests from 33 inventory rows
+evidence: 77 strong, 25 conservative
+sources digested: 10
+mechanical criteria exercised on 6 candidates; selected targets: 0

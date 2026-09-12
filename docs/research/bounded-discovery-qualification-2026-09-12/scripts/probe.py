@@ -217,10 +217,32 @@ def meter(args):
     (directory / "transcripts.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     effort = run([sys.executable, str(TOOLS / "agent_effort.py")] + [str(p) for p in found])
     (directory / "effort.txt").write_text(effort.stdout, encoding="utf-8")
-    # agent_effort.py exits 1 on a model or effort it was told to expect and did not see.
-    # Retaining its output and ignoring its exit code is how an unobserved setting becomes a
-    # pass, which is the one thing the fidelity rule forbids.
+    # agent_effort.py only rules on a setting it was told to expect, so reading its exit code
+    # without giving it the launch record's requested model and effort would be checking
+    # nothing. The check is against the root transcript alone: a child runs at whatever the
+    # startup worker definition named, which is not this record's --model, and a freeze
+    # checks that separately against the frozen definition.
     problems = []
+    requested_model = record["requested"].get("model")
+    requested_effort = record["requested"].get("effort")
+    fidelity = {"checked": str(found[0]), "expected_model": requested_model,
+                "expected_effort": requested_effort, "children_not_checked_here": len(found) - 1}
+    if requested_model or requested_effort:
+        command = [sys.executable, str(TOOLS / "agent_effort.py"), str(found[0])]
+        if requested_model:
+            command += ["--expect-model", requested_model]
+        if requested_effort:
+            command += ["--expect-effort", requested_effort]
+        checked = run(command)
+        (directory / "fidelity.txt").write_text(checked.stdout, encoding="utf-8")
+        fidelity["exit"] = checked.returncode
+        if checked.returncode:
+            problems.append("the root transcript does not run at the model or effort the "
+                            "launch requested; see fidelity.txt")
+    else:
+        fidelity["exit"] = None
+        fidelity["why_not_checked"] = ("the launch record requests no model or effort, so "
+                                       "there is nothing to check the transcript against")
     if effort.returncode:
         problems.append("agent_effort.py exited " + str(effort.returncode) +
                         "; see effort.txt")
@@ -280,6 +302,7 @@ def meter(args):
                                {name.partition("[")[0] for name in per_model}} or None),
         "settlement_rule": ("charge the larger of the runtime self-report and the recomputed "
                             "per-request total, and name the difference"),
+        "fidelity": fidelity,
         "metered_at": now(),
     }
     if split.returncode:
@@ -342,7 +365,7 @@ def self_test():
         one = base / "p-ok"
         result = subprocess.run(here + ["launch", "--probe-dir", str(one), "--id", "PT1",
                                         "--purpose", "echo", "--", "/bin/echo", "hello"],
-                                text=True, capture_output=True)
+                                text=True, encoding="utf-8", capture_output=True)
         check("a launch that runs exits 0", result.returncode == 0)
         check("the record is written", (one / "launch.json").exists())
         check("stdout is retained", (one / "stdout.txt").read_text(encoding="utf-8") == "hello\n")
@@ -353,35 +376,35 @@ def self_test():
 
         again = subprocess.run(here + ["launch", "--probe-dir", str(one), "--id", "PT1",
                                        "--purpose", "echo", "--", "/bin/echo", "hello"],
-                               text=True, capture_output=True)
+                               text=True, encoding="utf-8", capture_output=True)
         check("a second launch into one record is refused", again.returncode == 1)
 
         two = base / "p-missing"
         result = subprocess.run(here + ["launch", "--probe-dir", str(two), "--id", "PT2",
                                         "--purpose", "absent binary", "--",
                                         str(base / "definitely-absent")],
-                                text=True, capture_output=True)
+                                text=True, encoding="utf-8", capture_output=True)
         check("a failed launch exits 1", result.returncode == 1)
         check("a failed launch keeps its record", (two / "launch.json").exists())
         check("a failed launch records launch-failed",
               (two / "exit.txt").read_text(encoding="utf-8") == "launch-failed\n")
         result = subprocess.run(here + ["verdict", "--probe-dir", str(two), "--status",
                                         "established", "--summary", "x"],
-                                text=True, capture_output=True)
+                                text=True, encoding="utf-8", capture_output=True)
         check("an incomplete probe cannot be established", result.returncode == 1
               and "establishes nothing" in result.stdout)
         result = subprocess.run(here + ["verdict", "--probe-dir", str(two), "--status",
                                         "unestablished", "--summary", "the binary is absent"],
-                                text=True, capture_output=True)
+                                text=True, encoding="utf-8", capture_output=True)
         check("an incomplete probe records unestablished", result.returncode == 0)
 
         three = base / "p-exit"
         subprocess.run(here + ["launch", "--probe-dir", str(three), "--id", "PT3", "--purpose",
                                "false", "--expect-exit", "0", "--", "/usr/bin/false"],
-                       text=True, capture_output=True)
+                       text=True, encoding="utf-8", capture_output=True)
         result = subprocess.run(here + ["verdict", "--probe-dir", str(three), "--status",
                                         "established", "--summary", "x"],
-                                text=True, capture_output=True)
+                                text=True, encoding="utf-8", capture_output=True)
         check("an unexpected exit cannot be established", result.returncode == 1)
 
         four = base / "p-meter"
@@ -391,8 +414,43 @@ def self_test():
              "retained_before_process_creation": True,
              "requested": {"session_id": None}}) + "\n", encoding="utf-8")
         result = subprocess.run(here + ["meter", "--probe-dir", str(four), "--rates", "x"],
-                                text=True, capture_output=True)
+                                text=True, encoding="utf-8", capture_output=True)
         check("metering a launch with no session id is refused", result.returncode == 1)
+
+        # A launch that asked for one model and got another must fail metering, because
+        # that is what "an unobservable setting is never a pass" means in practice.
+        five = base / "p-fidelity"
+        five.mkdir()
+        (five / "launch.json").write_text(json.dumps(
+            {"probe": "PT5", "purpose": "p", "command_line": "c", "cwd": "/", "argv": ["x"],
+             "retained_before_process_creation": True,
+             "requested": {"session_id": "11111111-1111-1111-1111-111111111111",
+                           "model": "claude-opus-5", "effort": "high"}}) + "\n",
+            encoding="utf-8")
+        projects = base / "projects" / "-fake"
+        projects.mkdir(parents=True)
+        (projects / "11111111-1111-1111-1111-111111111111.jsonl").write_text(json.dumps(
+            {"type": "assistant", "effort": "high",
+             "message": {"model": "claude-sonnet-5", "usage": {
+                 "input_tokens": 1, "output_tokens": 1, "cache_creation_input_tokens": 0,
+                 "cache_read_input_tokens": 0}}}) + "\n", encoding="utf-8")
+        rates = base / "rates.json"
+        rates.write_text(json.dumps({"schema_version": "bounded-discovery-v1",
+                                     "observed_at": "2026-09-12", "source": "test",
+                                     "models": {"claude-sonnet-5": {
+                                         "input_usd_per_mtok": "2",
+                                         "output_usd_per_mtok": "10"}}}) + "\n",
+                         encoding="utf-8")
+        result = subprocess.run(here + ["meter", "--probe-dir", str(five), "--rates",
+                                        str(rates), "--projects-dir",
+                                        str(base / "projects")],
+                                text=True, encoding="utf-8", capture_output=True)
+        check("a transcript that does not run at the requested model fails metering",
+              result.returncode == 1 and "does not run at the model or effort" in result.stdout)
+        metering = json.loads((five / "metering.json").read_text(encoding="utf-8"))
+        check("the fidelity check is recorded with what it expected",
+              metering["fidelity"]["expected_model"] == "claude-opus-5"
+              and metering["fidelity"]["exit"] == 1)
 
         settings = requested_settings(shlex.split(
             'claude -p --model claude-sonnet-5 --effort high --restricted '
@@ -409,7 +467,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 16 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: 18 checks")
     return 1 if failures else 0
 
 
