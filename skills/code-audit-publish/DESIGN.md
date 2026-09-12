@@ -15,7 +15,7 @@ The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. It
 PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
 change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
 The rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
-advanced the identifier to `v2b-2` and C18 advances it to `v2b-3`. It does not claim that the planned transition audits, stronger
+advanced the identifier to `v2b-2`, C18 to `v2b-3`, and C19 advances it to `v2b-4`. It does not claim that the planned transition audits, stronger
 verification or executable experiments have shipped. Admission, verification, rendering and state
 changes receive their own release bumps.
 
@@ -44,14 +44,19 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-3`. Issue #163 increments `v2b-2` to `v2b-3` for the verdict-routing and
-status semantics recorded in [C18](#c18-unresolved-evidence-material-questions-and-optional-findings).
-Issue #161 incremented `v2b-1` to `v2b-2` for the admission and refutation change recorded in
+Workflow identifier: `v2b-4`. Issue #160 increments `v2b-3` to `v2b-4` for the verification
+change recorded in [C19](#c19-isolated-verification-and-verdict-accounting): the verifier runs
+in a genuinely non-inheriting worker or verification is incomplete, candidates and ledger rows carry
+a risk kind and ledger rows a per-run id, and every candidate verdict and acquittal ruling is
+accounted mechanically, with an empty return a failure rather than a clean review. Issue #163
+incremented `v2b-2` to `v2b-3` for the verdict-routing and status semantics recorded in
+[C18](#c18-unresolved-evidence-material-questions-and-optional-findings). Issue #161 incremented
+`v2b-1` to `v2b-2` for the admission and refutation change recorded in
 [C17](#c17-removed-guarantees-put-unchanged-code-in-scope): unchanged code is introduced-here when
 the diff removed or weakened a guarantee it relied on, and a `pre-existing` refutation must compare
-the same path, trigger and governing guarantee at base and head. A `v2a-1`, `v2b-1` or `v2b-2`
-trailer remains readable: each bump changes the identifier, not the trailer vocabulary, so a prior
-round's finding ids and trailers stay legible as the historical state they record.
+the same path, trigger and governing guarantee at base and head. A `v2a-1`, `v2b-1`, `v2b-2` or
+`v2b-3` trailer remains readable: each bump changes the identifier, not the trailer vocabulary, so a
+prior round's finding ids and trailers stay legible as the historical state they record.
 
 ### The pole statement
 
@@ -107,6 +112,7 @@ inert, or harmful against that intent.
 | C16 | Validate finder ledger, manifest, and counts shape before verification. | A malformed finder report gets one shape-only retry, then makes its axis incomplete instead of entering verification unaudited. | [finder-report validator](scripts/validate_finder_report.py), [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
 | C17 | Admit unchanged code whose relied-on guarantee the diff removed, and require the same base/head comparison before a `pre-existing` refutation. | A byte-identical path safe at base and unsafe at head becomes a candidate citing both revisions and its consumer, while a path already unsafe at base is still refuted as pre-existing and a guarantee-preserving refactor still yields nothing. | [replay record](../../docs/research/audit-removed-guarantee-scope-2026-09-12.md), [assessment B3](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
 | C18 | Route an unsettled thing by settle / ask / record, name the five refutation bases, and gate deferral questions on the present decision. | An answerable claim is settled rather than asked, a published question is outcome-changing and unanswerable, an unresolved record never reads as safety, and a proven low-priority defect stays a `consider` finding. | [holdout evaluation (a), (d), (e)](../../docs/research/prototype-runs-holdout/evaluation.md), [assessment B2/B6/B8](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
+| C19 | Run the verifier in a non-inheriting worker, carry kind / impact / change and per-run ledger ids through the packet, and account every verdict and ruling mechanically. | Every candidate id the verifier was given has exactly one verdict and every related row exactly one ruling before any verdict is read; an empty return to a non-empty packet is a failure that withholds the affected candidates; a run without isolation publishes no confirmed finding; support text never reaches the worker while the requested repair does. | [accounting fixtures](scripts/account_verifier_return.py), [packet fixtures](scripts/test_build_verifier_prompt.py), [replay record](../../docs/research/audit-verifier-accounting-2026-09-12.md), [assessment B5](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
 
 ## The changes, mapped to evidence
 
@@ -287,7 +293,7 @@ Three changes target waste around that architecture. The orchestrator now reads 
 manifest, and base-branch guidance once, then gives both finders a byte-identical prompt prefix for
 cache reuse. The verifier follows claim-dependent call sites but stops expanding once decisive
 evidence supports a verdict. Both finder ledgers keep every hypothesis while limiting each row to
-four compact fields on one line. The two full-diff analyses and verification of every candidate
+four compact fields on one line (six since C19 added the per-run id and kind). The two full-diff analyses and verification of every candidate
 remain mandatory.
 
 C15 supersedes the cache-reuse claim above: the measured harness did not reuse that prefix.
@@ -760,6 +766,75 @@ Expected cost is ≈0: the added work is a read the investigator should already 
 refusals remove output rather than adding it. Specified by
 [issue #163](https://github.com/kamui/skills/issues/163). The workflow identifier advances to
 `v2b-3` with this change.
+
+### C19. Isolated verification and verdict accounting
+
+Two holes sat in the verification boundary, and both let a verifier's silence read as a verdict.
+Step 3 said that a verifier which "runs and returns nothing" is a clean review, so a worker that
+timed out, truncated, or answered only the first three of five candidates approved the rest by
+omission. And the only isolation mechanism was
+[`build_verifier_prompt.py`](scripts/build_verifier_prompt.py) stripping `support` from the prompt,
+which withholds the finder's argument from the text but cannot withhold a parent conversation from a
+worker that inherits it — a forked sub-agent that has already read the finder reports agrees with
+itself however clean its prompt is. The candidate schema compounded the second problem: without
+`kind`, `impact`, or the proposed `change`, a verifier could rule on a claim without being told what
+consequence was asserted or what repair was requested, and the later scope checks (#162) had
+nothing to read.
+
+Five edits, made as one packet-contract change. The candidate block gains `kind` (the routine
+line's seven risk kinds, minus `compatibility`, which the audit has no released-contract admission
+for yet), `impact`, and `change`, in a fixed thirteen-field order; the builder carries all three to
+the verifier and still removes `support` mechanically, so the persuasive text never reaches the
+worker while the raw citations and the requested repair do. The disposition ledger row gains a
+per-run id (`code-3`, `requirements-1`) and the same `kind` as its first two fields, so every ruling
+is matched back to one row unambiguously; the id lives for one run and is never the durable
+`code/…` finding id, which survives across rounds. The builder now also writes an **accounting
+packet** — every candidate id the verifier owes a verdict, every related acquittal row it owes a
+ruling — and a new [`account_verifier_return.py`](scripts/account_verifier_return.py) checks the
+return against it: exactly one well-formed verdict per candidate id, exactly one well-formed ruling
+per row id, and a refusal for any missing, duplicate, unexpected, or malformed record. The
+orchestrator gets one shape-only repair — the same verdicts in conforming shape — and never writes
+a verdict itself; after a second failure the ids the violations name are withheld and coverage says
+so, while ids no violation names have exactly one conforming record and still publish under the
+ordinary status precedence. A zero-record return to a non-empty packet is a failure that takes the
+same repair. An intentionally empty input — finders that returned no candidates — takes the explicit
+clean-review path in `SKILL.md` and dispatches no verifier, so the accounting script refuses an
+empty packet outright rather than treating an absent return as clean. `verify.md` gains an Isolation
+section adapted from the routine line's `verifier.md`: a genuinely non-inheriting worker,
+`fork_turns=none` where supported, with the pinned identity, the rule and spec pointers, and bounded
+inspection; where the runtime cannot provide it, mandatory verification is incomplete, every
+candidate is withheld, and nothing imitates independence in the parent.
+
+The old shapes are refused by name, never misread. The validator and builder both refuse a ten-field
+candidate as missing `kind` before `anchor`, and a four-field ledger row by count with the old
+grammar named, so a finder still writing the earlier contract is sent back once for the same review
+in shape rather than having its claim silently read as an id. The validator now also runs the
+builder's candidate parser, so a candidate-shape violation gets the same one-shot re-dispatch a
+ledger violation had; before, it surfaced at step 3 with no repair path. Prior findings on a
+re-review reach the verifier through the builder's `--prior` input in the same grammar, so they join
+the packet and owe a verdict like any candidate; the earlier text asked for them to be "added to the
+list" with no mechanism.
+
+Kept fixed: the `confirmed` / `plausible` / `refuted` vocabulary, the five refutation bases, the
+`holds` / `re-open` rulings, the related-only acquittal filter, the published finding shape and
+trailer (no `kind=` key is published; the trailer vocabulary is unchanged and prior trailers stay
+readable), and the verify-all posture — every candidate is mandatory, so there is no routing by
+kind. Calibration and the clean-verdict and follow-up transitions belong to #162 and #164.
+
+Evidence is mechanical where the change is mechanical, and a paper replay where it is policy. The
+accounting cases — two candidates and one related row all returned; an empty return, a missing last
+id, a duplicate id, an unknown id, a malformed verdict; a refutation without its basis; a `holds`
+citing only the row's own evidence; the empty-packet refusal — are CLI fixtures with asserted exit
+codes in the two scripts' self-tests, and the packet cases — support text absent from the emitted
+prompt with the requested repair present, and the same claim on both axes keeping two ids — are
+fixtures in the builder's test runner. The isolation case is an instruction replay in the [replay
+record](../../docs/research/audit-verifier-accounting-2026-09-12.md): it shows which rule text
+withholds the output when no isolated worker exists, and it is not runtime evidence that any harness
+provides the isolation or that an isolated verifier performs better. No reviewer was run for this
+change and it claims no recall or precision gain. Specified by
+[issue #160](https://github.com/kamui/skills/issues/160), under
+[epic #156](https://github.com/kamui/skills/issues/156), whose own text names the empty-output gap;
+the assessment's B5 row names the schema one. The workflow identifier advances to `v2b-4` with this change.
 
 ### Subtractions
 
