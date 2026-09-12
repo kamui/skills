@@ -24,11 +24,14 @@ before anyone has to answer it under time pressure. It is not the decision to ru
 
 ## Where the rest of it lives
 
-- The **prospective tooling** the requirements point at is
+- The **prospective tooling** the requirements point at sits in two places.
   [`bounded-discovery-readiness-2026-09-12/`](../bounded-discovery-readiness-2026-09-12/README.md)
-  (PRs #205 and #206): launch retention, per-role settlement, the mechanical sandbox rule, the
-  recorded-root shutdown gate, the uniform payload contract, the per-command network judgment and the
-  ledger's terminal `stop`. Every one is exercised by synthetic tests only.
+  holds the new programs — the recorded-root shutdown gate, the uniform payload contract and the
+  ledger's terminal `stop` (PRs #205 and #206). The coordinator
+  [`run_cell.py`](../bounded-discovery-pilot-2026-09-09/scripts/run_cell.py) holds the rest: launch
+  retention, per-role settlement, the mechanical sandbox rule and the contract binding (PRs #205 and
+  #206), and the per-command network judgment, which PR #197 added when #150 stopped.
+  Every one is exercised by synthetic tests only.
 - The **closed grid** it proposes to succeed is the [#149 preregistration](../bounded-discovery-runs-2026-09-08/preregistration.md),
   the [#151 closeout](../bounded-discovery-closeout-2026-09-10/README.md) and the
   [#153 decision](../bounded-discovery-decision-2026-09-11/README.md). All three are unchanged by this
@@ -40,13 +43,14 @@ Standard-library Python 3.9+ on macOS or Linux. Unpaid, offline, and reading onl
 
 ```sh
 python3 scripts/check_spec.py             # the committed record against this repository
-python3 scripts/check_spec.py --self-test # 16 CLI tests over synthetic records
+python3 scripts/check_spec.py --self-test # 19 CLI tests over synthetic records
 ```
 
-`check_spec.py` refuses a control or test path that no longer exists, a test name a file no longer
-defines, a `#199` gap that is missing or duplicated, a probe either list has drifted on, an
-unresolved row that records no open question, and any status asserting that a requirement is
-established, frozen, qualified or authorized. It checks the record's integrity. **It establishes
+`check_spec.py` refuses a control or test path that no longer exists or that leaves the repository, a
+test name a file no longer defines — parsed, so a `def` inside a docstring does not count — a `#199`
+gap that is missing or duplicated, a probe either list has drifted on, an unresolved row that records
+no open question, and any status asserting that a requirement is established, frozen, qualified or
+authorized. It checks the record's integrity. **It establishes
 nothing about a runtime, a target or a blind, and a clean exit is not readiness.**
 
 ## What has to happen before anything runs

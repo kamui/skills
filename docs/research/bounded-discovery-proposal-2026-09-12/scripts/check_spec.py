@@ -23,8 +23,12 @@ Checked:
 * ``tooling-delivered`` names at least one control and one test;
   ``specified-only`` names no test; ``unknown`` and ``budget-dependent`` name at
   least one open question, so an unresolved choice cannot read as a settled one;
-* every control path exists, and every ``path::test_name`` resolves to a file
-  that actually defines that test;
+* every control and test path is repository-relative and stays inside the
+  repository - an absolute path would be checked against the filesystem and never
+  against the repository, and ``..`` escapes it just as quietly - and each one
+  exists;
+* every ``path::test_name`` resolves to a file that *parses* and really defines
+  that test, so ``def test_x(`` inside a docstring cannot stand in for one;
 * every ``#199`` gap appears exactly once, ids are unique, and every id is
   discussed in the specification;
 * every probe a row claims is defined in the probe catalogue, and every probe the
@@ -50,6 +54,7 @@ cannot be read, named on stderr.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 from pathlib import Path
 import re
@@ -77,10 +82,51 @@ def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def defines_test(path: Path, name: str) -> bool:
-    """Whether this file defines that test, so a rename cannot leave a stale row."""
-    return re.search(r"^\s*def %s\s*\(" % re.escape(name), path.read_text(encoding="utf-8"),
-                     re.MULTILINE) is not None
+def path_problem(where: str, relative: str, repo_root: Path, kind: str):
+    """Resolve one repository-relative path, refusing anything that leaves the repository.
+
+    ``repo_root / "/somewhere"`` is ``/somewhere``: an absolute entry would be
+    checked against the filesystem and never against the repository at all, and
+    ``..`` escapes it just as quietly. Both are refused by shape, and the resolved
+    path is required to stay inside the root, so a symlink cannot smuggle one in.
+    """
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        return "%s names %s %s, which is not a repository-relative path" % (where, kind, relative)
+    path = repo_root / relative
+    try:
+        inside = path.resolve().is_relative_to(repo_root.resolve())
+    except OSError as exc:
+        return "%s names %s %s, which cannot be resolved: %s" % (where, kind, relative, exc)
+    if not inside:
+        return "%s names %s %s, which resolves outside the repository" % (where, kind, relative)
+    if not path.is_file():
+        return "%s names %s %s, which does not exist" % (where, kind, relative)
+    return None
+
+
+def test_problem(where: str, relative: str, name: str, repo_root: Path):
+    """Whether this file really defines that test, so a rename cannot leave a stale row.
+
+    Parsed rather than matched: ``def test_x(`` inside a docstring or a string
+    literal is text about a test, not a test, and a row citing one would pass a
+    textual check while naming nothing runnable.
+    """
+    problem = path_problem(where, relative, repo_root, "test file")
+    if problem:
+        return problem
+    path = repo_root / relative
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError) as exc:
+        return "%s names test file %s, which cannot be read: %s" % (where, relative, exc)
+    except SyntaxError as exc:
+        return "%s names test file %s, which does not parse: %s" % (where, relative, exc)
+    defined = {node.name for node in ast.walk(tree)
+               if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    if name not in defined:
+        return "%s names %s, which %s does not define" % (where, name, relative)
+    return None
 
 
 def catalogue_probes(path: Path) -> set:
@@ -118,7 +164,8 @@ def status_problems(where: str, status) -> list:
         return ["%s status must be a string" % where]
     if status in STATUSES:
         return []
-    claimed = next((word for word in CLAIMED if word in status.lower()), None)
+    claimed = next((word for word in CLAIMED
+                    if re.search(r"\b%s\b" % word, status.lower())), None)
     if claimed:
         return ["%s status %r claims the requirement is %s; a proposed specification "
                 "records what a freeze must still establish" % (where, status, claimed)]
@@ -153,18 +200,17 @@ def requirement_problems(requirement, repo_root: Path, probes: set,
                         "it cannot be read" % (where, status))
 
     for control in requirement["controls"]:
-        if not (repo_root / control).is_file():
-            problems.append("%s names control %s, which does not exist" % (where, control))
+        problem = path_problem(where, control, repo_root, "control")
+        if problem:
+            problems.append(problem)
     for entry in requirement["tests"]:
         if entry.count("::") != 1:
             problems.append("%s test %r is not <path>::<test name>" % (where, entry))
             continue
         relative, name = entry.split("::")
-        path = repo_root / relative
-        if not path.is_file():
-            problems.append("%s names test file %s, which does not exist" % (where, relative))
-        elif not defines_test(path, name):
-            problems.append("%s names %s, which %s does not define" % (where, name, relative))
+        problem = test_problem(where, relative, name, repo_root)
+        if problem:
+            problems.append(problem)
     for probe in requirement["probes"]:
         if probe not in probes:
             problems.append("%s claims probe %s, which the catalogue does not define"

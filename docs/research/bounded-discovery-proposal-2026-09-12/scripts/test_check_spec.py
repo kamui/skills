@@ -120,6 +120,37 @@ class CheckSpecTests(unittest.TestCase):
         self.assertIn("names control controls/absent.py",
                       self.check(self.mutated(controls=["controls/absent.py"])))
 
+    def test_a_path_that_leaves_the_repository_is_refused_rather_than_resolved(self):
+        outside = self.root.parent / ("outside-%s.py" % self.root.name)
+        outside.write_text("def test_alpha(self):\n    pass\n", encoding="utf-8")
+        self.addCleanup(outside.unlink)
+        for entry in (str(outside), "../%s" % outside.name):
+            self.assertIn("is not a repository-relative path",
+                          self.check(self.mutated(controls=[entry])))
+            self.assertIn("is not a repository-relative path",
+                          self.check(self.mutated(tests=["%s::test_alpha" % entry])))
+
+    def test_a_test_name_that_is_only_text_does_not_count_as_defined(self):
+        quote = '"' * 3
+        (self.root / "controls" / "test_thing.py").write_text("\n".join([
+            "NOTE = " + quote,
+            "def test_ghost(self):",
+            "    pass",
+            quote,
+            "",
+            "class T:",
+            "    def test_alpha(self):",
+            "        pass",
+            ""]), encoding="utf-8")
+        self.assertIn("names test_ghost, which controls/test_thing.py does not define",
+                      self.check(self.mutated(tests=["controls/test_thing.py::test_ghost"])))
+        self.assertEqual(self.check(expected=0), "")
+
+    def test_a_test_file_that_does_not_parse_is_refused(self):
+        (self.root / "controls" / "broken.py").write_text("def test_alpha(\n", encoding="utf-8")
+        self.assertIn("which does not parse",
+                      self.check(self.mutated(tests=["controls/broken.py::test_alpha"])))
+
     def test_every_gap_is_carried_exactly_once(self):
         document = copy.deepcopy(self.document)
         document["requirements"] = document["requirements"][:-1]

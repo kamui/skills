@@ -167,7 +167,7 @@ with (section 7, P01) before a freeze may name it.
   probes 1 and 5: request both configurations, observe them on every root and child assistant line,
   and repeat the observation inside the exact cell configuration. A per-call field or a definition
   created mid-session does not establish a child setting; a definition supplied at startup did, on the
-  pilot's runtime, and whether it still does is `unknown`.
+  #138 runtime, and whether it still does is `unknown`.
 - **Model identifiers and the effort vocabulary may have changed.** The freeze records the runtime's
   own identifiers verbatim; this document's strings are the pilot's and are not a claim about any
   current catalog.
@@ -197,7 +197,7 @@ the process and tool surface, the history surface, the network surface and promp
 ### 5.2 Reviewer isolation, and what changed under the evaluator's feet
 
 The control that actually holds is **absence**: the material is not on the machine while a cell runs.
-The pilot's isolation probes established that tightening to a restriction flag with a shell allow list
+#149's isolation probes established that tightening to a restriction flag with a shell allow list
 does not close the interpreter path — an allow-listed `python3` read a canary outside every permitted
 root and opened a raw socket — so confinement was never the control and must not be treated as one.
 
@@ -232,7 +232,7 @@ mandatory. Committed ciphertext may remain; without the key it is inert.
 - The pinned policy's **permitted omissions** are part of the treatment in every arm. A and B may
   legitimately dispatch no verifier under the pinned rules; those outcomes and their costs are counted,
   never forced into a batch and never excluded as substantive misses.
-- **Verification runs in the foreground in every arm, by choice.** The pilot's probe 10 established
+- **Verification runs in the foreground in every arm, by choice.** #149's probe 10 established
   that the runtime supported background sub-agents, so the constraint is the experiment's. Read the
   arms' elapsed distributions as the harness's timing, not the policy's production timing.
 - A **selector miss is part of the measured strategy** and never grounds for reselection.
@@ -349,7 +349,8 @@ released.
 
 ### gap-6 — Uniform payload production and validation across arms · `tooling-delivered`
 
-Every arm writes **one** payload file with **one** key set in every outcome: a `summary.body`, an
+Every arm writes **one** payload file under **one** seven-key envelope in every outcome —
+`schema_version`, `attempt_id`, `arm`, `outcome`, a `summary` whose `body` carries the review, an
 `items` array that always exists, and a `stop` member that is null or names why the attempt ended.
 Findings carry items and a body; a clean result carries the empty array and a body; a stopped or
 unavailable attempt carries the empty array and an empty body, and an item is never invented for one.
@@ -489,7 +490,7 @@ establish, what refuses it, and whether it needs paid model sessions.
 
 **No probe has been run and none may be run from this document.** A paid probe needs its own
 reservation on the study's ledger, inside a pre-freeze subtotal a freeze has not yet set. The pilot's
-thirteen capability probes cost $1.0418428 and retained $0.082158 of uncertainty; that is the closed
+#149 capability probes cost $1.0418428 and retained $0.082158 of uncertainty; that is the closed
 grid's figure, offered as an order of magnitude and not as a budget.
 
 **A probe that did not complete establishes nothing.** Any non-zero exit blocks its step: retain the
@@ -537,8 +538,8 @@ computing one, not a value.
 Accounting rules that are **not** budget-dependent and are carried forward unchanged:
 
 - **Settle from the runtime self-report and from the retained per-request records; when they differ,
-  charge the larger and record the difference as a reconciliation residual.** The pilot's runtime
-  billed a small untranscripted request in six of thirteen probes; meter from both sources rather than
+  charge the larger and record the difference as a reconciliation residual.** The #138 runtime billed a
+  small untranscripted request in six of #149's thirteen probes; meter from both sources rather than
   treating the gap as noise.
 - An attempt that produced **no self-report** settles from its transcript and retains one further
   request at the largest observed per-request cost as uncertainty.
@@ -579,7 +580,9 @@ explicit clean return.
 **Blockers force `inconclusive`:** unresolved material truth, a planned cell without a **valid
 completed** outcome — attempted but invalid or unfinished counts as missing, not present — or a changed
 clean/buggy mix. One thing outranks them: a supported raw false finding **rejects** the arm outright on
-its own evidence, and the verdict is `fail`, not `inconclusive`. A partial run reports what it measured.
+its own evidence, and the verdict is `fail`, not `inconclusive`. A criterion that merely fails does not
+outrank a blocker — that is how #153 reported C/A's measured 2.106 cost ratio as `inconclusive` rather
+than `fail`. A partial run reports what it measured.
 
 A complete positive screen recommends a **fresh confirmation study** against the then-current policy.
 Four targets and two replicates support neither an equivalence claim nor a promotion.
@@ -707,9 +710,9 @@ selector-miss rule; the target mix; the access classes; and the per-role settlem
 
 | # | Unknown | Resolved by |
 | --- | --- | --- |
-| U1 | The runtime: version, whether a shell exists under the restriction flag, whether a startup-supplied worker definition still binds child model and effort, whether the effort vocabulary is unchanged | P01–P16 |
+| U1 | The runtime: version, whether a shell exists under the restriction flag, whether a startup-supplied worker definition still binds child model and effort, whether the effort vocabulary is unchanged | P00–P16 |
 | U2 | Whether the proposed model candidates exist and are observably distinct on that runtime | P01 |
-| U3 | The rate card, the per-cell projection, and therefore every ceiling, the cap, the replacement allowance and the attempt cap | P01–P16 then section 9 |
+| U3 | The rate card, the per-cell projection, and therefore every ceiling, the cap, the replacement allowance and the attempt cap | P00–P16, then section 9 |
 | U4 | The isolation regime the future host can actually reach | P16 |
 | U5 | Whether per-role metering needs initial/follow-up verifier granularity for the intended analysis | freeze decision, gap-2 |
 | U6 | The four targets: none is selected, and none may be selected from this document | P24 |
@@ -721,6 +724,6 @@ selector-miss rule; the target mix; the access classes; and the per-role settlem
 - It selects no target, opens no seal, runs no probe and charges nothing.
 - It changes no historical artifact: the pilot, closeout, grading and decision bundles, their sealed
   material, the #138 ledger and #149's frozen inputs are all untouched, and #199 stays open.
-- It claims nothing about any runtime. Every runtime statement in it is about the pilot's runtime, at
-  the pilot's date, offered as evidence to re-probe.
+- It claims nothing about any runtime. Every runtime statement in it is about the runtime the #138
+  stages probed, at their dates, offered as evidence to re-probe.
 - It recommends no arm, sets no threshold and changes no default.

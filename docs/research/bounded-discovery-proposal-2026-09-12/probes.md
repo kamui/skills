@@ -13,7 +13,7 @@ anything has established. It is part of the [proposed specification](SPECIFICATI
   ledger under a pre-freeze subtotal a freeze has not yet set, so none of them may run from this
   document. **Unpaid** probes drive scripts, files and processes only.
 - **Antecedent** names the closed grid's evidence for the same control. It is *historical evidence to
-  re-probe*, never a current capability claim — including the pilot's own "enforced" verdicts.
+  re-probe*, never a current capability claim — including #149's own "enforced" verdicts.
 - Every probe's record is retained, with the exact command, its exit status and its output, and pinned
   by digest in the freeze manifest. Raw captures that can name a slot stay outside the repository;
   only counts and digests are committed.
