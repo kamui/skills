@@ -135,7 +135,7 @@ Each row has four compact fields on one line: a one-line claim, a falsification 
 
 An accurate fact that fails the candidate bar — a doc sentence broader than the code, an unused artifact, a scoping imprecision with no wrong outcome — is an **observation**, not a dropped thought. Return it separately: one sentence plus one `file:line` evidence pointer, stating what is, never what should be. Observations skip the verifier and publish only in the review summary's bounded `Observations` section.
 
-The bar is an absence of consequence you established, not one you assume (`finding-format.md` § Settle, ask, or record). A defect you proved is a candidate however small — `P3` and `consider` is still a finding — and a consequence you left open is a ledger row saying so, never an observation that reads as a clean bill of health.
+The bar is an absence of consequence you established, not one you assume (`finding-format.md` § Settle, ask, or record). A defect you proved is a candidate however small — `P3` and `consider` is still a finding. A consequence you left open is not an observation: where you can name a failure scenario it is a candidate and the verifier rules on it, and where you cannot it is an `acquitted` ledger row whose claim says the consequence was never established rather than that it was disproved — this axis has no `question` disposition, and the verifier may re-open the row on evidence, which is the outcome that record is for.
 
 ## Report tail
 
