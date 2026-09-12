@@ -22,7 +22,7 @@ nothing runs from this handoff.** [`evaluation.md`](evaluation.md) is the argume
 | [comparison.json](comparison.json) | the join: every attempt with its arm, target, validity, completion, cost by role, timing and per-attempt scoring fields |
 | [grid-v2.json](grid-v2.json), [grid-v1.json](grid-v1.json) | the frozen scorer's input, against graded truth and against the registers as frozen |
 | [scorecard-v2.md](scorecard-v2.md), [scorecard-v1.md](scorecard-v1.md) | the pinned `score_attempts.py`'s own output, unedited (JSON beside each) |
-| [comparison-data.md](comparison-data.md) | per-attempt rows, per-target recall, screens, matched cost, spend by role, elapsed time, where each defect was found or lost |
+| [comparison-data.md](comparison-data.md) | per-attempt rows with raw items, concepts claimed, duplicate and bundled concept counts, per-target recall, screens, matched cost, spend by role, elapsed time, where each defect was found or lost |
 | [loss-stages.json](loss-stages.json) | the coordinator's stage judgments per attempt and defect, with evidence pointers into the sealed records |
 | [evaluation.md](evaluation.md) | the screening verdicts, what was measured, the limits, and what would change the conclusion |
 | [decision.json](decision.json) | the decision record: outcome, per-criterion verdicts, blockers, what would change it |
@@ -55,7 +55,9 @@ nothing runs from this handoff.** [`evaluation.md`](evaluation.md) is the argume
    schedule and the redaction map (cross-checked against each other and against #151's manifest);
    operational validity from the fidelity assessment (the map deliberately carries none); completion,
    cost and elapsed time from the manifest and reconciliation, including the per-role split; and the
-   per-attempt scoring fields from the sealed `derived-fields-amended-1.json`. Truth for the two
+   per-attempt scoring fields from the sealed `derived-fields-amended-1.json`; the duplicate-concept
+   and bundled-item counts come from the revealed ruling tables' item-to-concept mapping with the
+   amendments laid over by item reference, cross-checked against the derived fields. Truth for the two
    attempted slots comes from the derived fields (register status, `v1` ids, ids after grading) and
    for the two unattempted slots from their registers; the join refuses any disagreement.
 4. **Score.** The pinned `score_attempts.py`, its digest checked against the frozen manifest, over
@@ -116,7 +118,7 @@ stage's reviews have been.
 
 ## Scripts
 
-Standard-library Python 3.9+, macOS and Linux, with `--self-test` (48 checks, including CLI exit
+Standard-library Python 3.9+, macOS and Linux, with `--self-test` (52 checks, including CLI exit
 codes through `subprocess`):
 
 | Command | What it does |

@@ -403,15 +403,56 @@ def parse_register(text: str) -> dict:
     return {"status": status, "defect_ids": defects, "verdict": verdict.strip()}
 
 
+def amended_items(rulings: dict, amendments: list) -> dict:
+    """Every ruled item per packet, with each versioned amendment laid over the frozen table by
+    item_ref exactly as the grading stage's derive step does: an amendment replaces the whole item."""
+    replacements = {}
+    for amendment in amendments:
+        for item in amendment.get("items") or []:
+            replacements[item["item_ref"]] = item
+    out = {}
+    for packet in rulings.get("packets") or []:
+        out[packet["packet_id"]] = [replacements.get(item["item_ref"], item) for item in packet.get("items") or []]
+    return out
+
+
+def concept_counts(items: list) -> dict:
+    """Duplicate-concept counts for one attempt, from its item-to-concept mapping (method section
+    4): a second item on a concept already claimed is a duplicate, counted once per extra item;
+    one item that names several concepts is bundled, not duplicated. Both are reported, and a zero
+    is a count over the ruled items, never an omission."""
+    per_concept = {}
+    per_concept_false = {}
+    bundled = 0
+    for item in items:
+        concepts = [item.get("concept")] + [extra.get("concept") for extra in item.get("additional_concepts") or []]
+        concepts = [c for c in concepts if c]
+        if len(concepts) > 1:
+            bundled += 1
+        for concept in concepts:
+            per_concept[concept] = per_concept.get(concept, 0) + 1
+            if item.get("ruling") == "false":
+                per_concept_false[concept] = per_concept_false.get(concept, 0) + 1
+    return {
+        "items_ruled": len(items),
+        "concepts_claimed": len(per_concept),
+        "duplicate_items_on_a_concept": sum(n - 1 for n in per_concept.values()),
+        "duplicate_false_items": sum(n - 1 for n in per_concept_false.values()),
+        "bundled_concept_items": bundled,
+        "items_per_concept": dict(sorted(per_concept.items())),
+    }
+
+
 def claims_clean(status: str, clean_claim: bool) -> bool:
     return bool(clean_claim) or status == "Approved"
 
 
 def build_join(schedule: dict, manifest: dict, fidelity: dict, reconciliation: dict, mapping: dict,
                derived: dict, registers: dict, no_packet: dict, frozen: dict,
-               timing: dict = None, exposure: dict = None) -> dict:
+               timing: dict = None, exposure: dict = None, items_by_packet: dict = None) -> dict:
     """Join every operational record to the frozen rulings, keyed by attempt_ref."""
     problems = []
+    items_by_packet = items_by_packet or {}
     by_position = {c["position"]: c for c in schedule["ordered_cells"]}
     slot_of_ref = {v: k for k, v in mapping["target_masks"].items()}
     packets_by_id = {}
@@ -489,6 +530,22 @@ def build_join(schedule: dict, manifest: dict, fidelity: dict, reconciliation: d
             else:
                 status, clean_claim, recovered, sufficient, partial = "Incomplete", False, [], [], []
             buggy = t["status"] == "buggy"
+            if packet:
+                if row["packet_id"] not in items_by_packet:
+                    problems.append("%s: packet %s has no ruled items to count concepts over" % (ref, row["packet_id"][:8]))
+                counts = concept_counts(items_by_packet.get(row["packet_id"], []))
+                if counts["items_ruled"] != packet["raw_items"]:
+                    problems.append("%s: %d ruled items against %d raw items in the derived fields"
+                                    % (ref, counts["items_ruled"], packet["raw_items"]))
+                if counts["bundled_concept_items"] != packet.get("bundled_concept_items", 0):
+                    problems.append("%s: bundled items %d against the derived fields' %d"
+                                    % (ref, counts["bundled_concept_items"], packet.get("bundled_concept_items", 0)))
+                if packet["raw_false_finding_items"] - packet["unique_false_claims"] != counts["duplicate_false_items"]:
+                    problems.append("%s: duplicate false items %d against the derived fields' raw-minus-unique %d"
+                                    % (ref, counts["duplicate_false_items"],
+                                       packet["raw_false_finding_items"] - packet["unique_false_claims"]))
+            else:
+                counts = concept_counts([])
             entry = {
                 "position": cell["position"], "attempt_ref": ref, "ordinal": attempt["ordinal"],
                 "attempt_id": "issue-138-%s-attempt-%d" % (sched["cell_id"], attempt["ordinal"]),
@@ -511,6 +568,11 @@ def build_join(schedule: dict, manifest: dict, fidelity: dict, reconciliation: d
                 "sufficient_outcome_recall_v2": (len(sufficient) / len(t["defect_ids_v2"])) if buggy else None,
                 "fix_sufficiency": (len(sufficient) / len(recovered)) if recovered else None,
                 "false_clean": buggy and claims_clean(status, clean_claim),
+                "concepts_claimed": counts["concepts_claimed"],
+                "duplicate_items_on_a_concept": counts["duplicate_items_on_a_concept"],
+                "duplicate_false_items": counts["duplicate_false_items"],
+                "bundled_concept_items": counts["bundled_concept_items"],
+                "items_per_concept": counts["items_per_concept"],
                 "raw_items": packet["raw_items"] if packet else 0,
                 "raw_finding_items": packet["raw_finding_items"] if packet else 0,
                 "raw_false_finding_items": packet["raw_false_finding_items"] if packet else 0,
@@ -676,6 +738,11 @@ def join(args) -> None:
     schedule = load(bundle / "revealed" / "schedule.json")
     mapping = load(bundle / "revealed" / "packets" / "redaction-map.json")
     derived = load(bundle / "revealed" / "amendment-1" / "derived-fields-amended-1.json")
+    items_by_packet = {}
+    for target in ("A", "B"):
+        items_by_packet.update(amended_items(
+            load(bundle / "revealed" / "rulings" / ("rulings-target-%s.json" % target)),
+            [load(bundle / "revealed" / "amendment-1" / ("amendment-1-target-%s.json" % target))]))
     registers = {}
     for path in sorted((bundle / "revealed" / "targets").glob("slot-*-register.md")):
         registers[path.name.split("-register")[0]] = read_text(path)
@@ -691,7 +758,7 @@ def join(args) -> None:
         for row in load(args.loss_stages).get("verifier_exposure") or []:
             exposure[row["attempt_ref"]] = row
     comparison = build_join(schedule, manifest, fidelity, reconciliation, mapping, derived, registers,
-                            no_packet, frozen, timing, exposure)
+                            no_packet, frozen, timing, exposure, items_by_packet)
     comparison["derived_fields"] = "revealed/amendment-1/derived-fields-amended-1.json"
     comparison["closeout"] = {"manifest": str(closeout / "manifest.json"),
                               "fidelity_assessment": str(closeout / "fidelity-assessment.json"),
@@ -815,27 +882,34 @@ def render_comparison(comparison: dict, v2: dict, v1: dict, losses: dict) -> str
               "frozen. `Valid` is #151's operational validity: no attempt is `valid`, because the launch argv was never",
               "retained (five `unresolved`) or a protocol rule was broken (three `invalid`). False clean is a property of",
               "the published status on a buggy target. `V` is whether a verifier batch ran and what it received.", "",
-              "| Pos | Attempt | Cell | Arm | Validity | Completion | Status | `D_t` | `R_i` (v2) | Recall v2 | Recall v1 | Sufficient / partial | False findings | False clean | V | Settled |",
-              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+              "Duplicates are items beyond the first on a concept the attempt already claimed (supported or",
+              "false alike); bundled is one item naming more than one concept, which is not a duplicate. Both are",
+              "counted over the ruled items, so a zero is established, not omitted.", "",
+              "| Pos | Attempt | Cell | Arm | Validity | Completion | Status | `D_t` | `R_i` (v2) | Recall v2 | Recall v1 | Sufficient / partial | Raw items | Concepts | Duplicates | Bundled | False findings | False clean | V | Settled |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for a in attempts:
         buggy = a["target_status"] == "buggy"
         ver = a.get("verifier") or {}
         vtext = {"clean-verdict": "clean-verdict batch", "candidate": "candidate batch (%d, %d finder-origin)"
                  % (ver.get("candidates_received", 0), ver.get("finder_origin_received", 0)),
                  "none": "none (policy)"}.get(ver.get("batch"), "n/a")
-        lines.append("| %d | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %d | %s | %s | $%s |" % (
+        lines.append("| %d | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %d | %d | %d | %d | %d | %s | %s | $%s |" % (
             a["position"], a["attempt_ref"], a["cell_id"], a["arm"], a["operational_validity"], a["completion"],
             a["status"], len(a["defects_v2"]) if buggy else "0 (clean)",
             ", ".join(a["recovered_defect_ids"]) or "—",
             fmt(a["recall_v2"]) if buggy else "N/A", fmt(a["recall_v1"]) if buggy else "N/A",
             ("%s / %s" % (", ".join(a["sufficient_fix_defect_ids"]) or "—", ", ".join(a["partial_fix_defect_ids"]) or "—")) if a["recovered_defect_ids"] else "—",
+            a["raw_items"], a["concepts_claimed"], a["duplicate_items_on_a_concept"], a["bundled_concept_items"],
             a["raw_false_finding_items"], ("**yes**" if a["false_clean"] else "no") if buggy else "N/A",
             vtext, a["settled_usd"]))
-    lines += ["", "Raw items across the six packets: %d, of which %d findings, %d false findings, %d false non-finding items, %d unresolved rulings, %d action errors, %d priority errors, %d unsupported explicit safety claims."
+    lines += ["", "Raw items across the six packets: %d, of which %d findings, %d false findings, %d false non-finding items, %d unresolved rulings, %d action errors, %d priority errors, %d unsupported explicit safety claims. Concepts claimed: %d over %d items; duplicate items on a concept: %d (of them false: %d); bundled items: %d."
               % (sum(a["raw_items"] for a in attempts), sum(a["raw_finding_items"] for a in attempts),
                  sum(a["raw_false_finding_items"] for a in attempts), sum(a["raw_false_non_finding_items"] for a in attempts),
                  sum(a["unresolved_adjudications"] for a in attempts), sum(a["action_errors"] for a in attempts),
-                 sum(a["priority_errors"] for a in attempts), sum(a["unsupported_safety_claims"] for a in attempts)), ""]
+                 sum(a["priority_errors"] for a in attempts), sum(a["unsupported_safety_claims"] for a in attempts),
+                 sum(a["concepts_claimed"] for a in attempts), sum(a["raw_items"] for a in attempts),
+                 sum(a["duplicate_items_on_a_concept"] for a in attempts), sum(a["duplicate_false_items"] for a in attempts),
+                 sum(a["bundled_concept_items"] for a in attempts)), ""]
     lines += ["## 3. Arm scorecards (frozen scorer, graded truth)", "",
               "| Arm | Attempts | Valid completed | Completion | Macro recall (all) | Macro recall (completed) | False clean | Raw false findings | Sufficient-outcome recall | Fix sufficiency | Billed |",
               "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
@@ -1131,8 +1205,20 @@ def synthetic() -> dict:
         "slot-3": "# Target\n\n# Verdict\n\n1 material defect.\n\n# Defect register\n\n## GT-y1: something\n"}
     no_packet = {"attempts": [{"attempt_ref": "position-01-attempt-1"}]}
     frozen = {"experiment_id": "synthetic", "cells": {"cell_ids": [c["cell_id"] for c in schedule["ordered_cells"]] + ["slot-3-A-replicate-1"]}}
+    def item(ref, concept, ruling="supported", extra=None):
+        record = {"item_ref": ref, "kind": "finding", "ruling": ruling, "concept": concept}
+        if extra:
+            record["additional_concepts"] = [{"concept": e} for e in extra]
+        return record
+    items_by_packet = {"p1": [], "p2": [], "p3": [],
+                       "p4": [item("p4/r1", "GT-x1"), item("p4/r2", "GT-x2")],
+                       "p5": [item("p5/r1", "GT-x1", extra=["GT-x2"]), item("p5/r2", "GT-x1")]}
+    derived["targets"]["<target-B>"]["packets"][2]["bundled_concept_items"] = 1
+    derived["targets"]["<target-B>"]["packets"][2]["raw_items"] = 2
+    derived["targets"]["<target-B>"]["packets"][2]["raw_finding_items"] = 2
     return dict(schedule=schedule, manifest=manifest, fidelity=fidelity, reconciliation=reconciliation,
-                mapping=mapping, derived=derived, registers=registers, no_packet=no_packet, frozen=frozen)
+                mapping=mapping, derived=derived, registers=registers, no_packet=no_packet, frozen=frozen,
+                items_by_packet=items_by_packet)
 
 
 def self_test() -> int:
@@ -1181,6 +1267,30 @@ def self_test() -> int:
     check("2k the v1 grid intersects recovered and sufficient ids with the v1 register",
           [a for a in grid1["attempts"] if a["attempt_ref"] == "position-04-attempt-1"][0]["sufficient_fix_defect_ids"] == []
           and grid1["targets"]["slot-1"]["defect_ids"] == ["GT-x1"])
+
+    check("2l duplicate and bundled concept counts come from the ruled items",
+          rows["position-04-attempt-1"]["duplicate_items_on_a_concept"] == 0 and rows["position-04-attempt-1"]["concepts_claimed"] == 2
+          and rows["position-05-attempt-1"]["duplicate_items_on_a_concept"] == 1 and rows["position-05-attempt-1"]["bundled_concept_items"] == 1
+          and rows["position-05-attempt-1"]["concepts_claimed"] == 2 and rows["position-01-attempt-1"]["concepts_claimed"] == 0)
+    # 2m. concept_counts on the method's own cases
+    two_supported = [{"item_ref": "a/r1", "ruling": "supported", "concept": "GT-1"}, {"item_ref": "a/r2", "ruling": "supported", "concept": "GT-1"}]
+    two_false = [{"item_ref": "a/r1", "ruling": "false", "concept": "F1"}, {"item_ref": "a/r2", "ruling": "false", "concept": "F1"}]
+    bundled = [{"item_ref": "a/r1", "ruling": "supported", "concept": "GT-1", "additional_concepts": [{"concept": "GT-2"}]}]
+    c1, c2, c3 = concept_counts(two_supported), concept_counts(two_false), concept_counts(bundled)
+    check("2m a supported duplicate pair is one concept and one duplicate; a false pair likewise and a false duplicate; a bundled item is neither",
+          (c1["concepts_claimed"], c1["duplicate_items_on_a_concept"], c1["duplicate_false_items"]) == (1, 1, 0)
+          and (c2["concepts_claimed"], c2["duplicate_items_on_a_concept"], c2["duplicate_false_items"]) == (1, 1, 1)
+          and (c3["concepts_claimed"], c3["duplicate_items_on_a_concept"], c3["bundled_concept_items"]) == (2, 0, 1))
+    amended = amended_items({"packets": [{"packet_id": "p", "items": [{"item_ref": "p/r1", "ruling": "false", "concept": "F1"}]}]},
+                            [{"items": [{"item_ref": "p/r1", "ruling": "supported", "concept": "N2"}]}])
+    check("2n an amendment replaces the item by item_ref before counting", amended["p"][0]["concept"] == "N2" and amended["p"][0]["ruling"] == "supported")
+    bad = synthetic()
+    bad["items_by_packet"]["p4"].append(item_dup := {"item_ref": "p4/r3", "kind": "finding", "ruling": "supported", "concept": "GT-x1"})
+    try:
+        build_join(**bad)
+        check("2o ruled items that disagree with the derived raw count are refused", False)
+    except Failed as exc:
+        check("2o ruled items that disagree with the derived raw count are refused", "ruled items against" in str(exc))
 
     # 3. A join that disagrees with itself is refused.
     bad = synthetic()
