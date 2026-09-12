@@ -1,0 +1,11 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-A-clean2",
+  "arm": "A",
+  "outcome": "clean",
+  "summary": {
+    "body": "This is a comment-only change to `last_n` — no code lines are touched other than the comment above `return items[-n:]`. I verified the claim: for `n` greater than `len(items)`, Python's slice `items[-n:]` clamps the negative start index to `0`, so it returns the entire list, exactly as the new comment states. That matches the stated PR intent (\"document behaviour when `n` exceeds the list length, no behaviour change\") and there is no discrepancy between the comment and the actual slicing semantics.\n\nNo material defect found. (Minor aside, not blocking: the comment doesn't address `n == 0` or negative `n`, where `items[-0:]` and `items[-n:]` with negative `n` don't behave like \"last n items\" — but that's outside the scope this comment explicitly documents, so I'm not raising it as a finding.)"
+  },
+  "items": [],
+  "stop": null
+}

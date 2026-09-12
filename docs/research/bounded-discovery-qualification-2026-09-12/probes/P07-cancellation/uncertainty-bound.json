@@ -1,0 +1,10 @@
+{
+  "probe": "P07",
+  "why_a_bound_and_not_a_charge": "The cancelled session produced no result envelope (SIGTERM leaves none) and its transcript carries zero assistant lines, so there are no retained per-request records to settle from either. #149's rule - settle from the transcript and retain one further request as uncertainty - assumed the transcript held something. Here it holds nothing, so the whole cost is unknown and all of it is retained.",
+  "largest_per_request_cost_observed_in_this_bundle_usd": "0.05556",
+  "largest_observed_in": "P15b-restricted-without-tools-bash, claude-sonnet-5, priced at the pinned rate card",
+  "requests_assumed_in_flight": 2,
+  "retained_uncertainty_usd": "0.11112",
+  "settled_actual_usd": "0",
+  "rule": "Retained uncertainty comes off the remaining allowance and a terminal stop does not release it. This figure is deliberately conservative: it is an upper bound on an unknown, not an estimate of it."
+}

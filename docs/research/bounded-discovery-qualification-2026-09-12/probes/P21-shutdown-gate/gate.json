@@ -1,0 +1,164 @@
+{
+  "all_reviewers_stopped": true,
+  "artifact_id": "bounded-discovery-shutdown-gate",
+  "blocking": [],
+  "check_classes": "every check is required. A check establishes its condition only when its probe completed and the condition held; an incomplete probe, an unreachable runtime, a missing tool, a timeout and a root record that is not the pinned one all block clearance",
+  "checks": [
+    {
+      "check": "the root record is the one pinned before dispatch",
+      "class": "required",
+      "detail": "the root record matches the digest pinned outside the seal",
+      "established": true,
+      "outcome": "passed",
+      "passed": true,
+      "pinned_sha256": "6f6a6fcd63b937df5c399588754275fa0da001b0823dcf9693b82c7b49dde76c",
+      "probe_completed": true,
+      "record_sha256": "6f6a6fcd63b937df5c399588754275fa0da001b0823dcf9693b82c7b49dde76c"
+    },
+    {
+      "check": "the root record is retained outside the evidence seal",
+      "class": "required",
+      "detail": "the root record is retained outside the sealed evidence",
+      "established": true,
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true,
+      "record": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P21-shutdown-gate/roots-record.json",
+      "seal": "/Users/jack/.config/bounded-discovery/issue-207"
+    },
+    {
+      "check": "every recorded cell root is absent",
+      "class": "required",
+      "detail": "every recorded cell root is gone from its parent",
+      "established": true,
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true,
+      "roots": [
+        "/private/tmp/bd207-probes"
+      ],
+      "roots_present": 0
+    },
+    {
+      "check": "no reviewer or coordinator process is running",
+      "class": "required",
+      "command": [
+        "ps",
+        "-eo",
+        "pid=,ppid=,command="
+      ],
+      "detail": "no process outside this gate's own ancestry names a recorded cell root, a cell container or the coordinator; 3 in this gate's own ancestry matched and were excluded",
+      "established": true,
+      "exit_code": 0,
+      "markers": [
+        "/private/tmp/bd207-probes",
+        "bd207-cell",
+        "run_cell.py"
+      ],
+      "match_count": 0,
+      "outcome": "passed",
+      "output_sha256": "d485b3ff87dfc1b0e1e40e31ae0ce2dda79bceab9a7f575360cc3cc83b0656fe",
+      "own_ancestry_match_count": 3,
+      "passed": true,
+      "probe_completed": true,
+      "probe_ran": true,
+      "timed_out": false
+    },
+    {
+      "check": "no cell container is running",
+      "class": "required",
+      "command": [
+        "docker",
+        "ps",
+        "-a",
+        "--no-trunc",
+        "--format",
+        "{{.Names}}\t{{.Status}}"
+      ],
+      "container_prefix": "bd207-cell",
+      "detail": "the runtime lists no container named bd207-cell*",
+      "established": true,
+      "exit_code": 0,
+      "match_count": 0,
+      "outcome": "passed",
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true,
+      "probe_completed": true,
+      "probe_ran": true,
+      "timed_out": false
+    },
+    {
+      "attempts_closed": 0,
+      "attempts_opened": 0,
+      "check": "every opened attempt is closed on the ledger",
+      "class": "required",
+      "detail": "0 attempt-open events, 0 attempt-close events, 0 unclosed",
+      "established": true,
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true,
+      "unclosed_count": 0
+    },
+    {
+      "check": "no budget reservation is outstanding",
+      "class": "required",
+      "detail": "reservation deltas sum to 0.00 and the ledger header carries reserved_usd 0.00; an in-flight dispatch would hold a live reservation",
+      "established": true,
+      "header_reserved_usd": "0.00",
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true,
+      "reservation_delta_sum_usd": "0.00"
+    },
+    {
+      "check": "the ledger chain is unbroken through its last event",
+      "class": "required",
+      "detail": "28 events chain from the open event",
+      "established": true,
+      "event_count": 28,
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true
+    },
+    {
+      "check": "the ledger records a terminal stop",
+      "class": "required",
+      "detail": "the ledger carries its one terminal stop, so no further dispatch can be reserved",
+      "established": true,
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true,
+      "stop_events": 1
+    },
+    {
+      "check": "no ledger event was appended after the host was probed",
+      "class": "required",
+      "detail": "the newest ledger event is 2026-09-12T10:43:49.583473+00:00, before the host was probed at 2026-09-12T10:44:32.330492+00:00",
+      "established": true,
+      "latest_event_at": "2026-09-12T10:43:49.583473+00:00",
+      "outcome": "passed",
+      "passed": true,
+      "probe_completed": true,
+      "probes_captured_at": "2026-09-12T10:44:32.330492+00:00"
+    },
+    {
+      "check": "the host probes were captured for this gate",
+      "class": "required",
+      "detail": "the host was probed 0 seconds before this gate, within the 3600 second bound",
+      "established": true,
+      "max_probe_age_seconds": 3600,
+      "outcome": "passed",
+      "passed": true,
+      "probe_age_seconds": 0.04,
+      "probe_completed": true,
+      "probes_captured_at": "2026-09-12T10:44:32.330492+00:00"
+    }
+  ],
+  "every_check_established": true,
+  "ledger_sha256": "a355770a4d1b525313a92b5b8530586da792f976750a8d3f138d9b6d51f75919",
+  "observed_at": "2026-09-12T10:44:32.370014+00:00",
+  "probes_captured_at": "2026-09-12T10:44:32.330492+00:00",
+  "raw_capture": "retained separately and sealed with the evidence: a process command line or a container name can name a target slot",
+  "schema_version": "bounded-discovery-v1",
+  "seal_may_be_opened": true
+}

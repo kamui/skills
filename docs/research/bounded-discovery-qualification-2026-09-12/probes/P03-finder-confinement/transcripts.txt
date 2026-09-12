@@ -1,0 +1,2 @@
+session 0e7877bb-7e75-48f8-b5a3-5d1a07420358 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p03-store/0e7877bb-7e75-48f8-b5a3-5d1a07420358.jsonl sha256 42d8d77f6d28376d7b265a6313221a3999da8bfd7fd04f8bafd030df3f9dc0ae

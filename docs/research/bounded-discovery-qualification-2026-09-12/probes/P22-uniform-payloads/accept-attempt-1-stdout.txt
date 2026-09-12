@@ -1,0 +1,23 @@
+== arm A findings (completion complete) ==
+items[0].anchor: side is required in every arm's payload
+== arm A clean (completion complete) ==
+attempt_id: payload says 'probe-p22-A-clean2', the attempt is 'probe-p22-A-clean'
+== arm A stopped (completion stopped-budget) ==
+{"outcome": "stopped", "item_count": 0, "produced_by": "coordinator", "payload_sha256": "8ce3e10a6394b915722155fc92e9bfd005f704e2b0270438cd55924befd54092"}
+== arm B findings (completion complete) ==
+items[0].anchor: side is required in every arm's payload
+== arm B clean (completion complete) ==
+attempt_id: payload says 'probe-p22-B-clean2', the attempt is 'probe-p22-B-clean'
+== arm B stopped (completion stopped-budget) ==
+{"outcome": "stopped", "item_count": 0, "produced_by": "coordinator", "payload_sha256": "04ba57b9061aaae43a30334db6527d5ea495b3cec7a7970bd61ae422f666d005"}
+== arm C findings (completion complete) ==
+summary: trailer is not part of the frozen contract
+items[0].trailer: must not be empty
+items[0].anchor: side is required in every arm's payload
+== arm C clean (completion complete) ==
+attempt_id: payload says 'probe-p22-C-clean2', the attempt is 'probe-p22-C-clean'
+== arm C stopped (completion stopped-budget) ==
+{"outcome": "stopped", "item_count": 0, "produced_by": "coordinator", "payload_sha256": "16bfbc2e624466ce70f92297ebff2cd8f9fab27ecf39ef29068d6ca499b9dd84"}
+== uniformity over every receipt, before masking ==
+[Errno 2] No such file or directory: '/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/receipts/A-findings.receipt.json'
+uniformity exit=0

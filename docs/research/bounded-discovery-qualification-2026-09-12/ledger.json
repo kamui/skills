@@ -1,0 +1,633 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "experiment_id": "issue-207-qualification",
+  "owner": "kamui",
+  "currency": "USD",
+  "total_ceiling_usd": "100.00",
+  "pre_freeze_ceiling_usd": "15.00",
+  "frozen_total_cap_usd": null,
+  "grading_closeout_reserve_usd": null,
+  "actual_usd": "1.342962099999999994",
+  "reserved_usd": "0.00",
+  "uncertainty_usd": "0.11112",
+  "pre_freeze_actual_usd": "1.342962099999999994",
+  "pre_freeze_reserved_usd": "0.00",
+  "planned_cells": 24,
+  "attempts_dispatched": 0,
+  "replacement_limit": 0,
+  "attempt_limit": 0,
+  "events": [
+    {
+      "event_id": "issue-207-qualification-0001",
+      "previous_event_id": null,
+      "observed_at": "2026-09-12T09:51:28.894521+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "open",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [],
+      "reason": "Opened before any chargeable qualification operation, for #207's freeze gate under #199. This is the study's own ledger: the #138 ledger is closed at #153's figures and nothing here appends to it. Session authorization is USD 100.00 for target preparation and capability probes only, recorded as total_ceiling_usd; the pinned implementation clamps pre-freeze spend to USD 15.00 and that clamp, not the authorization, is the binding constraint. attempt_limit and replacement_limit are 0 because no attempt cap or replacement allowance has been computed from requalified rates, so this ledger refuses every review dispatch. No cap-freeze and no grading/closeout reserve: the study is not frozen and no grid is authorized."
+    },
+    {
+      "event_id": "255abf2b-8361-49f8-9f29-f01219d0980e",
+      "previous_event_id": "issue-207-qualification-0001",
+      "observed_at": "2026-09-12T09:51:28.945552+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "x"
+      ],
+      "reservation_id": "probe-dryrun",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.01",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "x"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "d04e09cc-3bdb-4f53-91e1-ae6cf457a248",
+      "previous_event_id": "255abf2b-8361-49f8-9f29-f01219d0980e",
+      "observed_at": "2026-09-12T09:51:41.218395+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P27-ledger-smoke/verdict.json: reserve/settle smoke test of the pinned budget.py against this study's own ledger; no model session ran and nothing was charged"
+      ],
+      "reservation_id": "probe-dryrun",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "-0.01",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P27-ledger-smoke/verdict.json: reserve/settle smoke test of the pinned budget.py against this study's own ledger; no model session ran and nothing was charged"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "fea24aba-873c-4dd0-8b6b-86731932959b",
+      "previous_event_id": "d04e09cc-3bdb-4f53-91e1-ae6cf457a248",
+      "observed_at": "2026-09-12T09:57:49.834111+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P15a-restricted-with-tools-bash/launch.json"
+      ],
+      "reservation_id": "P15a-shell-under-restriction",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.30",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P15a-restricted-with-tools-bash/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "c028d638-c268-4da9-99f1-fe1e3de916d8",
+      "previous_event_id": "fea24aba-873c-4dd0-8b6b-86731932959b",
+      "observed_at": "2026-09-12T09:57:49.876391+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P15b-restricted-without-tools-bash/launch.json"
+      ],
+      "reservation_id": "P15b-shell-without-tools-bash",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.30",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P15b-restricted-without-tools-bash/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "b2f9c0e1-660a-4786-8091-507ff88016e8",
+      "previous_event_id": "c028d638-c268-4da9-99f1-fe1e3de916d8",
+      "observed_at": "2026-09-12T09:59:54.977961+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P15a-restricted-with-tools-bash/metering.json"
+      ],
+      "reservation_id": "P15a-shell-under-restriction",
+      "actual_delta_usd": "0.0408200",
+      "reservation_delta_usd": "-0.30",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P15a-restricted-with-tools-bash/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "83e077bc-f1da-43a9-9d73-605d998e50ac",
+      "previous_event_id": "b2f9c0e1-660a-4786-8091-507ff88016e8",
+      "observed_at": "2026-09-12T09:59:55.018801+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P15b-restricted-without-tools-bash/metering.json"
+      ],
+      "reservation_id": "P15b-shell-without-tools-bash",
+      "actual_delta_usd": "0.0615888",
+      "reservation_delta_usd": "-0.30",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P15b-restricted-without-tools-bash/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "67716e15-8854-43e2-84c6-688346f0c6b8",
+      "previous_event_id": "83e077bc-f1da-43a9-9d73-605d998e50ac",
+      "observed_at": "2026-09-12T10:01:01.691618+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P01-P04-P11-cell-configuration/launch.json"
+      ],
+      "reservation_id": "P01-cell-configuration",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P01-P04-P11-cell-configuration/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "9959173f-70a0-4d4e-9c4d-55587abc03a8",
+      "previous_event_id": "67716e15-8854-43e2-84c6-688346f0c6b8",
+      "observed_at": "2026-09-12T10:01:54.323213+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P01-P04-P11-cell-configuration/metering.json"
+      ],
+      "reservation_id": "P01-cell-configuration",
+      "actual_delta_usd": "0.05071915",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P01-P04-P11-cell-configuration/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "c2819373-3571-4361-8168-23358c1ebd20",
+      "previous_event_id": "9959173f-70a0-4d4e-9c4d-55587abc03a8",
+      "observed_at": "2026-09-12T10:02:26.815877+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P03-finder-confinement/launch.json"
+      ],
+      "reservation_id": "P03-finder-confinement",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P03-finder-confinement/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "5353226a-2e78-456c-a3b3-1e469494921a",
+      "previous_event_id": "c2819373-3571-4361-8168-23358c1ebd20",
+      "observed_at": "2026-09-12T10:02:53.233125+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P03-finder-confinement/metering.json"
+      ],
+      "reservation_id": "P03-finder-confinement",
+      "actual_delta_usd": "0.0705595",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P03-finder-confinement/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "03478c4e-2981-428d-8c01-0b930e008bad",
+      "previous_event_id": "5353226a-2e78-456c-a3b3-1e469494921a",
+      "observed_at": "2026-09-12T10:03:45.462914+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P06-P14-egress/launch.json"
+      ],
+      "reservation_id": "P06-P14-egress",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P06-P14-egress/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "74d76d5f-301d-4493-bbd8-0b28a10edf3d",
+      "previous_event_id": "03478c4e-2981-428d-8c01-0b930e008bad",
+      "observed_at": "2026-09-12T10:04:22.725407+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P06-P14-egress/metering.json"
+      ],
+      "reservation_id": "P06-P14-egress",
+      "actual_delta_usd": "0.0271792",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P06-P14-egress/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "0f515843-6a48-4dc9-b9ae-7aecbeeb24e9",
+      "previous_event_id": "74d76d5f-301d-4493-bbd8-0b28a10edf3d",
+      "observed_at": "2026-09-12T10:05:13.700280+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P07-cancellation/launch.json"
+      ],
+      "reservation_id": "P07-cancellation",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P07-cancellation/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "37a46546-13ea-4661-a0e6-04ee40a4002c",
+      "previous_event_id": "0f515843-6a48-4dc9-b9ae-7aecbeeb24e9",
+      "observed_at": "2026-09-12T10:06:02.845816+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P08-bounded-allowance/launch.json"
+      ],
+      "reservation_id": "P08-allowance",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P08-bounded-allowance/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "5ca6ea8b-9da9-4c5d-8fa8-e7bd95462253",
+      "previous_event_id": "37a46546-13ea-4661-a0e6-04ee40a4002c",
+      "observed_at": "2026-09-12T10:06:39.722393+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P08a-bounded-allowance-self-limited/metering.json"
+      ],
+      "reservation_id": "P08-allowance",
+      "actual_delta_usd": "0.012423799999999999",
+      "reservation_delta_usd": "-0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P08a-bounded-allowance-self-limited/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "be734ca5-21c3-46b6-a67c-a0569cc5470e",
+      "previous_event_id": "5ca6ea8b-9da9-4c5d-8fa8-e7bd95462253",
+      "observed_at": "2026-09-12T10:06:54.448858+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P08b-bounded-allowance/launch.json"
+      ],
+      "reservation_id": "P08b-allowance",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P08b-bounded-allowance/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "0faafe5b-79bc-424c-be3a-cdcfa8bb6f23",
+      "previous_event_id": "be734ca5-21c3-46b6-a67c-a0569cc5470e",
+      "observed_at": "2026-09-12T10:08:47.541379+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P07-cancellation/uncertainty-bound.json"
+      ],
+      "reservation_id": "P07-cancellation",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "-0.80",
+      "uncertainty_usd": "0.11112",
+      "rate_usage_evidence": [
+        "probes/P07-cancellation/uncertainty-bound.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "42d5b6e0-0cf7-4973-8b3c-87623576257f",
+      "previous_event_id": "0faafe5b-79bc-424c-be3a-cdcfa8bb6f23",
+      "observed_at": "2026-09-12T10:09:03.256990+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P08b-bounded-allowance/metering.json"
+      ],
+      "reservation_id": "P08b-allowance",
+      "actual_delta_usd": "0.058664",
+      "reservation_delta_usd": "-0.80",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P08b-bounded-allowance/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "cc02e708-78c8-497d-89be-365498067dcd",
+      "previous_event_id": "42d5b6e0-0cf7-4973-8b3c-87623576257f",
+      "observed_at": "2026-09-12T10:09:34.207775+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P12-background-verification/launch.json"
+      ],
+      "reservation_id": "P12-background",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P12-background-verification/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "13a22297-de01-4630-84b2-210013e308a8",
+      "previous_event_id": "cc02e708-78c8-497d-89be-365498067dcd",
+      "observed_at": "2026-09-12T10:09:58.070703+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P12-background-verification/metering.json"
+      ],
+      "reservation_id": "P12-background",
+      "actual_delta_usd": "0.06445864999999999",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P12-background-verification/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "3a93c79a-d4c8-4598-b4c7-074386060360",
+      "previous_event_id": "13a22297-de01-4630-84b2-210013e308a8",
+      "observed_at": "2026-09-12T10:10:08.199012+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P13-shell-filesystem-reach/launch.json"
+      ],
+      "reservation_id": "P13-shell-reach",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P13-shell-filesystem-reach/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "487780d4-fccb-43b4-b835-c7a4ba3adce2",
+      "previous_event_id": "3a93c79a-d4c8-4598-b4c7-074386060360",
+      "observed_at": "2026-09-12T10:10:32.537621+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P13-shell-filesystem-reach/metering.json"
+      ],
+      "reservation_id": "P13-shell-reach",
+      "actual_delta_usd": "0.024979800000000003",
+      "reservation_delta_usd": "-0.60",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P13-shell-filesystem-reach/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "a15996be-84ee-4289-b8ac-c7b6d869a788",
+      "previous_event_id": "487780d4-fccb-43b4-b835-c7a4ba3adce2",
+      "observed_at": "2026-09-12T10:22:23.585838+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P22-uniform-payloads/"
+      ],
+      "reservation_id": "P22-uniform-payloads",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "1.20",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P22-uniform-payloads/"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "083b1840-5337-4d12-989b-2af7d3a93eba",
+      "previous_event_id": "a15996be-84ee-4289-b8ac-c7b6d869a788",
+      "observed_at": "2026-09-12T10:34:05.826136+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P22-uniform-payloads/per-session-charges.txt"
+      ],
+      "reservation_id": "P22-uniform-payloads",
+      "actual_delta_usd": "0.9184876",
+      "reservation_delta_usd": "-1.20",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P22-uniform-payloads/per-session-charges.txt"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "af5c07d8-6f21-49de-998d-d5651bb1ff32",
+      "previous_event_id": "083b1840-5337-4d12-989b-2af7d3a93eba",
+      "observed_at": "2026-09-12T10:36:42.406975+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P23-network-judgments/local-session/launch.json"
+      ],
+      "reservation_id": "P23-local-commands",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.30",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P23-network-judgments/local-session/launch.json"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "21315003-0ea0-4991-a0e7-412df762c5f2",
+      "previous_event_id": "af5c07d8-6f21-49de-998d-d5651bb1ff32",
+      "observed_at": "2026-09-12T10:37:01.815745+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P23-network-judgments/local-session/metering.json"
+      ],
+      "reservation_id": "P23-local-commands",
+      "actual_delta_usd": "0.013081600000000002",
+      "reservation_delta_usd": "-0.30",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P23-network-judgments/local-session/metering.json"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "6f63c409-5d32-4b09-afec-d0fcf7a815a8",
+      "previous_event_id": "21315003-0ea0-4991-a0e7-412df762c5f2",
+      "observed_at": "2026-09-12T10:43:49.583473+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "closeout",
+      "operation": "stop",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "docs/research/bounded-discovery-qualification-2026-09-12/README.md (the not-ready handoff, with every unresolved requirement listed)"
+      ],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "docs/research/bounded-discovery-qualification-2026-09-12/README.md (the not-ready handoff, with every unresolved requirement listed)"
+      ],
+      "reason": "Qualification complete and the study is not frozen. P16 did not establish an isolation regime a cell can run under - host absence is unreachable on this host and the container regime cannot authenticate a session - and the specification's own rule is that an unsupported or unobservable control stops the study. No target was selected, no dispatch was authorized and none may be. This ledger carries the qualification's pre-freeze spend only; a study that is ever ticketed opens its own."
+    }
+  ]
+}

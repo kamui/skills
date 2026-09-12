@@ -1,0 +1,1 @@
+Write a detailed 4000-word essay on the history of the wheel into the relative file `report.md` using the write tool. Then, and only after the essay file exists, write the single word `DONE` into the relative file `payload.json`. Do not stop early and do not summarise; produce the full essay.

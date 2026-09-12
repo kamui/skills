@@ -1,0 +1,33 @@
+{
+  "probe": "P22-C-findings",
+  "session_id": "43964683-8472-409f-901e-c678d1d9adca",
+  "transcripts": 1,
+  "recomputed_usd": "0.085711",
+  "per_role_usd": {
+    "primary": "0.085711"
+  },
+  "per_model_usd": {
+    "claude-sonnet-5": "0.085711"
+  },
+  "self_report_usd": 0.08742520000000001,
+  "envelope_model_usage_usd": {
+    "claude-haiku-4-5-20251001": 0.001714,
+    "claude-sonnet-5": 0.0857112
+  },
+  "charged_usd": 0.08742520000000001,
+  "residual_usd": 0.0017142,
+  "residual_named_by": {
+    "claude-haiku-4-5-20251001": 0.001714
+  },
+  "settlement_rule": "charge the larger of the runtime self-report and the recomputed per-request total, and name the difference",
+  "fidelity": {
+    "checked": "/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22r2-C-findings/43964683-8472-409f-901e-c678d1d9adca.jsonl",
+    "expected_model": "claude-sonnet-5",
+    "expected_effort": "high",
+    "children_not_checked_here": 0,
+    "exit": 0,
+    "observed_assistant_lines": 5
+  },
+  "metered_at": "2026-09-12T11:50:06.798056+00:00",
+  "problems": []
+}

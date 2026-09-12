@@ -1,0 +1,2 @@
+session 3d195991-13a8-4558-aeae-d97db84f099d transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22-B-findings/3d195991-13a8-4558-aeae-d97db84f099d.jsonl sha256 76682c73049f38229c4f6bce05d4364f7aff07dc911807b6cc87949e0a9aecaf

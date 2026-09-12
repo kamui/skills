@@ -1,0 +1,2 @@
+session a1431110-3d46-465e-bc93-e84569ac6d60 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22-C-clean2/a1431110-3d46-465e-bc93-e84569ac6d60.jsonl sha256 ebec44a0ef9e0b79d9248e740a79f1990a73b9d1d3aa0f4b8d9eebe7436b5574

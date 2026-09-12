@@ -1,0 +1,21 @@
+== arm A findings (completion complete) ==
+{"outcome": "findings", "item_count": 1, "produced_by": "arm", "payload_sha256": "ad050b70912d2653feb5af8aa3539853fdf8a33197fc9ead8d01ebc68e4e858e"}
+== arm A clean (completion complete) ==
+{"outcome": "clean", "item_count": 0, "produced_by": "arm", "payload_sha256": "5725dafdf1790e5c2c151f9cbf4161584b864de9eec2afe91f0ac5d0c2c61842"}
+== arm A stopped (completion stopped-budget) ==
+{"outcome": "stopped", "item_count": 0, "produced_by": "coordinator", "payload_sha256": "8ce3e10a6394b915722155fc92e9bfd005f704e2b0270438cd55924befd54092"}
+== arm B findings (completion complete) ==
+{"outcome": "findings", "item_count": 1, "produced_by": "arm", "payload_sha256": "844eb8002fd6333453c829756535756dd6326bb8f99631bb5f53b3b2fe1d5397"}
+== arm B clean (completion complete) ==
+{"outcome": "clean", "item_count": 0, "produced_by": "arm", "payload_sha256": "333a0949cffe90fcf89236960ce852215b99dcf969e5c6966eac9689b8dbb006"}
+== arm B stopped (completion stopped-budget) ==
+{"outcome": "stopped", "item_count": 0, "produced_by": "coordinator", "payload_sha256": "04ba57b9061aaae43a30334db6527d5ea495b3cec7a7970bd61ae422f666d005"}
+== arm C findings (completion complete) ==
+{"outcome": "findings", "item_count": 1, "produced_by": "arm", "payload_sha256": "6e9145d950be0cdcf46c202c50fe3b7c4785aec067acb616e02c45b6e44283b2"}
+== arm C clean (completion complete) ==
+{"outcome": "clean", "item_count": 0, "produced_by": "arm", "payload_sha256": "2b9551e78e478f09deeb9c13eb15c1246688334d670dda4ba3deeaff563191e3"}
+== arm C stopped (completion stopped-budget) ==
+{"outcome": "stopped", "item_count": 0, "produced_by": "coordinator", "payload_sha256": "16bfbc2e624466ce70f92297ebff2cd8f9fab27ecf39ef29068d6ca499b9dd84"}
+== uniformity over every receipt, before masking ==
+items[].fix appears only in arm B; a masked packet's shape would correlate with its arm. Rule on it with --allow-shape-correlation items[].fix or make the arms uniform
+uniformity exit=0

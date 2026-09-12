@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-A-findings",
+  "arm": "A",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite of `last_n` changes behavior in exactly the case the PR claims to preserve: when `n` exceeds the list length.\n\n- **n > len(items)** (the case the PR explicitly calls out): `items[len(items) - n:]` uses a *negative* start index (since `len(items) - n < 0`), which slices from near the end rather than clamping to the start. Example: `items=[1,2,3]`, `n=5` → old `items[-5:]` returns `[1, 2, 3]` (whole list, as intended); new `items[3-5:]` = `items[-2:]` returns `[2, 3]` — a truncated result, contradicting the stated intent.\n- **n == 0**: old `items[-0:]` returns the whole list (since `-0 == 0`); new `items[len(items):]` returns `[]`. This is a silent regression for the zero case.\n\nBoth of these are simple to hit and directly contradict the PR's own acceptance criterion, so this needs a fix (e.g. clamp with `max(0, len(items) - n)` and confirm `n <= 0` handling) plus a regression test covering `n=0` and `n > len(items)`."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "`items[len(items) - n:]` does not preserve the old slice semantics for `n >= len(items)` or `n == 0`.\n\n- For `n > len(items)`, `len(items) - n` is negative, so the new slice starts near the *end* of the list instead of clamping to the start — e.g. `items=[1,2,3], n=5`: old code returns `[1, 2, 3]` (whole list), new code returns `[2, 3]`. This directly contradicts the PR's stated intent (\"must return the whole list when n exceeds its length\").\n- For `n == 0`, old `items[-0:]` returns the whole list (`-0 == 0`), but new `items[len(items):]` returns `[]`.\n\nSuggest clamping the start index, e.g. `items[max(0, len(items) - n):]`, and adding tests for `n == 0` and `n > len(items)`.",
+      "trailer": "last_n-negative-start-index-breaks-n-gt-len-and-n-eq-0",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 8, "side": "RIGHT"},
+      "priority": "P0",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "logic-error"
+    }
+  ],
+  "stop": null
+}

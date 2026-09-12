@@ -1,0 +1,12 @@
+{
+  "probe": "P01+P04+P11",
+  "status": "established",
+  "summary": "In the frozen cell configuration on 2.1.269: the startup --agents definition bound the child, and agent_effort.py reads claude-sonnet-5/high on all 8 root assistant lines and claude-opus-5/high on the child's line (P01). An out-of-root absolute Read was denied and the denial named the permitted root - '/private/tmp/bd207-probes/outside/canary.txt is outside /private/tmp/bd207-probes/p01; --restricted confines the file tools to the working directory' (P04). A Write to a relative path inside the root produced the file with its exact content, and a Write to an absolute path outside was refused with the same root-naming denial (P11). meter_split.py split the charge by role - primary 0.020784, worker 0.028654 - summing to the recomputed 0.049438, against a 0.05071915 self-report.",
+  "establishes": "P01 for both configurations, P04, and P11 under the study's launch shape; and, as a by-product on real transcripts, gap-2's per-role reconciliation for the primary and worker roles and gap-9's model/effort observability. The two proposed candidates exist on this runtime and are observably distinct on every assistant line, so U2 resolves and no substitution question arises.",
+  "residual": "The child is one worker at one configuration: this does not establish the finder's read-only shape (P03) nor the verifier-ordinal granularity gap-2's open question names (U5). The envelope reports the child as claude-opus-5[1m] while the transcript says claude-opus-5; both are priced identically in rates.json and the long-context caveat there is unresolved for a cell whose context grows past the threshold. The charge exceeds the transcripts by 0.00128115, named exactly by an untranscripted claude-haiku-4-5-20251001 request in the envelope - the #149 residual, reproduced.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:01:54.371221+00:00"
+}

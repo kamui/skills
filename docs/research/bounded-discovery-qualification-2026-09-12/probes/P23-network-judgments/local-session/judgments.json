@@ -1,0 +1,12 @@
+[
+  {
+    "command_sha256": "e3b27baa676d14ff9580bb6a146a0dfcf74a2dbfacac8533a509ea7402fde38f",
+    "reason": "a local command: cat local.txt. The allow-list proxy was running and logging for the whole session - its log holds 14 entries, 13 allowed CONNECTs to the provider and one refused telemetry host, and none of them falls in this command tool call. Any traffic this command made would have produced an entry, and none did; the command reads a local file or computes in-process.",
+    "no_network_occurred": true
+  },
+  {
+    "command_sha256": "09ccab7b090efc519fa61e4c1f7292028825bbf4ffbc0eff0ccab8304abd05b7",
+    "reason": "a local command: python3 -c \"print(sum(range(10)))\". The allow-list proxy was running and logging for the whole session - its log holds 14 entries, 13 allowed CONNECTs to the provider and one refused telemetry host, and none of them falls in this command tool call. Any traffic this command made would have produced an entry, and none did; the command reads a local file or computes in-process.",
+    "no_network_occurred": true
+  }
+]

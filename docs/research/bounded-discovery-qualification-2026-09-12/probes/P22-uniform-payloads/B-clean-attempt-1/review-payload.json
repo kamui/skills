@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-B-clean",
+  "arm": "B",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite correctly handles the stated case (`n` exceeding `len(items)`): `max(0, len(items) - n)` clamps to `0`, so `items[0:]` returns the whole list, matching the old `items[-n:]` behavior for large `n`.\n\nHowever, the two forms are **not** equivalent at `n == 0`, which changes behavior beyond what the stated intent covers:\n\n- Old: `items[-0:]` — in Python, `-0 == 0`, so this is `items[0:]`, i.e. the **whole list**.\n- New: `items[max(0, len(items) - 0):]` = `items[len(items):]`, i.e. an **empty list**.\n\nSo `last_n(items, 0)` silently changes from returning the full list to returning `[]`. The PR description only claims parity for `n` exceeding the list length, but this diff also changes the `n == 0` case (and negative `n`, e.g. `last_n(items, -2)` now returns `[]` instead of `items[2:]`). If any caller relies on the old `n == 0` quirk, this is a behavioral regression; if the new behavior is intentional (arguably more correct), the PR description should say so explicitly so reviewers/callers aren't surprised."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "`last_n(items, 0)` changes behavior: the old `items[-n:]` returns the **whole list** when `n == 0` (since `-0 == 0` in Python), but the new `items[max(0, len(items) - n):]` returns `[]` for `n == 0`. The PR's stated intent only covers `n` exceeding the list length, not this case. Please confirm whether the `n == 0` change (and the analogous change for negative `n`) is intentional, and update the description/tests accordingly if so.",
+      "trailer": null,
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 8},
+      "priority": "P2",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "unstated-behavior-change"
+    }
+  ],
+  "stop": null
+}

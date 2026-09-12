@@ -1,0 +1,39 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P19",
+  "purpose": "On a real ledger driven by a real coordinator path: are a duplicate id, a reused context, the concurrency cap, an evidence-less replacement, a wrong replacement ordinal, a replacement of a validly closed attempt, the replacement cap and the attempt cap each refused before any worker starts - with the absence of a started worker asserted from the filesystem?",
+  "retained_at": "2026-09-12T10:18:19.079186+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P19-lifecycle-enforcement",
+  "argv": [
+    "python3",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/lifecycle_probe.py",
+    "--create-ledger",
+    "--ledger",
+    "lifecycle-ledger.json",
+    "--markers",
+    "workers",
+    "--out",
+    "lifecycle.json"
+  ],
+  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/lifecycle_probe.py --create-ledger --ledger lifecycle-ledger.json --markers workers --out lifecycle.json",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

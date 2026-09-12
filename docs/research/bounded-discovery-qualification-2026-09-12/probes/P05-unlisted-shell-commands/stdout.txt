@@ -1,0 +1,2 @@
+ALLOWED: git version 2.55.0
+UNLISTED: Permission for this tool use was denied. It requires approval, and this session has no approval surface — nobody can answer a permission prompt here — so it was denied automatically. The action was NOT performed.

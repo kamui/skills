@@ -1,0 +1,33 @@
+{
+  "probe": "P23-local",
+  "session_id": "1898c606-9846-4d12-a5a8-d15ac5507383",
+  "transcripts": 1,
+  "recomputed_usd": "0.012031",
+  "per_role_usd": {
+    "primary": "0.012031"
+  },
+  "per_model_usd": {
+    "claude-sonnet-5": "0.012031"
+  },
+  "self_report_usd": 0.013081600000000002,
+  "envelope_model_usage_usd": {
+    "claude-haiku-4-5-20251001": 0.0010509999999999999,
+    "claude-sonnet-5": 0.012030600000000002
+  },
+  "charged_usd": 0.013081600000000002,
+  "residual_usd": 0.0010506,
+  "residual_named_by": {
+    "claude-haiku-4-5-20251001": 0.0010509999999999999
+  },
+  "settlement_rule": "charge the larger of the runtime self-report and the recomputed per-request total, and name the difference",
+  "fidelity": {
+    "checked": "/Users/jack/.claude/projects/-private-tmp-bd207-probes-p23/1898c606-9846-4d12-a5a8-d15ac5507383.jsonl",
+    "expected_model": "claude-sonnet-5",
+    "expected_effort": "high",
+    "children_not_checked_here": 0,
+    "exit": 0,
+    "observed_assistant_lines": 4
+  },
+  "metered_at": "2026-09-12T11:50:07.620812+00:00",
+  "problems": []
+}
