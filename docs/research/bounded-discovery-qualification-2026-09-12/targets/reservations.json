@@ -2,7 +2,7 @@
   "schema_version": "bounded-discovery-qualification-v1",
   "ticket": 207,
   "rule": "E1 Unused, extended by rule rather than by hand: #148 section 7's list, #148's exclusion log, the revealed #138 slot registers, the two revealed excluded registers, and every pull request named in the revealed candidate inventory - candidates and the later fixes and confirming reports their rows cite. Only a backticked reference counts in a Markdown list or table, because these files also cite this project's own tickets in prose; a register is about one repository and every number in it resolves there. A candidate on this list cannot be reused blind, and closing an issue or renaming a slot does not restore blindness.",
-  "derived_at": "2026-09-12T11:49:22.814345+00:00",
+  "derived_at": "2026-09-12T11:57:16.011721+00:00",
   "sources_sha256": {
     "criteria": "5cf56f151da7e78261ac98e8b5a909fe1139d5f4d627129011d9afc227665f27",
     "exclusions": "4127b83a0e98c6dceaa75acb9c27ed95f6b65e7ff9d8e1ae863a45d8a6f15951",
@@ -16,8 +16,19 @@
     "register:slot-4-register": "a96e8027b4d907ee95e8a8a26a6004f85c421d022a2e80a13ff12230a023eb23"
   },
   "inventory_rows_read": 33,
-  "reserved_count": 103,
+  "reserved_count": 102,
   "reserved": {
+    "BurntSushi/ripgrep#137": {
+      "repository": "BurntSushi/ripgrep",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7), read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
     "BurntSushi/ripgrep#2957": {
       "repository": "BurntSushi/ripgrep",
       "number": 2957,
@@ -82,7 +93,8 @@
       "number": 5040,
       "confidence": "strong",
       "reasons": [
-        "a revealed #138 target's register, or a pull request it names"
+        "a revealed #138 target's register, or a pull request it names",
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
         "revealed/targets/slot-1-register.md"
@@ -94,6 +106,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed #138 target's register, or a pull request it names",
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "a candidate in the revealed inventory, with its category and eligibility result published"
       ],
       "named_by": [
@@ -107,6 +120,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed #138 target's register, or a pull request it names",
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change"
       ],
       "named_by": [
@@ -142,6 +156,17 @@
         "targets/exclusions.md"
       ]
     },
+    "etcd-io/etcd#124": {
+      "repository": "etcd-io/etcd",
+      "number": 124,
+      "confidence": "conservative",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7), read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
     "etcd-io/etcd#17563": {
       "repository": "etcd-io/etcd",
       "number": 17563,
@@ -168,17 +193,6 @@
         "targets/criteria.md section 7"
       ]
     },
-    "garden-rs/garden#6243": {
-      "repository": "garden-rs/garden",
-      "number": 6243,
-      "confidence": "strong",
-      "reasons": [
-        "a revealed #138 target's register, or a pull request it names"
-      ],
-      "named_by": [
-        "revealed/targets/slot-1-register.md"
-      ]
-    },
     "golang-jwt/jwt#124": {
       "repository": "golang-jwt/jwt",
       "number": 124,
@@ -197,6 +211,7 @@
       "reasons": [
         "named in #148's exclusion log",
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "a candidate in the revealed inventory, with its category and eligibility result published"
       ],
       "named_by": [
@@ -327,6 +342,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed #138 target's register, or a pull request it names",
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "a candidate in the revealed inventory, with its category and eligibility result published"
       ],
       "named_by": [
@@ -388,6 +404,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
@@ -412,8 +429,10 @@
       "confidence": "strong",
       "reasons": [
         "named in #148's exclusion log",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "a revealed excluded register, or a pull request it names",
-        "a candidate in the revealed inventory, with its category and eligibility result published"
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
         "targets/exclusions.md",
@@ -448,6 +467,7 @@
       "number": 8530,
       "confidence": "strong",
       "reasons": [
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "a revealed excluded register, or a pull request it names"
       ],
       "named_by": [
@@ -471,6 +491,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
@@ -484,6 +505,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
@@ -497,6 +519,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
@@ -510,6 +533,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
@@ -523,6 +547,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed excluded register, or a pull request it names",
+        "a revealed excluded register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
@@ -570,6 +595,7 @@
       "confidence": "strong",
       "reasons": [
         "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change"
       ],
       "named_by": [
@@ -615,28 +641,6 @@
       "confidence": "strong",
       "reasons": [
         "used or reserved by an earlier grid (#148 section 7)"
-      ],
-      "named_by": [
-        "targets/criteria.md section 7"
-      ]
-    },
-    "kamui/shortlist#124": {
-      "repository": "kamui/shortlist",
-      "number": 124,
-      "confidence": "conservative",
-      "reasons": [
-        "used or reserved by an earlier grid (#148 section 7), read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
-      ],
-      "named_by": [
-        "targets/criteria.md section 7"
-      ]
-    },
-    "kamui/shortlist#137": {
-      "repository": "kamui/shortlist",
-      "number": 137,
-      "confidence": "conservative",
-      "reasons": [
-        "used or reserved by an earlier grid (#148 section 7), read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
         "targets/criteria.md section 7"
@@ -860,7 +864,8 @@
       "confidence": "strong",
       "reasons": [
         "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
-        "a candidate in the revealed inventory, with its category and eligibility result published"
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
         "revealed/targets/slot-3-register.md",
@@ -872,6 +877,7 @@
       "number": 6623,
       "confidence": "strong",
       "reasons": [
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "a revealed #138 target's register, or a pull request it names",
         "named in a revealed inventory row as a later fix, a confirming report or a related change"
       ],
@@ -886,7 +892,8 @@
       "confidence": "strong",
       "reasons": [
         "named in #148's exclusion log",
-        "a candidate in the revealed inventory, with its category and eligibility result published"
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
         "targets/exclusions.md",
@@ -899,7 +906,9 @@
       "confidence": "strong",
       "reasons": [
         "a revealed #138 target's register, or a pull request it names",
-        "a candidate in the revealed inventory, with its category and eligibility result published"
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
       ],
       "named_by": [
         "revealed/targets/slot-4-register.md",
@@ -923,6 +932,7 @@
       "confidence": "strong",
       "reasons": [
         "a revealed #138 target's register, or a pull request it names",
+        "a revealed #138 target's register, or a pull request it names, read conservatively: the file writes it as a bare number in prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted",
         "named in a revealed inventory row as a later fix, a confirming report or a related change"
       ],
       "named_by": [

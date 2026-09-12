@@ -2432,15 +2432,15 @@
       },
       "observed_exit": "0",
       "status": "unestablished",
-      "summary": "No target was selected and none was prepared. What exists is the part of gap 8 that is decidable without spending: the extended reservation set, derived by rule from the ten files that publish it - 103 pull requests, 78 of them evidenced by a backticked, linked or qualified citation and 25 read conservatively from a bare number in prose - and the mechanical criteria E1, E2, E3 and E5 implemented as a checker and exercised against the live forge. The freshness threshold is recomputed for a 2026-09-12 freeze as 2026-03-12.",
+      "summary": "No target was selected and none was prepared. What exists is the part of gap 8 that is decidable without spending: the extended reservation set, derived by rule from the ten files that publish it - 102 pull requests, 77 of them evidenced by a backticked, linked or qualified citation and 25 read conservatively from a bare number in prose - and the mechanical criteria E1, E2, E3 and E5 implemented as a checker and exercised against the live forge. The freshness threshold is recomputed for a 2026-09-12 freeze as 2026-03-12.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-        "launch.json": "9b84cd3871ec8d4ea3d850399d778020e784f9d135e30ebd5024b1d5bd67bf67",
+        "launch.json": "11cb7b6cd3bd157839cf4c2d4392592721233e9349a0355a7c3a656efb553055",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout.txt": "6ba3344f354f8f09cfce00f78c1045e8c4bb058e82edaf945e3907e97229bc54",
-        "timing.json": "f317045e6c7509c8277ff360ee44972d5891ad24d23746872935e071c8b91597",
-        "verdict.json": "756e339a794850252cf03f096a989f5ef729df97d6ba51e9a2fcb0f342e6fb9d"
+        "stdout.txt": "e214fa07ba24a8f39878f176c0ec2d541e58556eb9081887ce5bb71e406b9067",
+        "timing.json": "1aa3503e70471b1c98f1e4fa097463b34f25c12a82f0760a57727525bad5c32a",
+        "verdict.json": "7e57a371944515a3647c43c124ad1fdf4b45150e0d064fd81d23b03a6acecef9"
       }
     },
     {
@@ -2589,5 +2589,5 @@
       }
     }
   ],
-  "recorded_at": "2026-09-12T11:50:47.180630+00:00"
+  "recorded_at": "2026-09-12T11:57:38.959852+00:00"
 }

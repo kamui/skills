@@ -126,12 +126,12 @@ spending, and the reason the rest was not attempted.
   **derived by rule**, as the specification requires, from the ten files that publish it: #148
   section 7, #148's exclusion log, the sealed slot map, the four revealed slot registers, the two
   revealed excluded registers, and every pull request named in the revealed candidate inventory.
-  **103 pull requests**, from 33 inventory rows and the registers' own citations, each with its
+  **102 pull requests**, from 33 inventory rows and the registers' own citations, each with its
   reason and the source that names it, and every source digested so a later freeze can tell
   whether the set it applies is the set these files still publish.
 
   Every bare number resolves to its scope's repository and is marked by how the file evidences
-  it — **78 `strong`** (backticked, linked, or written out qualified) and **25 `conservative`** (a
+  it — **77 `strong`** (backticked, linked, or written out qualified) and **25 `conservative`** (a
   bare number in running prose). Both are reserved. These files write genuine same-repository
   references in prose as well as in code spans, and they cite this project's own tickets in prose
   too, and no rule separates the two. The errors are not symmetric: over-reserving costs a future
