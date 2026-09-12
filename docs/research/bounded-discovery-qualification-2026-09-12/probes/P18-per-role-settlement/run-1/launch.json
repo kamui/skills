@@ -1,8 +1,8 @@
 {
   "schema_version": "bounded-discovery-qualification-v1",
   "probe": "P18",
-  "purpose": "Do per-role totals reconcile to the settled charge over real transcripts, for the primary, finder and verifier roles? Re-run with the identical command against the reconciliation report now keyed by each launch's bundle-relative path; the earlier run, published at the reviewed head, is retained under run-1/.",
-  "retained_at": "2026-09-12T21:39:07.003170+00:00",
+  "purpose": "Do per-role totals reconcile to the settled charge over real transcripts, for the primary, finder and verifier roles?",
+  "retained_at": "2026-09-12T10:40:24.520315+00:00",
   "retained_before_process_creation": true,
   "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
   "argv": [

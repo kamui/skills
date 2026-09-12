@@ -623,6 +623,30 @@
       "launch_started": true
     },
     {
+      "probe": "P18",
+      "directory": "probes/P18-per-role-settlement/run-1",
+      "retained_before_process_creation": true,
+      "argv_length": 3,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
       "probe": "P19",
       "directory": "probes/P19-lifecycle-enforcement",
       "retained_before_process_creation": true,
@@ -1721,5 +1745,5 @@
       "launch_started": true
     }
   ],
-  "recorded_at": "2026-09-12T21:24:12.691304+00:00"
+  "recorded_at": "2026-09-12T21:39:37.735351+00:00"
 }

@@ -1,5 +1,5 @@
 {
-  "probe": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P20-sandbox-and-scratch",
+  "probe": "P20-sandbox-and-scratch",
   "status": "unestablished",
   "summary": "The mechanical half of gap 4 is established by ./detected, ./accepted and ./clean. The other half is not: P20 requires every permitted root - including the scratch and image allowance of proposed change D3 - frozen identically across arms before probing, and this qualification has no frozen roots because it has no frozen targets, no cell image and no authorized dispatch.",
   "establishes": "That audit_reads has no acceptance path, on real transcripts, in both directions.",

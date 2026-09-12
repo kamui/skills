@@ -245,7 +245,7 @@ Ordered so that each item is doable once the one above it is.
 | Path | What it holds |
 | --- | --- |
 | [`qualification.json`](qualification.json) | the machine-readable record: every probe's status, each of #199's ten gaps with what holds and what does not, and section 11 item by item |
-| [`evidence-index.json`](evidence-index.json) | all 64 launches: the exact command, the runtime, the retained output by digest, the verdict read from it, and the ledger settlement where it was paid. `qualify.py index` exits non-zero unless every launch carries a verdict |
+| [`evidence-index.json`](evidence-index.json) | all 65 launches: the exact command, the runtime, the retained output by digest, the verdict read from it, and the ledger settlement where it was paid. `qualify.py index` exits non-zero unless every launch carries a verdict |
 | [`ledger.json`](ledger.json) | this qualification's own ledger, terminally stopped |
 | [`rates.json`](rates.json) | the dated rate card, with its provenance |
 | [`dispatch-payload-contract.md`](dispatch-payload-contract.md) | the proposed D2 payload-contract block, at revision 2, with revision 1's refusal recorded |
