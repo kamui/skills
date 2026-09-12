@@ -8,8 +8,8 @@ Approved implementation roadmap: [verification/publication #156](https://github.
 [audit discovery #157](https://github.com/kamui/skills/issues/157), and
 [evaluation/efficiency #158](https://github.com/kamui/skills/issues/158). The rename is tracked in
 [#159](https://github.com/kamui/skills/issues/159); [#84](https://github.com/kamui/skills/issues/84)
-now selects the demonstrated deleted-file link failure for both skills, superseding this assessment's
-earlier treatment of it as entirely deferred maintenance.
+now selects the demonstrated deleted-file link failure for both skills, superseding the B9 row's
+"no new basic-link project needed" verdict below.
 
 2026-09-05. Repository evidence only; no review or publishing workflow was run. This note evaluates the empirical case for retaining the Panel architecture. Recommendations are inferences from the cited records, not new experimental results.
 

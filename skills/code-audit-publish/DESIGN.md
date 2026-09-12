@@ -32,8 +32,9 @@ The implementation roadmap is tracked in GitHub:
 
 [#159](https://github.com/kamui/skills/issues/159) owns landing this rename. The existing
 [#84](https://github.com/kamui/skills/issues/84) owns the demonstrated deleted-file coordinate repair
-shared with the routine publisher. The bounded discovery-worker prototype remains a separate
-experiment under [#138](https://github.com/kamui/skills/issues/138).
+shared with the routine publisher. The bounded discovery-worker prototype was a separate
+experiment under [#138](https://github.com/kamui/skills/issues/138), now closed; its result does not
+change this skill.
 
 The strongest controlled evidence is requirements completeness and external-reference conformance.
 High-risk superiority remains unproven. Historical matched production-shaped cost premiums were
