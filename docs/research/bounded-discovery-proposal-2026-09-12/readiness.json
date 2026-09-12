@@ -1,0 +1,303 @@
+{
+  "schema_version": "bounded-discovery-proposal-v1",
+  "document_status": "proposed",
+  "written_at": "2026-09-12",
+  "specification": "SPECIFICATION.md",
+  "probe_catalogue": "probes.md",
+  "produced_for": {
+    "freeze_gate_issue": 207,
+    "prerequisite_issue": 199,
+    "closed_epic": 138,
+    "note": "Proposed, awaiting qualification. Not frozen, not qualified, not authorized to dispatch. No probe has been run, no target is selected and no ledger is appended to."
+  },
+  "requirements": [
+    {
+      "id": "gap-1",
+      "source": "#199 gap 1",
+      "title": "Exact launch and configuration retention",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_failed_launch_keeps_exact_argv_before_subprocess",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_finder_launch_retains_requested_controls"
+      ],
+      "probes": [
+        "P17"
+      ],
+      "evidence_required": "A retained launch record per phase and worker in each arm on the actual runtime, compared against the frozen allowances, plus a failed launch whose request is still retained. The recorded argv proves requested settings; transcripts and result envelopes establish what ran.",
+      "open_questions": []
+    },
+    {
+      "id": "gap-2",
+      "source": "#199 gap 2",
+      "title": "Per-role accounting and filtered-transcript provenance",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py",
+        "docs/research/bounded-discovery-runs-2026-09-08/scripts/meter_split.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_settlement_retains_roles_including_filtered_provider_error",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_unknown_metering_role_is_refused"
+      ],
+      "probes": [
+        "P18"
+      ],
+      "evidence_required": "Per-role totals reconciling to the settled charge over real transcripts for primary, finder and verifier, including a provider error that forces filtered copies resolved to their sources before pricing. An unknown role or missing usage is unresolved, never all-primary and never zero.",
+      "open_questions": [
+        "The coordinator groups every verifier session as `worker`. A study that reports verification cost by ordinal needs initial/follow-up attribution; the freeze must add it or state that the analysis does not distinguish them."
+      ]
+    },
+    {
+      "id": "gap-3",
+      "source": "#199 gap 3",
+      "title": "Contemporaneous lifecycle enforcement",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-prototype/scripts/test_adapter.py::test_atomic_budget_reservations_and_settlements",
+        "docs/research/bounded-discovery-prototype/scripts/test_adapter.py::test_phase_attempt_caps_corruption_and_attempt_identity",
+        "docs/research/bounded-discovery-prototype/scripts/test_adapter.py::test_attempt_replacement_and_concurrency_caps",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_refused_reservation_closes_budget_without_worker_usage"
+      ],
+      "probes": [
+        "P19"
+      ],
+      "evidence_required": "On the real ledger: a duplicate id, a concurrency violation, the attempt and replacement caps and an ineligible replacement each refused before any worker starts, with the absence of a started worker asserted. Open must precede launch and close must follow terminal accounting. Historical claim-history is reconstruction and evidences nothing prospective.",
+      "open_questions": []
+    },
+    {
+      "id": "gap-4",
+      "source": "#199 gap 4",
+      "title": "Frozen sandbox and scratch allowances",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_sandbox_acceptance_and_prefix_or_traversal_cannot_pass"
+      ],
+      "probes": [
+        "P20"
+      ],
+      "evidence_required": "Every permitted root, including any scratch and image allowance, frozen identically across arms before probing; then an actual out-of-root read and a tidiness acceptance must both fail. A detector false positive is fixed and re-probed before the freeze, never excused at settlement.",
+      "open_questions": [
+        "Whether the frozen roots include a named per-cell scratch directory at all is a freeze decision (SPECIFICATION.md D3). Either answer is acceptable; an acceptance path at settlement is not."
+      ]
+    },
+    {
+      "id": "gap-5",
+      "source": "#199 gap 5",
+      "title": "Completed shutdown probes over the recorded real roots",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/roots.py",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/shutdown.py",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_roots.py::test_record_is_exclusive_and_absence_uses_actual_root",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_roots.py::test_record_must_survive_root_removal",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_roots.py::test_incomplete_probe_establishes_nothing",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_complete_gate_clears_and_authorizes_the_seal",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_record_that_is_not_the_pinned_one_blocks",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_record_inside_the_seal_establishes_nothing",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_surviving_root_blocks_even_as_a_dangling_symlink",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_an_unreadable_parent_is_an_incomplete_probe",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_missing_timed_out_or_failed_process_probe_establishes_nothing",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_an_unreachable_runtime_is_not_a_clearance",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_replayed_capture_keeps_its_own_age",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_a_held_ledger_lock_is_a_failed_read_not_a_quiet_ledger",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_authorization_refuses_a_ledger_that_moved_after_clearance",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_shutdown.py::test_authorize_refuses_a_stale_incomplete_or_forged_gate",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_dispatch_requires_the_actual_unsealed_root"
+      ],
+      "probes": [
+        "P21"
+      ],
+      "evidence_required": "The root record created before dispatch while the roots exist, its digest pinned outside the seal, `shutdown.py check` with every check established, then `authorize --ledger` immediately before the seal is opened, probing the host again rather than re-scoring an old capture. Retain each root's parent until the check completes.",
+      "open_questions": []
+    },
+    {
+      "id": "gap-6",
+      "source": "#199 gap 6",
+      "title": "Uniform payload production and validation across arms",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/payload.py",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_every_outcome_validates_under_one_key_set",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_arm_specific_structure_is_refused",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_a_second_payload_form_is_refused_and_its_content_is_left_alone",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_the_pinned_contract_validator_gates_a_review_and_skips_a_stop",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_three_arms_under_one_contract_pass_with_full_outcome_coverage",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_a_missing_arm_or_outcome_blocks_masking",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_the_pilot_tell_is_refused",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_payload.py::test_a_field_only_one_arm_carries_blocks_until_it_is_ruled_on",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_dispatch_requires_a_pinned_payload_contract",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_dispatch_requires_the_prepared_contract_to_match_the_pin",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_every_arm_is_settled_under_one_contract_and_keeps_its_findings",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_a_stopped_attempt_gets_a_stopped_payload_and_no_invented_items",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_a_markdown_only_payload_is_refused_rather_than_masked",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_an_arm_specific_structure_invalidates_the_attempt",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_a_contract_that_changed_since_dispatch_accepts_nothing"
+      ],
+      "probes": [
+        "P22"
+      ],
+      "evidence_required": "A rendered dispatch template that writes the contract payload, the study's own output-contract validator pinned, findings/clean/stopped outcomes probed in each arm, and `payload.py uniformity` clean over every receipt before anything is masked.",
+      "open_questions": []
+    },
+    {
+      "id": "gap-7",
+      "source": "#199 gap 7",
+      "title": "A required evidence judgment for every shell command's network use",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py",
+        "docs/research/bounded-discovery-runs-2026-09-08/scripts/egress_proxy.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_direct_socket_evidence_requires_a_recorded_judgment",
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/test_review_fixes.py::test_indirect_network_and_ordinary_shell_both_require_review"
+      ],
+      "probes": [
+        "P23"
+      ],
+      "evidence_required": "A recorded evidence judgment for every retained shell command, bound to proxy events or establishing that no traffic occurred, including commands that look local and indirect interpreter traffic. An unreviewed command or an unresolved bypass invalidates fidelity.",
+      "open_questions": []
+    },
+    {
+      "id": "gap-8",
+      "source": "#199 gap 8",
+      "title": "Fresh targets and reviewer isolation",
+      "status": "specified-only",
+      "controls": [],
+      "tests": [],
+      "probes": [
+        "P24"
+      ],
+      "evidence_required": "Four new targets through #148's full preparation checklist with new registers and leak sets, the reservation set extended by the four revealed #138 targets, the two excluded registers and every pull request the revealed candidate inventory names, and every surviving blinding cue listed before dispatch.",
+      "open_questions": [
+        "No target is selected in this specification and none may be selected from it."
+      ]
+    },
+    {
+      "id": "gap-9",
+      "source": "#199 gap 9",
+      "title": "Requalification of every runtime control",
+      "status": "unknown",
+      "controls": [],
+      "tests": [],
+      "probes": [
+        "P00",
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09",
+        "P10",
+        "P11",
+        "P12",
+        "P13",
+        "P14",
+        "P15",
+        "P16"
+      ],
+      "evidence_required": "Every control of the old preregistration section 4 re-established on the runtime a study actually dispatches with, over a pinned runtime inventory. An unsupported or unobservable control stops the study.",
+      "open_questions": [
+        "Whether a shell allow list exists under the restriction flag on the future runtime is unknown; if it does not, the frozen launch shape cannot run as written (SPECIFICATION.md D7).",
+        "Whether a startup-supplied worker definition still binds a child's model and effort is unknown.",
+        "Whether the proposed model candidates exist on that runtime and are observably distinct is unknown."
+      ]
+    },
+    {
+      "id": "gap-10",
+      "source": "#199 gap 10",
+      "title": "Ledger stop and conservative accounting after termination",
+      "status": "tooling-delivered",
+      "controls": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py"
+      ],
+      "tests": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_budget.py::test_stop_retains_money_and_history_then_settles",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_budget.py::test_stop_refuses_restart_but_allows_protected_closeout",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_budget.py::test_stop_before_freeze_does_not_release_pre_freeze_reservation",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_budget.py::test_concurrent_stops_append_exactly_once",
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/test_budget.py::test_missing_evidence_and_unreadable_input_exit_codes"
+      ],
+      "probes": [
+        "P25"
+      ],
+      "evidence_required": "Stop exercised on the study's own ledger with outstanding reservations and retained uncertainty; a later settlement and attempt closure still accepted; a new review dispatch refused; the producing ticket, reason and handoff evidence retained. Workers are cancelled separately and the shutdown probes are what establish they stopped.",
+      "open_questions": [
+        "The #138 ledger is closed by the #153 decision record and is not appended to by any future study; a future study opens its own ledger with its own cap."
+      ]
+    },
+    {
+      "id": "study-isolation",
+      "source": "SPECIFICATION.md section 5.2",
+      "title": "The isolation regime and the revealed-truth hazard in this repository",
+      "status": "unknown",
+      "controls": [
+        "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py"
+      ],
+      "tests": [],
+      "probes": [
+        "P16"
+      ],
+      "evidence_required": "Which regime the future host can actually reach - host absence, container mounts, or both - with the mount set asserted from the runtime's own inspection, every checkout and worktree of this repository treated as forbidden material, and the residual reach the regime does not close stated in the freeze.",
+      "open_questions": [
+        "The pilot host could not reach host absence and ran cells in containers under a dated deviation; whether a future host can is unknown until probed.",
+        "This repository now carries revealed registers, leak sets and a 28-candidate inventory in cleartext, so the forbidden-path set is strictly larger than #149's."
+      ]
+    },
+    {
+      "id": "study-budget",
+      "source": "SPECIFICATION.md section 9",
+      "title": "Cap, ceilings, replacement allowance and attempt cap",
+      "status": "budget-dependent",
+      "controls": [
+        "docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py"
+      ],
+      "tests": [],
+      "probes": [
+        "P08",
+        "P10"
+      ],
+      "evidence_required": "A dated rate card for the runtime at freeze time, a per-cell projection measured under the pinned policy at those rates, and a cap recorded once with cap-freeze against that projection with the protected reserve set.",
+      "open_questions": [
+        "No cap, ceiling, replacement allowance or attempt cap is chosen in this specification.",
+        "The pilot's three-replacement allowance was demonstrably insufficient for its own failure rate; the replacement allowance is recomputed, not inherited."
+      ]
+    },
+    {
+      "id": "study-frozen-inputs",
+      "source": "SPECIFICATION.md section 11",
+      "title": "The frozen-input chain from template to rendered prompt to public summary",
+      "status": "specified-only",
+      "controls": [
+        "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py"
+      ],
+      "tests": [],
+      "probes": [
+        "P26"
+      ],
+      "evidence_required": "The dispatch template checked against its pin, each rendered prompt against the digest sealed beside it, and that same file against the value published in the public cell summary, with no-unfilled-placeholder as a dispatch precondition.",
+      "open_questions": [
+        "The pilot established this chain three links deep for all eight attempts; a future freeze re-establishes it over its own rendered template."
+      ]
+    }
+  ]
+}
