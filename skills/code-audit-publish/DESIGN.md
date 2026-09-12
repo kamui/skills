@@ -14,9 +14,10 @@ unchanged.
 The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. Its direction is a
 PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
 change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
-The rename retains the `v2b-1` review protocol and the existing two-finder workflow. It does not
-claim that the planned transition audits, stronger verification or executable experiments have
-shipped. Admission, verification, rendering and state changes receive their own release bumps.
+The rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
+advanced the identifier to `v2b-2` and C18 advances it to `v2b-3`. It does not claim that the planned transition audits, stronger
+verification or executable experiments have shipped. Admission, verification, rendering and state
+changes receive their own release bumps.
 
 The [assessment](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md) motivates
 three work streams: reliable verification/publication, discovery of affected obligations and
@@ -43,12 +44,14 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-2`. Issue #161 increments `v2b-1` to `v2b-2` for the admission and
-refutation change recorded in
+Workflow identifier: `v2b-3`. Issue #163 increments `v2b-2` to `v2b-3` for the verdict-routing and
+status semantics recorded in [C18](#c18-unresolved-evidence-material-questions-and-optional-findings).
+Issue #161 incremented `v2b-1` to `v2b-2` for the admission and refutation change recorded in
 [C17](#c17-removed-guarantees-put-unchanged-code-in-scope): unchanged code is introduced-here when
 the diff removed or weakened a guarantee it relied on, and a `pre-existing` refutation must compare
-the same path, trigger and governing guarantee at base and head. A `v2a-1` or `v2b-1` trailer
-remains readable because these releases change the identifier, not the trailer vocabulary.
+the same path, trigger and governing guarantee at base and head. A `v2a-1`, `v2b-1` or `v2b-2`
+trailer remains readable: each bump changes the identifier, not the trailer vocabulary, so a prior
+round's finding ids and trailers stay legible as the historical state they record.
 
 ### The pole statement
 
@@ -98,11 +101,12 @@ inert, or harmful against that intent.
 | C10 | Run permitted suites once before finder fan-out and share their results. | Both finders and the verifier receive the same suite result without either finder re-running the suite; focused candidate tests remain allowed. | [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
 | C11 | Send every candidate-related acquittal through the existing fresh-context verifier dispatch. | A related row receives a cited `holds` or `re-open` ruling; `re-open` becomes caller-visible uncertainty, never a verifier-created finding. | [test 3 v2a run](../../docs/research/prototype-runs-2026-09-01-test-3/v2a-run.md), [verifier addendum](../../docs/research/prototype-runs-2026-09-01-test-3/addendum-2026-09-03.md) |
 | C12 | Compare a generated artifact's changed hunks with its source before ignoring it. | A same-diff source/artifact contradiction becomes a candidate even when CI would ordinarily catch it. | [test 4 v2 run](../../docs/research/prototype-runs-2026-09-01-test-4/v2-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
-| C13 | Forward explicit review-record deferrals to the Requirements finder. | An unresolved design, naming, or API-shape deferral on unreleased public surface produces a question and prevents `Passed`. | [test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
+| C13 | Forward explicit review-record deferrals to the Requirements finder. | An unresolved design, naming, or API-shape deferral on unreleased public surface reaches the axis, never counts as `Met`, and produces a question that prevents `Passed` where C18's outcome-changing test admits one. | [test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
 | C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Every expressible file coordinate resolves at the reviewed full head SHA while `LEFT` and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
 | C15 | Build shared finder input and verifier prompts with scripts, and keep the caller report compact. | Mechanical orchestration is reproducible without moving review judgment or exposing finder `support` to the verifier. | [shared-block builder](scripts/build_shared_block.py), [verifier-prompt builder](scripts/build_verifier_prompt.py) |
 | C16 | Validate finder ledger, manifest, and counts shape before verification. | A malformed finder report gets one shape-only retry, then makes its axis incomplete instead of entering verification unaudited. | [finder-report validator](scripts/validate_finder_report.py), [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
 | C17 | Admit unchanged code whose relied-on guarantee the diff removed, and require the same base/head comparison before a `pre-existing` refutation. | A byte-identical path safe at base and unsafe at head becomes a candidate citing both revisions and its consumer, while a path already unsafe at base is still refuted as pre-existing and a guarantee-preserving refactor still yields nothing. | [replay record](../../docs/research/audit-removed-guarantee-scope-2026-09-12.md), [assessment B3](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
+| C18 | Route an unsettled thing by settle / ask / record, name the five refutation bases, and gate deferral questions on the present decision. | An answerable claim is settled rather than asked, a published question is outcome-changing and unanswerable, an unresolved record never reads as safety, and a proven low-priority defect stays a `consider` finding. | [holdout evaluation (a), (d), (e)](../../docs/research/prototype-runs-holdout/evaluation.md), [assessment B2/B6/B8](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
 
 ## The changes, mapped to evidence
 
@@ -199,8 +203,10 @@ choice that run made is now the rule, in `requirements-axis.md` § Step 2 and `S
 items in that bucket resolve to questions at the finder and bypass the confirm/refute verifier — a
 question is not a defect claim — and each must carry (a) why no static evidence can settle it and
 (b) what measurement or answer would. The bar matches v5a's G1 guard: "no static evidence could
-settle this", not "I didn't find it". The `plausible` → question route through the verifier is
-unchanged and remains the other way a question arises.
+settle this", not "I didn't find it". The `plausible` → question route through the verifier was the
+other way a question arose; C18 keeps that route and gates it, so a `plausible` verdict asks only
+where the unsettled fact is outcome-changing and no available source can settle it. C18 also adds a
+third thing each bucket item carries, beside (a) and (b): the present decision the answer moves.
 
 ### C5. The `Observations` section
 
@@ -502,6 +508,14 @@ The rule needs an explicit postponement in a review comment. A suggestion the au
 preference a reviewer stated once and dropped, is not a deferral, and a naming nit does not become
 one by being about a name.
 
+C18 narrows the publication half of this change and leaves the rest standing: the deferral still
+reaches the axis, is never `Met`, and counts as unverifiable, and it publishes as a question — the
+thing that holds the axis at `Waiting for information` — when its answer moves a decision this merge
+settles. Structurally the bucket is no longer a fold into "cannot tell": the deferral rule now
+carries its own two-rule split, and a recorded deferral keeps the `question` ledger disposition so a
+later round reads the decision as open rather than as tested and killed. The paper check below is
+unaffected, because `removeCookies` was what that merge would release.
+
 Checked on paper against test 4's pinned head (`cb02d5ba`, test 4 README): step 1 extracts the
 `pavelfeldman` sentence with `removeCookies(filter)` as its surface; the Requirements finder
 receives it after the issue text; `removeCookies` is absent from every released version, so the
@@ -628,6 +642,124 @@ The pre-change pin is recorded there. Specified by
 [epic #156](https://github.com/kamui/skills/issues/156). Identifier bumped to `v2b-2` with the
 trailer example in [`publishing.md`](references/publishing.md#one-review-one-call) and this note; the
 skill ships no validator that asserts the identifier, so nothing mechanical changed with it.
+
+### C18. Unresolved evidence, material questions, and optional findings
+
+Three channels had one boundary between them, and it sat in the wrong place. A `plausible` verdict
+became an author question automatically, whatever had left it unsettled, so a claim a reader could
+have settled by opening one more file reached the author as a request to finish the review. C13
+turned every explicit deferral on unreleased public surface into an open question, whatever the
+merge itself decided. And "accurate but sub-threshold" covered both a fact whose consequence was
+shown absent and a consequence nobody had established, so an unproven safety aside could publish as
+an observation beside the candidate it contradicted.
+
+The holdout shows each edge. On (a) the ground truth records that "everything needed is in the diff
+plus one function", and two of three `v5b` seeds still carried a false acquittal on that surface:
+seed 2 published the contradiction as an observation next to the finding it undercut, and seed 3
+refuted the candidate and added "the diff is correct as merged"
+([holdout evaluation](../../docs/research/prototype-runs-holdout/evaluation.md) § "(a)",
+[ground truth](../../docs/research/prototype-runs-holdout/README.md) § "Target (a)"). On (d) every
+cell located the same preview naming deferral and the four Skeptic-line cells published nothing,
+reasoning that "restating a question the maintainers had already deferred adds nothing a reviewer
+can settle" — scored `under`, because the `prefer-*` values shipped through five releases before the
+same author renamed them twelve days later (evaluation § "(d)", README § "Target (d)"). On (e) the
+designated question was outcome-changing precisely because "the change's entire justification is
+that number" (README § "Target (e)"). The assessment asks for the same three repairs in its B2, B6
+and B8 rows: align what an approval establishes across every role without turning each deferred name
+into a question; adopt explicit unresolved-evidence routing instead of deleting `plausible`; and
+separate lack of consequence from lack of evidence
+([assessment](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md) § "What
+shipped, and what to backport").
+
+`confirmed` / `plausible` / `refuted` stays the verifier's vocabulary. B6's deletion is not copied:
+the integrated arm leaving its own branch unused is not evidence that this one must lose the middle
+verdict, and the routing repair is what the failures actually call for.
+
+Six edits. `finding-format.md` gains § Settle, ask, or record, the ladder every unsettled thing now
+takes: **settle it** where a reachable source answers it, **ask it** where an outcome-changing fact
+no available source can settle remains, **record it** otherwise — with material nobody could read
+and checks nobody finished leaving the ladder at coverage instead. Outcome-changing is defined there
+as the ladder's own verdict test: the answer moves a decision this merge settles rather than one
+somebody makes later, which covers present correctness, what the change releases, what consumers may
+then depend on, and whether the change's stated justification holds. Priority moves nothing between
+rungs, so a proven `P3` defect is a `consider` finding rather than an observation, and a published
+question carries no priority and asks for no code change. `verify.md` names five refutation evidence
+bases — contradiction, prevention, established intent, pre-existing behavior, no qualifying
+consequence — each with the citation it requires, adds § Finish the legwork before any `plausible`
+ruling, makes `plausible` carry which of trigger or impact is unsettled, the smallest settling fact,
+and where
+that fact must come from, and bars an aside that asserts a consequence the verifier never checked.
+The two axis briefs carry the same intent test — an approval establishes exactly what it explicitly
+accepted, a postponement is open evidence rather than acceptance — the Code brief settles a
+reachable trigger before returning a candidate and treats a contradicted documented rule as a
+candidate on its own account, and the Requirements brief routes its "cannot tell" bucket through the
+ladder and gates the C13 deferral rule on the present decision. `publishing.md` gates the axis's
+`Waiting for information` on a deferral that published as a question, states that an unresolved
+record is never evidence the code is correct, drops a pooled observation asserting an unestablished
+consequence, and requires stated reasoning before a decline is `accepted` — an author's word alone
+never settles a verified blocker. `SKILL.md` routes the verifier's `plausible` through the same
+ladder and reports the unresolved records that published nothing.
+
+Acceptance table. Source, the channel it belongs in, and what it does to the status:
+
+| Source | Expected channel | Status |
+| --- | --- | --- |
+| Race premise a reader can settle — a flag that cannot go false while a body exists | Read the source and rule: `confirmed` finding, or `refuted` and dropped | `Changes Requested` on a `must-fix`; unchanged when refuted |
+| A required artifact the spec names that the diff never adds | Requirements finding, `must-fix` | `Changes Requested` |
+| A deployment fact only an operator holds, and the merge decision turns on it | Question naming the operator and the measurement | `Needs Information`; Requirements `Waiting for information` |
+| A benchmark justification nothing this merge decides turns on | Observation where the absence of consequence is established, else a ledger row | unchanged |
+| A preview naming decision the record defers to a named gate, on a surface the repository's own compatibility policy exempts | Recorded: a `question`-disposition ledger row carrying the deferral, its author and the decision, counted unverifiable, reported to the caller | unchanged; the axis may pass |
+| A deferral whose answer decides what this merge releases, or what consumers may already depend on | Question naming the deferral, its author and the decision | `Needs Information`; Requirements `Waiting for information` |
+| A true, actionable defect at `P3` | `consider` finding at `P3` | unchanged — `consider` holds nothing back |
+| An accurate fact with the absence of consequence established | Observation: pooled, deduplicated, capped at three | unchanged |
+| Prose asserting safety with no consequence established — "correct as merged" | Not an observation: rule on the candidate it bears on, or name the check as unfinished | `Incomplete` where a material check is unfinished; never `Approved` on the prose |
+
+Two properties the table holds fixed. A published question carries `action=question`, no priority
+and no `fix` in its trailer, plus the standing "Change no code for this." line
+(`finding-format.md` § The trailer). The observations channel keeps the cap of three, the pooled
+cross-axis deduplication, and the `observation (unpublished, cap)` record in the run report that C5
+specified; the only addition is dropping an item that asserts what nobody established.
+
+Replayed against the corpus as instructions, not as measurements: no run was executed for this
+change, and it claims no recall gain. On (d) the deferral still publishes as a question, and the
+conjunct that decides it is the named gate: "I'm fine adjusting this later if we need to since it's
+in preview" postpones without naming where, so the recorded rule cannot apply and rule 1 governs —
+consistent with the `prefer-*` values reaching users in `0.2.14` four days after the merge. Test 4's
+`removeCookies` deferral publishes on a different conjunct: its gate is named ("the pre-release api
+review"), but no exemption covers the surface — the diff adds the method to the public API docs and
+to the generated `types.d.ts`, and nothing in the packet marks it preview or unstable, which is an
+inference from absence rather than a quoted policy. So the exemption fails on the available evidence
+and rule 1 governs, as it does on its own release trigger. C13's paper check is unchanged. On (e)
+the benchmark question still publishes: whether the change's stated justification holds is one of
+the verdict-moving decisions the definition names, which is the ground truth's own reason for
+designating it. On (a) the retry premise is settled by reading rather than left in the middle
+verdict, seed 3's "correct as merged" is not a refutation on any of the five bases, and seed 2's
+aside fails the observation bar — it asserts a consequence the run never established beside the
+finding it contradicts, so it goes back as a ruling on that candidate. The test 2 Fable
+`redis.conf` scope fact is unchanged from C5's paper check and shows the low-priority rule working:
+it publishes as the confirmed `P3 consider` finding R2, and the Code finder's duplicate observation
+of the same fact at the same `file:line` is what the pool drops — a proven defect at the bottom
+priority stays a finding rather than sinking into the channel beside it.
+
+The gate can bite in the wrong direction, and the (d) cells show how: read "preview" as the author's
+word in the thread and the question disappears, which is the outcome the holdout scored `under`. The
+recorded rule therefore keys on what the repository marks, what its compatibility policy promises,
+and whether the record names the later gate — never on how a participant described the surface — and
+the briefs say that already discussed and already deferred are not the test.
+
+Two known softnesses, recorded rather than papered over. The `question` disposition now covers both
+a published question and a recorded one, so which of the two a row is lives in the row's claim and
+not in a mechanical field, while the axis outcome turns on that difference; the alternative was
+`acquitted`, which the orchestrator forwards to the verifier as a related acquittal and a later
+round reads as tried and killed, so the softness is the better trade. And the Code axis has no
+`question` disposition to record an open consequence with, so such a row is `acquitted` with the
+openness carried in its claim; `verify.md` § Related acquittals gains the ruling for a row that
+names no premise, which is what keeps that record from being attacked as an acquittal it is not.
+
+Expected cost is ≈0: the added work is a read the investigator should already have made, and the new
+refusals remove output rather than adding it. Specified by
+[issue #163](https://github.com/kamui/skills/issues/163). The workflow identifier advances to
+`v2b-3` with this change.
 
 ### Subtractions
 

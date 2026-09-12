@@ -16,6 +16,8 @@ So each finding carries both renderings of the same judgment, and the low band s
 | `consider` | may make the change or close it unactioned; both are correct | optional |
 | `question` | **change no code**; answer it, or say what would settle it | open question |
 
+A `question` carries no priority: it is not triaged against findings, and § Settle, ask, or record is what admits one.
+
 **Priority** — `P0`–`P3`, the human's triage order:
 
 - `P0` — drop everything. Blocking release, operations, or major usage. Only for issues that hold under any input, with no assumptions.
@@ -25,11 +27,21 @@ So each finding carries both renderings of the same judgment, and the low band s
 
 Priority and action are separate judgments. Priority describes impact and urgency; action is a merge judgment, licensed by **demonstrated merge consequence** — what provably goes wrong if this merges unfixed — never by the severity label. `P0` is inherently `must-fix`; otherwise do not derive action from priority, fix size, or artifact type, and do not inflate priority to communicate action. In particular, `P1` does not mean blocking and `P2`/`P3` do not mean optional. Restatement drift — a second document carrying an older version of a rule whose canonical statement is correct — is `P2` when the stale document is executed as instructions and `P3` otherwise; it is never `P1` or `P0`.
 
-The calibration: a proven correctness, security, or explicit-requirement gap on an authoritative execution path is `must-fix`, even when the edit is one line or documentary. A restatement of a rule in a second document is on an authoritative execution path only when **both** hold: the canonical rule is not linked or referenced from the stale text, so a reader following the stale text has no cue to the correct rule; **and** the stale text, followed literally, causes a concrete wrong action the canonical text forbids — name that action. When either fails, the drift is `consider`: the canonical behavior remains satisfied and merge does not depend on resolving it. A real doc-sync drift is usually this shape. The verifier may recalibrate action independently of priority, and a `plausible` verdict makes a candidate `question` at any priority.
+The calibration: a proven correctness, security, or explicit-requirement gap on an authoritative execution path is `must-fix`, even when the edit is one line or documentary. A restatement of a rule in a second document is on an authoritative execution path only when **both** hold: the canonical rule is not linked or referenced from the stale text, so a reader following the stale text has no cue to the correct rule; **and** the stale text, followed literally, causes a concrete wrong action the canonical text forbids — name that action. When either fails, the drift is `consider`: the canonical behavior remains satisfied and merge does not depend on resolving it. A real doc-sync drift is usually this shape. The verifier may recalibrate action independently of priority, and a `plausible` verdict sends a candidate to § Settle, ask, or record rather than to publication at any priority.
 
 Do not label everything `consider` and do not label nothing `consider`. The first is a review that blocks nothing; the second is a review where a nit stops a merge.
 
-**Confidence** — implicit, never written. Publication is the assertion: a finding published as a finding was verified `confirmed`. `plausible` publishes as a question and `refuted` does not publish at all, so a confidence key in the trailer would never vary.
+**Confidence** — implicit, never written. Publication is the assertion: a finding published as a finding was verified `confirmed`. A `plausible` verdict never publishes as a finding and `refuted` does not publish at all, so a confidence key in the trailer would never vary.
+
+## Settle, ask, or record
+
+Not everything a reviewer notices is a finding. An unsettled thing takes the first of these that applies, and the ladder is what keeps a published question rare enough to be worth answering.
+
+1. **Settle it.** Where a source you can reach answers it — another file, the base version, a caller, a constant, a documented rule, the suite results you were given, the single focused test the briefs already permit — read that source and rule. An answerable claim routed onward asks the author to finish the reviewer's own work. Material you could not read, or a check you started and abandoned, is neither settled nor a question: name it unfinished, and the run's coverage carries it.
+2. **Ask it.** An **outcome-changing** fact no available source can settle is a question. Outcome-changing means the answer could change this review's verdict — it moves a decision this merge settles rather than one somebody makes later. Present correctness, what the change releases, what consumers may then depend on, and whether the change's stated justification holds are all such decisions; the test is the verdict, not this list. That someone already discussed it, deferred it, or knows more than the reviewer does is not the test either. A question names who or what measurement can answer it, carries no priority, and asks for no code change.
+3. **Record it.** What is left is a ledger row, and reaches the caller in the run report. It publishes as an **observation** only where its absence of consequence is established: an accurate fact, one sentence, one evidence pointer, and no consequence anyone can name. A consequence that is merely unproven is not an observation — "nothing goes wrong here" asserts what the run did not establish, and safety is the one thing an unresolved record never proves.
+
+Priority moves nothing between rungs. A proven, actionable defect at `P3` is a `consider` finding: small is not the same as consequence-free, and recording it as an observation strips the action its reader needs.
 
 ## Anchor and fix site
 
@@ -140,7 +152,7 @@ Four parts, and each one serves a specific reader:
 
 1. **The tag line.** Axis, action, priority, then a title of at most 80 characters, imperative or declarative, naming the defect rather than the area. A human scans it; an agent parses it. It is redundant with the trailer on purpose — the trailer is authoritative, the tag line is what a human sees.
 2. **The evidence.** Written from the `claim`: `file:line` and what the code actually does. Cite the documented rule or the originating requirement where one applies, quoting it. One paragraph. Quote at most three lines of code — a diff the reader already has does not need reproducing.
-3. **`Triggers when`.** The concrete inputs, state, or environment that produce the wrong behavior. This is the field an agent uses to check its own fix, so "could be wrong under some conditions" is not an answer. A finding that cannot name its trigger is a `question`, not a finding.
+3. **`Triggers when`.** The concrete inputs, state, or environment that produce the wrong behavior. This is the field an agent uses to check its own fix, so "could be wrong under some conditions" is not an answer. A finding that cannot name its trigger is not a finding: take it back through § Settle, ask, or record, which decides whether it is asked or recorded.
 4. **`Change`.** The concrete edit. A human can work a fix out from the diagnosis; an agent handed only a diagnosis invents one. Name the file, the site, and what to do there. Where the fix is a literal replacement, give it as a fenced ```suggestion``` block with exact whitespace — and only then, because a suggestion block that does not apply cleanly is worse than prose.
 
 Nothing above the trailer but these parts, and the evidence stays one paragraph — where it wants a second, that is usually two findings, or argument that belongs in `support`.
@@ -154,9 +166,9 @@ Without it, an agent does the work anyway and the priority machinery upstream bu
 A question:
 
 ```markdown
-**[Question] Is the 30s timeout at `src/fetch.ts:88` deliberate?**
+**[Question] Does the 30s timeout at `src/fetch.ts:88` fit the gateway's request budget?**
 
-`src/fetch.ts:88` sets 30s where every other caller uses 5s. The issue is silent on timeouts and the history shows no rationale. If it is deliberate, a comment saying why would stop the next reader changing it.
+`src/fetch.ts:88` sets 30s where every other caller uses 5s. The issue is silent on timeouts, the history carries no rationale, and no file in the repository records the gateway's own budget — so whether this path can outlive it is not readable here, and it decides whether the new path times out at the caller instead. Whoever owns the gateway configuration can answer it; one request against the staging gateway would show it.
 
 **Change no code for this.** Answer it, or say what would settle it.
 
