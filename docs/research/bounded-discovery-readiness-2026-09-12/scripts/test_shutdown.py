@@ -423,6 +423,15 @@ class GateTests(unittest.TestCase):
         self.assertIn("did not establish its condition",
                       self.authorize(gate=path, expected=1).stdout)
 
+        # Staleness is bounded whether or not the caller asks for a bound, so a
+        # gate whose own stamp was refreshed over an old capture still refuses.
+        laundered = dict(record, observed_at=stamp(),
+                         probes_captured_at=stamp(-604800))
+        path = self.base / "laundered.json"
+        path.write_text(json.dumps(laundered), encoding="utf-8")
+        self.assertIn("probes_captured_at",
+                      self.authorize(gate=path, expected=1).stdout)
+
         path = self.base / "other.json"
         path.write_text(json.dumps({"artifact_id": "something-else"}), encoding="utf-8")
         self.assertIn("is not a shutdown gate record",

@@ -18,7 +18,7 @@ Usage::
         [--timeout SECONDS] [--max-probe-age-seconds N] [--probes-from FILE]
         [--raw-out FILE]
     python3 scripts/shutdown.py authorize --gate GATE --ledger FILE
-        [--max-age-seconds N]
+        [--max-age-seconds N]   # defaults to the probe-age bound, never unbounded
     python3 scripts/shutdown.py --self-test
 
 ``--roots-sha256`` is the digest the dispatch record pinned for this study's
@@ -34,7 +34,8 @@ while the host was probed is in the snapshot this gate decides on.
 ``authorize`` is what a later step calls before opening the seal: it re-reads a
 recorded gate and the ledger, and exits 0 only when that gate cleared, the
 ledger has not changed since, and the evidence it rests on — the capture, not
-just the gate's own stamp — is still fresh.
+just the gate's own stamp — is still within ``--max-age-seconds``, which is
+bounded by default rather than only when the caller remembers to ask.
 
 Exit: 0 the gate cleared, 1 a check refused clearance with one line each on
 stdout, 2 an input cannot be read or an output cannot be written. A probe that
@@ -541,7 +542,7 @@ def command_authorize(args) -> int:
         if ages[name] < -CLOCK_SKEW_SECONDS:
             problems.append("the gate's %s is %.0f seconds in the future"
                             % (name, -ages[name]))
-    if args.max_age_seconds and ages:
+    if ages:
         oldest = max(ages, key=lambda name: ages[name])
         if ages[oldest] > args.max_age_seconds:
             problems.append("the evidence this gate rests on is %.0f seconds old (%s); "
@@ -587,7 +588,11 @@ def build_parser() -> argparse.ArgumentParser:
                         help="how old the host capture this gate scores may be "
                              "(default %d)" % DEFAULT_MAX_PROBE_AGE)
     parser.add_argument("--gate")
-    parser.add_argument("--max-age-seconds", type=int)
+    parser.add_argument("--max-age-seconds", type=int, default=DEFAULT_MAX_PROBE_AGE,
+                        help="how old the evidence this gate rests on may be at "
+                             "authorization (default %d); staleness is always bounded, "
+                             "because a gate is only a clearance while it is current"
+                             % DEFAULT_MAX_PROBE_AGE)
     parser.add_argument("--self-test", action="store_true")
     return parser
 
