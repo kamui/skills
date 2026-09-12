@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-B-clean",
+  "arm": "B",
+  "outcome": "findings",
+  "summary": {"body": "Comment-only change, no behavior modification as intended. The new comment accurately describes the `n > len(items)` case, but the docstring/comment is incomplete: it doesn't mention the `n == 0` edge case, which is arguably the most surprising one. `items[-n:]` with `n == 0` evaluates to `items[0:]` (the whole list), not an empty list as most callers would intuitively expect from a function named `last_n`. Since the whole point of this PR is to document `last_n`'s edge-case behavior, silently omitting the `n == 0` quirk leaves the comment only partially trustworthy — a reader could reasonably assume all edge cases are now covered when they aren't."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "The added comment documents the `n > len(items)` behavior but omits the `n == 0` case, where `items[-0:]` is `items[0:]` — the full list, not an empty one. This is the more counter-intuitive edge case for a function called `last_n`, and since this PR's stated purpose is to document edge-case behavior, leaving it out makes the comment incomplete/misleading about coverage.",
+      "trailer": "last_n-comment-omits-n-zero-case",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 9, "side": "RIGHT"},
+      "priority": "P3",
+      "action": "consider",
+      "blocking": false,
+      "kind": "incomplete-documentation"
+    }
+  ],
+  "stop": null
+}

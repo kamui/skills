@@ -1,0 +1,863 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "ticket": 207,
+  "rule": "E1 Unused, extended by rule rather than by hand: #148 section 7's list, #148's exclusion log, the four revealed #138 targets, the two revealed excluded registers, and every pull request named in the revealed candidate inventory - candidates and the later fixes and confirming reports their rows cite. A candidate on this list cannot be reused blind, and closing an issue or renaming a slot does not restore blindness.",
+  "derived_at": "2026-09-12T10:25:24.497471+00:00",
+  "sources_sha256": {
+    "criteria": "5cf56f151da7e78261ac98e8b5a909fe1139d5f4d627129011d9afc227665f27",
+    "exclusions": "4127b83a0e98c6dceaa75acb9c27ed95f6b65e7ff9d8e1ae863a45d8a6f15951",
+    "inventory": "562a1a870a0f709cf8973141ff2f709ab4d6ed137a7eca3f1faa85665e9ceef5",
+    "slots": "276395c5467db4427d8cee081d818831939f99f7e90bad9e4011c4a0b5e31cbc",
+    "excluded_grpc_register": "b4e804c0c8464aaebd209817f61aefe97f44b9b2e6b2ab501d9ee1fcfa103ff7",
+    "excluded_jwt_register": "c1fa73c642fc7841a5cd67fa37795d53cf6d6e8583f0cccb4551f248ac09fe82"
+  },
+  "inventory_rows_read": 28,
+  "reserved_count": 79,
+  "reserved": {
+    "BurntSushi/ripgrep#2957": {
+      "repository": "BurntSushi/ripgrep",
+      "number": 2957,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "aio-libs/aiohttp#12119": {
+      "repository": "aio-libs/aiohttp",
+      "number": 12119,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "astral-sh/uv#4424": {
+      "repository": "astral-sh/uv",
+      "number": 4424,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "bokeh/bokeh#9232": {
+      "repository": "bokeh/bokeh",
+      "number": 9232,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "clap-rs/clap#6212": {
+      "repository": "clap-rs/clap",
+      "number": 6212,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "clap-rs/clap#6243": {
+      "repository": "clap-rs/clap",
+      "number": 6243,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "cockroachdb/pebble#5743": {
+      "repository": "cockroachdb/pebble",
+      "number": 5743,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "etcd-io/bbolt#1179": {
+      "repository": "etcd-io/bbolt",
+      "number": 1179,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md"
+      ]
+    },
+    "etcd-io/etcd#17563": {
+      "repository": "etcd-io/etcd",
+      "number": 17563,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "etcd-io/etcd#18749": {
+      "repository": "etcd-io/etcd",
+      "number": 18749,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "golang-jwt/jwt#124": {
+      "repository": "golang-jwt/jwt",
+      "number": 124,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "golang-jwt/jwt#456": {
+      "repository": "golang-jwt/jwt",
+      "number": 456,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "graphql/graphql-js#1582": {
+      "repository": "graphql/graphql-js",
+      "number": 1582,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "graphql/graphql-js#3760": {
+      "repository": "graphql/graphql-js",
+      "number": 3760,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "graphql/graphql-js#3816": {
+      "repository": "graphql/graphql-js",
+      "number": 3816,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#137": {
+      "repository": "grpc/grpc-go",
+      "number": 137,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#7390": {
+      "repository": "grpc/grpc-go",
+      "number": 7390,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "grpc/grpc-go#7417": {
+      "repository": "grpc/grpc-go",
+      "number": 7417,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8278": {
+      "repository": "grpc/grpc-go",
+      "number": 8278,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8342": {
+      "repository": "grpc/grpc-go",
+      "number": 8342,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8369": {
+      "repository": "grpc/grpc-go",
+      "number": 8369,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8514": {
+      "repository": "grpc/grpc-go",
+      "number": 8514,
+      "reasons": [
+        "a revealed excluded register",
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8519": {
+      "repository": "grpc/grpc-go",
+      "number": 8519,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8523": {
+      "repository": "grpc/grpc-go",
+      "number": 8523,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8527": {
+      "repository": "grpc/grpc-go",
+      "number": 8527,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8571": {
+      "repository": "grpc/grpc-go",
+      "number": 8571,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8624": {
+      "repository": "grpc/grpc-go",
+      "number": 8624,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8630": {
+      "repository": "grpc/grpc-go",
+      "number": 8630,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8639": {
+      "repository": "grpc/grpc-go",
+      "number": 8639,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#9136": {
+      "repository": "grpc/grpc-go",
+      "number": 9136,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#9331": {
+      "repository": "grpc/grpc-go",
+      "number": 9331,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hashicorp/raft#581": {
+      "repository": "hashicorp/raft",
+      "number": 581,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "hyperium/h2#596": {
+      "repository": "hyperium/h2",
+      "number": 596,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#628": {
+      "repository": "hyperium/h2",
+      "number": 628,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#661": {
+      "repository": "hyperium/h2",
+      "number": 661,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#897": {
+      "repository": "hyperium/h2",
+      "number": 897,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#898": {
+      "repository": "hyperium/h2",
+      "number": 898,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/hyper#3952": {
+      "repository": "hyperium/hyper",
+      "number": 3952,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/cobra-holdout#9": {
+      "repository": "kamui/cobra-holdout",
+      "number": 9,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/shortlist#66": {
+      "repository": "kamui/shortlist",
+      "number": 66,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/skills#17": {
+      "repository": "kamui/skills",
+      "number": 17,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "libuv/libuv#124": {
+      "repository": "libuv/libuv",
+      "number": 124,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "libuv/libuv#4400": {
+      "repository": "libuv/libuv",
+      "number": 4400,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "microsoft/playwright#29698": {
+      "repository": "microsoft/playwright",
+      "number": 29698,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "mvdan/sh#137": {
+      "repository": "mvdan/sh",
+      "number": 137,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "mvdan/sh#934": {
+      "repository": "mvdan/sh",
+      "number": 934,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#4045": {
+      "repository": "nats-io/nats-server",
+      "number": 4045,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#4861": {
+      "repository": "nats-io/nats-server",
+      "number": 4861,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#6266": {
+      "repository": "nats-io/nats-server",
+      "number": 6266,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#6593": {
+      "repository": "nats-io/nats-server",
+      "number": 6593,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#6623": {
+      "repository": "nats-io/nats-server",
+      "number": 6623,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7387": {
+      "repository": "nats-io/nats-server",
+      "number": 7387,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7395": {
+      "repository": "nats-io/nats-server",
+      "number": 7395,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7560": {
+      "repository": "nats-io/nats-server",
+      "number": 7560,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7716": {
+      "repository": "nats-io/nats-server",
+      "number": 7716,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats.go#1949": {
+      "repository": "nats-io/nats.go",
+      "number": 1949,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "pola-rs/polars#24771": {
+      "repository": "pola-rs/polars",
+      "number": 24771,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "prometheus/prometheus#15141": {
+      "repository": "prometheus/prometheus",
+      "number": 15141,
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "prometheus/prometheus#15316": {
+      "repository": "prometheus/prometheus",
+      "number": 15316,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "psf/black#3931": {
+      "repository": "psf/black",
+      "number": 3931,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "psf/black#3939": {
+      "repository": "psf/black",
+      "number": 3939,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "psf/requests#6667": {
+      "repository": "psf/requests",
+      "number": 6667,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "python/cpython#30637": {
+      "repository": "python/cpython",
+      "number": 30637,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "python/cpython#96475": {
+      "repository": "python/cpython",
+      "number": 96475,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "python/typeshed#9458": {
+      "repository": "python/typeshed",
+      "number": 9458,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "quic-go/quic-go#137": {
+      "repository": "quic-go/quic-go",
+      "number": 137,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "quic-go/quic-go#5220": {
+      "repository": "quic-go/quic-go",
+      "number": 5220,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "redis/redis#15530": {
+      "repository": "redis/redis",
+      "number": 15530,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "redis/redis#15680": {
+      "repository": "redis/redis",
+      "number": 15680,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "redis/redis-py#3654": {
+      "repository": "redis/redis-py",
+      "number": 3654,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "scrapy/scrapy#6993": {
+      "repository": "scrapy/scrapy",
+      "number": 6993,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "scrapy/scrapy#7426": {
+      "repository": "scrapy/scrapy",
+      "number": 7426,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "scrapy/scrapy#7449": {
+      "repository": "scrapy/scrapy",
+      "number": 7449,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "spf13/cobra#1938": {
+      "repository": "spf13/cobra",
+      "number": 1938,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "tokio-rs/bytes#698": {
+      "repository": "tokio-rs/bytes",
+      "number": 698,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "tokio-rs/tokio#1197": {
+      "repository": "tokio-rs/tokio",
+      "number": 1197,
+      "reasons": [
+        "named in a revealed inventory row as a later fix or confirming report"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "tokio-rs/tokio#7757": {
+      "repository": "tokio-rs/tokio",
+      "number": 7757,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "tokio-rs/tokio#964": {
+      "repository": "tokio-rs/tokio",
+      "number": 964,
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "trpc/trpc#5017": {
+      "repository": "trpc/trpc",
+      "number": 5017,
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    }
+  }
+}

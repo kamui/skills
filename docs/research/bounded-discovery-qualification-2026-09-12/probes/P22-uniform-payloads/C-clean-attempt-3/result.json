@@ -1,0 +1,111 @@
+{
+  "duration_api_ms": 22817,
+  "stop_reason": "end_turn",
+  "session_id": "89ae1b77-be01-43a1-99e5-0a17fe7b753d",
+  "total_cost_usd": 0.042977,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4356,
+    "cache_read_input_tokens": 24560,
+    "output_tokens": 1891,
+    "output_tokens_details": {
+      "thinking_tokens": 881
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4356,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 252,
+        "cache_read_input_tokens": 9194,
+        "cache_creation_input_tokens": 1691,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1691
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 1654,
+      "outputTokens": 13,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.001719,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5": {
+      "inputTokens": 6,
+      "outputTokens": 1891,
+      "cacheReadInputTokens": 24560,
+      "cacheCreationInputTokens": 4356,
+      "webSearchRequests": 0,
+      "costUSD": 0.041258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 881,
+      "canonicalModel": "claude-sonnet-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 3,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "I reviewed `packet.md` \u2014 a comment-only change to `last_n` in `store.py` that documents behavior when `n` exceeds the list length.\n\n**Finding:** The new comment is accurate but incomplete \u2014 it doesn't mention that `n == 0` (or negative `n`) doesn't behave like \"the last n items\" at all, since `items[-0:]` equals `items[0:]` (the whole list) rather than an empty one. Since the PR's purpose is specifically to document `last_n`'s edge-case behavior, this is a reasonable gap to flag, though it's non-blocking (P3/consider) since it's a docs-only change and no behavior actually changed.\n\nI wrote this to `review-payload.json` with `outcome: \"findings\"` and one `finding` item.",
+  "ttft_ms": 1674,
+  "type": "result",
+  "duration_ms": 22068,
+  "uuid": "715cf21f-69cb-4ebc-937e-e4ef921da772",
+  "ttft_stream_ms": 1075,
+  "time_to_request_ms": 31,
+  "first_content_frame_ms": 1268,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

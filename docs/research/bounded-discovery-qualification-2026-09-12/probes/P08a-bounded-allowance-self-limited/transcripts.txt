@@ -1,0 +1,2 @@
+session 9e58bfc6-c997-48d1-8abf-c5a25131cb6d transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p08/9e58bfc6-c997-48d1-8abf-c5a25131cb6d.jsonl sha256 40f63d7831cb7450cf4e3c2687afc3abc66c8029f63194e309f97eebcb0e57c2

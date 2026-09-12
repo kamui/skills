@@ -1,0 +1,24 @@
+{
+  "probe": "P22-A-clean",
+  "session_id": "d344ef08-c1de-470e-8278-89822aeca9a2",
+  "transcripts": 1,
+  "recomputed_usd": "0.047605",
+  "per_role_usd": {
+    "primary": "0.047605"
+  },
+  "per_model_usd": {
+    "claude-sonnet-5": "0.047605"
+  },
+  "self_report_usd": 0.049201600000000005,
+  "envelope_model_usage_usd": {
+    "claude-haiku-4-5-20251001": 0.001597,
+    "claude-sonnet-5": 0.047604600000000004
+  },
+  "charged_usd": 0.049201600000000005,
+  "residual_usd": 0.0015966,
+  "residual_named_by": {
+    "claude-haiku-4-5-20251001": 0.001597
+  },
+  "settlement_rule": "charge the larger of the runtime self-report and the recomputed per-request total, and name the difference",
+  "metered_at": "2026-09-12T10:33:48.465655+00:00"
+}

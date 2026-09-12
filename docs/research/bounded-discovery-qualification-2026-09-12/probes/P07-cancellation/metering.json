@@ -1,0 +1,15 @@
+{
+  "probe": "P07",
+  "session_id": "69b13839-307b-40b5-97c4-f0c0c70313e8",
+  "transcripts": 1,
+  "recomputed_usd": null,
+  "per_role_usd": {},
+  "per_model_usd": {},
+  "self_report_usd": null,
+  "envelope_model_usage_usd": {},
+  "charged_usd": null,
+  "residual_usd": null,
+  "residual_named_by": null,
+  "settlement_rule": "charge the larger of the runtime self-report and the recomputed per-request total, and name the difference",
+  "metered_at": "2026-09-12T10:07:49.341842+00:00"
+}

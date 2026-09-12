@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-C-clean",
+  "arm": "C",
+  "outcome": "findings",
+  "summary": {"body": "Comment-only change, no behavior change as claimed. The new comment correctly explains the `n > len(items)` case, but it stops short of the edge case that actually surprises callers: `n == 0` (and negative `n`) don't behave like \"the last n items\" at all, since `items[-0:]` is `items[0:]`, i.e. the *whole* list, not an empty one. Worth a one-line addendum to the comment (or a guard in the code) so the documented behavior matches what a reader would expect from the function's name."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "The added comment documents the `n > len(items)` case but omits the more surprising edge case: for `n == 0`, `items[-n:]` becomes `items[0:]`, returning the *entire* list rather than an empty one (and negative `n` drops from the front instead of taking from the back). Given the whole point of this change is to document `last_n`'s edge-case behavior, this gap seems worth closing — either extend the comment to call out `n <= 0`, or add an explicit guard (e.g. `if n <= 0: return []`) if that behavior was never intended.",
+      "trailer": "last_n: n<=0 edge case undocumented",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 10, "side": "RIGHT"},
+      "priority": "P3",
+      "action": "consider",
+      "blocking": false,
+      "kind": "incomplete-documentation"
+    }
+  ],
+  "stop": null
+}

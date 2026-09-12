@@ -1,0 +1,61 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "experiment_id": "issue-207-P09-contention",
+  "owner": "kamui",
+  "currency": "USD",
+  "total_ceiling_usd": "0.10",
+  "pre_freeze_ceiling_usd": "0.10",
+  "frozen_total_cap_usd": null,
+  "grading_closeout_reserve_usd": null,
+  "actual_usd": "0",
+  "reserved_usd": "0.08",
+  "uncertainty_usd": "0",
+  "pre_freeze_actual_usd": "0",
+  "pre_freeze_reserved_usd": "0.08",
+  "planned_cells": 0,
+  "attempts_dispatched": 0,
+  "replacement_limit": 0,
+  "attempt_limit": 0,
+  "events": [
+    {
+      "event_id": "P09-0001",
+      "previous_event_id": null,
+      "observed_at": "2026-09-12T10:16:02.165204+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "open",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [],
+      "reason": "A probe ledger for P09 only, with a 0.10 ceiling so two 0.08 reservations cannot both fit. It carries no study money and is never settled against."
+    },
+    {
+      "event_id": "42079299-ddb8-4ef9-83e3-66043c3172cc",
+      "previous_event_id": "P09-0001",
+      "observed_at": "2026-09-12T10:16:02.264719+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "P09"
+      ],
+      "reservation_id": "race-A",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.08",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "P09"
+      ],
+      "reason": "Conservative reservation"
+    }
+  ]
+}

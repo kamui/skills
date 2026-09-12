@@ -1,0 +1,10 @@
+[
+    {
+        "Type": "bind",
+        "Source": "/private/tmp/bd207-probes/p16cell",
+        "Destination": "/private/tmp/bd207-probes/p16cell",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+    }
+]

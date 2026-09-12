@@ -1,0 +1,185 @@
+{
+  "probe": "P19",
+  "rule": "every claim goes through the ledger before a worker exists; a refusal is enforcement only if no worker started, which is asserted from the marker files rather than from this driver's control flow.",
+  "budget_script": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py",
+  "ledger": "lifecycle-ledger.json",
+  "claims": [
+    {
+      "claim": "01-first-open",
+      "attempt_id": "A",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.135393+00:00"
+    },
+    {
+      "claim": "02-duplicate-attempt-id",
+      "attempt_id": "A",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "attempt ID already used",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.135646+00:00"
+    },
+    {
+      "claim": "03-reused-context",
+      "attempt_id": "B",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "context ID used by a previous attempt",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.135727+00:00"
+    },
+    {
+      "claim": "04-second-open",
+      "attempt_id": "B",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.155471+00:00"
+    },
+    {
+      "claim": "05-third-open-while-two-live",
+      "attempt_id": "C",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "attempt or simultaneous cell cap",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.155687+00:00"
+    },
+    {
+      "claim": "06-close-A-stopped-invalid",
+      "attempt_id": "A",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.174854+00:00"
+    },
+    {
+      "claim": "07-replacement-without-evidence",
+      "attempt_id": "D",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "replacement evidence required",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.175098+00:00"
+    },
+    {
+      "claim": "08-replacement-wrong-ordinal",
+      "attempt_id": "D",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "replacement ordinal mismatch",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.175182+00:00"
+    },
+    {
+      "claim": "09-replacement-admitted",
+      "attempt_id": "D",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.195268+00:00"
+    },
+    {
+      "claim": "10-close-B-complete",
+      "attempt_id": "B",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.214928+00:00"
+    },
+    {
+      "claim": "11-replacement-of-a-valid-attempt",
+      "attempt_id": "E",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "only documented protocol/input invalidity earns replacement",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.215177+00:00"
+    },
+    {
+      "claim": "12-close-D-stopped-invalid",
+      "attempt_id": "D",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.234490+00:00"
+    },
+    {
+      "claim": "13-second-replacement-admitted",
+      "attempt_id": "F",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.254022+00:00"
+    },
+    {
+      "claim": "14-close-F-stopped-invalid",
+      "attempt_id": "F",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.273385+00:00"
+    },
+    {
+      "claim": "15-replacement-cap",
+      "attempt_id": "G",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "replacement cap",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.273661+00:00"
+    },
+    {
+      "claim": "16-fifth-attempt",
+      "attempt_id": "H",
+      "expected": "admitted",
+      "outcome": "admitted",
+      "refusal": null,
+      "worker_started": true,
+      "observed_at": "2026-09-12T10:18:19.293356+00:00"
+    },
+    {
+      "claim": "17-attempt-cap",
+      "attempt_id": "I",
+      "expected": "refused",
+      "outcome": "refused",
+      "refusal": "attempt or simultaneous cell cap",
+      "worker_started": false,
+      "observed_at": "2026-09-12T10:18:19.293605+00:00"
+    }
+  ],
+  "lifecycle_events_written": 9,
+  "lifecycle_event_timestamps": [
+    "2026-09-12T10:18:19.115330+00:00",
+    "2026-09-12T10:18:19.135800+00:00",
+    "2026-09-12T10:18:19.155762+00:00",
+    "2026-09-12T10:18:19.175255+00:00",
+    "2026-09-12T10:18:19.195500+00:00",
+    "2026-09-12T10:18:19.215261+00:00",
+    "2026-09-12T10:18:19.234716+00:00",
+    "2026-09-12T10:18:19.254246+00:00",
+    "2026-09-12T10:18:19.273759+00:00"
+  ],
+  "workers_started": [
+    "01-first-open.marker",
+    "04-second-open.marker",
+    "06-close-A-stopped-invalid.marker",
+    "09-replacement-admitted.marker",
+    "10-close-B-complete.marker",
+    "12-close-D-stopped-invalid.marker",
+    "13-second-replacement-admitted.marker",
+    "14-close-F-stopped-invalid.marker",
+    "16-fifth-attempt.marker"
+  ],
+  "recorded_at": "2026-09-12T10:18:19.293728+00:00"
+}

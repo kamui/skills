@@ -1,0 +1,7 @@
+{
+  "what_this_is": "the dispatch record's pin of the roots record, written outside the evidence seal while the roots still existed. The shutdown gate refuses a record that is not this one.",
+  "roots_record": "probes/P21-shutdown-gate/roots-record.json",
+  "roots_record_sha256": "6f6a6fcd63b937df5c399588754275fa0da001b0823dcf9693b82c7b49dde76c",
+  "seal": "~/.config/bounded-discovery/issue-207 (the evaluator-only directory this bundle's raw captures and synthetic canary live in; nothing of a target's truth is sealed here, because no target was prepared)",
+  "pinned_at": "2026-09-12T10:43:33.779368+00:00"
+}
