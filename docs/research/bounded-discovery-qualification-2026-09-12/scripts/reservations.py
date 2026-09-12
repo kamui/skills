@@ -12,7 +12,8 @@ How a reference is read, and why it matters:
 
 - A **qualified** reference (``owner/repo#123``) names its own repository. A **bare** number
   (``#123``) belongs to the repository most recently named in its own scope — the row, for a
-  table; the running text, for section 7's comma list; the whole file, for a register. A
+  table; the running text, for section 7's comma list; a line at a time, for a register,
+  whose own repository is the anchor on every line. A
   code span may also be a **repository** on its own (``owner/repo``, as in
   "``traefik/traefik`` (via ``#10244``)"), which anchors the bare numbers after it.
 - **Every bare number resolves, and the ones the file does not evidence are marked rather
@@ -77,6 +78,13 @@ NOT_A_REPOSITORY = (".enc", ".md", ".json", ".jsonl", ".py", ".txt", ".sh", ".ym
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def fold(key: str) -> str:
+    """One spelling for ``owner/repo#123``: the forge compares owner and repository names
+    case-insensitively, so a reservation must too."""
+    repository, _, number = key.partition("#")
+    return repository.lower() + "#" + number
 
 
 def looks_like_a_repository(span: str) -> bool:
@@ -177,9 +185,12 @@ def derive(research: Path):
     if violations:
         return None, violations
     reserved: dict = {}
+    # The forge treats owner and repository names case-insensitively, so two spellings of
+    # one pull request are one reservation, published under the first spelling seen.
+    canonical: dict = {}
 
     def reserve(repository, number, reason, source, kind="qualified"):
-        key = repository + "#" + number
+        key = canonical.setdefault(fold(repository + "#" + number), repository + "#" + number)
         entry = reserved.setdefault(key, {"repository": repository, "number": int(number),
                                           "confidence": "conservative",
                                           "reasons": [], "named_by": []})
@@ -259,12 +270,17 @@ def derive(research: Path):
         "rule": ("E1 Unused, extended by rule rather than by hand: #148 section 7's list, #148's "
                  "exclusion log, the revealed #138 slot registers, the two revealed excluded "
                  "registers, and every pull request named in the revealed candidate inventory - "
-                 "candidates and the later fixes and confirming reports their rows cite. Only a "
-                 "backticked reference counts in a Markdown list or table, because these files "
-                 "also cite this project's own tickets in prose; a register is about one "
-                 "repository and every number in it resolves there. A candidate on this list "
-                 "cannot be reused blind, and closing an issue or renaming a slot does not "
-                 "restore blindness."),
+                 "candidates and the later fixes and confirming reports their rows cite. Every "
+                 "bare number resolves to the nearest repository its scope names - a register's "
+                 "own, on every line of the register - and each entry is marked by how the files "
+                 "evidence it: strong where some citation is backticked, linked or written out "
+                 "qualified, conservative where every citation is a bare number in running prose. "
+                 "Both are reserved, because prose also carries this project's own ticket "
+                 "citations and no rule separates the two, and missing a published reference "
+                 "costs the study its blind where over-reserving costs a hunt one candidate. "
+                 "Owner and repository names compare case-insensitively, as the forge does. A "
+                 "candidate on this list cannot be reused blind, and closing an issue or renaming "
+                 "a slot does not restore blindness."),
         "derived_at": datetime.now(timezone.utc).isoformat(),
         "sources_sha256": {name: digest(path) for name, path in sources.items()},
         "inventory_rows_read": rows,
@@ -280,12 +296,18 @@ QUALIFIED_IN_TEXT = re.compile(r"\b([A-Za-z0-9][\w.-]*/[\w.-]+)#(\d+)\b")
 def self_test():
     failures = []
 
+    checked = []
+
     def check(name, condition):
+        checked.append(name)
         if not condition:
             failures.append(name)
 
     found = list(references("see `owner/repo#12`, `#13` and `#14` here"))
     check("a qualified reference is read", found[0] == ("owner/repo", "12", "qualified"))
+    check("two spellings of one repository fold to one key",
+          fold("BurntSushi/ripgrep#137") == fold("burntsushi/RipGrep#137"))
+    check("folding keeps the number and the separator", fold("A/B#7") == "a/b#7")
     check("a bare reference follows its repository",
           [f[:2] for f in found[1:]] == [("owner/repo", "13"), ("owner/repo", "14")])
     check("an unbackticked project citation is reserved conservatively, not dropped",
@@ -350,7 +372,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 20 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: " + str(len(checked)) + " checks")
     return 1 if failures else 0
 
 

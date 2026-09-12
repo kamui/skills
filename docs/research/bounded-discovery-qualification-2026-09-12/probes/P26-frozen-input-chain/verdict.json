@@ -1,12 +1,12 @@
 {
   "probe": "P26",
   "status": "unestablished",
-  "summary": "One of the chain's three links holds over this bundle's material. All 18 rendered prompts carry the pinned template block and none has an unfilled placeholder, and the template itself is pinned by digest - that is link one. Link two does not hold: the rendered prompts name their input by relative path and not by digest, so nothing in the bytes ties a prompt to the packet it was rendered against, which ./rechecked demonstrates by finding two shapes each standing for three different packets. Link three has nothing to check, because no cell ran and there is no public cell summary.",
-  "establishes": "The template-to-prompt link and the no-unfilled-placeholder precondition, over a real rendering; and, through ./rechecked, that the checker refuses to call a normalisation sound when it can stand for more than one input.",
-  "residual": "Previously recorded here as 'two of the three links hold'. That was wrong in the same way the unenforced check was: the prompt-to-input link was assumed from the normalisation rather than established from the bytes. The correction is the reason ./rechecked exists.",
+  "summary": "One of the chain's three links holds, and only for half the prompts. Comparing the whole pinned block rather than its opening, 9 of the 18 rendered prompts carry it - the nine final prompts, rendered from the committed revision 2. The other nine are the superseded P22 attempts, rendered from revision 1, which was revised before it was ever committed, so they tie to no pinned template at all. None has an unfilled placeholder. Link two does not hold: the prompts name their input by relative path rather than by digest, and two normalised shapes each stand for three different packets. Link three has nothing to check, because no cell ran. probes/frozen-inputs.json is written by this launch.",
+  "establishes": "Link one for the nine prompts rendered from the committed template, the no-unfilled-placeholder precondition over all eighteen, and that the checker now refuses both a prompt rendered from a superseded revision and a normalised shape that stands for more than one input.",
+  "residual": "Previously recorded as 'all 18 prompts carry the pinned block'. That came from a check on the block's first 200 bytes, which a prompt rendered from a superseded revision shares; the whole-block comparison is what separates them. A freeze has to pin every template revision a retained prompt was rendered from, or it cannot tie that prompt to anything. The first run, under the prefix rule, is retained under run-1/.",
   "refuted_by": null,
-  "observed_exit": "0",
-  "expected_exit": 0,
+  "observed_exit": "1",
+  "expected_exit": 1,
   "read_from": "the probe's own retained output, not asserted beside it",
-  "recorded_at": "2026-09-12T11:17:36.466541+00:00"
+  "recorded_at": "2026-09-12T21:23:11.901453+00:00"
 }

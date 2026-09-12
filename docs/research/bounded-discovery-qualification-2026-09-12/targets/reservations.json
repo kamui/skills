@@ -1,8 +1,8 @@
 {
   "schema_version": "bounded-discovery-qualification-v1",
   "ticket": 207,
-  "rule": "E1 Unused, extended by rule rather than by hand: #148 section 7's list, #148's exclusion log, the revealed #138 slot registers, the two revealed excluded registers, and every pull request named in the revealed candidate inventory - candidates and the later fixes and confirming reports their rows cite. Only a backticked reference counts in a Markdown list or table, because these files also cite this project's own tickets in prose; a register is about one repository and every number in it resolves there. A candidate on this list cannot be reused blind, and closing an issue or renaming a slot does not restore blindness.",
-  "derived_at": "2026-09-12T12:12:46.564117+00:00",
+  "rule": "E1 Unused, extended by rule rather than by hand: #148 section 7's list, #148's exclusion log, the revealed #138 slot registers, the two revealed excluded registers, and every pull request named in the revealed candidate inventory - candidates and the later fixes and confirming reports their rows cite. Every bare number resolves to the nearest repository its scope names - a register's own, on every line of the register - and each entry is marked by how the files evidence it: strong where some citation is backticked, linked or written out qualified, conservative where every citation is a bare number in running prose. Both are reserved, because prose also carries this project's own ticket citations and no rule separates the two, and missing a published reference costs the study its blind where over-reserving costs a hunt one candidate. Owner and repository names compare case-insensitively, as the forge does. A candidate on this list cannot be reused blind, and closing an issue or renaming a slot does not restore blindness.",
+  "derived_at": "2026-09-12T21:22:47.514189+00:00",
   "sources_sha256": {
     "criteria": "5cf56f151da7e78261ac98e8b5a909fe1139d5f4d627129011d9afc227665f27",
     "exclusions": "4127b83a0e98c6dceaa75acb9c27ed95f6b65e7ff9d8e1ae863a45d8a6f15951",

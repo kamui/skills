@@ -91,6 +91,30 @@
       "launch_started": true
     },
     {
+      "probe": "P02",
+      "directory": "probes/P02-fresh-context/run-1",
+      "retained_before_process_creation": true,
+      "argv_length": 5,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
       "probe": "P03",
       "directory": "probes/P03-finder-confinement",
       "retained_before_process_creation": true,
@@ -311,6 +335,30 @@
       "launch_started": true
     },
     {
+      "probe": "P10",
+      "directory": "probes/P10-billed-totals/run-1",
+      "retained_before_process_creation": true,
+      "argv_length": 5,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
       "probe": "P12",
       "directory": "probes/P12-background-verification",
       "retained_before_process_creation": true,
@@ -481,6 +529,30 @@
     {
       "probe": "P17",
       "directory": "probes/P17-launch-retention",
+      "retained_before_process_creation": true,
+      "argv_length": 5,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": null,
+      "launch_started": true
+    },
+    {
+      "probe": "P17",
+      "directory": "probes/P17-launch-retention/run-1",
       "retained_before_process_creation": true,
       "argv_length": 5,
       "requested": {
@@ -1505,6 +1577,54 @@
       "launch_started": true
     },
     {
+      "probe": "P24-machinery",
+      "directory": "probes/P24-fresh-targets/machinery/run-1",
+      "retained_before_process_creation": true,
+      "argv_length": 14,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
+      "probe": "P24-reservations",
+      "directory": "probes/P24-fresh-targets/reservations",
+      "retained_before_process_creation": true,
+      "argv_length": 6,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
       "probe": "P25",
       "directory": "probes/P25-ledger-stop",
       "retained_before_process_creation": true,
@@ -1549,7 +1669,7 @@
         "print_mode": false,
         "resume": null
       },
-      "observed_exit": "0",
+      "observed_exit": "1",
       "launch_started": true
     },
     {
@@ -1575,7 +1695,31 @@
       },
       "observed_exit": "1",
       "launch_started": true
+    },
+    {
+      "probe": "P26",
+      "directory": "probes/P26-frozen-input-chain/run-1",
+      "retained_before_process_creation": true,
+      "argv_length": 5,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
     }
   ],
-  "recorded_at": "2026-09-12T11:57:38.849318+00:00"
+  "recorded_at": "2026-09-12T21:24:12.691304+00:00"
 }

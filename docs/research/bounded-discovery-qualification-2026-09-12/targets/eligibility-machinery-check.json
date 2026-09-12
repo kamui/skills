@@ -3,7 +3,8 @@
   "what_this_decides": "E1, E2, E3 and E5 only. E4, E6-E10 stay with the curator and E11 with the adjudicator; a candidate this script passes is not a selected target and no selection is made here.",
   "freshness_threshold": "2026-03-12T00:00:00Z",
   "reservations": "targets/reservations.json",
-  "reserved_count": 87,
+  "reservations_sha256": "a9d2a87e25e86ee5adc22c6b865e413dda9b6b41600b9695ceb82c77238662e3",
+  "reserved_count": 102,
   "candidates": [
     {
       "candidate": "clap-rs/clap#6212",
@@ -13,7 +14,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: a revealed #138 target's register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
+          "detail": "on the reservation set as clap-rs/clap#6212: a revealed #138 target's register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
         },
         "E2": {
           "passed": true,
@@ -38,7 +39,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: a revealed #138 target's register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
+          "detail": "on the reservation set as nats-io/nats-server#7395: a revealed #138 target's register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published; named in a revealed inventory row as a later fix, a confirming report or a related change"
         },
         "E2": {
           "passed": true,
@@ -63,7 +64,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: named in #148's exclusion log; a revealed excluded register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
+          "detail": "on the reservation set as grpc/grpc-go#8519: named in #148's exclusion log; a revealed excluded register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published; named in a revealed inventory row as a later fix, a confirming report or a related change"
         },
         "E2": {
           "passed": true,
@@ -88,7 +89,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: named in #148's exclusion log; a revealed excluded register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
+          "detail": "on the reservation set as golang-jwt/jwt#456: named in #148's exclusion log; a revealed excluded register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
         },
         "E2": {
           "passed": true,
@@ -156,5 +157,5 @@
       "mechanically_eligible": false
     }
   ],
-  "recorded_at": "2026-09-12T11:16:58.842971+00:00"
+  "recorded_at": "2026-09-12T21:23:47.148980+00:00"
 }

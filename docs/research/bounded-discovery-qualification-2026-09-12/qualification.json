@@ -119,7 +119,7 @@
       },
       "P24": {
         "status": "unestablished",
-        "evidence": "probes/P24-fresh-targets/, targets/reservations.json, targets/eligibility-machinery-check.json",
+        "evidence": "probes/P24-fresh-targets/, targets/reservations.json (written by probes/P24-fresh-targets/reservations/), targets/eligibility-machinery-check.json (written by probes/P24-fresh-targets/machinery/)",
         "why": "no target was selected. The reservation set and the mechanical criteria are delivered; the selection, adjudication, sealing and selector runs are not"
       },
       "P25": {
@@ -129,7 +129,7 @@
       "P26": {
         "status": "unestablished",
         "evidence": "probes/P26-frozen-input-chain/, probes/frozen-inputs.json",
-        "why": "one of the chain's three links holds. The template is pinned and every rendered prompt carries its block with no unfilled placeholder; but the prompts name their input by relative path and not by digest, so nothing in the rendered bytes ties a prompt to the packet it was rendered against - the check finds two normalised shapes each standing for three different packets. The third link needs a public cell summary and no cell ran"
+        "why": "one of the chain's three links holds, and only for half the prompts. Comparing the whole pinned block rather than its opening, 9 of the 18 rendered prompts carry it - the nine rendered from the committed revision 2. The other nine are superseded attempts rendered from revision 1, which was revised before it was ever committed, so they tie to no pinned template. Link two does not hold: the prompts name their input by relative path and not by digest, and two normalised shapes each stand for three different packets. The third link needs a public cell summary and no cell ran"
       }
     }
   },
@@ -138,7 +138,7 @@
       "requirement": "Retain the launch argv per attempt",
       "status": "met-for-what-could-be-probed",
       "evidence": "probes/P17-launch-retention/, probes/retention.json",
-      "what_holds": "all 58 launches in this bundle retained their exact argv and requested model, effort, dollar allowance, restriction flag, tool list and allow list, written with O_EXCL and fsynced before process creation; one launch that never started kept its record. Metering checks each root transcript against the model and effort its own launch record requested: 28 observed and matching, no mismatch, and one - the cancelled P07 - passing vacuously because its transcript carries no assistant line, which its record says in as many words",
+      "what_holds": "all 64 launches in this bundle retained their exact argv and requested model, effort, dollar allowance, restriction flag, tool list and allow list, written with O_EXCL and fsynced before process creation; one launch that never started kept its record. Metering checks each root transcript against the model and effort its own launch record requested: 28 observed and matching, no mismatch, and one - the cancelled P07 - passing vacuously because its transcript carries no assistant line, which its record says in as many words. Every committed report a verdict cites - freshness, reconciliation, retention, the frozen-input chain, the reservation set and the eligibility record - comes from a retained launch whose output matches it",
       "what_does_not": "there are no arms and no frozen allowances, so 'every arm received identical allowances' has nothing to compare against"
     },
     "gap-2": {

@@ -1,12 +1,12 @@
 {
   "probe": "P10",
   "status": "established",
-  "summary": "Nine metered probes reconcile (probes/reconciliation.json). Every one is charged the larger of the runtime self-report and the recomputed per-request total, and in every case the difference is named exactly by an untranscripted claude-haiku-4-5-20251001 request that appears only in the result envelope's modelUsage - between $0.001076 and $0.001281 per session. No residual is recorded as noise.",
-  "establishes": "P10 on this runtime, and that #149's metering residual is still present and still has the same cause. The settlement rule - meter from both sources, charge the larger, name the difference - is therefore still the right one and is not a historical artefact.",
-  "residual": "The tenth session, the cancelled P07, reconciles against nothing: no envelope and no assistant lines. It is settled at zero actual with a retained bound, and that is a worse position than #149's cancelled probe, which at least had six request records.",
+  "summary": "All 28 metered sessions reconcile (probes/reconciliation.json, written by this launch). Every one is charged the larger of the runtime self-report and the recomputed per-request total, and in every case the difference is named exactly by an untranscripted claude-haiku-4-5-20251001 request that appears only in the result envelope's modelUsage. No residual is recorded as noise.",
+  "establishes": "P10 on this runtime, and that #149's metering residual is still present and still has the same cause, so the settlement rule - meter from both sources, charge the larger, name the difference - is still the right one.",
+  "residual": "The twenty-ninth session, the cancelled P07, reconciles against nothing: no envelope and no assistant lines. It is settled at zero actual with a retained bound. An earlier run of this probe, over the nine sessions metered when it ran, is retained under run-1/.",
   "refuted_by": null,
   "observed_exit": "0",
   "expected_exit": 0,
   "read_from": "the probe's own retained output, not asserted beside it",
-  "recorded_at": "2026-09-12T10:15:23.669550+00:00"
+  "recorded_at": "2026-09-12T21:23:00.097103+00:00"
 }

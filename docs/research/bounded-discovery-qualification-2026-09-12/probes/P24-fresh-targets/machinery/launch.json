@@ -1,8 +1,8 @@
 {
   "schema_version": "bounded-discovery-qualification-v1",
   "probe": "P24-machinery",
-  "purpose": "Does the mechanical half of #148's criteria run by rule against the live forge - E1 against the derived reservation set, E2 against the recomputed freshness threshold, E3 on size and E5 on the review trail? Every candidate named here is either already reserved or a pull request of this repository itself, which is forbidden material for a cell and can never be a target, so the record leaks nothing about a future selection.",
-  "retained_at": "2026-09-12T11:16:50.096462+00:00",
+  "purpose": "Apply E1, E2, E3 and E5 by rule against the live forge, evaluated against the reservation set as it is now committed and recording that set's digest. Every candidate named is either already reserved or a pull request of this repository, which can never be a target. The earlier run, against an 87-entry set that has since been regenerated, is retained under run-1/.",
+  "retained_at": "2026-09-12T21:23:37.906367+00:00",
   "retained_before_process_creation": true,
   "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
   "argv": [

@@ -136,7 +136,9 @@ spending, and the reason the rest was not attempted.
   references in prose as well as in code spans, and they cite this project's own tickets in prose
   too, and no rule separates the two. The errors are not symmetric: over-reserving costs a future
   hunt one candidate, under-reserving costs the study its blind. So the rule reserves what it
-  cannot prove and marks it, rather than asserting it or dropping it.
+  cannot prove and marks it, rather than asserting it or dropping it. Owner and repository
+  names compare case-insensitively, as the forge does, so a reserved pull request cannot slip past
+  E1 by being spelled differently.
 - [`scripts/eligibility.py`](scripts/eligibility.py) — E1, E2, E3 and E5 applied by rule against the
   live forge. Exercised in [P24](probes/P24-fresh-targets/machinery/): the four revealed #138 pull
   requests were excluded by E1, and two of this repository's own pull requests by E2 and E3. An
@@ -183,6 +185,12 @@ now carrying its one terminal `stop` (ticket 207) — which is also how #199 gap
 `stop` be exercised on the study's own ledger is met. After it, the shutdown gate read the ledger and
 all eleven checks cleared. Nothing here was appended to the #138 ledger and nothing may be.
 
+The ledger's first reservation is a smoke test of the pinned `budget.py`, run by hand before any
+chargeable work: USD 0.01 reserved and settled at zero. Its evidence fields read `x` and it
+carries `budget.py`'s default ticket, 147, because the flags were omitted;
+[P27](probes/P27-ledger-smoke/) is the record the settlement cites. Those two events stay as
+written — the ledger is append-only and the shutdown gate scored its chain.
+
 The ledger's `attempt_limit` and `replacement_limit` are **0**, deliberately: no attempt cap or
 replacement allowance has been computed from requalified rates, so this ledger refuses every review
 dispatch by construction.
@@ -217,7 +225,10 @@ Ordered so that each item is doable once the one above it is.
    one arm only. Make it required in every arm or drop it; an optional member one arm happens to
    emit is the pilot's tell in a new place. Then render a study dispatch template against a real
    target and probe findings, clean and stopped in each arm again.
-7. **The frozen-input chain's second and third links (P26).** The second needs the dispatch
+7. **The frozen-input chain, all three links (P26).** The first holds here for only the nine
+   prompts rendered from the committed template revision; the other nine were rendered from a
+   revision that was never committed, so a freeze has to pin every template revision a retained
+   prompt came from or it cannot tie that prompt to anything. The second needs the dispatch
    template to carry its packet's digest in the rendered bytes — a prompt that names its input by
    relative path binds to nothing, which is what the check found here. The third needs a public
    cell summary, which needs a cell.
@@ -234,7 +245,7 @@ Ordered so that each item is doable once the one above it is.
 | Path | What it holds |
 | --- | --- |
 | [`qualification.json`](qualification.json) | the machine-readable record: every probe's status, each of #199's ten gaps with what holds and what does not, and section 11 item by item |
-| [`evidence-index.json`](evidence-index.json) | all 58 launches: the exact command, the runtime, the retained output by digest, the verdict read from it, and the ledger settlement where it was paid. `qualify.py index` exits non-zero unless every launch carries a verdict |
+| [`evidence-index.json`](evidence-index.json) | all 64 launches: the exact command, the runtime, the retained output by digest, the verdict read from it, and the ledger settlement where it was paid. `qualify.py index` exits non-zero unless every launch carries a verdict |
 | [`ledger.json`](ledger.json) | this qualification's own ledger, terminally stopped |
 | [`rates.json`](rates.json) | the dated rate card, with its provenance |
 | [`dispatch-payload-contract.md`](dispatch-payload-contract.md) | the proposed D2 payload-contract block, at revision 2, with revision 1's refusal recorded |
@@ -259,10 +270,12 @@ python3 scripts/qualify.py index --bundle .      # rebuilds the evidence index
 python3 scripts/qualify.py chain --bundle .      # exits 1 here, by design: see P26
 ```
 
-`qualify.py chain` **fails on this bundle and that is its result**, not a broken check. The
-rendered prompts name their input by relative path rather than by digest, so two normalised shapes
-each stand for three different packets — which is exactly the collision the shape comparison exists
-to refuse. [P26](probes/P26-frozen-input-chain/) records it.
+`qualify.py chain` **fails on this bundle and that is its result**, not a broken check. It
+compares the whole pinned template block, and the nine superseded payload attempts were rendered
+from a revision that was never committed, so they do not carry it. And the rendered prompts name
+their input by relative path rather than by digest, so two normalised shapes each stand for three
+different packets — which is exactly the collision the shape comparison exists to refuse.
+[P26](probes/P26-frozen-input-chain/) records both.
 
 Raw captures that could name a slot stay outside this repository, under
 `~/.config/bounded-discovery/issue-207/`; nothing of any target's truth is in there, because no

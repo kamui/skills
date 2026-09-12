@@ -1,1 +1,11 @@
-chain: 18 rendered prompts, 2 distinct shape(s) once the attempt id and arm label are normalised, no unfilled placeholder
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/A-clean-attempt-1/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/A-clean-attempt-2/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/A-findings-attempt-1/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/B-clean-attempt-1/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/B-clean-attempt-2/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/B-findings-attempt-1/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/C-clean-attempt-1/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/C-clean-attempt-2/dispatch.md does not carry the pinned template block
+docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/C-findings-attempt-1/dispatch.md does not carry the pinned template block
+normalised shape 1c900771ba76 stands for 3 different packets; a shape may stand for exactly one input
+normalised shape 89bced5eeda3 stands for 3 different packets; a shape may stand for exactly one input

@@ -32,6 +32,7 @@ line each on stdout, 2 when an input cannot be read or ``gh`` is unavailable.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -42,6 +43,14 @@ from pathlib import Path
 CANDIDATE = re.compile(r"^([A-Za-z0-9][\w.-]*/[\w.-]+)#(\d+)$")
 MAX_LINES = 200
 MAX_FILES = 6
+
+
+def fold(key: str) -> str:
+    """One spelling for ``owner/repo#123``. The forge compares owner and repository names
+    case-insensitively, so a reserved pull request written with different case must still
+    fail E1 rather than slip past an exact string comparison."""
+    repository, _, number = key.partition("#")
+    return repository.lower() + "#" + number
 
 
 def count(result):
@@ -90,10 +99,12 @@ def fetch(repository, number):
 def evaluate(candidate, data, reserved, threshold):
     """Each criterion is pass, fail or unknown. Unknown never counts as pass."""
     checks = {}
-    checks["E1"] = {"passed": candidate not in reserved,
-                    "detail": ("on the reservation set: " +
-                               "; ".join(reserved[candidate]["reasons"])
-                               if candidate in reserved else "not on the reservation set")}
+    folded = {fold(key): key for key in reserved}
+    hit = folded.get(fold(candidate))
+    checks["E1"] = {"passed": hit is None,
+                    "detail": ("on the reservation set as " + hit + ": " +
+                               "; ".join(reserved[hit]["reasons"])
+                               if hit else "not on the reservation set")}
     merged = data.get("merged_at")
     if not data.get("merged") or not merged:
         checks["E2"] = {"passed": False, "detail": "not merged"}
@@ -150,6 +161,9 @@ def run(candidates, reservations_path: Path, threshold: str, out: Path):
                               "selected target and no selection is made here."),
         "freshness_threshold": threshold,
         "reservations": str(reservations_path),
+        # The digest of the exact set this record was evaluated against, so the record can be
+        # tied to its input after that file has moved on rather than only to its path.
+        "reservations_sha256": hashlib.sha256(reservations_path.read_bytes()).hexdigest(),
         "reserved_count": len(reserved),
         "candidates": rows,
         "recorded_at": datetime.now(timezone.utc).isoformat(),
@@ -172,7 +186,10 @@ def run(candidates, reservations_path: Path, threshold: str, out: Path):
 def self_test():
     failures = []
 
+    checked = []
+
     def check(name, condition):
+        checked.append(name)
         if not condition:
             failures.append(name)
 
@@ -181,6 +198,8 @@ def self_test():
             "additions": 10, "deletions": 5, "review_count": 1, "review_comment_count": 0}
     checks = evaluate("a/b#1", data, reserved, "2026-03-12T00:00:00Z")
     check("a reserved candidate fails E1", checks["E1"]["passed"] is False)
+    check("a reserved candidate spelled with different case still fails E1",
+          evaluate("A/B#1", data, reserved, "2026-03-12T00:00:00Z")["E1"]["passed"] is False)
     checks = evaluate("c/d#2", data, reserved, "2026-03-12T00:00:00Z")
     check("an unreserved candidate passes E1", checks["E1"]["passed"] is True)
     check("a settled merge passes E2", checks["E2"]["passed"] is True)
@@ -208,7 +227,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 11 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: " + str(len(checked)) + " checks")
     return 1 if failures else 0
 
 
