@@ -205,7 +205,8 @@ question is not a defect claim — and each must carry (a) why no static evidenc
 (b) what measurement or answer would. The bar matches v5a's G1 guard: "no static evidence could
 settle this", not "I didn't find it". The `plausible` → question route through the verifier was the
 other way a question arose; C18 keeps that route and gates it, so a `plausible` verdict asks only
-where the unsettled fact is outcome-changing and no available source can settle it.
+where the unsettled fact is outcome-changing and no available source can settle it. C18 also adds a
+third thing each bucket item carries, beside (a) and (b): the present decision the answer moves.
 
 ### C5. The `Observations` section
 
@@ -510,8 +511,10 @@ one by being about a name.
 C18 narrows the publication half of this change and leaves the rest standing: the deferral still
 reaches the axis, is never `Met`, and counts as unverifiable, and it publishes as a question — the
 thing that holds the axis at `Waiting for information` — when its answer moves a decision this merge
-settles. The paper check below is unaffected, because `removeCookies` was what that merge would
-release.
+settles. Structurally the bucket is no longer a fold into "cannot tell": the deferral rule now
+carries its own two-rule split, and a recorded deferral keeps the `question` ledger disposition so a
+later round reads the decision as open rather than as tested and killed. The paper check below is
+unaffected, because `removeCookies` was what that merge would release.
 
 Checked on paper against test 4's pinned head (`cb02d5ba`, test 4 README): step 1 extracts the
 `pavelfeldman` sentence with `removeCookies(filter)` as its surface; the Requirements finder
@@ -675,9 +678,10 @@ verdict, and the routing repair is what the failures actually call for.
 Six edits. `finding-format.md` gains § Settle, ask, or record, the ladder every unsettled thing now
 takes: **settle it** where a reachable source answers it, **ask it** where an outcome-changing fact
 no available source can settle remains, **record it** otherwise — with material nobody could read
-and checks nobody finished leaving the ladder at coverage instead. Outcome-changing is defined
-there as moving a decision this merge settles: present correctness, what this change releases, or
-compatibility for a surface consumers can already depend on. Priority moves nothing between rungs,
+and checks nobody finished leaving the ladder at coverage instead. Outcome-changing is defined there
+as the ladder's own verdict test: the answer moves a decision this merge settles rather than one
+somebody makes later, which covers present correctness, what the change releases, what consumers may
+then depend on, and whether the change's stated justification holds. Priority moves nothing between rungs,
 so a proven `P3` defect is a `consider` finding rather than an observation, and a published question
 carries no priority and asks for no code change. `verify.md` names five refutation evidence bases —
 contradiction, prevention, established intent, pre-existing behavior, no qualifying consequence —
@@ -717,14 +721,19 @@ specified; the only addition is dropping an item that asserts what nobody establ
 
 Replayed against the corpus as instructions, not as measurements: no run was executed for this
 change, and it claims no recall gain. On (d) the deferral still publishes as a question — the
-`prefer-*` values reached users in `0.2.14` four days after the merge, so the answer moved a
-compatibility decision this merge settled, and the preview row does not reach it. Test 4's
+`prefer-*` values reached users in `0.2.14` four days after the merge, so the merge released the
+name and rule 1 governs, whatever the author called the surface in the thread. Test 4's
 `removeCookies` deferral publishes for the same reason, so C13's paper check is unchanged. On (e) the
-benchmark question still publishes, because the change's justification is the number. On (a) the
-retry premise is settled by reading rather than left in the middle verdict, seed 3's "correct as
-merged" is not a refutation on any of the five bases, and seed 2's aside is a `re-open` on the row
-it contradicts rather than an observation. The test 2 Fable `redis.conf` scope fact still publishes
-as an observation: its absence of consequence was shown, which is exactly what the channel is for.
+benchmark question still publishes: whether the change's stated justification holds is one of the
+verdict-moving decisions the definition names, which is the ground truth's own reason for
+designating it. On (a) the retry premise is settled by reading rather than left in the middle
+verdict, seed 3's "correct as merged" is not a refutation on any of the five bases, and seed 2's
+aside fails the observation bar — it asserts a consequence the run never established beside the
+finding it contradicts, so it goes back as a ruling on that candidate. The test 2 Fable
+`redis.conf` scope fact is unchanged from C5's paper check and shows the low-priority rule working:
+it publishes as the confirmed `P3 consider` finding R2, and the Code finder's duplicate observation
+of the same fact at the same `file:line` is what the pool drops — a proven defect at the bottom
+priority stays a finding rather than sinking into the channel beside it.
 
 The gate can bite in the wrong direction, and the (d) cells show how: read "preview" as the author's
 word in the thread and the question disappears, which is the outcome the holdout scored `under`. The

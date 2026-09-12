@@ -20,4 +20,4 @@ Claude Code's built-in `/code-review` is proprietary and compiled into the CLI. 
 
 The dual-audience finding contract — an agent-facing `action` alongside a human-facing `priority`, the explicit permission line on `consider`, the required `trigger` field, and the trailer as the machine-authoritative copy of the tag line — is this skill's own, and is the reason it does not simply adopt one of the above.
 
-Routing verified-`plausible` candidates to questions rather than findings is also original, and follows from the same premise: an agent reading this review will act on a finding, so an unproven finding is more expensive here than an unanswered question.
+Routing a verified-`plausible` candidate away from findings — to a question where the answer decides something, to a record otherwise — is also original, and follows from the same premise: an agent reading this review will act on a finding, so an unproven finding is more expensive here than an unanswered question.
