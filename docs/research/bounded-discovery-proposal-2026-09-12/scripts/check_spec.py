@@ -215,7 +215,8 @@ def requirement_problems(requirement, repo_root: Path, probes: set,
         if probe not in probes:
             problems.append("%s claims probe %s, which the catalogue does not define"
                             % (where, probe))
-    if requirement["id"] not in specification:
+    identifier = r"(?<![\w-])%s(?![\w-])" % re.escape(requirement["id"])
+    if not re.search(identifier, specification):
         problems.append("%s is not discussed in the specification" % where)
     return problems
 
