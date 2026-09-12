@@ -293,7 +293,8 @@ Three changes target waste around that architecture. The orchestrator now reads 
 manifest, and base-branch guidance once, then gives both finders a byte-identical prompt prefix for
 cache reuse. The verifier follows claim-dependent call sites but stops expanding once decisive
 evidence supports a verdict. Both finder ledgers keep every hypothesis while limiting each row to
-four compact fields on one line (six since C19 added the per-run id and kind). The two full-diff analyses and verification of every candidate
+compact fields on one line — four at the time, six since C19 added the per-run id and kind. The two
+full-diff analyses and verification of every candidate
 remain mandatory.
 
 C15 supersedes the cache-reuse claim above: the measured harness did not reuse that prefix.

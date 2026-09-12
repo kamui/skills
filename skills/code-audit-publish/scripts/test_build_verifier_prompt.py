@@ -331,6 +331,30 @@ def main() -> int:
         code.write_text(CODE_REPORT.replace("kind: concurrency\n", "kind: race\n"), encoding="utf-8")
         expect_refusal(failures, invoke(code, requirements), "has kind 'race'", "an unknown candidate kind")
 
+        code.write_text(CODE_REPORT.replace("kind: concurrency\n", "kind: requirement\n"), encoding="utf-8")
+        expect_refusal(
+            failures,
+            invoke(code, requirements),
+            "has kind 'requirement'; a Code candidate uses bug, concurrency, invariant, security, performance, maintainability",
+            "a Code candidate of kind requirement",
+        )
+        code.write_text(CODE_REPORT, encoding="utf-8")
+        requirements.write_text(REQUIREMENTS_REPORT.replace("kind: requirement\n", "kind: bug\n"), encoding="utf-8")
+        expect_refusal(
+            failures,
+            invoke(code, requirements),
+            "has kind 'bug'; a Requirements candidate uses requirement",
+            "a Requirements candidate of kind bug",
+        )
+        requirements.write_text(REQUIREMENTS_REPORT, encoding="utf-8")
+
+        code.write_text(
+            CODE_REPORT.replace("code-3 | invariant |", "code-3 | requirement |"), encoding="utf-8"
+        )
+        expect_refusal(
+            failures, invoke(code, requirements), "ledger row 3 has kind 'requirement'; a Code row uses", "a Code row of kind requirement"
+        )
+
         code.write_text(
             CODE_REPORT.replace("code-3 | invariant |", "code-3 | race |"), encoding="utf-8"
         )
@@ -364,8 +388,8 @@ def main() -> int:
 
         code.write_text(
             CODE_REPORT.replace(
-                CANDIDATE_LINES["id"] + CANDIDATE_LINES["axis"],
-                "id: requirements/browser-context/remove-cookies-race\naxis: Requirements\n",
+                CANDIDATE_LINES["id"] + CANDIDATE_LINES["axis"] + CANDIDATE_LINES["kind"],
+                "id: requirements/browser-context/remove-cookies-race\naxis: Requirements\nkind: requirement\n",
             ),
             encoding="utf-8",
         )

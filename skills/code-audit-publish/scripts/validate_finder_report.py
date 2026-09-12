@@ -45,7 +45,8 @@ Rows are one per line, pipe-separated, no header row, no blank rows. A row
 id is the axis name, a dash, and a positive integer (`code-3`,
 `requirements-1`), unique within the block; it is a per-run handle, never a
 published finding id. A kind is one of bug, concurrency, invariant,
-security, performance, maintainability, requirement. A disposition is
+security, performance, maintainability, requirement; a Requirements row
+uses `requirement` and a Code row one of the other six. A disposition is
 `candidate`, `acquitted`, `observation`, or, on the Requirements axis only,
 `question`. Evidence is one whole `path:line`, `path:start-end`, or
 quoted-rule location `` `path` § heading ``, optionally in backticks. The
@@ -70,6 +71,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_verifier_prompt import (  # noqa: E402  (sibling script in this skill)
     KINDS,
+    KINDS_BY_AXIS,
     LEDGER_FIELD_COUNT,
     ROW_ID_RE,
     ReportError,
@@ -287,6 +289,16 @@ def check_ledger(block: Block, axis: str, report: str, blocks: list[Block]) -> l
         if kind not in KINDS:
             violations.append(
                 Violation("ledger", number, "kind", f"{kind!r} is not one of {', '.join(KINDS)}")
+            )
+        elif kind not in KINDS_BY_AXIS[axis.capitalize()]:
+            violations.append(
+                Violation(
+                    "ledger",
+                    number,
+                    "kind",
+                    f"{kind!r} is not a {axis} kind; this axis uses "
+                    + ", ".join(KINDS_BY_AXIS[axis.capitalize()]),
+                )
             )
         for name, value in (("claim", claim), ("route", route)):
             if not value:
@@ -560,6 +572,12 @@ def self_test_cases() -> list[tuple[str, str, str, int, str]]:
          _replace(code, "code-2 | bug |", "code-1 | bug |"), 1, "ledger:2: duplicate row id: code-1 was already used on row 1"),
         ("ledger kind", "code",
          _replace(code, "code-2 | bug |", "code-2 | race |"), 1, "ledger:2: kind: 'race' is not one of"),
+        ("ledger kind wrong axis on code", "code",
+         _replace(code, "code-2 | bug |", "code-2 | requirement |"),
+         1, "ledger:2: kind: 'requirement' is not a code kind; this axis uses bug, concurrency"),
+        ("ledger kind wrong axis on requirements", "requirements",
+         _replace(req, "requirements-2 | requirement |", "requirements-2 | bug |"),
+         1, "ledger:2: kind: 'bug' is not a requirements kind; this axis uses requirement"),
         ("ledger header row", "code",
          _replace(code, "```ledger\n", "```ledger\nid | kind | claim | route | evidence | disposition\n"),
          1, "ledger:1: header row"),
@@ -588,6 +606,9 @@ def self_test_cases() -> list[tuple[str, str, str, int, str]]:
          1, "candidates:0: candidate shape: Code Candidate is missing kind before anchor"),
         ("candidate kind vocabulary", "code",
          _replace(code, "kind: bug\n", "kind: race\n"), 1, "candidates:0: candidate shape: Code Candidate has kind 'race'"),
+        ("candidate kind wrong axis", "code",
+         _replace(code, "kind: bug\n", "kind: requirement\n"),
+         1, "candidates:0: candidate shape: Code Candidate has kind 'requirement'; a Code candidate uses bug, concurrency"),
         ("candidate id axis prefix", "code",
          _replace(code, "id: code/app/retry-drops-last-error\naxis: Code\n",
                   "id: requirements/app/retry-drops-last-error\naxis: Code\n"),
