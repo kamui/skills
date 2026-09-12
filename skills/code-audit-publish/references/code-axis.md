@@ -64,7 +64,7 @@ A path that was already unsafe at the merge-base under the same conditions is **
 
 Neither proximity nor unease substitutes for the comparison. That the diff touches the function, that it is a large refactor, that the new code is harder to follow, that some caller *might* have depended on something — none of those is a candidate. A refactor that preserves the guarantee introduces nothing, however much it moved. Name the guarantee and name the consumer, or you have nothing to report.
 
-Where the consumer is untouched, the honest anchor is the changed line that removed the protection, and the consumer is the `fix` site; `finding-format.md` § Anchor and fix site picks between them. Do not present an unchanged consumer's line as one the diff touches in order to anchor there.
+Both coordinates follow from the repair you propose, so settle that first. Where the repair is to restore what the diff took away — put the lock back, restore the ordering — the fix site is that changed line, and the comment attaches there. Where the removal is deliberate and the untouched consumer is what has to adapt, the fix site is the consumer, and the anchor falls back to the changed line that removed the protection. `finding-format.md` § Anchor and fix site is what picks the anchor in either case, and in either case, do not present an unchanged consumer's line as one the diff touches in order to anchor there.
 
 This is a scope rule, not an instruction to audit the repository. The consumers you owe an inspection are the ones that reach the guarantee this diff changed, found the way you would find any caller.
 

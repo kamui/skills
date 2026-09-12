@@ -604,10 +604,12 @@ size, and unease are explicitly not substitutes for the comparison; and the sect
 text that it is a scope rule, not a licence to audit the repository. `verify.md` gains
 § The pre-existing comparison, which turns that refutation into four steps against both revisions
 and routes an unreconstructable base state to `plausible` rather than to a refutation.
-`finding-format.md` § Anchor and fix site names rung 2's ordinary case: the anchor is the changed
-line that removed the protection, the untouched consumer is the `fix` site, and fabricating a
-changed line at the consumer is called out as the thing not to do — the forge rejects it, and a
-reader who follows it finds a claim the diff does not make.
+`finding-format.md` § Anchor and fix site derives both coordinates from the proposed repair rather
+than fixing either in advance: restoring the protection the diff removed makes that changed line the
+fix site and rung 1 the anchor, while a deliberate removal the consumer must adapt to makes the
+consumer the fix site and rung 2 the anchor at the line that dropped the protection. Fabricating a
+changed line at the consumer is called out as the thing not to do in both directions — the forge
+rejects it, and a reader who follows it finds a claim the diff does not make.
 
 Two existing properties are preserved deliberately, because a general introduction rule is exactly
 what could erode them. The Requirements exception keeps `verify.md`'s wording verbatim and gains a

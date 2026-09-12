@@ -68,7 +68,13 @@ candidate is admitted with both revisions and the consumer in its `claim`. At th
 of the comparison fails — the guarantee was stronger at base — so `pre-existing` is unavailable and
 the claim is ruled on its own evidence. Whether that ruling is `confirmed` or `plausible` remains
 the verifier's judgment about the trigger; the replay establishes only that neither gate now
-removes the candidate silently. Anchor at the head `put` line, `fix=cache.py:12`.
+removes the candidate silently.
+
+The coordinates come from the repair. Restoring `put`'s lock is what fixes this, so `put` is the fix
+site, it is in the diff, and rung 1 anchors the comment there with no separate `fix` coordinate —
+`live` needs no edit at all. Had the unlocked write been deliberate, a documented lock-scope
+reduction the reader has to adapt to, the repair would move into `live`: the untouched consumer
+would be the fix site, and rung 2 would anchor at the same `put` line with `fix=cache.py:12`.
 
 ## Case 2 — the same path was already unsafe at base
 
