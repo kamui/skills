@@ -249,24 +249,33 @@ class ContractTests(unittest.TestCase):
         again = json.loads(self.receipt.read_text(encoding="utf-8"))
         self.assertEqual(again["produced_by"], "coordinator")
         self.assertEqual(again["payload_sha256"], first["payload_sha256"])
-        # An origin record beside a review the arm did write claims nothing.
-        other = self.base / "review-work"
-        other.mkdir()
-        (other / payload.PAYLOAD_NAME).write_text(json.dumps(envelope()), encoding="utf-8")
-        (other / payload.ORIGIN_NAME).write_text(json.dumps(
-            {"produced_by": "coordinator",
-             "payload_sha256": payload.sha256_file(other / payload.PAYLOAD_NAME)}),
+        # The origin record is kept beside the receipt, never in the work
+        # directory the arm writes to, so the arm cannot plant one.
+        self.assertTrue(payload.origin_for(self.receipt).is_file())
+        self.assertFalse(any(self.work.glob("*" + payload.ORIGIN_SUFFIX)))
+        forged = self.base / "forged-work"
+        forged.mkdir()
+        receipt_name = "forged-receipt.json"
+        receipt = self.base / receipt_name
+        (forged / payload.PAYLOAD_NAME).write_text(
+            json.dumps(envelope(outcome="stopped",
+                                stop={"reason": "budget", "detail": "I gave up"})),
             encoding="utf-8")
-        receipt = self.base / "review-receipt.json"
-        self.call("accept", "--work", other, "--receipt", receipt, "--arm", "A",
-                  "--attempt", "attempt-1", "--completion", "complete")
+        (forged / (Path(receipt_name).stem + payload.ORIGIN_SUFFIX)).write_text(json.dumps(
+            {"produced_by": "coordinator",
+             "payload_sha256": payload.sha256_file(forged / payload.PAYLOAD_NAME)}),
+            encoding="utf-8")
+        self.call("accept", "--work", forged, "--receipt", receipt, "--arm", "A",
+                  "--attempt", "attempt-1", "--completion", "stopped-budget")
         self.assertEqual(json.loads(receipt.read_text(encoding="utf-8"))["produced_by"], "arm")
 
-    def test_emit_into_a_work_directory_records_its_own_origin(self):
+    def test_emit_records_its_origin_where_the_coordinator_keeps_it(self):
         out = self.work / payload.PAYLOAD_NAME
+        origin_path = payload.origin_for(self.receipt)
         self.call("emit", "--out", out, "--arm", "A", "--attempt", "attempt-1",
-                  "--outcome", "unavailable", "--reason", "launch-failed")
-        origin = json.loads((self.work / payload.ORIGIN_NAME).read_text(encoding="utf-8"))
+                  "--outcome", "unavailable", "--reason", "launch-failed",
+                  "--origin", origin_path)
+        origin = json.loads(origin_path.read_text(encoding="utf-8"))
         self.assertEqual(origin["payload_sha256"], payload.sha256_file(out))
         self.accept("stopped-runtime")
         self.assertEqual(json.loads(self.receipt.read_text(encoding="utf-8"))["produced_by"],
