@@ -16,7 +16,8 @@ nothing runs from this handoff.** [`evaluation.md`](evaluation.md) is the argume
 
 | Artifact | What it settles |
 | --- | --- |
-| [verification.json](verification.json) | every revealed plaintext against the digest its stage sealed; both #152 freeze records with their exact file sets; the packets against the public index; the ledger's chain and totals |
+| [reveal.json](reveal.json) | the per-member digests of #151's sealed packet archive, read from the decrypted archive only after it hashed to the digest #151 published, so both packet files have a sealed digest to be checked against without the key |
+| [verification.json](verification.json) | every revealed plaintext against the digest its stage sealed; both #152 freeze records with their exact file sets; both packet files against the sealed archive's member digests and the packet set against the public index, nothing missing or duplicated; the ledger's chain and totals |
 | [revealed/](revealed/) | the sealed truth, schedule, packets, redaction map and ruling tables, opened after the freezes verified |
 | [comparison.json](comparison.json) | the join: every attempt with its arm, target, validity, completion, cost by role, timing and per-attempt scoring fields |
 | [grid-v2.json](grid-v2.json), [grid-v1.json](grid-v1.json) | the frozen scorer's input, against graded truth and against the registers as frozen |
@@ -37,7 +38,11 @@ nothing runs from this handoff.** [`evaluation.md`](evaluation.md) is the argume
    the map was never opened during grading).
 2. **Reveal.** Every `.enc` under #148's `targets/sealed/`, #149's sealed schedule, #151's sealed
    packets and #152's two sealed archives were decrypted under #148's key and each plaintext
-   checked against its `SHA256SUMS` or seal record. The plaintexts the decision reads are committed
+   checked against its `SHA256SUMS` or seal record. #151 published its packet archive's digest and
+   not its members', so `decide.py reveal` records the two members' digests from the archive once
+   it has hashed as sealed ([`reveal.json`](reveal.json)); `verify` checks the revealed packet
+   files against that record and the packet set against the public index, refusing a missing,
+   extra or duplicated packet or a changed redaction-map row. The plaintexts the decision reads are committed
    verbatim under [`revealed/`](revealed/): the four registers and leak sets, the inventory, the two
    excluded registers, the slot map, the schedule, the grading packets and redaction map, the two
    ruling tables (and the pre-resume table beside the final one), both amendments and both derived
@@ -108,12 +113,13 @@ stage's reviews have been.
 
 ## Scripts
 
-Standard-library Python 3.9+, macOS and Linux, with `--self-test` (35 checks, including CLI exit
+Standard-library Python 3.9+, macOS and Linux, with `--self-test` (45 checks, including CLI exit
 codes through `subprocess`):
 
 | Command | What it does |
 | --- | --- |
-| `decide.py verify` | every revealed plaintext against its sealed digest, the two freeze records with exact file sets, the packet index, the ledger chain |
+| `decide.py reveal` | the per-member digests of #151's packet archive, refusing an archive that does not hash as sealed or lacks a member |
+| `decide.py verify` | every revealed plaintext against its sealed digest, the two freeze records with exact file sets, both packet files against the reveal record and the packet set against the public index, the ledger chain |
 | `decide.py join` | the per-attempt join and the two scorer grids, refusing any disagreement between the schedule, the map, the manifest, the assessment and the derived fields |
 | `decide.py score` | the pinned scorer over a grid, refusing a scorer whose digest is not the frozen one |
 | `decide.py compare` | `comparison-data.md` from the join, the scorecards and the loss-stage record, whose vocabulary it validates |
@@ -137,9 +143,11 @@ EVIDENCE=~/.config/bounded-discovery/issue-151/evidence           # the decrypte
 
 python3 $BUNDLE/scripts/decide.py --self-test
 # reveal: each sealed README's own procedure, under #148's key; the plaintexts under revealed/ are the result
+python3 $BUNDLE/scripts/decide.py reveal --archive <decrypted grading-packets.tar.gz> \
+  --sums $CLOSEOUT/packets/SHA256SUMS --out $BUNDLE/reveal.json      # needs the key; the record is committed
 python3 $BUNDLE/scripts/decide.py verify --bundle $BUNDLE --targets-sums $TARGETS/sealed/SHA256SUMS \
-  --schedule-sums $FROZEN/sealed/SHA256SUMS --packets-dir $CLOSEOUT/packets --grading-dir $GRADING \
-  --ledger $LEDGER --out $BUNDLE/verification.json
+  --schedule-sums $FROZEN/sealed/SHA256SUMS --packets-dir $CLOSEOUT/packets --reveal $BUNDLE/reveal.json \
+  --grading-dir $GRADING --ledger $LEDGER --out $BUNDLE/verification.json
 python3 $BUNDLE/scripts/decide.py join --bundle $BUNDLE --closeout-dir $CLOSEOUT --frozen $FROZEN/manifest.json \
   --evidence $EVIDENCE --loss-stages $BUNDLE/loss-stages.json --grading-usd 3.0168006 --out-dir $BUNDLE
 for v in v2 v1; do

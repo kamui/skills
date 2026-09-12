@@ -4,12 +4,18 @@
 The decision itself is read off the frozen scorer; this script does everything
 around it that must not depend on anyone's judgment:
 
+* ``reveal``   - the per-member digests of #151's sealed packet archive, read
+                 from the decrypted archive only after it hashes to the digest
+                 #151 published, so that both packet files have a sealed digest
+                 to be checked against without the key;
 * ``verify``   - every revealed plaintext against the digest its stage sealed
                  (#148's registers and leak sets, #149's schedule, #151's
-                 packets and redaction map, #152's ruling tables, amendments and
-                 derived fields), both #152 freeze records with their exact file
-                 sets, the packet digests against the public packet index, and
-                 the live ledger's chain and totals;
+                 packets and redaction map through the reveal record, #152's
+                 ruling tables, amendments and derived fields), both #152 freeze
+                 records with their exact file sets, the packet set against the
+                 public packet index (no packet missing, none duplicated, every
+                 one hashing to its index entry), and the live ledger's chain and
+                 totals;
 * ``join``     - the redaction map, the sealed schedule, #151's cell manifest,
                  fidelity assessment and reconciliation, and #152's amended
                  derived fields into the grid the frozen scorer consumes, once
@@ -29,8 +35,9 @@ around it that must not depend on anyone's judgment:
 
 Usage::
 
+    decide.py reveal --archive grading-packets.tar.gz --sums F --out F
     decide.py verify --bundle D --targets-sums F --schedule-sums F \\
-        --packets-dir D --grading-dir D [--ledger F] --out F
+        --packets-dir D --reveal F --grading-dir D [--ledger F] --out F
     decide.py join --bundle D --closeout-dir D --frozen F [--evidence D] \\
         [--loss-stages F] --out-dir D
     decide.py score --scorer F --frozen F --grid F --out-json F --out-md F
@@ -81,6 +88,7 @@ import re
 import statistics
 import subprocess
 import sys
+import tarfile
 import tempfile
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -207,6 +215,85 @@ def ledger_summary(ledger: dict) -> dict:
     }
 
 
+PACKET_MEMBERS = ("grading-packets.json", "redaction-map.json")
+
+
+def reveal_packets(archive, sums_text: str) -> dict:
+    """Per-member digests of #151's packet archive, taken only from an archive that hashes to
+    the digest #151 published. #151 sealed the two packet files as one archive and published the
+    archive's plaintext digest, not the members', so this record is what gives each revealed file
+    a sealed digest to be checked against later without the key."""
+    recorded = parse_sums(sums_text).get("grading-packets.tar.gz")
+    if not recorded:
+        raise Failed("the sealed SHA256SUMS carries no entry for grading-packets.tar.gz")
+    actual = sha256_file(archive)
+    if actual != recorded:
+        raise Failed("the archive hashes to %s..., #151 sealed %s...: not the sealed plaintext"
+                     % (actual[:12], recorded[:12]))
+    members = {}
+    try:
+        with tarfile.open(os.path.expanduser(str(archive)), "r:gz") as tar:
+            for member in tar.getmembers():
+                name = os.path.basename(member.name)
+                if name in PACKET_MEMBERS and member.isfile():
+                    members[name] = hashlib.sha256(tar.extractfile(member).read()).hexdigest()
+    except (OSError, tarfile.TarError) as exc:
+        sys.stderr.write("cannot read %s: %s\n" % (archive, exc))
+        raise SystemExit(2)
+    missing = sorted(set(PACKET_MEMBERS) - set(members))
+    if missing:
+        raise Failed("the sealed archive lacks %s" % ", ".join(missing))
+    return {"artifact_id": "issue-153-packet-reveal", "schema_version": SCHEMA, "revealed_at": now(),
+            "source": "#151 packets/grading-packets.tar.gz.enc, decrypted under #148's key",
+            "archive_sha256": actual, "archive_sha256_as_sealed": recorded, "members": members}
+
+
+def check_packets(packets_dir, index: dict, reveal: dict, problems: list, checked: list) -> None:
+    """Both revealed packet files against the reveal record's sealed member digests, then the
+    packet set against the public index: nothing missing, nothing duplicated, everything hashing
+    to its entry, and the redaction map naming exactly that set."""
+    folder = Path(packets_dir)
+    for name in PACKET_MEMBERS:
+        path = folder / name
+        if not path.exists():
+            problems.append("#151 packets: %s is not among the revealed files" % name)
+            continue
+        actual = sha256_file(path)
+        sealed = (reveal.get("members") or {}).get(name)
+        checked.append({"source": "#151 sealed packet archive", "file": name, "sha256": actual, "matches": actual == sealed})
+        if actual != sealed:
+            problems.append("#151 packets: %s hashes to %s..., the sealed archive member is %s..."
+                            % (name, actual[:12], (sealed or "")[:12]))
+    if problems:
+        return
+    packets = load(folder / "grading-packets.json")
+    mapping = load(folder / "redaction-map.json")
+    indexed = {p["packet_id"]: p["masked_packet_sha256"] for p in index["packets"]}
+    seen = []
+    for packet in packets["packets"]:
+        pid = packet["packet_id"]
+        if pid in seen:
+            problems.append("#151 packets: packet %s appears twice" % pid[:8])
+        seen.append(pid)
+        digest = hashlib.sha256(json.dumps(packet, sort_keys=True).encode("utf-8")).hexdigest()
+        checked.append({"source": "#151 packet index", "file": pid, "sha256": digest, "matches": digest == indexed.get(pid)})
+        if digest != indexed.get(pid):
+            problems.append("#151 packets: packet %s does not hash to the public index" % pid[:8])
+    for pid in sorted(set(indexed) - set(seen)):
+        problems.append("#151 packets: packet %s is in the public index and not in the revealed file" % pid[:8])
+    for pid in sorted(set(seen) - set(indexed)):
+        problems.append("#151 packets: packet %s is not in the public index" % pid[:8])
+    rows = mapping["mapping"]
+    mapped = [row["packet_id"] for row in rows]
+    if len(mapped) != len(set(mapped)) or len({row["attempt_ref"] for row in rows}) != len(rows):
+        problems.append("#151 redaction map: a packet or attempt is mapped twice")
+    if set(mapped) != set(indexed):
+        problems.append("#151 redaction map: packet ids differ from the public index")
+    for row in rows:
+        if row["masked_packet_sha256"] != indexed.get(row["packet_id"]):
+            problems.append("#151 redaction map: packet %s carries a digest the index does not" % row["packet_id"][:8])
+
+
 def verify(args) -> dict:
     bundle = Path(args.bundle)
     problems, checked = [], []
@@ -214,25 +301,14 @@ def verify(args) -> dict:
                "#148 sealed registers", problems, checked)
     check_sums(bundle / "revealed", parse_sums(read_text(args.schedule_sums)),
                "#149 sealed schedule", problems, checked)
-    # #151: the packets were sealed as one archive; the per-packet digests are public in the index.
-    index = load(Path(args.packets_dir) / "packet-index.json")
-    packets = load(bundle / "revealed" / "packets" / "grading-packets.json")
-    mapping = load(bundle / "revealed" / "packets" / "redaction-map.json")
-    indexed = {p["packet_id"]: p["masked_packet_sha256"] for p in index["packets"]}
-    for packet in packets["packets"]:
-        digest = hashlib.sha256(json.dumps(packet, sort_keys=True).encode("utf-8")).hexdigest()
-        checked.append({"source": "#151 packet index", "file": packet["packet_id"], "sha256": digest,
-                        "matches": digest == indexed.get(packet["packet_id"])})
-        if digest != indexed.get(packet["packet_id"]):
-            problems.append("#151 packets: packet %s does not hash to the public index" % packet["packet_id"][:8])
-    mapped = {row["packet_id"] for row in mapping["mapping"]}
-    if mapped != set(indexed):
-        problems.append("#151 redaction map: packet ids differ from the public index")
-    for row in mapping["mapping"]:
-        if row["masked_packet_sha256"] != indexed.get(row["packet_id"]):
-            problems.append("#151 redaction map: packet %s carries a digest the index does not" % row["packet_id"][:8])
+    # #151: both packet files against the sealed archive's member digests, then the public index.
+    reveal = load(args.reveal)
+    if reveal.get("archive_sha256") != parse_sums(read_text(Path(args.packets_dir) / "SHA256SUMS")).get("grading-packets.tar.gz"):
+        problems.append("#151 packets: the reveal record's archive digest is not the one #151 sealed")
+    check_packets(bundle / "revealed" / "packets", load(Path(args.packets_dir) / "packet-index.json"), reveal,
+                  problems, checked)
     seal = load(Path(args.packets_dir) / "seal.json")
-    if sorted(seal.get("files_sealed") or []) != ["grading-packets.json", "redaction-map.json"]:
+    if sorted(seal.get("files_sealed") or []) != sorted(PACKET_MEMBERS):
         problems.append("#151 seal record names a different file set")
     # #152: two freeze records with exact file sets, and the seal's per-file digests.
     grading = Path(args.grading_dir)
@@ -1140,6 +1216,78 @@ def self_test() -> int:
         check_freeze_exact(record, {"one.json": one, "two.json": two}, "t", problems)
         check("5d a changed file is refused", any("hashes to" in p for p in problems))
 
+    # 5e. The packet reveal and its altered-input cases.
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch)
+        packet_a = {"packet_id": "aaaa", "status": "Approved", "body_markdown": "x", "items": []}
+        packet_b = {"packet_id": "bbbb", "status": "Approved", "body_markdown": "y", "items": []}
+        digest = lambda p: hashlib.sha256(json.dumps(p, sort_keys=True).encode("utf-8")).hexdigest()
+        index = {"packets": [{"packet_id": "aaaa", "masked_packet_sha256": digest(packet_a)},
+                             {"packet_id": "bbbb", "masked_packet_sha256": digest(packet_b)}]}
+        packets_text = json.dumps({"packets": [packet_a, packet_b]}, indent=1)
+        mapping = {"mapping": [{"packet_id": "aaaa", "attempt_ref": "position-01-attempt-1", "masked_packet_sha256": digest(packet_a), "worker_model": None},
+                               {"packet_id": "bbbb", "attempt_ref": "position-02-attempt-1", "masked_packet_sha256": digest(packet_b), "worker_model": None}]}
+        mapping_text = json.dumps(mapping, indent=1)
+        revealed = root / "revealed"; revealed.mkdir()
+        (revealed / "grading-packets.json").write_text(packets_text, encoding="utf-8")
+        (revealed / "redaction-map.json").write_text(mapping_text, encoding="utf-8")
+        archive = root / "grading-packets.tar.gz"
+        with tarfile.open(archive, "w:gz") as tar:
+            tar.add(revealed / "grading-packets.json", arcname="grading-packets.json")
+            tar.add(revealed / "redaction-map.json", arcname="redaction-map.json")
+        sums = "%s  grading-packets.tar.gz\n" % sha256_file(archive)
+        record = reveal_packets(archive, sums)
+        check("5e the reveal records both members from an archive that hashes as sealed",
+              sorted(record["members"]) == ["grading-packets.json", "redaction-map.json"]
+              and record["members"]["grading-packets.json"] == sha256_file(revealed / "grading-packets.json"))
+        try:
+            reveal_packets(archive, "%s  grading-packets.tar.gz\n" % ("0" * 64))
+            check("5f an archive that does not hash as sealed is refused", False)
+        except Failed as exc:
+            check("5f an archive that does not hash as sealed is refused", "not the sealed plaintext" in str(exc))
+        short = root / "short.tar.gz"
+        with tarfile.open(short, "w:gz") as tar:
+            tar.add(revealed / "grading-packets.json", arcname="grading-packets.json")
+        try:
+            reveal_packets(short, "%s  grading-packets.tar.gz\n" % sha256_file(short))
+            check("5g an archive lacking a member is refused", False)
+        except Failed as exc:
+            check("5g an archive lacking a member is refused", "lacks redaction-map.json" in str(exc))
+        problems, checked = [], []
+        check_packets(revealed, index, record, problems, checked)
+        check("5h the intact reveal verifies", problems == [])
+        # emptied packets: refused by the sealed digest, and by the index completeness check
+        (revealed / "grading-packets.json").write_text(json.dumps({"packets": []}), encoding="utf-8")
+        problems = []
+        check_packets(revealed, index, record, problems, [])
+        check("5i an emptied packet file is refused", any("sealed archive member" in p for p in problems))
+        problems = []
+        check_packets(revealed, index, {"members": {"grading-packets.json": sha256_file(revealed / "grading-packets.json"),
+                                                    "redaction-map.json": record["members"]["redaction-map.json"]}}, problems, [])
+        check("5j a packet missing from the file is refused against the index even with a matching digest",
+              any("in the public index and not in the revealed file" in p for p in problems))
+        # duplicated packet
+        (revealed / "grading-packets.json").write_text(json.dumps({"packets": [packet_a, packet_a, packet_b]}), encoding="utf-8")
+        problems = []
+        check_packets(revealed, index, {"members": {"grading-packets.json": sha256_file(revealed / "grading-packets.json"),
+                                                    "redaction-map.json": record["members"]["redaction-map.json"]}}, problems, [])
+        check("5k a duplicated packet is refused", any("appears twice" in p for p in problems))
+        (revealed / "grading-packets.json").write_text(packets_text, encoding="utf-8")
+        # a changed worker_model in the map: refused by the sealed digest
+        changed = json.loads(mapping_text); changed["mapping"][0]["worker_model"] = "claude-opus-5"
+        (revealed / "redaction-map.json").write_text(json.dumps(changed, indent=1), encoding="utf-8")
+        problems = []
+        check_packets(revealed, index, record, problems, [])
+        check("5l a changed redaction-map row is refused by the sealed digest", any("redaction-map.json hashes to" in p for p in problems))
+        (revealed / "redaction-map.json").write_text(mapping_text, encoding="utf-8")
+        run = subprocess.run([sys.executable, __file__, "reveal", "--archive", str(archive), "--sums", str(root / "missing-sums"),
+                              "--out", str(root / "r.json")], capture_output=True, text=True, encoding="utf-8")
+        check("5m reveal exits 2 on an unreadable SHA256SUMS", run.returncode == 2)
+        (root / "sums").write_text(sums, encoding="utf-8")
+        run = subprocess.run([sys.executable, __file__, "reveal", "--archive", str(archive), "--sums", str(root / "sums"),
+                              "--out", str(root / "r.json")], capture_output=True, text=True, encoding="utf-8")
+        check("5n reveal exits 0 and writes the record", run.returncode == 0 and (root / "r.json").exists())
+
     # 6. The loss-stage vocabulary.
     check("6a a known stage and origin pass", validate_loss_stages({"rows": [
         {"attempt_ref": "x", "defect_id": "d", "outcome": "missed", "stage": "never-discovered", "evidence": ["e"]},
@@ -1211,11 +1359,16 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--self-test", action="store_true")
     sub = parser.add_subparsers(dest="command")
+    p = sub.add_parser("reveal")
+    p.add_argument("--archive", required=True)
+    p.add_argument("--sums", required=True)
+    p.add_argument("--out", required=True)
     p = sub.add_parser("verify")
     p.add_argument("--bundle", required=True)
     p.add_argument("--targets-sums", required=True)
     p.add_argument("--schedule-sums", required=True)
     p.add_argument("--packets-dir", required=True)
+    p.add_argument("--reveal", required=True)
     p.add_argument("--grading-dir", required=True)
     p.add_argument("--ledger")
     p.add_argument("--out", required=True)
@@ -1256,6 +1409,11 @@ def main(argv=None) -> int:
     if not args.command:
         parser.error("a command or --self-test is required")
     try:
+        if args.command == "reveal":
+            record = reveal_packets(args.archive, read_text(args.sums))
+            write(args.out, record)
+            print("wrote %s: archive %s..., %d member digest(s)" % (args.out, record["archive_sha256"][:12], len(record["members"])))
+            return 0
         if args.command == "verify":
             record = verify(args)
             write(args.out, record)
