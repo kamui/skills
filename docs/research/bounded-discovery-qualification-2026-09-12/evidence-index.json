@@ -109,6 +109,41 @@
     {
       "probe": "P02",
       "directory": "probes/P02-fresh-context",
+      "purpose": "Is every worker's context fresh, checked mechanically from the transcripts rather than by asking the model? This is the run that produced the committed probes/freshness.json; the earlier run, over the ten sessions that existed when it ran, is retained under run-1/.",
+      "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py freshness --bundle docs/research/bounded-discovery-qualification-2026-09-12",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "established",
+      "summary": "All 29 model sessions in this bundle open with exactly one user text message before their first assistant line, carry no summary record and were not resumed or forked (probes/freshness.json, written by this launch). The check is mechanical over the transcripts; no session was asked whether it was fresh.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "83290726479c334163a1a6e867f99568059ab6539a0d94c77e509b9edc15f52e",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "bddd9accf91ed11e62bd1984eee0df20dfeff2e007a56b4f2bbc7115ed6b2068",
+        "timing.json": "8f32c013db546e92a2e6add387ff4db631add41de231540d7eb767125ac2c772",
+        "verdict.json": "59c8c10ab548eb73d0bfe730b703d8aed4896150d2161daca562111d40eb185d"
+      }
+    },
+    {
+      "probe": "P02",
+      "directory": "probes/P02-fresh-context/run-1",
       "purpose": "Is every worker's context fresh, checked mechanically from the transcripts rather than by asking the model?",
       "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py freshness --bundle docs/research/bounded-discovery-qualification-2026-09-12",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
@@ -130,7 +165,7 @@
       },
       "observed_exit": "0",
       "status": "established",
-      "summary": "All ten model sessions in this bundle open with exactly one user text message, carry no summary record and were not resumed or forked (probes/freshness.json). The check is mechanical over the transcripts; no session was asked whether it was fresh.",
+      "summary": "The first run of P02, at 10:15 UTC, over the ten model sessions the bundle held then: all ten fresh. Superseded by the parent directory's run, which covers all 29 sessions and wrote the committed probes/freshness.json; this run's own report was overwritten by later regenerations and is not retained.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
@@ -138,7 +173,7 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "e38ac5d7004c04270cb46f65422f83e00aa80f50849e083cd3122ea3a805d7fa",
         "timing.json": "bd93912d62760c91ebfa15aeef184254bee60898febf0cd8e5339765978cb0e5",
-        "verdict.json": "7b09233f705e8e98eeddd8e2cf700044dbafdf55137b78b33a5a070527b47afa"
+        "verdict.json": "cd500c1f5f08b5e8c228f8c2d6c50c8838d6780ddd9abdb6af49a4e0bf66f28b"
       }
     },
     {
@@ -479,7 +514,6 @@
       "ledger": null,
       "retained_sha256": {
         "contention-ledger.json": "134b5ff46f4f19278e5d681fa6b2db4086d4e80f19fe358ec84fb05be7221e55",
-        "contention-ledger.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
         "launch.json": "0c069c304f36bebab9971a5374abe422040d4bae861503e3d2fbbead79e0720b",
         "race-A.out": "4097ecd165706fec92f51f52c7877d671ab97a20b18ddb186613420edb413808",
@@ -493,6 +527,41 @@
     {
       "probe": "P10",
       "directory": "probes/P10-billed-totals",
+      "purpose": "Does the runtime self-report reproduce from the per-request records, with every residual named? This is the run that produced the committed probes/reconciliation.json; the earlier run, over the nine sessions metered when it ran, is retained under run-1/.",
+      "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py reconcile --bundle docs/research/bounded-discovery-qualification-2026-09-12",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "established",
+      "summary": "All 28 metered sessions reconcile (probes/reconciliation.json, written by this launch). Every one is charged the larger of the runtime self-report and the recomputed per-request total, and in every case the difference is named exactly by an untranscripted claude-haiku-4-5-20251001 request that appears only in the result envelope's modelUsage. No residual is recorded as noise.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "a88e881684d8471515bedd670475d0067c219443a530e279ec065387229a6119",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "ff19f0097f0d1e9031c5bafb44148a31203820a56fbba0161545ed59652e7e3a",
+        "timing.json": "30c7f57f74190caf476f8c7a836aa53b49786935ebe5ecea95fad62b89808f20",
+        "verdict.json": "93702a8c5a0f307381ae2288042b15bf428d79037022e68761054721d5ae7009"
+      }
+    },
+    {
+      "probe": "P10",
+      "directory": "probes/P10-billed-totals/run-1",
       "purpose": "Does the runtime self-report reproduce from the per-request records, with every residual named - including any untranscripted request the runtime bills?",
       "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py reconcile --bundle docs/research/bounded-discovery-qualification-2026-09-12",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
@@ -514,7 +583,7 @@
       },
       "observed_exit": "0",
       "status": "established",
-      "summary": "Nine metered probes reconcile (probes/reconciliation.json). Every one is charged the larger of the runtime self-report and the recomputed per-request total, and in every case the difference is named exactly by an untranscripted claude-haiku-4-5-20251001 request that appears only in the result envelope's modelUsage - between $0.001076 and $0.001281 per session. No residual is recorded as noise.",
+      "summary": "The first run of P10, at 10:15 UTC, over the nine sessions metered then: all nine reconcile with their residuals named. Superseded by the parent directory's run, which covers all 28 metered sessions and wrote the committed probes/reconciliation.json; this run's own report was overwritten by later regenerations and is not retained.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
@@ -522,7 +591,7 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "59b3a6dd3c17b49e5998418e8c882fc3d2d3bd3dc90267226afda87279942420",
         "timing.json": "9825e5e86f082acdb256fc1b4742e183a6682fce3c8f537b76282bf119cf553e",
-        "verdict.json": "f420e52bb3cd52ecdb9c2d66438888859c18c15b318d2dc12d294794ceebe439"
+        "verdict.json": "822766a390fc4c1f473b358a8b0b4539f899330e30a711a46a0a84a276dc87ee"
       }
     },
     {
@@ -823,6 +892,41 @@
     {
       "probe": "P17",
       "directory": "probes/P17-launch-retention",
+      "purpose": "Was every launch in this bundle retained before its process was created, with the requested allowances readable back from the record, and did a launch that never started keep its record anyway? This is the run that produced the committed probes/retention.json, run after every other launch in the bundle exists; the earlier run, over the nineteen launches that existed then, is retained under run-1/.",
+      "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py retention --bundle docs/research/bounded-discovery-qualification-2026-09-12",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "established",
+      "summary": "Every one of the bundle's 64 launches retained its exact argv and its requested model, effort, dollar allowance, restriction flag, tool list and allow list in an exclusively created, flushed and fsynced record written before the process was created (probes/retention.json, written by this launch, which ran last and counted itself). One launch never started at all - P17a names a binary that does not exist - and its record is there with the full request, exit recorded as launch-failed and the OS error retained.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "a3e90db513c957072b03d860e94b993e1bff25b490d166937a405c36896d99f0",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "4d3e1bb8aaace08c09d1835785a67ce9486ff6d772e1269ab9976b949784a20a",
+        "timing.json": "6b1f63b0cad835f0fa3c57b1c8cd4ffc133883377eaeec4345d83ae57bd4dc96",
+        "verdict.json": "9044b6936dec2c398c70551dcdf8152ae4a07447b884829898e5bb5e7bfa1987"
+      }
+    },
+    {
+      "probe": "P17",
+      "directory": "probes/P17-launch-retention/run-1",
       "purpose": "Was every launch in this bundle retained before its process was created, with the requested allowances readable back from the record, and did a launch that never started keep its record anyway?",
       "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py retention --bundle docs/research/bounded-discovery-qualification-2026-09-12",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
@@ -844,7 +948,7 @@
       },
       "observed_exit": "0",
       "status": "established",
-      "summary": "Every launch in this bundle retained its exact argv and its requested model, effort, dollar allowance, restriction flag, tool list and allow list in an exclusively created, flushed and fsynced record written before the process was created (probes/retention.json). One launch never started at all - P17a names a binary that does not exist - and its record is there with the full request, exit recorded as launch-failed and the OS error retained.",
+      "summary": "The first run of P17, at 10:20 UTC, over the nineteen launches the bundle held then: all nineteen retained before process creation, one of them a launch that never started. Superseded by the parent directory's run, which covers all 64 launches and wrote the committed probes/retention.json; this run's own report was overwritten by later regenerations and is not retained.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
@@ -852,7 +956,7 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "b2c396d617a77b2c1340fe60b3dd558bd063ef3a68b5663e1e31760e46d0d6a9",
         "timing.json": "35515638116647a1a4a395d3ed6e67c5cba34593d2f02eba954ece7f53c4f22d",
-        "verdict.json": "02a53cccc6ac876e7a26f8121bd02dd2c1e1c4b2d588d1edd505ee60475cc50c"
+        "verdict.json": "edf1fce655c03d303362b0419fb72af21cd277810cffd43b3131445ef7de61c7"
       }
     },
     {
@@ -954,7 +1058,6 @@
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
         "launch.json": "3b6419ad34f5fcaa3f8531fd12b691a17556424711bebd13cf479102687f7e7d",
         "lifecycle-ledger.json": "7360aeb25309ce73e0453af8ca01102184f863d52f52fc4e1fbee66c24897960",
-        "lifecycle-ledger.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "lifecycle.json": "88cded4f72daa7e08fc2c73b95ade97d57096f5235bd95fe3f561ca3b75e7520",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "53a32639f9324aaa568a7bc21b447ce99f02304f6773d0c4d98eb2dc27f126b7",
@@ -2446,6 +2549,41 @@
     {
       "probe": "P24-machinery",
       "directory": "probes/P24-fresh-targets/machinery",
+      "purpose": "Apply E1, E2, E3 and E5 by rule against the live forge, evaluated against the reservation set as it is now committed and recording that set's digest. Every candidate named is either already reserved or a pull request of this repository, which can never be a target. The earlier run, against an 87-entry set that has since been regenerated, is retained under run-1/.",
+      "command": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/eligibility.py --reservations targets/reservations.json --threshold 2026-03-12 --out targets/eligibility-machinery-check.json 'clap-rs/clap#6212' 'nats-io/nats-server#7395' 'grpc/grpc-go#8519' 'golang-jwt/jwt#456' 'kamui/skills#208' 'kamui/skills#209'",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "established",
+      "summary": "The mechanical half of #148's criteria runs by rule against the live forge. Six candidates checked, six excluded: the four revealed #138 pull requests by E1 against the committed 102-entry reservation set, whose digest this record carries, and two of this repository's own recent pull requests by E2 against the recomputed freshness threshold of 2026-03-12 and by E3 on size. E1 compares owner and repository names case-insensitively, as the forge does. No candidate was passed on anything the script could not read - an unreadable field is recorded unknown and unknown never counts as a pass.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "2471febc10915064ecc49f093b51268873b8566367c550755a99ad4447c64ba5",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "ac1c3646769dbaf627288ef66f186941860edeb8da5aa678ad0ab978bbc813b2",
+        "timing.json": "9a17eb6432c8629ec4a5ecede556f5e73ceb3c202201a6e52c48082c2bc6c5ab",
+        "verdict.json": "d53ef27701a9ea812fd70ae3ed6389428218154ea2cade45810ef90f234defa3"
+      }
+    },
+    {
+      "probe": "P24-machinery",
+      "directory": "probes/P24-fresh-targets/machinery/run-1",
       "purpose": "Does the mechanical half of #148's criteria run by rule against the live forge - E1 against the derived reservation set, E2 against the recomputed freshness threshold, E3 on size and E5 on the review trail? Every candidate named here is either already reserved or a pull request of this repository itself, which is forbidden material for a cell and can never be a target, so the record leaks nothing about a future selection.",
       "command": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/eligibility.py --reservations targets/reservations.json --threshold 2026-03-12 --out targets/eligibility-machinery-check.json 'clap-rs/clap#6212' 'nats-io/nats-server#7395' 'grpc/grpc-go#8519' 'golang-jwt/jwt#456' 'kamui/skills#208' 'kamui/skills#209'",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
@@ -2467,7 +2605,7 @@
       },
       "observed_exit": "0",
       "status": "established",
-      "summary": "The mechanical half of #148's criteria runs by rule against the live forge. Six candidates checked, six excluded: the four revealed #138 pull requests by E1 against the derived reservation set, and two of this repository's own recent pull requests by E2 against the recomputed freshness threshold of 2026-03-12 and by E3 on size. No candidate was passed on anything the script could not read - an unreadable field is recorded unknown and unknown never counts as a pass.",
+      "summary": "The earlier run of the eligibility machinery, evaluated against the reservation set as it then stood - 87 entries, before the derivation was corrected twice - and recording no digest of it. Its six outcomes match the parent run's exactly. Superseded by the parent run, which is tied to the committed set by digest.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
@@ -2475,7 +2613,42 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "ac1c3646769dbaf627288ef66f186941860edeb8da5aa678ad0ab978bbc813b2",
         "timing.json": "43d414f9433969834d8bf2775a9187e37c922626bee2da608e8be5996c386fc7",
-        "verdict.json": "7019d1aa051d084a2bf660a11f0c3c764930e92fc43b6e42543aaed038a6c5c2"
+        "verdict.json": "e3d41c91eeeb3a55e7876ea3d7d1cef348fd36a976049a49c83b8f5a0c3d469e"
+      }
+    },
+    {
+      "probe": "P24-reservations",
+      "directory": "probes/P24-fresh-targets/reservations",
+      "purpose": "Derive the extended reservation set by rule from the files that publish it. This is the run that produced the committed targets/reservations.json, so that record is tied to a retained launch rather than to a run no record describes.",
+      "command": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/reservations.py --research /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research --out targets/reservations.json",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "established",
+      "summary": "Derived 102 pull requests from the ten source files, 77 strong and 25 conservative, and wrote the committed targets/reservations.json. Every bare number resolved to the nearest repository its scope names - a register's own on every line of the register - and owner and repository names were folded to one spelling before entries were merged, as the forge compares them.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "b3f2c2202810200c4c886835f0ee4cb825900ee7a6f22add493f59ee9f616183",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "60c230a348d47696b37b2eddb2f4c6e467301757e4863bf66043e513bb26c280",
+        "timing.json": "5f24b462d15df6e8d4369bcb006f23a7a82c1ba4cb18ad4a435aa544f9e7bdbb",
+        "verdict.json": "08171835076b36713fb613df44cc6701124cfb6eab94dcf1f7b530bc222230a9"
       }
     },
     {
@@ -2513,7 +2686,6 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "3c2ea81901b210a9747f454f99ff83e808c3902ed2c32d3c1b5e37178c97255a",
         "stop-ledger.json": "cd4dbdd91ac33e8893fd3117ac5d115a1e1017c2219a2b3e82945fcb93fd20a0",
-        "stop-ledger.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "timing.json": "3d94b8789cec1d045ac473e937479205c08cde17f7b718247b60f102ef9377df",
         "verdict.json": "e554c1f685e5ded35e6da335d0b3c80931eab18b3766be0f0456f657ea3acbe6"
       }
@@ -2521,7 +2693,7 @@
     {
       "probe": "P26",
       "directory": "probes/P26-frozen-input-chain",
-      "purpose": "Is every rendered prompt tied to the pinned template it came from, with no unfilled placeholder, and do the arms differ only in the attempt id and the arm label?",
+      "purpose": "Is every rendered prompt tied to the pinned template it came from, comparing the whole pinned block rather than its opening, with no unfilled placeholder, and does each normalised shape stand for exactly one input? This is the run that produced the committed probes/frozen-inputs.json; the first run, under the 200-byte prefix rule, is retained under run-1/.",
       "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py chain --bundle docs/research/bounded-discovery-qualification-2026-09-12",
       "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
       "requested": {
@@ -2540,17 +2712,17 @@
         "print_mode": false,
         "resume": null
       },
-      "observed_exit": "0",
+      "observed_exit": "1",
       "status": "unestablished",
-      "summary": "One of the chain's three links holds over this bundle's material. All 18 rendered prompts carry the pinned template block and none has an unfilled placeholder, and the template itself is pinned by digest - that is link one. Link two does not hold: the rendered prompts name their input by relative path and not by digest, so nothing in the bytes ties a prompt to the packet it was rendered against, which ./rechecked demonstrates by finding two shapes each standing for three different packets. Link three has nothing to check, because no cell ran and there is no public cell summary.",
+      "summary": "One of the chain's three links holds, and only for half the prompts. Comparing the whole pinned block rather than its opening, 9 of the 18 rendered prompts carry it - the nine final prompts, rendered from the committed revision 2. The other nine are the superseded P22 attempts, rendered from revision 1, which was revised before it was ever committed, so they tie to no pinned template at all. None has an unfilled placeholder. Link two does not hold: the prompts name their input by relative path rather than by digest, and two normalised shapes each stand for three different packets. Link three has nothing to check, because no cell ran. probes/frozen-inputs.json is written by this launch.",
       "ledger": null,
       "retained_sha256": {
-        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-        "launch.json": "4a37129fabd6e65264d60b88a3e250068b1e9ba501f8fb00740a33bdee309eda",
+        "exit.txt": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+        "launch.json": "47c27ebf16315a52fdeb2642d4319e047733472c0bde4332a5b66f475848b084",
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "stdout.txt": "042b7fa53dc804ffeb579a4750254788ffb521e173471147179eab1d54982e0e",
-        "timing.json": "c726c188778b846b71fa6fc7df6d58c8b1c9f0bcb3e9d297a95877342677f7fe",
-        "verdict.json": "4e1cde60c80eff91cc9d1a2993c599a9e41c3a00c7e0beb0feb8add5064bd34f"
+        "stdout.txt": "ff90a6bd147556922ca5ff0efeb0a77abe257fe8c09dde6564c762fdd1448858",
+        "timing.json": "fe57e3216813bb00b8a3f18767129430d87d067bbbbe2e10e83ee17055f407f9",
+        "verdict.json": "d1f0107abc31ff773e9eac239a420953ef12805b529675534609702880aa1ff9"
       }
     },
     {
@@ -2577,7 +2749,7 @@
       },
       "observed_exit": "1",
       "status": "established",
-      "summary": "With the invariant enforced, the chain check fails, and the failure is the finding: two normalised shapes each stand for three different packets. The probe's rendered prompts carry the pinned block and no unfilled placeholder, but they name only a relative path to their input and no digest of it, so nothing in the rendered bytes distinguishes one input from another. Under the previous, unenforced version this reported 'two distinct shapes' and looked like a pass.",
+      "summary": "With the shape-to-packet invariant enforced, the chain check failed: two normalised shapes each stand for three different packets, because the rendered prompts name their input by relative path and carry no digest of it. This run still compared only the pinned block's first 200 bytes, so its record of every prompt carrying the block was wrong for the nine rendered from revision 1; the parent directory's run corrects that.",
       "ledger": null,
       "retained_sha256": {
         "exit.txt": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
@@ -2585,9 +2757,44 @@
         "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "stdout.txt": "5ba52e5ada4a162504fdafe26d19466d01ce9abcef9e72c78905cb2355676a97",
         "timing.json": "01293832dd311be19f79b74dfbe9950b2636d0a47c151ea3d4297e3fad754a2d",
-        "verdict.json": "145f1d8b21b463310d1218399be2d34468036488ba68057ad06f83276b666027"
+        "verdict.json": "8396a216427a0322c09f5e7dbbb98155f1438de74a45b5e4b8ca8cc40ec3b585"
+      }
+    },
+    {
+      "probe": "P26",
+      "directory": "probes/P26-frozen-input-chain/run-1",
+      "purpose": "Is every rendered prompt tied to the pinned template it came from, with no unfilled placeholder, and do the arms differ only in the attempt id and the arm label?",
+      "command": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py chain --bundle docs/research/bounded-discovery-qualification-2026-09-12",
+      "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "status": "unestablished",
+      "summary": "The first run of P26. It reported all 18 rendered prompts as carrying the pinned template block, because it compared only the block's first 200 bytes - and the nine prompts rendered from the uncommitted revision 1 share that opening. It also did not yet check that a normalised shape stands for one input. Both claims were wrong in the same way, and the parent directory's run corrects them.",
+      "ledger": null,
+      "retained_sha256": {
+        "exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "launch.json": "4a37129fabd6e65264d60b88a3e250068b1e9ba501f8fb00740a33bdee309eda",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.txt": "042b7fa53dc804ffeb579a4750254788ffb521e173471147179eab1d54982e0e",
+        "timing.json": "c726c188778b846b71fa6fc7df6d58c8b1c9f0bcb3e9d297a95877342677f7fe",
+        "verdict.json": "29100ca69de709cfc66f3490af9c2497831cfdaa9dc05535b595f6ecb4613131"
       }
     }
   ],
-  "recorded_at": "2026-09-12T11:57:38.959852+00:00"
+  "recorded_at": "2026-09-12T21:25:21.871678+00:00"
 }

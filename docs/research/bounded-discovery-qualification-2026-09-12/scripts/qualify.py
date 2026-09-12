@@ -285,7 +285,10 @@ def chain(bundle: Path, out: Path):
             if match:
                 normalised = normalised.replace('"%s": "%s"' % (key, match.group(1)),
                                                 '"%s": "%s"' % (key, token))
-        carries_block = block.strip() and block.strip()[:200] in text
+        # The whole pinned block, compared over the normalised text. A prefix is not the
+        # block: a prompt rendered from a superseded revision shares the template's opening
+        # and differs from it further down, and a prefix check passes it anyway.
+        carries_block = bool(block.strip()) and block.strip() in normalised
         packet = directory / "packet.md"
         rendered.append({
             "directory": relative_name(bundle, directory),
@@ -408,7 +411,10 @@ def self_test():
     import tempfile
     failures = []
 
+    checked = []
+
     def check(name, condition):
+        checked.append(name)
         if not condition:
             failures.append(name)
 
@@ -483,7 +489,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 12 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: " + str(len(checked)) + " checks")
     return 1 if failures else 0
 
 

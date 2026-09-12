@@ -1,8 +1,8 @@
 {
   "schema_version": "bounded-discovery-qualification-v1",
   "probe": "P26",
-  "purpose": "Is every rendered prompt tied to the pinned template it came from, with no unfilled placeholder, and do the arms differ only in the attempt id and the arm label?",
-  "retained_at": "2026-09-12T10:40:10.092660+00:00",
+  "purpose": "Is every rendered prompt tied to the pinned template it came from, comparing the whole pinned block rather than its opening, with no unfilled placeholder, and does each normalised shape stand for exactly one input? This is the run that produced the committed probes/frozen-inputs.json; the first run, under the 200-byte prefix rule, is retained under run-1/.",
+  "retained_at": "2026-09-12T21:21:48.213280+00:00",
   "retained_before_process_creation": true,
   "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
   "argv": [
@@ -31,5 +31,5 @@
     "resume": null
   },
   "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
-  "expect_exit": 0
+  "expect_exit": 1
 }

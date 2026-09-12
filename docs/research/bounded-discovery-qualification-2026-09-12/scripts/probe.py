@@ -365,7 +365,10 @@ def self_test():
     import tempfile
     failures = []
 
+    checked = []
+
     def check(name, condition):
+        checked.append(name)
         if not condition:
             failures.append(name)
 
@@ -477,7 +480,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 18 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: " + str(len(checked)) + " checks")
     return 1 if failures else 0
 
 

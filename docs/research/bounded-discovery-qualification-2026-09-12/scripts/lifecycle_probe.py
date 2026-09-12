@@ -180,25 +180,30 @@ def new_ledger(path: Path):
 def self_test():
     import tempfile
     failures = []
+    checked = []
+
+    def check(name, condition):
+        checked.append(name)
+        if not condition:
+            failures.append(name)
+
     with tempfile.TemporaryDirectory() as temporary:
         base = Path(temporary)
         ledger = base / "ledger.json"
         new_ledger(ledger)
         code = run(ledger, base / "markers", base / "report.json", DEFAULT_BUDGET)
-        if code != 0:
-            failures.append("the lifecycle battery did not come out as expected")
+        check("the lifecycle battery comes out as expected", code == 0)
         report = json.loads((base / "report.json").read_text(encoding="utf-8"))
         refused = [r for r in report["claims"] if r["outcome"] == "refused"]
-        if len(refused) != 8:
-            failures.append("expected eight refusals, got " + str(len(refused)))
-        if any(r["worker_started"] for r in refused):
-            failures.append("a refused claim started a worker")
-        if report["lifecycle_events_written"] != 9:
-            failures.append("expected nine lifecycle events, got " +
-                            str(report["lifecycle_events_written"]))
+        check("eight claims are refused, got " + str(len(refused)), len(refused) == 8)
+        check("no refused claim starts a worker",
+              not any(r["worker_started"] for r in refused))
+        check("nine lifecycle events are written, got " +
+              str(report["lifecycle_events_written"]),
+              report["lifecycle_events_written"] == 9)
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 4 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: " + str(len(checked)) + " checks")
     return 1 if failures else 0
 
 

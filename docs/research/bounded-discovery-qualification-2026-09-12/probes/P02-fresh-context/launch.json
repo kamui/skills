@@ -1,8 +1,8 @@
 {
   "schema_version": "bounded-discovery-qualification-v1",
   "probe": "P02",
-  "purpose": "Is every worker's context fresh, checked mechanically from the transcripts rather than by asking the model?",
-  "retained_at": "2026-09-12T10:15:05.230292+00:00",
+  "purpose": "Is every worker's context fresh, checked mechanically from the transcripts rather than by asking the model? This is the run that produced the committed probes/freshness.json; the earlier run, over the ten sessions that existed when it ran, is retained under run-1/.",
+  "retained_at": "2026-09-12T21:21:39.781945+00:00",
   "retained_before_process_creation": true,
   "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
   "argv": [
