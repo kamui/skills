@@ -184,13 +184,12 @@ def derive(research: Path):
                                           "confidence": "conservative",
                                           "reasons": [], "named_by": []})
         # One strongly evidenced citation settles it: an entry is conservative only when no
-        # source evidenced it, not when one source out of two wrote it in prose.
+        # source evidenced it, not when one source out of two wrote it in prose. The
+        # explanation of what conservative means belongs to the entry, not to each reason:
+        # appending it per reason left an entry that one source evidences strongly carrying a
+        # sentence saying it was reserved rather than asserted, which is the opposite of true.
         if kind != "prose":
             entry["confidence"] = "strong"
-        if kind == "prose":
-            reason += (", read conservatively: the file writes it as a bare number in prose, "
-                       "which no rule separates from a citation of this project's own tickets, "
-                       "so it is reserved rather than asserted")
         if reason not in entry["reasons"]:
             entry["reasons"].append(reason)
         if source not in entry["named_by"]:
@@ -248,6 +247,12 @@ def derive(research: Path):
     if not rows:
         violations.append("the revealed inventory yielded no candidate rows")
 
+    for entry in reserved.values():
+        if entry["confidence"] == "conservative":
+            entry["conservative_because"] = (
+                "every citation of it is a bare number in running prose, which no rule "
+                "separates from a citation of this project's own tickets, so it is reserved "
+                "rather than asserted")
     body = {
         "schema_version": "bounded-discovery-qualification-v1",
         "ticket": 207,
