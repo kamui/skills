@@ -23,8 +23,23 @@ Read the cited `anchor` and `fix` sites, then only enough surrounding context to
 - factually wrong — the code does not say what the candidate claims. Quote the actual line.
 - provably impossible — a type, constant, or invariant rules it out. Show it.
 - already handled — a guard, check, or earlier return covers it. Cite it.
-- pre-existing — **Code candidates only** — the defect is real but this change did not introduce it. Cite the prior state. Never refute a Requirements candidate this way: a requirements gap is measured against the issue, not the diff, and the issue made it this change's job whether or not the code predates it.
+- pre-existing — **Code candidates only** — the defect is real but this change did not introduce it. Cite the base state, and reach it through the comparison below rather than through the observation that the line is untouched. Never refute a Requirements candidate this way: a requirements gap is measured against the issue, not the diff, and the issue made it this change's job whether or not the code predates it.
 - no observable effect — pure style, with no behavior consequence and no documented rule requiring it.
+
+### The pre-existing comparison
+
+An untouched line is not a pre-existing defect, and a touched one is not an introduced defect. Before ruling `pre-existing`, hold the candidate's failing path and trigger fixed and put them against both revisions:
+
+1. Name the guarantee that governs the path — a lock or its scope, an ordering constraint, an ownership or lifetime rule, a validated invariant, a check, a bound.
+2. State what that guarantee provided at the merge-base, citing the base line.
+3. State what it provides at the head, citing the head line.
+4. Rule `pre-existing` only if it was no stronger at base — so the same trigger, run against the base, produces the same wrong outcome there.
+
+Where the guarantee was stronger at base and this change removed or weakened it, the candidate was introduced here however far its consumer sits from the diff. `pre-existing` is then the wrong refutation: rule on the claim itself, on its own evidence.
+
+Where you cannot reconstruct the base state well enough to compare, you have not established this refutation. That is `plausible` — the asymmetry below is about exactly this.
+
+The Code finder is asked to put both revisions and the consumer in its `claim` (`code-axis.md` § Guarantees removed from unchanged code). A claim that omits them is not refuted for omitting them: make the comparison yourself and rule on what the code says.
 
 ## Related acquittals
 
