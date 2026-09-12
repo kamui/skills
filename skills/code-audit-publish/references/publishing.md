@@ -75,8 +75,8 @@ Reviewed `a1b2c3d` against `main` (merge-base `9e8d7c6`). Coverage: complete.
 
 Retries are the thing to fix: the new path swallows validation errors the queue downstream
 assumes have already been raised. The two optional findings are the same duplicated shape
-either side of it and clear up with it. The open question is whether the 30s timeout is
-deliberate; if it is, nothing else here blocks.
+either side of it and clear up with it. The open question is whether the 30s timeout fits the
+gateway's request budget; if it does, nothing else here blocks.
 
 - [Code] [must-fix] [P1] — `parseOrder` swallows the validation error on the retry path — anchor [`src/order.ts:47`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/order.ts?plain=1#L47)
 - [Code] [consider] [P2] — `retryOnce` drops the idempotency key across attempts — anchor [`src/order.ts:61`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/order.ts?plain=1#L61); fix [`src/retry-policy.ts:18`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/retry-policy.ts?plain=1#L18)
@@ -102,7 +102,7 @@ These are accurate observations, not findings — no action is requested.
 
 ## Open questions
 
-**[Question] Is the 30s queue timeout deliberate?**
+**[Question] Does the 30s queue timeout fit the gateway's request budget?**
 
 The new queue path defaults to 30s — [`src/config.ts`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/src/config.ts) is where the diff sets it — where every caller it replaces used 5s. The issue is silent on timeouts, the history carries no rationale, and nothing in the repository records the gateway budget this path runs under, so whether the queue outlives it decides whether the new path times out at the caller. Whoever owns the gateway configuration can answer it; one request against staging would show it.
 
