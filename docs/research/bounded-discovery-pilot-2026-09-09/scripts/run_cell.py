@@ -49,8 +49,11 @@ Config schema (UTF-8 JSON): ``repo``, ``bundle``, ``targets``, ``tools``,
 ``ledger``, ``schedule``, ``leak_sets``, ``cells_root``, ``image``,
 ``auth_env_file``, ``proxy_port``, ``policy_tree``, ``policy_commit``.
 New dispatches also require ``roots_record``: the unsealed record produced by
-the prospective roots.py before launch. ``budget_script`` selects a future
-freeze's ledger implementation; historical settlement defaults to #147's pin.
+the prospective roots.py before launch, and ``payload_contract``: the pinned
+uniform-payload validator every arm's output is accepted under. Optional
+``payload_output_contract`` names the study's own output-contract validator, run
+over the same review in every arm. ``budget_script`` selects a future freeze's
+ledger implementation; historical settlement defaults to #147's pin.
 
 Exit: 0 on success, 1 on a content or protocol violation with one line per
 violation on stdout, 2 when an input cannot be read or a subprocess fails,
@@ -204,6 +207,10 @@ def paths_for(root) -> dict:
             "PACKET_DIR": str(root / "packet"), "PACKET": str(root / "packet" / "packet.md"),
             "WORK": str(root / "work"), "RUNNER": str(root / "runner"),
             "PAYLOAD": str(root / "work" / "review-payload.md"),
+            # The uniform contract payload a future freeze's template names. The
+            # #149 template writes the Markdown form only, which settlement
+            # refuses to mask rather than converting it into a shape it never had.
+            "PAYLOAD_CONTRACT": str(root / "work" / "review-payload.json"),
             "REPORT": str(root / "work" / "research-report.md"),
             "TIMING": str(root / "work" / "timing.json"),
             "FREEZE": str(root / "work" / "freeze.json"),
@@ -463,6 +470,11 @@ def prepare(config, position, force=False, attempt=1):
 
     shutil.copyfile(Path(__file__).resolve().parent / "mark_event.py",
                     root / "runner" / "mark_event.py")
+    # The cell validates its own payload with the program settlement accepts it
+    # under, so no arm can satisfy a contract of its own.
+    if config.get("payload_contract"):
+        shutil.copyfile(Path(config["payload_contract"]).expanduser(),
+                        root / "runner" / "payload.py")
     problems.extend(render_prompts(config, root, row, manifest))
     isolation = Path(config["bundle"]) / "scripts" / "check_cell_isolation.py"
     shutil.copyfile(isolation, root / "runner" / "check_cell_isolation.py")
@@ -828,6 +840,38 @@ def dispatch_roots(config):
     return {"path": str(path), "sha256": digest(path)}
 
 
+def payload_contract(config, root=None):
+    """Bind dispatch to one payload contract, identical in every arm.
+
+    #199 gap 6: only one pilot arm wrote structured items beside its body, so a
+    populated array correlated with that arm and the masked packets carried a
+    structural tell. A new dispatch names the validator before it launches, and
+    settlement accepts that arm's payload under exactly this program.
+
+    With a cell root, the copy preparation put in ``runner/`` is checked against
+    the same digest before any worker starts. Preparation and dispatch are
+    separate invocations, so the configured file can change between them or the
+    cell can have been prepared before one was configured at all; either way the
+    cell would run against a validator the dispatch record does not name.
+    """
+    if not config.get("payload_contract"):
+        raise Failed("new dispatch requires a pinned payload_contract")
+    path = Path(config["payload_contract"]).expanduser().resolve()
+    if not path.is_file():
+        raise Failed("payload_contract %s is not a file" % path)
+    contract = {"path": str(path), "sha256": digest(path)}
+    if root is not None:
+        prepared = Path(root) / "runner" / "payload.py"
+        if not prepared.is_file():
+            raise Failed("this cell was prepared without the payload contract; set "
+                         "payload_contract and prepare this attempt again")
+        if digest(prepared) != contract["sha256"]:
+            raise Failed("the prepared %s is not the pinned payload contract; prepare "
+                         "this attempt again" % prepared)
+        contract["prepared_path"] = str(prepared)
+    return contract
+
+
 def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
              replacement_evidence=None):
     import time
@@ -839,6 +883,9 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
         predecessor = attempt_id_for(row, attempt - 1)
         ordinal = ordinal or attempt - 1
     root = cell_root(config, position, attempt)
+    # The cell runs the copy in its own runner/, so that copy is what has to
+    # match the digest this dispatch record pins.
+    contract = payload_contract(config, root)
     slot, arm = row["target_slot"], row["arm"]
     manifest = load(Path(config["targets"]) / slot / "manifest.json")
     prepared = load(root / "artifacts" / "prepare.json")
@@ -867,7 +914,7 @@ def dispatch(config, position, attempt=1, predecessor=None, ordinal=0,
     result = {"schema_version": "bounded-discovery-v1", "position": int(position),
               "cell_id": row["cell_id"], "attempt_id": row["attempt_id"], "arm": arm,
               "target_slot": slot, "phases": [], "problems": problems,
-              "roots_record": roots_record}
+              "roots_record": roots_record, "payload_contract": contract}
     finder = None
     try:
         if not record_mounts(config, root, slot, root / "artifacts" / "mounts.json", arm):
@@ -1543,6 +1590,44 @@ def missing_usage_accounting(config, row, dispatched, split_document):
     return answer
 
 
+def accept_payload(config, root, row, dispatched, completion, problems) -> dict:
+    """Accept this attempt's payload under the contract its dispatch pinned.
+
+    Every arm passes the same program, and an attempt that produced no payload
+    gets the frozen stopped or unavailable record rather than an invented review.
+    A dispatch record that bound no contract - every historical one - is settled
+    exactly as before, so the pilot's retained evidence stays reproducible.
+    """
+    contract = dispatched.get("payload_contract")
+    if not contract:
+        return {"payload_contract_enforced": False}
+    script = Path(contract["path"])
+    if not script.is_file() or digest(script) != contract["sha256"]:
+        problems.append("the payload contract pinned at dispatch is missing or has changed, "
+                        "so no payload can be accepted under it")
+        return {"payload_contract_enforced": False, "payload_accepted": False}
+    receipt = root / "artifacts" / "payload-receipt.json"
+    argv = [sys.executable, str(script), "accept", "--work", str(root / "work"),
+            "--receipt", str(receipt), "--arm", row["arm"],
+            "--attempt", row["attempt_id"], "--completion", completion]
+    if dispatched.get("stop_reason"):
+        argv += ["--stop-detail", dispatched["stop_reason"]]
+    if config.get("payload_output_contract"):
+        argv += ["--contract-validator",
+                 str(Path(config["payload_output_contract"]).expanduser())]
+    accepted = run(*argv, check=False)
+    if accepted.returncode:
+        problems.append("the payload contract refused this attempt: %s"
+                        % (accepted.stdout or accepted.stderr).strip())
+        return {"payload_contract_enforced": True, "payload_accepted": False}
+    document = load(receipt)
+    return {"payload_contract_enforced": True, "payload_accepted": True,
+            "payload_outcome": document["outcome"],
+            "payload_item_count": document["item_count"],
+            "payload_produced_by": document["produced_by"],
+            "payload_sha256": document["payload_sha256"]}
+
+
 def settle(config, position, attempt=1):
     row = dict(schedule_row(config, position))
     row["attempt_id"] = attempt_id_for(row, attempt)
@@ -1568,6 +1653,8 @@ def settle(config, position, attempt=1):
         # closes the claimed attempt without treating absent usage as a defect.
         if dispatched.get("phases") or transcripts_for(root):
             raise Failed("reservation refusal contains worker evidence; reconcile before closeout")
+        record.update(accept_payload(config, root, row, dispatched, "reservation-refused",
+                                     problems))
         closure = "stopped-invalid" if problems else "stopped-budget"
         ledger = load(config["ledger"])
         closed = next((event for event in ledger["events"]
@@ -1670,6 +1757,9 @@ def settle(config, position, attempt=1):
     record["egress_attempts"] = len(egress)
     record["egress_refused"] = sum(1 for entry in egress
                                    if entry.get("decision") not in ("allow", "allowed"))
+
+    record.update(accept_payload(config, root, row, dispatched, record["completion"],
+                                 problems))
 
     # Settlement charges the larger of the self-report and the retained records, and
     # records the difference between them as a reconciliation residual. The probes
