@@ -15,8 +15,10 @@ Usage::
     python3 scripts/shutdown.py check --ledger FILE --roots-record FILE
         --roots-sha256 DIGEST --seal PATH --out GATE
         [--container-prefix PREFIX] [--container-cli NAME] [--marker TEXT ...]
-        [--timeout SECONDS] [--probes-from FILE] [--raw-out FILE]
-    python3 scripts/shutdown.py authorize --gate GATE [--max-age-seconds N]
+        [--timeout SECONDS] [--max-probe-age-seconds N] [--probes-from FILE]
+        [--raw-out FILE]
+    python3 scripts/shutdown.py authorize --gate GATE --ledger FILE
+        [--max-age-seconds N]
     python3 scripts/shutdown.py --self-test
 
 ``--roots-sha256`` is the digest the dispatch record pinned for this study's
@@ -24,10 +26,15 @@ unsealed root record; a record that does not match it is not the one the study
 ran under. ``--seal`` is the sealed evidence the gate would release: the root
 record must lie outside it, or the gate would be reading what it is gating.
 ``--probes-from`` re-scores a retained raw capture instead of probing the host,
-for replay; it never turns an incomplete capture into a pass.
+for replay; it never turns an incomplete or stale capture into a pass — the
+capture keeps its own age, bounded by ``--max-probe-age-seconds``. The ledger is
+read after the probes, under the writer's own lock, so a reservation appended
+while the host was probed is in the snapshot this gate decides on.
 
 ``authorize`` is what a later step calls before opening the seal: it re-reads a
-recorded gate and exits 0 only when that gate cleared and is still fresh.
+recorded gate and the ledger, and exits 0 only when that gate cleared, the
+ledger has not changed since, and the evidence it rests on — the capture, not
+just the gate's own stamp — is still fresh.
 
 Exit: 0 the gate cleared, 1 a check refused clearance with one line each on
 stdout, 2 an input cannot be read or an output cannot be written. A probe that
@@ -40,6 +47,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+import fcntl
 import hashlib
 import importlib.util
 import json
@@ -47,23 +55,31 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 ARTIFACT_ID = "bounded-discovery-shutdown-gate"
 SCHEMA_VERSION = "bounded-discovery-v1"
 DEFAULT_CONTAINER_PREFIX = "bd"
 DEFAULT_MARKERS = ("run_cell.py",)
 DEFAULT_TIMEOUT = 120
+DEFAULT_MAX_PROBE_AGE = 3600
+# Two clocks never agree exactly; a stamp beyond this much in the future is not
+# jitter, it is evidence that did not come from this gate's own probe.
+CLOCK_SKEW_SECONDS = 5
+LEDGER_LOCK_TIMEOUT = 30
 
-CHECKS = ("the root record is the one pinned before dispatch",
-          "the root record is retained outside the evidence seal",
-          "every recorded cell root is absent",
-          "no reviewer or coordinator process is running",
-          "no cell container is running",
-          "every opened attempt is closed on the ledger",
-          "no budget reservation is outstanding",
-          "the ledger chain is unbroken through its last event",
-          "the ledger records a terminal stop",
-          "no ledger event was appended after the host was probed")
+ROOT_CHECKS = ("the root record is the one pinned before dispatch",
+               "the root record is retained outside the evidence seal",
+               "every recorded cell root is absent")
+HOST_CHECKS = ("no reviewer or coordinator process is running",
+               "no cell container is running")
+LEDGER_CHECKS = ("every opened attempt is closed on the ledger",
+                 "no budget reservation is outstanding",
+                 "the ledger chain is unbroken through its last event",
+                 "the ledger records a terminal stop",
+                 "no ledger event was appended after the host was probed")
+EVIDENCE_CHECKS = ("the host probes were captured for this gate",)
+CHECKS = ROOT_CHECKS + HOST_CHECKS + LEDGER_CHECKS + EVIDENCE_CHECKS
 
 
 def now() -> str:
@@ -104,6 +120,34 @@ def capture(argv, timeout=DEFAULT_TIMEOUT) -> dict:
     return record
 
 
+def read_ledger(path, timeout=LEDGER_LOCK_TIMEOUT) -> tuple:
+    """Read the ledger under the budget ledger's own writer lock.
+
+    The gate reads the ledger *after* the host probes, so a reservation appended
+    while the host was being probed is still in the snapshot the decision rests
+    on, and the quiet check below catches it. The lock is the same one budget.py
+    serialises every append with, so the read cannot land mid-write; a lock held
+    past the timeout is a failed read, never an assumed-quiet ledger.
+    """
+    path = Path(path)
+    deadline = time.monotonic() + timeout
+    with open(str(path) + ".lock", "a", encoding="utf-8") as lock:
+        while True:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("the ledger writer lock was still held after %s "
+                                       "seconds, so the ledger could not be read" % timeout)
+                time.sleep(0.1)
+        try:
+            raw = path.read_bytes()
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+    return json.loads(raw.decode("utf-8")), hashlib.sha256(raw).hexdigest()
+
+
 def probe_completed(probe) -> bool:
     return bool(probe.get("ran")) and probe.get("exit_code") == 0
 
@@ -132,6 +176,50 @@ def live_probes(container_cli, timeout) -> dict:
             "processes": capture(["ps", "-eo", "pid=,ppid=,command="], timeout),
             "containers": capture([container_cli, "ps", "-a", "--no-trunc",
                                    "--format", "{{.Names}}\t{{.Status}}"], timeout)}
+
+
+def moment(value):
+    """An aware instant, or None when there is nothing usable to read."""
+    try:
+        parsed = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def probe_freshness(probes, observed_at, max_age) -> dict:
+    """This gate is only as current as the capture it scored.
+
+    ``--probes-from`` replays a retained capture, and the gate stamps itself with
+    the instant it ran. Without this check that stamp is the only age anything
+    downstream can see, so January's process table would launder into a September
+    clearance. The capture keeps its own age, and an unusable or impossible one
+    establishes nothing.
+    """
+    name = EVIDENCE_CHECKS[0]
+    captured = probes.get("captured_at")
+    captured_at, gate_at = moment(captured), moment(observed_at)
+    record = {"check": name, "probes_captured_at": captured,
+              "max_probe_age_seconds": max_age}
+    if captured_at is None or gate_at is None:
+        record.update(passed=False, probe_completed=False,
+                      detail="the capture carries no usable timezone-aware timestamp (%r), "
+                             "so how old this evidence is cannot be established" % captured)
+        return record
+    age = (gate_at - captured_at).total_seconds()
+    record["probe_age_seconds"] = round(age, 3)
+    if age < -CLOCK_SKEW_SECONDS:
+        record.update(passed=False, probe_completed=True,
+                      detail="the capture is stamped %.0f seconds after this gate ran, so it "
+                             "did not come from this gate's probe" % -age)
+        return record
+    record.update(passed=age <= max_age, probe_completed=True,
+                  detail="the host was probed %.0f seconds before this gate, within the %s "
+                         "second bound" % (max(age, 0), max_age) if age <= max_age else
+                         "the host was probed %.0f seconds before this gate, past the %s "
+                         "second bound; probe the host again rather than re-scoring an old "
+                         "capture" % (age, max_age))
+    return record
 
 
 def parse_processes(probe) -> dict:
@@ -271,7 +359,8 @@ def record_checks(roots_record, roots_sha256, seal, roots_module) -> list:
 
 
 def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
-               container_prefix, markers, roots_module, observed_at=None) -> dict:
+               container_prefix, markers, roots_module, observed_at=None,
+               ledger_digest=None, max_probe_age=DEFAULT_MAX_PROBE_AGE) -> dict:
     observed_at = observed_at or now()
     checks = record_checks(roots_record, roots_sha256, seal, roots_module)
     recorded_roots = next((check.get("roots") for check in checks
@@ -311,7 +400,7 @@ def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
     checks.append(check)
 
     if ledger_error is not None:
-        for name in CHECKS[5:]:
+        for name in LEDGER_CHECKS:
             checks.append({"check": name, "passed": False, "probe_completed": False,
                            "detail": "the ledger could not be read: %s" % ledger_error})
     else:
@@ -354,6 +443,8 @@ def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
                                   "the newest ledger event is %r, which does not precede the "
                                   "probe at %s" % (latest, captured))})
 
+    checks.append(probe_freshness(probes, observed_at, max_probe_age))
+
     for check in checks:
         check["class"] = "required"
         check["established"] = bool(check["passed"] and check.get("probe_completed"))
@@ -363,6 +454,7 @@ def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
     return {
         "schema_version": SCHEMA_VERSION, "artifact_id": ARTIFACT_ID,
         "observed_at": observed_at, "probes_captured_at": probes.get("captured_at"),
+        "ledger_sha256": ledger_digest,
         "all_reviewers_stopped": cleared, "seal_may_be_opened": cleared,
         "every_check_established": cleared,
         "check_classes": ("every check is required. A check establishes its condition only "
@@ -378,11 +470,6 @@ def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
 
 def command_check(args) -> int:
     roots_module = load_roots_module()
-    ledger, ledger_error = None, None
-    try:
-        ledger = json.loads(Path(args.ledger).read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        ledger_error = str(exc)
     if args.probes_from:
         try:
             probes = json.loads(Path(args.probes_from).read_text(encoding="utf-8"))
@@ -391,8 +478,16 @@ def command_check(args) -> int:
             return 2
     else:
         probes = live_probes(args.container_cli, args.timeout)
+    # After the probes, never before: a reservation appended while the host was
+    # being probed has to be in the snapshot this gate decides on.
+    ledger, ledger_error, ledger_digest = None, None, None
+    try:
+        ledger, ledger_digest = read_ledger(args.ledger)
+    except (OSError, ValueError) as exc:
+        ledger_error = str(exc)
     gate = build_gate(ledger, ledger_error, probes, args.roots_record, args.roots_sha256,
-                      args.seal, args.container_prefix, args.marker, roots_module)
+                      args.seal, args.container_prefix, args.marker, roots_module,
+                      ledger_digest=ledger_digest, max_probe_age=args.max_probe_age_seconds)
     try:
         if args.raw_out:
             Path(args.raw_out).write_text(json.dumps(probes, indent=2, sort_keys=True) + "\n",
@@ -431,15 +526,43 @@ def command_authorize(args) -> int:
                             % (check.get("check"), check.get("detail")))
     if not gate.get("all_reviewers_stopped") and not problems:
         problems.append("the gate record does not clear the seal")
-    if args.max_age_seconds:
-        try:
-            observed = datetime.fromisoformat(gate.get("observed_at"))
-            age = (datetime.now(timezone.utc) - observed).total_seconds()
-            if age > args.max_age_seconds or age < 0:
-                problems.append("the gate was recorded %.0f seconds ago; re-probe before "
-                                "opening the seal" % age)
-        except (TypeError, ValueError):
-            problems.append("the gate record carries no usable observation time")
+
+    # Age is measured from the capture as well as from the gate. The gate stamps
+    # itself when it ran; the capture is when the host was actually in the state
+    # the gate scored, and a replayed capture is the older of the two.
+    ages = {}
+    for name in ("observed_at", "probes_captured_at"):
+        instant = moment(gate.get(name))
+        if instant is None:
+            problems.append("the gate record carries no usable %s, so the age of the "
+                            "evidence it rests on cannot be established" % name)
+            continue
+        ages[name] = (datetime.now(timezone.utc) - instant).total_seconds()
+        if ages[name] < -CLOCK_SKEW_SECONDS:
+            problems.append("the gate's %s is %.0f seconds in the future"
+                            % (name, -ages[name]))
+    if args.max_age_seconds and ages:
+        oldest = max(ages, key=lambda name: ages[name])
+        if ages[oldest] > args.max_age_seconds:
+            problems.append("the evidence this gate rests on is %.0f seconds old (%s); "
+                            "probe the host again before opening the seal"
+                            % (ages[oldest], oldest))
+
+    # The ledger is re-read here, not trusted from the gate: clearance is only
+    # current while the ledger it cleared is the one still on disk.
+    try:
+        current = hashlib.sha256(Path(args.ledger).read_bytes()).hexdigest()
+    except OSError as exc:
+        problems.append("the ledger could not be re-read at authorization: %s" % exc)
+    else:
+        pinned = gate.get("ledger_sha256")
+        if not pinned:
+            problems.append("the gate record carries no ledger digest, so a change to the "
+                            "ledger since it was recorded cannot be ruled out")
+        elif pinned != current:
+            problems.append("the ledger is %s now and was %s at the gate; it changed after "
+                            "clearance, so probe the host again before opening the seal"
+                            % (current, pinned))
     for problem in problems:
         print(problem)
     return 1 if problems else 0
@@ -460,6 +583,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--container-cli", default="docker")
     parser.add_argument("--marker", action="append", default=list(DEFAULT_MARKERS))
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    parser.add_argument("--max-probe-age-seconds", type=int, default=DEFAULT_MAX_PROBE_AGE,
+                        help="how old the host capture this gate scores may be "
+                             "(default %d)" % DEFAULT_MAX_PROBE_AGE)
     parser.add_argument("--gate")
     parser.add_argument("--max-age-seconds", type=int)
     parser.add_argument("--self-test", action="store_true")
@@ -478,8 +604,8 @@ def main(argv=None) -> int:
                                           and args.roots_sha256 and args.seal and args.out):
         parser.error("check requires --ledger, --roots-record, --roots-sha256, --seal "
                      "and --out")
-    if args.operation == "authorize" and not args.gate:
-        parser.error("authorize requires --gate")
+    if args.operation == "authorize" and not (args.gate and args.ledger):
+        parser.error("authorize requires --gate and --ledger")
     if args.operation == "check":
         return command_check(args)
     return command_authorize(args)
