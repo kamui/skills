@@ -34,41 +34,41 @@ Fixture. `snapshot` is byte-identical across the revisions; only `put` is in the
 class Cache:
     def __init__(self):
         self._lock = threading.Lock()
-        self._entries = {}
+        self._entries = {}                 # key -> (value, expires_at)
 
-    def put(self, key, value):
-        with self._lock:              # base guarantee: every mutation under _lock
-            self._entries[key] = value
+    def put(self, key, value, expires_at):
+        with self._lock:                   # base guarantee: every mutation under _lock
+            self._entries[key] = (value, expires_at)
 
-    def snapshot(self):
+    def live(self, now):
         with self._lock:
-            return dict(self._entries)
+            return {k: v for k, (v, exp) in self._entries.items() if exp > now}
 ```
 
 ```diff
-     def put(self, key, value):
+     def put(self, key, value, expires_at):
 -        with self._lock:
--            self._entries[key] = value
-+        self._entries[key] = value    # dict assignment is atomic
+-            self._entries[key] = (value, expires_at)
++        self._entries[key] = (value, expires_at)   # tuple assignment is atomic
 ```
 
-`snapshot` still takes `_lock`, but `_lock` no longer excludes writers, so its copy can run while
-`put` inserts.
+`live` still takes `_lock`, but `_lock` no longer excludes writers, so its comprehension iterates
+`self._entries` while `put` inserts into it.
 
-**`v2b-1`:** refused twice. Criterion 4 puts `snapshot` out of scope because the diff did not
-modify its lines, and the one exception is documentary. A finder that raised it anyway reaches a
+**`v2b-1`:** refused twice. Criterion 4 puts `live` out of scope because the diff did not modify
+its lines, and the one exception is documentary. A finder that raised it anyway reaches a
 `pre-existing` refutation whose whole requirement — "cite the prior state" — is satisfied by
-observing that `snapshot` is unchanged at base, which is the same reasoning that excluded it.
+observing that `live` is unchanged at base, which is the same reasoning that excluded it.
 
 **`v2b-2`:** the guarantee shape, with all four parts quotable — base `cache.py:8` `with
 self._lock:` guaranteeing every mutation under `_lock`; head `cache.py:8` writing outside it;
-consumer `cache.py:12` `return dict(self._entries)`; trigger a `put` concurrent with a `snapshot`,
-raising `RuntimeError: dictionary changed size during iteration`. The candidate is admitted with
-both revisions and the consumer in its `claim`. At the verifier, step 4 of the comparison fails —
-the guarantee was stronger at base — so `pre-existing` is unavailable and the claim is ruled on its
-own evidence. Whether that ruling is `confirmed` or `plausible` remains the verifier's judgment
-about the trigger; the replay establishes only that neither gate now removes the candidate
-silently. Anchor at the head `put` line, `fix=cache.py:12`.
+consumer `cache.py:12`, the comprehension over `self._entries.items()`; trigger a `put` concurrent
+with a `live`, raising `RuntimeError: dictionary changed size during iteration` in the reader. The
+candidate is admitted with both revisions and the consumer in its `claim`. At the verifier, step 4
+of the comparison fails — the guarantee was stronger at base — so `pre-existing` is unavailable and
+the claim is ruled on its own evidence. Whether that ruling is `confirmed` or `plausible` remains
+the verifier's judgment about the trigger; the replay establishes only that neither gate now
+removes the candidate silently. Anchor at the head `put` line, `fix=cache.py:12`.
 
 ## Case 2 — the same path was already unsafe at base
 
@@ -76,14 +76,14 @@ Fixture. Same file, but the lock-free write predates the pull request, which onl
 
 ```python
 # cache.py — base
-    def put(self, key, value):
-        self._entries[key] = value    # already unlocked at base
+    def put(self, key, value, expires_at):
+        self._entries[key] = (value, expires_at)   # already unlocked at base
 ```
 
 ```diff
-     def put(self, key, value):
+     def put(self, key, value, expires_at):
 +        log.debug("put %s", key)
-         self._entries[key] = value
+         self._entries[key] = (value, expires_at)
 ```
 
 **`v2b-1`:** out of scope by criterion 4, and `pre-existing` at the verifier.
@@ -91,8 +91,8 @@ Fixture. Same file, but the lock-free write predates the pull request, which onl
 **`v2b-2`:** unchanged, and now for a stated reason. The finder runs its own trigger against the
 base and gets the same `RuntimeError`, so the section sends it to an acquitted ledger row. The
 verifier's step 4 holds — the guarantee was no stronger at base — so `pre-existing` is the correct
-refutation and it is reached by comparison rather than by noticing that `snapshot` is untouched.
-The widened admission does not pull old bugs into scope.
+refutation and it is reached by comparison rather than by noticing that `live` is untouched. The
+widened admission does not pull old bugs into scope.
 
 ## Case 3 — a refactor that preserves the guarantee
 
@@ -161,7 +161,14 @@ refuse a real drift if it replaced the paired sweep. Priority and action still c
 - Nothing here measures whether a finder *reaches* the guarantee — discovery is the concern of
   [#157](https://github.com/kamui/skills/issues/157), and this release only changes what is
   admitted once reached.
-- Cases 1 and 2 turn on CPython dict semantics chosen to make the trigger concrete. The rule is not
-  language-specific, and no other language was replayed.
+- Cases 1 and 2 turn on CPython dict semantics chosen to make the trigger concrete, and on one
+  specific semantic: a dict mutated while Python-level iteration is in flight raises. The reader
+  therefore has to iterate. An earlier draft of this fixture had it call `dict(self._entries)`,
+  which does **not** race — that copy runs inside one C-level operation holding the GIL, never
+  re-entering the interpreter, and is the standard CPython idiom for a safe snapshot. Executed on
+  CPython 3.14.7 with `sys.setswitchinterval(1e-6)`, four unlocked writer threads and one reader:
+  `dict(d)` and `d.copy()` survived roughly 460k concurrent inserts with zero errors, while
+  `{k: v for k, v in d.items()}` raised `RuntimeError: dictionary changed size during iteration` on
+  its first pass. The rule itself is not language-specific, and no other language was replayed.
 - Case 1's final verdict is deliberately left open: the release removes two silent exclusions, and
   a `confirmed`/`plausible` split on a real run is a model judgment this document cannot settle.

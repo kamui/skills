@@ -586,7 +586,8 @@ The [assessment](../../docs/research/code-review-deep-publish-assessment-2026-09
 item B3 is the gap this closes. `code-axis.md` criterion 4 excluded every defect the diff did not
 write, and the one exception it carried — C9's sync drift — is documentary: it admits a peer whose
 text went stale, and says nothing about a consumer whose *runtime* safety went stale. Between them
-sat the class the routine line already admits (`review-rubric.md` gate 2, `v5b-1` onward): a lock
+sat the class the routine line already admits (`review-rubric.md` gate 2, shipped for its issue #49
+under `v5a-1` and folded into `v5b-1`): a lock
 whose scope shrank, an ordering constraint dropped, an ownership or lifetime rule relaxed, a
 validated invariant no longer validated, a check or a bound removed — with the code that relied on
 it left byte-identical, and therefore silently out of scope. `verify.md` compounded it: its
@@ -609,9 +610,10 @@ changed line at the consumer is called out as the thing not to do — the forge 
 reader who follows it finds a claim the diff does not make.
 
 Two existing properties are preserved deliberately, because a general introduction rule is exactly
-what could erode them. The Requirements exception keeps its wording in both owners: a requirements
-gap is measured against the issue, so an explicit unmet obligation is this change's responsibility
-even when the missing work lives entirely in unchanged or pre-existing code. And C9's paired
+what could erode them. The Requirements exception keeps `verify.md`'s wording verbatim and gains a
+restatement in `code-axis.md`, which never carried it before: a requirements gap is measured against
+the issue, so an explicit unmet obligation is this change's responsibility even when the missing
+work lives entirely in unchanged or pre-existing code. And C9's paired
 old/new peer sweep keeps its own evidence rule rather than being folded into the new comparison;
 the new section points at it as the documentary case and changes none of its searches.
 

@@ -30,7 +30,7 @@ Read the cited `anchor` and `fix` sites, then only enough surrounding context to
 
 An untouched line is not a pre-existing defect, and a touched one is not an introduced defect. Before ruling `pre-existing`, hold the candidate's failing path and trigger fixed and put them against both revisions:
 
-1. Name the guarantee that governs the path — a lock or its scope, an ordering constraint, an ownership or lifetime rule, a validated invariant, a check, a bound.
+1. Name the guarantee that governs the path — a lock or its scope, an ordering constraint, an ownership or lifetime rule, a validated invariant, an authorization or authentication check, a bound or a quota.
 2. State what that guarantee provided at the merge-base, citing the base line.
 3. State what it provides at the head, citing the head line.
 4. Rule `pre-existing` only if it was no stronger at base — so the same trigger, run against the base, produces the same wrong outcome there.
