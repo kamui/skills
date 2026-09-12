@@ -23,7 +23,7 @@ rules this release was required to preserve still decide their own cases.
 | --- | --- | --- |
 | `references/code-axis.md` | Criterion 4 excludes "pre-existing issues, including real ones on lines the change did not modify"; the only exception is § Sync drift from a changed rule, which is documentary. | Criterion 4 names two shapes of introduction; new § Guarantees removed from unchanged code admits a consumer whose relied-on guarantee the diff removed or weakened, on a four-part comparison, and keeps an already-unsafe base path out. |
 | `references/verify.md` | `pre-existing` refutation: "the defect is real but this change did not introduce it. Cite the prior state." | Same bullet plus § The pre-existing comparison: four steps against both revisions, and an unreconstructable base state rules `plausible` rather than `refuted`. |
-| `references/finding-format.md` | Anchor ladder rung 2: "the diff line that **makes the finding true**". | Same ladder plus its removed-guarantee case: anchor at the line that removed the protection, `fix` at the untouched consumer, and an explicit prohibition on presenting the consumer's line as one the diff touches. |
+| `references/finding-format.md` | Anchor ladder rung 2: "the diff line that **makes the finding true**". | Same ladder plus its removed-guarantee case: the fix site comes from the proposed repair and the ladder runs from there — the changed line when the protection is restored there, the untouched consumer when the removal is deliberate — with an explicit prohibition on presenting the consumer's line as one the diff touches. |
 
 ## Case 1 — a removed lock races an unchanged reader
 
@@ -62,7 +62,7 @@ observing that `live` is unchanged at base, which is the same reasoning that exc
 
 **`v2b-2`:** the guarantee shape, with all four parts quotable — base `cache.py:8` `with
 self._lock:` guaranteeing every mutation under `_lock`; head `cache.py:8` writing outside it;
-consumer `cache.py:12`, the comprehension over `self._entries.items()`; trigger a `put` concurrent
+consumer `cache.py:13`, the comprehension over `self._entries.items()`; trigger a `put` concurrent
 with a `live`, raising `RuntimeError: dictionary changed size during iteration` in the reader. The
 candidate is admitted with both revisions and the consumer in its `claim`. At the verifier, step 4
 of the comparison fails — the guarantee was stronger at base — so `pre-existing` is unavailable and
@@ -74,7 +74,7 @@ The coordinates come from the repair. Restoring `put`'s lock is what fixes this,
 site, it is in the diff, and rung 1 anchors the comment there with no separate `fix` coordinate —
 `live` needs no edit at all. Had the unlocked write been deliberate, a documented lock-scope
 reduction the reader has to adapt to, the repair would move into `live`: the untouched consumer
-would be the fix site, and rung 2 would anchor at the same `put` line with `fix=cache.py:12`.
+would be the fix site, and rung 2 would anchor at the same `put` line with `fix=cache.py:13`.
 
 ## Case 2 — the same path was already unsafe at base
 
@@ -105,14 +105,14 @@ widened admission does not pull old bugs into scope.
 Fixture. The mutation moves; the lock moves with it.
 
 ```diff
-     def put(self, key, value):
+     def put(self, key, value, expires_at):
 -        with self._lock:
--            self._entries[key] = value
-+        self._store(key, value)
+-            self._entries[key] = (value, expires_at)
++        self._store(key, value, expires_at)
 +
-+    def _store(self, key, value):
++    def _store(self, key, value, expires_at):
 +        with self._lock:
-+            self._entries[key] = value
++            self._entries[key] = (value, expires_at)
 ```
 
 **`v2b-1`:** nothing admitted.
