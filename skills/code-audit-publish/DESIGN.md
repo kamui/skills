@@ -43,8 +43,12 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-1`. A `v2a-1` trailer remains readable because v2b changes the identifier,
-not the trailer vocabulary.
+Workflow identifier: `v2b-2`. Issue #161 increments `v2b-1` to `v2b-2` for the admission and
+refutation change recorded in
+[C17](#c17-removed-guarantees-put-unchanged-code-in-scope): unchanged code is introduced-here when
+the diff removed or weakened a guarantee it relied on, and a `pre-existing` refutation must compare
+the same path, trigger and governing guarantee at base and head. A `v2a-1` or `v2b-1` trailer
+remains readable because these releases change the identifier, not the trailer vocabulary.
 
 ### The pole statement
 
@@ -98,6 +102,7 @@ inert, or harmful against that intent.
 | C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Every expressible file coordinate resolves at the reviewed full head SHA while `LEFT` and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
 | C15 | Build shared finder input and verifier prompts with scripts, and keep the caller report compact. | Mechanical orchestration is reproducible without moving review judgment or exposing finder `support` to the verifier. | [shared-block builder](scripts/build_shared_block.py), [verifier-prompt builder](scripts/build_verifier_prompt.py) |
 | C16 | Validate finder ledger, manifest, and counts shape before verification. | A malformed finder report gets one shape-only retry, then makes its axis incomplete instead of entering verification unaudited. | [finder-report validator](scripts/validate_finder_report.py), [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
+| C17 | Admit unchanged code whose relied-on guarantee the diff removed, and require the same base/head comparison before a `pre-existing` refutation. | A byte-identical path safe at base and unsafe at head becomes a candidate citing both revisions and its consumer, while a path already unsafe at base is still refuted as pre-existing and a guarantee-preserving refactor still yields nothing. | [replay record](../../docs/research/audit-removed-guarantee-scope-2026-09-12.md), [assessment B3](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
 
 ## The changes, mapped to evidence
 
@@ -574,6 +579,55 @@ row shape the briefs now spell out for acquittals that rest on an absence. Expec
 [issue #53](https://github.com/kamui/skills/issues/53), which named this section C10; that number
 went to the suite-once change, C11–C14 to #64, #56, #57, and #83, and C15 to script-driven
 orchestration. The workflow identifier stayed `v2a-1` pending #59.
+
+### C17. Removed guarantees put unchanged code in scope
+
+The [assessment](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport)
+item B3 is the gap this closes. `code-axis.md` criterion 4 excluded every defect the diff did not
+write, and the one exception it carried — C9's sync drift — is documentary: it admits a peer whose
+text went stale, and says nothing about a consumer whose *runtime* safety went stale. Between them
+sat the class the routine line already admits (`review-rubric.md` gate 2, shipped for its issue #49
+under `v5a-1` and folded into `v5b-1`): a lock
+whose scope shrank, an ordering constraint dropped, an ownership or lifetime rule relaxed, a
+validated invariant no longer validated, a check or a bound removed — with the code that relied on
+it left byte-identical, and therefore silently out of scope. `verify.md` compounded it: its
+`pre-existing` refutation asked only for "the prior state", which a verifier can satisfy by
+observing that the consumer's line is untouched, the same reasoning that put the candidate out of
+scope in the first place.
+
+Three owners move together. `code-axis.md` gains § Guarantees removed from unchanged code: name
+which of the two shapes of introduction you have, and for the guarantee shape carry the whole
+comparison in the `claim` — the base line that established the guarantee, the diff line that
+removed or weakened it, the consumer that relied on it, and the trigger. A path already unsafe at
+the merge-base under the same conditions stays pre-existing and stays out; proximity, refactor
+size, and unease are explicitly not substitutes for the comparison; and the section says in its own
+text that it is a scope rule, not a licence to audit the repository. `verify.md` gains
+§ The pre-existing comparison, which turns that refutation into four steps against both revisions
+and routes an unreconstructable base state to `plausible` rather than to a refutation.
+`finding-format.md` § Anchor and fix site derives both coordinates from the proposed repair rather
+than fixing either in advance: restoring the protection the diff removed makes that changed line the
+fix site and rung 1 the anchor, while a deliberate removal the consumer must adapt to makes the
+consumer the fix site and rung 2 the anchor at the line that dropped the protection. Fabricating a
+changed line at the consumer is called out as the thing not to do in both directions — the forge
+rejects it, and a reader who follows it finds a claim the diff does not make.
+
+Two existing properties are preserved deliberately, because a general introduction rule is exactly
+what could erode them. The Requirements exception keeps `verify.md`'s wording verbatim and gains a
+restatement in `code-axis.md`, which never carried it before: a requirements gap is measured against
+the issue, so an explicit unmet obligation is this change's responsibility even when the missing
+work lives entirely in unchanged or pre-existing code. And C9's paired
+old/new peer sweep keeps its own evidence rule rather than being folded into the new comparison;
+the new section points at it as the documentary case and changes none of its searches.
+
+Evidence is a [replay record](../../docs/research/audit-removed-guarantee-scope-2026-09-12.md): five
+pinned fixtures traced through the pre-change and post-change instruction text, one per acceptance
+case in the issue. It is a paper transition check of what the rules admit and refute, not a measured
+recall or precision result — no reviewer run, no corpus, no rescoring of any historical snapshot.
+The pre-change pin is recorded there. Specified by
+[issue #161](https://github.com/kamui/skills/issues/161), under
+[epic #156](https://github.com/kamui/skills/issues/156). Identifier bumped to `v2b-2` with the
+trailer example in [`publishing.md`](references/publishing.md#one-review-one-call) and this note; the
+skill ships no validator that asserts the identifier, so nothing mechanical changed with it.
 
 ### Subtractions
 
