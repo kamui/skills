@@ -1,0 +1,12 @@
+{
+  "probe": "P23-unjudged",
+  "status": "established",
+  "summary": "With no judgments recorded, the coordinator's audit refused all three of the egress probe's shell commands - including the one that only reads os.environ. Nothing is passed on its spelling.",
+  "establishes": null,
+  "residual": null,
+  "refuted_by": null,
+  "observed_exit": "1",
+  "expected_exit": 1,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:37:18.088886+00:00"
+}

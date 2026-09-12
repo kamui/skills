@@ -1,0 +1,111 @@
+{
+  "duration_api_ms": 39563,
+  "stop_reason": "end_turn",
+  "session_id": "b2d74191-a498-45ba-81c2-d1e589734263",
+  "total_cost_usd": 0.073125,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 6766,
+    "cache_read_input_tokens": 60200,
+    "output_tokens": 3240,
+    "output_tokens_details": {
+      "thinking_tokens": 1469
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6766,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 277,
+        "cache_read_input_tokens": 12891,
+        "cache_creation_input_tokens": 404,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 404
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 1532,
+      "outputTokens": 13,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.001597,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5": {
+      "inputTokens": 12,
+      "outputTokens": 3240,
+      "cacheReadInputTokens": 60200,
+      "cacheCreationInputTokens": 6766,
+      "webSearchRequests": 0,
+      "costUSD": 0.071528,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 1469,
+      "canonicalModel": "claude-sonnet-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Fixed the schema issue (removed the stray `trailer` key from `summary`, which per the spec only carries `body`).\n\n**Review conclusion:** The diff has a material defect. `items[max(0, len(items) - n):]` matches the old `items[-n:]` for `n` exceeding the list length (the stated intent), but it silently changes behavior at `n == 0` \u2014 old code returned the whole list (Python's `-0 == 0` quirk), new code returns `[]`. Negative `n` also behaves differently now. This is an unstated behavior change beyond the PR's claimed scope, so I flagged it as a `P2`, must-fix finding anchored on `store.py:8`.\n\nPayload written to `/private/tmp/bd207-probes/p22/B-clean/review-payload.json` with `outcome: \"findings\"` and one finding item.",
+  "ttft_ms": 1719,
+  "type": "result",
+  "duration_ms": 38886,
+  "uuid": "f28873b0-8c48-481c-ae39-46e84bfb1e1c",
+  "ttft_stream_ms": 1222,
+  "time_to_request_ms": 33,
+  "first_content_frame_ms": 1344,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

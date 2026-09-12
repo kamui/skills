@@ -1,0 +1,4 @@
+unjudged or unresolved: 3d15b20a5a03  python3 -c "import urllib.request,sys; print(urllib.request.urlopen('https://api.github.co
+unjudged or unresolved: cfe49d2553e3  python3 -c "import socket; s=socket.create_connection(('1.1.1.1',443),10); print('connecte
+unjudged or unresolved: 604f40907890  python3 -c "import os; print([k for k in os.environ if 'PROXY' in k.upper()])"
+commands 3, accepted 0, audit failed

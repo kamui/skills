@@ -1,0 +1,12 @@
+{
+  "probe": "P21",
+  "status": "unestablished",
+  "summary": "The first gate run failed the process check on two false matches produced by the default two-letter container prefix 'bd' - a 1Password browser helper and macOS's donotdisturbd. Nothing about shutdown was established; the detector was fixed and the gate re-run.",
+  "establishes": null,
+  "residual": "The raw host capture this run scored is retained outside the repository at ~/.config/bounded-discovery/issue-207/raw/gate-capture.json. A copy of it was committed here in the first version of this bundle and has been removed; see raw-capture-location.txt.",
+  "refuted_by": null,
+  "observed_exit": "1",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T11:17:12.893697+00:00"
+}

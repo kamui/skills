@@ -1,0 +1,2 @@
+unjudged or unresolved: cfe49d2553e3  python3 -c "import socket; s=socket.create_connection(('1.1.1.1',443),10); print('connecte
+commands 3, accepted 2, audit failed

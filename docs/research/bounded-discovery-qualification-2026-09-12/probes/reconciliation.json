@@ -1,0 +1,487 @@
+{
+  "probe": "P10",
+  "probes": {
+    "probes/P01-P04-P11-cell-configuration": {
+      "charged_usd": 0.05071915,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001281
+      },
+      "difference_usd": 0.00128115,
+      "per_model_usd": {
+        "claude-opus-5": "0.028654",
+        "claude-sonnet-5": "0.020784"
+      },
+      "per_role_usd": {
+        "primary": "0.020784",
+        "worker": "0.028654"
+      },
+      "recomputed_usd": "0.049438",
+      "self_report_usd": 0.05071915,
+      "session_id": "453e9c86-d7c5-49e1-b373-be811df086ea",
+      "transcripts": 2
+    },
+    "probes/P03-finder-confinement": {
+      "charged_usd": 0.0705595,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001364
+      },
+      "difference_usd": 0.0013645,
+      "per_model_usd": {
+        "claude-opus-5": "0.069195"
+      },
+      "per_role_usd": {
+        "finder": "0.069195"
+      },
+      "recomputed_usd": "0.069195",
+      "self_report_usd": 0.0705595,
+      "session_id": "0e7877bb-7e75-48f8-b5a3-5d1a07420358",
+      "transcripts": 1
+    },
+    "probes/P06-P14-egress": {
+      "charged_usd": 0.0271792,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001281
+      },
+      "difference_usd": 0.0012812,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.025898"
+      },
+      "per_role_usd": {
+        "primary": "0.025898"
+      },
+      "recomputed_usd": "0.025898",
+      "self_report_usd": 0.0271792,
+      "session_id": "a9af4382-4cd8-4c87-a6c8-0b11f33c8f59",
+      "transcripts": 1
+    },
+    "probes/P08a-bounded-allowance-self-limited": {
+      "charged_usd": 0.012423799999999999,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001026
+      },
+      "difference_usd": 0.0010258,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.011398"
+      },
+      "per_role_usd": {
+        "primary": "0.011398"
+      },
+      "recomputed_usd": "0.011398",
+      "self_report_usd": 0.012423799999999999,
+      "session_id": "9e58bfc6-c997-48d1-8abf-c5a25131cb6d",
+      "transcripts": 1
+    },
+    "probes/P08b-bounded-allowance": {
+      "charged_usd": 0.058664,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001076
+      },
+      "difference_usd": 0.001076,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.057588"
+      },
+      "per_role_usd": {
+        "primary": "0.057588"
+      },
+      "recomputed_usd": "0.057588",
+      "self_report_usd": 0.058664,
+      "session_id": "c5e9b72a-4be8-4ef6-8841-3479122a6d3d",
+      "transcripts": 1
+    },
+    "probes/P12-background-verification": {
+      "charged_usd": 0.06445864999999999,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001173
+      },
+      "difference_usd": 0.00117365,
+      "per_model_usd": {
+        "claude-opus-5": "0.037591",
+        "claude-sonnet-5": "0.025694"
+      },
+      "per_role_usd": {
+        "primary": "0.025694",
+        "worker": "0.037591"
+      },
+      "recomputed_usd": "0.063285",
+      "self_report_usd": 0.06445864999999999,
+      "session_id": "1cd4dc2b-831c-4742-8fc7-8ffde4d9155d",
+      "transcripts": 2
+    },
+    "probes/P13-shell-filesystem-reach": {
+      "charged_usd": 0.024979800000000003,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.0013109999999999999
+      },
+      "difference_usd": 0.0013108,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.023669"
+      },
+      "per_role_usd": {
+        "primary": "0.023669"
+      },
+      "recomputed_usd": "0.023669",
+      "self_report_usd": 0.024979800000000003,
+      "session_id": "43c87454-60c3-4d52-9f32-e1796ac4ee85",
+      "transcripts": 1
+    },
+    "probes/P15a-restricted-with-tools-bash": {
+      "charged_usd": 0.040819999999999995,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001186
+      },
+      "difference_usd": 0.001186,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.039634"
+      },
+      "per_role_usd": {
+        "primary": "0.039634"
+      },
+      "recomputed_usd": "0.039634",
+      "self_report_usd": 0.040819999999999995,
+      "session_id": "a181baed-a118-437a-bd07-8bf4e0f71eb5",
+      "transcripts": 1
+    },
+    "probes/P15b-restricted-without-tools-bash": {
+      "charged_usd": 0.06158879999999999,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001176
+      },
+      "difference_usd": 0.0011758,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.060413"
+      },
+      "per_role_usd": {
+        "primary": "0.060413"
+      },
+      "recomputed_usd": "0.060413",
+      "self_report_usd": 0.06158879999999999,
+      "session_id": "fd3eda59-92de-4464-ac1e-7058e71b123d",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/A-clean": {
+      "charged_usd": 0.023621199999999995,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001719
+      },
+      "difference_usd": 0.0017192,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.021902"
+      },
+      "per_role_usd": {
+        "primary": "0.021902"
+      },
+      "recomputed_usd": "0.021902",
+      "self_report_usd": 0.023621199999999995,
+      "session_id": "7c0fc216-35e3-4278-9c21-2f5c7fef9679",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/A-clean-attempt-1": {
+      "charged_usd": 0.049201600000000005,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001597
+      },
+      "difference_usd": 0.0015966,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.047605"
+      },
+      "per_role_usd": {
+        "primary": "0.047605"
+      },
+      "recomputed_usd": "0.047605",
+      "self_report_usd": 0.049201600000000005,
+      "session_id": "d344ef08-c1de-470e-8278-89822aeca9a2",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/A-clean-attempt-2": {
+      "charged_usd": 0.0427296,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001598
+      },
+      "difference_usd": 0.0015976,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.041132"
+      },
+      "per_role_usd": {
+        "primary": "0.041132"
+      },
+      "recomputed_usd": "0.041132",
+      "self_report_usd": 0.0427296,
+      "session_id": "8273536d-2ebb-4436-9763-53e0e1bcc122",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/A-clean-attempt-3": {
+      "charged_usd": 0.0459114,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001719
+      },
+      "difference_usd": 0.0017194,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.044192"
+      },
+      "per_role_usd": {
+        "primary": "0.044192"
+      },
+      "recomputed_usd": "0.044192",
+      "self_report_usd": 0.0459114,
+      "session_id": "5d4acf91-7cb0-494c-972a-f4b84778e565",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/A-findings": {
+      "charged_usd": 0.0664354,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001714
+      },
+      "difference_usd": 0.0017144,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.064721"
+      },
+      "per_role_usd": {
+        "primary": "0.064721"
+      },
+      "recomputed_usd": "0.064721",
+      "self_report_usd": 0.0664354,
+      "session_id": "304cb623-6692-4be9-98f9-9cbc251ff0d9",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/A-findings-attempt-1": {
+      "charged_usd": 0.0933332,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001597
+      },
+      "difference_usd": 0.0015972,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.091736"
+      },
+      "per_role_usd": {
+        "primary": "0.091736"
+      },
+      "recomputed_usd": "0.091736",
+      "self_report_usd": 0.0933332,
+      "session_id": "3fbda135-8589-461a-870c-c6310fdbf6cd",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/B-clean": {
+      "charged_usd": 0.023654799999999997,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001714
+      },
+      "difference_usd": 0.0017138,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.021941"
+      },
+      "per_role_usd": {
+        "primary": "0.021941"
+      },
+      "recomputed_usd": "0.021941",
+      "self_report_usd": 0.023654799999999997,
+      "session_id": "202627d6-9ee3-4700-9ddc-bf4f7e6d8bbc",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/B-clean-attempt-1": {
+      "charged_usd": 0.073125,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001597
+      },
+      "difference_usd": 0.001597,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.071528"
+      },
+      "per_role_usd": {
+        "primary": "0.071528"
+      },
+      "recomputed_usd": "0.071528",
+      "self_report_usd": 0.073125,
+      "session_id": "b2d74191-a498-45ba-81c2-d1e589734263",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/B-clean-attempt-2": {
+      "charged_usd": 0.0378932,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001593
+      },
+      "difference_usd": 0.0015932,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.0363"
+      },
+      "per_role_usd": {
+        "primary": "0.0363"
+      },
+      "recomputed_usd": "0.0363",
+      "self_report_usd": 0.0378932,
+      "session_id": "1512c921-e5ca-4d72-aead-dfe2021b2425",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/B-clean-attempt-3": {
+      "charged_usd": 0.0380374,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001719
+      },
+      "difference_usd": 0.0017194,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.036318"
+      },
+      "per_role_usd": {
+        "primary": "0.036318"
+      },
+      "recomputed_usd": "0.036318",
+      "self_report_usd": 0.0380374,
+      "session_id": "c43bdfe8-11c8-4eaf-a33d-47b07e32edfd",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/B-findings": {
+      "charged_usd": 0.062182,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001714
+      },
+      "difference_usd": 0.001714,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.060468"
+      },
+      "per_role_usd": {
+        "primary": "0.060468"
+      },
+      "recomputed_usd": "0.060468",
+      "self_report_usd": 0.062182,
+      "session_id": "49878d8c-dbf9-475e-b723-0cadc316ef70",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/B-findings-attempt-1": {
+      "charged_usd": 0.0518432,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001597
+      },
+      "difference_usd": 0.0015972,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.050246"
+      },
+      "per_role_usd": {
+        "primary": "0.050246"
+      },
+      "recomputed_usd": "0.050246",
+      "self_report_usd": 0.0518432,
+      "session_id": "3d195991-13a8-4558-aeae-d97db84f099d",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/C-clean": {
+      "charged_usd": 0.0239952,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001714
+      },
+      "difference_usd": 0.0017142,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.022281"
+      },
+      "per_role_usd": {
+        "primary": "0.022281"
+      },
+      "recomputed_usd": "0.022281",
+      "self_report_usd": 0.0239952,
+      "session_id": "5e57eec0-3677-4c16-9de2-7823cfe00c96",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/C-clean-attempt-1": {
+      "charged_usd": 0.057881,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.0015919999999999999
+      },
+      "difference_usd": 0.001592,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.056289"
+      },
+      "per_role_usd": {
+        "primary": "0.056289"
+      },
+      "recomputed_usd": "0.056289",
+      "self_report_usd": 0.057881,
+      "session_id": "207c657e-d3eb-4bbb-8325-8624410b83ab",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/C-clean-attempt-2": {
+      "charged_usd": 0.0439816,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001598
+      },
+      "difference_usd": 0.0015976,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.042384"
+      },
+      "per_role_usd": {
+        "primary": "0.042384"
+      },
+      "recomputed_usd": "0.042384",
+      "self_report_usd": 0.0439816,
+      "session_id": "a1431110-3d46-465e-bc93-e84569ac6d60",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/C-clean-attempt-3": {
+      "charged_usd": 0.042977,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001719
+      },
+      "difference_usd": 0.001719,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.041258"
+      },
+      "per_role_usd": {
+        "primary": "0.041258"
+      },
+      "recomputed_usd": "0.041258",
+      "self_report_usd": 0.042977,
+      "session_id": "89ae1b77-be01-43a1-99e5-0a17fe7b753d",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/C-findings": {
+      "charged_usd": 0.08742520000000001,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001714
+      },
+      "difference_usd": 0.0017142,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.085711"
+      },
+      "per_role_usd": {
+        "primary": "0.085711"
+      },
+      "recomputed_usd": "0.085711",
+      "self_report_usd": 0.08742520000000001,
+      "session_id": "43964683-8472-409f-901e-c678d1d9adca",
+      "transcripts": 1
+    },
+    "probes/P22-uniform-payloads/C-findings-attempt-1": {
+      "charged_usd": 0.054259600000000005,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.001597
+      },
+      "difference_usd": 0.0015966,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.052663"
+      },
+      "per_role_usd": {
+        "primary": "0.052663"
+      },
+      "recomputed_usd": "0.052663",
+      "self_report_usd": 0.054259600000000005,
+      "session_id": "db7544bc-d57d-47bf-ab5c-8e04c10a62c2",
+      "transcripts": 1
+    },
+    "probes/P23-network-judgments/local-session": {
+      "charged_usd": 0.013081600000000002,
+      "difference_named_by": {
+        "claude-haiku-4-5-20251001": 0.0010509999999999999
+      },
+      "difference_usd": 0.0010506,
+      "per_model_usd": {
+        "claude-sonnet-5": "0.012031"
+      },
+      "per_role_usd": {
+        "primary": "0.012031"
+      },
+      "recomputed_usd": "0.012031",
+      "self_report_usd": 0.013081600000000002,
+      "session_id": "1898c606-9846-4d12-a5a8-d15ac5507383",
+      "transcripts": 1
+    }
+  },
+  "recorded_at": "2026-09-12T21:38:39.838821+00:00",
+  "rule": "settle from the runtime self-report and from the retained per-request records; when they differ, charge the larger and name the difference. A residual recorded as noise is a violation."
+}

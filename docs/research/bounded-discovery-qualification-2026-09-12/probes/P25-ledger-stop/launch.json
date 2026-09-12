@@ -1,0 +1,33 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P25",
+  "purpose": "Does the ledger's terminal stop preserve outstanding reservations, retained uncertainty and the event chain, still accept a later settlement and attempt closure and a protected closeout reservation, and refuse a new review dispatch, a new pre-freeze reservation, a new attempt and a second stop?",
+  "retained_at": "2026-09-12T10:19:38.928508+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P25-ledger-stop",
+  "argv": [
+    "sh",
+    "battery.sh",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py"
+  ],
+  "command_line": "sh battery.sh /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

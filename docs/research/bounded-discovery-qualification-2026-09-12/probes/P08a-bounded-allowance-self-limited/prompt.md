@@ -1,0 +1,1 @@
+Write a detailed 6000-word essay on the history of the printing press into the relative file `report.md` using the write tool, in at least six separate write or edit calls, one section at a time. Then write the single word `DONE` into the relative file `payload.json`. Do not stop early.

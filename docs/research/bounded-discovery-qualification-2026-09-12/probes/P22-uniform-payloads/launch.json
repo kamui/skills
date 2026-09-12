@@ -1,0 +1,36 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P22",
+  "purpose": "Do the findings, clean and stopped outcomes validate under one seven-key contract in every arm, and is payload.py uniformity clean over every receipt before anything is masked?",
+  "retained_at": "2026-09-12T10:33:17.753727+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads",
+  "argv": [
+    "sh",
+    "accept.sh",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/payload.py",
+    "/private/tmp/bd207-probes/p22r2",
+    "/private/tmp/bd207-probes/p22r3",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/receipts"
+  ],
+  "command_line": "sh accept.sh /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/payload.py /private/tmp/bd207-probes/p22r2 /private/tmp/bd207-probes/p22r3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P22-uniform-payloads/receipts",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

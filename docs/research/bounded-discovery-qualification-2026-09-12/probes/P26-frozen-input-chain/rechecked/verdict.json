@@ -1,0 +1,12 @@
+{
+  "probe": "P26-rechecked",
+  "status": "established",
+  "summary": "With the shape-to-packet invariant enforced, the chain check failed: two normalised shapes each stand for three different packets, because the rendered prompts name their input by relative path and carry no digest of it. This run still compared only the pinned block's first 200 bytes, so its record of every prompt carrying the block was wrong for the nine rendered from revision 1; the parent directory's run corrects that.",
+  "establishes": "That a normalisation which erases the rendered identity can hide a real difference, and that the check refuses a shape standing for more than one input.",
+  "residual": "The fix for the collision is in the template, not the checker: a study's dispatch block must carry its packet's digest in the rendered bytes. Re-rendering needs paid sessions and this ledger is terminally stopped, so it is in the handoff.",
+  "refuted_by": null,
+  "observed_exit": "1",
+  "expected_exit": 1,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T21:23:11.982823+00:00"
+}

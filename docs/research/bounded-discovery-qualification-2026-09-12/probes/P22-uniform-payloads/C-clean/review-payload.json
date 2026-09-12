@@ -1,0 +1,9 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-C-clean",
+  "arm": "C",
+  "outcome": "clean",
+  "summary": {"body": "This change only corrects a typo in a comment (\"Retrun\" → \"Return\") in `store.py`. The code itself (`return items[-n:]`) is untouched, so there is no behavior change, matching the stated intent. No material defects found."},
+  "items": [],
+  "stop": null
+}

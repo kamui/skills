@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-A-clean",
+  "arm": "A",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite preserves the stated goal (`n` larger than the list length still returns the whole list) but introduces a regression at `n == 0`.\n\nWith the original `items[-n:]`, `n == 0` gives `items[-0:]` — and since `-0 == 0` in Python, that's `items[0:]`, i.e. the **whole list**.\n\nWith the new `items[max(0, len(items) - n):]`, `n == 0` gives `items[len(items):]`, which is **always empty**.\n\nSo for the one edge case the old slice-based trick relied on `-0 == 0`, behavior silently flips from \"return everything\" to \"return nothing,\" with no error raised. Every other case (`0 < n <= len(items)` and `n > len(items)`) matches the old behavior, so this is easy to miss in review and in testing unless `n = 0` is explicitly exercised."},
+  "items": [
+    {
+      "type": "finding",
+      "kind": "logic-regression",
+      "markdown": "`items[max(0, len(items) - n):]` does not match `items[-n:]` when `n == 0`.\n\n- Old: `items[-0:]` → `-0 == 0` in Python → `items[0:]` → whole list.\n- New: `max(0, len(items) - 0) == len(items)` → `items[len(items):]` → `[]`.\n\nSo `last_n(items, 0)` now returns an empty list instead of the whole list, a silent behavior change not covered by the stated PR intent (which only talks about `n` exceeding the list length).",
+      "trailer": "Add an explicit test/handling for `n == 0`, or special-case it (`if n == 0: return items[:]`) before applying the `max(0, ...)` formula.",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 6, "end_line": 8},
+      "priority": "P1",
+      "action": "must-fix",
+      "blocking": true
+    }
+  ],
+  "stop": null
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "observed_at": "2026-09-12",
+  "source": "First-party Anthropic list prices in dollars per million tokens, read on 2026-09-12 from the runtime's own bundled claude-api skill reference (its model table is cached 2026-06-24): Opus 5 $5/$25, Sonnet 5 $2/$10, Haiku 4.5 $1/$5. Cache multipliers are transcript_usage.py's documented defaults and unchanged from the #149 card: 5-minute cache write x1.25, 1-hour cache write x2.0, cache read x0.1. Provenance stated rather than asserted: this is a dated reference read, not a live billing-API query, and a freeze that prices a grid from it says so. Haiku 4.5 is priced here because the #149 reconciliation found the runtime billing an untranscripted Haiku request that only the result envelope names; a card without it cannot explain that residual.",
+  "models": {
+    "claude-sonnet-5": {
+      "input_usd_per_mtok": "2",
+      "output_usd_per_mtok": "10",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    },
+    "claude-sonnet-5[1m]": {
+      "input_usd_per_mtok": "2",
+      "output_usd_per_mtok": "10",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    },
+    "claude-opus-5": {
+      "input_usd_per_mtok": "5",
+      "output_usd_per_mtok": "25",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    },
+    "claude-opus-5[1m]": {
+      "input_usd_per_mtok": "5",
+      "output_usd_per_mtok": "25",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    },
+    "claude-haiku-4-5": {
+      "input_usd_per_mtok": "1",
+      "output_usd_per_mtok": "5",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    },
+    "claude-haiku-4-5-20251001": {
+      "input_usd_per_mtok": "1",
+      "output_usd_per_mtok": "5",
+      "cache_write_5m_mult": "1.25",
+      "cache_write_1h_mult": "2.0",
+      "cache_read_mult": "0.1"
+    }
+  },
+  "long_context_caveat": "The runtime reports the Opus child as claude-opus-5[1m] in the result envelope while agent_effort.py sees claude-opus-5 on its assistant lines. At the context sizes these probes reach the standard rates reproduce the billed total; a cell whose context grows past a long-context threshold needs that assumption rechecked before its cost is claimed. Both identifiers are priced identically here so a transcript and an envelope cannot disagree about which row applies."
+}

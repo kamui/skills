@@ -1,0 +1,2 @@
+session 49878d8c-dbf9-475e-b723-0cadc316ef70 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22r2-B-findings/49878d8c-dbf9-475e-b723-0cadc316ef70.jsonl sha256 efd983d9ebc98f94066b6dd3f1aa027fc79a510de77b6f3cb93f628a96a90e6d

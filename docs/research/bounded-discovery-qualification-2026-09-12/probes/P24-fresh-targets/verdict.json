@@ -1,0 +1,12 @@
+{
+  "probe": "P24",
+  "status": "unestablished",
+  "summary": "No target was selected and none was prepared. What exists is the part of gap 8 that is decidable without spending: the extended reservation set, derived by rule from the ten files that publish it - 102 pull requests, 77 of them evidenced by a backticked, linked or qualified citation and 25 read conservatively from a bare number in prose - and the mechanical criteria E1, E2, E3 and E5 implemented as a checker and exercised against the live forge. The freshness threshold is recomputed for a 2026-09-12 freeze as 2026-03-12.",
+  "establishes": "gap 8's derivation requirement - the reservation set grows by rule and not by hand, and it is reproducible from the repository - and the mechanical half of the criteria. Nothing about any target.",
+  "residual": "Selection was not performed, and the reason is the specification's own ordering rather than an oversight: its README puts runtime requalification before fresh targets and says an unsupported or unobservable control stops the study, and P16 did not establish an isolation regime a cell can run under. Preparing and sealing four targets - each needing an adjudicator and a selector session, both charged - for a study that is stopped would spend the pre-freeze subtotal on inputs no dispatch can consume. What remains, per target, is #148 section 9 in full: pins; the truncated mirror with negative leak-set checks on the mirror and every clone; the packet build with its recorded cutoff; offline provisioning and one focused base and head command; adjudication by a fresh helper with the register and leak set sealed; one selector run frozen as delivered; and the manifest. Before any of that, the curator's hunt has to produce a sealed candidate inventory covering E4 and E6 to E10, which only the curator can decide. Two notes for whoever resumes: E2's threshold moves with the freeze's 'today', so an inventory frozen now expires, and the 25 conservative entries are over-reservations by design - a bare number in prose cannot be told from a citation of this project's own tickets, and the safe direction is to reserve it.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T11:57:38.666023+00:00"
+}

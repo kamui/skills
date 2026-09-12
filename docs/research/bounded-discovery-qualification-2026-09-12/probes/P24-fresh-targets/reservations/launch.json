@@ -1,0 +1,36 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P24-reservations",
+  "purpose": "Derive the extended reservation set by rule from the files that publish it. This is the run that produced the committed targets/reservations.json, so that record is tied to a retained launch rather than to a run no record describes.",
+  "retained_at": "2026-09-12T21:22:47.476380+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
+  "argv": [
+    "python3",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/reservations.py",
+    "--research",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research",
+    "--out",
+    "targets/reservations.json"
+  ],
+  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/reservations.py --research /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research --out targets/reservations.json",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

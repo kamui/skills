@@ -1,0 +1,12 @@
+{
+  "probe": "P06+P14",
+  "status": "established",
+  "summary": "The allow-list proxy holds by host name and the session stays normal: api.github.com was refused with 'host or port not on the allow list' and a 403 tunnel failure reached the cell, while 13 CONNECTs to api.anthropic.com were allowed and the session answered every question. A raw socket to 1.1.1.1:443 through the allow-listed interpreter connected and produced no proxy log entry at all.",
+  "establishes": "P06 (refusal by host name, logged, session unbroken) and P14 (raw-socket egress is audited, not enforced) - both as #149 measured them, re-established on 2.1.269. The retained log is the per-command evidence gap-7 requires: two of the three shell commands bind to log entries and the third binds to the absence of one.",
+  "residual": "Two residuals. First, the bypass itself: an allow-listed interpreter dialling an IP address is outside the boundary, so the control is the container mount set plus this audit trail, never the proxy alone. Second, and new: the runtime made its own CONNECT to http-intake.logs.us5.datadoghq.com, which the #149 allow list does not cover. It was refused and the session was unaffected, but a freeze must either allow-list that host or predeclare the refusal, because otherwise every cell's egress log carries an unexplained refused line that an auditor cannot distinguish from a worker's bypass attempt.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:04:22.765275+00:00"
+}

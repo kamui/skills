@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-A-findings",
+  "arm": "A",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite of `last_n` is not equivalent to the original slice and breaks the exact behavior the PR says it must preserve (\"return the whole list when `n` exceeds its length, exactly as the slice did\"). See the finding below with concrete counterexamples."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "`items[len(items) - n:]` is **not** equivalent to `items[-n:]`, and it violates the stated intent that `n` exceeding the list's length must still return the whole list.\n\nPython only normalizes a negative slice bound by adding the length once, then clamps to 0. With the old code the raw bound passed to the slice is `-n`, so very large `n` normalizes to a deeply negative number that clamps to 0 (start of list) — the whole list is returned, as intended.\n\nWith the new code the bound passed is the *already-subtracted* value `len(items) - n`. For `n` between `len(items)` and `2 * len(items)`, that value is negative but only mildly so, so it normalizes to a **positive** start index instead of clamping to 0 — silently dropping leading elements instead of returning the whole list.\n\nConcrete counterexample: `items = [0,1,2,3,4]`, `n = 7` (n > len(items), so per the stated contract the whole list should come back):\n- old: `items[-7:]` → normalizes to `5 + (-7) = -2` → clamps to `0` → `[0,1,2,3,4]` (correct, whole list)\n- new: `items[5-7:]` = `items[-2:]` → normalizes to `5 + (-2) = 3` → `[3,4]` (wrong — drops 3 elements)\n\nA second, separate break at `n = 0`: `items = [0,1,2,3,4]`, `n = 0`:\n- old: `items[-0:]` = `items[0:]` → `[0,1,2,3,4]` (whole list, since `-0 == 0` for ints)\n- new: `items[5-0:]` = `items[5:]` → `[]` (empty, not the whole list)\n\nBoth cases directly contradict the PR's own stated correctness requirement and change observable behavior for realistic inputs (any caller passing `n >= len(items)`, including the common `n=0` case). The original `items[-n:]` already had the exact semantics being asked for; this change should be reverted, or if there's a reason to avoid negative indexing, it should clamp explicitly, e.g. `items[max(len(items) - n, 0):]`.",
+      "trailer": "Suggest reverting to `items[-n:]`, or using `items[max(len(items) - n, 0):]` if negative indices must be avoided.",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 6, "end_line": 8},
+      "priority": "P0",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "correctness"
+    }
+  ],
+  "stop": null
+}

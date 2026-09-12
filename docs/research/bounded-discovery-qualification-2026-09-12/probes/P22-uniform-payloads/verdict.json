@@ -1,0 +1,12 @@
+{
+  "probe": "P22",
+  "status": "established",
+  "summary": "Nine payloads - findings, clean and stopped in each of arms A, B and C - all accepted under one seven-key contract. The six review payloads were written by sessions in each arm's launch shape from a rendered dispatch block that is byte-identical across arms once the attempt id and arm label are filled; the three stopped payloads were produced by the coordinator from a stopped-budget completion, with an origin record beside each receipt so 'produced_by' is 'coordinator' and not an arm. payload.py uniformity over all nine receipts then found one shape correlation - 'items[].fix appears only in arm B; a masked packet's shape would correlate with its arm' - and passed once that field was ruled on by name with --allow-shape-correlation.",
+  "establishes": "gap-6's mechanical requirement on this runtime, at synthetic scale: a dispatch block that makes every arm write the contract payload, every outcome validating under one key set, and the uniformity check refusing to let masking proceed on an unruled correlation. It also establishes that the check catches a real correlation rather than passing vacuously.",
+  "residual": "Four residuals, three of them freeze decisions. (1) The contract block was wrong on its first revision - it described a line anchor's 'side' as optional and did not say that 'summary' carries only 'body', and every arm's payload was refused for it. Revision 2 is what passed; the failed attempts are retained. (2) The one real correlation, items[].fix, is ruled acceptable here only so the probe could complete. A freeze must decide it properly: either require 'fix' in every arm or drop it from the contract, because an optional member that one arm happens to emit is exactly the pilot's tell in a new place. (3) The clean outcome took three packets to probe. A change that a reviewer agrees has no material defect is not something a prompt can force - the first two synthetic 'clean' changes both drew substantive findings, one of them correct about an n == 0 regression - which is why a clean control is an adjudicated target and not a prompt. (4) This is synthetic: the block has never been rendered against a real target, and P26's frozen-input chain has no real template to check.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:34:23.738672+00:00"
+}

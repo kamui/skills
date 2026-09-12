@@ -1,0 +1,35 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P10",
+  "purpose": "Does the runtime self-report reproduce from the per-request records, with every residual named - including any untranscripted request the runtime bills?",
+  "retained_at": "2026-09-12T10:15:05.317578+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+  "argv": [
+    "python3",
+    "docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py",
+    "reconcile",
+    "--bundle",
+    "docs/research/bounded-discovery-qualification-2026-09-12"
+  ],
+  "command_line": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py reconcile --bundle docs/research/bounded-discovery-qualification-2026-09-12",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

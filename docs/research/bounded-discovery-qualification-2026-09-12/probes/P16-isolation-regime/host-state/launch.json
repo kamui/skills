@@ -1,0 +1,33 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P16-host-state",
+  "purpose": "Re-record the host facts P16 rests on with the exact command retained, so the counts are reproducible rather than asserted: what provider credential a container could use, and what this host carries that a cell must not reach.",
+  "retained_at": "2026-09-12T11:17:54.310765+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+  "argv": [
+    "sh",
+    "-c",
+    "\necho \"== provider credentials reachable for a container session ==\"\necho \"ANTHROPIC_API_KEY set: $([ -n \"${ANTHROPIC_API_KEY-}\" ] && echo yes || echo no)\"\necho \"ANTHROPIC_AUTH_TOKEN set: $([ -n \"${ANTHROPIC_AUTH_TOKEN-}\" ] && echo yes || echo no)\"\necho \"ANTHROPIC_PROFILE set: $([ -n \"${ANTHROPIC_PROFILE-}\" ] && echo yes || echo no)\"\necho \"ant CLI: $(command -v ant || echo absent)\"\necho \"~/.config/anthropic: $([ -d \"$HOME/.config/anthropic\" ] && echo present || echo absent)\"\necho \"auth env files under ~/.config/bounded-discovery: $(find \"$HOME/.config/bounded-discovery\" -maxdepth 3 -name \"*.env\" 2>/dev/null | wc -l | tr -d \" \")\"\necho\necho \"== host absence: what is on this machine that a cell must not reach ==\"\necho \"linked worktrees of the repository under test: $(git -C /Users/jack/Development/skills worktree list | wc -l | tr -d \" \")\"\necho \"revealed cleartext truth entries in the working tree: $(ls /Users/jack/Development/skills/docs/research/bounded-discovery-decision-2026-09-11/revealed | wc -l | tr -d \" \")\"\necho \"evaluator-only directories: $(ls -d \"$HOME\"/.config/bounded-discovery/issue-* 2>/dev/null | wc -l | tr -d \" \")\"\n"
+  ],
+  "command_line": "sh -c '\necho \"== provider credentials reachable for a container session ==\"\necho \"ANTHROPIC_API_KEY set: $([ -n \"${ANTHROPIC_API_KEY-}\" ] && echo yes || echo no)\"\necho \"ANTHROPIC_AUTH_TOKEN set: $([ -n \"${ANTHROPIC_AUTH_TOKEN-}\" ] && echo yes || echo no)\"\necho \"ANTHROPIC_PROFILE set: $([ -n \"${ANTHROPIC_PROFILE-}\" ] && echo yes || echo no)\"\necho \"ant CLI: $(command -v ant || echo absent)\"\necho \"~/.config/anthropic: $([ -d \"$HOME/.config/anthropic\" ] && echo present || echo absent)\"\necho \"auth env files under ~/.config/bounded-discovery: $(find \"$HOME/.config/bounded-discovery\" -maxdepth 3 -name \"*.env\" 2>/dev/null | wc -l | tr -d \" \")\"\necho\necho \"== host absence: what is on this machine that a cell must not reach ==\"\necho \"linked worktrees of the repository under test: $(git -C /Users/jack/Development/skills worktree list | wc -l | tr -d \" \")\"\necho \"revealed cleartext truth entries in the working tree: $(ls /Users/jack/Development/skills/docs/research/bounded-discovery-decision-2026-09-11/revealed | wc -l | tr -d \" \")\"\necho \"evaluator-only directories: $(ls -d \"$HOME\"/.config/bounded-discovery/issue-* 2>/dev/null | wc -l | tr -d \" \")\"\n'",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

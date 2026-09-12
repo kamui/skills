@@ -1,0 +1,12 @@
+{
+  "probe": "P08b",
+  "status": "established",
+  "summary": "With --max-budget-usd 0.05 and an instruction not to self-limit, the session was stopped by the harness: subtype error_max_budget_usd, exit 1, no result payload, after spending $0.058664 across 4 turns. The overshoot is $0.008664, 17.3% of the allowance and one call's worth.",
+  "establishes": "P08: the dollar allowance is real and it is a bound checked after a call completes, not a hard stop. A freeze that sets a per-attempt ceiling must reserve one call of headroom above it, exactly as #149 concluded, and the proportion is worth re-measuring at cell scale because 17% of a small allowance is a different risk from 17% of a $4 cell.",
+  "residual": "Read with P08a: the allowance is also visible to the model, so a cell can stop short of its ceiling by its own reasoning. Both behaviours are present at once, and which one a cell exhibits depends on its prompt - which makes the ceiling part of the treatment every arm sees, not only an accounting parameter.",
+  "refuted_by": null,
+  "observed_exit": "1",
+  "expected_exit": null,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:09:03.298282+00:00"
+}

@@ -1,0 +1,3 @@
+session 453e9c86-d7c5-49e1-b373-be811df086ea transcripts: 2
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p01/453e9c86-d7c5-49e1-b373-be811df086ea.jsonl sha256 c764b09c81c903ece7a8ad158cfa300cb22ba45917fe6e96fc506fe0f79085e2
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p01/453e9c86-d7c5-49e1-b373-be811df086ea/subagents/agent-a24de2e329f9f09f2.jsonl sha256 21e3ac42260e023ea82ce8e6e8347c0eb82d57b4efa48c96ed1cd950534bbdd6

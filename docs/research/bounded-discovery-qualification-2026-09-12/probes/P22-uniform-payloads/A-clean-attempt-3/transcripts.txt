@@ -1,0 +1,2 @@
+session 5d4acf91-7cb0-494c-972a-f4b84778e565 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22r2-A-clean/5d4acf91-7cb0-494c-972a-f4b84778e565.jsonl sha256 605fd8eb29321d422e4fd1ee7c85f0ec495dc61c2e794a6ac6e348b8128ad7d9
