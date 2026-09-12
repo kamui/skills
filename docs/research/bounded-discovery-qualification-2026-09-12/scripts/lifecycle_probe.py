@@ -55,10 +55,15 @@ def claim(budget, ledger, markers, report, label, config, close=None, expect="re
         budget.attempt_event(str(ledger), config, close=close)
     except budget.Violation as violation:
         outcome, reason = "refused", str(violation)
+    except (KeyError, ValueError) as error:
+        # A malformed ledger is an unreadable input, not a refusal; calling it one would
+        # record a rule as having fired when nothing did.
+        raise OSError("the ledger could not be claimed against: " + str(error)) from error
     if outcome == "admitted":
         subprocess.run([sys.executable, "-c",
                         "import sys, pathlib; pathlib.Path(sys.argv[1]).write_text('started', "
-                        "encoding='utf-8')", str(marker)], check=True)
+                        "encoding='utf-8')", str(marker)],
+                       text=True, encoding="utf-8", check=True)
     report.append({
         "claim": label,
         "attempt_id": config["attempt_id"],

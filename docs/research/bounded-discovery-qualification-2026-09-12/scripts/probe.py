@@ -155,6 +155,7 @@ def launch(args, argv):
         # stdin is /dev/null, as the frozen dispatch shape has it: a headless session must
         # never be able to wait on an operator.
         completed = subprocess.run(argv, cwd=str(workdir), env=environment, text=True,
+                                   encoding="utf-8", errors="replace",
                                    capture_output=True, stdin=subprocess.DEVNULL)
     except OSError as error:
         (directory / "exit.txt").write_text("launch-failed\n", encoding="utf-8")
@@ -193,7 +194,8 @@ def transcripts_for(session_id, projects_dir):
 
 
 def run(command):
-    result = subprocess.run(command, text=True, capture_output=True)
+    result = subprocess.run(command, text=True, encoding="utf-8", errors="replace",
+                            capture_output=True)
     if result.returncode == 2:
         print(" ".join(command), file=sys.stderr)
         raise SystemExit(2)
@@ -215,6 +217,13 @@ def meter(args):
     (directory / "transcripts.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     effort = run([sys.executable, str(TOOLS / "agent_effort.py")] + [str(p) for p in found])
     (directory / "effort.txt").write_text(effort.stdout, encoding="utf-8")
+    # agent_effort.py exits 1 on a model or effort it was told to expect and did not see.
+    # Retaining its output and ignoring its exit code is how an unobserved setting becomes a
+    # pass, which is the one thing the fidelity rule forbids.
+    problems = []
+    if effort.returncode:
+        problems.append("agent_effort.py exited " + str(effort.returncode) +
+                        "; see effort.txt")
     self_report = None
     envelope_models = {}
     result_path = directory / "result.json"
@@ -273,10 +282,16 @@ def meter(args):
                             "per-request total, and name the difference"),
         "metered_at": now(),
     }
+    if split.returncode:
+        problems.append("meter_split.py exited " + str(split.returncode) +
+                        "; see meter-split-stdout.txt")
+    metering["problems"] = problems
     (directory / "metering.json").write_text(json.dumps(metering, indent=2) + "\n",
                                              encoding="utf-8")
     print(json.dumps(metering, indent=2))
-    return 0 if split.returncode == 0 else 1
+    for problem in problems:
+        print(problem)
+    return 1 if problems else 0
 
 
 def verdict(args):
@@ -369,6 +384,16 @@ def self_test():
                                 text=True, capture_output=True)
         check("an unexpected exit cannot be established", result.returncode == 1)
 
+        four = base / "p-meter"
+        four.mkdir()
+        (four / "launch.json").write_text(json.dumps(
+            {"probe": "PT4", "purpose": "p", "command_line": "c", "cwd": "/", "argv": ["x"],
+             "retained_before_process_creation": True,
+             "requested": {"session_id": None}}) + "\n", encoding="utf-8")
+        result = subprocess.run(here + ["meter", "--probe-dir", str(four), "--rates", "x"],
+                                text=True, capture_output=True)
+        check("metering a launch with no session id is refused", result.returncode == 1)
+
         settings = requested_settings(shlex.split(
             'claude -p --model claude-sonnet-5 --effort high --restricted '
             '--tools "Bash,Read" --allowedTools "Write" "Bash(git:*)" --add-dir /a /b '
@@ -384,7 +409,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 15 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: 16 checks")
     return 1 if failures else 0
 
 

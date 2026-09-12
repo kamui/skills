@@ -3,6 +3,30 @@
   "rule": "the requested model, effort, dollar allowance, restriction flag and allow list are retained before process creation, per launch, and a record survives a launch that never starts. The recorded argv proves what was requested; transcripts and result envelopes establish what actually ran.",
   "launches": [
     {
+      "probe": "P00",
+      "directory": "probes/P00-runtime-inventory/pin",
+      "retained_before_process_creation": true,
+      "argv_length": 3,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
       "probe": "P01+P04+P11",
       "directory": "probes/P01-P04-P11-cell-configuration",
       "retained_before_process_creation": true,
@@ -431,6 +455,30 @@
       "launch_started": true
     },
     {
+      "probe": "P16-host-state",
+      "directory": "probes/P16-isolation-regime/host-state",
+      "retained_before_process_creation": true,
+      "argv_length": 3,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "0",
+      "launch_started": true
+    },
+    {
       "probe": "P17",
       "directory": "probes/P17-launch-retention",
       "retained_before_process_creation": true,
@@ -528,7 +576,7 @@
     },
     {
       "probe": "P20-acceptance",
-      "directory": "probes/accepted",
+      "directory": "probes/P20-sandbox-and-scratch/accepted",
       "retained_before_process_creation": true,
       "argv_length": 15,
       "requested": {
@@ -552,7 +600,7 @@
     },
     {
       "probe": "P20-clean",
-      "directory": "probes/clean",
+      "directory": "probes/P20-sandbox-and-scratch/clean",
       "retained_before_process_creation": true,
       "argv_length": 11,
       "requested": {
@@ -576,7 +624,7 @@
     },
     {
       "probe": "P20-detected",
-      "directory": "probes/detected",
+      "directory": "probes/P20-sandbox-and-scratch/detected",
       "retained_before_process_creation": true,
       "argv_length": 11,
       "requested": {
@@ -624,7 +672,7 @@
     },
     {
       "probe": "P21",
-      "directory": "probes/attempt-1",
+      "directory": "probes/P21-shutdown-gate/attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 15,
       "requested": {
@@ -648,7 +696,7 @@
     },
     {
       "probe": "P21-authorize",
-      "directory": "probes/authorize",
+      "directory": "probes/P21-shutdown-gate/authorize",
       "retained_before_process_creation": true,
       "argv_length": 7,
       "requested": {
@@ -672,7 +720,7 @@
     },
     {
       "probe": "P21-record",
-      "directory": "probes/record",
+      "directory": "probes/P21-shutdown-gate/record",
       "retained_before_process_creation": true,
       "argv_length": 7,
       "requested": {
@@ -720,7 +768,7 @@
     },
     {
       "probe": "P22-A-clean",
-      "directory": "probes/A-clean",
+      "directory": "probes/P22-uniform-payloads/A-clean",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -750,7 +798,7 @@
     },
     {
       "probe": "P22-A-clean",
-      "directory": "probes/A-clean-attempt-1",
+      "directory": "probes/P22-uniform-payloads/A-clean-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -780,7 +828,7 @@
     },
     {
       "probe": "P22-A-clean",
-      "directory": "probes/A-clean-attempt-2",
+      "directory": "probes/P22-uniform-payloads/A-clean-attempt-2",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -810,7 +858,7 @@
     },
     {
       "probe": "P22-A-clean",
-      "directory": "probes/A-clean-attempt-3",
+      "directory": "probes/P22-uniform-payloads/A-clean-attempt-3",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -840,7 +888,7 @@
     },
     {
       "probe": "P22-A-findings",
-      "directory": "probes/A-findings",
+      "directory": "probes/P22-uniform-payloads/A-findings",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -870,7 +918,7 @@
     },
     {
       "probe": "P22-A-findings",
-      "directory": "probes/A-findings-attempt-1",
+      "directory": "probes/P22-uniform-payloads/A-findings-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -900,7 +948,7 @@
     },
     {
       "probe": "P22-B-clean",
-      "directory": "probes/B-clean",
+      "directory": "probes/P22-uniform-payloads/B-clean",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -930,7 +978,7 @@
     },
     {
       "probe": "P22-B-clean",
-      "directory": "probes/B-clean-attempt-1",
+      "directory": "probes/P22-uniform-payloads/B-clean-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -960,7 +1008,7 @@
     },
     {
       "probe": "P22-B-clean",
-      "directory": "probes/B-clean-attempt-2",
+      "directory": "probes/P22-uniform-payloads/B-clean-attempt-2",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -990,7 +1038,7 @@
     },
     {
       "probe": "P22-B-clean",
-      "directory": "probes/B-clean-attempt-3",
+      "directory": "probes/P22-uniform-payloads/B-clean-attempt-3",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1020,7 +1068,7 @@
     },
     {
       "probe": "P22-B-findings",
-      "directory": "probes/B-findings",
+      "directory": "probes/P22-uniform-payloads/B-findings",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1050,7 +1098,7 @@
     },
     {
       "probe": "P22-B-findings",
-      "directory": "probes/B-findings-attempt-1",
+      "directory": "probes/P22-uniform-payloads/B-findings-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1080,7 +1128,7 @@
     },
     {
       "probe": "P22-C-clean",
-      "directory": "probes/C-clean",
+      "directory": "probes/P22-uniform-payloads/C-clean",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1110,7 +1158,7 @@
     },
     {
       "probe": "P22-C-clean",
-      "directory": "probes/C-clean-attempt-1",
+      "directory": "probes/P22-uniform-payloads/C-clean-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1140,7 +1188,7 @@
     },
     {
       "probe": "P22-C-clean",
-      "directory": "probes/C-clean-attempt-2",
+      "directory": "probes/P22-uniform-payloads/C-clean-attempt-2",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1170,7 +1218,7 @@
     },
     {
       "probe": "P22-C-clean",
-      "directory": "probes/C-clean-attempt-3",
+      "directory": "probes/P22-uniform-payloads/C-clean-attempt-3",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1200,7 +1248,7 @@
     },
     {
       "probe": "P22-C-findings",
-      "directory": "probes/C-findings",
+      "directory": "probes/P22-uniform-payloads/C-findings",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1230,7 +1278,7 @@
     },
     {
       "probe": "P22-C-findings",
-      "directory": "probes/C-findings-attempt-1",
+      "directory": "probes/P22-uniform-payloads/C-findings-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1260,7 +1308,7 @@
     },
     {
       "probe": "P22-ruling",
-      "directory": "probes/uniformity-ruled",
+      "directory": "probes/P22-uniform-payloads/uniformity-ruled",
       "retained_before_process_creation": true,
       "argv_length": 35,
       "requested": {
@@ -1284,7 +1332,7 @@
     },
     {
       "probe": "P23",
-      "directory": "probes/judged",
+      "directory": "probes/P23-network-judgments/judged",
       "retained_before_process_creation": true,
       "argv_length": 11,
       "requested": {
@@ -1308,7 +1356,7 @@
     },
     {
       "probe": "P23-judged-attempt-1",
-      "directory": "probes/judged-attempt-1",
+      "directory": "probes/P23-network-judgments/judged-attempt-1",
       "retained_before_process_creation": true,
       "argv_length": 11,
       "requested": {
@@ -1332,7 +1380,7 @@
     },
     {
       "probe": "P23-local",
-      "directory": "probes/local-session",
+      "directory": "probes/P23-network-judgments/local-session",
       "retained_before_process_creation": true,
       "argv_length": 28,
       "requested": {
@@ -1362,7 +1410,7 @@
     },
     {
       "probe": "P23-local-audit",
-      "directory": "probes/audited",
+      "directory": "probes/P23-network-judgments/local-session/audited",
       "retained_before_process_creation": true,
       "argv_length": 11,
       "requested": {
@@ -1386,7 +1434,7 @@
     },
     {
       "probe": "P23-unjudged",
-      "directory": "probes/unjudged",
+      "directory": "probes/P23-network-judgments/unjudged",
       "retained_before_process_creation": true,
       "argv_length": 9,
       "requested": {
@@ -1434,9 +1482,9 @@
     },
     {
       "probe": "P24-machinery",
-      "directory": "probes/machinery",
+      "directory": "probes/P24-fresh-targets/machinery",
       "retained_before_process_creation": true,
-      "argv_length": 13,
+      "argv_length": 14,
       "requested": {
         "model": null,
         "effort": null,
@@ -1503,7 +1551,31 @@
       },
       "observed_exit": "0",
       "launch_started": true
+    },
+    {
+      "probe": "P26-rechecked",
+      "directory": "probes/P26-frozen-input-chain/rechecked",
+      "retained_before_process_creation": true,
+      "argv_length": 5,
+      "requested": {
+        "model": null,
+        "effort": null,
+        "max_budget_usd": null,
+        "restricted": false,
+        "tools": null,
+        "allowed_tools": [],
+        "disallowed_tools": [],
+        "add_dir": [],
+        "permission_prompts": null,
+        "session_id": null,
+        "output_format": null,
+        "agents_json_sha256": null,
+        "print_mode": false,
+        "resume": null
+      },
+      "observed_exit": "1",
+      "launch_started": true
     }
   ],
-  "recorded_at": "2026-09-12T10:45:04.587564+00:00"
+  "recorded_at": "2026-09-12T11:18:10.229529+00:00"
 }

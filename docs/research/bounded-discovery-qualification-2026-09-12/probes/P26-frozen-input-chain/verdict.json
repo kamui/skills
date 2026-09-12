@@ -1,12 +1,12 @@
 {
   "probe": "P26",
   "status": "unestablished",
-  "summary": "Two of the chain's three links hold over this bundle's own material. All 18 rendered prompts carry the pinned template block, none has an unfilled placeholder, and once the attempt id and the arm label are normalised they collapse to exactly two shapes - nine prompts at contract revision 1 and nine at revision 2 - so within a revision the arms are byte-identical. The third link has nothing to check.",
-  "establishes": "The template-to-prompt link and the no-unfilled-placeholder precondition, over a real rendering, plus the arm-identity property the payload contract exists to give.",
-  "residual": "P26 asks for three links and this bundle can only supply two. The third - each rendered prompt's digest against the value published in the public cell summary - needs a cell summary, and no cell ran. The template here is also the probe's payload-contract block, not a study dispatch template: the #149 template has not been re-rendered, because that needs a frozen target, a pinned policy snapshot and an authorized dispatch, none of which exist.",
+  "summary": "One of the chain's three links holds over this bundle's material. All 18 rendered prompts carry the pinned template block and none has an unfilled placeholder, and the template itself is pinned by digest - that is link one. Link two does not hold: the rendered prompts name their input by relative path and not by digest, so nothing in the bytes ties a prompt to the packet it was rendered against, which ./rechecked demonstrates by finding two shapes each standing for three different packets. Link three has nothing to check, because no cell ran and there is no public cell summary.",
+  "establishes": "The template-to-prompt link and the no-unfilled-placeholder precondition, over a real rendering; and, through ./rechecked, that the checker refuses to call a normalisation sound when it can stand for more than one input.",
+  "residual": "Previously recorded here as 'two of the three links hold'. That was wrong in the same way the unenforced check was: the prompt-to-input link was assumed from the normalisation rather than established from the bytes. The correction is the reason ./rechecked exists.",
   "refuted_by": null,
   "observed_exit": "0",
   "expected_exit": 0,
   "read_from": "the probe's own retained output, not asserted beside it",
-  "recorded_at": "2026-09-12T10:40:10.175616+00:00"
+  "recorded_at": "2026-09-12T11:17:36.466541+00:00"
 }

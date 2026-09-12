@@ -231,7 +231,7 @@ def main():
             return reads(args.transcript, args.root, args.permitted, args.out,
                          args.accept, args.coordinator)
         return run(args.transcript, args.egress, args.out, args.judgments, args.coordinator)
-    except (OSError, json.JSONDecodeError) as error:
+    except (OSError, json.JSONDecodeError, AttributeError) as error:
         print(str(error), file=sys.stderr)
         return 2
 

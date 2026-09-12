@@ -1,8 +1,8 @@
 {
   "schema_version": "bounded-discovery-qualification-v1",
   "probe": "P24-machinery",
-  "purpose": "Does the mechanical half of #148's criteria run by rule against the live forge - E1 against the derived reservation set, E2 against the recomputed freshness threshold, E3 on size and E5 on the review trail? This exercises the machinery; it selects no target.",
-  "retained_at": "2026-09-12T10:42:22.923158+00:00",
+  "purpose": "Does the mechanical half of #148's criteria run by rule against the live forge - E1 against the derived reservation set, E2 against the recomputed freshness threshold, E3 on size and E5 on the review trail? Every candidate named here is either already reserved or a pull request of this repository itself, which is forbidden material for a cell and can never be a target, so the record leaks nothing about a future selection.",
+  "retained_at": "2026-09-12T11:16:50.096462+00:00",
   "retained_before_process_creation": true,
   "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12",
   "argv": [
@@ -17,10 +17,11 @@
     "clap-rs/clap#6212",
     "nats-io/nats-server#7395",
     "grpc/grpc-go#8519",
-    "sharkdp/bat#3912",
-    "sharkdp/bat#3904"
+    "golang-jwt/jwt#456",
+    "kamui/skills#208",
+    "kamui/skills#209"
   ],
-  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/eligibility.py --reservations targets/reservations.json --threshold 2026-03-12 --out targets/eligibility-machinery-check.json 'clap-rs/clap#6212' 'nats-io/nats-server#7395' 'grpc/grpc-go#8519' 'sharkdp/bat#3912' 'sharkdp/bat#3904'",
+  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/eligibility.py --reservations targets/reservations.json --threshold 2026-03-12 --out targets/eligibility-machinery-check.json 'clap-rs/clap#6212' 'nats-io/nats-server#7395' 'grpc/grpc-go#8519' 'golang-jwt/jwt#456' 'kamui/skills#208' 'kamui/skills#209'",
   "env_additions": {},
   "requested": {
     "model": null,
