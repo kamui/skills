@@ -299,6 +299,30 @@ class GateTests(unittest.TestCase):
                 entry = next(c for c in record["checks"] if c["check"] == name)
                 self.assertIn("unreadable USD amount", entry["detail"])
                 self.assertFalse(entry["probe_completed"])
+        # Every other shape the gate cannot read is the same recorded failure:
+        # a ledger that is not an object, events that are not a list, an event
+        # that is not an object, a non-finite amount, and one that parses but
+        # overflows when the deltas are summed.
+        base = json.loads(self.ledger.read_text(encoding="utf-8"))
+        for label, document in (
+                ("not an object", ["a ledger is not a list"]),
+                ("events not a list", dict(base, events="all of them")),
+                ("event not an object", dict(base, events=["an event"])),
+                ("non-finite header", dict(base, reserved_usd="NaN")),
+                ("non-finite delta", dict(base, events=[dict(base["events"][0],
+                                                             reservation_delta_usd="Infinity")])),
+                ("unsummable delta", dict(base, events=[
+                    dict(base["events"][0], reservation_delta_usd="1e999999999"),
+                    dict(base["events"][0], reservation_delta_usd="1e999999999")]))):
+            with self.subTest(shape=label):
+                self.ledger.write_text(json.dumps(document), encoding="utf-8")
+                result = self.check(expected=2, remove_root=self.cells.exists())
+                self.assertNotIn("Traceback", result.stderr)
+                record = self.gate_record()
+                self.assertFalse(record["seal_may_be_opened"])
+                for name in shutdown.LEDGER_CHECKS:
+                    self.assertIn(name, record["blocking"])
+
         # A caller reaching build_gate directly still gets a gate, not a raise.
         gate = shutdown.build_gate({"reserved_usd": "still-not-a-number", "events": []},
                                    None, json.loads(self.probes_file.read_text(encoding="utf-8")),

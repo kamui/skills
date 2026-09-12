@@ -146,14 +146,33 @@ def read_ledger(path, timeout=LEDGER_LOCK_TIMEOUT) -> tuple:
             raw = path.read_bytes()
         finally:
             fcntl.flock(lock, fcntl.LOCK_UN)
-    document = json.loads(raw.decode("utf-8"))
-    # An amount the gate cannot price is a ledger it cannot read, and it is
-    # settled here so the caller records it the same way as a missing file
-    # rather than discovering it half way through building the gate.
-    usd(document.get("reserved_usd"))
-    for event in document.get("events", []):
-        usd(event.get("reservation_delta_usd"))
+    document = validate_ledger(json.loads(raw.decode("utf-8")))
     return document, hashlib.sha256(raw).hexdigest()
+
+
+def validate_ledger(document):
+    """Everything the gate will later read, shaped and priced here.
+
+    A ledger the gate cannot read is a read failure with a recorded gate, not a
+    traceback: it is settled at the read so the caller records it the same way
+    as a missing file rather than discovering it half way through the decision.
+    """
+    if not isinstance(document, dict):
+        raise ValueError("the ledger is not a JSON object")
+    events = document.get("events", [])
+    if not isinstance(events, list):
+        raise ValueError("the ledger's events are not a list")
+    try:
+        total = usd(document.get("reserved_usd"))
+        for index, event in enumerate(events):
+            if not isinstance(event, dict):
+                raise ValueError("ledger event %d is not an object" % index)
+            total += usd(event.get("reservation_delta_usd"))
+    except ArithmeticError as exc:
+        # An amount that parses but cannot be summed is still one the gate
+        # cannot price, and Overflow is not a ValueError.
+        raise ValueError("the ledger's amounts cannot be summed: %s" % exc)
+    return document
 
 
 def probe_completed(probe) -> bool:
@@ -275,9 +294,14 @@ def cell_containers(probe, prefix) -> list:
 
 def usd(value) -> Decimal:
     try:
-        return Decimal(str(value or "0"))
-    except InvalidOperation:
+        amount = Decimal(str(value or "0"))
+    except (InvalidOperation, ValueError, TypeError):
         raise ValueError("the ledger carries an unreadable USD amount")
+    # budget.py refuses a non-finite amount when it writes one; a gate that
+    # accepted one here would price a reservation as NaN and call it zero.
+    if not amount.is_finite():
+        raise ValueError("the ledger carries a non-finite USD amount")
+    return amount
 
 
 def ledger_state(ledger) -> dict:
@@ -454,7 +478,7 @@ def build_gate(ledger, ledger_error, probes, roots_record, roots_sha256, seal,
     if ledger_error is None:
         try:
             checks.extend(ledger_checks(ledger, probes, observed_at))
-        except (ValueError, TypeError, AttributeError) as exc:
+        except (ValueError, TypeError, AttributeError, ArithmeticError) as exc:
             # The gate has to record why it could not decide. Raising here would
             # leave the refusal with no artifact at all.
             ledger_error = str(exc)
