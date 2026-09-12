@@ -28,8 +28,10 @@ How a reference is read, and why it matters:
   repository. Two segments only, and not something ending in a file extension a repository
   name cannot have, so ``sealed/excluded-grpc-go-8519-register.md.enc`` is skipped while
   ``vercel/next.js`` and ``nats-io/nats.go`` are not.
-- A **register** is about exactly one repository, named in its own header, so every ``#123``
-  in it resolves there whether it is backticked or not. That is deliberately conservative:
+- A **register** is about exactly one repository, named in its own header, and nothing inside
+  it may take that anchor away — not a third-party repository quoted in a bug report, not a
+  source path. Every ``#123`` in it resolves to the register's own repository whether it is
+  backticked or not. That is deliberately conservative:
   a register also cites this project's own tickets in prose ("clean per #137 hunt"), and no
   mechanical rule separates those from a genuine same-repository number. Reserving one that
   did not need it costs a future hunt one candidate; failing to reserve one that did costs
@@ -82,62 +84,65 @@ def looks_like_a_repository(span: str) -> bool:
             and not span.lower().endswith(NOT_A_REPOSITORY))
 
 
-def references(text: str, repository=None):
+def references(text: str, repository=None, repository_spans=True):
     """Yield ``(repository, number, kind)`` for every reference in one scope, in order.
 
+    The scope is walked left to right and each number takes the **nearest preceding**
+    repository, which is what "the repository most recently named" has to mean: anchoring
+    every number to the first repository a scope happens to name attributes a reference in
+    the middle of a list to whatever stood at the front of it.
+
     ``kind`` is ``qualified`` (the reference named its own repository), ``linked`` (a markdown
-    link, which names its repository in the URL), ``bare`` (backticked, so the file marks it
-    as a reference) or ``prose`` (a bare number the file does not mark as one, which is
-    reserved conservatively rather than dropped).
+    link, which names its repository in the URL and is trusted over the anchor), ``bare``
+    (backticked, so the file marks it as a reference) or ``prose`` (a bare number the file
+    does not mark as one, which is reserved conservatively rather than dropped).
+
+    ``repository_spans`` is false for a scope that already knows its repository — a register
+    is about exactly one — so that a third-party repository or a source path mentioned in
+    passing cannot take the anchor away from it.
     """
+    events = []
+    covered = []
+    for match in CODE_SPAN.finditer(text):
+        covered.append((match.start(), match.end()))
+        events.append((match.start(), "span", match.group(1)))
+    for match in LINKED.finditer(text):
+        covered.append((match.start(), match.end()))
+        events.append((match.start(), "link", (match.group(2), match.group(1))))
+    for match in ANY_NUMBER.finditer(text):
+        if any(start <= match.start() < end for start, end in covered):
+            continue
+        events.append((match.start(), "prose", match.group(1)))
     current = repository
-    evidenced = set()
-    for span in CODE_SPAN.findall(text):
-        qualified = QUALIFIED.match(span)
-        if qualified:
-            current = qualified.group(1)
-            evidenced.add(qualified.group(2))
-            yield current, qualified.group(2), "qualified"
-            continue
-        bare = BARE.match(span)
-        if bare:
-            evidenced.add(bare.group(1))
+    for _, kind, value in sorted(events, key=lambda event: event[0]):
+        if kind == "link":
+            # The URL names its own repository, which is better evidence than any anchor,
+            # and it does not move the anchor: a link to somewhere else is still an aside.
+            yield value[0], value[1], "linked"
+        elif kind == "prose":
             if current:
-                yield current, bare.group(1), "bare"
-            continue
-        if looks_like_a_repository(span):
-            current = span
-    # A markdown link names its own repository, which is better evidence than the scope's
-    # anchor. It is yielded, not merely noted: marking it evidenced without reserving it
-    # would suppress the prose fallback and drop the reference entirely.
-    for number, linked_repository in LINKED.findall(text):
-        evidenced.add(number)
-        yield linked_repository, number, "linked"
-    # Second pass for the numbers the file wrote in plain prose. The scope's repository is
-    # whatever the scope named; a scope that named none has nothing to resolve them against.
-    anchor = last_repository(text) or repository
-    if anchor:
-        for number in ANY_NUMBER.findall(text):
-            if number not in evidenced:
-                yield anchor, number, "prose"
+                yield current, value, "prose"
+        else:
+            qualified = QUALIFIED.match(value)
+            if qualified:
+                current = qualified.group(1)
+                yield current, qualified.group(2), "qualified"
+            elif BARE.match(value):
+                if current:
+                    yield current, BARE.match(value).group(1), "bare"
+            elif repository_spans and looks_like_a_repository(value):
+                current = value
 
 
-def last_repository(text: str):
-    """The repository a scope names, for resolving the bare numbers it wrote in prose."""
-    current = None
-    for span in CODE_SPAN.findall(text):
-        qualified = QUALIFIED.match(span)
-        if qualified:
-            return qualified.group(1)
-        if looks_like_a_repository(span) and current is None:
-            current = span
-    return current
+def per_line(text: str, repository=None, repository_spans=True):
+    """References scoped to one line.
 
-
-def per_line(text: str):
-    """References scoped to one line, for a table whose rows each name their own repository."""
+    A table's rows each name their own repository, and a register's paragraphs each stand
+    alone, so an anchor must not carry from one line to the next: that is how a third-party
+    repository mentioned in passing on one line came to own a reference eighty lines later.
+    """
     for line in text.splitlines():
-        for reference in references(line):
+        for reference in references(line, repository, repository_spans):
             yield reference
 
 
@@ -218,7 +223,10 @@ def derive(research: Path):
         reason = ("a revealed #138 target's register, or a pull request it names"
                   if path.name.startswith("slot-") else
                   "a revealed excluded register, or a pull request it names")
-        for found, number, kind in references(text, repository=repository):
+        # A register knows its repository, so nothing in it may take the anchor away: not a
+        # third-party repository named in a quoted bug report, and not a source path.
+        for found, number, kind in per_line(text, repository=repository,
+                                            repository_spans=False):
             reserve(found, number, reason, "revealed/targets/" + path.name, kind)
 
     inventory = sources["inventory"].read_text(encoding="utf-8")
@@ -308,6 +316,25 @@ def self_test():
     check("a link-only citation is reserved from the repository its URL names",
           list(references("- Pull request: [#77](https://github.com/o/r/pull/77)")) ==
           [("o/r", "77", "linked")])
+    # The two scope bugs a first-named anchor and a hijackable one produced, kept as cases.
+    nearest = list(references("`a/b#1`, `c/d#2` (#3); `e/f#4` (#5)."))
+    check("a prose number takes the nearest preceding repository, not the first",
+          [r[:2] for r in nearest if r[2] == "prose"] == [("c/d", "3"), ("e/f", "5")])
+    hijack = "quoting `garden-rs/garden`'s use of it, and `#99` is the fix"
+    check("a repository named in passing can anchor where the scope has none",
+          [r[:2] for r in references(hijack)] == [("garden-rs/garden", "99")])
+    check("a scope that knows its repository keeps it",
+          [r[:2] for r in references(hijack, repository="clap-rs/clap",
+                                     repository_spans=False)] == [("clap-rs/clap", "99")])
+    check("a source path cannot take a known repository's anchor",
+          [r[:2] for r in references("`server/raft_test.go` then `#42`",
+                                     repository="nats-io/nats-server",
+                                     repository_spans=False)] ==
+          [("nats-io/nats-server", "42")])
+    check("a register's anchor does not carry across its lines",
+          [r[:2] for r in per_line("quoting `x/y` here\nand `#7` there",
+                                   repository="o/r", repository_spans=False)] ==
+          [("o/r", "7")])
     check("a prose number in a register is still reserved",
           sorted(r[1] for r in register if r[2] == "prose") == ["137", "484"])
     check("a linked number is not also read as prose",
@@ -318,7 +345,7 @@ def self_test():
 
     for failure in failures:
         print("FAIL", failure)
-    print(("FAILED " + str(len(failures))) if failures else "ok: 15 checks")
+    print(("FAILED " + str(len(failures))) if failures else "ok: 20 checks")
     return 1 if failures else 0
 
 
