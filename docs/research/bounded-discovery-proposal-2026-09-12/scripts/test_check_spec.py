@@ -171,6 +171,15 @@ class CheckSpecTests(unittest.TestCase):
         (self.bundle / "spec.md").write_text("### gap-1\n", encoding="utf-8")
         self.assertIn("requirement gap-2 is not discussed in the specification", self.check())
 
+    def test_requirement_ids_are_matched_as_complete_identifiers(self):
+        path = self.bundle / "spec.md"
+        missing = path.read_text(encoding="utf-8").replace("### gap-1\n", "")
+        for decoy in ("gap-10", "gap-1-extra", "prefix-gap-1", "gap-1_suffix"):
+            with self.subTest(decoy=decoy):
+                path.write_text(missing + decoy + "\n", encoding="utf-8")
+                self.assertIn("requirement gap-1 is not discussed in the specification",
+                              self.check())
+
     def test_unknown_and_missing_keys_are_refused_at_both_levels(self):
         document = copy.deepcopy(self.document)
         document["dispatch_authorized"] = False

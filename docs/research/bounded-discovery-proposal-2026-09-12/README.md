@@ -43,7 +43,7 @@ Standard-library Python 3.9+ on macOS or Linux. Unpaid, offline, and reading onl
 
 ```sh
 python3 scripts/check_spec.py             # the committed record against this repository
-python3 scripts/check_spec.py --self-test # 19 CLI tests over synthetic records
+python3 scripts/check_spec.py --self-test # 20 CLI tests over synthetic records
 ```
 
 `check_spec.py` refuses a control or test path that no longer exists or that leaves the repository, a
