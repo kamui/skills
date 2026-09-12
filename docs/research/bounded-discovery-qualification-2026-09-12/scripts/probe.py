@@ -41,6 +41,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -236,6 +237,15 @@ def meter(args):
         checked = run(command)
         (directory / "fidelity.txt").write_text(checked.stdout, encoding="utf-8")
         fidelity["exit"] = checked.returncode
+        # A transcript with no assistant line cannot violate an expectation, so a clean exit
+        # over one is a pass that observed nothing. Recording the line count beside the exit
+        # is what stops that reading as a verified setting.
+        observed = re.search(r"\blines=(\d+)", checked.stdout)
+        fidelity["observed_assistant_lines"] = int(observed.group(1)) if observed else None
+        if fidelity["observed_assistant_lines"] == 0:
+            fidelity["establishes"] = ("nothing: the transcript carries no assistant line, so "
+                                       "the expectation had nothing to rule on and this clean "
+                                       "exit is not an observed setting")
         if checked.returncode:
             problems.append("the root transcript does not run at the model or effort the "
                             "launch requested; see fidelity.txt")

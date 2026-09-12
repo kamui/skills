@@ -16,9 +16,11 @@
     "expected_model": "claude-sonnet-5",
     "expected_effort": "high",
     "children_not_checked_here": 0,
-    "exit": 0
+    "exit": 0,
+    "observed_assistant_lines": 0,
+    "establishes": "nothing: the transcript carries no assistant line, so the expectation had nothing to rule on and this clean exit is not an observed setting"
   },
-  "metered_at": "2026-09-12T11:35:20.940196+00:00",
+  "metered_at": "2026-09-12T11:49:57.505380+00:00",
   "problems": [
     "meter_split.py exited 1; see meter-split-stdout.txt"
   ]
