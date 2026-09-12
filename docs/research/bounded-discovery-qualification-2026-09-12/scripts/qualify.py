@@ -76,6 +76,16 @@ def probe_dirs(bundle: Path):
     return sorted(p.parent for p in (bundle / "probes").rglob("launch.json"))
 
 
+def relative_name(bundle: Path, directory: Path) -> str:
+    """The path a probe actually lives at, relative to the bundle.
+
+    The basename is not it: a probe that needed several launches keeps them in
+    subdirectories, and more than half of this bundle's launches are nested. Naming them by
+    basename produced an evidence index whose paths did not exist.
+    """
+    return "probes/" + str(directory.relative_to(bundle / "probes"))
+
+
 def root_transcript(directory: Path):
     listing = directory / "transcripts.txt"
     if not listing.exists():
@@ -214,7 +224,7 @@ def retention(bundle: Path, out: Path):
         observed = exit_path.read_text(encoding="utf-8").strip() if exit_path.exists() else None
         rows.append({
             "probe": record["probe"],
-            "directory": "probes/" + directory.name,
+            "directory": relative_name(bundle, directory),
             "retained_before_process_creation": record.get("retained_before_process_creation"),
             "argv_length": len(record.get("argv") or []),
             "requested": record["requested"],
@@ -248,6 +258,11 @@ def retention(bundle: Path, out: Path):
 PLACEHOLDER = re.compile(r"\{[A-Z][A-Z0-9_]*\}")
 
 
+def read_field(text: str, key: str):
+    match = re.search(r'"%s":\s*"([^"]*)"' % key, text)
+    return match.group(1) if match else None
+
+
 def chain(bundle: Path, out: Path):
     template = bundle / "dispatch-payload-contract.md"
     if not template.exists():
@@ -271,10 +286,17 @@ def chain(bundle: Path, out: Path):
                 normalised = normalised.replace('"%s": "%s"' % (key, match.group(1)),
                                                 '"%s": "%s"' % (key, token))
         carries_block = block.strip() and block.strip()[:200] in text
+        packet = directory / "packet.md"
         rendered.append({
-            "directory": "probes/" + str(directory.relative_to(bundle / "probes")),
+            "directory": relative_name(bundle, directory),
             "prompt_sha256": digest_bytes(prompt.read_bytes()),
             "normalised_sha256": digest_bytes(normalised.encode("utf-8")),
+            # The identity the renderer filled is recorded, not erased: it is the only place
+            # a rendered prompt names its own attempt, and a comparison that dropped it
+            # without recording it could not tell two targets apart afterwards.
+            "attempt_id": read_field(text, "attempt_id"),
+            "arm": read_field(text, "arm"),
+            "packet_sha256": digest_bytes(packet.read_bytes()) if packet.exists() else None,
             "unfilled_placeholders": left,
             "carries_the_pinned_block": bool(carries_block),
         })
@@ -284,7 +306,24 @@ def chain(bundle: Path, out: Path):
             violations.append(str(prompt) + " does not carry the pinned template block")
     if not rendered:
         violations.append("no rendered prompt was found to check")
-    shapes = {row["normalised_sha256"] for row in rendered}
+    # Normalising the attempt id and the arm label is what lets the arms be compared at all,
+    # and it is also the way a comparison could go wrong: two prompts rendered against
+    # *different inputs* must never collapse to one shape. So the invariant checked here is
+    # the inverse of the grouping - a normalised shape may stand for exactly one packet, and
+    # a shape that spans two inputs is a collision, not a match. A prompt with no packet
+    # beside it binds to nothing and fails for that reason.
+    groups: dict = {}
+    for row in rendered:
+        groups.setdefault(row["normalised_sha256"], set()).add(row["packet_sha256"])
+    for shape, packets in sorted(groups.items()):
+        if len(packets) > 1:
+            violations.append("normalised shape " + shape[:12] + " stands for " +
+                              str(len(packets)) + " different packets; a shape may stand for "
+                              "exactly one input")
+    if any(row["packet_sha256"] is None for row in rendered):
+        violations.append("a rendered prompt has no packet beside it, so nothing binds it to "
+                          "the input it was rendered against")
+    shapes = set(groups)
     body = {
         "probe": "P26",
         "rule": ("the rendered prompt is tied to the pinned template it came from, no placeholder "
@@ -295,6 +334,8 @@ def chain(bundle: Path, out: Path):
         "template_sha256": digest_bytes(template.read_bytes()),
         "rendered": rendered,
         "distinct_normalised_shapes": len(shapes),
+        "packets_per_shape": {shape: sorted(str(packet) for packet in packets)
+                              for shape, packets in sorted(groups.items())},
         "recorded_at": datetime.now(timezone.utc).isoformat(),
     }
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
@@ -328,7 +369,7 @@ def index(bundle: Path, out: Path):
         for item in sorted(directory.iterdir()):
             if item.is_file():
                 retained[item.name] = digest_bytes(item.read_bytes())
-        relative = "probes/" + directory.name
+        relative = relative_name(bundle, directory)
         entries.append({
             "probe": record["probe"],
             "directory": relative,

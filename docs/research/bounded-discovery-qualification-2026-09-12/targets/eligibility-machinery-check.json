@@ -3,7 +3,7 @@
   "what_this_decides": "E1, E2, E3 and E5 only. E4, E6-E10 stay with the curator and E11 with the adjudicator; a candidate this script passes is not a selected target and no selection is made here.",
   "freshness_threshold": "2026-03-12T00:00:00Z",
   "reservations": "targets/reservations.json",
-  "reserved_count": 79,
+  "reserved_count": 87,
   "candidates": [
     {
       "candidate": "clap-rs/clap#6212",
@@ -13,7 +13,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: a candidate in the revealed inventory, with its category and eligibility result published"
+          "detail": "on the reservation set: a revealed #138 target's register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
         },
         "E2": {
           "passed": true,
@@ -38,7 +38,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: a candidate in the revealed inventory, with its category and eligibility result published; named in a revealed inventory row as a later fix or confirming report"
+          "detail": "on the reservation set: a revealed #138 target's register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
         },
         "E2": {
           "passed": true,
@@ -63,7 +63,7 @@
       "checks": {
         "E1": {
           "passed": false,
-          "detail": "on the reservation set: named in #148's exclusion log; a candidate in the revealed inventory, with its category and eligibility result published; named in a revealed inventory row as a later fix or confirming report"
+          "detail": "on the reservation set: named in #148's exclusion log; a revealed excluded register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
         },
         "E2": {
           "passed": true,
@@ -81,35 +81,35 @@
       "mechanically_eligible": false
     },
     {
-      "candidate": "sharkdp/bat#3912",
-      "title": "Allow boolean flags to be repeated",
-      "head_sha": "cf72a432acd6cb5c72c5eb2935468a0b0d668d87",
-      "base_ref": "master",
+      "candidate": "golang-jwt/jwt#456",
+      "title": "Add `WithNotBeforeRequired` parser option and add test coverage",
+      "head_sha": "734a9292dbc587d5f0e7086af8e622d3541af21c",
+      "base_ref": "main",
       "checks": {
         "E1": {
-          "passed": true,
-          "detail": "not on the reservation set"
+          "passed": false,
+          "detail": "on the reservation set: named in #148's exclusion log; a revealed excluded register, or a pull request it names; a candidate in the revealed inventory, with its category and eligibility result published"
         },
         "E2": {
-          "passed": false,
-          "detail": "mergedAt 2026-09-04T19:10:30Z against the threshold 2026-03-12T00:00:00Z"
+          "passed": true,
+          "detail": "mergedAt 2025-08-07T06:01:43Z against the threshold 2026-03-12T00:00:00Z"
         },
         "E3": {
           "passed": true,
-          "detail": "4 files, +34/-0 (34) against at most 6 files and 200 lines"
+          "detail": "3 files, +81/-2 (83) against at most 6 files and 200 lines"
         },
         "E5": {
           "passed": true,
-          "detail": "1 review submission(s), 0 review comment(s)"
+          "detail": "5 review submission(s), 3 review comment(s)"
         }
       },
       "mechanically_eligible": false
     },
     {
-      "candidate": "sharkdp/bat#3904",
-      "title": "build(deps): bump bytesize from 2.4.2 to 2.7.0",
-      "head_sha": "7928b4be52cb9192b04fa95567882604df873d60",
-      "base_ref": "master",
+      "candidate": "kamui/skills#208",
+      "title": "Propose the specification a future bounded-discovery study must qualify against",
+      "head_sha": "0e6a45f0dc866efc28cb0541008e3f19a936c577",
+      "base_ref": "main",
       "checks": {
         "E1": {
           "passed": true,
@@ -117,19 +117,44 @@
         },
         "E2": {
           "passed": false,
-          "detail": "mergedAt 2026-09-01T03:10:38Z against the threshold 2026-03-12T00:00:00Z"
+          "detail": "mergedAt 2026-09-12T09:21:49Z against the threshold 2026-03-12T00:00:00Z"
         },
         "E3": {
-          "passed": true,
-          "detail": "1 files, +2/-2 (4) against at most 6 files and 200 lines"
+          "passed": false,
+          "detail": "6 files, +1691/-0 (1691) against at most 6 files and 200 lines"
         },
         "E5": {
+          "passed": true,
+          "detail": "2 review submission(s), 2 review comment(s)"
+        }
+      },
+      "mechanically_eligible": false
+    },
+    {
+      "candidate": "kamui/skills#209",
+      "title": "Audit: attribute regressions to removed guarantees across unchanged code",
+      "head_sha": "552d58c64b85915906c4262b6bac79eb652b6bef",
+      "base_ref": "main",
+      "checks": {
+        "E1": {
+          "passed": true,
+          "detail": "not on the reservation set"
+        },
+        "E2": {
           "passed": false,
-          "detail": "0 review submission(s), 0 review comment(s)"
+          "detail": "mergedAt 2026-09-12T09:43:21Z against the threshold 2026-03-12T00:00:00Z"
+        },
+        "E3": {
+          "passed": false,
+          "detail": "7 files, +283/-10 (293) against at most 6 files and 200 lines"
+        },
+        "E5": {
+          "passed": true,
+          "detail": "2 review submission(s), 2 review comment(s)"
         }
       },
       "mechanically_eligible": false
     }
   ],
-  "recorded_at": "2026-09-12T10:42:30.160806+00:00"
+  "recorded_at": "2026-09-12T11:16:58.842971+00:00"
 }

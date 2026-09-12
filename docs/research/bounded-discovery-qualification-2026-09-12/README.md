@@ -57,7 +57,7 @@ with no approval surface. **D7 does not trigger and no launch-shape decision is 
 | primary/verifier confinement | [P04](probes/P01-P04-P11-cell-configuration/) | out-of-root `Read` denied, denial naming the permitted root |
 | unlisted shell commands | [P05](probes/P05-unlisted-shell-commands/) | denied automatically, no approval surface |
 | network refusal by host name | [P06](probes/P06-P14-egress/) | `api.github.com` refused and logged, provider allowed, session unaffected |
-| cancellation | [P07](probes/P07-cancellation/) | SIGTERM at 25 s: exit 124, no payload, no surviving process, transcript byte-identical two minutes later |
+| cancellation | [P07](probes/P07-cancellation/) | SIGTERM at 25 s: exit 124, no payload, no surviving process, transcript byte-identical on re-check nearly two minutes later |
 | bounded allowance | [P08](probes/P08b-bounded-allowance/) | `error_max_budget_usd` at \$0.058664 against a \$0.05 allowance — one call, 17.3% overshoot |
 | atomic budget contention | [P09](probes/P09-atomic-contention/) | one admitted, one refused, exactly one event written |
 | billed totals | [P10](probes/P10-billed-totals/) | 28 sessions reconcile; every difference named by an untranscripted Haiku request |
@@ -104,9 +104,10 @@ Each of these was found by a probe and none of them is in the proposed specifica
    is no tell — but the roster also lists the harness's own built-in agent types. A primary can
    dispatch one of those instead of the frozen worker, at whatever model it defaults to. Fidelity
    checking catches it after the fact; a freeze should predeclare it.
-5. **The runtime makes its own egress attempt.** Every session tried to CONNECT to
-   `http-intake.logs.us5.datadoghq.com`, which the #149 allow list does not cover. It was refused and
-   nothing broke — but it means every cell's egress log carries a refused line that an auditor cannot
+5. **The runtime makes its own egress attempt.** Both sessions that ran behind the proxy — the only
+   two this bundle could observe — tried to CONNECT to `http-intake.logs.us5.datadoghq.com`, which
+   the #149 allow list does not cover. It was refused and nothing broke — but if it is as consistent
+   as those two suggest, every cell's egress log will carry a refused line an auditor cannot
    distinguish from a worker's bypass attempt unless the freeze predeclares it.
 
 Two more, from the controls themselves: the shutdown gate's default container prefix is the two
@@ -121,16 +122,24 @@ No target was selected. What is delivered is the part of #199 gap 8 that is deci
 spending, and the reason the rest was not attempted.
 
 - [`targets/reservations.json`](targets/reservations.json) — the extended reservation set **derived
-  by rule**, as the specification requires, from the six files that publish it: #148 section 7,
-  #148's exclusion log, the four revealed #138 targets, the two revealed excluded registers, and
-  every pull request named in the revealed candidate inventory. **79 pull requests**, from 28
-  inventory candidate rows, each with its reason and the source that names it, and every source
-  digested so a later freeze can tell whether the set it applies is the set these files still
-  publish.
+  by rule**, as the specification requires, from the files that publish it: #148 section 7, #148's
+  exclusion log, the four revealed slot registers, the two revealed excluded registers, and every
+  pull request named in the revealed candidate inventory. **87 pull requests**, from 28 inventory
+  candidate rows and the registers' own citations, each with its reason and the source that names
+  it, and every source digested so a later freeze can tell whether the set it applies is the set
+  these files still publish. Only a backticked reference counts in a list or a table, because these
+  files also cite this project's own tickets in prose and a rule that read every bare `#1234` would
+  invent reservations in the wrong repository. A register is about one repository, so every number
+  in it resolves there — **11 entries are marked `conservative`** because the file cites them as
+  bare prose numbers that no rule can separate from a project citation. They are reserved anyway:
+  over-reserving costs a future hunt one candidate, under-reserving costs the study its blind.
 - [`scripts/eligibility.py`](scripts/eligibility.py) — E1, E2, E3 and E5 applied by rule against the
-  live forge. Exercised in [P24](probes/P24-fresh-targets/machinery/): the revealed #138 pull
-  requests were excluded by E1 and two recent merges by E2, one of them also by E5. An unreadable
-  field is recorded `unknown`, and `unknown` never counts as a pass.
+  live forge. Exercised in [P24](probes/P24-fresh-targets/machinery/): the four revealed #138 pull
+  requests were excluded by E1, and two of this repository's own pull requests by E2 and E3. An
+  unreadable field is recorded `unknown`, and `unknown` never counts as a pass. Every candidate in
+  that record is either already reserved or a pull request of this repository — forbidden material
+  for a cell, and never a possible target — so the record names no fresh candidate and leaks
+  nothing a future blind selection is supposed to derive for itself.
 - The freshness threshold recomputed for a 2026-09-12 freeze: **2026-03-12**.
 
 **Why the selection itself was not performed.** The specification's own order puts runtime
@@ -146,9 +155,9 @@ rather than the acceptance criterion weakened. Everything it needs is itemized i
 | --- | --- |
 | Session authorization | USD 100.00, for target preparation and capability probes only |
 | Binding constraint | **USD 15.00** — the pinned `budget.py` clamps pre-freeze spend to it regardless of the ledger's ceiling. The authorization was never the limit |
-| Charged | **USD 1.3429621**, across 28 metered sessions |
+| Charged | **USD 1.3429621**, across 28 metered sessions. The ledger records `1.342962099999999994`; the trailing digits are float artefacts of the per-session figures the runtime reports, and the ledger's own total is what governs |
 | Retained as uncertainty | **USD 0.11112**, all of it [P07](probes/P07-cancellation/)'s |
-| Total exposure | USD 1.4540821 |
+| Total exposure | USD 1.4540821, against a USD 15.00 pre-freeze ceiling |
 | Cap frozen | none — no projection exists, so none could be |
 
 Every charge is the larger of the runtime self-report and the recomputed per-request total, and every
@@ -204,7 +213,10 @@ Ordered so that each item is doable once the one above it is.
    one arm only. Make it required in every arm or drop it; an optional member one arm happens to
    emit is the pilot's tell in a new place. Then render a study dispatch template against a real
    target and probe findings, clean and stopped in each arm again.
-7. **The frozen-input chain's third link (P26).** Needs a cell summary, which needs a cell.
+7. **The frozen-input chain's second and third links (P26).** The second needs the dispatch
+   template to carry its packet's digest in the rendered bytes — a prompt that names its input by
+   relative path binds to nothing, which is what the check found here. The third needs a public
+   cell summary, which needs a cell.
 8. **A budget.** A rate card at freeze time, a per-cell projection from measured attempts, the
    per-attempt ceiling with one call of headroom — P08 measured 17.3% overshoot on a small
    allowance and that proportion needs re-measuring at cell scale — the finder sublimit inside the
@@ -218,7 +230,7 @@ Ordered so that each item is doable once the one above it is.
 | Path | What it holds |
 | --- | --- |
 | [`qualification.json`](qualification.json) | the machine-readable record: every probe's status, each of #199's ten gaps with what holds and what does not, and section 11 item by item |
-| [`evidence-index.json`](evidence-index.json) | every launch: the exact command, the runtime, the retained output by digest, the verdict read from it, and the ledger settlement where it was paid |
+| [`evidence-index.json`](evidence-index.json) | all 58 launches: the exact command, the runtime, the retained output by digest, the verdict read from it, and the ledger settlement where it was paid. `qualify.py index` exits non-zero unless every launch carries a verdict |
 | [`ledger.json`](ledger.json) | this qualification's own ledger, terminally stopped |
 | [`rates.json`](rates.json) | the dated rate card, with its provenance |
 | [`dispatch-payload-contract.md`](dispatch-payload-contract.md) | the proposed D2 payload-contract block, at revision 2, with revision 1's refusal recorded |
@@ -240,7 +252,13 @@ python3 scripts/audit_probe.py --self-test
 python3 scripts/reservations.py --self-test
 python3 scripts/eligibility.py --self-test
 python3 scripts/qualify.py index --bundle .      # rebuilds the evidence index
+python3 scripts/qualify.py chain --bundle .      # exits 1 here, by design: see P26
 ```
+
+`qualify.py chain` **fails on this bundle and that is its result**, not a broken check. The
+rendered prompts name their input by relative path rather than by digest, so two normalised shapes
+each stand for three different packets — which is exactly the collision the shape comparison exists
+to refuse. [P26](probes/P26-frozen-input-chain/) records it.
 
 Raw captures that could name a slot stay outside this repository, under
 `~/.config/bounded-discovery/issue-207/`; nothing of any target's truth is in there, because no

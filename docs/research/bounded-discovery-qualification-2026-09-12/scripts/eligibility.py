@@ -44,10 +44,21 @@ MAX_LINES = 200
 MAX_FILES = 6
 
 
+def count(result):
+    """A helper's count, or None when it failed or printed something that is not one."""
+    if result.returncode != 0:
+        return None
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return None
+
+
 def fetch(repository, number):
     """The forge fields E1-E3 and E5 need, or None with the failure text."""
     query = ("repos/%s/pulls/%s" % (repository, number))
-    result = subprocess.run(["gh", "api", query], text=True, capture_output=True)
+    result = subprocess.run(["gh", "api", query], text=True, encoding="utf-8",
+                            errors="replace", capture_output=True)
     if result.returncode != 0:
         return None, result.stderr.strip().splitlines()[-1] if result.stderr else "gh failed"
     if not result.stdout.strip():
@@ -55,18 +66,19 @@ def fetch(repository, number):
                       "emptiness is not an answer")
     pull = json.loads(result.stdout)
     reviews = subprocess.run(["gh", "api", query + "/reviews", "--jq", "length"],
-                             text=True, capture_output=True)
+                             text=True, encoding="utf-8", errors="replace",
+                             capture_output=True)
     comments = subprocess.run(["gh", "api", query + "/comments", "--jq", "length"],
-                              text=True, capture_output=True)
+                              text=True, encoding="utf-8", errors="replace",
+                              capture_output=True)
     return {
         "merged_at": pull.get("merged_at"),
         "merged": bool(pull.get("merged")),
         "changed_files": pull.get("changed_files"),
         "additions": pull.get("additions"),
         "deletions": pull.get("deletions"),
-        "review_count": int(reviews.stdout.strip() or 0) if reviews.returncode == 0 else None,
-        "review_comment_count": int(comments.stdout.strip() or 0)
-        if comments.returncode == 0 else None,
+        "review_count": count(reviews),
+        "review_comment_count": count(comments),
         "title": pull.get("title"),
         "head_sha": (pull.get("head") or {}).get("sha"),
         "base_sha": (pull.get("base") or {}).get("sha"),

@@ -1,12 +1,12 @@
 {
   "probe": "P15b",
   "status": "established",
-  "summary": "The same restricted launch with no --tools list has no shell at all: the session reported 'Agent, Edit, Glob, Grep, ListAgents, Read, ReportFindings, ScheduleWakeup, Skill, ToolSearch, Write' and answered 'no shell tool exists' to both command questions, while the in-root read still succeeded.",
-  "establishes": "The mechanism behind #153's observation, and that the observation was about the launch shape rather than the flag: --restricted removes the code-running tools unless --tools names them, which this runtime's own --help states and this probe confirms. Read with P15a, the pair fixes the cause and closes gap-9's headline hazard.",
-  "residual": "A second, unbudgeted-for finding: without an explicit --tools list this runtime also hands the session Skill, ToolSearch, ScheduleWakeup, ListAgents and ReportFindings, which the frozen shape's --tools list excludes. A cell launched without --tools would carry a skill loader the freeze never specified, so the explicit --tools list is load-bearing for arm comparability and not decoration.",
+  "summary": "The same restricted launch with no --tools list has no shell at all: the session answered 'no shell tool exists' to both command questions and listed its tool set as 'Agent, Edit, Glob, Grep, ListAgents, Read, ReportFindings, ScheduleWakeup, Skill, ToolSearch, Write', while the in-root read still succeeded.",
+  "establishes": "The mechanism behind #153's observation, and that the observation was about the launch shape rather than the flag: --restricted removes the code-running tools unless --tools names them, which this runtime's own --help states and this probe confirms. Read with P15a, the pair fixes the cause and closes gap-9's headline hazard. The shell half is corroborated mechanically and not only from the model's report: in P15a the allow-listed command actually ran and produced git's own version string, and here neither command ran at all.",
+  "residual": "The rest of the tool roster is the model's self-report, with no mechanical corroboration, and this bundle's own freshness rule refuses to ask a model whether it is fresh for exactly that reason - so treat the five extra tool names as reported rather than established. What is corroborated is the part that matters: without --tools there is no shell. The session's retained attachments do independently show a skill catalogue this runtime gave it, naming code-review and security-review, which the frozen shape's --tools list excludes.",
   "refuted_by": null,
   "observed_exit": "0",
   "expected_exit": 0,
   "read_from": "the probe's own retained output, not asserted beside it",
-  "recorded_at": "2026-09-12T10:00:12.873142+00:00"
+  "recorded_at": "2026-09-12T11:18:10.071933+00:00"
 }
