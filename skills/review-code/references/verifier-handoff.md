@@ -33,7 +33,7 @@ Each full-ledger row requires `id`, `kind`, one-line `claim`, one-word `disposit
 
 Candidates and ledger rows may additionally carry:
 
-- `requirement_source` and `rule_source`: exact source coordinates. Put the linked issue/spec and applicable base-branch rules in `sources`, including explicit unavailable sources. For a `pr-title` or `pr-body` requirement, include both raw `pr-title` and `pr-body` entries in `sources`.
+- `requirement_source` and `rule_source`: exact source coordinates. Put the linked issue/spec and applicable base-branch rules in `sources`, including explicit unavailable sources. For a change-description requirement, include the raw change-description entries in `sources`: both `pr-title` and `pr-body` on a pull request; the cited full commit message at `commit-<sha7>` on a local target whose requirement coordinate is `commit-<sha7>/"<quoted phrase>"`.
 - `conformance`: `{coordinate, version, artifact, consumer_sites}`; the last two are nonempty evidence arrays with the pinned artifact version/delta location, artifact-side citation, and inspected consumer definitions/aliases/re-exports/conditional sites (or the search and sites that supplied nothing). Required for an `artifact-` requirement source. The builder includes the conformance verifier procedure.
 - `released_compatibility`: `{coordinate, promise, scope, documentation, tests, callers, release_decision}`. The last four are nonempty evidence arrays, including unavailable inputs. Supply this for every promised released-contract candidate or row; semantic applicability belongs to the primary. The builder includes the rubric's Released compatibility procedure.
 

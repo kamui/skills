@@ -4,6 +4,8 @@
 
 ### Added
 
+- `review-code` now reviews local ranges and working-tree snapshots, infers branch bases, and carries commit-message requirements through verification and rendering. Snapshots preserve the real index and working files, include non-ignored untracked files, and reset parent chaining when real HEAD moves. Local coordinates stay code spans; ordinary review requests select the core, while `code-review-publish` remains the posting entrypoint. Pull-request output and fixtures remain byte-identical, so workflow `v5b-17` is retained (issue #232).
+
 - `references/review-protocol.md`, mirrored in `code-review-publish-legacy` and `code-review-address`: one comment shape for findings and replies, carrying a rendered-invisible trailer so a finding keeps a stable id across review rounds; a shared disposition vocabulary; and a `gh` verb reference covering batched review submission, inline replies, and GraphQL thread resolution and reopening.
 - Questions as a first-class item on both sides. A reviewer that cannot judge code without knowing something raises a `[Question]` instead of guessing a finding; an addresser stuck on a finding replies `needs-info`. A whole-change question carries a stable id in the review body and closes when its answer entry and reply trailer appear in the round's addressing summary. Questions count toward no axis and toward no round cap; the same open question is not re-posted, and it holds `Needs Information` until answered or withdrawn rather than aging into approval.
 - An `answered` disposition, which the prose already assumed and the vocabulary lacked.

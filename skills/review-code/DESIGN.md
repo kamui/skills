@@ -2,6 +2,14 @@
 
 This document records why the v5a prototype differs from v5. It is not runtime instruction. `SKILL.md`, `references/review-rubric.md`, `references/review-record.md`, `references/rendering.md`, the publisher's `references/publication.md`, and the conditionally loaded `references/verifier.md` are authoritative.
 
+## Local review targets (issue #232)
+
+The review core now accepts a range and the working tree as well as a pull request. Local routing and base inference live in `references/local-targets.md`; the shared rubric uses change-description intent, with commit-message source coordinates on local targets. The snapshot helper seeds a temporary index from real HEAD, captures working files, and writes a dangling commit. Its source-HEAD marker permits parent chaining only while the branch has not moved; a moved branch resets the chain and invalidates prior snapshot state. Session persistence remains #228's responsibility.
+
+Retain `v5b-17`: this issue changes only local-target behavior. The pull-request rendering path is byte-identical to `origin/main` at `71c6460`: 107 successful existing fixture invocations composed the same input through the base and changed composers with identical stdout. Existing pull-request composer fixtures and validator fixtures are unchanged; the added explicit `target_kind: pull-request` case also matches the default byte for byte. Pull-request `pr-title` and `pr-body` coordinates retain their exact handling. The paper replay follows the same packet, issue ordering, prior-state and deferral detection, ledger, verification, composition, advisory status, and emitted batch; only local runs take the new identity/source branches. The new tests establish mechanical behavior and instruction replays establish routing, not measured recall, precision, or speedup.
+
+The earlier design and change notes below describe the pull-request path and its historical versions unless they explicitly name a local target; their pull-request terminology records that scope rather than restricting the new target kinds.
+
 ## Question this prototype answers
 
 Can v5 retain its economical single-reviewer frequent path while recovering accurate questions and observations, checking high-risk clean verdicts, and making verification and rendering behavior deterministic enough to grade?
