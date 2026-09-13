@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Compute the deterministic context digest used by code-review-publish.
+"""Compute the deterministic context digest used by code-review-inspect.
 
 Usage:
     python3 scripts/context_fingerprint.py [INPUT | --json JSON]
     python3 scripts/context_fingerprint.py --packet packet.json [INPUT | --json JSON]
 
 INPUT is a JSON object with `pr`, `issues`, `specs`, and `guidance` as the
-output contract defines them (`-` or omitted reads stdin). With `--packet`, the
+review record defines them (`-` or omitted reads stdin). With `--packet`, the
 `pr` and `issues` objects come from the `fingerprint` section of the packet
 that `forge_packet.py normalize` wrote, so the digest is computed over the same
 normalized records the review read; the optional INPUT then supplies only

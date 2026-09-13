@@ -1,0 +1,4 @@
+interface:
+  display_name: "Inspect Code Review"
+  short_description: "Review a pull request into a validated record"
+  default_prompt: "Use $code-review-inspect to review the current pull request without publishing."

@@ -25,7 +25,7 @@ is a named gap for the same reason, as is a page carrying the forge's HTTP
 error body instead of a response. A file that cannot be opened, or a JSON page
 that matches no documented query shape, is exit 2.
 
-`later-state` answers the output contract's later-state question for the
+`later-state` answers the re-review reference's later-state question for the
 candidate review `--review ID` (its `fullDatabaseId`): it prints one line per
 pull-request, issue, review, comment, or reply created or edited after that
 review's submission time (or after `--after`), one line per packet gap, and one

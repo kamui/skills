@@ -10,7 +10,7 @@ Locate each obligation with one batched search over the whole consuming tree, un
 
 ## An artifact the reviewer cannot obtain
 
-It is an unrecoverable input under the rubric's Uncertainty routing: list no rows for it, never assemble the surface from the submitted diff, and name under `Coverage gaps` the artifact and the consumer surfaces its enumeration would have covered. When the orchestrator supplies it, enumerate the rows and run only their dispositions.
+It is an unrecoverable input under the rubric's Uncertainty routing: list no rows for it, never assemble the surface from the submitted diff, and name under `Coverage gaps` the artifact and the consumer surfaces its enumeration would have covered. When supplied, enumerate its rows; recovery follows the rubric's Uncertainty routing section.
 
 ## Verifier brief
 

@@ -32,6 +32,8 @@ A script does mechanical work: builds a prompt, validates a payload, hashes cont
 
 Write the command as `python3 scripts/<name>.py …` with the path relative to the skill root, so it works without an executable bit. Say what the agent does on a non-zero exit: report the script's output and stop the step. The fix is to the script, and the script's output is what the next step consumes.
 
+A skill that runs another skill's script uses the absolute path named in the returned record, never a sibling-relative path.
+
 ## Declaring the requirement
 
 A skill that ships scripts declares it in `SKILL.md` frontmatter with the Agent Skills `compatibility` field:

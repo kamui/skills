@@ -27,7 +27,7 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## Pull request review operations
 
-Reviewing and replying on a pull request needs verbs this file does not carry (batched review submission, inline replies, GraphQL thread resolution). The review skills ship their own `references/review-protocol.md` with those, since they install into repos whose tracker docs differ. This repo is GitHub, so that reference applies as written.
+Reviewing and replying on a pull request needs verbs this file does not carry (batched review submission, inline replies, GraphQL thread resolution). `code-review-publish` ships `references/publication.md` for review submission, thread replies, and resolution; the legacy review and addressing skills ship `references/review-protocol.md` for their operations. These references apply to this GitHub repository as written.
 
 ## When a skill says "publish to the issue tracker"
 
