@@ -10,10 +10,10 @@ Install from GitHub with the [`skills`](https://github.com/vercel-labs/skills) C
 npx skills@latest add kamui/skills
 ```
 
-To install only one skill:
+To install selected skills:
 
 ```sh
-npx skills@latest add kamui/skills --skill code-review-publish
+npx skills@latest add kamui/skills --skill code-review-publish --skill code-review-inspect
 npx skills@latest add kamui/skills --skill code-audit-publish
 npx skills@latest add kamui/skills --skill code-review-address
 npx skills@latest add kamui/skills --skill implement-publish
