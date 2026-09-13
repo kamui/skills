@@ -15,7 +15,7 @@ The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. It
 PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
 change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
 The rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
-advanced the identifier to `v2b-2`, C18 to `v2b-3`, C19 to `v2b-4`, and C20 advances it to `v2b-5`. It does not claim that the planned transition audits, stronger
+advanced the identifier to `v2b-2`, C18 to `v2b-3`, C19 to `v2b-4`, C20 advanced it to `v2b-5`, and the paired deleted-file repair advances it to `v2b-6`. It does not claim that the planned transition audits, stronger
 verification or executable experiments have shipped. Admission, verification, rendering and state
 changes receive their own release bumps.
 
@@ -44,7 +44,7 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-5`. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
+Workflow identifier: `v2b-6`. Issue #84 adds the deleted-file provenance contract described below. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
 change recorded in [C19](#c19-isolated-verification-and-verdict-accounting): the verifier runs
 in a genuinely non-inheriting worker or verification is incomplete, candidates and ledger rows carry
 a risk kind and ledger rows a per-run id, and every candidate verdict and acquittal ruling is
@@ -106,7 +106,7 @@ inert, or harmful against that intent.
 | C11 | Send every candidate-related acquittal through the existing fresh-context verifier dispatch. | A related row receives a cited `holds` or `re-open` ruling; `re-open` becomes caller-visible uncertainty, never a verifier-created finding. | [test 3 v2a run](../../docs/research/prototype-runs-2026-09-01-test-3/v2a-run.md), [verifier addendum](../../docs/research/prototype-runs-2026-09-01-test-3/addendum-2026-09-03.md) |
 | C12 | Compare a generated artifact's changed hunks with its source before ignoring it. | A same-diff source/artifact contradiction becomes a candidate even when CI would ordinarily catch it. | [test 4 v2 run](../../docs/research/prototype-runs-2026-09-01-test-4/v2-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
 | C13 | Forward explicit review-record deferrals to the Requirements finder. | An unresolved design, naming, or API-shape deferral on unreleased public surface reaches the axis, never counts as `Met`, and produces a question that prevents `Passed` where C18's outcome-changing test admits one. | [test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
-| C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Every expressible file coordinate resolves at the reviewed full head SHA while `LEFT` and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
+| C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Ordinary coordinates resolve at head; known deleted whole files resolve at the pinned merge-base. LEFT lines, unknown file provenance, rename and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
 | C15 | Build shared finder input and verifier prompts with scripts, and keep the caller report compact. | Mechanical orchestration is reproducible without moving review judgment or exposing finder `support` to the verifier. | [shared-block builder](scripts/build_shared_block.py), [verifier-prompt builder](scripts/build_verifier_prompt.py) |
 | C16 | Validate finder ledger, manifest, and counts shape before verification. | A malformed finder report gets one shape-only retry, then makes its axis incomplete instead of entering verification unaudited. | [finder-report validator](scripts/validate_finder_report.py), [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
 | C17 | Admit unchanged code whose relied-on guarantee the diff removed, and require the same base/head comparison before a `pre-existing` refutation. | A byte-identical path safe at base and unsafe at head becomes a candidate citing both revisions and its consumer, while a path already unsafe at base is still refuted as pre-existing and a guarantee-preserving refactor still yields nothing. | [replay record](../../docs/research/audit-removed-guarantee-scope-2026-09-12.md), [assessment B3](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
@@ -539,11 +539,13 @@ The workflow identifier stayed `v2a-1` pending #59.
 The Panel line's summaries and caller handoffs named review coordinates as bare code spans, leaving
 the reader to navigate to a file and recover the reviewed revision. `publishing.md` now renders each
 expressible coordinate through [`link_coordinate.py`](scripts/link_coordinate.py) as a link to the
-base repository at the reviewed full head SHA. The visible coordinate is unchanged; line and range
+base repository at the reviewed full head SHA, with the deleted-file exception added by
+[issue #84](#deleted-file-provenance-issue-84) resolving at the pinned merge-base. The visible
+coordinate is unchanged; line and range
 links carry GitHub's `?plain=1` fragment, a distinct fix site gets its own link, and every assembled
-fragment is checked against the script before publication. `LEFT` anchors and observation pointers
-remain code spans because the current record does not carry enough revision provenance to link them
-honestly.
+fragment is checked against the script before publication. LEFT lines, unknown file provenance,
+rename coordinates and observation pointers remain code spans because the record does not establish
+a linkable path and revision for them.
 
 The checkable intent is that every linked coordinate resolves to the exact code the review read and
 stays stable across later branch movement, while a coordinate without sufficient provenance is not
@@ -855,3 +857,10 @@ Validation combines the copied multi-page, edit-detection and digest fixtures wi
 
 None structural. Beyond the deletions listed under C2 and C5, no working v2 machinery was removed
 or made conditional.
+
+
+## Deleted-file provenance (issue #84)
+
+`v2b-6` adds merge-base links for known deleted whole files. The orchestrator derives `{coordinate, side}` from the full pinned merge-base manifest, retains it beside the pinned head/merge-base, and passes the same record to render and check for findings and questions, body repairs, index updates and the caller report. `--revision` remains head; `--side LEFT --merge-base <sha>` selects the established pre-image file. Missing merge-base or `UNKNOWN` file provenance produces an honest code span. Malformed supplied identity fails; LEFT lines and rename coordinates remain unlinked.
+
+The later audit payload emitter must preserve this publication record and argument mapping in `references/publishing.md`; finder and verifier accounting grammars stay unchanged. Whole-file items remain body-resident and native `commit_id` and trailers stay at head. The paired routine release is `v5b-15`. CLI fixtures cover PR #118's exact deleted path and revision, ordinary links, malformed provenance and unavailable/ambiguous pre-images. These are mechanical checks only; no general LEFT-line, rename, observation or prior-finding provenance expansion is claimed. Earlier workflow trailers and stable ids remain readable history.

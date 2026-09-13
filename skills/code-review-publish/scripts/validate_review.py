@@ -72,7 +72,10 @@ Input schema (JSON object on stdin)::
 
 A file anchor carries ``type`` and ``path`` plus an optional ``side``: ``LEFT``
 for a file the change deletes, which exists only at the merge-base; ``RIGHT``,
-the default, for a file present at the head. A line anchor carries
+the default, for a file present at the head; ``UNKNOWN`` when the pinned
+manifest/diff cannot establish the pre-image path or revision (an unlinked
+file coordinate). Side provenance comes from the full merge-base manifest,
+not a delta manifest or a guessed filename. A line anchor carries
 ``start_line``, ``end_line``, and a required ``side``. ``summary.repository_url``
 is the base repository's canonical web URL; when present, ``RIGHT`` line
 anchors, ``RIGHT`` file anchors, and fix sites render as commit-pinned blob
@@ -112,7 +115,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-14"
+WORKFLOW = "v5b-15"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -355,7 +358,8 @@ def render_reference(item: dict[str, Any], run: dict[str, Any]) -> str | None:
     ``; fix <coordinate>`` when ``item.fix`` is set. ``RIGHT`` line anchors,
     ``RIGHT`` file anchors, and fix sites link at ``head`` when
     ``repository_url`` is present; a ``LEFT`` file anchor — a file the change
-    deletes — links at ``merge_base``, the revision the file exists at; a
+    deletes — links at ``merge_base``, the revision the file exists at;
+    an ``UNKNOWN`` file side retains an unlinked coordinate; a
     ``LEFT`` line anchor renders as a code span with its fix still linked;
     without ``repository_url`` everything is a code span. Returns ``None`` when
     the anchor or fix is malformed, which the anchor-shape and fix-coordinate
@@ -367,10 +371,14 @@ def render_reference(item: dict[str, Any], run: dict[str, Any]) -> str | None:
         return None
     path = anchor["path"]
     if anchor.get("type") == "file":
-        side = anchor.get("side", "RIGHT")
-        if side not in SIDES:
+        shape = Report()
+        check_anchor(shape, "anchor", anchor)
+        if shape.lines:
             return None
-        if isinstance(run.get("repository_url"), str):
+        side = anchor.get("side", "RIGHT")
+        if side == "UNKNOWN":
+            fragment = f"anchor `{path}` (file)"
+        elif isinstance(run.get("repository_url"), str):
             revision = "merge_base" if side == "LEFT" else "head"
             if run.get(revision) is None:
                 return None
@@ -550,11 +558,11 @@ def check_anchor(report: Report, location: str, anchor: Any) -> None:
         if extra:
             report.add(location, "anchor-shape", f"a file anchor carries only `type`, `path`, and an optional `side`; found {extra}")
         side = anchor.get("side", "RIGHT")
-        if side not in SIDES:
+        if side not in (*SIDES, "UNKNOWN"):
             report.add(
                 location,
                 "anchor-shape",
-                f"a file anchor's optional `side` is `LEFT` for a file the change deletes or `RIGHT` (the default), not `{side!r}`",
+                f"a file anchor's optional `side` is `LEFT` for a file the change deletes or `RIGHT` (the default), or `UNKNOWN` for an unestablished pre-image, not `{side!r}`",
             )
         return
     if anchor_type != "line":
@@ -1543,7 +1551,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-13"
+            f"workflow={WORKFLOW}", "workflow=v5b-14"
         )
 
     def malformed_trailer(payload):
