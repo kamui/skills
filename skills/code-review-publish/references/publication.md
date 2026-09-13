@@ -20,7 +20,7 @@ Authorization changes only the forge event, never the semantic status:
 - Re-read the target after an ambiguous write result before one retry.
 - Store the run trailer in the summary and finding/question trailers in raw comment bodies.
 
-- On a conclusive malformed-comment rejection, apply inspect's render-and-validate step to the repaired record, confirm no review exists, and retry once.
+- On a conclusive malformed-comment rejection, apply `review-code`'s render-and-validate step to the repaired record, confirm no review exists, and retry once.
 
 On GitHub, the `Create a review for a pull request` batch documents line comments but not file subjects. Keep file-anchored findings in `Unanchored findings` rather than making a separate write through the review-comment endpoint or inventing an unrelated line. The one-call batch shape is:
 
@@ -44,7 +44,7 @@ Post it with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/reviews --inp
 
 ## Authorized gating emission
 
-Inspect returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < payload.json > batch.json`. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
+`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < payload.json > batch.json`. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
 
 On this gating path only, the script enforces the first-line grammar `**<Status>[ (advisory)]** — …`: the input advisory suffix is present exactly for `Changes Requested` or `Approved` under `COMMENT`. `APPROVE` requires `Approved`, and `REQUEST_CHANGES` requires `Changes Requested`; a mismatch exits 1. It removes the suffix and re-validates the edited body before printing. The batch is what validated after that one scripted edit. The ordinary `COMMENT` path retains its existing acceptance rules. Report the posted form from `batch.json`, not the advisory form in `payload.json`.
 
@@ -52,7 +52,7 @@ On this gating path only, the script enforces the first-line grammar `**<Status>
 
 Post each drafted reply to its recorded comment id with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/comments/<id>/replies -f body='<drafted reply>'`. Use the equivalent structured body input when quoting needs it. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item. Re-read the thread after an ambiguous result before one retry. Report any reply that failed.
 
-For every prior item inspect classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: inspect's evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
+For every prior item `review-code` classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: `review-code`'s evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
 
 On GitHub, run:
 

@@ -1,6 +1,6 @@
 # Handoff — add a new prototype code-review comparison test
 
-After the split in issue #226, a snapshot of the default line consists of the `skills/code-review-inspect` and `skills/code-review-publish` trees together; pin both tree hashes. Historical run snapshots below remain unchanged.
+After the split in issue #226, a snapshot of the default line consists of the `skills/review-code` and `skills/code-review-publish` trees together; pin both tree hashes. Historical run snapshots below remain unchanged.
 
 **For the current-skill one-shot program (#137, #124, and any later #138 preregistration), use
 [the one-shot method](code-review-one-shot-method.md) before preparing or dispatching runs.**

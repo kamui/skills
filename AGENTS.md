@@ -22,7 +22,7 @@ Use the single-context layout. See `docs/agents/domain.md`.
 
 ### Runtime review dependency
 
-`code-review-publish` and `code-review-interactive` require `code-review-inspect`; each stops with a named report when it is absent. This is the named exception to installing skills alone; no other runtime skill dependency is introduced.
+`code-review-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. This is the named exception to installing skills alone; no other runtime skill dependency is introduced.
 
 ### Global skill sync
 
