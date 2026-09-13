@@ -106,7 +106,7 @@ inert, or harmful against that intent.
 | C11 | Send every candidate-related acquittal through the existing fresh-context verifier dispatch. | A related row receives a cited `holds` or `re-open` ruling; `re-open` becomes caller-visible uncertainty, never a verifier-created finding. | [test 3 v2a run](../../docs/research/prototype-runs-2026-09-01-test-3/v2a-run.md), [verifier addendum](../../docs/research/prototype-runs-2026-09-01-test-3/addendum-2026-09-03.md) |
 | C12 | Compare a generated artifact's changed hunks with its source before ignoring it. | A same-diff source/artifact contradiction becomes a candidate even when CI would ordinarily catch it. | [test 4 v2 run](../../docs/research/prototype-runs-2026-09-01-test-4/v2-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
 | C13 | Forward explicit review-record deferrals to the Requirements finder. | An unresolved design, naming, or API-shape deferral on unreleased public surface reaches the axis, never counts as `Met`, and produces a question that prevents `Passed` where C18's outcome-changing test admits one. | [test 4 v2a run](../../docs/research/prototype-runs-2026-09-01-test-4/v2a-run.md), [test 4 evaluation](../../docs/research/prototype-runs-2026-09-01-test-4/evaluation.md) |
-| C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Every expressible file coordinate resolves at the reviewed full head SHA while `LEFT` and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
+| C14 | Render summary and caller-report coordinates as checked, commit-pinned links. | Ordinary coordinates resolve at head; known deleted whole files resolve at the pinned merge-base. LEFT lines, unknown file provenance, rename and observation coordinates remain code spans. | [coordinate-link contract](references/publishing.md#coordinate-links), [link checker](scripts/link_coordinate.py) |
 | C15 | Build shared finder input and verifier prompts with scripts, and keep the caller report compact. | Mechanical orchestration is reproducible without moving review judgment or exposing finder `support` to the verifier. | [shared-block builder](scripts/build_shared_block.py), [verifier-prompt builder](scripts/build_verifier_prompt.py) |
 | C16 | Validate finder ledger, manifest, and counts shape before verification. | A malformed finder report gets one shape-only retry, then makes its axis incomplete instead of entering verification unaudited. | [finder-report validator](scripts/validate_finder_report.py), [test 1 v2a run](../../docs/research/prototype-runs-2026-09-01-test-1/v2a-run.md) |
 | C17 | Admit unchanged code whose relied-on guarantee the diff removed, and require the same base/head comparison before a `pre-existing` refutation. | A byte-identical path safe at base and unsafe at head becomes a candidate citing both revisions and its consumer, while a path already unsafe at base is still refuted as pre-existing and a guarantee-preserving refactor still yields nothing. | [replay record](../../docs/research/audit-removed-guarantee-scope-2026-09-12.md), [assessment B3](../../docs/research/code-review-deep-publish-assessment-2026-09-05.md#what-shipped-and-what-to-backport) |
@@ -539,11 +539,13 @@ The workflow identifier stayed `v2a-1` pending #59.
 The Panel line's summaries and caller handoffs named review coordinates as bare code spans, leaving
 the reader to navigate to a file and recover the reviewed revision. `publishing.md` now renders each
 expressible coordinate through [`link_coordinate.py`](scripts/link_coordinate.py) as a link to the
-base repository at the reviewed full head SHA. The visible coordinate is unchanged; line and range
+base repository at the reviewed full head SHA, with the deleted-file exception added by
+[issue #84](#deleted-file-provenance-issue-84) resolving at the pinned merge-base. The visible
+coordinate is unchanged; line and range
 links carry GitHub's `?plain=1` fragment, a distinct fix site gets its own link, and every assembled
-fragment is checked against the script before publication. `LEFT` anchors and observation pointers
-remain code spans because the current record does not carry enough revision provenance to link them
-honestly.
+fragment is checked against the script before publication. LEFT lines, unknown file provenance,
+rename coordinates and observation pointers remain code spans because the record does not establish
+a linkable path and revision for them.
 
 The checkable intent is that every linked coordinate resolves to the exact code the review read and
 stays stable across later branch movement, while a coordinate without sufficient provenance is not
