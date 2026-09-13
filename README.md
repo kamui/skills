@@ -10,10 +10,10 @@ Install from GitHub with the [`skills`](https://github.com/vercel-labs/skills) C
 npx skills@latest add kamui/skills
 ```
 
-To install only one skill:
+To install selected skills:
 
 ```sh
-npx skills@latest add kamui/skills --skill code-review-publish
+npx skills@latest add kamui/skills --skill code-review-publish --skill code-review-inspect
 npx skills@latest add kamui/skills --skill code-audit-publish
 npx skills@latest add kamui/skills --skill code-review-address
 npx skills@latest add kamui/skills --skill implement-publish
@@ -50,7 +50,7 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-Three skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name, and `code-audit-publish` is explicit-only. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+Four skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name, and `code-audit-publish` is explicit-only. The fourth, `code-review-inspect`, is reached by the publisher or an explicit request by name; ordinary read-only reviews keep their existing routing. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
 Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
@@ -58,9 +58,13 @@ Skills that ship scripts run them with `python3` on the standard library alone, 
 
 The skills compose into a loop: `implement-publish` opens a pull request, `code-review-publish` reviews it, `code-review-address` works the feedback, and the review runs again. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff). `code-audit-publish` occupies the reviewer slot when an independent audit is requested. Its investigation stays bounded by the pull request’s affected contracts and code; it is not an automatic additional review stage.
 
+### `code-review-inspect`
+
+The shared review core returns a validated record, emitted batch, and complete would-be review without writing to the forge. It is reached by `code-review-publish` (and the planned `code-review-interactive`) or by explicit `$code-review-inspect`; it does not compete with the installed `code-review` skill for ordinary read-only requests.
+
 ### `code-review-publish`
 
-Reviews the complete merge-base diff and publishes one forge-native review containing every verified finding. One integrated reviewer checks both implementation behavior and issue fit against a private evidence rubric, falsifies each candidate, and invokes one fresh batched verifier for every proposed `must-fix` and other consequential claim — security, data loss, compatibility. A mechanical validator checks the assembled payload before anything is written. `scripts/review_context.py` builds the changed-file manifest, function-context diff, and per-hunk ranges in one call.
+Invokes `code-review-inspect` to review the complete merge-base diff and publishes one forge-native review containing every verified finding. One integrated reviewer checks both implementation behavior and issue fit against a private evidence rubric, falsifies each candidate, and invokes one fresh batched verifier for every proposed `must-fix` and other consequential claim — security, data loss, compatibility. A mechanical validator checks the assembled payload before anything is written. `code-review-inspect/scripts/review_context.py` builds the changed-file manifest, function-context diff, and per-hunk ranges in one call.
 
 Each finding carries an impact priority and an independent action: `must-fix` blocks the merge, while `consider` is optional. The review reaches `Changes Requested`, `Incomplete`, `Needs Information`, or `Approved`, and reports its coverage. Publication is atomic against a freshly checked head; findings without an honest line anchor remain complete in the review body rather than being attached to unrelated code.
 
@@ -114,7 +118,7 @@ The host agent needs access to the forge to create the pull request.
 
 ## The review handoff
 
-`code-review-publish` owns finding admission, review status, and publication through [`references/review-rubric.md`](skills/code-review-publish/references/review-rubric.md) and [`references/output-contract.md`](skills/code-review-publish/references/output-contract.md). `code-review-address` owns replies, dispositions, thread state, and round closeout through its [`review-protocol.md`](skills/code-review-address/references/review-protocol.md).
+`code-review-inspect` owns finding admission through [`review-rubric.md`](skills/code-review-inspect/references/review-rubric.md), record semantics through [`review-record.md`](skills/code-review-inspect/references/review-record.md), and visible output through [`rendering.md`](skills/code-review-inspect/references/rendering.md). `code-review-publish` owns forge writes through [`publication.md`](skills/code-review-publish/references/publication.md). `code-review-address` owns replies, dispositions, thread state, and round closeout through its [`review-protocol.md`](skills/code-review-address/references/review-protocol.md).
 
 A published finding is understandable from visible prose alone: its title states priority and action, and its `Triggers when`, `Impact`, and `Change` fields explain the defect and requested outcome. Optional findings explicitly say they may be closed without action. Hidden trailers add stable ids, reviewed heads, and correlation metadata for agents, but human comments without trailers remain first-class input.
 
