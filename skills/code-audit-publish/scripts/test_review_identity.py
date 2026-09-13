@@ -29,7 +29,7 @@ def fixture() -> dict:
     context = digest(dict(packet["fingerprint"], **INPUTS))
     packet["reviews"][0]["body"] = (
         "Changes Requested (advisory)\n"
-        f"<!-- review-run workflow=v2b-5 head={'a' * 40} base-ref=main state=OPEN merged=false "
+        f"<!-- review-run workflow=v2b-6 head={'a' * 40} base-ref=main state=OPEN merged=false "
         f"base-sha={BASE} merge-base={MERGE} context={context} "
         "issues=acme/payments#123 coverage=complete -->"
     )
@@ -102,7 +102,7 @@ def main() -> int:
               inputs=dict(INPUTS, specs=[{"identity": "doc:1", "text": "Refunds required"}]),
               contains="context")
         changed = fixture()
-        changed["reviews"][0]["body"] = changed["reviews"][0]["body"].replace("v2b-5", "v2b-4")
+        changed["reviews"][0]["body"] = changed["reviews"][0]["body"].replace("v2b-6", "v2b-5")
         check("old workflow", changed, 1, contains="workflow")
         changed = fixture()
         body = changed["reviews"][0]["body"].split()

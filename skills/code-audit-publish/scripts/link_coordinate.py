@@ -9,31 +9,32 @@ web URL; everything the rule cannot express stays the code span it already
 was. This script owns that rule so no review composes a URL by hand.
 
 The rule:
-    - the link resolves at the reviewed full head SHA, never a branch name or
-      an abbreviated SHA;
+    - ordinary links resolve at the reviewed full head SHA; a known deleted
+      whole file (LEFT) resolves at the pinned merge-base when supplied;
     - a line coordinate renders `?plain=1#L<line>`, a range renders
       `?plain=1#L<start>-L<end>`, and a file anchor (a bare path) carries
       neither;
     - the path is decoded of its percent escapes once, then encoded once with
       `urllib.parse.quote(path, safe="/")`, so spaces, `%`, and path-borne
       `?`/`#` cannot forge a query or fragment;
-    - a `LEFT` anchor, and any coordinate carrying an old path, renders as a
-      code span: merge-base and rename links are deferred to issue #84.
+    - LEFT lines, UNKNOWN whole-file provenance, missing merge-base for a
+      LEFT file, and coordinates carrying an old path render as code spans.
 
 Usage:
     python3 scripts/link_coordinate.py --self-test
     python3 scripts/link_coordinate.py render --repo-url <url> --revision <sha>
-        --coordinate <path|path:line|path:start-end> [--side RIGHT|LEFT]
+        --coordinate <path|path:line|path:start-end> [--side RIGHT|LEFT|UNKNOWN] [--merge-base <sha>]
         [--old-path <path>]
     python3 scripts/link_coordinate.py check --repo-url <url> --revision <sha>
-        --coordinate <...> [--side RIGHT|LEFT] [--old-path <path>]
+        --coordinate <...> [--side RIGHT|LEFT|UNKNOWN] [--merge-base <sha>] [--old-path <path>]
         --fragment <fragment|->
 
 `render` writes one fragment to stdout, followed by a newline. `check`
 re-renders the fragment from the same inputs and exits 0 only when `--fragment`
 is exactly that fragment; `-` reads the fragment from stdin, stripping one
 trailing newline. `render` with `--old-path` notes on stderr that renames are
-deferred to issue #84 and emits the code-span form.
+deferred pending a separate demonstrated case and bounded scope, and emits
+the code-span form.
 
 Exit codes:
     0  fragment rendered, fragment matched, or the self-test passed
@@ -42,8 +43,11 @@ Exit codes:
 
 Input schema: `--repo-url` is the base repository's canonical http(s) web URL;
 `--revision` is the reviewed head as a full 40-hex commit SHA; `--side` is the
-diff side the coordinate was read at (`RIGHT`, the default, links; `LEFT`
-never does); `--coordinate` is a whole repository-relative path optionally
+diff side the coordinate was read at (`RIGHT`, the default; `LEFT` for a
+known deleted file or deleted line; `UNKNOWN` for a whole file whose pre-image
+path/revision is unestablished); `--merge-base` is the run identity's full
+40-hex merge-base SHA, not a per-coordinate revision override; `--coordinate`
+is a whole repository-relative path optionally
 followed by `:<line>` or `:<start>-<end>`; `--old-path` records the pre-rename
 path, if any; `--fragment` (check only) is the published fragment under test.
 """
@@ -75,7 +79,7 @@ def parse_coordinate(coordinate: str) -> tuple[str, int | None, int | None]:
     if "`" in coordinate:
         raise CoordinateError(
             f"coordinate {coordinate!r} contains a backtick, which the URL rule"
-            " cannot render safely; paths with backticks are deferred to issue #84"
+            " cannot render safely; backtick-path support requires a separate demonstrated case and bounded scope"
         )
     if "\n" in coordinate or "\r" in coordinate:
         raise CoordinateError(f"coordinate {coordinate!r} spans multiple lines")
@@ -133,12 +137,23 @@ def render_fragment(
     side: str,
     coordinate: str,
     old_path: str | None = None,
+    merge_base: str | None = None,
 ) -> str:
     """Render the exact fragment the URL rule produces for one coordinate."""
-    parse_coordinate(coordinate)
+    _, start, _ = parse_coordinate(coordinate)
     validate_identity(repo_url, revision)
-    if side == "LEFT" or old_path is not None:
+    if merge_base is not None and not SHA_PATTERN.fullmatch(merge_base):
+        raise CoordinateError("merge-base must be the pinned full 40-hex commit SHA")
+    if side not in ("RIGHT", "LEFT", "UNKNOWN"):
+        raise CoordinateError("side must be RIGHT, LEFT, or UNKNOWN")
+    if side == "UNKNOWN" and start is not None:
+        raise CoordinateError("UNKNOWN provenance is only supported for whole files")
+    if old_path is not None or side == "UNKNOWN":
         return f"`{coordinate}`"
+    if side == "LEFT":
+        if start is not None or merge_base is None:
+            return f"`{coordinate}`"
+        return f"[`{coordinate}`]({blob_url(repo_url, merge_base, coordinate)})"
     return f"[`{coordinate}`]({blob_url(repo_url, revision, coordinate)})"
 
 
@@ -149,9 +164,10 @@ def check_fragment(
     coordinate: str,
     old_path: str | None,
     fragment: str,
+    merge_base: str | None = None,
 ) -> str | None:
     """Return one violation line when the fragment is not exactly the rule's."""
-    expected = render_fragment(repo_url, revision, side, coordinate, old_path)
+    expected = render_fragment(repo_url, revision, side, coordinate, old_path, merge_base)
     if fragment == expected:
         return None
     return (
@@ -192,9 +208,13 @@ def build_parser() -> argparse.ArgumentParser:
         )
         command.add_argument(
             "--side",
-            choices=("RIGHT", "LEFT"),
+            choices=("RIGHT", "LEFT", "UNKNOWN"),
             default="RIGHT",
             help="diff side the coordinate was read at (default: RIGHT)",
+        )
+        command.add_argument(
+            "--merge-base",
+            help="pinned run merge-base as a full 40-hex SHA; LEFT whole files link here",
         )
         command.add_argument(
             "--old-path",
@@ -232,12 +252,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "render":
             output = render_fragment(
-                args.repo_url, args.revision, args.side, args.coordinate, args.old_path
+                args.repo_url, args.revision, args.side, args.coordinate, args.old_path, args.merge_base
             )
             if args.old_path is not None and args.side != "LEFT":
                 sys.stderr.write(
                     "link_coordinate: --old-path supplied; rename links are deferred"
-                    " to issue #84, so the coordinate renders as a code span\n"
+                    " pending a separate demonstrated case and bounded scope; rendering a code span\n"
                 )
             sys.stdout.write(output + "\n")
         else:
@@ -248,6 +268,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.coordinate,
                 args.old_path,
                 fragment,
+                args.merge_base,
             )
             if violation is not None:
                 sys.stdout.write(violation + "\n")
