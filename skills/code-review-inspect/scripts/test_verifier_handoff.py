@@ -169,6 +169,10 @@ class HandoffTests(unittest.TestCase):
 
     def test_build_refusals(self):
         variants = []
+        for repository in (".", "relative/checkout"):
+            data = input_data()
+            data["run"]["repository"] = repository
+            variants.append((data, []))
         data = input_data("complete-ledger", [], [])
         variants.append((data, [row()]))
         variants.append((input_data("related-acquittal", [], ["missing"]), [row()]))

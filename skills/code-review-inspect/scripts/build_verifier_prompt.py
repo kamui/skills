@@ -174,6 +174,7 @@ def ledger_row(value, where):
 def project(data, ledger):
     obj(data, "input")
     run = fields(data.get("run"), ("id", "repository", "base", "head", "merge_base"), "run")
+    require(Path(run["repository"]).is_absolute(), "run.repository", "expected absolute checkout path")
     for name in ("base", "head", "merge_base"):
         sha(run[name], "run." + name)
     batch = fields(data.get("batch"), ("id", "phase", "mode"), "batch")
