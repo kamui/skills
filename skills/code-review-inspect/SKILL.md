@@ -149,7 +149,7 @@ Produce `batch.json` with `python3 scripts/validate_review.py --emit-batch < pay
 Return an immutable review record at named paths in the private directory:
 
 1. Run identity: repository, pull request, head, base, merge-base, state, merged, posting identity, packet and private-store paths, and the absolute path of every script run.
-2. The rubric's private record: requirement and candidate disposition ledgers, file accounting, verification accounting (batches, verdicts, rulings, whether the follow-up is spent), recorded deferrals, prior-item classifications, and each drafted thread reply with its target comment id.
+2. The rubric's private record: requirement and candidate disposition ledgers, file accounting, verification accounting (batches, verdicts, rulings, whether the follow-up is spent), recorded deferrals, prior-item classifications with each item's thread node id and current resolution state from the packet, and each drafted thread reply with its target comment id.
 3. Semantic status and coverage.
 4. `payload.json` validated at exit 0, the rendered fragments, and emitted `batch.json` at named paths.
 5. The complete would-be review: summary, findings, and questions as prose with the script-rendered commit-pinned links.

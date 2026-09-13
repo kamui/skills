@@ -26,14 +26,14 @@ For a merged target without separate publication authorization, report the compl
 
 ## Publish
 
-Read [`references/publication.md`](references/publication.md) now and follow its invariants, event table, batch shape, and reply operation.
+Read [`references/publication.md`](references/publication.md) now and follow its invariants, event table, batch shape, and thread operations.
 Use the returned `batch.json` for the common `COMMENT` path.
 For authorized gating, regenerate it with `--emit-batch --event` through the absolute validator path recorded by inspect; the script owns the suffix change.
 Never edit the batch by hand or locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head immediately before the first write.
 If it differs from the reviewed head or cannot be read, publish nothing and report the stale review.
-Post the batch in one forge-native review call, then post each drafted reply on its existing thread through the reference's reply verb.
+Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule.
 
 For a conclusive malformed-comment rejection, apply inspect's render-and-validate step to the repaired record using its recorded absolute script paths.
 If compaction dropped the rendering instructions, re-read `references/rendering.md` from the inspect skill root those paths identify.
