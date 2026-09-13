@@ -28,6 +28,8 @@ A script does mechanical work: builds a prompt, validates a payload, hashes cont
 - Exits `0` on success, `1` on a content violation with one line per violation on stdout, `2` when input cannot be read or a subprocess fails, naming the failing command on stderr.
 - Ships a `--self-test` flag or a `test_<name>.py` sibling that drives it through `subprocess`, so exit codes are what gets tested. Run it before committing.
 
+`review-code/scripts/review_context.py --worktree` writes unreferenced loose objects and a temporary index without changing the real index, refs, or working files; configured clean filters run, including on untracked files, and retain their normal side effects.
+
 ## Invocation from `SKILL.md`
 
 Write the command as `python3 scripts/<name>.py …` with the path relative to the skill root, so it works without an executable bit. Say what the agent does on a non-zero exit: report the script's output and stop the step. The fix is to the script, and the script's output is what the next step consumes.

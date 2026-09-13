@@ -12,6 +12,10 @@ that `forge_packet.py normalize` wrote, so the digest is computed over the same
 normalized records the review read; the optional INPUT then supplies only
 `specs` and `guidance`, and may not carry `pr` or `issues` of its own.
 
+On local targets, supply the same schema directly: `pr.title` is the range
+as written or `worktree tree=<tree hash>`; `pr.body` holds only the real
+commit messages since merge-base, never snapshot messages or uncommitted text.
+
 Per issue, `comments_available: false` records that no comments could be
 obtained and `comments_complete: false` records that a paginated comment
 connection was left truncated. Each key is added to the normalized issue only
