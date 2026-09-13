@@ -54,7 +54,7 @@ A finding has two locations and they are not always the same one. The forge cons
 
 Choose the anchor in order, taking the first that applies:
 
-1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds or rewrites has no single line: it goes in the review body, still inside the review, because the batched review call takes line comments only (`publishing.md` § One review, one call).
+1. The fix site is in the diff — anchor there. A finding about a whole file the diff adds, rewrites, or deletes has no single line: it goes in the review body, still inside the review, because the batched review call takes line comments only (`publishing.md` § One review, one call).
 2. Otherwise, the diff line that **makes the finding true**: the change that opened the gap, or that stranded code elsewhere.
 3. Otherwise, the diff line that most directly **demonstrates** it — a test that looks like it covers the case and does not, a call site that breaks.
 4. Otherwise the finding has no honest anchor, and it goes in the review body. Do not attach it to an unrelated line merely to make it a line comment.
@@ -78,6 +78,8 @@ Closing this without action is a correct response.
 ```
 
 A human reads the prose and goes where it says. An agent that parsed only the anchor would edit the wrong line — so this is the one place where omitting a machine-readable field turns a helpful comment into a harmful one.
+
+For a whole-file candidate, `anchor` is the bare repository-relative path. Keep the existing thirteen-field candidate grammar: the orchestrator derives publication provenance from the pinned changed-file manifest after verification, for findings and questions alike. Its publication record is `{coordinate, side}` with `RIGHT`, `LEFT` (known deleted file at its established pre-image path), or `UNKNOWN` (unestablished file path/revision). The run identity supplies head and merge-base, never the candidate. [`publishing.md`](publishing.md#coordinate-links) defines the renderer arguments and unlinked fallback that the later audit payload emitter must preserve. These fields select an evidence link only; whole-file items remain in the body and finding trailers retain the reviewed head.
 
 ## Claim and support
 
@@ -137,7 +139,7 @@ fields silently absent. Every other line continues the field above it and is car
 verbatim, so a `claim` quoting configuration or code that begins with a field label indents that
 line — `  priority: high` reaches the verifier as written, while `priority: high` at column zero is
 refused. Write `anchor`, `fix`, and every ledger row's evidence as one whole repository-relative
-`path:line` coordinate (or, for a `fix` that names a file, the bare path), optionally in backticks; a
+`path:line` coordinate (or a bare path for a whole-file anchor or fix), optionally in backticks; a
 path may contain spaces, because the builder reads the whole field as the coordinate rather than
 picking a path out of prose. It relates a ledger row to a candidate by whole file identity, so
 `foo.py` and `src/foo.py` are two different files and neither stands in for the other.
