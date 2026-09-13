@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Validate a would-be code-review-publish review against the mechanical
-rules of ``references/output-contract.md`` and ``references/review-rubric.md``.
+"""Validate a would-be code-review-inspect record against the mechanical
+rules of ``references/review-record.md``, ``references/rendering.md``, and
+``references/review-rubric.md``.
 
 The reviewer keeps every semantic judgment (is the evidence real, is the fix
 location real, is a candidate a duplicate, is a question or observation
@@ -21,15 +22,18 @@ then requires each fragment to appear in ``summary.body`` exactly once.
 
 ``--emit-batch`` validates the payload and, when it has zero violations,
 prints the forge-native one-call review body as JSON: ``commit_id`` (the run
-trailer's ``head``), ``event`` (``COMMENT``), ``body`` (``summary.body``,
-unchanged), and ``comments`` — one entry per finding or question with a line
+trailer's ``head``), ``event`` (``COMMENT``, ``REQUEST_CHANGES``, or ``APPROVE``),
+``body`` (``summary.body``, unchanged for ``COMMENT``), and ``comments`` — one entry per finding or question with a line
 anchor, in item order, carrying ``path``, ``line``/``side`` (the anchor's end
 line and side), ``start_line``/``start_side`` when the anchor spans more than
 one line, and ``body`` (the item's markdown, a blank line, then its trailer).
 File-anchored items and observations produce no comment: the summary body
 already carries their prose. A payload with any violation prints the
-violations and emits nothing, so the batch can never drift from what
-validated. The script never posts; the forge call stays in ``SKILL.md``.
+violations and emits nothing. On the gating path only, enforce the first-line
+status grammar and event compatibility, remove the advisory suffix, and
+re-validate that edited body before emission. The batch is what validated
+after the one scripted edit; COMMENT keeps its existing acceptance rules.
+The script never posts; the forge call belongs to code-review-publish.
 
 Exit codes: ``0`` valid (or every fragment rendered, or the batch emitted),
 ``1`` one or more violations (one line each, in the form
@@ -91,7 +95,7 @@ against the fragments ``--render`` produces, under the one rule
 Where a check could disagree with the reference text, the reference text wins
 and this script is the thing that must be fixed. Four deliberate reading notes:
 the observation evidence check requires an ``Evidence:`` pointer rather than
-exactly one coordinate, because the output contract's own example pairs two
+exactly one coordinate, because the rendering reference's own example pairs two
 coordinates for a single drift pointer; ``context`` is a SHA-256 digest
 rather than a commit SHA, so the 40-hex commit rule does not apply to it; and
 the one-sentence observation check masks the abbreviations ``e.g.``, ``i.e.``,
@@ -108,6 +112,7 @@ remedy is the right one remain reviewer judgments.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 import subprocess
@@ -133,7 +138,7 @@ SIDES = ("LEFT", "RIGHT")
 MAX_OBSERVATIONS = 3
 PERMISSION_SENTENCE = "Closing this without action is a correct response."
 QUESTION_FRAMING = "Change no code for this"
-# An ordinary finding's prose fields, in the order the output contract states them;
+# An ordinary finding's prose fields, in the order the review record states them;
 # the first three are required and `Source` is optional.
 FIELD_LABELS = ("Triggers when", "Impact", "Change", "Source")
 FIELD_REQUIRED = ("Triggers when", "Impact", "Change")
@@ -897,9 +902,30 @@ def _needs_missing_merge_base(item: dict[str, Any], run: dict[str, Any]) -> bool
 def emit_batch(payload: dict[str, Any], event: str = "COMMENT") -> dict[str, Any]:
     """Project a zero-violation payload into GitHub's one-call review body.
 
-    Call ``validate`` first: this projection assumes the payload is valid and
-    never alters prose, anchors, or ``summary.body``.
+    Call ``validate`` first. COMMENT preserves the body. Gating events check
+    the advisory status line, remove its suffix, and re-validate a copy before
+    projection; ValueError carries content violations. Anchors and item prose
+    never change, and the input record remains immutable.
     """
+    if event != "COMMENT":
+        expected = {"APPROVE": "Approved", "REQUEST_CHANGES": "Changes Requested"}.get(event)
+        if expected is None:
+            raise ValueError("summary: event-status: unsupported review event")
+        body = payload["summary"]["body"]
+        first_line = body.split("\n", 1)[0]
+        match = re.fullmatch(
+            r"\*\*(Changes Requested|Incomplete|Needs Information|Approved)( \(advisory\))?\*\* — \S.*",
+            first_line,
+        )
+        if match is None or bool(match.group(2)) != (match.group(1) in {"Changes Requested", "Approved"}):
+            raise ValueError("summary: status-line: expected an advisory COMMENT status line before gating emission")
+        if match.group(1) != expected:
+            raise ValueError(f"summary: event-status: {event} requires {expected}")
+        payload = copy.deepcopy(payload)
+        payload["summary"]["body"] = body.replace(f"**{expected} (advisory)**", f"**{expected}**", 1)
+        violations = validate(payload)
+        if violations:
+            raise ValueError("\n".join(violations))
     summary = payload["summary"]
     comments: list[dict[str, Any]] = []
     for _index, item in referenced_items(payload.get("items", [])):
@@ -1001,7 +1027,7 @@ OBSERVATION_MARKDOWN = (
 
 
 def valid_payload() -> dict[str, Any]:
-    """The output contract's own example review, in payload form."""
+    """The rendering reference's own example review, in payload form."""
     return {
         "summary": {"body": SUMMARY_BODY, "trailer": RUN_TRAILER, "repository_url": REPOSITORY_URL},
         "items": [
@@ -1690,7 +1716,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
     ]
 
 
-EMIT_BATCH_CASES = 5
+EMIT_BATCH_CASES = 15
 
 
 def emit_batch_cases() -> list[str]:
@@ -1770,6 +1796,50 @@ def emit_batch_cases() -> list[str]:
     refused = subprocess.run(command, input=json.dumps(reproduced), capture_output=True, text=True, encoding="utf-8")
     if refused.returncode != 1 or refused.stdout != "".join(f"{line}\n" for line in violations) or "commit_id" in refused.stdout:
         failures.append(f"--emit-batch on the issue #134 reproduction: exit {refused.returncode}, stdout {refused.stdout!r}")
+    # The status is a model judgment; these cases exercise only transport grammar.
+    for status, event, expected_rule in [
+        ("Changes Requested (advisory)", "REQUEST_CHANGES", None),
+        ("Approved (advisory)", "APPROVE", None),
+        ("Changes Requested (advisory)", "APPROVE", "event-status"),
+        ("Approved (advisory)", "REQUEST_CHANGES", "event-status"),
+        ("Incomplete", "APPROVE", "event-status"),
+        ("Needs Information", "REQUEST_CHANGES", "event-status"),
+        ("Approved", "APPROVE", "status-line"),
+        ("Incomplete (advisory)", "APPROVE", "status-line"),
+        ("Unknown", "APPROVE", "status-line"),
+        ("Unknown", "COMMENT", None),
+    ]:
+        sample = valid_payload()
+        sample["summary"]["body"] = sample["summary"]["body"].replace(
+            "Changes Requested (advisory)", status, 1
+        )
+        before = copy.deepcopy(sample)
+        result = subprocess.run(
+            command + ["--event", event], input=json.dumps(sample),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        if expected_rule:
+            if result.returncode != 1 or f": {expected_rule}: " not in result.stdout or '"commit_id"' in result.stdout:
+                failures.append(f"gating {status}/{event}: expected {expected_rule}, got {result.returncode}: {result.stdout!r}")
+            continue
+        expected = dict(want)
+        expected["event"] = event
+        expected["body"] = sample["summary"]["body"]
+        if event != "COMMENT":
+            expected["body"] = expected["body"].replace(" (advisory)**", "**", 1)
+        try:
+            printed = json.loads(result.stdout)
+        except ValueError:
+            printed = None
+        if result.returncode != 0 or printed != expected or result.stderr:
+            failures.append(f"gating {status}/{event}: unexpected batch {result.returncode}: {result.stdout!r}")
+        direct = emit_batch(sample, event)
+        if sample != before or direct != expected:
+            failures.append(f"gating {status}/{event}: input changed or projection disagrees")
+        edited = copy.deepcopy(sample)
+        edited["summary"]["body"] = direct["body"]
+        if validate(edited):
+            failures.append(f"gating {status}/{event}: emitted body does not validate")
     return failures
 
 
@@ -1857,7 +1927,7 @@ def self_test() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Check a would-be v5b review payload against the mechanical output-contract rules."
+        description="Check a would-be v5b review payload against the mechanical review-record and rendering rules."
     )
     parser.add_argument("input", nargs="?", default="-", help="JSON file, or - for stdin")
     parser.add_argument("--self-test", action="store_true", help="run the embedded fixtures and exit")
@@ -1871,7 +1941,7 @@ def main() -> int:
         action="store_true",
         help="print the forge-native one-call review body for a payload with zero violations, and exit",
     )
-    parser.add_argument("--event", default="COMMENT", choices=("COMMENT",), help="review event; only COMMENT is emitted")
+    parser.add_argument("--event", default="COMMENT", choices=("COMMENT", "REQUEST_CHANGES", "APPROVE"), help="review event; gating checks status and removes the advisory suffix")
     args = parser.parse_args()
 
     if args.self_test:
@@ -1893,7 +1963,12 @@ def main() -> int:
             for line in violations:
                 print(line)
             return 1
-        print(json.dumps(emit_batch(payload, args.event), indent=2))
+        try:
+            batch = emit_batch(payload, args.event)
+        except ValueError as error:
+            print(error)
+            return 1
+        print(json.dumps(batch, indent=2))
         return 0
 
     if args.render:
