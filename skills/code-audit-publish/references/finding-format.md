@@ -31,6 +31,8 @@ The calibration: a proven correctness, security, or explicit-requirement gap on 
 
 Do not label everything `consider` and do not label nothing `consider`. The first is a review that blocks nothing; the second is a review where a nit stops a merge.
 
+**Kind** — the risk class a candidate or ledger row asserts, one of `bug`, `concurrency`, `invariant`, `security`, `performance`, `maintainability`, `requirement`. It is an internal routing field: the finders assign it, the verifier and the orchestrator's scope checks read it, and it never appears in the published comment or trailer. The Requirements axis uses `requirement`; the Code axis uses the other six. `concurrency` and `invariant` mark a claim that breaks a state rule shared across paths; `maintainability` covers a documented-standard or hygiene claim with no behavioral consequence of its own.
+
 **Confidence** — implicit, never written. Publication is the assertion: a finding published as a finding was verified `confirmed`. A `plausible` verdict never publishes as a finding and `refuted` does not publish at all, so a confidence key in the trailer would never vary.
 
 ## Settle, ask, or record
@@ -86,7 +88,7 @@ A finder produces two things about every candidate, and only one of them crosses
 
 The test for which is which: **the claim describes the artifact; the support describes the finder.** Anything that would read identically had a different finder found the same defect is claim. Anything in the first person, or that reports a process, is support.
 
-Quoted lines from the repository and the spec are facts about the artifact, so they belong in the claim. The split withholds argument, not evidence.
+Quoted lines from the repository and the spec are facts about the artifact, so they belong in the claim. The split withholds argument, not evidence. The same test sorts the other structured fields: `trigger`, `impact`, and the proposed `change` describe the artifact and the repair, so they cross to the verifier with the claim; the finder's confidence, its process, and how sure it is stay in `support`.
 
 `support` reaches neither the pull request nor the verifier. It exists so a finder has somewhere to put its uncertainty other than the finding itself, and so a run can be audited afterwards. A verifier told that the finder already demonstrated something believes it, and the step decays into agreement; re-deriving the claim from the code is the entire check.
 
@@ -103,34 +105,50 @@ End the candidate material with exactly one fenced `candidates` block. Use one e
 ### Candidate
 id: code/file-slug/defect-slug
 axis: Code
+kind: bug
 anchor: path/to/file.ext:123
 fix: (same as anchor)
 title: Short defect title
 claim: Flat, falsifiable claim with evidence pointers.
 support: Finder process, checks, and uncertainty.
 trigger: Concrete input, state, or environment that produces the wrong outcome.
+impact: What observably goes wrong when the trigger occurs.
+change: The concrete edit: file, site, what to do.
 priority: P2
 action: must-fix
 ````
 `````
 
-Use `Code` or `Requirements` for `axis`. Keep `fix` present and write `(same as anchor)` when it is
-the anchor. The verifier-prompt builder carries every other field verbatim and removes `support`
-mechanically, so load-bearing evidence belongs in `claim` and the concrete scenario belongs in
-`trigger`.
+Use `Code` or `Requirements` for `axis`, and one of the seven kinds in § Vocabularies for `kind`.
+An `id` starts with its axis — `code/` or `requirements/` — and is unique across both finder
+reports, because every verdict is matched back to it; the same claim found on both axes keeps two
+ids until the verifier's deduplication says they are one. Keep `fix` present and write `(same as
+anchor)` when it is the anchor. The verifier-prompt builder carries every other field verbatim and
+removes `support` mechanically, so load-bearing evidence belongs in `claim`, the concrete scenario in
+`trigger`, its consequence in `impact`, and the requested repair in `change`.
 
 Each field appears once, and the order above is the grammar rather than a house style. A column-zero
-line that begins with one of these ten labels is always a field line, and it must name the next field
-still expected; the builder refuses a candidate whose column-zero label is out of order or repeated,
-because it cannot tell a quoted `support: enabled` from the candidate's own routing and will not
-guess. Every other line continues the field above it and is carried through verbatim, so a `claim`
-quoting configuration or code that begins with a field label indents that line — `  priority: high`
-reaches the verifier as written, while `priority: high` at column zero is refused. Write `anchor`,
-`fix`, and every ledger row's evidence as one whole repository-relative `path:line` coordinate (or,
-for a `fix` that names a file, the bare path), optionally in backticks; a path may contain spaces,
-because the builder reads the whole field as the coordinate rather than picking a path out of prose.
-It relates a ledger row to a candidate by whole file identity, so `foo.py` and `src/foo.py` are two
-different files and neither stands in for the other.
+line that begins with one of these thirteen labels is always a field line, and it must name the next
+field still expected; the builder refuses a candidate whose column-zero label is out of order or
+repeated, because it cannot tell a quoted `support: enabled` from the candidate's own routing and
+will not guess. A candidate in the earlier ten-field shape, without `kind`, `impact`, and `change`,
+is refused the same way — it is missing `kind` before `anchor` — rather than read as a new one with
+fields silently absent. Every other line continues the field above it and is carried through
+verbatim, so a `claim` quoting configuration or code that begins with a field label indents that
+line — `  priority: high` reaches the verifier as written, while `priority: high` at column zero is
+refused. Write `anchor`, `fix`, and every ledger row's evidence as one whole repository-relative
+`path:line` coordinate (or, for a `fix` that names a file, the bare path), optionally in backticks; a
+path may contain spaces, because the builder reads the whole field as the coordinate rather than
+picking a path out of prose. It relates a ledger row to a candidate by whole file identity, so
+`foo.py` and `src/foo.py` are two different files and neither stands in for the other.
+
+A disposition ledger row carries the same `kind` and a **per-run id** as its first two fields —
+`<axis>-<n>`, numbered from 1 within the report, so `code-4` and `requirements-4` are different rows
+and neither is ever a published finding id. The id is what a verifier ruling is matched back to and
+what the run report names; it lives for one run and is reassigned on the next, while the durable
+`code/…` and `requirements/…` ids survive across rounds. The axis briefs give the full row grammar,
+and the validator refuses the earlier four-field row by field count rather than reading its claim as
+an id.
 
 ## Shape
 

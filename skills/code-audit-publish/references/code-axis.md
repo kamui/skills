@@ -106,30 +106,32 @@ Say plainly where you could not finish: a file you could not read, a check you s
 
 Per candidate:
 
-- `id` — `code/<file-slug>/<defect-slug>`. Never a line number.
+- `id` — `code/<file-slug>/<defect-slug>`. Never a line number, and never reused within your report: every verdict is matched back to it.
 - `axis` — `Code`.
+- `kind` — the risk class, one of `bug`, `concurrency`, `invariant`, `security`, `performance`, `maintainability` (`finding-format.md` § Vocabularies). Use `concurrency` or `invariant` when the claim breaks a state rule that sibling paths share; a documented-standard or hygiene claim with no behavioral consequence of its own is `maintainability`.
 - `anchor` — the `file:line` the comment attaches to. **Must be a line the diff touches.** Pick it with the ladder in `finding-format.md` § Anchor and fix site.
 - `fix` — where the edit actually goes; write `(same as anchor)` when they are the same.
 - `title` — 80 characters or fewer, naming the defect.
 - `claim` — a flat, falsifiable statement of what is wrong, with the quoted code and the quoted rule. Written to be checked, not to persuade. This is what the verifier receives. A removed-guarantee candidate quotes both revisions here and names the consumer, per § Guarantees removed from unchanged code; the verifier sees no `support`, so a comparison left out of the `claim` is a comparison it has to rebuild alone.
 - `support` — what you ran, what you read, and what you remain unsure of. First person is fine here and nowhere else. The verifier never sees this, so do not put anything load-bearing in it.
 - `trigger` — the concrete inputs, state, or environment producing the wrong behavior. Required. If you cannot write one, you do not have a candidate. Where a source you can reach settles it — a caller, the base version, a constant, a documented rule, one focused test — read that source before you return the candidate, because an unsettled trigger a reader could have settled costs the author a round for work that was yours (`finding-format.md` § Settle, ask, or record). Where none can, write what remains unsettled and the smallest fact that would settle it, and say plainly in `support` what you could not reach.
-- `change` — the concrete edit: file, site, what to do.
+- `impact` — what observably goes wrong when the trigger occurs: the wrong value, the lost write, the unauthorized access. The verifier checks that the consequence follows and that nothing unchanged prevents it.
+- `change` — the concrete edit: file, site, what to do. The verifier reads it to check that the repair matches the defect's scope.
 - `priority` — `P0` blocking release or major usage, holding under any input; `P1` urgent; `P2` normal; `P3` nice to have.
 - `action` — `must-fix` or `consider`, judged independently of priority by the calibration in `finding-format.md` § Vocabularies: blocking needs a demonstrated merge consequence, not a severity label.
 
 Keep each field tight. Whoever acts on this — a person or an agent — acts from these fields alone.
 
 Then end the candidate material with the fenced `candidates` block defined by
-`finding-format.md` § Finder candidate block. It repeats the verifier-input fields, including `axis`,
-and always carries `fix` as specified there; `change` remains in the candidate description for
-publication.
+`finding-format.md` § Finder candidate block. It carries every field above, including `axis`,
+`kind`, `impact`, and `change`, and always carries `fix` as specified there. The verifier receives
+every field except `support`.
 
 ## The disposition ledger
 
-Alongside the candidates, return one ledger row for **every** hypothesis you weighed, including the ones you acquitted before returning them: claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, or `observation`). "Specifically tried to convict and could not" is a row, not narrative — a later re-review reads this ledger to recognize a hypothesis as already tested and killed, and prose does not survive to that round.
+Alongside the candidates, return one ledger row for **every** hypothesis you weighed, including the ones you acquitted before returning them: per-run id, kind, claim, falsification route, decisive evidence, disposition (`candidate`, `acquitted`, or `observation`). "Specifically tried to convict and could not" is a row, not narrative — a later re-review reads this ledger to recognize a hypothesis as already tested and killed, and prose does not survive to that round.
 
-Each row has four compact fields on one line: a one-line claim, a falsification route of a few words, one decisive evidence pointer (`path:line` or a quoted rule location), and a one-word disposition. Pre-admission acquittals use the same compact shape. Return the ledger as the fenced `ledger` block defined in § Report tail; a ledger written as prose or as a markdown table is non-conforming and will be sent back.
+Each row has six compact fields on one line: a per-run id `code-<n>`, numbered from 1 in the order you list the rows; the row's `kind`, from the same six values a candidate uses; a one-line claim; a falsification route of a few words; one decisive evidence pointer (`path:line` or a quoted rule location); and a one-word disposition. The id is a handle for this run only — the verifier's ruling on an acquitted row is matched back to it, and the run report names it — and it is never the durable `code/…` finding id, which a `candidate` row's candidate carries in the candidates block. Pre-admission acquittals use the same compact shape. Return the ledger as the fenced `ledger` block defined in § Report tail; a ledger written as prose or as a markdown table is non-conforming and will be sent back, and so is a row in the earlier four-field shape without its id and kind.
 
 ## Observations
 
@@ -143,11 +145,11 @@ End the report with these two fenced blocks, in this order, each with the exact 
 
 `````markdown
 ```ledger
-<one-line claim> | <falsification route> | <path:line or quoted-rule location> | <candidate|acquitted|observation>
+code-<n> | <kind> | <one-line claim> | <falsification route> | <path:line or quoted-rule location> | <candidate|acquitted|observation>
 ```
 ```manifest
 <path> | <reviewed|ignored> | <reason>
 ```
 `````
 
-Rows are one per line, four (`ledger`) or three (`manifest`) pipe-separated fields, no header row, no blank rows, and no `|` inside a field. The evidence field is one whole pointer: `path:line`, `path:start-end`, or a quoted-rule location written `` `path` § heading ``, optionally in backticks. An acquittal that rests on an absence — no rule in the guidance, no code path that reaches the claim — points at the section that would have carried the rule or the line the claim was about, not at a sentence of explanation. The disposition is one of `candidate`, `acquitted`, or `observation`; `question` belongs to the Requirements axis. At least one row is a `candidate` unless the candidate section says "no candidates". Every path in the manifest you were given appears exactly once in the `manifest` block, its status is `reviewed` or `ignored`, and an `ignored` row carries a reason. A renamed or copied entry is listed once, under its new path. The Code axis returns no `counts` block.
+Rows are one per line, six (`ledger`) or three (`manifest`) pipe-separated fields, no header row, no blank rows, and no `|` inside a field. The id is `code-` followed by a positive integer, unique within the block. The kind is one of `bug`, `concurrency`, `invariant`, `security`, `performance`, `maintainability`. The evidence field is one whole pointer: `path:line`, `path:start-end`, or a quoted-rule location written `` `path` § heading ``, optionally in backticks. An acquittal that rests on an absence — no rule in the guidance, no code path that reaches the claim — points at the section that would have carried the rule or the line the claim was about, not at a sentence of explanation. The disposition is one of `candidate`, `acquitted`, or `observation`; `question` belongs to the Requirements axis. At least one row is a `candidate` unless the candidate section says "no candidates". The validator also checks the `candidates` block against `finding-format.md` § Finder candidate block — thirteen fields in order, a unique `code/` id, a known kind — so a candidate in the earlier ten-field shape is sent back rather than carried forward. Every path in the manifest you were given appears exactly once in the `manifest` block, its status is `reviewed` or `ignored`, and an `ignored` row carries a reason. A renamed or copied entry is listed once, under its new path. The Code axis returns no `counts` block.
