@@ -131,7 +131,7 @@ Render each fragment with the script's `render` command, and `check` a fragment 
 
 ## One review, one call
 
-**Re-read the head immediately before this call.** If it differs from the reviewed head, or cannot be read, publish nothing and report the stale review — the anchors were computed against a diff that has moved, so every line comment risks landing on code that no longer says what the finding claims. This check costs one API call and is the difference between a stale review and a wrong one.
+**Apply SKILL step 4's complete input freshness check before the first write.** A stale or unreadable head/base, changed evidence, or missing state stops publication until reassessed; a newly merged target requires separate explicit authority.
 
 Submit the body and every line comment together. One call, one timeline entry.
 
@@ -155,10 +155,10 @@ Validate every anchor against the diff before submitting — `git diff <base>...
 End the body with a run trailer, so a later run can correlate what this one covered without re-deriving it:
 
 ```
-<!-- review-run workflow=v2b-4 head=<full 40-hex sha> base-ref=<branch> base-sha=<full 40-hex sha> merge-base=<full 40-hex sha> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
+<!-- review-run workflow=v2b-5 head=<full 40-hex sha> base-ref=<branch> base-sha=<full 40-hex sha> merge-base=<full 40-hex sha> context=<full 64-hex sha256> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
 ```
 
-Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2b-4` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs are this run's identity record.
+Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2b-5` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs and recomputed `context` are this run's identity record. Compute and check them under [`input-identity.md`](input-identity.md); a prior trailer without the digest is readable history but cannot suppress a current-contract review. Percent-encode spaces and percent signs in `base-ref`.
 
 The comment URLs do not exist when the body is written, so publish in two phases: submit with the index entries carrying their rendered coordinate fragments — the phase-1 body is complete and clickable on its own — then read back the created comment URLs and `PUT repos/{owner}/{repo}/pulls/<n>/reviews/<review_id> -f body='...'` with each entry's title now linked to its comment and every file fragment left byte-identical. If the second phase fails, the phase-1 body stands on its own — never block a review on it.
 
@@ -190,21 +190,7 @@ A finding or reply written by a person carries no trailer. Read it as prose, inf
 
 ## Thread handling
 
-Reading prior activity:
-
-- reviews — `gh api repos/{owner}/{repo}/pulls/<n>/reviews --jq '.[] | {id, user: .user.login, state, commit_id, body}'`. `commit_id` differing from the current `headRefOid` is what makes a run a re-review.
-- inline comments — `gh api repos/{owner}/{repo}/pulls/<n>/comments`. Cite `original_line` for location; `line` goes null once a push outdates the comment.
-- thread state — GraphQL only:
-
-  ```sh
-  gh api graphql -f query='
-    query($owner:String!,$repo:String!,$pr:Int!){
-      repository(owner:$owner,name:$repo){ pullRequest(number:$pr){
-        reviewThreads(first:100){ nodes{
-          id isResolved isOutdated path line
-          comments(first:1){ nodes{ databaseId } } } } } } }
-  ' -f owner=<owner> -f repo=<repo> -F pr=<n>
-  ```
+Read prior activity from step 1's normalized packet: `reviews` carries review ids, authors, bodies, commit and timestamps; `threads` carries node ids, `is_resolved`, original coordinates, and every comment/reply with numeric `id`, `review_id` and `reply_to`; `pr_comments` carries the full PR discussion. Use `original_line` when a push has out-dated a thread. These fields serve every round. The complete paginated collection and freshness calls live in `SKILL.md`; a capped ad-hoc fetch is not a substitute.
 
 Correlate prior findings by trailer `id`, not by line. The verify step supplies the verdict wherever it turns on the code; judging a decline is the reviewer's own call. Either way a reply's word is evidence of intent, not of outcome:
 
@@ -229,10 +215,10 @@ Reopen — `unresolveReviewThread` — rather than filing a fresh finding when a
 
 ## Publishing twice
 
-Before writing, check for an existing review from this identity at this head and compare its status as well as its head.
+Apply [`input-identity.md`](input-identity.md)'s duplicate gate. Head/status equality alone never suppresses a review. When any identity, intent, guidance, discussion or thread input changed, complete the assessment even if the resulting aggregate status stays the same.
 
-- Same head, same status — that review stands. Update its body if the forge allows; otherwise report it as already published. Do not post a second.
-- Same head, moved status — a decline accepted, a question answered — publish a new review carrying the new event and summary, without re-posting line comments that are already up. A review's state is fixed at submission; the update endpoint rewrites a body, not a state.
+Publish one new review for the assessed current inputs, with every **new** eligible finding and the current summary, even at unchanged head/status. Correlate standing findings by their durable ids and reply on existing threads; do not repost them. Preserve new findings from either axis even when another standing `must-fix` already determines `Changes Requested`. A changed status likewise publishes the new summary and authorized event. If full identity and later-state checks pass but this run has already discovered new eligible material, it also publishes: the duplicate shortcut cannot discard findings. An exact duplicate with no new material is reported by its existing URL, without a write.
+
 - Dismiss a superseded review only where it carried a gate the new event cannot replace. A later `APPROVE` clears an earlier `REQUEST_CHANGES`; a `COMMENT` supersedes another `COMMENT` with no dismissal needed, and cannot clear a standing `APPROVED` or `CHANGES_REQUESTED`.
 
   ```sh
