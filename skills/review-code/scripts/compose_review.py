@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose the code-review-inspect validator payload from authoritative fields
+"""Compose the review-code validator payload from authoritative fields
 and authored prose.
 
 The reviewer supplies the semantic fields it decided -- each finding's stable
@@ -808,7 +808,7 @@ def load_json(path: str, what: str) -> Any:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Compose the validator payload of a code-review-inspect review from authoritative fields and authored prose."
+        description="Compose the validator payload of a review-code review from authoritative fields and authored prose."
     )
     parser.add_argument("input", nargs="?", default="-", help="composition JSON file, or - for stdin")
     parser.add_argument(

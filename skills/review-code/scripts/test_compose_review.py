@@ -441,6 +441,44 @@ def main() -> int:
     refused(spaced, "stable-id", "id with a space")
     print("ok stable ids: duplicates and malformed ids refused")
 
+    # Missing workflow-required issue: a complete review still emits its material question.
+    required_issue = base_composition()
+    required_issue["run"]["issues"] = []
+    required_issue["findings"] = []
+    required_issue["observations"] = []
+    required_issue["summary"]["status"] = "Needs Information"
+    required_issue["summary"]["issue_fit"] = "Issue alignment unavailable; the ledger came from the pull-request title and body. The repository workflow requires an originating issue."
+    required_issue["questions"] = [{
+        "id": "workflow/required-issue", "title": "Which originating issue applies?",
+        "anchor": {"type": "file", "path": "src/queue.ts", "side": "RIGHT"},
+        "evidence": "The repository workflow requires an originating issue, but none resolves from the pull-request text, supplied inputs, branch, or commits.",
+        "why_it_matters": "The merge decision requires the originating issue so its acceptance criteria can be checked.",
+        "answer": "The pull-request author can supply the issue; its acceptance criteria settle the required issue-alignment decision.",
+    }]
+    payload, batch, _ = composed(required_issue, "missing required issue")
+    body = batch["body"]
+    assert body.startswith("**Needs Information** — 1 open question.")
+    assert "**[Question] Which originating issue applies?**" in body
+    assert required_issue["summary"]["issue_fit"] in body
+    assert "issues=none coverage=complete" in body and "workflow=v5b-17" in body
+    assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
+    assert payload["items"][0]["id"] == "workflow/required-issue"
+    wrong = copy.deepcopy(required_issue)
+    wrong["summary"]["status"] = "Incomplete"
+    refused(wrong, "status-consistency", "missing required issue alone cannot be Incomplete")
+    blocked = copy.deepcopy(required_issue)
+    blocked["findings"] = [finding()]
+    blocked["summary"]["status"] = "Changes Requested"
+    _, batch, _ = composed(blocked, "required issue beside a blocker")
+    assert batch["body"].startswith("**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.")
+    gap = copy.deepcopy(required_issue)
+    gap["run"]["coverage"] = "incomplete"
+    gap["summary"]["status"] = "Incomplete"
+    gap["summary"]["coverage_gaps"] = ["The reviewThreads continuation failed; a missing reply could settle a prior finding."]
+    _, batch, _ = composed(gap, "required issue beside a genuine coverage gap")
+    assert batch["body"].startswith("**Incomplete** — 1 open question.") and "## Coverage gaps" in batch["body"]
+    print("ok required issue: body question, current workflow, no-issue identity, status precedence")
+
     # Statuses: each of the four, with the contradictions the contract's precedence makes decidable.
     approved_with_blocker = base_composition()
     approved_with_blocker["summary"]["status"] = "Approved"

@@ -1,6 +1,6 @@
 # Pinned baseline for the repaired one-shot review skill
 
-After the split in issue #226, a snapshot of the default line consists of the `skills/code-review-inspect` and `skills/code-review-publish` trees together; pin both tree hashes. Historical run snapshots below remain unchanged.
+After the split in issue #226, a snapshot of the default line consists of the `skills/review-code` and `skills/code-review-publish` trees together; pin both tree hashes. Historical run snapshots below remain unchanged.
 
 **Pinned 2026-09-06 for [#136](https://github.com/kamui/skills/issues/136).** This document
 fixes the snapshot that [#137](https://github.com/kamui/skills/issues/137) measures against the

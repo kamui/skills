@@ -325,7 +325,7 @@ class HandoffTests(unittest.TestCase):
         self.run_cli("build_verifier_prompt.py", self.root / "missing", "--ledger", self.write([]), "--output", self.path("bundle"), code=2)
 
     def test_standalone_install(self):
-        skill = self.root / "installed" / "code-review-inspect"
+        skill = self.root / "installed" / "review-code"
         shutil.copytree(SCRIPTS.parent, skill, ignore=shutil.ignore_patterns("__pycache__"))
         bundle = self.build(scripts=skill / "scripts")
         self.account(bundle, self.returned(bundle), scripts=skill / "scripts")

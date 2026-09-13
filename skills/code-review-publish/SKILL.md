@@ -1,6 +1,6 @@
 ---
 name: code-review-publish
-description: "Invoke code-review-inspect and publish one forge-native review of an existing pull request. Use when the caller wants a review posted to the pull request, not just reported back."
+description: "Invoke review-code and publish one forge-native review of an existing pull request. Use when the caller wants a review posted to the pull request, not just reported back."
 ---
 
 # Publish code review
@@ -14,13 +14,13 @@ Use a gating event only when the user or repository workflow separately authoriz
 A self-review always uses `COMMENT`.
 
 This workflow is one-shot: finish without pausing for reviewer preferences.
-If `code-review-inspect` is not among the installed skills, stop with `missing-dependency: code-review-inspect`.
+If `review-code` is not among the installed skills, stop with `missing-dependency: review-code`.
 
 ## Inspect
 
-Invoke `code-review-inspect` with the target, any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
+Invoke `review-code` with `mode: one-shot`, the target, any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
 Pass through supplied phase-1 packets, posting identity, focused-test policy, and up-front inputs under its Caller contract when provided.
-Apply the one-shot column of inspect's Return routing table.
+Apply the one-shot column of `review-code`'s Return routing table.
 A named stop ends this run with its report; a completed record supplies everything needed below.
 For a merged target without separate publication authorization, report the complete would-be review and finish.
 
@@ -28,15 +28,16 @@ For a merged target without separate publication authorization, report the compl
 
 Read [`references/publication.md`](references/publication.md) now and follow its invariants, event table, batch shape, and thread operations.
 Use the returned `batch.json` for the common `COMMENT` path.
-For authorized gating, regenerate it with `--emit-batch --event` through the absolute validator path recorded by inspect; the script owns the suffix change.
+An `issue-required` routed item appears as a `[Question]` in the review body; `Issue fit` states that the ledger came from the pull-request text. With otherwise complete coverage and no unsettled must-fix finding, the status is `Needs Information`, never `Incomplete` for this reason alone.
+For authorized gating, regenerate it with `--emit-batch --event` through the absolute validator path recorded by `review-code`; the script owns the suffix change.
 Never edit the batch by hand or locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head immediately before the first write.
 If it differs from the reviewed head or cannot be read, publish nothing and report the stale review.
 Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule to every prior item.
 
-For a conclusive malformed-comment rejection, apply inspect's render-and-validate step to the repaired record using its recorded absolute script paths.
-If compaction dropped the rendering instructions, re-read `references/rendering.md` from the inspect skill root those paths identify.
+For a conclusive malformed-comment rejection, apply `review-code`'s render-and-validate step to the repaired record using its recorded absolute script paths.
+If compaction dropped the rendering instructions, re-read `references/rendering.md` from the `review-code` skill root those paths identify.
 Confirm no review exists before the single retry, as publication.md specifies.
 Use a general comment only for the reference's documented fallback; re-read after an ambiguous write before one retry.
 
