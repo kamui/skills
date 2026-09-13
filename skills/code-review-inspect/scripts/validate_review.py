@@ -16,9 +16,10 @@ Usage::
     python3 scripts/validate_review.py --self-test
 
 ``--render`` prints the exact summary reference fragment for each finding and
-question item, one per line in item order, so the reviewer pastes generated
-text into the summary body instead of composing a link by hand. The validator
-then requires each fragment to appear in ``summary.body`` exactly once.
+question item, one per line in item order; ``compose_review.py`` places the
+same fragments in the summary body it composes, and the final report reuses
+them, so no link is ever composed by hand. The validator requires each
+fragment to appear in ``summary.body`` exactly once.
 
 ``--emit-batch`` validates the payload and, when it has zero violations,
 prints the forge-native one-call review body as JSON: ``commit_id`` (the run
