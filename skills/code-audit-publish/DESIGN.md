@@ -793,14 +793,19 @@ is matched back to one row unambiguously; the id lives for one run and is never 
 packet** — every candidate id the verifier owes a verdict, every related acquittal row it owes a
 ruling — and a new [`account_verifier_return.py`](scripts/account_verifier_return.py) checks the
 return against it: exactly one well-formed verdict per candidate id, exactly one well-formed ruling
-per row id, and a refusal for any missing, duplicate, unexpected, or malformed record. The
-orchestrator gets one shape-only repair — the same verdicts in conforming shape — and never writes
-a verdict itself; after a second failure the ids the violations name are withheld and coverage says
-so, while ids no violation names have exactly one conforming record and still publish under the
+per row id, and a refusal for any missing, duplicate, unexpected, or malformed record, each
+violation naming the record id where the row carries one. The orchestrator gets one shape-only
+repair — a fresh worker handed the original prompt, the verifier's own return as the artifact to
+repair, and the violation lines, told to preserve every judgment that return already carries and to
+invent none — and never writes a verdict itself. After a second failure the script's own
+`accounted:` and `withheld:` lines partition the packet: every id on the withheld line — missing,
+duplicated, or malformed, whether or not a violation happened to name it — is withheld and coverage
+says so, while every accounted id has exactly one conforming record and still publishes under the
 ordinary status precedence. A zero-record return to a non-empty packet is a failure that takes the
-same repair. An intentionally empty input — finders that returned no candidates — takes the explicit
-clean-review path in `SKILL.md` and dispatches no verifier, so the accounting script refuses an
-empty packet outright rather than treating an absent return as clean. `verify.md` gains an Isolation
+same repair. An intentionally empty input — no candidates and, on a re-review, no code-decided
+prior finding — takes the explicit clean-review path in `SKILL.md` on any round and dispatches no
+verifier, so the accounting script refuses an empty packet outright rather than treating an absent
+return as clean. `verify.md` gains an Isolation
 section adapted from the routine line's `verifier.md`: a genuinely non-inheriting worker,
 `fork_turns=none` where supported, with the pinned identity, the rule and spec pointers, and bounded
 inspection; where the runtime cannot provide it, mandatory verification is incomplete, every
@@ -813,8 +818,8 @@ in shape rather than having its claim silently read as an id. The validator now 
 builder's candidate parser, so a candidate-shape violation gets the same one-shot re-dispatch a
 ledger violation had; before, it surfaced at step 3 with no repair path. Prior findings on a
 re-review reach the verifier through the builder's `--prior` input in the same grammar, so they join
-the packet and owe a verdict like any candidate; the earlier text asked for them to be "added to the
-list" with no mechanism.
+the packet, owe a verdict like any candidate, and count as candidates when the builder selects the
+related acquittal rows; the earlier text asked for them to be "added to the list" with no mechanism.
 
 Kept fixed: the `confirmed` / `plausible` / `refuted` vocabulary, the five refutation bases, the
 `holds` / `re-open` rulings, the related-only acquittal filter, the published finding shape and

@@ -45,6 +45,7 @@ code-3 | invariant | The `removeCookies` reset premise holds elsewhere | trace t
 code-4 | maintainability | An unrelated generated file may drift | regenerate it | packages/types.d.ts:10 | acquitted
 code-5 | bug | The `BrowserContext` constructor validates its options | inspect the constructor | packages/context/create.ts:8 | acquitted
 code-6 | maintainability | A root-level helper of the same name drifts | diff the two files | browserContext.ts:14 | acquitted
+code-7 | bug | The order parser validates before the retry | read the retry branch | src/order.ts:48 | acquitted
 ```
 """
 
@@ -260,6 +261,8 @@ def main() -> int:
             }
             if written != expected_packet:
                 failures.append(f"the packet does not list exactly the expected records: {written}")
+            if "order parser validates before the retry" in result.stdout:
+                failures.append("a row related only to an absent prior finding was sent to the verifier")
 
         # Same claim text on both axes keeps two distinguishable ids (acceptance case 5).
         twin = REQUIREMENTS_REPORT.replace(
@@ -291,9 +294,16 @@ def main() -> int:
         else:
             if "## Prior findings" not in result.stdout or "### Candidate 3\nid: code/order-ts/swallowed-validation-error" not in result.stdout:
                 failures.append("the prior finding was not rendered under its own heading")
-            ids = [entry["id"] for entry in json.loads(packet.read_text(encoding="utf-8"))["candidates"]]
+            written = json.loads(packet.read_text(encoding="utf-8"))
+            ids = [entry["id"] for entry in written["candidates"]]
             if ids[-1] != "code/order-ts/swallowed-validation-error":
                 failures.append(f"the prior finding did not join the packet: {ids}")
+            if "code-7 | bug | The order parser validates before the retry" not in result.stdout:
+                failures.append("a row related only to a prior finding was not sent to the verifier")
+            if {"id": "code-7", "axis": "Code", "evidence": "src/order.ts:48"} not in written["acquittals"]:
+                failures.append(f"a row related only to a prior finding did not join the packet: {written['acquittals']}")
+            if result.stdout.count("code-7 | bug |") != 1:
+                failures.append("a row related to a prior finding was rendered more than once")
         prior.write_text(
             PRIOR_REPORT.replace(
                 "id: code/order-ts/swallowed-validation-error", "id: code/browser-context/remove-cookies-race"
