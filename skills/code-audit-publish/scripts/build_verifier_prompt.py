@@ -4,36 +4,54 @@
 Purpose: render the fresh-context verifier's prompt from the two finder
 reports and optional test-suite result summaries, carrying every candidate
 field except `support` and only those acquitted ledger rows that relate to a
-candidate, so the verifier never sees the finder's own demonstrations.
+candidate, so the verifier never sees the finder's own demonstrations. With
+`--packet` it also writes the accounting packet: every candidate id the
+verifier owes a verdict and every acquittal row id it owes a ruling, which
+`account_verifier_return.py` checks the return against.
 
 Usage:
     python3 scripts/build_verifier_prompt.py --brief <absolute path>
         --repo <path> --base-sha <sha> --head-sha <sha> --merge-base <sha>
         --code <report> --requirements <report> [--suite-results <path>]
+        [--prior <report>] [--packet <path>]
 
 The prompt is written to stdout; violations are written to stdout too, one per
 line, and the reason for an unreadable input to stderr.
 
 Exit codes:
-    0  the prompt was written
+    0  the prompt was written (and the packet, when --packet was given)
     1  a report violates the finding format (one violation per line on stdout)
-    2  the brief or a finder report could not be read
+    2  the brief, a finder report, or the packet path could not be read or
+       written
 
 Input schema: each finder report carries a fenced ```candidates block of
-`### Candidate` sections whose fields are `id`, `axis`, `anchor`, `fix`,
-`title`, `claim`, `support`, `trigger`, `priority`, `action`, once each in
-that order, every field line at column zero, and a fenced ```ledger block of
-`claim | probe | evidence | disposition` rows. A line quoted inside a field
-that begins with one of those labels is indented. `anchor`, `fix`, and a
-row's evidence are whole `path:line` coordinates or file paths, which may
-contain spaces.
+`### Candidate` sections whose fields are `id`, `axis`, `kind`, `anchor`,
+`fix`, `title`, `claim`, `support`, `trigger`, `impact`, `change`,
+`priority`, `action`, once each in that order, every field line at column
+zero, and a fenced ```ledger block of
+`id | kind | claim | probe | evidence | disposition` rows. A line quoted
+inside a field that begins with one of those labels is indented. `anchor`,
+`fix`, and a row's evidence are whole `path:line` coordinates or file paths,
+which may contain spaces. A candidate id starts with its axis (`code/` or
+`requirements/`) and is unique across both reports; a ledger row id is the
+axis name, a dash, and a positive integer (`code-3`, `requirements-1`),
+unique within its report. `kind` is one of bug, concurrency, invariant,
+security, performance, maintainability, requirement; a Requirements
+candidate or row uses `requirement` and a Code one uses the other six.
 When supplied, suite-results is a UTF-8 file containing one result-summary
-line per suite.
+line per suite. On a re-review, `--prior` names a report holding one
+```candidates block of the prior findings whose fate turns on the code, in
+the same section grammar with `support` left empty; they render under their
+own heading and join the packet as candidates, and a ledger row related to
+a prior finding is supplied and packeted like one related to a candidate.
+The packet is JSON: {"candidates": [{"id", "axis"}...],
+"acquittals": [{"id", "axis", "evidence"}...]}.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import dataclass
@@ -42,16 +60,31 @@ from pathlib import Path, PurePosixPath
 CANDIDATE_FIELDS = (
     "id",
     "axis",
+    "kind",
     "anchor",
     "fix",
     "title",
     "claim",
     "support",
     "trigger",
+    "impact",
+    "change",
     "priority",
     "action",
 )
 VERIFIER_FIELDS = tuple(field for field in CANDIDATE_FIELDS if field != "support")
+KINDS = (
+    "bug",
+    "concurrency",
+    "invariant",
+    "security",
+    "performance",
+    "maintainability",
+    "requirement",
+)
+LEDGER_FIELD_COUNT = 6
+AXES = ("Code", "Requirements")
+KINDS_BY_AXIS = {"Code": KINDS[:-1], "Requirements": ("requirement",)}
 FIELD_RE = re.compile(
     r"^(?:-\s+)?(?:\*\*)?("
     + "|".join(CANDIDATE_FIELDS)
@@ -69,10 +102,12 @@ CODE_SPAN_RE = re.compile(r"`([^`\n]+)`")
 IDENTIFIER_RE = re.compile(
     r"\b[A-Za-z_][A-Za-z0-9_]*(?:(?:::|\.)[A-Za-z_][A-Za-z0-9_]*)*(?:\(\))?\b"
 )
+ROW_ID_RE = re.compile(r"^(?P<axis>code|requirements)-[1-9][0-9]*$")
+CANDIDATE_ID_RE = re.compile(r"^(?P<axis>code|requirements)/\S+$")
 
 
 class InputError(OSError):
-    """An argument named an input the script could not read."""
+    """An argument named an input the script could not read or write."""
 
 
 class ReportError(ValueError):
@@ -89,6 +124,7 @@ class Candidate:
 class LedgerRow:
     axis: str
     line: str
+    id: str
     claim: str
     evidence: str
 
@@ -167,10 +203,32 @@ def parse_candidate_section(label: str, lines: list[str]) -> Candidate:
     for field in VERIFIER_FIELDS:
         if not fields[field].strip():
             raise ReportError(f"{label} has an empty {field}")
+    axis = fields["axis"].strip()
+    if axis not in AXES:
+        raise ReportError(f"{label} has axis {axis!r}; expected Code or Requirements")
+    kind = fields["kind"].strip()
+    if kind not in KINDS:
+        raise ReportError(f"{label} has kind {kind!r}; expected one of {', '.join(KINDS)}")
+    if kind not in KINDS_BY_AXIS[axis]:
+        raise ReportError(
+            f"{label} has kind {kind!r}; a {axis} candidate uses "
+            + ", ".join(KINDS_BY_AXIS[axis])
+        )
+    candidate_id = fields["id"].strip()
+    id_match = CANDIDATE_ID_RE.match(candidate_id)
+    if not id_match or id_match.group("axis") != axis.lower():
+        raise ReportError(
+            f"{label} has id {candidate_id!r}; a {axis} candidate id starts with {axis.lower()}/"
+        )
     return Candidate(label=label, fields=fields)
 
 
 def parse_candidates(report: str, axis_label: str) -> list[Candidate]:
+    """Every candidate in the report's single candidates block, in order.
+
+    `axis_label` names the report for messages; a `Prior` report may carry
+    candidates of either axis, and the axis check is per section.
+    """
     blocks = fenced_blocks(report, "candidates")
     if len(blocks) != 1:
         raise ReportError(
@@ -204,10 +262,31 @@ def parse_candidates(report: str, axis_label: str) -> list[Candidate]:
     if heading is None:
         raise ReportError(f"{axis_label} candidates block has no Candidate heading")
     candidates.append(parse_candidate_section(heading, section))
+    if axis_label in AXES:
+        for candidate in candidates:
+            if candidate.fields["axis"].strip() != axis_label:
+                raise ReportError(
+                    f"{candidate.label} carries axis {candidate.fields['axis'].strip()!r} "
+                    f"inside the {axis_label} report"
+                )
+    seen: dict[str, str] = {}
+    for candidate in candidates:
+        candidate_id = candidate.fields["id"].strip()
+        if candidate_id in seen:
+            raise ReportError(
+                f"{candidate.label} repeats id {candidate_id!r} already used by {seen[candidate_id]}"
+            )
+        seen[candidate_id] = candidate.label
     return candidates
 
 
 def parse_ledger(report: str, axis_label: str) -> list[LedgerRow]:
+    """Every acquitted ledger row, with its per-run id checked for shape and uniqueness.
+
+    A row has six fields. The four-field grammar that preceded ids and kinds
+    is refused by count, naming the old grammar, so an old row cannot parse
+    as a new one with its claim read as an id.
+    """
     blocks = fenced_blocks(report, "ledger")
     if not blocks:
         return []
@@ -216,18 +295,43 @@ def parse_ledger(report: str, axis_label: str) -> list[LedgerRow]:
             f"{axis_label} report must contain at most one ledger block; found {len(blocks)}"
         )
     rows: list[LedgerRow] = []
+    seen_ids: set[str] = set()
     for row_number, line in enumerate(blocks[0].splitlines(), start=1):
         if not line.strip():
             continue
         fields = [field.strip() for field in line.split("|")]
-        if len(fields) != 4:
-            raise ReportError(f"{axis_label} ledger row {row_number} does not have four fields")
-        claim, _, evidence, disposition = fields
+        if len(fields) != LEDGER_FIELD_COUNT:
+            hint = " (the four-field row grammar has no id or kind)" if len(fields) == 4 else ""
+            raise ReportError(
+                f"{axis_label} ledger row {row_number} has {len(fields)} fields, expected "
+                f"{LEDGER_FIELD_COUNT} (id | kind | claim | route | evidence | disposition){hint}"
+            )
+        row_id, kind, claim, _, evidence, disposition = fields
+        id_match = ROW_ID_RE.match(row_id)
+        if not id_match or id_match.group("axis") != axis_label.lower():
+            raise ReportError(
+                f"{axis_label} ledger row {row_number} has id {row_id!r}; expected "
+                f"{axis_label.lower()}-<n>"
+            )
+        if row_id in seen_ids:
+            raise ReportError(f"{axis_label} ledger row {row_number} repeats id {row_id!r}")
+        seen_ids.add(row_id)
+        if kind not in KINDS:
+            raise ReportError(
+                f"{axis_label} ledger row {row_number} has kind {kind!r}; expected one of "
+                + ", ".join(KINDS)
+            )
+        if kind not in KINDS_BY_AXIS[axis_label]:
+            raise ReportError(
+                f"{axis_label} ledger row {row_number} has kind {kind!r}; a {axis_label} row uses "
+                + ", ".join(KINDS_BY_AXIS[axis_label])
+            )
         if disposition == "acquitted":
             rows.append(
                 LedgerRow(
                     axis=axis_label,
                     line=line,
+                    id=row_id,
                     claim=claim,
                     evidence=evidence,
                 )
@@ -331,33 +435,46 @@ def render_candidate(index: int, candidate: Candidate) -> str:
     return "\n".join(lines)
 
 
-def build(args: argparse.Namespace) -> str:
+def read_input(path: str, description: str) -> str:
     try:
-        brief = Path(args.brief).read_text(encoding="utf-8")
+        return Path(path).read_text(encoding="utf-8")
     except OSError as error:
-        raise InputError(f"cannot read verifier brief {args.brief}: {error}") from error
+        raise InputError(f"cannot read {description} {path}: {error}") from error
+
+
+def build(args: argparse.Namespace) -> tuple[str, dict]:
+    brief = read_input(args.brief, "verifier brief")
 
     reports: list[tuple[str, str]] = []
     for axis_label, path in (("Code", args.code), ("Requirements", args.requirements)):
-        try:
-            reports.append((axis_label, Path(path).read_text(encoding="utf-8")))
-        except OSError as error:
-            raise InputError(f"cannot read {axis_label} report {path}: {error}") from error
+        reports.append((axis_label, read_input(path, f"{axis_label} report")))
 
     suite_results = None
     if args.suite_results:
-        try:
-            suite_results = Path(args.suite_results).read_text(encoding="utf-8")
-        except OSError as error:
-            raise InputError(
-                f"cannot read suite results {args.suite_results}: {error}"
-            ) from error
+        suite_results = read_input(args.suite_results, "suite results")
+
+    prior_report = None
+    if args.prior:
+        prior_report = read_input(args.prior, "prior findings report")
 
     candidates: list[Candidate] = []
     ledger_rows: list[LedgerRow] = []
     for axis_label, report in reports:
         candidates.extend(parse_candidates(report, axis_label))
         ledger_rows.extend(parse_ledger(report, axis_label))
+
+    prior: list[Candidate] = []
+    if prior_report is not None:
+        prior = parse_candidates(prior_report, "Prior")
+
+    seen: dict[str, str] = {}
+    for candidate in candidates + prior:
+        candidate_id = candidate.fields["id"].strip()
+        if candidate_id in seen:
+            raise ReportError(
+                f"{candidate.label} repeats id {candidate_id!r} already used by {seen[candidate_id]}"
+            )
+        seen[candidate_id] = candidate.label
 
     sections = [
         f"Verifier brief: `{args.brief}`\n\nRepository: `{args.repo}`",
@@ -378,10 +495,19 @@ def build(args: argparse.Namespace) -> str:
         )
     else:
         sections.append("## Candidates\n\nNone.")
+    if prior:
+        sections.append(
+            "## Prior findings\n\n"
+            "Each is a claim about the current code at its recorded fix site.\n\n"
+            + "\n\n".join(
+                render_candidate(index, candidate)
+                for index, candidate in enumerate(prior, start=len(candidates) + 1)
+            )
+        )
 
     related = []
     if re.search(r"^## Related acquittals[ \t]*$", brief, re.MULTILINE):
-        related = [row for row in ledger_rows if is_related(row, candidates)]
+        related = [row for row in ledger_rows if is_related(row, candidates + prior)]
     if related:
         rows_by_axis: dict[str, list[str]] = {}
         for row in related:
@@ -394,7 +520,17 @@ def build(args: argparse.Namespace) -> str:
     output = "\n\n".join(sections) + "\n"
     if SUPPORT_LABEL_RE.search(output):
         raise ReportError("private field text survived into the verifier prompt")
-    return output
+
+    packet = {
+        "candidates": [
+            {"id": candidate.fields["id"].strip(), "axis": candidate.fields["axis"].strip()}
+            for candidate in candidates + prior
+        ],
+        "acquittals": [
+            {"id": row.id, "axis": row.axis, "evidence": row.evidence} for row in related
+        ],
+    }
+    return output, packet
 
 
 def main() -> int:
@@ -412,13 +548,28 @@ def main() -> int:
         "--suite-results",
         help="UTF-8 file containing one result-summary line per test suite",
     )
+    parser.add_argument(
+        "--prior",
+        help="re-review only: a report whose candidates block holds the prior findings to re-verify",
+    )
+    parser.add_argument(
+        "--packet",
+        help="write the accounting packet (expected candidate and acquittal ids) to this JSON file",
+    )
     args = parser.parse_args()
 
     if not Path(args.brief).is_absolute():
         parser.error("--brief must be an absolute path")
 
     try:
-        output = build(args)
+        output, packet = build(args)
+        if args.packet:
+            try:
+                Path(args.packet).write_text(
+                    json.dumps(packet, indent=2) + "\n", encoding="utf-8"
+                )
+            except OSError as error:
+                raise InputError(f"cannot write packet {args.packet}: {error}") from error
     except InputError as error:
         print(f"build_verifier_prompt: {error}", file=sys.stderr)
         return 2
