@@ -33,7 +33,7 @@ Never edit the batch by hand or locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head immediately before the first write.
 If it differs from the reviewed head or cannot be read, publish nothing and report the stale review.
-Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule.
+Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule to every prior item.
 
 For a conclusive malformed-comment rejection, apply inspect's render-and-validate step to the repaired record using its recorded absolute script paths.
 If compaction dropped the rendering instructions, re-read `references/rendering.md` from the inspect skill root those paths identify.
