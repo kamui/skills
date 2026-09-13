@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the local review context for code-review-inspect in one call.
+"""Build the local review context for review-code in one call.
 
 Emits, for the pinned merge-base and head of one pull request, the changed-file
 manifest, the complete merge-base diff with function context, the head and

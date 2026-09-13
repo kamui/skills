@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute the deterministic context digest used by code-review-inspect.
+"""Compute the deterministic context digest used by review-code.
 
 Usage:
     python3 scripts/context_fingerprint.py [INPUT | --json JSON]
