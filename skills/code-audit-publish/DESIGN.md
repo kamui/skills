@@ -15,7 +15,7 @@ The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. It
 PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
 change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
 The rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
-advanced the identifier to `v2b-2`, C18 to `v2b-3`, and C19 advances it to `v2b-4`. It does not claim that the planned transition audits, stronger
+advanced the identifier to `v2b-2`, C18 to `v2b-3`, C19 to `v2b-4`, and C20 advances it to `v2b-5`. It does not claim that the planned transition audits, stronger
 verification or executable experiments have shipped. Admission, verification, rendering and state
 changes receive their own release bumps.
 
@@ -44,7 +44,7 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-4`. Issue #160 increments `v2b-3` to `v2b-4` for the verification
+Workflow identifier: `v2b-5`. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
 change recorded in [C19](#c19-isolated-verification-and-verdict-accounting): the verifier runs
 in a genuinely non-inheriting worker or verification is incomplete, candidates and ledger rows carry
 a risk kind and ledger rows a per-run id, and every candidate verdict and acquittal ruling is
@@ -841,6 +841,16 @@ change and it claims no recall or precision gain. Specified by
 [issue #160](https://github.com/kamui/skills/issues/160), under
 [epic #156](https://github.com/kamui/skills/issues/156), whose own text names the empty-output gap;
 the assessment's B5 row names the schema one. The workflow identifier advances to `v2b-4` with this change.
+
+### C20. Complete input identity and same-head changes
+
+Issue [#166](https://github.com/kamui/skills/issues/166), under [#156](https://github.com/kamui/skills/issues/156), replaces head/status duplicate suppression with full head/base/merge-base, workflow and normalized intent/guidance identity. The workflow advances to `v2b-5`; its run trailer adds `context`, and `review_identity.py` asserts that version. Historical trailers remain readable for finding ids, replies, verdicts and the round cap, but cannot suppress a current-contract review.
+
+The audit packages the routine skill's tested `forge_packet.py` and `context_fingerprint.py` mechanics delivered by #132, with their CLI fixtures, as local helpers. No sibling skill is required and no forge operation moves into Python. Step 1 persists all outer and nested pages, stable numeric ids, comment timestamps, explicit state/merged, missing slices and per-connection coverage. Audit additions retain continuation cursors, reject missing state/timestamp evidence for complete coverage, and count later edits to the candidate review's own output while excluding its original submission. The input identity reference defines exact membership and type/order normalization, retaining this audit's existing broader guidance set and recording additional applicable normative pointers actually read.
+
+The new identity checker requires complete current and prior coverage, full matching identity and no later evidence. Undated resolution state conservatively defeats its shortcut. Changed same-head inputs trigger assessment and new eligible findings publish even when aggregate status stays unchanged; standing defects retain their ids and original threads, including human replies without trailers. A separate complete prepublication collection checks input freshness, and supplied missing merged state never becomes publication permission. Retrospective publication still requires explicit separate authority.
+
+Validation combines the copied multi-page, edit-detection and digest fixtures with audit-specific CLI eligibility cases and an [instruction replay](../../docs/research/audit-input-identity-2026-09-12.md). These are mechanical regressions and paper policy transitions, not measured recall or precision gains. Full payload validation remains separate work; this ticket checks duplicate identity, not finding admission or review rendering. The conservative later-state rule may repeat an assessment after harmless activity, and missing external evidence remains incomplete even when the visible pages normalize successfully.
 
 ### Subtractions
 
