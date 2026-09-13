@@ -18,7 +18,7 @@ If `review-code` is not among the installed skills, stop with `missing-dependenc
 
 ## Inspect
 
-Invoke `review-code` with `mode: one-shot`, the target, any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
+Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
 Pass through supplied phase-1 packets, posting identity, focused-test policy, and up-front inputs under its Caller contract when provided.
 Apply the one-shot column of `review-code`'s Return routing table.
 A named stop ends this run with its report; a completed record supplies everything needed below.

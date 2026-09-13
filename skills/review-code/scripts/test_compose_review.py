@@ -142,6 +142,82 @@ def consider(**overrides) -> dict:
     return value
 
 
+def local_targets() -> None:
+    for kind in ("range", "worktree"):
+        value = base_composition()
+        value["run"].pop("repository_url")
+        value["run"].update(target_kind=kind, target="main..HEAD", tree="e" * 40,
+                            change_description="Keep the key", specs=["spec/retries"])
+        value["findings"][0]["source"] = 'commit-abcdef0/"Keep the key"'
+        value["findings"][0]["anchor"]["side"] = "LEFT"
+        result = run(COMPOSER, json.dumps(value))
+        assert result.returncode == 0, result.stdout + result.stderr
+        payload = json.loads(result.stdout)
+        body = payload["summary"]["body"]
+        assert "repository_url" not in payload["summary"] and "](http" not in body, body
+        assert "anchor `src/payments.ts:42`; fix `src/retry-policy.ts:18`" in body, body
+        assert "anchor `src/queue.ts (file)`" in body, body
+        assert '**Source:** commit-abcdef0/"Keep the key"' in payload["items"][0]["markdown"]
+        assert "Source: originating issues; user-supplied spec; commit messages in the range." in body, body
+        assert "**Mode:**" not in body, body
+        if kind == "worktree":
+            assert f"Working tree snapshot `{HEAD}` (tree `{'e' * 40}`)" in body, body
+            bad_tree = copy.deepcopy(value)
+            bad_tree["run"].pop("tree")
+            refused(bad_tree, "schema", "snapshot tree required", needle="run.tree")
+        else:
+            assert "**Reviewed:** Range `main..HEAD`: `a1b2c3d` against merge-base" in body, body
+        assert run(VALIDATOR, result.stdout).returncode == 0
+        assert run(VALIDATOR, result.stdout, "--emit-batch").returncode == 0
+        value["run"].update(issues=[], specs=[], change_description="")
+        result = run(COMPOSER, json.dumps(value))
+        assert result.returncode == 0, result.stdout
+        assert "Source: no source (no issue, spec, or commit messages)." in json.loads(result.stdout)["summary"]["body"]
+        value["run"]["repository_url"] = REPO
+        refused(value, "schema", "local links refused")
+        value["run"].pop("repository_url")
+        value["run"]["merged"] = True
+        refused(value, "schema", "local retrospective refused")
+
+    # Explicit pull-request identity preserves the existing fixture byte for byte.
+    implicit = run(COMPOSER, json.dumps(base_composition()))
+    explicit = base_composition()
+    explicit["run"]["target_kind"] = "pull-request"
+    assert run(COMPOSER, json.dumps(explicit)).stdout == implicit.stdout
+
+    # Real producer metadata is required when composing a stored snapshot.
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory) / "repo"
+        root.mkdir()
+        def git(*args):
+            return subprocess.run(["git", *args], cwd=root, capture_output=True,
+                                  text=True, encoding="utf-8", check=True).stdout.strip()
+        git("init", "-q")
+        git("config", "user.name", "Test")
+        git("config", "user.email", "test@example.invalid")
+        (root / "file").write_text("base\n", encoding="utf-8")
+        git("add", ".")
+        git("commit", "-qm", "Initial")
+        base = git("rev-parse", "HEAD")
+        (root / "file").write_text("working\n", encoding="utf-8")
+        store = Path(directory) / "context.json"
+        subprocess.run([sys.executable, str(CONTEXT_SCRIPT), "--worktree", "--store", str(store)],
+                       cwd=root, capture_output=True, text=True, encoding="utf-8", check=True)
+        snapshot = json.loads(store.read_text(encoding="utf-8"))["context"]["snapshot"]
+        value = {"run": {"head": snapshot["head"], "base_sha": base, "merge_base": base,
+                         "base_ref": "HEAD", "target_kind": "worktree", "tree": snapshot["tree"],
+                         "context": CONTEXT, "issues": [], "coverage": "complete", "merged": False,
+                         "change_description": ""},
+                 "summary": {"status": "Approved", "intent": "Edit file.",
+                             "issue_fit": "Issue alignment unavailable; no stated promises.",
+                             "coverage": "Complete working-tree diff inspected."}}
+        result = run(COMPOSER, json.dumps(value), "--store", str(store))
+        assert result.returncode == 0, result.stdout + result.stderr
+        value["run"]["tree"] = "0" * 40
+        refused(value, "run-identity", "snapshot tree/store mismatch", "--store", str(store))
+    print("ok local targets: identity, source kinds, code spans, and unchanged pull-request fixture")
+
+
 def main() -> int:
     # Ordinary finding, whole-change question, observation: the contract example, byte for byte where the contract renders it.
     contract = base_composition()
@@ -619,6 +695,7 @@ def main() -> int:
     not_object = run(COMPOSER, "[]")
     assert not_object.returncode == 1 and "schema" in not_object.stdout, not_object
     print("ok input: unreadable input exits 2, non-object exits 1")
+    local_targets()
     return 0
 
 

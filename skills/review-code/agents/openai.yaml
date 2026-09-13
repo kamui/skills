@@ -1,4 +1,4 @@
 interface:
   display_name: "Review Code"
-  short_description: "Review a pull request into a validated record"
-  default_prompt: "Use $review-code to review the current pull request without publishing."
+  short_description: "Review local changes or a pull request"
+  default_prompt: "Use $review-code to review my changes without publishing."

@@ -50,7 +50,7 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-Four skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name, and `code-audit-publish` is explicit-only. The fourth, `review-code`, is reached by the publisher with `mode: one-shot` or an explicit request by name in session mode; ordinary read-only reviews keep their existing routing. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+Four skills are model-invocable, so a driving agent can run the loop end to end; `code-review-publish-legacy` is not model-invocable and runs only when invoked by name, and `code-audit-publish` is explicit-only. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `code-review-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
 Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
@@ -60,7 +60,7 @@ The skills compose into a loop: `implement-publish` opens a pull request, `code-
 
 ### `review-code`
 
-The shared review core returns a validated record, emitted batch, and complete would-be review without writing to the forge. It is reached by `code-review-publish` with `mode: one-shot` or by explicit `$review-code`. Absent `mode`, it runs in session mode: ask before falsification, present the record and routed questions afterward, and leave the record unchanged; headless asks become report lines. It currently reviews pull requests only. `/code-review` is left to the harness and the two-axis skill installed from another source.
+The shared review core returns a validated record, emitted batch, and complete would-be review without writing to the forge. Plain review requests and explicit `$review-code` select it; `code-review-publish` calls it with `mode: one-shot` for posting. Absent `mode`, it runs in session mode: ask before falsification, present the record and routed questions afterward, and leave the record unchanged; headless asks become report lines. It reviews pull requests, merge-base ranges, and working-tree snapshots including non-ignored untracked files. Local targets omit forge links and keep the working tree and index unchanged. `/code-review` is left to the harness and the two-axis skill installed from another source.
 
 ### `code-review-publish`
 

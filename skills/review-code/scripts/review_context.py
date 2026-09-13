@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Build the local review context for review-code in one call.
 
-Emits, for the pinned merge-base and head of one pull request, the changed-file
+Emits, for the pinned merge-base and head of one review target, the changed-file
 manifest, the complete merge-base diff with function context, the head and
 merge-base line ranges of every hunk, and the last commits before the merge-base
-that touched each changed path. It reads only the local git repository: it never
-calls `gh`, never touches the network, and never prints a whole file.
+that touched each changed path. It never calls `gh` or prints a whole file.
+With --worktree it writes unreferenced loose objects and a temporary index,
+leaving the real index, refs, and working files unchanged; configured clean
+filters run (including on untracked files) and retain their normal side effects.
 
 Usage:
+    python3 scripts/review_context.py --worktree [--merge-base SHA] [--parent SHA] [--json]
     python3 scripts/review_context.py --merge-base SHA --head SHA [--json]
     python3 scripts/review_context.py --merge-base SHA --head SHA \
         --prior-head SHA [--base-ref NAME] [--json]
@@ -78,7 +81,7 @@ options nor globs.
 `--store FILE` persists the complete context to FILE before any output, as one
 private JSON object, and turns on bounded output: one call prints at most
 `--chunk-bytes` bytes of diff text (default 24000; choose a value below the
-harness's tool-output limit). FILE holds the pull request's whole diff, so it
+harness's tool-output limit). FILE holds the target's whole diff, so it
 is opened without following symlinks, refused unless it is an unshared regular
 file this user owns, and set to mode 0600 before the first byte is written;
 give it a path only this user can reach (`mktemp -d`), never a predictable
@@ -106,6 +109,17 @@ marks its chunks consumed in the store, so the inventory is an exhaustive
 account: concatenating the chunks of a section in inventory order reproduces
 the persisted diff byte for byte, and a `missing` chunk is diff text no bounded
 call has printed. Continue at the missing chunk.
+
+The --worktree flag snapshots tracked and non-ignored untracked files using a
+temporary index seeded from HEAD; working files win over staged versions.
+It builds the usual context (merge-base defaults to the source HEAD) and adds
+snapshot metadata: head, tree, source_head, parent, chain (first|chained|reset),
+and dirty_submodules (content not captured by their checked-out gitlinks).
+--parent chains only from a snapshot whose recorded source equals current HEAD;
+otherwise it resets to HEAD and that prior snapshot is unusable as prior state.
+An unborn HEAD or failed snapshot command reports snapshot-failed at exit 2.
+Objects are unreachable and subject to Git garbage collection; persist the
+metadata and manifest with --store outside the working tree before reviewing.
 
 Exit codes:
     0  the context was written to stdout
@@ -149,7 +163,7 @@ class InputError(Exception):
 
 
 def start_git(
-    arguments: list[str], cwd: Optional[str] = None
+    arguments: list[str], cwd: Optional[str] = None, env: Optional[dict[str, str]] = None
 ) -> tuple[str, subprocess.CompletedProcess[str]]:
     """Run git and return the printable command with its completed process."""
     command = [
@@ -175,14 +189,15 @@ def start_git(
             text=True,
             encoding="utf-8",
             errors="replace",
+            env=env,
         )
     except OSError as error:
         raise GitError(printable, str(error)) from error
     return printable, completed
 
 
-def run_git(arguments: list[str], cwd: Optional[str] = None) -> str:
-    printable, completed = start_git(arguments, cwd)
+def run_git(arguments: list[str], cwd: Optional[str] = None, env: Optional[dict[str, str]] = None) -> str:
+    printable, completed = start_git(arguments, cwd, env)
     if completed.returncode != 0:
         raise GitError(printable, completed.stderr.strip() or "exited non-zero")
     return completed.stdout
@@ -245,6 +260,9 @@ def parse_numstat(output: str) -> dict[str, tuple[str, str]]:
 
 def count_lines_at_head(head: str, path: str, cwd: Optional[str]) -> int:
     """Count the lines of `path` at `head`, as `git show <head>:<path> | wc -l`."""
+    entry = run_git(["ls-tree", head, "--", literal_pathspec(path)], cwd)
+    if entry.startswith("160000 commit "):
+        return 1  # The diff represents a gitlink as one Subproject commit line.
     return run_git(["show", f"{head}:{path}"], cwd).count("\n")
 
 
@@ -815,6 +833,8 @@ def render_markdown(context: dict[str, Any]) -> str:
     ]
     if context.get("delta") is not None:
         sections.extend(render_delta(context["delta"]))
+    if "snapshot" in context:
+        sections.insert(0, snapshot_section(context["snapshot"])["markdown"])
     return "\n\n".join(sections) + "\n"
 
 
@@ -907,6 +927,56 @@ def render_view(sections: list[dict[str, Any]], as_json: bool) -> str:
 # --- Context and store -------------------------------------------------------
 
 
+def snapshot_worktree(parent: Optional[str] = None) -> dict[str, Any]:
+    """Capture working files without changing the user's index or refs."""
+    try:
+        root = run_git(["rev-parse", "--show-toplevel"]).strip()
+        source = run_git(["rev-parse", "--verify", "HEAD^{commit}"], root).strip()
+        snapshot_parent, chain = source, "first"
+        if parent is not None:
+            prior = run_git(["rev-parse", "--verify", f"{parent}^{{commit}}"], root).strip()
+            message = run_git(["show", "-s", "--format=%B", prior], root).strip()
+            match = re.fullmatch(r"review-code snapshot source=([0-9a-f]{40})", message)
+            if match is None:
+                raise InputError("--parent is not a review-code snapshot")
+            if match.group(1) == source:
+                snapshot_parent, chain = prior, "chained"
+            else:
+                chain = "reset"
+        with tempfile.TemporaryDirectory(prefix="review-code-index-") as directory:
+            env = dict(os.environ, GIT_INDEX_FILE=os.path.join(directory, "index"))
+            run_git(["read-tree", source], root, env)
+            run_git(["add", "-A", "--", "."], root, env)
+            tree = run_git(["write-tree"], root, env).strip()
+            dirty_submodules = []
+            for entry in run_git(["ls-files", "--stage", "-z"], root, env).split("\0"):
+                if not entry.startswith("160000 "):
+                    continue
+                path = entry.split("\t", 1)[1]
+                checkout = os.path.join(root, path)
+                if os.path.exists(os.path.join(checkout, ".git")) and run_git(
+                    ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"], checkout,
+                    dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+                ).strip():
+                    dirty_submodules.append(path)
+            if run_git(["rev-parse", "HEAD"], root).strip() != source:
+                raise InputError("HEAD moved while snapshotting; retry against the new branch head")
+            head = run_git([
+                "commit-tree", tree, "-p", snapshot_parent,
+                "-m", f"review-code snapshot source={source}",
+            ], root, env).strip()
+        return {"head": head, "tree": tree, "source_head": source,
+                "parent": snapshot_parent, "chain": chain,
+                "dirty_submodules": dirty_submodules}
+    except (GitError, InputError, OSError) as error:
+        raise InputError(f"snapshot-failed: {error}") from error
+
+
+def snapshot_section(snapshot: dict[str, Any]) -> dict[str, Any]:
+    return {"name": "snapshot", "json": snapshot,
+            "markdown": fenced("snapshot", [f"{key}: {value}" for key, value in snapshot.items()])}
+
+
 def build_context(
     merge_base: str,
     head: str,
@@ -951,7 +1021,7 @@ def make_store(context: dict[str, Any], chunk_bytes: int) -> dict[str, Any]:
 def write_store(path: str, store: dict[str, Any]) -> None:
     """Write the store privately: created 0600, and vetted before any byte lands.
 
-    The store holds the pull request's complete diff, so a path another local
+    The store holds the target's complete diff, so a path another local
     user can pre-create must never receive it. The open refuses a symlink
     (`O_NOFOLLOW`), and the descriptor is checked to be an unshared regular file
     this user owns and chmodded 0600 before the file is truncated and written.
@@ -1063,6 +1133,8 @@ def small_sections(context: dict[str, Any]) -> list[dict[str, Any]]:
             ),
         },
     ]
+    if "snapshot" in context:
+        sections.insert(0, snapshot_section(context["snapshot"]))
     delta = context.get("delta")
     if delta is not None:
         sections.extend(
@@ -1114,6 +1186,8 @@ def live_view(
     small = {section["name"]: section for section in small_sections(context)}
     chunks = store["chunks"] if store is not None else []
     sections: list[dict[str, Any]] = [small["manifest"]]
+    if "snapshot" in small:
+        sections.insert(0, small["snapshot"])
     diffs: dict[str, dict[str, Any]] = {}
     chosen_blocks: dict[str, list[dict[str, Any]]] = {}
     selected_paths: Optional[list[str]] = None
@@ -1894,7 +1968,7 @@ def self_test() -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Print the manifest, function-context diff, hunk ranges, and "
-        "pre-merge-base history for one pull request's changes. With --store, "
+        "pre-merge-base history for one target's changes. With --store, "
         "persist the complete context privately and bound each call's diff output; "
         "with --from, read bounded chunks back from that store without touching git.",
         epilog="Selection and recovery: --path P (repeatable, literal, use --path=P for a "
@@ -1906,6 +1980,8 @@ def main() -> int:
     )
     parser.add_argument("--merge-base", help="the pinned merge-base SHA")
     parser.add_argument("--head", help="the pinned head SHA")
+    parser.add_argument("--worktree", action="store_true", help="snapshot working files before building context")
+    parser.add_argument("--parent", help="prior worktree snapshot; chain only while source HEAD is unchanged")
     parser.add_argument(
         "--prior-head",
         help="the head the earlier review pinned; adds the delta sections",
@@ -1965,12 +2041,16 @@ def main() -> int:
         if (
             arguments.merge_base or arguments.head or arguments.prior_head or arguments.base_ref
             or arguments.path or arguments.store or arguments.store_from or arguments.chunk
-            or arguments.chunk_bytes is not None
+            or arguments.chunk_bytes is not None or arguments.worktree or arguments.parent
         ):
             parser.error("--self-test takes no other arguments")
         return self_test()
     if arguments.chunk_bytes is not None and arguments.chunk_bytes < 1:
         parser.error("--chunk-bytes must be at least 1")
+    if arguments.parent and not arguments.worktree:
+        parser.error("--parent requires --worktree")
+    if arguments.worktree and (arguments.head or arguments.prior_head or arguments.store_from):
+        parser.error("--worktree cannot be combined with --head, --prior-head, or --from")
     if arguments.chunk is not None and (len(arguments.path) != 1 or not arguments.store_from):
         parser.error("--chunk requires exactly one --path and --from")
     if arguments.store_from:
@@ -1986,7 +2066,7 @@ def main() -> int:
                 "a rebuild with --store --chunk-bytes N"
             )
     else:
-        if not arguments.merge_base or not arguments.head:
+        if not arguments.worktree and (not arguments.merge_base or not arguments.head):
             parser.error("--merge-base and --head are both required")
         if arguments.base_ref and not arguments.prior_head:
             parser.error("--base-ref is only used with --prior-head")
@@ -2009,12 +2089,20 @@ def main() -> int:
                 write_store(arguments.store_from, store)
             sys.stdout.write(render_view(view, arguments.json))
             return 0
+        snapshot = snapshot_worktree(arguments.parent) if arguments.worktree else None
+        if snapshot is not None:
+            arguments.head = snapshot["head"]
+            arguments.merge_base = run_git([
+                "merge-base", arguments.merge_base or snapshot["source_head"], arguments.head
+            ]).strip()
         context = build_context(
             arguments.merge_base,
             arguments.head,
             prior_head=arguments.prior_head,
             base_ref=arguments.base_ref,
         )
+        if snapshot is not None:
+            context["snapshot"] = snapshot
         if not arguments.path and not arguments.store:
             if arguments.json:
                 print(json.dumps(context, ensure_ascii=False, indent=2))

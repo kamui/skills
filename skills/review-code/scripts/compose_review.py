@@ -40,6 +40,11 @@ Input schema (JSON object)::
 
     {
       "run": {
+        "target_kind": "pull-request",            # default; range | worktree
+        "target": "main...HEAD",                  # required for range; as requested
+        "tree": "<40-hex tree SHA>",              # required only for worktree
+        "change_description": "<commit messages>", # required on local targets; may be empty
+        "specs": [],                              # local supplied spec identities, optional
         "head": "<full 40-hex head SHA>",
         "base_ref": "main",
         "base_sha": "<full 40-hex base SHA>",
@@ -399,6 +404,25 @@ def read_run(report: vr.Report, run: Any) -> dict[str, Any] | None:
         report.add("run", "schema", "`run` must be an object")
         return None
     fields: dict[str, Any] = {}
+    kind = run.get("target_kind", "pull-request")
+    if kind not in ("pull-request", "range", "worktree"):
+        report.add("run.target_kind", "schema", "expected pull-request, range, or worktree")
+    fields["target_kind"] = kind
+    fields["target"] = read_line(report, "run", run, "target") if kind == "range" else None
+    tree = run.get("tree")
+    if kind == "worktree" and (not isinstance(tree, str) or not vr.COMMIT_SHA_RE.fullmatch(tree)):
+        report.add("run.tree", "schema", "worktree requires a full 40-hex tree SHA")
+    fields["tree"] = tree
+    if kind in ("range", "worktree"):
+        description = run.get("change_description")
+        if not isinstance(description, str):
+            report.add("run.change_description", "schema", "local targets require commit messages (empty string when none)")
+        specs = run.get("specs", [])
+        if not isinstance(specs, list) or not all(isinstance(s, str) and s.strip() for s in specs):
+            report.add("run.specs", "schema", "specs must list supplied spec identities")
+        fields["change_description"], fields["specs"] = description, specs
+        if run.get("merged") is not False or run.get("repository_url") is not None:
+            report.add("run", "schema", "local targets require merged=false and omit repository_url")
     for key in ("head", "base_sha", "merge_base"):
         value = run.get(key)
         if not isinstance(value, str) or not vr.COMMIT_SHA_RE.match(value):
@@ -569,6 +593,10 @@ def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], i
         report.add("store", "schema", f"expected a `{rc.STORE_FORMAT}` envelope with a `context` object from review_context.py --store")
         return
     context = store["context"]
+    if run.get("target_kind") == "worktree":
+        snapshot = context.get("snapshot", {})
+        if not isinstance(snapshot, dict) or snapshot.get("tree") != run.get("tree") or snapshot.get("head") != run.get("head"):
+            report.add("run.tree", "run-identity", "worktree identity disagrees with the store's snapshot")
     for key, run_key in (("head", "head"), ("merge_base", "merge_base")):
         if context.get(key) != run.get(run_key):
             report.add(f"run.{run_key}", "run-identity", f"the store was built for {key} `{context.get(key)}`, not `{run.get(run_key)}`")
@@ -667,12 +695,28 @@ def compose_body(
     paragraphs = [first]
     if run["merged"]:
         paragraphs.append(MODE_AUTHORIZED if run["publication_authorized"] else MODE_DEFAULT)
+    reviewed = f"`{abbreviate(run['head'])}` against merge-base `{abbreviate(run['merge_base'])}`."
+    issue_fit = summary["issue_fit"]
+    if run["target_kind"] != "pull-request":
+        if run["target_kind"] == "worktree":
+            reviewed = f"Working tree snapshot `{run['head']}` (tree `{run['tree']}`) against merge-base `{abbreviate(run['merge_base'])}`."
+        else:
+            reviewed = f"Range `{run['target']}`: {reviewed}"
+        sources = []
+        if run["issues"] != "none":
+            sources.append("originating issues")
+        if run["specs"]:
+            sources.append("user-supplied spec")
+        if run["change_description"].strip():
+            sources.append("commit messages in the range")
+        source = "; ".join(sources) if sources else "no source (no issue, spec, or commit messages)"
+        issue_fit += f" Source: {source}."
     paragraphs.extend(
         [
             f"**Intent:** {summary['intent']}",
-            f"**Issue fit:** {summary['issue_fit']}",
+            f"**Issue fit:** {issue_fit}",
             f"**Coverage:** {summary['coverage']}",
-            f"**Reviewed:** `{abbreviate(run['head'])}` against merge-base `{abbreviate(run['merge_base'])}`.",
+            f"**Reviewed:** {reviewed}",
         ]
     )
 
