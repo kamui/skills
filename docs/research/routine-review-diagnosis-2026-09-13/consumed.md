@@ -1,0 +1,56 @@
+# Consumed diagnostic material and inherited exclusions
+
+Apply this register together with the existing [102-identity reservation map](https://github.com/kamui/skills/blob/374635be7f4e62f6eb9c797530bf6bf091a9d3a1/docs/research/bounded-discovery-qualification-2026-09-12/targets/reservations.json) and [#173’s exclusions](https://github.com/kamui/skills/issues/173). This is an additive handoff, not a replacement study inventory. Historical fixtures never become fresh holdouts through renaming. No active fresh target or sealed archive was opened.
+
+## This diagnosis’s source PRs
+
+All 15 qualified targets below are conservatively consumed for later blind selection because their outcomes/corrections were read. Each linked item is a separate defect concept; a repeated review of it is not recurrence. Inclusion records exposure, not independent adjudication of every published assertion. Runs and miss decisions are in [cases.md](cases.md).
+
+- **[kamui/skills#198](https://github.com/kamui/skills/pull/198)**: [Keep the stop gate closed when a probe fails](https://github.com/kamui/skills/pull/198#discussion_r3977021991); [Recover the available per-role transcript costs](https://github.com/kamui/skills/pull/198#discussion_r3977021998); [Keep operational metadata outside anonymous rulings](https://github.com/kamui/skills/pull/198#discussion_r3977022004); [Apply the frozen rule to the retained out-of-root read](https://github.com/kamui/skills/pull/198#discussion_r3977022009).
+- **[kamui/skills#200](https://github.com/kamui/skills/pull/200)**: [Correct the false timer-observation ruling](https://github.com/kamui/skills/pull/200#discussion_r3986329298); [Remove full fix credit for the unhandled terminal-positional case](https://github.com/kamui/skills/pull/200#discussion_r3986329305); [Exclude non-findings from recovery credit](https://github.com/kamui/skills/pull/200#discussion_r3986329307); [Preserve outside-root reads after their source files disappear](https://github.com/kamui/skills/pull/200#discussion_r3986329312); [Require every frozen file before declaring the freeze verified](https://github.com/kamui/skills/pull/200#discussion_r3986329320); [Publish the amended fields in the reproduction recipe](https://github.com/kamui/skills/pull/200#discussion_r3986779270).
+- **[kamui/skills#201](https://github.com/kamui/skills/pull/201)**: [Verify both packet files against their sealed contents](https://github.com/kamui/skills/pull/201#discussion_r3992741952); [Report duplicate-concept counts for each attempt](https://github.com/kamui/skills/pull/201#discussion_r3994642106).
+- **[kamui/skills#203](https://github.com/kamui/skills/pull/203)**: No published defect concept established; source outcome inspected. Rename-only scope.
+- **[kamui/skills#204](https://github.com/kamui/skills/pull/204)**: No published defect concept established; source outcome inspected. Any-surface clean-verdict policy and paper-check coverage.
+- **[kamui/skills#205](https://github.com/kamui/skills/pull/205)**: No published defect concept established; source outcome inspected. Partial readiness tooling; later prepared-validator claim considered in C03.
+- **[kamui/skills#206](https://github.com/kamui/skills/pull/206)**: [Measure freshness from the retained probe time](https://github.com/kamui/skills/pull/206#discussion_r3995306637); [Keep ledger clearance current through authorization](https://github.com/kamui/skills/pull/206#discussion_r3995306641); [Verify the prepared validator against the dispatch pin](https://github.com/kamui/skills/pull/206#discussion_r3995306644); [Record an unparseable ledger instead of crashing](https://github.com/kamui/skills/pull/206#discussion_r3995436450).
+- **[kamui/skills#208](https://github.com/kamui/skills/pull/208)**: [Match complete requirement identifiers](https://github.com/kamui/skills/pull/208#discussion_r3995740597).
+- **[kamui/skills#209](https://github.com/kamui/skills/pull/209)**: [Derive the fix site from the actual repair](https://github.com/kamui/skills/pull/209#discussion_r3995780379).
+- **[kamui/skills#210](https://github.com/kamui/skills/pull/210)**: [Retitle the publishing example question to the outcome it decides](https://github.com/kamui/skills/pull/210#discussion_r3997311710).
+- **[kamui/skills#211](https://github.com/kamui/skills/pull/211)**: [`chain()` decides that a prompt carries the pinned block from a 200-byte prefix](https://github.com/kamui/skills/pull/211#discussion_r3997557718); [P02, P10 and P17 launch records and verdicts describe superseded runs](https://github.com/kamui/skills/pull/211#discussion_r3997557722); [The eligibility record names a reservation set it did not evaluate against](https://github.com/kamui/skills/pull/211#discussion_r3997557727); [The reservation rule text says only backticked references count, but prose references are reserved too](https://github.com/kamui/skills/pull/211#discussion_r3997557730); [The dry-run ledger events carry placeholder evidence and cite a probe that does not exist](https://github.com/kamui/skills/pull/211#discussion_r3997557735); [E1 compares candidate names case-sensitively](https://github.com/kamui/skills/pull/211#discussion_r3997557738); [Four empty `.lock` files are committed and indexed as evidence](https://github.com/kamui/skills/pull/211#discussion_r3997557739).
+- **[kamui/skills#212](https://github.com/kamui/skills/pull/212)**: [Identify every record rejected by accounting](https://github.com/kamui/skills/pull/212#discussion_r3998073129); [Give the shape-repair worker the results it must preserve](https://github.com/kamui/skills/pull/212#discussion_r3998073136); [Allow the clean path for an empty re-review packet](https://github.com/kamui/skills/pull/212#discussion_r3998073139); [Include prior findings when selecting related acquittals](https://github.com/kamui/skills/pull/212#discussion_r3998073142).
+- **[kamui/skills#213](https://github.com/kamui/skills/pull/213)**: [Stop counting the candidate review's own unedited output as later state](https://github.com/kamui/skills/pull/213#discussion_r3998469126); [Make the gate-time context digest reproducible](https://github.com/kamui/skills/pull/213#discussion_r3998469130); [Record the `v2b-5` protocol bump in the changelog](https://github.com/kamui/skills/pull/213#discussion_r3998469132).
+- **[kamui/skills#214](https://github.com/kamui/skills/pull/214)**: No published defect concept established; source outcome inspected. Question admission/deferral/priority calibration.
+- **[kamui/skills#215](https://github.com/kamui/skills/pull/215)**: [Repoint deferred-provenance references away from the issue this PR closes](https://github.com/kamui/skills/pull/215#discussion_r3998856276).
+
+Additional exposed concepts are distinct from the published items: #200 ruling-table glob (C05); #206 malformed ledger shapes and arithmetic overflow (C04); #209 comprehension coordinate and stale fixture signature (C06). #212’s partition-test-loop observation and #211’s retention self-count/timestamp observation remain observations. The broader fixes described in those PR replies are not additional independent review runs.
+
+## Incidental historical exposure
+
+Initial broad repository text searches, subsequent identity-only README reads and a bounded source-history read that also displayed a public comparison table surfaced historical evidence outside the selected routine sample. It was not used to enlarge the sample or regrade experiments. Conservatively retain these exclusions even where only a snippet or identity was seen:
+
+| Qualified target | Exposed topic / source |
+| --- | --- |
+| [kamui/shortlist#66](https://github.com/kamui/shortlist/pull/66) | Test-suite repetition / historical prototype context. [Source](../prototype-runs-2026-09-01-test-1/README.md). |
+| [redis/redis#15680](https://github.com/redis/redis/pull/15680) | Cross-shard replication and cached-master reasoning snippets. [Source](../prototype-runs-2026-09-01-test-2/README.md). |
+| [tokio-rs/tokio#7757](https://github.com/tokio-rs/tokio/pull/7757) | Prototype identity only; no target truth investigated. [Source](../prototype-runs-2026-09-01-test-3/README.md). |
+| [microsoft/playwright#29698](https://github.com/microsoft/playwright/pull/29698) | removeCookies deferral/sugar-API reasoning; incidental public README outcome summary. [Source](../prototype-runs-2026-09-01-test-4/README.md). |
+| [hashicorp/raft#581](https://github.com/hashicorp/raft/pull/581) | Leadership-transfer timeout path snippet. [Source](../prototype-runs-holdout/README.md). |
+| [graphql/graphql-js#1582](https://github.com/graphql/graphql-js/pull/1582) | Error-constructor/disposition-ledger snippet. [Source](../one-shot-qualification-2026-09-07/README.md). |
+| [bokeh/bokeh#9232](https://github.com/bokeh/bokeh/pull/9232) | UTC-preservation and verifier-routing snippets. [Source](../one-shot-qualification-2026-09-07/README.md). |
+| [clap-rs/clap#6212](https://github.com/clap-rs/clap/pull/6212) | Terminal-positional remedy topic in PR #200; target mapping from public reservation/title metadata. [Source](../bounded-discovery-qualification-2026-09-12/targets/reservations.json). |
+| [nats-io/nats-server#6593](https://github.com/nats-io/nats-server/pull/6593) | Timer/test-observation topic in PR #200; target mapping is a conservative title-based inference, not re-adjudicated truth. [Source](../bounded-discovery-qualification-2026-09-12/targets/reservations.json). |
+
+The incidental public comparison-table read was `docs/research/bounded-discovery-decision-2026-09-11/comparison-data.md`, approximately lines 1–80 at the R17/R16 heads. It exposed the following historical labels and participation mapping; no semantic truth behind the concept IDs was investigated. Retain all four as consumed, including the clean control. [Pinned source](https://github.com/kamui/skills/blob/5379447d0fd99819144955214cbe6d64be1df61d/docs/research/bounded-discovery-decision-2026-09-11/comparison-data.md).
+
+| Qualified target | Exposed register labels |
+| --- | --- |
+| [clap-rs/clap#6212](https://github.com/clap-rs/clap/pull/6212) | Buggy; `GT-p1`, `GT-p2`; attempted; arm/position mapping visible |
+| [grpc/grpc-go#7417](https://github.com/grpc/grpc-go/pull/7417) | Clean control; no defect concept; attempted; arm/position mapping visible |
+| [nats-io/nats-server#6593](https://github.com/nats-io/nats-server/pull/6593) | Buggy; `GT-r1`; unattempted |
+| [nats-io/nats-server#7395](https://github.com/nats-io/nats-server/pull/7395) | Buggy; `GT-s1`; unattempted |
+
+The inherited map also preserves the other surfaced filename-only holdouts (Hyper, Typeshed, uv, Polars, Cobra), qualified by its own provenance, and #173’s bytes/etcd regression fixtures. No historical exclusion is released here. Where a topic-to-target mapping is uncertain, conservatively exclude the qualified candidate and retain the uncertainty rather than opening truth to settle it.
+
+## Later-study handoff
+
+[#173](https://github.com/kamui/skills/issues/173) can use this available register immediately and must carry these qualified identities into its own exclusions; it need not wait for #216. This PR only records the handoff. It does not edit #173’s scope, issue status, dependencies, or future target manifest.
