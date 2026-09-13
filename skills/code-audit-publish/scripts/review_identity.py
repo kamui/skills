@@ -52,6 +52,8 @@ def check(packet: dict, review_id: str, author: str, merge_base: str, context: s
         if key in fields or not value:
             return reasons + ["duplicate or empty run trailer field"]
         fields[key] = value
+    if not re.fullmatch(r"[0-9a-f]{64}", fields.get("output", "")):
+        reasons.append("original output digest unavailable")
     pr = packet["pr"]
     issues = ",".join(sorted(i["coordinate"] for i in packet["fingerprint"]["issues"])) or "none"
     expected = {

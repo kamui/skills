@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 from context_fingerprint import digest
-from forge_packet import normalize, sample_root
+from forge_packet import normalize, output_digest, sample_root
 
 HERE = Path(__file__).resolve().parent
 BASE = "b" * 40
@@ -32,7 +33,17 @@ def fixture() -> dict:
         f"base-sha={BASE} merge-base={MERGE} context={context} "
         "issues=acme/payments#123 coverage=complete -->"
     )
+    seal_output(packet)
     return packet
+
+
+def seal_output(packet: dict) -> None:
+    review = packet["reviews"][0]
+    comments = [c for t in packet["threads"] for c in t["comments"]
+                if c.get("review_id") == review["id"] and c.get("reply_to") is None]
+    review["body"] = re.sub(r" output=[0-9a-f]{64}", "", review["body"])
+    value = output_digest({"body": review["body"], "comments": comments})
+    review["body"] = review["body"].replace(" -->", f" output={value} -->")
 
 
 def main() -> int:
@@ -55,7 +66,17 @@ def main() -> int:
             if result.returncode != expected or contains not in result.stdout + result.stderr:
                 failures.append(f"{name}: exit {result.returncode}: {result.stdout} {result.stderr}")
 
-        check("exact current inputs", fixture(), 0)
+        original = fixture()
+        payload = {"body": original["reviews"][0]["body"],
+                   "comments": original["threads"][0]["comments"]}
+        (tmp / "output.json").write_text(json.dumps(payload), encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(HERE / "forge_packet.py"), "output-digest", str(tmp / "output.json")],
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        if result.returncode != 0 or f"output={result.stdout.strip()} " not in payload["body"]:
+            failures.append(f"publication digest CLI roundtrip: {result.stdout} {result.stderr}")
+        check("exact current inputs", original, 0)
         changed = fixture()
         changed["pr"].update(state="MERGED", merged=True)
         check("open review cannot suppress merged retrospective", changed, 1, contains="merged")
@@ -99,7 +120,25 @@ def main() -> int:
         check("human reply without trailer and same review id", changed, 1, contains="reply ")
         changed = fixture()
         changed["reviews"][0]["last_edited_at"] = "2026-09-01T11:00:00Z"
-        check("edited candidate review", changed, 1, contains="review id=900 edited")
+        changed["reviews"][0]["body"] = "New evidence.\n" + changed["reviews"][0]["body"]
+        check("edited candidate review", changed, 1, contains="own-output")
+        changed = fixture()
+        changed["reviews"][0]["updated_at"] = "2026-09-01T09:00:01Z"
+        for comment in changed["threads"][0]["comments"]:
+            comment.update(created_at="2026-09-01T09:00:01Z", updated_at="2026-09-01T09:00:01Z")
+        check("original timestamps drift one second without edits", changed, 0)
+        changed["reviews"][0]["body"] = "[Finding](https://example.test/comment/1)\n" + changed["reviews"][0]["body"]
+        changed["reviews"][0]["last_edited_at"] = "2026-09-01T09:00:10Z"
+        seal_output(changed)  # the same final payload sent by the phase-2 update
+        check("phase-2 linked index is original output", changed, 0)
+        changed["threads"][0]["comments"][0]["body"] += " Later correction."
+        check("later edit to an original comment", changed, 1, contains="own-output")
+        changed = fixture()
+        changed["threads"][0]["comments"] = []
+        check("deleted original comment", changed, 1, contains="own-output")
+        changed = fixture()
+        changed["reviews"][0]["body"] = re.sub(r" output=[0-9a-f]{64}", "", changed["reviews"][0]["body"])
+        check("missing output baseline", changed, 1, contains="output digest unavailable")
         changed = fixture()
         changed["threads"][0]["is_resolved"] = True
         check("undated resolution", changed, 1, contains="thread-state")
