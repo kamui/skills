@@ -82,7 +82,7 @@ Each decision rule has one owning document; every other document that needs it c
 | Prior state, duplicate-review shortcut, delta scope and its summary, reply dispositions, prior-item classification | `references/re-review.md`, loaded when step 1 finds prior state from the posting identity | `SKILL.md` step 1 (prior-state reading), step 2 (the whole shortcut, delta sections), step 4 (delta summary and digest); `re-review.md` | `SKILL.md` steps 1, 2, 3, and 4 and the contract's "Replies and prior state" each point at it |
 | Finding fields, forms, stable ids, kinds, observation cap, status, coverage, workflow and digest | `references/review-record.md` | combined output contract | rubric, re-review, and step 3 point at record semantics |
 | Comment syntax, summary layout and references, trailers, malformed-comment repair | `references/rendering.md`, loaded at step 5 | combined output contract | inspect step 5 loads it; publisher repair returns to that step using recorded absolute script paths |
-| Authorization, event selection, atomic batch publication, stale-head and retry checks, posting drafted replies | `code-review-publish/SKILL.md` and its `references/publication.md` | combined output contract and former step 6 | inspect returns validated payload, emitted batch, and drafts; caller owns forge writes |
+| Authorization, event selection, atomic batch publication, stale-head and retry checks, posting drafted replies and resolving settled threads | `code-review-publish/SKILL.md` and its `references/publication.md` | combined output contract and former step 6 | inspect returns validated payload, emitted batch, and drafts; caller owns forge writes |
 | Material questions and recorded deferrals: the question bar, supplied-evidence reading, when a recorded deferral publishes (issue #139) | rubric, "Issue fit" | rubric question paragraph; Released compatibility restated the bar for `unresolved`; `SKILL.md` step 1 said step 3 treats a deferral as an open question | Released compatibility, `SKILL.md` step 1, the contract's Question comment and `Needs Information` line, and Uncertainty routing each point at the rule |
 | Priority calibration from demonstrated impact and reach, separate from the action decision (issue #139) | rubric, "Priorities and blocking" | rubric priority list; verifier calibrated `action` only; nothing named confirmation or visibility | contract Finding comment and `SKILL.md` step 3's correction check each carry one pointer sentence; the verifier restates the sentence in its own procedure under the documented brief exception |
 
@@ -90,7 +90,7 @@ Each decision rule has one owning document; every other document that needs it c
 
 ### Inspect/publish split (issue #226)
 
-The original package moved with `git mv` to `code-review-inspect`; `code-review-publish` is now a 49-line one-shot caller. The first commit records the named install-alone exception. The Caller/Return seam carries the private record, validated payload, emitted advisory batch, prose, routed inputs, drafted replies, and absolute script paths. The semantic record loads with the rubric, syntax loads at step 5, and forge write mechanics load only in the publisher. Recovery has one owner in the rubric; posting existing-thread replies has one owner in publication. The interactive wrapper remains work for #227 and session delta review for #228 under #225.
+The original package moved with `git mv` to `code-review-inspect`; `code-review-publish` is now a 49-line one-shot caller. The first commit records the named install-alone exception. The Caller/Return seam carries the private record, validated payload, emitted advisory batch, prose, routed inputs, prior thread node ids and resolution states, drafted replies, and absolute script paths. The semantic record loads with the rubric, syntax loads at step 5, and forge write mechanics load only in the publisher. Recovery has one owner in the rubric; posting existing-thread replies and resolving settled threads have one owner in publication. The interactive wrapper remains work for #227 and session delta review for #228 under #225.
 
 **Identifier retained: `v5b-15`.** Admission, verification, status precedence, ordinary COMMENT validation, trailers, finding ids, posting identity, digest membership, and duplicate/delta rules remain unchanged. The sole non-editorial script change is authorized gating emission: enforce the first-line grammar and event/status compatibility on that path only, remove `(advisory)` mechanically, and re-validate the edited copy before printing. No payload formerly accepted by COMMENT is newly rejected. The posted batch, rather than the advisory input payload, supplies the final report. Universal status-line enforcement remains outside this split (#220).
 
@@ -98,16 +98,16 @@ The original package moved with `git mv` to `code-review-inspect`; `code-review-
 
 | Load | Before | After |
 | --- | ---: | ---: |
-| Core SKILL.md | 30,680 | 32,422 |
+| Core SKILL.md | 30,680 | 32,499 |
 | Rubric | 35,988 | 36,219 |
 | Always-loaded contract / semantic record | 21,862 | 9,570 |
-| Early inspection total | 88,530 | 78,211 |
+| Early inspection total | 88,530 | 78,288 |
 | Rendering reference loaded at step 5 | Included above | 10,420 |
-| Publisher SKILL.md | Included above | 3,197 |
-| Publish-only publication reference | Included above | 3,522 |
-| Complete first-review instruction set, excluding conditional branches | 88,530 | 95,350 |
+| Publisher SKILL.md | Included above | 3,213 |
+| Publish-only publication reference | Included above | 4,511 |
+| Complete first-review instruction set, excluding conditional branches | 88,530 | 96,432 |
 
-The publisher entrypoint loads before inspect when invoked through it: that path's early total is 81,408 bytes. These counts establish placement, not measured cost savings, recall, precision, or production speedup. The extra caller contract and wrapper increase total text while delaying rendering and publication details.
+The publisher entrypoint loads before inspect when invoked through it: that path's early total is 81,501 bytes. These counts establish placement, not measured cost savings, recall, precision, or production speedup. The extra caller contract and wrapper increase total text while delaying rendering and publication details.
 
 **Instruction replays.** Compared the before/after rules at the seam against these described inputs; these are paper walks, not new review-quality measurements:
 
@@ -124,11 +124,13 @@ The publisher entrypoint loads before inspect when invoked through it: that path
 | Conformance and released compatibility | Conditional conformance reference; artifact rows and separate compatibility disposition unchanged | Same admission, verification, source coordinates and unavailable-artifact accounting |
 | Changed tests | Same execution-order inspection, focused execution bounds and outcome distinctions | Same evidence / unavailable-execution coverage statement |
 | Deleted or renamed anchor | Full pinned manifest supplies file provenance; rendering preserves LEFT/RIGHT/UNKNOWN and rename limitations | Same commit-pinned fragment, same file-body fallback, no invented line |
-| Duplicate or delta re-review; disputed decline | Conditional re-review reference; unchanged workflow/context/posting identity; shortcut on; widening and prior classification unchanged | Existing URL stop or same delta review; replies drafted with target ids, caller posts on those threads; disputes remain human decisions |
+| Duplicate or delta re-review; disputed decline | Conditional re-review reference; unchanged workflow/context/posting identity; shortcut on; widening and prior classification unchanged | Existing URL stop or same delta review; replies drafted with target ids, caller posts on those threads and resolves fixed/accepted/obsolete items after successful replies; disputes remain open for human decisions |
 | Merged-target retrospective | Inspect renders mandatory Mode line from authorization input | Complete would-be review; no publication by default |
 | Gating authorized; self-review | Publisher's event table and identity bound; script enforces status grammar and compatibility | APPROVE / REQUEST_CHANGES removes suffix and re-validates; self-review stays COMMENT; report uses posted form |
 | Conclusive forge rejection; head drift; ambiguous write | Publisher owns stale-head/read-back/retry decision; inspect rendering owns repair and recomputation via recorded absolute paths | Repair retains every verified finding, then validate/render/emit and confirm no review exists before one retry; drift aborts; ambiguity is read back first |
 | Missing dependency; unresolved target; required issue; script failure | Dependency named before invocation; inspect's named-stop contract | Publisher reports stop without writing |
+
+**Thread-resolution repair (PR #229).** The first split draft recorded settled classifications without assigning the former “Resolve the first three” action to the publisher. The return now carries thread node ids and packet resolution states; publication owns the mutation after successful replies. This restores pre-split behavior under `v5b-15`, rather than introducing a new classification or acceptance rule. Paper replay: fixed, accepted, and obsolete items each resolve using their node id after a successful reply; already-resolved threads skip the mutation; still-open, not-verifiable, and disputed items stay open; an author decline alone does not settle one; a failed reply prevents resolution; an ambiguous mutation reads thread state before one retry; a refusal is reported unresolved; retrospective non-publication performs neither write. The same packet `id` / `is_resolved` fields already used by re-review supply the returned coordinates, so no script change is needed.
 
 **Mechanical verification.** `validate_review.py --self-test` passes 117 cases including all three events, both event/status mismatches, malformed gating status lines, unchanged COMMENT acceptance, input immutability, and validation of the emitted body. `review_context.py --self-test`, `test_context_fingerprint.py`, `test_forge_packet.py`, and `test_deleted_file_links.py` all pass from the moved skill root. Swept all runtime step pointers (steps 1–5 retained), output-contract mentions, Markdown local links and fences, and paired each non-empty old contract line with its destination or explicit ownership rewrite. Historical run records and historical DESIGN entries are not rewritten. `git diff --check` passes.
 

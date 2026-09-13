@@ -48,6 +48,16 @@ Inspect returns the advisory `COMMENT` batch. For a separately authorized gating
 
 On this gating path only, the script enforces the first-line grammar `**<Status>[ (advisory)]** — …`: the input advisory suffix is present exactly for `Changes Requested` or `Approved` under `COMMENT`. `APPROVE` requires `Approved`, and `REQUEST_CHANGES` requires `Changes Requested`; a mismatch exits 1. It removes the suffix and re-validates the edited body before printing. The batch is what validated after that one scripted edit. The ordinary `COMMENT` path retains its existing acceptance rules. Report the posted form from `batch.json`, not the advisory form in `payload.json`.
 
-## Existing-thread replies
+## Existing-thread replies and resolution
 
 Post each drafted reply to its recorded comment id with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/comments/<id>/replies -f body='<drafted reply>'`. Use the equivalent structured body input when quoting needs it. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item. Re-read the thread after an ambiguous result before one retry. Report any reply that failed.
+
+After successfully posting an item's drafted reply, resolve its existing thread when inspect classified it `fixed`, `accepted`, or `obsolete`. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: inspect's evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
+
+On GitHub, run:
+
+```sh
+gh api graphql -f query='mutation($id:ID!){ resolveReviewThread(input:{threadId:$id}){ thread{ isResolved } } }' -f id=<thread-node-id>
+```
+
+Confirm `isResolved: true`. If the result is ambiguous, re-read that thread's state before one retry; if resolution is refused or still fails, report the thread as unresolved rather than claiming it closed. Resolve nothing whose drafted reply failed to post. Non-publishing retrospective runs perform neither replies nor resolutions.
