@@ -21,8 +21,13 @@ Exit codes:
        `candidate <id> | <verdict> | <basis>` then
        `acquittal <id> | <ruling> | <evidence>`
     1  the return violates the accounting (one line per violation on stdout,
-       as `<block>:<row>: <rule>: <detail>`; row 0 is the block as a whole).
-       An id no violation names has exactly one conforming record.
+       as `<block>:<row>: <rule>: <detail>`, each naming the record id where
+       the row carries one; row 0 is the block as a whole), followed by one
+       `accounted: <id>, ...` line listing every expected id with exactly one
+       conforming record and one `withheld: <id>, ...` line listing every
+       other expected id — missing, duplicated, or malformed. The two lines
+       partition the packet, so the orchestrator withholds exactly what the
+       `withheld:` line names and never infers it from the violations.
     2  the packet or the return could not be read, the packet is not the
        builder's JSON, or the packet is empty — an intentionally empty input
        takes the explicit clean-review path and dispatches no verifier — or a
@@ -276,12 +281,16 @@ def check_records(
                 )
                 continue
             if len(fields) != 3:
+                if fields[0] in expected:
+                    rows_by_id.setdefault(fields[0], []).append(number)
+                    malformed.add(fields[0])
                 violations.append(
                     Violation(
                         name,
                         number,
                         "field count",
-                        f"expected three pipe-separated fields (id | {kind_label} word | "
+                        f"{fields[0] + ': ' if fields[0] in expected else ''}expected three "
+                        f"pipe-separated fields (id | {kind_label} word | "
                         f"{'basis' if name == 'verdicts' else 'evidence'}); found {len(fields)}",
                     )
                 )
@@ -303,14 +312,24 @@ def check_records(
             if word not in vocabulary:
                 violations.append(
                     Violation(
-                        name, number, kind_label, f"{word!r} is not one of {', '.join(vocabulary)}"
+                        name,
+                        number,
+                        kind_label,
+                        f"{record_id}: {word!r} is not one of {', '.join(vocabulary)}",
                     )
                 )
                 well_formed = False
             else:
                 detail = check_third(record_id, word, third)
                 if detail is not None:
-                    violations.append(Violation(name, number, "basis" if name == "verdicts" else "evidence", detail))
+                    violations.append(
+                        Violation(
+                            name,
+                            number,
+                            "basis" if name == "verdicts" else "evidence",
+                            f"{record_id}: {detail}",
+                        )
+                    )
                     well_formed = False
             if well_formed:
                 records[record_id] = (word, third)
@@ -338,10 +357,17 @@ def check_records(
     return records, violations
 
 
-def account(return_text: str, packet: Packet) -> tuple[list[str], list[Violation]]:
+def account(return_text: str, packet: Packet) -> tuple[list[str], list[Violation], list[str], list[str]]:
+    """The normalized records, the violations, and the accounted / withheld id partition.
+
+    Every expected id lands in exactly one of the two id lists: accounted when
+    it has exactly one conforming record, withheld otherwise — missing,
+    duplicated, malformed, or in a block the return lacks.
+    """
     blocks = fenced_blocks(return_text)
     found, violations = locate_blocks(blocks)
     normalized: list[str] = []
+    accounted: list[str] = []
 
     def verdict_basis(_: str, word: str, basis: str) -> str | None:
         if not basis:
@@ -376,6 +402,7 @@ def account(return_text: str, packet: Packet) -> tuple[list[str], list[Violation
             if candidate_id in verdicts:
                 word, basis = verdicts[candidate_id]
                 normalized.append(f"candidate {candidate_id} | {word} | {basis}")
+                accounted.append(candidate_id)
     else:
         for candidate_id in packet.candidates:
             violations.append(Violation("verdicts", 0, "missing verdict", f"{candidate_id} has no record"))
@@ -388,10 +415,16 @@ def account(return_text: str, packet: Packet) -> tuple[list[str], list[Violation
             if row_id in rulings:
                 word, evidence = rulings[row_id]
                 normalized.append(f"acquittal {row_id} | {word} | {evidence}")
+                accounted.append(row_id)
     else:
         for row_id in packet.acquittals:
             violations.append(Violation("rulings", 0, "missing ruling", f"{row_id} has no record"))
-    return normalized, violations
+    withheld = [
+        record_id
+        for record_id in packet.candidates + list(packet.acquittals)
+        if record_id not in accounted
+    ]
+    return normalized, violations, accounted, withheld
 
 
 # --- self-test -------------------------------------------------------------
@@ -469,22 +502,44 @@ def self_test_cases() -> list[tuple[str, dict, str, int, str]]:
          "verdicts:1: unexpected id: 'code/invented/finding' is not a verdict the verifier was given"),
         ("malformed verdict", PACKET,
          _replace(full, "| confirmed | packages/browserContext.ts:291", "| probably | packages/browserContext.ts:291"), 1,
-         "verdicts:1: verdict: 'probably' is not one of confirmed, plausible, refuted"),
+         "verdicts:1: verdict: code/browser-context/remove-cookies-race: 'probably' is not one of confirmed, plausible, refuted"),
+        ("malformed verdict is withheld by name", PACKET,
+         _replace(full, "| confirmed | packages/browserContext.ts:291", "| probably | packages/browserContext.ts:291"), 1,
+         "accounted: requirements/release-notes/missing-flag, code-2\nwithheld: code/browser-context/remove-cookies-race"),
         ("refuted without a basis token", PACKET,
          _replace(full, "| refuted | contradiction", "| refuted | seems speculative"), 1,
-         "verdicts:2: basis: 'seems speculative' is not one of the five refutation bases"),
+         "verdicts:2: basis: requirements/release-notes/missing-flag: 'seems speculative' is not one of the five refutation bases"),
+        ("malformed confirmed basis is withheld by name", PACKET,
+         _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed | prose without citation"), 1,
+         "verdicts:1: basis: code/browser-context/remove-cookies-race: 'prose without citation' is not the path:line"),
+        ("malformed confirmed basis lands in withheld", PACKET,
+         _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed | prose without citation"), 1,
+         "withheld: code/browser-context/remove-cookies-race"),
+        ("malformed duplicate beside a valid row is withheld", PACKET,
+         _replace(full, VERDICTS_HEAD,
+                  VERDICTS_HEAD + "code/browser-context/remove-cookies-race | refuted | seems speculative\n"), 1,
+         "withheld: code/browser-context/remove-cookies-race"),
+        ("short row naming an expected id is withheld", PACKET,
+         _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed"), 1,
+         "verdicts:1: field count: code/browser-context/remove-cookies-race: expected three"),
+        ("short row naming an expected id lands in withheld", PACKET,
+         _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed"), 1,
+         "withheld: code/browser-context/remove-cookies-race"),
+        ("malformed ruling is withheld by name", PACKET,
+         _replace(full, "code-2 | holds |", "code-2 | stands |"), 1,
+         "accounted: code/browser-context/remove-cookies-race, requirements/release-notes/missing-flag\nwithheld: code-2"),
         ("plausible names what is unsettled", PACKET,
          _replace(full, "| refuted | contradiction", "| plausible | impact"), 0,
          "candidate requirements/release-notes/missing-flag | plausible | impact"),
         ("plausible with a stray basis", PACKET,
          _replace(full, "| refuted | contradiction", "| plausible | needs an operator"), 1,
-         "verdicts:2: basis: 'needs an operator' is not trigger or impact"),
+         "verdicts:2: basis: requirements/release-notes/missing-flag: 'needs an operator' is not trigger or impact"),
         ("confirmed without a quoted line", PACKET,
          _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed | it clearly races"), 1,
-         "verdicts:1: basis: 'it clearly races' is not the path:line of the quoted defect line"),
+         "verdicts:1: basis: code/browser-context/remove-cookies-race: 'it clearly races' is not the path:line of the quoted defect line"),
         ("empty basis", PACKET,
          _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed |"), 1,
-         "verdicts:1: basis: the basis field is empty"),
+         "verdicts:1: basis: code/browser-context/remove-cookies-race: the basis field is empty"),
         ("field count", PACKET,
          _replace(full, "| confirmed | packages/browserContext.ts:291", "| confirmed"), 1,
          "verdicts:1: field count"),
@@ -492,7 +547,7 @@ def self_test_cases() -> list[tuple[str, dict, str, int, str]]:
          _replace(full, VERDICTS_HEAD, VERDICTS_HEAD + "id | verdict | basis\n"), 1,
          "verdicts:1: header row"),
         ("missing ruling", PACKET,
-         _replace(full, "code-2 | holds | packages/browserContext.ts:538\n", "code-2 | holds\n"), 1,
+         _replace(full, "code-2 | holds | packages/browserContext.ts:538\n", "code-9 | holds | packages/browserContext.ts:538\n"), 1,
          "rulings:0: missing ruling: code-2 has no record"),
         ("duplicate ruling", PACKET,
          _replace(full, RULINGS_HEAD, RULINGS_HEAD + "code-2 | re-open | packages/browserContext.ts:600\n"), 1,
@@ -502,11 +557,11 @@ def self_test_cases() -> list[tuple[str, dict, str, int, str]]:
          "rulings:1: unexpected id: 'code-9' is not a ruling the verifier was given"),
         ("malformed ruling", PACKET,
          _replace(full, "code-2 | holds |", "code-2 | stands |"), 1,
-         "rulings:1: ruling: 'stands' is not one of holds, re-open"),
+         "rulings:1: ruling: code-2: 'stands' is not one of holds, re-open"),
         ("holds citing the row's own evidence", PACKET,
          _replace(full, "code-2 | holds | packages/browserContext.ts:538",
                   "code-2 | holds | `packages/browserContext.ts:540-544`"), 1,
-         "rulings:1: evidence: a holds ruling cites `packages/browserContext.ts:540-544`, the row's own evidence"),
+         "rulings:1: evidence: code-2: a holds ruling cites `packages/browserContext.ts:540-544`, the row's own evidence"),
         ("re-open may cite the row's evidence", PACKET,
          _replace(full, "code-2 | holds | packages/browserContext.ts:538",
                   "code-2 | re-open | packages/browserContext.ts:540-544"), 0,
@@ -514,7 +569,7 @@ def self_test_cases() -> list[tuple[str, dict, str, int, str]]:
         ("ruling evidence prose", PACKET,
          _replace(full, "code-2 | holds | packages/browserContext.ts:538",
                   "code-2 | holds | the reset branch takes the lock"), 1,
-         "rulings:1: evidence: 'the reset branch takes the lock' is not one path:line"),
+         "rulings:1: evidence: code-2: 'the reset branch takes the lock' is not one path:line"),
         ("blocks out of order", PACKET,
          _replace(_replace(full, "```rulings\ncode-2 | holds | packages/browserContext.ts:538\n```\n", ""),
                   VERDICTS_HEAD, "```rulings\ncode-2 | holds | packages/browserContext.ts:538\n```\n" + VERDICTS_HEAD), 1,
@@ -529,7 +584,9 @@ def self_test_cases() -> list[tuple[str, dict, str, int, str]]:
          "rulings:1: unexpected id: 'code-2' is not a ruling the verifier was given"),
         ("violations leave the other ids accounted", PACKET,
          _replace(full, "requirements/release-notes/missing-flag | refuted | contradiction\n", ""), 1,
-         "verdicts:0: missing verdict: requirements/release-notes/missing-flag"),
+         "accounted: code/browser-context/remove-cookies-race, code-2\nwithheld: requirements/release-notes/missing-flag"),
+        ("empty response withholds everything", PACKET, "", 1,
+         "accounted: (none)\nwithheld: code/browser-context/remove-cookies-race, requirements/release-notes/missing-flag, code-2"),
     ]
 
 
@@ -559,16 +616,23 @@ def run_self_test() -> int:
                     f"{name}: expected exit {expected_code} containing {expected_text!r}; "
                     f"got exit {result.returncode} with output {result.stdout.strip()!r}"
                 )
-        # The "violations leave the other ids accounted" case: the missing id is
-        # the only one a violation names, so the confirmed one stays usable.
+        # The accounted and withheld lines partition the packet on every exit-1 run.
         packet_path = root / "packet.json"
         packet_path.write_text(json.dumps(PACKET), encoding="utf-8")
         result = invoke(
             packet_path,
             _replace(RETURN, "requirements/release-notes/missing-flag | refuted | contradiction\n", ""),
         )
-        if "code/browser-context/remove-cookies-race" in result.stdout:
-            failures.append("a violation line named an id that had exactly one conforming record")
+        lines = result.stdout.splitlines()
+        if not (len(lines) >= 2 and lines[-2].startswith("accounted: ") and lines[-1].startswith("withheld: ")):
+            failures.append(f"exit-1 output does not end with the accounted and withheld lines: {lines!r}")
+        else:
+            listed = [x for x in (lines[-2][len("accounted: "):] + ", " + lines[-1][len("withheld: "):]).split(", ") if x != "(none)"]
+            expected_ids = [c["id"] for c in PACKET["candidates"]] + [a["id"] for a in PACKET["acquittals"]]
+            if sorted(listed) != sorted(expected_ids):
+                failures.append(f"accounted and withheld do not partition the packet: {listed!r}")
+        if "accounted:" in "".join(l for l in lines if l.startswith("verdicts:")):
+            failures.append("a violation line carried the accounting summary")
 
         empty = root / "empty.json"
         empty.write_text(json.dumps({"candidates": [], "acquittals": []}), encoding="utf-8")
@@ -623,10 +687,12 @@ def main() -> int:
         print(f"account_verifier_return: cannot read the return from stdin: {error}", file=sys.stderr)
         return 2
 
-    normalized, violations = account(return_text, packet)
+    normalized, violations, accounted, withheld = account(return_text, packet)
     if violations:
         for violation in violations:
             print(violation.render())
+        print("accounted: " + (", ".join(accounted) or "(none)"))
+        print("withheld: " + (", ".join(withheld) or "(none)"))
         return 1
     for line in normalized:
         print(line)

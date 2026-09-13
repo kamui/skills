@@ -42,7 +42,8 @@ When supplied, suite-results is a UTF-8 file containing one result-summary
 line per suite. On a re-review, `--prior` names a report holding one
 ```candidates block of the prior findings whose fate turns on the code, in
 the same section grammar with `support` left empty; they render under their
-own heading and join the packet as candidates.
+own heading and join the packet as candidates, and a ledger row related to
+a prior finding is supplied and packeted like one related to a candidate.
 The packet is JSON: {"candidates": [{"id", "axis"}...],
 "acquittals": [{"id", "axis", "evidence"}...]}.
 """
@@ -506,7 +507,7 @@ def build(args: argparse.Namespace) -> tuple[str, dict]:
 
     related = []
     if re.search(r"^## Related acquittals[ \t]*$", brief, re.MULTILINE):
-        related = [row for row in ledger_rows if is_related(row, candidates)]
+        related = [row for row in ledger_rows if is_related(row, candidates + prior)]
     if related:
         rows_by_axis: dict[str, list[str]] = {}
         for row in related:

@@ -22,7 +22,7 @@ the incomplete path below. The release claims no recall, precision, or runtime-p
 
 | Owner | `v2b-3` | `v2b-4` |
 | --- | --- | --- |
-| `SKILL.md` step 3 | "Spawn one sub-agent with a fresh context" and use the builder's output as the prompt. "If the verifier runs and returns nothing, that is a clean review, not a failure." | A genuinely non-inheriting worker, `fork_turns=none` or equivalent, or verification is incomplete and every candidate is withheld. The builder writes an accounting packet; `account_verifier_return.py` checks the return against it before any verdict is read; one shape-only repair; a zero-record return is a failure; an intentionally empty input takes the explicit clean-review path. |
+| `SKILL.md` step 3 | "Spawn one sub-agent with a fresh context" and use the builder's output as the prompt. "If the verifier runs and returns nothing, that is a clean review, not a failure." | A genuinely non-inheriting worker, `fork_turns=none` or equivalent, or verification is incomplete and every candidate is withheld. The builder writes an accounting packet; `account_verifier_return.py` checks the return against it before any verdict is read; one shape-only repair handed the prior return to preserve; a zero-record return is a failure; an intentionally empty input — nothing to verify on any round — takes the explicit clean-review path. |
 | `references/verify.md` | Verifier receives the claim, the repository, and suite results; returns per-candidate verdicts and per-row rulings in prose. | Gains § Isolation; receives `kind`, `trigger`, `impact`, `change`; returns exactly one record per supplied id in fenced `verdicts` and `rulings` blocks, with a merged candidate carrying its survivor's verdict. |
 | `references/finding-format.md` § Finder candidate block | Ten fields: `id`, `axis`, `anchor`, `fix`, `title`, `claim`, `support`, `trigger`, `priority`, `action`. | Thirteen fields, adding `kind`, `impact`, `change`; axis-prefixed unique ids; ledger rows carry a per-run id and a kind. |
 | Both axis briefs § Report tail | Four-field ledger row: claim, route, evidence, disposition. | Six-field row: `<axis>-<n>`, kind, claim, route, evidence, disposition. The old row is refused by count with the old grammar named. |
@@ -54,13 +54,17 @@ Each is a fixture in the same self-test, and each exits 1 with the violation nam
 | Last candidate's row omitted | "missing last id" | `verdicts:0: missing verdict: requirements/release-notes/missing-flag has no record` |
 | A candidate ruled twice | "duplicate id" | `verdicts:2: duplicate verdict: … appears 2 times` |
 | A verdict on an id not in the packet | "unknown id" | `verdicts:1: unexpected id: … is not a verdict the verifier was given` |
-| `probably` in the verdict column | "malformed verdict" | `verdicts:1: verdict: 'probably' is not one of confirmed, plausible, refuted` |
-| `refuted` with prose where a basis belongs | "refuted without a basis token" | `verdicts:2: basis: … is not one of the five refutation bases` |
-| `holds` citing only the row's own evidence | "holds citing the row's own evidence" | `rulings:1: evidence: a holds ruling cites …, the row's own evidence` |
+| `probably` in the verdict column | "malformed verdict" | `verdicts:1: verdict: <id>: 'probably' is not one of confirmed, plausible, refuted` |
+| `refuted` with prose where a basis belongs | "refuted without a basis token" | `verdicts:2: basis: <id>: … is not one of the five refutation bases` |
+| `holds` citing only the row's own evidence | "holds citing the row's own evidence" | `rulings:1: evidence: code-2: a holds ruling cites …, the row's own evidence` |
 
 The "violations leave the other ids accounted" fixture checks the partial-use rule: with the
-Requirements verdict missing, the only violation names that id, and the confirmed Code verdict is
-not named, so the orchestrator may use it after the one repair fails. The empty-packet fixture
+Requirements verdict missing, the script's closing `accounted:` line carries the confirmed Code
+verdict and the related ruling, its `withheld:` line carries the missing id, and the two lines
+partition the packet, so after the one repair fails the orchestrator withholds exactly the withheld
+line. The "malformed confirmed basis lands in withheld" and "malformed duplicate beside a valid row
+is withheld" fixtures check that a record whose id is recoverable but whose shape is not conforming
+lands on the withheld line rather than passing as accounted. The empty-packet fixture
 checks the other boundary: a packet with no candidates and no rows exits 2 naming the clean-review
 path, because such a run never dispatched a verifier and has no return to account for.
 
