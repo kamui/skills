@@ -54,7 +54,6 @@ Input schema (JSON object)::
       },
       "summary": {
         "status": "Changes Requested",  # Changes Requested | Incomplete | Needs Information | Approved
-        "gating": false,                # optional; true omits "(advisory)" when a gating event is authorized
         "intent": "<Intent line prose>",
         "issue_fit": "<Issue fit line prose>",
         "coverage": "<Coverage line prose>",
@@ -113,6 +112,7 @@ import re
 import sys
 from typing import Any
 
+import review_context as rc
 import validate_review as vr  # the sibling script; the skill installs alone
 
 STATUSES = ("Changes Requested", "Incomplete", "Needs Information", "Approved")
@@ -455,13 +455,13 @@ def read_summary(report: vr.Report, summary: Any, coverage: Any) -> dict[str, An
     if status not in STATUSES:
         report.add("summary.status", "status-consistency", f"`status` must be one of {list(STATUSES)}, not `{status!r}`; the reviewer selects it")
     fields["status"] = status
-    gating = summary.get("gating", False)
-    if not isinstance(gating, bool):
-        report.add("summary.gating", "schema", "`gating` must be a boolean when present")
-        gating = False
-    fields["gating"] = gating
+    if "gating" in summary:
+        report.add("summary.gating", "publication-boundary", "inspect composition is advisory; omit `gating` and let the publisher select --emit-batch --event")
     for key in ("intent", "issue_fit", "coverage"):
         fields[key] = read_text(report, "summary", summary, key)
+        if fields[key] is not None:
+            for match in re.finditer(r"\*\*(Intent|Issue fit|Coverage|Reviewed|Mode):\*\*", vr.mask_code(fields[key])):
+                report.add(f"summary.{key}", "field-label", f"`{key}` contains the composer-owned label `{match.group(0)}` outside code")
     ambiguities = summary.get("ambiguities", [])
     if not isinstance(ambiguities, list):
         report.add("summary.ambiguities", "schema", "`ambiguities` must be a list")
@@ -565,10 +565,14 @@ def check_identities(
 
 def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], items: list[tuple[str, dict[str, Any]]]) -> None:
     """Check anchors against the persisted review context's pinned manifest and run identity."""
+    if store.get("format") != rc.STORE_FORMAT or not isinstance(store.get("context"), dict):
+        report.add("store", "schema", f"expected a `{rc.STORE_FORMAT}` envelope with a `context` object from review_context.py --store")
+        return
+    context = store["context"]
     for key, run_key in (("head", "head"), ("merge_base", "merge_base")):
-        if store.get(key) != run.get(run_key):
-            report.add(f"run.{run_key}", "run-identity", f"the store was built for {key} `{store.get(key)}`, not `{run.get(run_key)}`")
-    manifest = store.get("manifest")
+        if context.get(key) != run.get(run_key):
+            report.add(f"run.{run_key}", "run-identity", f"the store was built for {key} `{context.get(key)}`, not `{run.get(run_key)}`")
+    manifest = context.get("manifest")
     if not isinstance(manifest, list):
         report.add("store", "schema", "the store carries no `manifest` list")
         return
@@ -655,7 +659,7 @@ def compose_body(
     if disputed:
         counts.append(plural(len(disputed), "disputed prior finding"))
     status = summary["status"]
-    if status in ADVISORY_STATUSES and not summary["gating"]:
+    if status in ADVISORY_STATUSES:
         status += " (advisory)"
     first = f"**{status}** — {', '.join(counts) if counts else 'no findings'}."
     if run["prior_head"] is not None:
