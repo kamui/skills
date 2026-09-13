@@ -33,7 +33,8 @@ Usage:
 re-renders the fragment from the same inputs and exits 0 only when `--fragment`
 is exactly that fragment; `-` reads the fragment from stdin, stripping one
 trailing newline. `render` with `--old-path` notes on stderr that renames are
-deferred to issue #84 and emits the code-span form.
+deferred pending a separate demonstrated case and bounded scope, and emits
+the code-span form.
 
 Exit codes:
     0  fragment rendered, fragment matched, or the self-test passed
@@ -78,7 +79,7 @@ def parse_coordinate(coordinate: str) -> tuple[str, int | None, int | None]:
     if "`" in coordinate:
         raise CoordinateError(
             f"coordinate {coordinate!r} contains a backtick, which the URL rule"
-            " cannot render safely; paths with backticks are deferred to issue #84"
+            " cannot render safely; backtick-path support requires a separate demonstrated case and bounded scope"
         )
     if "\n" in coordinate or "\r" in coordinate:
         raise CoordinateError(f"coordinate {coordinate!r} spans multiple lines")
@@ -256,7 +257,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.old_path is not None and args.side != "LEFT":
                 sys.stderr.write(
                     "link_coordinate: --old-path supplied; rename links are deferred"
-                    " to issue #84, so the coordinate renders as a code span\n"
+                    " pending a separate demonstrated case and bounded scope; rendering a code span\n"
                 )
             sys.stdout.write(output + "\n")
         else:

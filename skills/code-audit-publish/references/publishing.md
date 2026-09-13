@@ -125,7 +125,7 @@ anchor [`src/order.ts:47`](https://github.com/acme/payments/blob/a1b2c3d4e5f6a7b
 - a line or range carries `?plain=1#L<line>` or `?plain=1#L<start>-L<end>`; a file anchor carries neither;
 - a distinct fix site renders its own fragment and follows the anchor as `; fix` with its fragment;
 - a known deleted whole-file anchor uses `--side LEFT --merge-base <pinned merge-base>` and links at that merge-base with its established pre-image path; `LEFT` lines and rename coordinates carrying `--old-path` remain code spans;
-- an observation's evidence pointer stays a code span: the ledger row behind it does not record the side or revision the evidence was read at, and structured provenance is [issue #84](https://github.com/kamui/skills/issues/84)'s item.
+- an observation's evidence pointer stays a code span: the ledger row behind it does not record the side or revision the evidence was read at, and structured provenance remains deferred until a separate demonstrated case and bounded scope justify it.
 
 The caller retains a publication record `{coordinate, side}` derived from the full pinned merge-base manifest (`D` establishes a deleted file's pre-image path), alongside the run's pinned `head` and `merge-base`. For both findings and questions, pass `coordinate` as `--coordinate`, `side` as `--side`, head as `--revision`, and merge-base as `--merge-base` to **both** render and check. A delta deletion alone does not establish a merge-base file. Keep this record through body fallback, payload repair, the index update and the caller report; the later audit payload-emitter implementation must consume these same fields and roles. The finder/accounting packets retain their existing grammar; the orchestrator owns this publication record.
 
