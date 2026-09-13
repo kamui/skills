@@ -7,7 +7,7 @@ Usage: python3 scripts/review_identity.py packet.json --review ID --author LOGIN
 Inputs: a forge-packet/1 from forge_packet.py and a JSON object carrying the
 exact reviewed specs and guidance for context_fingerprint.py. The candidate
 review must have one complete current-contract trailer and match the packet's
-head/base/ref, supplied merge-base, issue set, posting identity and recomputed
+head/base/ref and explicit state/merged, supplied merge-base, issue set, posting identity and recomputed
 digest. Later activity or an undated thread transition prevents the shortcut;
 this conservative check never makes a relevance or finding judgment.
 
@@ -56,6 +56,7 @@ def check(packet: dict, review_id: str, author: str, merge_base: str, context: s
     issues = ",".join(sorted(i["coordinate"] for i in packet["fingerprint"]["issues"])) or "none"
     expected = {
         "workflow": WORKFLOW, "head": pr["head_sha"],
+        "state": pr["state"], "merged": str(pr["merged"]).lower(),
         "base-ref": quote(pr["base_ref"], safe="/-._~"), "base-sha": pr["base_sha"],
         "merge-base": merge_base, "context": context, "issues": issues,
         "coverage": "complete",

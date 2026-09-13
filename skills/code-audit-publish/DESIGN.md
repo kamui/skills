@@ -55,8 +55,7 @@ incremented `v2b-2` to `v2b-3` for the verdict-routing and status semantics reco
 [C17](#c17-removed-guarantees-put-unchanged-code-in-scope): unchanged code is introduced-here when
 the diff removed or weakened a guarantee it relied on, and a `pre-existing` refutation must compare
 the same path, trigger and governing guarantee at base and head. A `v2a-1`, `v2b-1`, `v2b-2` or
-`v2b-3` trailer remains readable: each bump changes the identifier, not the trailer vocabulary, so a
-prior round's finding ids and trailers stay legible as the historical state they record.
+`v2b-3` or `v2b-4` trailer remains readable as historical state. The current trailer adds context and lifecycle identity; prior finding ids, replies and verdicts remain legible, but older run trailers cannot suppress a current-contract review.
 
 ### The pole statement
 
@@ -844,7 +843,7 @@ the assessment's B5 row names the schema one. The workflow identifier advances t
 
 ### C20. Complete input identity and same-head changes
 
-Issue [#166](https://github.com/kamui/skills/issues/166), under [#156](https://github.com/kamui/skills/issues/156), replaces head/status duplicate suppression with full head/base/merge-base, workflow and normalized intent/guidance identity. The workflow advances to `v2b-5`; its run trailer adds `context`, and `review_identity.py` asserts that version. Historical trailers remain readable for finding ids, replies, verdicts and the round cap, but cannot suppress a current-contract review.
+Issue [#166](https://github.com/kamui/skills/issues/166), under [#156](https://github.com/kamui/skills/issues/156), replaces head/status duplicate suppression with full head/base/merge-base, workflow and normalized intent/guidance identity. The workflow advances to `v2b-5`; its run trailer adds `context`, `state` and `merged`, and `review_identity.py` asserts that version. Historical trailers remain readable for finding ids, replies, verdicts and the round cap, but cannot suppress a current-contract review.
 
 The audit packages the routine skill's tested `forge_packet.py` and `context_fingerprint.py` mechanics delivered by #132, with their CLI fixtures, as local helpers. No sibling skill is required and no forge operation moves into Python. Step 1 persists all outer and nested pages, stable numeric ids, comment timestamps, explicit state/merged, missing slices and per-connection coverage. Audit additions retain continuation cursors, reject missing state/timestamp evidence for complete coverage, and count later edits to the candidate review's own output while excluding its original submission. The input identity reference defines exact membership and type/order normalization, retaining this audit's existing broader guidance set and recording additional applicable normative pointers actually read.
 

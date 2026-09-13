@@ -28,7 +28,7 @@ def fixture() -> dict:
     context = digest(dict(packet["fingerprint"], **INPUTS))
     packet["reviews"][0]["body"] = (
         "Changes Requested (advisory)\n"
-        f"<!-- review-run workflow=v2b-5 head={'a' * 40} base-ref=main "
+        f"<!-- review-run workflow=v2b-5 head={'a' * 40} base-ref=main state=OPEN merged=false "
         f"base-sha={BASE} merge-base={MERGE} context={context} "
         "issues=acme/payments#123 coverage=complete -->"
     )
@@ -50,12 +50,21 @@ def main() -> int:
             result = subprocess.run(
                 [sys.executable, str(HERE / "review_identity.py"), str(tmp / "packet.json"),
                  "--review", "900", "--author", author, "--merge-base", merge,
-                 "--inputs", str(tmp / "inputs.json")], capture_output=True, encoding="utf-8",
+                 "--inputs", str(tmp / "inputs.json")], capture_output=True, text=True, encoding="utf-8",
             )
             if result.returncode != expected or contains not in result.stdout + result.stderr:
                 failures.append(f"{name}: exit {result.returncode}: {result.stdout} {result.stderr}")
 
         check("exact current inputs", fixture(), 0)
+        changed = fixture()
+        changed["pr"].update(state="MERGED", merged=True)
+        check("open review cannot suppress merged retrospective", changed, 1, contains="merged")
+        changed["reviews"][0]["body"] = changed["reviews"][0]["body"].replace(
+            "state=OPEN merged=false", "state=MERGED merged=true")
+        check("matching merged identity is eligible but grants no authority", changed, 0)
+        changed = fixture()
+        changed["pr"]["state"] = "CLOSED"
+        check("closed lifecycle differs at same head", changed, 1, contains="state")
         check("different identity", fixture(), 1, author="another", contains="posting identity")
         check("changed merge-base", fixture(), 1, merge="e" * 40, contains="merge-base")
         check("abbreviated SHA", fixture(), 2, merge="abc", contains="40-hex")

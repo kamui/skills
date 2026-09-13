@@ -89,12 +89,9 @@ def expect_error(case: str, payload: Any, fragment: str, *, dumps: Any = None) -
         fail(case, f"error message `{result.stderr.strip()}` does not mention `{fragment}`")
 
 
-# The reviewed inputs of one representative run. `guidance` here is a fixture of
-# the F1.1 membership rule in `references/output-contract.md`: root AGENTS.md and
-# root CLAUDE.md, a path-scoped AGENTS.md in an ancestor directory of a changed
-# path, and root CONTEXT.md. Membership is decided by the reviewer, not by this
-# script — the script hashes exactly the entries it is given, which is why the
-# membership rule has to be exhaustive for two runs to agree.
+# Representative inputs under references/input-identity.md: root/scoped guidance
+# plus CONTEXT.md, assumed reached through an applicable normative pointer in
+# this fixture. The helper hashes supplied membership; it does not select files.
 BASE: dict[str, Any] = {
     "pr": {
         "title": "Preserve the idempotency key across retries",
@@ -224,13 +221,10 @@ def case_sensitivity() -> None:
 
 
 def case_guidance_membership() -> None:
-    """F1.1: membership is the reviewer's decision, and it changes the digest.
+    """Membership is selected from the exact reviewed base guidance.
 
-    The base fixture's `guidance` list is exactly what the output contract's
-    membership rule admits. Adding an entry the contract excludes — a non-root
-    `CONTEXT.md`, or a head-branch variant of an included file — produces a
-    different digest, which is why an under-specified membership rule would
-    break the duplicate-review short-circuit even between two correct runs.
+    Extra unrelated guidance, a head blob, or a missing reviewed pointer changes
+    the digest. These fixtures test sensitivity, not automatic file selection.
     """
 
     def add_non_root_context(payload):
@@ -251,7 +245,7 @@ def case_guidance_membership() -> None:
             item for item in payload["guidance"] if item["path"] != "CONTEXT.md"
         ]
 
-    expect_different("excluded non-root CONTEXT.md changes the digest", BASE, variant(add_non_root_context))
+    expect_different("additional unrelated CONTEXT.md changes the digest", BASE, variant(add_non_root_context))
     expect_different("out-of-scope AGENTS.md changes the digest", BASE, variant(add_out_of_scope_agents))
     expect_different("head-branch blob variant changes the digest", BASE, variant(head_branch_variant))
     expect_different("dropping an included entry changes the digest", BASE, variant(drop_included_entry))
