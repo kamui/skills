@@ -52,7 +52,7 @@ On this gating path only, the script enforces the first-line grammar `**<Status>
 
 Post each drafted reply to its recorded comment id with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/comments/<id>/replies -f body='<drafted reply>'`. Use the equivalent structured body input when quoting needs it. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item. Re-read the thread after an ambiguous result before one retry. Report any reply that failed.
 
-After successfully posting an item's drafted reply, resolve its existing thread when inspect classified it `fixed`, `accepted`, or `obsolete`. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: inspect's evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
+For every prior item inspect classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: inspect's evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
 
 On GitHub, run:
 
