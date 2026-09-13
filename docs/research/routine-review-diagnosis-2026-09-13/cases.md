@@ -60,4 +60,3 @@ Neither R19's five published findings nor R18's old-derived-file finding names t
 ### C07 — the role-cost correction was already requested
 
 **Not a miss in R20.** On `kamui/skills#198` at `d53e98f779233fd409654a0f01b111a1d670a57d`, R20 [explicitly retained the role-cost finding as open](https://github.com/kamui/skills/pull/198#pullrequestreview-5170526713), naming finder usage misassigned to primary in the provider-error predecessor. The [later correction](https://github.com/kamui/skills/pull/198#issuecomment-5624027336), `838323d`, resolves filtered transcript copies to retained originals by session ID before assigning roles and leaves unresolved copies unassigned. The reply reports focused checks and unchanged total cost. This is evidence of an insufficient first remedy that the selected review caught; it is not absent publication. **Loss stage not applicable.** The quoted study-role dollar amount is not R20's routine-review cost.
-

@@ -26,7 +26,7 @@ Additional exposed concepts are distinct from the published items: #200 ruling-t
 
 ## Incidental historical exposure
 
-Initial broad repository text searches and subsequent identity-only README reads surfaced historical evidence outside the selected routine sample. It was not used to enlarge the sample or regrade experiments. Conservatively retain these exclusions even where only a snippet or identity was seen:
+Initial broad repository text searches, subsequent identity-only README reads and a bounded source-history read that also displayed a public comparison table surfaced historical evidence outside the selected routine sample. It was not used to enlarge the sample or regrade experiments. Conservatively retain these exclusions even where only a snippet or identity was seen:
 
 | Qualified target | Exposed topic / source |
 | --- | --- |
