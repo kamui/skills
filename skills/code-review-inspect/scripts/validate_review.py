@@ -769,7 +769,7 @@ def check_question(report: Report, location: str, item: dict[str, Any]) -> None:
     action = item.get("action")
     if action is not None and action != "question":
         report.add(location, "question-form", f"a question's action is `question`, not `{action}`")
-    if "**Change:**" in markdown:
+    if "**Change:**" in mask_code(markdown):
         report.add(location, "question-form", "a question requests no code change, so it states no `Change` field")
     if QUESTION_FRAMING not in markdown:
         report.add(location, "question-form", f"a question carries the `{QUESTION_FRAMING}` framing")
@@ -797,8 +797,10 @@ def check_observation(report: Report, location: str, item: dict[str, Any]) -> No
     text = markdown.strip().lstrip("-").strip()
     if WORD_SHOULD_MUST_RE.search(text):
         report.add(location, "observation-form", "an observation uses descriptive language without `should` or `must`")
-    claim, separator, evidence = text.partition("Evidence:")
-    if not separator or not evidence.strip():
+    labels = list(re.finditer(r"Evidence:", mask_code(text)))
+    claim = text[:labels[0].start()] if labels else text
+    evidence = text[labels[0].end():] if labels else ""
+    if len(labels) != 1 or not evidence.strip():
         report.add(location, "observation-form", "an observation ends with one `Evidence:` pointer")
         claim = text
     masked = ABBREVIATION_RE.sub(lambda m: m.group(0).replace(".", "\x00"), claim.strip())
