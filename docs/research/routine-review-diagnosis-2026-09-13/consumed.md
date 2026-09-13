@@ -40,6 +40,15 @@ Initial broad repository text searches, subsequent identity-only README reads an
 | [clap-rs/clap#6212](https://github.com/clap-rs/clap/pull/6212) | Terminal-positional remedy topic in PR #200; target mapping from public reservation/title metadata. [Source](../bounded-discovery-qualification-2026-09-12/targets/reservations.json). |
 | [nats-io/nats-server#6593](https://github.com/nats-io/nats-server/pull/6593) | Timer/test-observation topic in PR #200; target mapping is a conservative title-based inference, not re-adjudicated truth. [Source](../bounded-discovery-qualification-2026-09-12/targets/reservations.json). |
 
+The incidental public comparison-table read was `docs/research/bounded-discovery-decision-2026-09-11/comparison-data.md`, approximately lines 1–80 at the R17/R16 heads. It exposed the following historical labels and participation mapping; no semantic truth behind the concept IDs was investigated. Retain all four as consumed, including the clean control. [Pinned source](https://github.com/kamui/skills/blob/5379447d0fd99819144955214cbe6d64be1df61d/docs/research/bounded-discovery-decision-2026-09-11/comparison-data.md).
+
+| Qualified target | Exposed register labels |
+| --- | --- |
+| [clap-rs/clap#6212](https://github.com/clap-rs/clap/pull/6212) | Buggy; `GT-p1`, `GT-p2`; attempted; arm/position mapping visible |
+| [grpc/grpc-go#7417](https://github.com/grpc/grpc-go/pull/7417) | Clean control; no defect concept; attempted; arm/position mapping visible |
+| [nats-io/nats-server#6593](https://github.com/nats-io/nats-server/pull/6593) | Buggy; `GT-r1`; unattempted |
+| [nats-io/nats-server#7395](https://github.com/nats-io/nats-server/pull/7395) | Buggy; `GT-s1`; unattempted |
+
 The inherited map also preserves the other surfaced filename-only holdouts (Hyper, Typeshed, uv, Polars, Cobra), qualified by its own provenance, and #173’s bytes/etcd regression fixtures. No historical exclusion is released here. Where a topic-to-target mapping is uncertain, conservatively exclude the qualified candidate and retain the uncertainty rather than opening truth to settle it.
 
 ## Later-study handoff
