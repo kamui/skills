@@ -28,21 +28,53 @@ The same rule decides which standards apply: evaluate repository guidance (`CLAU
 
 Read `docs/agents/issue-tracker.md` when present for the forge's verbs. Then resolve, without asking:
 
-- the pull request, its head SHA (`headRefOid`), and its base branch;
+- the unambiguous pull request, its head SHA (`headRefOid`), base branch and SHA, and explicit `state` and boolean `merged`;
 - the comparison base — the merge-base of the head with the base branch, which is what the pull request already means. Take a different fixed point only when the caller supplies one;
-- the originating issue, from `Closes #n` / `Fixes #n` / a bare `#n` in the pull request body, then the branch name, then the commit messages. This is the spec source. Read it with its comments;
+- every clearly relevant originating issue/spec: closing references first, other explicit body references next, then caller-supplied sources; use branch-name or commit-message references only when they resolve uniquely. Fetch non-closing sources too, with their complete discussions. Record an ambiguous reference and its competing targets as a coverage gap rather than inventing a unique issue;
 - the posting identity (`gh api user --jq .login`), and whether it authored the pull request;
 - the base repository's canonical web URL (`gh api repos/{owner}/{repo}/pulls/<n> --jq .base.repo.html_url`), which every coordinate link resolves under;
 - any earlier review from that identity: its `commit_id`, its findings' ids and trailers, the replies on those threads, and thread resolution state;
 - any explicit deferral in the review threads: every review comment, by any participant in any round, that explicitly postpones a design, naming, or API-shape decision. Record each verbatim with its author and the surface it concerns. Step 2 forwards these to the Requirements finder, and on a first review nothing else from prior review reaches a finder.
 
-No pull request means there is nothing to publish to. Stop and report it; opening one is `implement-publish`'s job.
+No unambiguous pull request means there is nothing to publish to. Stop and report it; opening one is `implement-publish`'s job.
+
+Missing supplied `state` or `merged` is an input gap, including in an orchestrator-supplied packet: report `Incomplete` and disable every write until that explicit input is recovered. Never infer missing merged state from `CLOSED`, commit ancestry, or a retrospective label.
 
 A **closed** pull request — abandoned or rejected without merge — has nothing actionable to review; stop and report it. A **merged** pull request is reviewable when the caller explicitly asks for it, as a retrospective review: run the whole pipeline, but publication is disabled unless the caller explicitly enables it, and a published summary states on its first line that this is a retrospective review of a merged change.
 
-No originating issue is a normal state, not a failure. The Requirements axis still runs — against the pull request body's behavioral claims and its explicit non-goals, which are the only statement of intent available. Give the Requirements finder the body in place of the issue; its brief says how to use it. Report issue alignment as **unavailable** in the published summary. Do not invent requirements beyond what the body claims.
+No originating issue or supplied spec is a normal state, not a failure. The Requirements axis still runs — against the pull request body's behavioral claims and its explicit non-goals, which are the only statement of intent available. Give the Requirements finder the body in place of the issue; its brief says how to use it. Report issue alignment as **unavailable** in the published summary. Do not invent requirements beyond what the body claims.
 
-Pin `base`, `head`, and `merge-base` together as the run identity, and record them alongside the base repository's canonical web URL. Everything downstream is judged against that triple; a review that cannot name it has nothing to publish.
+Pin full 40-hex `base`, `head`, and `merge-base` together as the run identity, and record them alongside the base repository's canonical web URL. Everything downstream is judged against that triple; a review that cannot name it has nothing to publish.
+
+Fetch the pull request, its closing issues with their comments, and its reviews, review threads, and comments as **one persisted logical collection**: run the root query below once, then one continuation query per bounded connection whose `pageInfo.hasNextPage` is `true`, repeating each with the returned `endCursor` until it is `false`, and save every response as returned to its own file (`> forge-root.json`, `> forge-2.json`, …), a failed call included. Fetch each explicitly referenced non-closing issue from the resolution order above once with the issue query below and save it the same way. Then run `python3 scripts/forge_packet.py normalize forge-*.json > packet.json` once after collection and keep the packet in the run record; reuse it throughout discovery and verification. Step 4 owns the separate freshness collection. Use filenames that name the exact requested connection and cursor, and retain a fetch ledger mapping each file to its query variables, success/failure and next cursor, so a failed explicit-source fetch names what is missing. Persist failed stdout and error detail too. The helper only normalizes the saved JSON: it merges pages by stable numeric id, keeps every record's `id`, author, body, creation and edit timestamps, and source coordinates, and reports per-connection completeness with a named gap for every connection that did not finish. A non-zero exit means a page file could not be opened or matches no documented shape: report its output and stop the step. On GitHub:
+
+```sh
+gh api graphql -F owner='{owner}' -F name='{repo}' -F number=<pr> -f query='
+query($owner:String!,$name:String!,$number:Int!){
+  repository(owner:$owner,name:$name){ url
+    pullRequest(number:$number){
+      title body state merged isDraft baseRefName baseRefOid headRefOid updatedAt lastEditedAt
+      baseRepository{ url }
+      closingIssuesReferences(first:20){ totalCount pageInfo{ hasNextPage endCursor } nodes{ number title body url updatedAt lastEditedAt
+        comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} createdAt updatedAt lastEditedAt body url } } } }
+      reviews(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} state body submittedAt updatedAt lastEditedAt commit{oid} url } }
+      reviewThreads(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ id isResolved isOutdated path line originalLine diffSide
+        comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt replyTo{ fullDatabaseId } pullRequestReview{ fullDatabaseId } url } } } }
+      comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url } } } } }' > forge-root.json
+```
+
+Continuations bind `after` to the connection's `endCursor` (`-F after=<cursor>`, declared as `$after:String`) and return the same node fields and `totalCount pageInfo{ hasNextPage endCursor }` as above:
+
+- a pull-request connection: `repository(owner:$owner,name:$name){ pullRequest(number:$number){ reviews(first:100,after:$after){ … } } }`, and likewise for `reviewThreads`, `comments`, and `closingIssuesReferences`;
+- an issue's comments: `repository(owner:$owner,name:$name){ issue(number:$issue){ number url comments(first:100,after:$after){ … } } }`;
+- a thread's comments: `node(id:$thread){ ... on PullRequestReviewThread { id comments(first:100,after:$after){ … } } }`;
+- an explicitly referenced issue: the issue shape with `number title body url updatedAt lastEditedAt` and its `comments(first:100)` connection, no `after`.
+
+`fullDatabaseId` is the stable numeric id the fingerprint and re-review rules use; `databaseId` is deprecated on review and review-comment types and is accepted only as a fallback. `lastEditedAt` is `null` until an object is edited. Thread resolution carries no timestamp, which the input identity reference's later-state check accounts for.
+
+`baseRepository.url` is `summary.repository_url`. Compute the merge-base locally with `git merge-base <baseRefOid> <headRefOid>`; the forge does not return it. On another forge, make the equivalent smallest set of calls.
+
+Packet gaps remain coverage gaps even when both finders finish. Read [`references/input-identity.md`](references/input-identity.md) now for fingerprint membership, input normalization and the duplicate gate. First-review, re-review, deferral extraction and hashing all consume this same packet. Any external spec discussion unavailable or truncated is a named coverage gap too; record the missing source/slice in the run record.
 
 Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
@@ -50,7 +82,9 @@ When the run conditions permit test execution, run the repository's permitted te
 
 Run `python3 scripts/build_shared_block.py` with the pinned identity, passing the result-summary file with `--suite-results` when suites ran; its output is the shared block. Do not re-read the diff or guidance files to build it by hand. On a non-zero exit, report the script's output and stop the step — hand-building the block is not the fallback.
 
-An earlier review at a different head makes this a re-review. Keep the original comparison base; use the earlier head only to locate what changed since.
+Before dispatch, resolve every applicable normative guidance pointer from the shared block, recursively until no new applicable tracked base file remains; record each selected path and base blob once and give those contents to the affected workers. After this closure is complete, persist `context-inputs.json` with the exact reviewed specs and guidance defined in the input identity reference. Compute `python3 scripts/context_fingerprint.py --packet packet.json context-inputs.json` and retain its digest and input file. On a non-zero exit, report the output and stop the step. Freeze that guidance membership for the run. If investigation exposes a missed applicable pointer or a newly resolved intent source, return to this input-preparation step, rebuild the complete inputs, and repeat affected assessment with the updated handover before publication; never silently append a discovery-only guidance set to the final digest.
+
+Any prior review, reply, or trailer-bearing comment from the posting identity makes this a re-review, even at the same head. Apply the duplicate gate in the input identity reference before dispatch. A legacy/no-digest trailer remains historical evidence and never qualifies for that shortcut. Otherwise run the full pinned merge-base comparison, carrying prior findings and ledgers; use the earlier head only to locate what changed since. Reassess ledger conclusions whose requirements, guidance or reply evidence changed; an old acquittal is not binding under changed inputs.
 
 ### 2. Find
 
@@ -69,7 +103,7 @@ Build each finder prompt as one shared block followed by one axis-specific block
 Append the axis-specific block last:
 
 - **Code**: name the Code axis, give the absolute path to [`references/code-axis.md`](references/code-axis.md), and instruct the finder to read that brief first.
-- **Requirements**: name the Requirements axis, give the absolute path to [`references/requirements-axis.md`](references/requirements-axis.md), instruct the finder to read that brief first, and include the issue text or pull request body used as its substitute. Include, verbatim, every explicit deferral of a design, naming, or API-shape decision found in the pull request's review comments — any participant, any round — each with its author and the surface it concerns. Include nothing else from prior review on a first review; a deferral is evidence that a question is open, and that is the only thing the finder needs it for.
+- **Requirements**: name the Requirements axis, give the absolute path to [`references/requirements-axis.md`](references/requirements-axis.md), instruct the finder to read that brief first, and include the normalized PR title/body, every resolved issue with its complete obtained discussion, and every supplied/resolved spec with its discussion from the recorded inputs. Name unavailable slices rather than replacing them with an empty source. Include, verbatim, every explicit deferral of a design, naming, or API-shape decision found in the pull request's review comments — any participant, any round — each with its author and the surface it concerns. Include nothing else from prior review on a first review; a deferral is evidence that a question is open, and that is the only thing the finder needs it for.
 
 On a re-review, append the prior findings and disposition ledger for that axis to its axis-specific block. Nothing axis-specific may precede the shared block. The identical leading bytes let the harness's prompt cache serve the second copy cheaply; re-rendering the shared material per finder, or putting an axis label before it, defeats that cache path.
 
@@ -127,7 +161,9 @@ Carry the Requirements finder's restated requirement list and its met / not-met 
 
 Follow [`references/publishing.md`](references/publishing.md) for the comment shape's transport, the status ladder, and the forge verbs. Render every coordinate fragment the body carries with `python3 scripts/link_coordinate.py` — its `render` command per coordinate, its `check` command against anything already written; on a non-zero exit, report the script's output and stop the step, because a hand-written fragment is not the fallback.
 
-Re-read the pull request head immediately before the first write. If it no longer matches the reviewed head, or cannot be read, **publish nothing**: the diff the findings were anchored against has moved, and every line comment would land on code that no longer says what the finding claims. Report the stale review and the head it was computed for.
+Immediately before the first write, repeat the complete logical forge collection into separate freshness files and normalize it; recheck full head/base/ref, explicit state/merged, issue/spec text, discussions and thread state against the reviewed packet, and recheck any external spec inputs. Ignore only fetch bookkeeping (page/file order and cursor placement), not evidence. A failed collection, changed pinned identity, or evidence change stops all writes: report the stale inputs and reassess them before preparing a new payload. A newly merged target still requires separate explicit publication authority. Reuse local pinned guidance blobs; they cannot change at the same base SHA. This freshness collection is separate from the packet used by the finders. The GitHub collection above supplies these fields; on another forge use equivalent read calls.
+
+Before each publication-body write (the initial batch and the final index-link update), compute its `output` digest with `python3 scripts/forge_packet.py output-digest review.json`, as the publishing reference specifies. On a non-zero exit, report the output and stop the step.
 
 One review: the summary as its body, the findings as its line comments, submitted in one call. Every finding that names code goes on that code — the body indexes, the line comments carry the detail, and whoever acts on a finding acts from its comment alone.
 
