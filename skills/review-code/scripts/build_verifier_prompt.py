@@ -204,6 +204,11 @@ def project(data, ledger):
         if source.startswith(("pr-title", "pr-body")):
             require({"pr-title", "pr-body"} <= {s.get("coordinate") for s in sources},
                     "sources", "PR requirement needs raw pr-title and pr-body")
+        elif source.startswith("commit-"):
+            require(re.fullmatch(r'commit-[0-9a-f]{7}/"[^\n]+"', source) is not None,
+                    "requirement_source", 'expected commit-<sha7>/"<quoted phrase>"')
+            require(source.split("/", 1)[0] in {s.get("coordinate") for s in sources},
+                    "sources", "commit requirement needs its raw commit message")
     return {"run": run, "batch": batch, "sources": sources,
             "run_policy": string(data.get("run_policy"), "run_policy"),
             "candidates": candidates, "ledger": selected_rows}

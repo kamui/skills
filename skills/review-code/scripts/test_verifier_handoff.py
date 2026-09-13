@@ -128,6 +128,22 @@ class HandoffTests(unittest.TestCase):
                     self.assertTrue(report["structurally_complete"])
                     self.assertEqual(report["withheld"], {"candidates": [], "ledger": []})
 
+    def test_commit_requirement_sources(self):
+        for role in ("candidate", "ledger"):
+            item = candidate() if role == "candidate" else row()
+            item["requirement_source"] = 'commit-abcdef0/"Keep the key"'
+            rows = [] if role == "candidate" else [item]
+            data = input_data("candidate-only" if role == "candidate" else "complete-ledger",
+                              [item] if role == "candidate" else [], [r["id"] for r in rows])
+            data["sources"] = [ev("commit-abcdef0", "Keep the key\n\nAcross retries.")]
+            bundle = self.build(data, rows)
+            self.assertIn('Keep the key', (bundle / 'brief.md').read_text(encoding='utf-8'))
+            self.account(bundle, self.returned(bundle))
+            data["sources"] = [ev("commit-1234567", "A different commit")]
+            self.build(data, rows, code=1)
+            item["requirement_source"] = 'commit-notasha/"Keep the key"'
+            self.build(data, rows, code=1)
+
     def test_projection_preserves_raw_evidence_and_excludes_private_fields(self):
         data = input_data("complete-ledger", [candidate()], ["a/bug"])
         data["candidates"][0]["test_evidence"] = [{"command": "python3 test_retry.py", "head": HEAD,
