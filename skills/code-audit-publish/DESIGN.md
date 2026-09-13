@@ -15,7 +15,7 @@ The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. It
 PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
 change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
 The rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
-advanced the identifier to `v2b-2`, C18 to `v2b-3`, C19 to `v2b-4`, and C20 advances it to `v2b-5`. It does not claim that the planned transition audits, stronger
+advanced the identifier to `v2b-2`, C18 to `v2b-3`, C19 to `v2b-4`, C20 advanced it to `v2b-5`, and the paired deleted-file repair advances it to `v2b-6`. It does not claim that the planned transition audits, stronger
 verification or executable experiments have shipped. Admission, verification, rendering and state
 changes receive their own release bumps.
 
@@ -44,7 +44,7 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-5`. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
+Workflow identifier: `v2b-6`. Issue #84 adds the deleted-file provenance contract described below. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
 change recorded in [C19](#c19-isolated-verification-and-verdict-accounting): the verifier runs
 in a genuinely non-inheriting worker or verification is incomplete, candidates and ledger rows carry
 a risk kind and ledger rows a per-run id, and every candidate verdict and acquittal ruling is
@@ -855,3 +855,10 @@ Validation combines the copied multi-page, edit-detection and digest fixtures wi
 
 None structural. Beyond the deletions listed under C2 and C5, no working v2 machinery was removed
 or made conditional.
+
+
+## Deleted-file provenance (issue #84)
+
+`v2b-6` adds merge-base links for known deleted whole files. The orchestrator derives `{coordinate, side}` from the full pinned merge-base manifest, retains it beside the pinned head/merge-base, and passes the same record to render and check for findings and questions, body repairs, index updates and the caller report. `--revision` remains head; `--side LEFT --merge-base <sha>` selects the established pre-image file. Missing merge-base or `UNKNOWN` file provenance produces an honest code span. Malformed supplied identity fails; LEFT lines and rename coordinates remain unlinked.
+
+The later audit payload emitter must preserve this publication record and argument mapping in `references/publishing.md`; finder and verifier accounting grammars stay unchanged. Whole-file items remain body-resident and native `commit_id` and trailers stay at head. The paired routine release is `v5b-15`. CLI fixtures cover PR #118's exact deleted path and revision, ordinary links, malformed provenance and unavailable/ambiguous pre-images. These are mechanical checks only; no general LEFT-line, rename, observation or prior-finding provenance expansion is claimed. Earlier workflow trailers and stable ids remain readable history.

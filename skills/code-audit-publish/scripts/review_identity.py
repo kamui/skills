@@ -26,7 +26,7 @@ from urllib.parse import quote
 from context_fingerprint import digest, merge_packet
 from forge_packet import PageError, later_state
 
-WORKFLOW = "v2b-5"
+WORKFLOW = "v2b-6"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 
 
