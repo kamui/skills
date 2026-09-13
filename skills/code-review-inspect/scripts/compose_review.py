@@ -186,16 +186,20 @@ def read_id(report: vr.Report, location: str, obj: dict[str, Any]) -> str | None
     return identity
 
 
-def check_prose_labels(report: vr.Report, location: str, key: str, prose: str) -> None:
+def check_prose_labels(report: vr.Report, location: str, key: str, prose: str, observation: bool = False) -> None:
     """A labelled field's prose may quote a label only inside code."""
-    for match in vr.FIELD_LABEL_RE.finditer(vr.mask_code(prose)):
+    masked = vr.mask_code(prose)
+    labels = re.compile(r"\*\*(?P<label>Triggers when|Impact|Change|Source|Evidence|Why it matters):\*\*")
+    for match in labels.finditer(masked):
         report.add(
             location,
             "field-label",
             f"`{key}` contains the label `**{match.group('label')}:**` outside a code block or code span; "
             "the composer renders each label once, so a literal label belongs in a code span",
         )
-    if vr.PERMISSION_SENTENCE in prose:
+    if observation and "Evidence:" in masked:
+        report.add(location, "field-label", f"`{key}` contains `Evidence:` outside code; the composer appends the evidence pointer")
+    if vr.PERMISSION_SENTENCE in masked:
         report.add(location, "field-label", f"`{key}` contains the permission sentence; the composer adds it to a `consider` finding")
 
 
@@ -333,9 +337,11 @@ def compose_question(report: vr.Report, location: str, question: Any, head: str)
     for key, text in prose.items():
         if text is None:
             continue
-        if "**Change:**" in text:
+        check_prose_labels(report, location, key, text)
+        masked = vr.mask_code(text)
+        if "**Change:**" in masked:
             report.add(location, "question-form", f"`{key}` states a `**Change:**` field; a question requests no code change")
-        if vr.QUESTION_FRAMING in text:
+        if vr.QUESTION_FRAMING in masked:
             report.add(location, "question-form", f"`{key}` contains the `{vr.QUESTION_FRAMING}` framing; the composer adds it before `answer`")
     anchor = question.get("anchor")
     check_anchor_input(report, f"{location}.anchor", anchor)
@@ -366,10 +372,9 @@ def compose_observation(report: vr.Report, location: str, observation: Any) -> d
     evidence = read_text(report, location, observation, "evidence")
     if fact is None or evidence is None:
         return None
-    if "Evidence:" in fact:
-        report.add(location, "observation-form", "`fact` contains `Evidence:`; the composer appends the evidence pointer")
-        return None
-    return {"type": "observation", "markdown": f"{fact.strip()} Evidence: {evidence.strip()}"}
+    for key, text in (("fact", fact), ("evidence", evidence)):
+        check_prose_labels(report, location, key, text, observation=True)
+    return {"type": "observation", "markdown": f"{fact} Evidence: {evidence}"}
 
 
 def read_prior_item(report: vr.Report, location: str, prior: Any) -> dict[str, Any] | None:
@@ -569,14 +574,15 @@ def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], i
         return
     known: set[str] = set()
     deleted: set[str] = set()
+    added: set[str] = set()
     for entry in manifest:
         if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
             continue
         known.add(entry["path"])
-        if isinstance(entry.get("old_path"), str):
-            known.add(entry["old_path"])
         if str(entry.get("status", "")).startswith("D"):
             deleted.add(entry["path"])
+        if str(entry.get("status", "")).startswith("A"):
+            added.add(entry["path"])
     for location, item in items:
         anchor = item.get("anchor")
         if not isinstance(anchor, dict) or not isinstance(anchor.get("path"), str):
@@ -585,12 +591,12 @@ def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], i
         if path not in known:
             report.add(f"{location}.anchor", "anchor-provenance", f"`{path}` is not in the pinned merge-base manifest; an anchor names a changed file")
             continue
-        if anchor.get("type") != "file":
-            continue
         side = anchor.get("side")
         if path in deleted and side == "RIGHT":
             report.add(f"{location}.anchor", "anchor-provenance", f"`{path}` is a `D` entry of the pinned manifest, so its side is `LEFT`, not `RIGHT`")
-        elif path not in deleted and side == "LEFT":
+        elif anchor.get("type") == "line" and path in added and side == "LEFT":
+            report.add(f"{location}.anchor", "anchor-provenance", f"`{path}` is an `A` entry of the pinned manifest, so its side is `RIGHT`, not `LEFT`")
+        elif anchor.get("type") == "file" and path not in deleted and side == "LEFT":
             report.add(f"{location}.anchor", "anchor-provenance", f"`{path}` is not a `D` entry of the pinned manifest, so `LEFT` does not apply")
 
 

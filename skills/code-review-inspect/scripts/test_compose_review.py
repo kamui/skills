@@ -249,6 +249,47 @@ def main() -> int:
     refused(bare, "field-label", "literal label outside code", needle="findings[0]")
     print("ok code blocks: suggestion and code-span labels preserved, bare label refused")
 
+    # Every question/observation prose field owns its labels outside code only.
+    for key in ("evidence", "why_it_matters", "answer"):
+        for label in ("**Evidence:**", "**Why it matters:**", "**Change:**", vr.QUESTION_FRAMING):
+            for code in (f"`{label}`", f"\n\n```text\n{label}\n```\n"):
+                sample = base_composition()
+                sample["questions"][0][key] += f" {code}"
+                payload, _, _ = composed(sample, f"question {key} code label")
+                assert sample["questions"][0][key] in payload["items"][1]["markdown"]
+            sample = base_composition()
+            sample["questions"][0][key] += f" {label} Duplicate."
+            refused(sample, "question-form" if label == vr.QUESTION_FRAMING else "field-label", f"question {key} bare label", needle=key)
+    for key in ("fact", "evidence"):
+        for label in ("Evidence:", "**Evidence:**", "**Why it matters:**"):
+            for code in (f"`{label}`", f"\n\n```text\n{label}\n```\n"):
+                sample = base_composition()
+                sample["observations"][0][key] = f"The literal {code} is present."
+                payload, batch, _ = composed(sample, f"observation {key} code label")
+                assert sample["observations"][0][key] in payload["items"][-1]["markdown"]
+                assert sample["observations"][0][key] in batch["body"]
+            sample = base_composition()
+            sample["observations"][0][key] = f"The literal {label} is present."
+            refused(sample, "field-label", f"observation {key} bare label", needle=key)
+    whitespace = base_composition()
+    whitespace["observations"][0] = {"fact": "  The configuration records the limit.  ", "evidence": "  `redis.conf:1903`. \n"}
+    payload, batch, _ = composed(whitespace, "observation exact whitespace")
+    authored = whitespace["observations"][0]
+    expected = authored["fact"] + " Evidence: " + authored["evidence"]
+    assert payload["items"][-1]["markdown"] == expected and expected in batch["body"]
+    print("ok prose: all question and observation fields mask code labels and preserve authored bytes")
+
+    # The composed advisory record feeds #226's authorized gating emitter unchanged.
+    for composition, event, status in ((base_composition(), "REQUEST_CHANGES", "Changes Requested"),
+                                        ({**clean, "summary": {**clean["summary"], "gating": False}}, "APPROVE", "Approved")):
+        payload, _, raw = composed(composition, "advisory before gating")
+        emitted = run(VALIDATOR, raw, "--emit-batch", "--event", event)
+        assert emitted.returncode == 0, emitted.stdout
+        batch = json.loads(emitted.stdout)
+        assert batch["event"] == event and batch["body"].startswith(f"**{status}** — ")
+        assert "(advisory)" in payload["summary"]["body"].splitlines()[0]
+    print("ok gating: composed advisory payloads project to both authorized events")
+
     # Fix sites: omitted, distinct and named, distinct and unnamed, ranged, and a path needing percent-encoding.
     no_fix = base_composition()
     del no_fix["findings"][0]["fix"]
@@ -316,7 +357,20 @@ def main() -> int:
         composed(deleted, "manifest D entry with LEFT", "--store", str(store_path))
         renamed = base_composition()
         renamed["questions"][0]["anchor"] = {"type": "line", "path": "src/old-queue.ts", "start_line": 3, "end_line": 3, "side": "LEFT"}
-        composed(renamed, "LEFT line on a rename's old path", "--store", str(store_path))
+        for side in ("LEFT", "RIGHT"):
+            renamed["questions"][0]["anchor"]["side"] = side
+            refused(renamed, "anchor-provenance", "rename pre-image path", "--store", str(store_path))
+            renamed["questions"][0]["anchor"]["path"] = "src/queue.ts"
+            _, batch, _ = composed(renamed, "rename manifest path", "--store", str(store_path))
+            assert batch["comments"][1]["path"] == "src/queue.ts" and batch["comments"][1]["side"] == side
+            renamed["questions"][0]["anchor"]["path"] = "src/old-queue.ts"
+        composed(left_line, "modified LEFT line", "--store", str(store_path))
+        for path, valid_side in (("src/legacy-queue.ts", "LEFT"), ("src/retry-policy.ts", "RIGHT")):
+            line = base_composition()
+            line["questions"][0]["anchor"] = {"type": "line", "path": path, "start_line": 3, "end_line": 3, "side": valid_side}
+            composed(line, "line manifest compatible", "--store", str(store_path))
+            line["questions"][0]["anchor"]["side"] = "LEFT" if valid_side == "RIGHT" else "RIGHT"
+            refused(line, "anchor-provenance", "line manifest incompatible", "--store", str(store_path))
         at_head = copy.deepcopy(deleted)
         at_head["questions"][0]["anchor"]["side"] = "RIGHT"
         refused(at_head, "anchor-provenance", "deleted file marked RIGHT", "--store", str(store_path), needle="`D` entry")
