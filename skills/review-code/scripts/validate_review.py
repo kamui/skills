@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a would-be code-review-inspect record against the mechanical
+"""Validate a would-be review-code record against the mechanical
 rules of ``references/review-record.md``, ``references/rendering.md``, and
 ``references/review-rubric.md``.
 
@@ -121,7 +121,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-16"
+WORKFLOW = "v5b-17"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
