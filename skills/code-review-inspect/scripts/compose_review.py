@@ -109,14 +109,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 from typing import Any
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-import validate_review as vr  # noqa: E402  (sibling script; the skill installs alone)
+import validate_review as vr  # the sibling script; the skill installs alone
 
 STATUSES = ("Changes Requested", "Incomplete", "Needs Information", "Approved")
 ADVISORY_STATUSES = ("Changes Requested", "Approved")
