@@ -2,6 +2,8 @@
 
 Read this reference only when `SKILL.md` requires independent verification. It owns the verifier's evidence procedure: what the verifier receives, how it decides, and what it returns. It defines a candidate mode and a clean-verdict mode; one batch may carry both tasks, and their records stay separate. The verifier fact-checks supplied records; it is not a second reviewer, cannot search for unrelated findings, and cannot write to the pull request. Which batches run, what they carry, and what the primary does with their results are `SKILL.md` step 3's rules; the brief carries no publication syntax — no trailers, comment shapes, or summary sections — because the verifier renders nothing.
 
+The primary builds the brief through [verifier-handoff.md](verifier-handoff.md); the worker returns the records using [verifier-return.md](verifier-return.md), which the generated brief includes. These mechanics preserve the tasks and evidence rules below.
+
 ## Isolation
 
 Run each permitted batch in a genuinely fresh context. Do not inherit the primary review conversation, its chain of reasoning, or prior finder output. In a harness with fork controls, use an empty or minimal fork such as `fork_turns=none`; otherwise start an equivalent clean worker.
