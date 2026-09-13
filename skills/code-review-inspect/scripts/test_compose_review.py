@@ -2,7 +2,7 @@
 """Exercise compose_review.py through its CLI: composition, refusal, and batch agreement.
 
 Usage: python3 scripts/test_compose_review.py
-Inputs: local fixture compositions; no repository or forge access.
+Inputs: local fixture compositions and a disposable Git repository; no forge access.
 Exit 0: all checks pass; exit 1: a check fails; exit 2: the CLI cannot run.
 
 Every fixture composes a payload, validates it with validate_review.py, and
@@ -22,6 +22,7 @@ import validate_review as vr
 
 COMPOSER = Path(__file__).with_name("compose_review.py")
 VALIDATOR = Path(__file__).with_name("validate_review.py")
+CONTEXT_SCRIPT = Path(__file__).with_name("review_context.py")
 HEAD = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
 BASE = "b2c3d4e5f60718293a4b5c6d7e8f90123456789a"
 MERGE_BASE = "d4e5f60718293a4b5c6d7e8f90123456789abcde"
@@ -96,14 +97,14 @@ def composed(composition: dict, name: str, *args: str) -> tuple[dict, dict, str]
     emitted = run(VALIDATOR, result.stdout, "--emit-batch")
     assert emitted.returncode == 0, (name, emitted.stdout)
     batch = json.loads(emitted.stdout)
-    assert batch["commit_id"] == HEAD and batch["body"] == payload["summary"]["body"], name
+    assert batch["commit_id"] == composition["run"]["head"] and batch["body"] == payload["summary"]["body"], name
     inline = [item for item in payload["items"] if item["type"] != "observation" and item["anchor"]["type"] == "line"]
     assert len(batch["comments"]) == len(inline), (name, batch["comments"])
     for item in payload["items"]:
         if item["type"] == "observation":
             assert item["markdown"] in payload["summary"]["body"], (name, item)
             continue
-        fragment = vr.render_reference(item, {"head": HEAD, "merge_base": MERGE_BASE, "repository_url": REPO})
+        fragment = vr.render_reference(item, {"head": composition["run"]["head"], "merge_base": composition["run"]["merge_base"], "repository_url": REPO})
         assert payload["summary"]["body"].count(fragment) == 1, (name, fragment)
         if item["anchor"]["type"] != "line":
             # A body-carried item keeps its complete prose and trailer in the body, once.
@@ -189,10 +190,11 @@ def main() -> int:
     clean["summary"]["status"] = "Approved"
     payload, batch, _ = composed(clean, "clean review")
     assert payload["summary"]["body"].startswith("**Approved (advisory)** — no findings.\n") and batch["comments"] == []
-    clean["summary"]["gating"] = True
-    payload, _, _ = composed(clean, "gating approval")
-    assert payload["summary"]["body"].startswith("**Approved** — no findings.\n")
-    print("ok clean review: no findings, advisory marker follows gating")
+    for gating in (True, False, "true", None):
+        bad = copy.deepcopy(clean)
+        bad["summary"]["gating"] = gating
+        refused(bad, "publication-boundary", "gating belongs to publisher", needle="summary.gating")
+    print("ok clean review: always advisory, composition gating input refused")
 
     # Questions: a line-anchored question is a comment; a whole-change question lives in the body with its prose.
     questions = base_composition()
@@ -281,7 +283,7 @@ def main() -> int:
 
     # The composed advisory record feeds #226's authorized gating emitter unchanged.
     for composition, event, status in ((base_composition(), "REQUEST_CHANGES", "Changes Requested"),
-                                        ({**clean, "summary": {**clean["summary"], "gating": False}}, "APPROVE", "Approved")):
+                                        (clean, "APPROVE", "Approved")):
         payload, _, raw = composed(composition, "advisory before gating")
         emitted = run(VALIDATOR, raw, "--emit-batch", "--event", event)
         assert emitted.returncode == 0, emitted.stdout
@@ -289,6 +291,19 @@ def main() -> int:
         assert batch["event"] == event and batch["body"].startswith(f"**{status}** — ")
         assert "(advisory)" in payload["summary"]["body"].splitlines()[0]
     print("ok gating: composed advisory payloads project to both authorized events")
+
+    for key in ("intent", "issue_fit", "coverage"):
+        for label in ("Intent", "Issue fit", "Coverage", "Reviewed", "Mode"):
+            token = f"**{label}:**"
+            for literal in (f"`{token}`", f"\n\n```text\n{token}\n```\n"):
+                sample = base_composition()
+                sample["summary"][key] += literal
+                payload, _, _ = composed(sample, "summary code label")
+                assert sample["summary"][key] in payload["summary"]["body"]
+            sample = base_composition()
+            sample["summary"][key] += f"\n\n{token} Duplicate."
+            refused(sample, "field-label", "summary bare label", needle=f"summary.{key}")
+    print("ok summary labels: all authored summary fields accept code literals and refuse duplicate labels")
 
     # Fix sites: omitted, distinct and named, distinct and unnamed, ranged, and a path needing percent-encoding.
     no_fix = base_composition()
@@ -343,50 +358,79 @@ def main() -> int:
     # The pinned manifest checks anchor provenance without deciding it.
     with tempfile.TemporaryDirectory() as directory:
         store_path = Path(directory) / f"review-context-{HEAD}.json"
-        store = {
-            "head": HEAD, "merge_base": MERGE_BASE,
-            "manifest": [
-                {"status": "M", "path": "src/payments.ts", "old_path": None},
-                {"status": "R", "path": "src/queue.ts", "old_path": "src/old-queue.ts"},
-                {"status": "D", "path": "src/legacy-queue.ts", "old_path": None},
-                {"status": "A", "path": "src/retry-policy.ts", "old_path": None},
-            ],
-        }
-        store_path.write_text(json.dumps(store), encoding="utf-8")
-        composed(base_composition(), "manifest agrees", "--store", str(store_path))
-        composed(deleted, "manifest D entry with LEFT", "--store", str(store_path))
+        repo = Path(directory) / "repo"
+        repo.mkdir()
+
+        def git(*args: str) -> str:
+            result = subprocess.run(["git", "-C", str(repo), "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args],
+                                    capture_output=True, encoding="utf-8", check=True)
+            return result.stdout.strip()
+
+        git("init", "-q")
+        (repo / "src").mkdir()
+        for name, count in (("payments.ts", 50), ("old-queue.ts", 10), ("legacy-queue.ts", 8)):
+            (repo / "src" / name).write_text("".join(f"{name} line {n}\n" for n in range(count)), encoding="utf-8")
+        git("add", ".")
+        git("commit", "-qm", "Add base fixtures")
+        base = git("rev-parse", "HEAD")
+        git("mv", "src/old-queue.ts", "src/queue.ts")
+        git("rm", "src/legacy-queue.ts")
+        (repo / "src/payments.ts").write_text("changed\n" * 50, encoding="utf-8")
+        (repo / "src/retry-policy.ts").write_text("retry\n" * 20, encoding="utf-8")
+        git("add", ".")
+        git("commit", "-qm", "Modify rename delete and add fixtures")
+        head = git("rev-parse", "HEAD")
+        produced = subprocess.run([sys.executable, str(CONTEXT_SCRIPT), "--head", head, "--merge-base", base, "--store", str(store_path)],
+                                  cwd=repo, capture_output=True, encoding="utf-8", check=False)
+        assert produced.returncode == 0, (produced.stdout, produced.stderr)
+        store = json.loads(store_path.read_text(encoding="utf-8"))
+        assert store["context"]["head"] == head and store["context"]["merge_base"] == base
+        assert {entry["status"][0] for entry in store["context"]["manifest"]} == {"A", "D", "M", "R"}
+
+        def pinned(composition: dict) -> dict:
+            value = copy.deepcopy(composition)
+            for key, original, actual in (("head", HEAD, head), ("merge_base", MERGE_BASE, base), ("base_sha", BASE, base)):
+                if value["run"][key] == original:
+                    value["run"][key] = actual
+            return value
+
+        composed(pinned(base_composition()), "manifest agrees", "--store", str(store_path))
+        composed(pinned(deleted), "manifest D entry with LEFT", "--store", str(store_path))
         renamed = base_composition()
         renamed["questions"][0]["anchor"] = {"type": "line", "path": "src/old-queue.ts", "start_line": 3, "end_line": 3, "side": "LEFT"}
         for side in ("LEFT", "RIGHT"):
             renamed["questions"][0]["anchor"]["side"] = side
-            refused(renamed, "anchor-provenance", "rename pre-image path", "--store", str(store_path))
+            refused(pinned(renamed), "anchor-provenance", "rename pre-image path", "--store", str(store_path))
             renamed["questions"][0]["anchor"]["path"] = "src/queue.ts"
-            _, batch, _ = composed(renamed, "rename manifest path", "--store", str(store_path))
+            _, batch, _ = composed(pinned(renamed), "rename manifest path", "--store", str(store_path))
             assert batch["comments"][1]["path"] == "src/queue.ts" and batch["comments"][1]["side"] == side
             renamed["questions"][0]["anchor"]["path"] = "src/old-queue.ts"
-        composed(left_line, "modified LEFT line", "--store", str(store_path))
+        composed(pinned(left_line), "modified LEFT line", "--store", str(store_path))
         for path, valid_side in (("src/legacy-queue.ts", "LEFT"), ("src/retry-policy.ts", "RIGHT")):
             line = base_composition()
             line["questions"][0]["anchor"] = {"type": "line", "path": path, "start_line": 3, "end_line": 3, "side": valid_side}
-            composed(line, "line manifest compatible", "--store", str(store_path))
+            composed(pinned(line), "line manifest compatible", "--store", str(store_path))
             line["questions"][0]["anchor"]["side"] = "LEFT" if valid_side == "RIGHT" else "RIGHT"
-            refused(line, "anchor-provenance", "line manifest incompatible", "--store", str(store_path))
+            refused(pinned(line), "anchor-provenance", "line manifest incompatible", "--store", str(store_path))
         at_head = copy.deepcopy(deleted)
         at_head["questions"][0]["anchor"]["side"] = "RIGHT"
-        refused(at_head, "anchor-provenance", "deleted file marked RIGHT", "--store", str(store_path), needle="`D` entry")
+        refused(pinned(at_head), "anchor-provenance", "deleted file marked RIGHT", "--store", str(store_path), needle="`D` entry")
         as_unknown = copy.deepcopy(deleted)
         as_unknown["questions"][0]["anchor"]["side"] = "UNKNOWN"
-        composed(as_unknown, "deleted file marked UNKNOWN is the reviewer's call", "--store", str(store_path))
+        composed(pinned(as_unknown), "deleted file marked UNKNOWN is the reviewer's call", "--store", str(store_path))
         undeleted = base_composition()
         undeleted["questions"][0]["anchor"]["side"] = "LEFT"
-        refused(undeleted, "anchor-provenance", "present file marked LEFT", "--store", str(store_path))
-        refused(unknown, "anchor-provenance", "path outside the manifest", "--store", str(store_path), needle="reported/path.ts")
+        refused(pinned(undeleted), "anchor-provenance", "present file marked LEFT", "--store", str(store_path))
+        refused(pinned(unknown), "anchor-provenance", "path outside the manifest", "--store", str(store_path), needle="reported/path.ts")
         stale = base_composition()
         stale["run"]["head"] = PRIOR
-        refused(stale, "run-identity", "store built for another head", "--store", str(store_path))
+        refused(pinned(stale), "run-identity", "store built for another head", "--store", str(store_path))
         missing = run(COMPOSER, json.dumps(base_composition()), "--store", str(Path(directory) / "absent.json"))
         assert missing.returncode == 2 and "absent.json" in missing.stderr, missing
-    print("ok manifest: D/LEFT agreement checked, unknown paths and stale stores refused")
+        for invalid in (store["context"], {**store, "format": "unknown"}, {**store, "context": []}, {**store, "context": {}}):
+            store_path.write_text(json.dumps(invalid), encoding="utf-8")
+            refused(pinned(base_composition()), "schema", "malformed store envelope/context", "--store", str(store_path))
+    print("ok manifest: real producer store, path/side agreement, stale and malformed stores refused")
 
     # Stable ids: duplicates and malformed ids are refused.
     duplicate = base_composition()
@@ -554,6 +598,9 @@ if __name__ == "__main__":
     except AssertionError as error:
         print(f"FAIL {error}")
         raise SystemExit(1)
+    except subprocess.CalledProcessError as error:
+        print(f"test_compose_review: {error.cmd} failed: {error.stderr}", file=sys.stderr)
+        raise SystemExit(2)
     except OSError as error:
         print(f"test_compose_review: cannot run {COMPOSER}: {error}", file=sys.stderr)
         raise SystemExit(2)
