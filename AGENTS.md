@@ -20,6 +20,10 @@ Use the single-context layout. See `docs/agents/domain.md`.
 
 `references/review-protocol.md` is byte-identical in `code-review-publish-legacy` and `code-review-address`. Skills install one at a time, so neither can point at the other's copy. Edit both together and `diff` them before committing.
 
+### Runtime review dependency
+
+`code-review-publish` and `code-review-interactive` require `code-review-inspect`; each stops with a named report when it is absent. This is the named exception to installing skills alone; no other runtime skill dependency is introduced.
+
 ### Global skill sync
 
 After successfully pushing or merging a change under `skills/` into `origin/main`, run `scripts/sync-global-skills` and report its result. The script owns installation and provenance-checked removal; do not reproduce those operations by hand.
