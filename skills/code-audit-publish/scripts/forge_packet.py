@@ -13,6 +13,7 @@ Usage:
     python3 scripts/forge_packet.py normalize PAGE [PAGE ...] > packet.json
     python3 scripts/forge_packet.py later-state packet.json --review ID
         [--after ISO-8601]
+    python3 scripts/forge_packet.py output-digest review.json
     python3 scripts/forge_packet.py --self-test
 
 `normalize` accepts the raw stdout of each `gh api graphql` call from the
@@ -33,8 +34,11 @@ review's submission time (or after `--after`), one line per packet gap, and one
 unchanged and that carries no later comment: every resolved thread, and every
 thread predating the review, since one resolved when the review ran can have
 been un-resolved since without leaving a timestamp. A thread the candidate
-review created and left unresolved is the one silent case. Only original output
-is excluded: subsequent edits to the candidate review or its comments still count. Exit 0 means the packet is complete
+review created and left unresolved is the one silent case. An output digest in the run trailer identifies the publication content, including
+the final index-link update, independently of forge timestamp drift. Changed
+content counts as later evidence; matching original content does not. Without a
+digest, original output uses lastEditedAt, never updatedAt, but cannot qualify
+for the current duplicate gate. Exit 0 means the packet is complete
 and nothing later exists, so the deduplication rule may consider the candidate;
 exit 1 means the lines on stdout stand between the run and that shortcut.
 
@@ -58,8 +62,13 @@ page carried a GraphQL error or an HTTP failure. Anything else is a named gap. T
 `context_fingerprint.py`, so `context_fingerprint.py --packet packet.json`
 hashes the same normalized records the review and the re-review read.
 
+`output-digest` accepts prospective review JSON with a string `body` and a
+`comments` array of objects with string `body` fields. It hashes only publication
+content, stripping the review-run trailer to avoid a self-reference. Use an empty
+comments array for a body-only review. It performs no forge operations.
+
 Exit codes:
-    0  the packet or an empty later-state report was written to stdout
+    0  the digest, packet or an empty later-state report was written to stdout
     1  later-state lines were written to stdout, or a --self-test assertion
        failed
     2  a page file cannot be opened or matches no documented shape; the file
@@ -70,7 +79,9 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -711,6 +722,32 @@ def normalize(pages: list[tuple[str, Any]]) -> dict[str, Any]:
     return packet.build()
 
 
+# --- original publication content ------------------------------------------
+
+
+def output_digest(payload: Any) -> str:
+    """Hash a submitted body and its original comment bodies, without run trailers.
+
+    The prospective review payload and the normalized forge packet can provide
+    the same content before numeric comment ids exist. Order is immaterial;
+    duplicate bodies remain duplicate entries. Coordinates are pinned by the
+    review's full code identity and are immutable on published comments.
+    """
+    if not isinstance(payload, dict) or not isinstance(payload.get("body"), str):
+        raise PageError("output payload must carry a string body")
+    comments = payload.get("comments")
+    if not isinstance(comments, list) or any(
+        not isinstance(c, dict) or not isinstance(c.get("body"), str) for c in comments
+    ):
+        raise PageError("output payload must carry comments with string bodies")
+    body = re.sub(r"<!-- review-run [^\n]*? -->", "", payload["body"])
+    canonical = json.dumps(
+        {"body": body, "comments": sorted(c["body"] for c in comments)},
+        ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 # --- later-state ------------------------------------------------------------
 
 
@@ -721,6 +758,17 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
     candidate = next((review for review in packet["reviews"] if review["id"] == review_id), None)
     if candidate is None:
         raise PageError(f"review {review_id} is not in the packet's reviews")
+    original_comments = [c for thread in packet["threads"] for c in thread["comments"]
+                         if c.get("review_id") == review_id and c.get("reply_to") is None]
+    trailers = re.findall(r"<!-- review-run ([^\n]*?) -->", candidate["body"])
+    outputs = [token.split("=", 1)[1] for trailer in trailers for token in trailer.split()
+               if token.startswith("output=")]
+    matches_output = None
+    if outputs:
+        matches_output = (len(outputs) == 1 and outputs[0] == output_digest(
+            {"body": candidate["body"], "comments": original_comments}))
+        if not matches_output:
+            lines.append(f"own-output review={review_id} differs from publication")
     cutoff_text = after or candidate.get("submitted_at") or ""
     cutoff = parse_time(cutoff_text)
     if cutoff is None:
@@ -750,7 +798,7 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
                 lines.append(f"issue-comment {issue['coordinate']} id={comment['id']} at {stamp}")
     for review in packet["reviews"]:
         if review["id"] == review_id:
-            stamp = later(review.get("last_edited_at"), review.get("updated_at"))
+            stamp = later(review.get("last_edited_at")) if matches_output is None else None
             if stamp:
                 lines.append(f"review id={review_id} edited {stamp}")
             continue
@@ -767,7 +815,7 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
         for comment in thread["comments"]:
             own = comment.get("review_id") == review_id and comment.get("reply_to") is None
             if own:
-                stamp = later(comment.get("last_edited_at"), comment.get("updated_at"))
+                stamp = later(comment.get("last_edited_at")) if matches_output is None else None
                 if stamp:
                     lines.append(f"thread-comment thread={thread['id']} id={comment['id']} edited {stamp}")
                     thread_later = True
@@ -963,6 +1011,8 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command")
     normalize_parser = subparsers.add_parser("normalize", help="merge saved response pages into one packet")
     normalize_parser.add_argument("pages", nargs="+", help="saved `gh api graphql` responses, or - for stdin")
+    output_parser = subparsers.add_parser("output-digest", help="hash original publication content")
+    output_parser.add_argument("payload", help="review JSON with body and comments, or - for stdin")
     later_parser = subparsers.add_parser("later-state", help="list state created or edited after a review")
     later_parser.add_argument("packet", help="packet written by `normalize`")
     later_parser.add_argument("--review", required=True, help="fullDatabaseId of the candidate review")
@@ -982,6 +1032,9 @@ def main() -> int:
             sys.stdout.write("\n")
             for gap in packet["gaps"]:
                 print(f"forge_packet: gap: {gap}", file=sys.stderr)
+            return 0
+        if args.command == "output-digest":
+            print(output_digest(load_page(args.payload)))
             return 0
         packet = load_page(args.packet)
         if not isinstance(packet, dict):
