@@ -16,9 +16,10 @@ Usage::
     python3 scripts/validate_review.py --self-test
 
 ``--render`` prints the exact summary reference fragment for each finding and
-question item, one per line in item order, so the reviewer pastes generated
-text into the summary body instead of composing a link by hand. The validator
-then requires each fragment to appear in ``summary.body`` exactly once.
+question item, one per line in item order; ``compose_review.py`` places the
+same fragments in the summary body it composes, and the final report reuses
+them, so no link is ever composed by hand. The validator requires each
+fragment to appear in ``summary.body`` exactly once.
 
 ``--emit-batch`` validates the payload and, when it has zero violations,
 prints the forge-native one-call review body as JSON: ``commit_id`` (the run
@@ -120,7 +121,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-15"
+WORKFLOW = "v5b-16"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -768,7 +769,7 @@ def check_question(report: Report, location: str, item: dict[str, Any]) -> None:
     action = item.get("action")
     if action is not None and action != "question":
         report.add(location, "question-form", f"a question's action is `question`, not `{action}`")
-    if "**Change:**" in markdown:
+    if "**Change:**" in mask_code(markdown):
         report.add(location, "question-form", "a question requests no code change, so it states no `Change` field")
     if QUESTION_FRAMING not in markdown:
         report.add(location, "question-form", f"a question carries the `{QUESTION_FRAMING}` framing")
@@ -796,8 +797,10 @@ def check_observation(report: Report, location: str, item: dict[str, Any]) -> No
     text = markdown.strip().lstrip("-").strip()
     if WORD_SHOULD_MUST_RE.search(text):
         report.add(location, "observation-form", "an observation uses descriptive language without `should` or `must`")
-    claim, separator, evidence = text.partition("Evidence:")
-    if not separator or not evidence.strip():
+    labels = list(re.finditer(r"Evidence:", mask_code(text)))
+    claim = text[:labels[0].start()] if labels else text
+    evidence = text[labels[0].end():] if labels else ""
+    if len(labels) != 1 or not evidence.strip():
         report.add(location, "observation-form", "an observation ends with one `Evidence:` pointer")
         claim = text
     masked = ABBREVIATION_RE.sub(lambda m: m.group(0).replace(".", "\x00"), claim.strip())
@@ -1577,7 +1580,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-14"
+            f"workflow={WORKFLOW}", "workflow=v5b-15"
         )
 
     def malformed_trailer(payload):
