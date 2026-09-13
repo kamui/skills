@@ -1,6 +1,6 @@
 # Reviewed inputs and duplicate identity
 
-Read with step 1 on every run. The forge packet is the reviewed evidence, the context digest identifies intent and guidance, and the later-state check accounts for discussions and undated thread state. None is publication authority.
+Read with step 1 on every run. The forge packet is the reviewed evidence, the context digest identifies intent and guidance, and the later-state check accounts for discussions and undated thread state. PR lifecycle (`state` and `merged`) is also pinned in the run trailer: an open-target review cannot suppress a subsequent explicit merged-target retrospective. None is publication authority.
 
 ## Fingerprint membership
 
@@ -25,7 +25,7 @@ After computing the reviewed inputs, select a candidate prior review from the po
 python3 scripts/review_identity.py packet.json --review <numeric-review-id> --author <login> --merge-base <full-sha> --inputs context-inputs.json
 ```
 
-Exit 0 means its single trailer matches `workflow=v2b-5`, the full head/base/merge-base, encoded base ref, sorted issue membership and freshly computed full 64-hex `context`, both prior coverage and current packet coverage are complete, and no later-state line exists. Report that existing review only when there is also no newly discovered eligible material and no additional input/coverage gap outside the packet. Exit 1 prints why this is a review to perform, not a duplicate to skip. Exit 2 is unreadable/malformed input: report the output and stop the step. This helper validates duplicate identity only; final payload validation is a separate contract.
+Exit 0 means its single trailer matches `workflow=v2b-5`, the full head/base/merge-base, explicit PR `state` and boolean `merged`, encoded base ref, sorted issue membership and freshly computed full 64-hex `context`, both prior coverage and current packet coverage are complete, and no later-state line exists. Report that existing review only when there is also no newly discovered eligible material and no additional input/coverage gap outside the packet. Exit 1 prints why this is a review to perform, not a duplicate to skip. Exit 2 is unreadable/malformed input: report the output and stop the step. This helper validates duplicate identity only; final payload validation is a separate contract.
 
 `python3 scripts/forge_packet.py later-state packet.json --review <id>` is the underlying check. It retains later PR/issue edits, reviews, PR comments and inline replies, including human prose without trailers. Only the candidate review's original submission and original line comments are excluded; later edits to that output still count. A reply belongs to later state even when its `review_id` equals the candidate's. Relevant evidence changes must be assessed even when status and head stay unchanged. The helper conservatively treats every reported later item as defeating suppression; it never decides relevance from words or trailer presence.
 
