@@ -226,7 +226,7 @@ def build(args: argparse.Namespace) -> tuple[str, str | None]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Write the shared code-audit-publish finder block to stdout."
+        description="Write the shared audit-code-publish finder block to stdout."
     )
     parser.add_argument("--repo", required=True, help="path to the repository under review")
     parser.add_argument("--base-ref", required=True, help="pinned base branch name")

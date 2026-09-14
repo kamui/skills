@@ -34,7 +34,7 @@ violations and emits nothing. On the gating path only, enforce the first-line
 status grammar and event compatibility, remove the advisory suffix, and
 re-validate that edited body before emission. The batch is what validated
 after the one scripted edit; COMMENT keeps its existing acceptance rules.
-The script never posts; the forge call belongs to code-review-publish.
+The script never posts; the forge call belongs to review-code-publish.
 
 Exit codes: ``0`` valid (or every fragment rendered, or the batch emitted),
 ``1`` one or more violations (one line each, in the form

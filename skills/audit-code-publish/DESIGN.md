@@ -1,4 +1,4 @@
-# Design notes — code-audit-publish
+# Design notes — audit-code-publish
 
 v2a is the Panel line's second iteration: `code-review-publish-2` (v2, PR #14, seeded at commit
 `f42f708`) with the fixes the three 2026-09-01 test runs proved necessary, and nothing that would
@@ -11,10 +11,10 @@ unchanged.
 
 ## Positioning
 
-The skill is named `code-audit-publish`, formerly `code-review-deep-publish`. Its direction is a
+The skill is named `audit-code-publish`, formerly `code-audit-publish` (issue #245) and before that `code-review-deep-publish`. Its direction is a
 PR-triggered audit of affected requirements, contracts and system guarantees, bounded by the
-change's effects. The frequent path belongs to `code-review-publish`; the audit remains explicit-only.
-The rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
+change's effects. The frequent path belongs to `review-code-publish`; the audit remains explicit-only.
+The `code-review-deep-publish` rename retained the `v2b-1` review protocol and the existing two-finder workflow; C17
 advanced the identifier to `v2b-2`, C18 to `v2b-3`, C19 to `v2b-4`, C20 advanced it to `v2b-5`, and the paired deleted-file repair advances it to `v2b-6`. It does not claim that the planned transition audits, stronger
 verification or executable experiments have shipped. Admission, verification, rendering and state
 changes receive their own release bumps.
@@ -864,3 +864,9 @@ or made conditional.
 `v2b-6` adds merge-base links for known deleted whole files. The orchestrator derives `{coordinate, side}` from the full pinned merge-base manifest, retains it beside the pinned head/merge-base, and passes the same record to render and check for findings and questions, body repairs, index updates and the caller report. `--revision` remains head; `--side LEFT --merge-base <sha>` selects the established pre-image file. Missing merge-base or `UNKNOWN` file provenance produces an honest code span. Malformed supplied identity fails; LEFT lines and rename coordinates remain unlinked.
 
 The later audit payload emitter must preserve this publication record and argument mapping in `references/publishing.md`; finder and verifier accounting grammars stay unchanged. Whole-file items remain body-resident and native `commit_id` and trailers stay at head. The paired routine release is `v5b-15`. CLI fixtures cover PR #118's exact deleted path and revision, ordinary links, malformed provenance and unavailable/ambiguous pre-images. These are mechanical checks only; no general LEFT-line, rename, observation or prior-finding provenance expansion is claimed. Earlier workflow trailers and stable ids remain readable history.
+
+## Verb-first rename (issue #245)
+
+`code-audit-publish` became `audit-code-publish` so that every skill name in this repository starts with its verb, ends in `-publish` when it writes to the forge, and stays clear of `code-review`, which the harness and skills from other sources use. Only names changed: the directory moved with `git mv`, and the frontmatter, `agents/openai.yaml` prompt, script descriptions, and current cross-references followed. Earlier notes in this file and the research records keep the name they were written under.
+
+**Identifier retained: `v2b-6`.** Trailers, the context digest, and the finder and verifier grammars carry no skill name, so admission, verification, rendering, and state semantics are unchanged and earlier audits remain continuous.

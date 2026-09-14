@@ -1,5 +1,5 @@
 ---
-name: code-review-publish
+name: review-code-publish
 description: "Invoke review-code and publish one forge-native review of an existing pull request. Use when the caller wants a review posted to the pull request, not just reported back."
 ---
 

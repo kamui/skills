@@ -1,6 +1,6 @@
 # Review protocol
 
-Mirrored verbatim in `code-review-publish-legacy` and `code-review-address`; edit both together.
+Mirrored verbatim in `code-review-publish-legacy` and `resolve-review`; edit both together.
 
 ## Where a review goes
 
@@ -35,7 +35,7 @@ The pull request under review is a fixed target. Neither skill opens, retargets,
 - Six lines or fewer above the trailer. Whoever acts on it, human or agent, acts from this comment alone.
 - The trailer is an HTML comment: invisible in the rendered view, present in the raw body via `gh api`.
 
-The current `code-review-publish` contract labels findings `[P0]` through `[P3]` and then `[must-fix]` or `[consider]`; its trailers carry matching `priority`, `action`, and `blocking` fields. When addressing those findings, map `[must-fix]` or `action=must-fix blocking=true` to blocking, and `[consider]` or `action=consider blocking=false` to the optional semantics below. A visible action/trailer mismatch is malformed feedback to clarify rather than silently choosing one.
+The current `review-code-publish` contract labels findings `[P0]` through `[P3]` and then `[must-fix]` or `[consider]`; its trailers carry matching `priority`, `action`, and `blocking` fields. When addressing those findings, map `[must-fix]` or `action=must-fix blocking=true` to blocking, and `[consider]` or `action=consider blocking=false` to the optional semantics below. A visible action/trailer mismatch is malformed feedback to clarify rather than silently choosing one.
 
 For legacy reviews, `[Suggestion]` is the one severity marker for a finding worth saying and not worth blocking on — a nice-to-have, a preference, or food for thought the author may close unactioned. It goes after the axis tag and rides the trailer:
 
@@ -53,7 +53,7 @@ The `id` slugs the axis (`code` or `requirements`), file, and finding title — 
 
 ## Reply comments
 
-`code-review-address` replies once per item:
+`resolve-review` replies once per item:
 
 ```markdown
 **Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green.
@@ -112,7 +112,7 @@ Resolve a thread when:
 
 A `declined` reply does not resolve its own thread. Declining states a position; the reviewer accepting it is what settles the disagreement, and closing early would hide a live dispute from the round cap.
 
-`code-review-address` resolves each thread as it finishes that thread — reply posted, change live — rather than batching resolutions at the end. Threads sitting at `needs-info` or `blocked` stay open.
+`resolve-review` resolves each thread as it finishes that thread — reply posted, change live — rather than batching resolutions at the end. Threads sitting at `needs-info` or `blocked` stay open.
 
 `code-review-publish-legacy` resolves what it verdicts `fixed`, `accepted`, or `obsolete`, and its own findings once it withdraws them. A stale thread left from an earlier round is the reviewer's to close, not something the addresser inherits.
 
@@ -230,7 +230,7 @@ A batched review creates its body and its comments in one call, so the comment U
 
 Before closing the round, reconcile the pull request title and description against the resulting diff and originating spec. Edit either field when it no longer describes the change accurately or completely; preserve issue links and still-valid context, and describe the resulting behavior rather than the review chronology. An already-accurate field stays unchanged. In the summary comment, mention only fields actually edited during the round; omit unchanged fields even when the other field changed.
 
-Resolving every thread leaves a pull request looking untouched. The forge collapses resolved threads, so a round that answered everything and a round that did nothing render the same, and the reviewer has to expand each one to find out which. `code-review-address` closes a round with one general pull-request comment:
+Resolving every thread leaves a pull request looking untouched. The forge collapses resolved threads, so a round that answered everything and a round that did nothing render the same, and the reviewer has to expand each one to find out which. `resolve-review` closes a round with one general pull-request comment:
 
 ```markdown
 **Addressed** at `5844a3c` — 2 implemented, 1 answered, 1 declined.
