@@ -2,7 +2,7 @@
 
 Load only in session mode, after step 5 has produced the immutable review record. One-shot callers do not load this reference.
 
-Present the complete would-be review: summary, findings, and questions, retaining the script-rendered commit-pinned links. Then list every routed item as a question the user can answer:
+Present the complete would-be review: summary, findings, and questions, retaining the script-rendered commit-pinned links. Then list every unresolved routed item as a question the user can answer; local rechecks apply carried answers and chosen readings under [`re-review.md`](re-review.md#session-recheck) first:
 
 - For each ambiguity, give both supported readings and the one applied, and ask which reading should govern.
 - For each unrecoverable input, name the missing input, what it gates, and who can supply it; ask for that input.
@@ -54,8 +54,8 @@ After every turn, show the immutable review record beside the current valid sess
 
 ## Fixes and exit
 
-Fixes are outside the record. A request to fix hands off to implementation separately from this read-only review. Once reviewed code changes, mark both records stale for the new code and stop amending them. In v1, a further review is a fresh first review of the new head or working-tree snapshot under the target rules; a session record is not prior state and its layer is not an input to that review. Session-carried delta review is scoped as #228.
+Fixes are outside the record. A request to fix hands off to implementation separately from this read-only review. Once reviewed code changes, mark both records stale for the new code and stop amending them. A requested local recheck returns to step 1 with the same session’s persisted session record under [`re-review.md`](re-review.md#session-recheck); that reference owns continuity, delta scope, layer carry-forward, and run-budget handling. A pull-request recheck continues to take prior state only from its packet.
 
-At exit, summarize decisions, findings accepted, disputed, or re-opened, and questions answered or still open. Keep the decision-to-coordinate mapping in the named private session layer, and report its path alongside both records and statuses. If stale, show that qualification with both statuses.
+At local-session exit, release the owned snapshot refs under [`re-review.md`](re-review.md#session-snapshot-lifetime). At exit, summarize decisions, findings accepted, disputed, or re-opened, and questions answered or still open. Keep the decision-to-coordinate mapping in the named private session layer, and report its path alongside both records and statuses. If stale, show that qualification with both statuses.
 
 Nothing from the session reaches the forge. For a publication request, direct the user to `code-review-publish`, which performs its own one-shot review and knows nothing of the session layer. A later one-shot review receives no session decisions or amendments; publication of a discussed record remains deferred.
