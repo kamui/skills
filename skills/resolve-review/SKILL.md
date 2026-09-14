@@ -1,9 +1,9 @@
 ---
-name: code-review-address
+name: resolve-review
 description: Address every review comment on a pull request, make the warranted changes, and reply to each one. Use when review feedback on a pull request needs working through, including as the fix step of a review loop.
 ---
 
-# Address code review
+# Resolve code review
 
 Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
 
@@ -19,7 +19,7 @@ Read `docs/agents/issue-tracker.md` when present, then resolve the pull request,
 
 Fetch every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Skip automated status messages unless they ask for a change.
 
-Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, priority, action, requested change, and whether this identity already replied. Treat `[Suggestion]` and `[consider]` findings as optional, and `[must-fix]` findings as blocking; for current `code-review-publish` trailers, `action=consider blocking=false` is optional and `action=must-fix blocking=true` is blocking. Anything without one of those optional markers is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
+Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, priority, action, requested change, and whether this identity already replied. Treat `[Suggestion]` and `[consider]` findings as optional, and `[must-fix]` findings as blocking; for current `review-code-publish` trailers, `action=consider blocking=false` is optional and `action=must-fix blocking=true` is blocking. Anything without one of those optional markers is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
 
 ### 2. Evaluate and address each item
 

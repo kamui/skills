@@ -5,7 +5,7 @@ description: Implement work from a spec, issue, or set of tickets and open a pul
 
 # Implement and publish
 
-Implement the work, review it locally with a fresh-context subagent, then open one pull request linked to its spec. This skill stops at the pull request; `code-review-publish` handles the published review.
+Implement the work, review it locally with a fresh-context subagent, then open one pull request linked to its spec. This skill stops at the pull request; `review-code-publish` handles the published review.
 
 ## Process
 

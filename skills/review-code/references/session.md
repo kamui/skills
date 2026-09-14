@@ -58,4 +58,4 @@ Fixes are outside the record. A request to fix hands off to implementation separ
 
 At local-session exit, release the owned snapshot refs under [`re-review.md`](re-review.md#session-snapshot-lifetime). At exit, summarize decisions, findings accepted, disputed, or re-opened, and questions answered or still open. Keep the decision-to-coordinate mapping in the named private session layer, and report its path alongside both records and statuses. If stale, show that qualification with both statuses.
 
-Nothing from the session reaches the forge. For a publication request, direct the user to `code-review-publish`, which performs its own one-shot review and knows nothing of the session layer. A later one-shot review receives no session decisions or amendments; publication of a discussed record remains deferred.
+Nothing from the session reaches the forge. For a publication request, direct the user to `review-code-publish`, which performs its own one-shot review and knows nothing of the session layer. A later one-shot review receives no session decisions or amendments; publication of a discussed record remains deferred.

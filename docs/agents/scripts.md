@@ -34,7 +34,7 @@ A script does mechanical work: builds a prompt, validates a payload, hashes cont
 
 Write the command as `python3 scripts/<name>.py …` with the path relative to the skill root, so it works without an executable bit. Say what the agent does on a non-zero exit: report the script's output and stop the step. The fix is to the script, and the script's output is what the next step consumes.
 
-The named install-alone exception is `code-review-publish` and `implement-publish` requiring `review-code`; other skills remain independent. A skill that runs another skill's script uses the absolute path named in the returned record, never a sibling-relative path.
+The named install-alone exception is `review-code-publish` and `implement-publish` requiring `review-code`; other skills remain independent. A skill that runs another skill's script uses the absolute path named in the returned record, never a sibling-relative path.
 
 ## Declaring the requirement
 

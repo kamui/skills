@@ -1,6 +1,6 @@
 ---
 name: code-review-publish-legacy
-description: "Legacy: review an issue-linked pull request along two axes (Code and Requirements) and publish the findings as line comments and a review summary under the shared review-protocol.md. Kept for historical purposes only: code-review-publish supersedes it with one integrated reviewer, calibrated consequence-triggered verification, and a mechanically validated output contract, so use code-review-publish instead. Not invoked automatically; only when the caller explicitly asks for the legacy review protocol."
+description: "Legacy: review an issue-linked pull request along two axes (Code and Requirements) and publish the findings as line comments and a review summary under the shared review-protocol.md. Kept for historical purposes only: review-code-publish supersedes it with one integrated reviewer, calibrated consequence-triggered verification, and a mechanically validated output contract, so use review-code-publish instead. Not invoked automatically; only when the caller explicitly asks for the legacy review protocol."
 ---
 
 # Publish code review (legacy)
