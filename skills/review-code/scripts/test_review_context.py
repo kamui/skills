@@ -112,6 +112,58 @@ class SnapshotTests(unittest.TestCase):
         self.git('checkout', '--orphan', 'unborn')
         self.snapshot(code=2)
 
+    def test_recheck_context_preserves_state_and_reports_delta(self):
+        self.write('tracked', 'first\n')
+        first = self.snapshot()['snapshot']
+        self.write('tracked', 'staged\n')
+        self.git('add', 'tracked')
+        self.write('tracked', 'fixed\n')
+        self.write('untracked', 'new\n')
+        index = (self.root / '.git/index').read_bytes()
+        refs = self.git('show-ref')
+        store = Path(self.temp.name) / 'recheck.json'
+        self.snapshot('--parent', first['head'], '--prior-head', first['head'],
+                      '--merge-base', self.head, '--base-ref', self.head, '--store', str(store))
+        context = json.loads(store.read_text(encoding='utf-8'))['context']
+        self.assertEqual(context['snapshot']['chain'], 'chained')
+        self.assertEqual(context['delta']['conditions']['ancestor'], 'yes')
+        self.assertEqual(context['delta']['conditions']['merge-base-unchanged'], 'yes')
+        self.assertIn('-first', context['delta']['diff'])
+        self.assertIn('+fixed', context['delta']['diff'])
+        self.assertEqual({row['path'] for row in context['delta']['manifest']},
+                         {'tracked', 'untracked'})
+        self.assertEqual(index, (self.root / '.git/index').read_bytes())
+        self.assertEqual(refs, self.git('show-ref'))
+        self.assertEqual((self.root / 'tracked').read_text(encoding='utf-8'), 'fixed\n')
+        self.assertEqual((self.root / 'untracked').read_text(encoding='utf-8'), 'new\n')
+        second = context['snapshot']
+        same = self.snapshot('--parent', second['head'], '--prior-head', second['head'],
+                             '--merge-base', self.head, '--base-ref', self.head)
+        self.assertEqual(same['snapshot']['chain'], 'chained')
+        self.assertEqual(same['snapshot']['tree'], second['tree'])
+        self.assertEqual(same['delta']['manifest'], [])
+        self.assertEqual(same['delta']['diff'], '')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'User commit')
+        self.write('tracked', 'after commit\n')
+        reset = self.snapshot('--parent', second['head'], '--prior-head', second['head'],
+                              '--merge-base', self.head, '--base-ref', self.head)
+        self.assertEqual(reset['snapshot']['chain'], 'reset')
+        self.assertEqual(reset['snapshot']['parent'], self.git('rev-parse', 'HEAD').strip())
+        self.assertIn('+after commit', reset['diff'])
+
+    def test_session_ref_protects_snapshot_until_exit(self):
+        self.write('tracked', 'reviewed\n')
+        snap = self.snapshot()['snapshot']
+        ref = 'refs/review-code/session/test-session/1'
+        self.git('update-ref', ref, snap['head'])
+        self.git('gc', '--prune=now')
+        self.assertEqual(self.git('rev-parse', ref).strip(), snap['head'])
+        self.git('cat-file', '-e', snap['head'])
+        self.git('update-ref', '-d', ref)
+        self.assertEqual(self.git('for-each-ref', '--format=%(refname)',
+                                  'refs/review-code/session/'), '')
+
     def test_submodule_gitlink_and_dirty_content(self):
         child = Path(self.temp.name) / 'child'
         child.mkdir()

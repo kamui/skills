@@ -11,6 +11,8 @@ filters run (including on untracked files) and retain their normal side effects.
 
 Usage:
     python3 scripts/review_context.py --worktree [--merge-base SHA] [--parent SHA] [--json]
+    python3 scripts/review_context.py --worktree --parent SHA --prior-head SHA \
+        --merge-base SHA --base-ref NAME [--store FILE] [--json]
     python3 scripts/review_context.py --merge-base SHA --head SHA [--json]
     python3 scripts/review_context.py --merge-base SHA --head SHA \
         --prior-head SHA [--base-ref NAME] [--json]
@@ -2049,8 +2051,8 @@ def main() -> int:
         parser.error("--chunk-bytes must be at least 1")
     if arguments.parent and not arguments.worktree:
         parser.error("--parent requires --worktree")
-    if arguments.worktree and (arguments.head or arguments.prior_head or arguments.store_from):
-        parser.error("--worktree cannot be combined with --head, --prior-head, or --from")
+    if arguments.worktree and (arguments.head or arguments.store_from):
+        parser.error("--worktree cannot be combined with --head or --from")
     if arguments.chunk is not None and (len(arguments.path) != 1 or not arguments.store_from):
         parser.error("--chunk requires exactly one --path and --from")
     if arguments.store_from:
