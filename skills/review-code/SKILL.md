@@ -155,13 +155,13 @@ Write the composition input the rendering reference's Composition section define
 
 Produce `batch.json` with `python3 scripts/validate_review.py --emit-batch < payload.json > batch.json`; never assemble it by hand. On a non-zero exit, fix the composition input and re-run composition and emission; an unresolved failure returns `script-failure` with the script output.
 
-After the record exists, session mode alone reads [`references/session.md`](references/session.md) and presents the record and routed questions under its procedure. One-shot returns them without loading that reference.
+After step 5 completes, session mode alone reads [`references/session.md`](references/session.md) and hands the immutable record and routed items to its conversation procedure. One-shot returns them without loading that reference.
 
 ## Return
 
 Return an immutable review record at named paths in the private directory:
 
-1. Run identity: repository, target kind and target, head, base and its source, merge-base, state and posting identity and packet path when the target is a pull request, merged, tree hash and snapshot metadata when it is the working tree, private-store path, and the absolute path of every script run.
+1. Run identity: repository, target kind and target, head, base and its source, merge-base, state and posting identity and packet path when the target is a pull request, merged, tree hash and snapshot metadata when it is the working tree, private-store path, and the absolute path of every script run. Retain absolute reference paths and which were loaded, including the locations of conditional references for later recovery.
 2. The rubric's private record: requirement and candidate disposition ledgers, file accounting, verification accounting (batches, verdicts, rulings, whether the follow-up is spent), recorded deferrals, prior-item classifications with each item's thread node id and current resolution state from the packet, and each drafted thread reply with its target comment id.
 3. Semantic status and coverage.
 4. `composition.json`, `payload.json` validated at exit 0, the rendered fragments, and emitted `batch.json` at named paths.
@@ -189,4 +189,4 @@ The skill cannot detect who invoked it. The operative rule is: absent `mode`, se
 | Material question, including `issue-required` | Report question; status may be Needs Information | Required issue is asked before falsification; open questions are asked after the record under `references/session.md` |
 | Verification incomplete after follow-up | Report verified unrelated findings and disclose gap | Same report; further batch authorization belongs to `references/session.md` |
 
-Both modes receive the same complete record for the same resolved inputs and scope. Session policy belongs to `references/session.md`; this minimal session presents questions and an exit summary without amending the immutable review record.
+Both modes receive the same complete record for the same resolved inputs and scope. After-record conversation policy belongs to `references/session.md`; the review record stays immutable while that procedure maintains the separate session layer and session record.
