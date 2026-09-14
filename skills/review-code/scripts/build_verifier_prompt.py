@@ -276,10 +276,12 @@ def main():
     parser.add_argument("--ledger", required=True)
     parser.add_argument("--output", required=True, help="new private bundle directory; never overwritten")
     args = parser.parse_args()
+    EVENT.update(event="verifier-brief-built", output=args.output)
     temporary = None
     try:
         ledger = read_json(args.ledger)
         data = project(read_json(args.input), ledger)
+        EVENT.update(projected=data, ledger=ledger)
         brief = render(data)
         manifest = make_manifest(data, brief, digest(json_text(ledger).encode("utf-8")))
         output = Path(args.output)
@@ -304,5 +306,19 @@ def main():
             shutil.rmtree(temporary)
 
 
+# What this build hands run_events.py; recording never changes the result.
+EVENT = {}
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import time
+
+    started_ns = time.monotonic_ns()
+    status = main()
+    try:
+        import run_events
+
+        run_events.record(EVENT, status, started_ns, "build_verifier_prompt.py")
+    except Exception:
+        pass
+    raise SystemExit(status)

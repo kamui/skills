@@ -861,6 +861,8 @@ def main() -> int:
     )
     args = parser.parse_args()
     composition = load_json(args.input, "composition input")
+    if args.store is not None:
+        EVENT.update(event="payload-composed", store=args.store, composition=composition)
     store = None
     if args.store is not None:
         store = load_json(args.store, "store")
@@ -876,5 +878,19 @@ def main() -> int:
     return 0
 
 
+# What a --store composition hands run_events.py; recording never changes the result.
+EVENT: dict[str, Any] = {}
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import time
+
+    started_ns = time.monotonic_ns()
+    status = main()
+    try:
+        import run_events
+
+        run_events.record(EVENT, status, started_ns, "compose_review.py")
+    except Exception:
+        pass
+    raise SystemExit(status)
