@@ -8,7 +8,7 @@ A pull-request target takes prior state only from the persisted packet, in eithe
 
 ### Session snapshot lifetime
 
-At local-session start, create a private directory with `mktemp -d` outside the working tree; its basename is `<session id>`. List `git for-each-ref --format='%(refname)' refs/review-code/session/`. Report refs from earlier sessions as stale and offer to delete the listed refs; delete them only on the user's authorization and never reuse them as prior state.
+At local-session start, create a private directory with `mktemp -d` outside the working tree; its basename is `<session id>`. List `git for-each-ref --format='%(refname)' refs/review-code/session/`. Report other sessions' refs as potentially live: a concurrent session in this repository or a linked worktree may still own them. Only after the user confirms that no such session is running, report the leftovers as stale and offer deletion; delete them only on the user's authorization and never reuse them as prior state.
 
 After each session snapshot, run `git update-ref refs/review-code/session/<session id>/<n> <snapshot sha>` with a fresh increasing `<n>` and retain the name in the run identity. This keeps the snapshot reachable even through `git gc --prune=now`. Keep the session's owned-ref inventory across runs, including unchanged-tree probes and failed runs. On exit, run `git update-ref -d <ref>` for every owned ref. Report any ref-command failure; a failed protection step stops the recheck before relying on that snapshot, and failed cleanup leaves a named stale ref for the next session. The snapshot script itself leaves refs unchanged.
 

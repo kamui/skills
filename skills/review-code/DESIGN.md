@@ -110,7 +110,7 @@ Word counts use whitespace splitting (`wc -w`); startup is `SKILL.md`, while ref
 | Instruction | Load condition | Before | After |
 | --- | --- | ---: | ---: |
 | `SKILL.md` | Startup | 5,750 | 5,799 |
-| `references/re-review.md` | Conditional | 952 | 1,730 |
+| `references/re-review.md` | Conditional | 952 | 1,756 |
 | `references/session.md` | Conditional | 1,380 | 1,397 |
 | `references/local-targets.md` | Conditional | 1,166 | 1,240 |
 
