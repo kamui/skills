@@ -10,7 +10,7 @@ Verified against the sources on 2026-08-31. Prompt text in these repositories dr
 | [`qodo-ai/pr-agent`](https://github.com/qodo-ai/pr-agent) (now `The-PR-Agent/pr-agent`) — `pr_agent/settings/pr_reviewer_prompts.toml` and `code_suggestions/pr_code_suggestions_reflect_prompts.toml` | MIT | The requirement-restatement step, the compliance buckets, and the "cannot tell from the code" channel in `requirements-axis.md`; the asymmetric flag rule and the low-value exclusions in `code-axis.md` |
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) — `skills/engineering/code-review/SKILL.md` | MIT | The two-axis separation, and the scope-creep bucket in `requirements-axis.md` |
 | Anthropic `code-review` plugin — `plugins/code-review/commands/code-review.md` in the official Claude Code plugin marketplace | Apache-2.0 | The exclusion taxonomy in `code-axis.md` |
-| `code-review-publish` — `references/review-protocol.md`, in this repository | — | Directional ancestor of the comment shape, trailers, status ladder, disposition and verdict vocabularies, round cap, and forge verbs |
+| `code-review-publish-legacy` (formerly `code-review-publish`) — `references/review-protocol.md`, in this repository | — | Directional ancestor of the comment shape, trailers, status ladder, disposition and verdict vocabularies, round cap, and forge verbs |
 
 ## Not used
 

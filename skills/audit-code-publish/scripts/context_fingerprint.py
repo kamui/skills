@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute the deterministic context digest used by code-audit-publish.
+"""Compute the deterministic context digest used by audit-code-publish.
 
 Usage:
     python3 scripts/context_fingerprint.py [INPUT | --json JSON]
