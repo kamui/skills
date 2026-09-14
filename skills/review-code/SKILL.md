@@ -6,7 +6,7 @@ compatibility: Requires git and Python 3.9+ on macOS or Linux
 
 # Review code
 
-This is the shared review core. It supersedes `code-review-publish-legacy` and does not use that skill's `review-protocol.md` as a specification.
+This is the shared review core. It supersedes `code-review-publish` and does not use that skill's `review-protocol.md` as a specification.
 
 Review one target — a pull request, a range, or the working tree — without modifying its code, then return one validated record containing every verified finding. The visible prose must be sufficient for either a person or an agent to act on; hidden trailers assist correlation but never carry meaning that the prose omits.
 
