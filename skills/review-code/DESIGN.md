@@ -97,6 +97,12 @@ Each decision rule has one owning document; every other document that needs it c
 
 ## Change notes
 
+### Local implementation review caller (issue #234)
+
+`implement-publish` now invokes the core in one-shot mode on its committed local base-to-head range from a fresh, resumable general-purpose reviewer. After blocking fixes, the same reviewer re-verifies the fixed stable ids and applies the rubric's Complete inspection rules to the entire fix delta; any newly surviving mandatory candidate receives one verifier batch. That addendum preserves the existing completion condition by covering every change between the reviewed and final heads. A delta too large for complete delta inspection falls back to a fresh-context one-shot review of the full final range. The core retains its read-only source and disposable-test bounds.
+
+**Identifier retained: `v5b-17`.** This changes caller orchestration in `implement-publish`, not `review-code` admission, verification, rendering, record state, trailers, or duplicate-review behavior. `implement-publish` carries no workflow identifier, and `review-code`'s one-shot record remains unchanged. The PR's paper replays cover caller branches; they establish instruction behavior, not measured recall, precision, or production speedup.
+
 ### After-record conversation (issue #233)
 
 `references/session.md` replaces the minimal session handoff with three private artifacts: the immutable review record, a decision layer, and an evidence-amended session record. Answers use the recorded settlement field; code claims face bounded re-falsification under the rubric. Risk acceptance stays solely in the layer, so even an accepted `must-fix` leaves both statuses unchanged. Each amendment is recomposed and validated through the existing scripts at separate paths, preserving the original artifacts, stable ids, and private provenance. The report shows both statuses and the decisions any difference depends on; coordinate mappings stay in the private layer. Absolute reference paths in the return support recovery after compaction.

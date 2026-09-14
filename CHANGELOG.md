@@ -4,6 +4,8 @@
 
 ### Added
 
+- `implement-publish` now sends its committed local base-to-head range through `review-code` in a resumable fresh-context general-purpose subagent before publication. Blocking fixes return to the same reviewer for bounded re-verification and complete fix-delta inspection, with a fresh one-shot review when the delta is too large; the reviewed source stays read-only and focused tests stay disposable. Workflow `v5b-17` is retained because the review core's admission, verification, rendering, and state semantics are unchanged (issue #234).
+
 - `review-code` session mode now handles answers, challenges, risk acceptance, and bounded deeper checks after the validated review. It preserves the immutable review record beside a private decision layer and a separately validated session record; acceptance alone changes neither status. Workflow `v5b-17` is retained because the one-shot review and published behavior are unchanged (issue #233).
 
 - `review-code` now reviews local ranges and working-tree snapshots, infers branch bases, and carries commit-message requirements through verification and rendering. Snapshots preserve the real index and working files, include non-ignored untracked files, and reset parent chaining when real HEAD moves. Local coordinates stay code spans; ordinary review requests select the core, while `code-review-publish` remains the posting entrypoint. Pull-request output and fixtures remain byte-identical, so workflow `v5b-17` is retained (issue #232).
