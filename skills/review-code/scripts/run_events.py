@@ -86,6 +86,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import stat
 import subprocess
 import sys
@@ -260,7 +261,9 @@ def record(stash: dict, status, started_ns: int, script: str) -> None:
             "data": data,
         }
         line = (json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
-        flags = os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+        # O_NONBLOCK: a FIFO or device at this path fails the open instead of blocking the script.
+        flags = (os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+                 | getattr(os, "O_NONBLOCK", 0))
         descriptor = os.open(os.path.join(directory, EVENTS_NAME), flags, 0o600)
         try:
             info = os.fstat(descriptor)
@@ -274,8 +277,35 @@ def record(stash: dict, status, started_ns: int, script: str) -> None:
 
 # --- Summary -----------------------------------------------------------------
 
+TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)")
+DATA_STRINGS = ("head", "merge_base", "prior_head", "target", "target_kind", "run_id", "batch_id", "phase",
+                "mode", "status", "coverage", "store", "bundle")
+DATA_COUNTS = ("candidates", "ledger_rows", "full_ledger_rows", "findings", "questions")
+DATA_TALLIES = ("supplied", "returned", "withheld")
+
+
+def _timestamp(value) -> bool:
+    """An ISO-8601 instant with seconds and timezone that the research sidecar reader accepts."""
+    if not isinstance(value, str) or not TIMESTAMP.fullmatch(value):
+        return False
+    normalized = re.sub(r"\.(\d+)", lambda match: "." + match[1][:6].ljust(6, "0"), value)
+    try:
+        datetime.fromisoformat(normalized.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
+def _optional(value, kinds) -> bool:
+    return value is None or (isinstance(value, kinds) and not isinstance(value, bool))
+
+
+def _strings(value, names) -> bool:
+    return isinstance(value, dict) and all(_optional(value.get(name), str) for name in names)
+
+
 def _valid(event) -> str:
-    """Why a parsed line is not a usable event, or ''."""
+    """Why a parsed line is not a usable event, or ''. Checks every field the summary reads."""
     if not isinstance(event, dict) or event.get("format") != EVENT_FORMAT:
         return f"not a {EVENT_FORMAT} object"
     if event.get("event") not in EVENTS:
@@ -287,10 +317,31 @@ def _valid(event) -> str:
         return "started_ns and ended_ns must be integers"
     if started > ended:
         return "started_ns is after ended_ns"
-    if not isinstance(event.get("clock"), dict) or not isinstance(event.get("data"), dict):
-        return "clock and data must be objects"
-    if not isinstance(event.get("ended_at"), str):
-        return "ended_at must be a string"
+    if not _strings(event.get("clock"), ("host", "boot", "implementation")):
+        return "clock must be an object whose host, boot and implementation are strings or null"
+    if not _timestamp(event.get("ended_at")):
+        return "ended_at must be an ISO-8601 timestamp with seconds and timezone"
+    origin = event.get("origin")
+    if origin is not None:
+        if not _strings(origin, ("script",)) or not _optional(origin.get("pid"), int):
+            return "origin must be an object with a string script and integer pid"
+        if origin.get("harness") is not None and not _strings(origin["harness"], ("name", "source", "session")):
+            return "origin.harness name, source and session must be strings or null"
+    if event.get("policy") is not None and not _strings(event["policy"], ("workflow", "commit", "commit_source")):
+        return "policy workflow, commit and commit_source must be strings or null"
+    data = event.get("data")
+    if not _strings(data, DATA_STRINGS):
+        return "data must be an object whose identity fields are strings or null"
+    if not all(_optional(data.get(name), int) and (data.get(name) or 0) >= 0 for name in DATA_COUNTS):
+        return "data counts must be non-negative integers or null"
+    for name in DATA_TALLIES:
+        tally = data.get(name)
+        if tally is not None and not (isinstance(tally, dict) and all(
+                _optional(count, int) and (count or 0) >= 0 for count in tally.values())):
+            return f"data.{name} must map to non-negative integers or null"
+    for name in ("structurally_complete", "conclusion_accounted"):
+        if data.get(name) is not None and not isinstance(data.get(name), bool):
+            return f"data.{name} must be a boolean or null"
     return ""
 
 
@@ -462,7 +513,8 @@ def summarize(lines, events_path: str, mode) -> tuple:
     last_join = None
     if payload is not None:
         joins = [a for key in order for a in batches[key]["accountings"] if a["_line"] < payload["_line"]]
-        last_join = joins[-1] if joins else None
+        # Latest in event order, not batch order: batches may be accounted in reverse.
+        last_join = max(joins, key=lambda a: a["_line"]) if joins else None
     durations = {
         "context_build": duration(context["started_ns"] if context else None, context["ended_ns"] if context else None,
                                   "captured", "context build script span", "no successful context build"),

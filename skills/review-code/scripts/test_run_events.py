@@ -15,6 +15,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 import test_verifier_handoff as handoff
@@ -63,7 +64,7 @@ class RunEventTests(unittest.TestCase):
 
     def cli(self, script, *args, code=0, cwd=None, stdin=None):
         result = subprocess.run([sys.executable, str(SCRIPTS / script), *map(str, args)], cwd=cwd, input=stdin,
-                                capture_output=True, text=True, encoding="utf-8")
+                                capture_output=True, text=True, encoding="utf-8", timeout=120)
         self.assertEqual(result.returncode, code, result.stdout + result.stderr)
         self.assertNotIn("Traceback", result.stderr)
         return result
@@ -175,6 +176,82 @@ class RunEventTests(unittest.TestCase):
         composition = self.root / "composition-False.json"
         self.cli("compose_review.py", composition)
         self.assertFalse((self.root / "run-events.jsonl").exists())
+
+    def test_special_event_path_never_blocks(self):
+        repo, base, head = self.repository()
+        outputs = []
+        for fifo in (False, True):
+            private = self.root / f"special-{fifo}"
+            private.mkdir()
+            if fifo:
+                os.mkfifo(private / "run-events.jsonl")  # no reader: a blocking open would hang
+            store = private / "context.json"
+            started = time.monotonic()
+            built = subprocess.run([sys.executable, str(SCRIPTS / "review_context.py"), "--merge-base", base,
+                                    "--head", head, "--store", str(store)], cwd=repo, capture_output=True,
+                                   text=True, encoding="utf-8", timeout=20)
+            composition = self.root / f"special-{fifo}.json"
+            composition.write_text(json.dumps(self.composition(base, head)), encoding="utf-8")
+            composed = subprocess.run([sys.executable, str(SCRIPTS / "compose_review.py"), "--store", str(store),
+                                       str(composition)], capture_output=True, text=True, encoding="utf-8", timeout=20)
+            self.assertLess(time.monotonic() - started, 20)
+            outputs.append((built.returncode, built.stdout.replace(str(store), "STORE"), built.stderr,
+                            composed.returncode, composed.stdout, composed.stderr))
+        self.assertEqual(outputs[0], outputs[1])
+        self.assertEqual((outputs[1][0], outputs[1][3]), (0, 0))
+        self.assertTrue(stat.S_ISFIFO((self.root / "special-True" / "run-events.jsonl").stat().st_mode))
+
+    def test_latest_accounting_follows_event_order(self):
+        summary, _ = self.summarize([context(), brief("one", 10), brief("two", 20), accounted("two", 30),
+                                     accounted("one", 50), payload(59)], "--completion-mode", "result")
+        interval = summary["durations"]["last_accounting_to_validated_payload"]
+        self.assertEqual((interval["seconds"], interval["status"]), (9.0, "proxy"))
+
+    def test_malformed_fields_are_violations_not_crashes(self):
+        cases = []
+        bad = context()
+        bad["clock"]["boot"] = {"nested": True}
+        cases.append(("clock", bad))
+        bad = payload(4)
+        bad["ended_at"] = "not-a-timestamp"
+        cases.append(("ended_at", bad))
+        bad = payload(4)
+        bad["ended_at"] = "2026-02-30T12:00:00Z"
+        cases.append(("ended_at", bad))
+        bad = context()
+        bad["data"]["head"] = ["a"]
+        cases.append(("identity fields", bad))
+        bad = brief("one", 3)
+        bad["data"]["batch_id"] = {"id": 1}
+        cases.append(("identity fields", bad))
+        bad = brief("one", 3)
+        bad["data"]["candidates"] = "1"
+        cases.append(("counts", bad))
+        bad = accounted("one", 3)
+        bad["data"]["returned"]["confirmed"] = -1
+        cases.append(("data.returned", bad))
+        bad = context()
+        bad["origin"] = ["x"]
+        cases.append(("origin", bad))
+        bad = context()
+        bad["policy"] = {"workflow": 17}
+        cases.append(("policy", bad))
+        for needle, line in cases:
+            with self.subTest(needle=needle, line=line):
+                self.count += 1
+                sidecar = self.root / f"{self.count}-malformed-timing.json"
+                summary, result = self.summarize([line], "--completion-mode", "result",
+                                                 "--timing-sidecar", sidecar, code=1)
+                self.assertIn(needle, result.stdout)
+                self.assertEqual((summary["event_count"], summary["complete"]), (0, False))
+                self.assertIsNone(json.loads(sidecar.read_text(encoding="utf-8"))["payload_validated_at"])
+        # A rejected payload never exports a timestamp or reads as complete.
+        bad = payload(4)
+        bad["ended_at"] = "not-a-timestamp"
+        sidecar = self.root / "rejected-timing.json"
+        summary, _ = self.summarize([context(), bad], "--completion-mode", "result", "--timing-sidecar", sidecar, code=1)
+        self.assertFalse(summary["complete"])
+        self.assertIsNone(json.loads(sidecar.read_text(encoding="utf-8"))["completed_at"])
 
     def test_overlapping_batches_are_counted_once(self):
         summary, _ = self.summarize([context(), brief("one", 10), brief("two", 20), accounted("one", 40),
