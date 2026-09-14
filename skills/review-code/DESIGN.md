@@ -98,6 +98,45 @@ Each decision rule has one owning document; every other document that needs it c
 
 ## Change notes
 
+### Ordinary-run timing records (issue #218)
+
+Issue #218 asked for a feasible way to time an ordinary run without a central runner. The seam is the four scripts every run already calls in a fixed order. Each one appends a single event to `run-events.jsonl` in the run's private directory when it exits: `review_context.py` for a `--store` build, `build_verifier_prompt.py`, `account_verifier_return.py`, and `compose_review.py` with `--store`. Exit 0 from the composer marks the validated payload, which has only this one mechanical producer. `scripts/run_events.py` is standard library only and ships with the skill. Its docstring owns the event and summary schema. `summarize` reads the events and writes a summary. It can also write the research metering timing sidecar from issue #130: `payload_validated_at` comes from the validated payload, `root_dispatched_at` is always null, and `completed_at` is null in `publication` mode. `docs/research/tools/transcript_usage.py --timing` accepted both the `result` and `publication` sidecars. `validate_review.py --emit-batch` reads stdin and gets no directory, so batch emission records no event. Forge fetches and `forge_packet.py` run relative to the working directory, so collection is timed only as the context build.
+
+The scripts pass what they already hold. All extraction, clock reads, and the append happen inside one catch-all in `run_events.record`, after `main` has returned. Recording therefore never prints anything, never changes an exit status, and never touches the payload or batch. A blocked append (the events path is a directory, a symlink, or another user's file) leaves the event out. That is the tested measurement gap. `SKILL.md` gains three clauses: the event file exists and is never written or narrated by the model, `<private-dir>` is the store's directory, and Return names the events path. `SKILL.md` goes from 5,730 words / 39,878 bytes to 5,785 / 40,241. On the WSL2 development host, recording an event took a median of 3.9 ms (8.1 ms max) when it reads the policy commit through git and 0.02 ms otherwise. Each event line is at most 788 bytes.
+
+**Support matrix.** It is reproducible with `python3 scripts/test_run_events.py`, and by summarizing any retained `run-events.jsonl`.
+
+| Field | Actual source | Status |
+| --- | --- | --- |
+| Workflow | `validate_review.WORKFLOW`, imported when the event is recorded | Captured |
+| Policy commit | `git rev-parse HEAD` at the skill root, only when that tree is clean. The synced install is a plain copy, so it is null there. | Captured in a clean checkout; otherwise unavailable |
+| Harness and session | `CLAUDECODE` and `CLAUDE_CODE_SESSION_ID` environment variables. No other harness marker was verified. | Captured on Claude Code; otherwise unavailable |
+| Reviewed head, merge-base | Context-build arguments or the snapshot, and the composition run | Captured |
+| Target kind | Composition `run.target_kind`. A context build alone only tells `worktree` from `commit-range`. | Captured when composed; otherwise proxy |
+| Caller mode (`one-shot`, `session`) | Not passed to any script | Unavailable. Needs a script argument. |
+| Event origin | Script name, pid, exit status | Captured |
+| Clock domain | Host name, boot identity (`/proc/sys/kernel/random/boot_id` or `kern.bootsessionuuid`), monotonic clock implementation | Captured |
+| Context build duration | Monotonic span of the build script | Captured. Excludes forge fetches and interpreter start. |
+| Context build to validated payload | Monotonic difference between two recorded exits | Captured as one interval. Inspection, focused tests, verification, reconciliation, and composition cannot be separated inside it. |
+| Primary inspection, focused tests | Model turns and arbitrary commands | Unavailable |
+| Verifier dispatch and join | Brief-built exit to first accounting exit, per batch | Proxy bracket. Contains dispatch, worker lifetime, save, and join; it is not waiting time. |
+| Overlapping batches | Bracket union and sum, reported separately | Proxy. The union counts wall time once; the sum is labelled not elapsed. |
+| Batch mode, phase, supplied candidate and ledger-row counts | The projected build input, or the manifest | Captured. A complete-ledger batch with no rows is an explicit 0. An unrecorded batch is unknown. |
+| Returned confirmed, refuted, holds, re-open, withheld | The accounting report, counting accounted records only | Captured |
+| Reconciliation | Last accounting exit to validated payload | Proxy |
+| Validated payload, final result | Composer exit 0, with `ended_at` as provenance | Captured. `result` and `render-only` end at this record. |
+| Publication | The publisher's forge write, which is not a script | Unavailable. The forge's review timestamp is on another clock and is never subtracted. |
+| Root dispatch, root elapsed | Happens before any script runs | Unavailable. The #130 sidecar leaves it null. |
+| Usage and cost | No script sees per-request usage. Retained Claude Code sub-agent transcripts (`<session>/subagents/agent-*.jsonl`) carry `timestamp`, `requestId`, and `message.usage` with cache tiers, which `transcript_usage.py` prices in the repository. None of the 40 most recent local main transcripts held an Agent dispatch or join record, so that source is unverified. | Unavailable in the skill summary; null, never zero |
+
+Recording the missing fields would take the following work, none of it in scope here. Caller mode would need a new script argument. Publication would need a publisher-side script that wraps the one forge write. Root dispatch would need the caller to record an event before invoking the skill. Inspection, tests, and waiting cannot be separated without per-step narration, which issue #218 rules out. No universal adapter across harnesses is claimed.
+
+The summary subtracts monotonic readings only within one host, boot, and clock implementation, and only while events stay in non-decreasing file order. Mixed or unknown domains null every duration. So does out-of-order input, which also exits 1. The summary is marked complete only when both boundaries, every batch join, a supplied completion mode that ends at the record, and one reviewed head are all present. Anything else lists its gaps, so partial timing never reads as a complete total. Historical #130 rows, pricing arithmetic, and `transcript_usage.py` behavior are unchanged. The docstring gains one pointer sentence.
+
+For issue #222, the summary counts complete-ledger batches with zero rows, batches with rows, and batches whose row count is unknown. Zero recorded batches is not evidence that none ran. No run has been captured and no comparison is claimed.
+
+**Identifier retained: `v5b-17`.** Admission, verification triggers and caps, rendering, record state, trailers, and the duplicate shortcut are unchanged. Script stdout, exit statuses, payloads, and batches stay byte-identical. The test suite checks this with and without a writable events file, and every existing suite passes unchanged. The only new artifact is a private file that no review decision reads. Tests exercise mechanical behavior on synthetic events and one real script run. They are not a measured production speedup, and no paid review ran.
+
 ### Rendering-only instructions after judgment (issue #221)
 
 #226 already moved syntax, summary layout, composition, and repair into `references/rendering.md` at step 5. This sweep moves the passages that stayed in the startup files but serve only composition input or payload reading. Each moved rule now has one owner, and each startup file keeps the semantic rule plus a pointer.

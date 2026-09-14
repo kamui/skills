@@ -104,6 +104,9 @@ null events stay unavailable. All available events must be in that order;
 equal instants are allowed. Unknown keys, invalid timestamps, a missing/invalid
 mode, or invalid ordering are input errors (exit 2, sidecar path on stderr).
 Record events as they happen, starting immediately before root dispatch.
+``review-code``'s ``scripts/run_events.py summarize --timing-sidecar`` writes
+this shape from a run's recorded events, with ``root_dispatched_at`` null
+because no review script observes root dispatch.
 
 JSON adds a top-level ``timing`` object with the mode, events normalized to UTC,
 ``elapsed_to_payload_seconds`` and ``elapsed_to_completion_seconds``. Each
