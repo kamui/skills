@@ -18,11 +18,11 @@ Use the single-context layout. See `docs/agents/domain.md`.
 
 ### Mirrored reference
 
-`references/review-protocol.md` is byte-identical in `code-review-publish-legacy` and `code-review-address`. Skills install one at a time, so neither can point at the other's copy. Edit both together and `diff` them before committing.
+`references/review-protocol.md` is byte-identical in `code-review-publish-legacy` and `resolve-review`. Skills install one at a time, so neither can point at the other's copy. Edit both together and `diff` them before committing.
 
 ### Runtime review dependency
 
-`code-review-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. This is the named exception to installing skills alone; no other runtime skill dependency is introduced.
+`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. This is the named exception to installing skills alone; no other runtime skill dependency is introduced.
 
 ### Global skill sync
 

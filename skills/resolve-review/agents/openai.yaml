@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resolve Code Review"
+  short_description: "Evaluate and address every PR review comment"
+  default_prompt: "Use $resolve-review to evaluate and address every review comment on the current pull request."
