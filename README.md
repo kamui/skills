@@ -108,7 +108,7 @@ The host agent needs write access to the pull request to post replies and resolv
 
 Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the best matching installed skill, creates a suitable branch when the current one is not pull-request ready, and links the spec source in the pull-request body.
 
-Before pushing or opening the pull request, it runs an internal review in a fresh-context subagent, addresses blocking findings, and verifies the final committed head. The reviewer receives the spec and repository evidence without inheriting the implementation conversation. `code-review-publish` handles the published review afterward.
+Before pushing or opening the pull request, it has a fresh-context general-purpose subagent invoke `review-code` in one-shot mode on the local base-to-head range. It addresses blocking findings, then resumes the same reviewer to re-verify fixes and inspect the complete fix delta so the review still covers the final committed head. `code-review-publish` handles the published review afterward.
 
 It activates when a caller asks to implement work from a spec or issue and publish the result as a pull request. You can also invoke it directly:
 
@@ -120,7 +120,7 @@ The host agent needs access to the forge to create the pull request.
 
 ## The review handoff
 
-`code-review-publish` and `implement-publish` require `review-code` as the named install-alone exception. The publisher calls it today; integration of the local-range reviewer into `implement-publish` follows in issue #234 after local targets ship in #232.
+`code-review-publish` and `implement-publish` require `review-code` as the named install-alone exception. Both call it in one-shot mode: the publisher reviews a pull request for posting, while `implement-publish` reviews its local base-to-head range before publication.
 
 `review-code` owns finding admission through [`review-rubric.md`](skills/review-code/references/review-rubric.md), record semantics through [`review-record.md`](skills/review-code/references/review-record.md), and visible output through [`rendering.md`](skills/review-code/references/rendering.md). `code-review-publish` owns forge writes through [`publication.md`](skills/code-review-publish/references/publication.md). `code-review-address` owns replies, dispositions, thread state, and round closeout through its [`review-protocol.md`](skills/code-review-address/references/review-protocol.md).
 
