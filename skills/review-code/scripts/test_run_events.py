@@ -162,6 +162,15 @@ class RunEventTests(unittest.TestCase):
             composed = self.cli("compose_review.py", "--store", store, composition)
             outputs.append((built.stdout.replace(str(store), "STORE"), composed.stdout, composed.stderr))
         self.assertEqual(outputs[0], outputs[1])
+        # A composer that exits from inside main still records its failure.
+        private = self.root / "private-True"
+        (private / "run-events.jsonl").rmdir()
+        corrupt = private / "corrupt.json"
+        corrupt.write_text("{", encoding="utf-8")
+        self.cli("compose_review.py", "--store", corrupt, self.root / "composition-True.json", code=2)
+        self.cli("compose_review.py", "--store", store, self.root / "missing.json", code=2)
+        failures = [json.loads(line) for line in (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertEqual([(e["event"], e["exit"]) for e in failures], [("payload-composed", 2)] * 2)
         # Without --store there is no private directory and nothing is written.
         composition = self.root / "composition-False.json"
         self.cli("compose_review.py", composition)
@@ -217,6 +226,13 @@ class RunEventTests(unittest.TestCase):
         summary, _ = self.summarize([context(), accounted("orphan", 5), payload(9)], "--completion-mode", "result")
         self.assertTrue(any("without a recorded brief" in gap for gap in summary["gaps"]))
         self.assertFalse(summary["complete"])
+
+        # Accountings that failed before reading a manifest are never merged into one batch.
+        summary, _ = self.summarize([context(), brief("one", 3), accounted("one", 4), accounted(None, 5, exit=1),
+                                     accounted(None, 6, exit=1), payload(9)], "--completion-mode", "result")
+        self.assertEqual(summary["verification"]["batches_recorded"], 1)
+        self.assertEqual(sum("no batch identity" in gap for gap in summary["gaps"]), 2)
+        self.assertEqual(len(summary["script_failures"]), 2)
 
     def test_clock_domains_are_never_mixed(self):
         other = dict(DOMAIN, boot="rebooted")

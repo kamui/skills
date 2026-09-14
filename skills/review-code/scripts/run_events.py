@@ -404,6 +404,9 @@ def summarize(lines, events_path: str, mode) -> tuple:
         if event["exit"] not in (0, 1):
             continue
         key = event["data"].get("batch_id")
+        if key is None:
+            gaps.append(f"line {event['_line']}: accounting recorded no batch identity (bundle unreadable)")
+            continue
         if key not in batches:
             gaps.append(f"batch {key!r} was accounted without a recorded brief")
             batches[key] = {"brief": None, "accountings": []}

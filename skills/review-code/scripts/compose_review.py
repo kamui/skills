@@ -860,9 +860,10 @@ def main() -> int:
         help="the run's persisted review context (review-context-<head>.json); its pinned manifest and run identity check every anchor",
     )
     args = parser.parse_args()
-    composition = load_json(args.input, "composition input")
     if args.store is not None:
-        EVENT.update(event="payload-composed", store=args.store, composition=composition)
+        EVENT.update(event="payload-composed", store=args.store)
+    composition = load_json(args.input, "composition input")
+    EVENT.update(composition=composition)
     store = None
     if args.store is not None:
         store = load_json(args.store, "store")
@@ -886,7 +887,10 @@ if __name__ == "__main__":
     import time
 
     started_ns = time.monotonic_ns()
-    status = main()
+    try:
+        status = main()
+    except SystemExit as stop:  # load_json exits from inside main
+        status = stop.code
     try:
         import run_events
 
