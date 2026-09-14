@@ -1,6 +1,6 @@
 # Review protocol
 
-Mirrored verbatim in `code-review-publish-legacy` and `resolve-review`; edit both together.
+Mirrored verbatim in `code-review-publish` and `resolve-review`; edit both together.
 
 ## Where a review goes
 
@@ -14,7 +14,7 @@ The pull request under review is a fixed target. Neither skill opens, retargets,
 
 ## Finding comments
 
-`code-review-publish-legacy` posts one comment per finding:
+`code-review-publish` posts one comment per finding:
 
 ```markdown
 **[Code] Duplicated validation in `parseOrder`**
@@ -114,7 +114,7 @@ A `declined` reply does not resolve its own thread. Declining states a position;
 
 `resolve-review` resolves each thread as it finishes that thread — reply posted, change live — rather than batching resolutions at the end. Threads sitting at `needs-info` or `blocked` stay open.
 
-`code-review-publish-legacy` resolves what it verdicts `fixed`, `accepted`, or `obsolete`, and its own findings once it withdraws them. A stale thread left from an earlier round is the reviewer's to close, not something the addresser inherits.
+`code-review-publish` resolves what it verdicts `fixed`, `accepted`, or `obsolete`, and its own findings once it withdraws them. A stale thread left from an earlier round is the reviewer's to close, not something the addresser inherits.
 
 Reopen a thread rather than file a fresh finding, which would strand the original discussion: the fix regressed, a later commit undid it, or a reply claimed more than the code delivered. Post a new reply on the thread saying why it reopened.
 
@@ -122,7 +122,7 @@ Resolve nothing whose reply is still missing. Where only the other party can res
 
 ## Verdicts and the round cap
 
-Re-reviewing, `code-review-publish-legacy` reads each prior finding and its reply, then verdicts it against the code. Verify against the diff: a reply's word is evidence of intent, not of outcome.
+Re-reviewing, `code-review-publish` reads each prior finding and its reply, then verdicts it against the code. Verify against the diff: a reply's word is evidence of intent, not of outcome.
 
 | Verdict | Means | The thread |
 | --- | --- | --- |
