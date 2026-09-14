@@ -35,7 +35,7 @@ zero. A local target's empty *requirement* ledger is a different ledger and is n
 | #218 addendum at `0297f79` | Not a run | Addendum to the record above, not a new record | `v5b-17` | Excluded: it re-verifies two fixed ids and raises no new candidates. It has no ledger of its own. | None; no batch |
 | [PR #242 review 5194968143](https://github.com/kamui/skills/pull/242#pullrequestreview-5194968143) at `0297f79` | 1 | pull-request / one-shot | `v5b-17` | Nonempty: three confirmed findings and two related acquittals | Unavailable |
 | [PR #242 review 5195193241](https://github.com/kamui/skills/pull/242#pullrequestreview-5195193241) at `07affb5` | 1 | pull-request / one-shot | `v5b-17` | Nonempty: a complete-ledger clean verdict over at least three fixed dispositions | Unavailable |
-| `run-events.jsonl` on this host (filesystem search, 2026-09-14) | 0 ordinary runs | — | — | The three files found are #218 test and benchmark artifacts: `bench.py` events with synthetic heads, and two empty test fixtures. | None |
+| `run-events.jsonl` on this host (filesystem search, 2026-09-14, before this record's own pre-publish review) | 0 ordinary runs | — | — | The three files found are #218 test and benchmark artifacts: `bench.py` events with synthetic heads, and two empty test fixtures. | None |
 
 | Denominator | pull-request | range | worktree | Total |
 | --- | --- | --- | --- | --- |
@@ -67,8 +67,8 @@ Those facts suggest the batch adds little independent checking. They are not evi
 quality. No record shows what such a worker returns, whether its dispatch catches a primary that
 under-recorded candidates, or what it costs.
 
-The only clean-verdict worker charges on record are #137's $0.24–$0.62. Those came from nonempty
-ledgers, under experimental rates and pre-`v5b-13` pins
+The only clean-verdict worker charges on record are #137's three runs at $0.24–$0.53 and #138's
+control run at $0.62. Those came from nonempty ledgers, under experimental rates and pre-`v5b-13` pins
 ([source](clean-verdict-any-surface-2026-09-11.md#incremental-cost-at-the-recorded-rates)). They are
 not a proxy for an empty batch and are not converted to current prices.
 
