@@ -97,6 +97,12 @@ Each decision rule has one owning document; every other document that needs it c
 
 ## Change notes
 
+### After-record conversation (issue #233)
+
+`references/session.md` replaces the minimal session handoff with three private artifacts: the immutable review record, a decision layer, and an evidence-amended session record. Answers use the recorded settlement field; code claims face bounded re-falsification under the rubric. Risk acceptance stays solely in the layer, so even an accepted `must-fix` leaves both statuses unchanged. Each amendment is recomposed and validated through the existing scripts at separate paths, preserving the original artifacts, stable ids, and private provenance. The report shows both statuses and the decisions any difference depends on; coordinate mappings stay in the private layer. Absolute reference paths in the return support recovery after compaction.
+
+**Identifier retained: `v5b-17`.** The reference loads only in session mode after step 5 completes. Admission, verification, rendering, status semantics, payloads, and trailers on the one-shot and published paths are unchanged. The session's verification-cost exception has its sole rule in `references/session.md`; the publisher has no pointer to that file and receives no session artifacts. Code edits make the records stale; a subsequent review is a fresh first review until #228 implements session-carried delta review. The PR's instruction replays cover the conversation branches and complement mechanical composition/validation checks; neither establishes measured recall, precision, or production speedup.
+
 ### Inspect/publish split (issue #226)
 
 The original package moved with `git mv` to `code-review-inspect`; `code-review-publish` is now a 49-line one-shot caller. The first commit records the named install-alone exception. The Caller/Return seam carries the private record, validated payload, emitted advisory batch, prose, routed inputs, prior thread node ids and resolution states, drafted replies, and absolute script paths. The semantic record loads with the rubric, syntax loads at step 5, and forge write mechanics load only in the publisher. Recovery has one owner in the rubric; posting existing-thread replies and resolving settled threads have one owner in publication. The interactive wrapper remains work for #227 and session delta review for #228 under #225.
