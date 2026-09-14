@@ -93,9 +93,64 @@ Each decision rule has one owning document; every other document that needs it c
 | Authorization, event selection, atomic batch publication, stale-head and retry checks, posting drafted replies and resolving settled threads | `code-review-publish/SKILL.md` and its `references/publication.md` | combined output contract and former step 6 | `review-code` returns validated payload, emitted batch, and drafts; caller owns forge writes |
 | Material questions and recorded deferrals: the question bar, supplied-evidence reading, when a recorded deferral publishes (issue #139) | rubric, "Issue fit" | rubric question paragraph; Released compatibility restated the bar for `unresolved`; `SKILL.md` step 1 said step 3 treats a deferral as an open question | Released compatibility, `SKILL.md` step 1, the contract's Question comment and `Needs Information` line, and Uncertainty routing each point at the rule |
 | Priority calibration from demonstrated impact and reach, separate from the action decision (issue #139) | rubric, "Priorities and blocking" | rubric priority list; verifier calibrated `action` only; nothing named confirmation or visibility | contract Finding comment and `SKILL.md` step 3's correction check each carry one pointer sentence; the verifier restates the sentence in its own procedure under the documented brief exception |
+| Action tag and trailer spellings, the `consider` permission sentence, the `fix=` trailer field, the question trailer type, the `(advisory)` suffix, and the validator's mechanical-check inventory (issue #221) | `references/rendering.md`, "Finding comment", "Question comment", "Summary body", and "Composition" | `review-record.md` Finding comment, Question comment, and Status; `SKILL.md` step 5 alone for the validator inventory, which moved; `SKILL.md` step 5 and `rendering.md` "Composition" for the composer cross-check list, which was deduplicated | `review-record.md` keeps each semantic rule with a one-clause pointer; `SKILL.md` step 5 keeps the command, the never-by-hand rule, and the reference-wins rule |
 | Composition: which syntax code renders from which authoritative fields, and which field contradictions it refuses (issue #220) | `references/rendering.md`, "Composition"; the exact input schema is `scripts/compose_review.py`'s docstring | the reviewer assembled comment prose, trailers, index entries, counts, and sections by hand under `SKILL.md` step 5 and the contract's shapes | `SKILL.md` step 5 names the command and what a refusal means; the rendering reference names recomposition as the repair path |
 
 ## Change notes
+
+### Rendering-only instructions after judgment (issue #221)
+
+#226 already moved syntax, summary layout, composition, and repair into `references/rendering.md` at step 5. This sweep moves the passages that stayed in the startup files but serve only composition input or payload reading. Each moved rule now has one owner, and each startup file keeps the semantic rule plus a pointer.
+
+| Moved passage | Old owner | New owner | Semantic rule kept at startup |
+| --- | --- | --- | --- |
+| `[must-fix]`/`action=must-fix`/`blocking=true` and `[consider]`/`action=consider`/`blocking=false` | `review-record.md` Finding comment | `rendering.md` Finding comment | Two actions: `must-fix` blocks merge, `consider` is optional, and closing it without action is correct. The rubric's Priorities and blocking section is unchanged. |
+| Exact permission sentence and its position after `Source` | same | same | Field order ends with optional `Source`; closing a `consider` finding without action is correct. |
+| `fix=<path>:<line>` trailer field | same | same | `fix` site is optional, omitted when it is the anchor, and named in visible `Change` text. |
+| Validator label reading (`finding-fields`, `field-order`, labels inside code) | same | same | Exactly one non-empty `Triggers when`, `Impact`, `Change` in order, then optional `Source`. |
+| Trailer type `finding` → `question` | `review-record.md` Question comment | `rendering.md` Question comment | The stable concept id is retained; only the item type changes. |
+| "Always write the semantic status in the body" and the `(advisory)` suffix | `review-record.md` Status | `rendering.md` Summary body | Status precedence and the required-issue rule. The composer always renders the advisory form, and only `--emit-batch --event` removes it. `SKILL.md` Caller still says gating is not an input. |
+| Validator mechanical-check inventory (moved) | `SKILL.md` step 5 alone | `rendering.md` Composition | Step 5 still names `validate_review.py` and points at the Composition section for its checks. |
+| Composer cross-check list (deduplicated) | `SKILL.md` step 5 and `rendering.md` Composition | `rendering.md` Composition only | Step 5 keeps the composer command, never assembling by hand, repairing the composition input on a non-zero exit, and letting reference text win. |
+
+Nothing moved that inspection, recording, routing, or status needs before step 5. Admission gates, uncertainty routing, the record's fields and evidence, priority/action/blocking, status precedence, coverage, stable ids and prior state, anchor and fix provenance (the `side` from the pinned manifest and the rubric's placement rule), review identity and the fingerprint, the caller contract, mode tables, and named stops all stay where they were. The rubric's Comment quality section restates no syntax and is unchanged. `verifier-handoff.md` and `build_verifier_prompt.py` are unchanged. `session.md` still says to re-read `review-rubric.md` and `review-record.md` before re-falsification and `rendering.md` before re-rendering, and that remains accurate: action semantics stay in the record, and spellings are needed only when recomposing.
+
+Counts use whitespace splitting (`wc -w`) and bytes (`wc -c`) on `origin/main` at `0a885f9` and on this change. They include the retained semantic sentences and the pointers.
+
+| Instruction | Load | Before words / bytes | After words / bytes |
+| --- | --- | ---: | ---: |
+| `SKILL.md` | Startup | 5,799 / 40,338 | 5,730 / 39,878 |
+| `references/review-rubric.md` | Startup | 5,474 / 36,669 | 5,474 / 36,669 |
+| `references/review-record.md` | Startup | 1,566 / 10,817 | 1,528 / 10,518 |
+| Startup total | | 12,839 / 87,824 | 12,732 / 87,065 |
+| `references/rendering.md` | Step 5 | 2,295 / 16,663 | 2,484 / 18,037 |
+
+Startup text shrinks by 107 words and 759 bytes, and step-5 text grows by 189 words and 1,374 bytes. The step-5 file grows more than startup shrinks because each moved spelling now appears in a full sentence, while the startup files keep the semantic rule. These counts establish where instructions are placed. They do not measure cost, latency, or recall.
+
+**Identifier retained: `v5b-17`.** This changes which file states each rule, not the rules. No script, fixture, or example trailer changed, so composer and validator output for any composition input is byte-identical, pull-request output included. Admission, verification thresholds, state semantics, and rendered syntax are unchanged, and no investigation or automatic skip was added.
+
+**Paper replays.** Each case was replayed against the new text. "Before step 5" lists the decisions that still come from startup files; "Step 5" lists what rendering now supplies. Outputs are unchanged in every case.
+
+| Case | Before step 5 (startup reads) | Step 5 (`rendering.md`) |
+| --- | --- | --- |
+| First review | Admission, action, priority, status precedence, coverage | Tags, trailers, advisory status line, composition |
+| No findings | Coverage and `Approved` precedence | `no findings` status paragraph with `(advisory)` |
+| Material and hygiene findings | `must-fix` vs `consider` judgment; material-survivor routing (step 3) | `[must-fix]`/`[consider]` tags, `blocking=` value, permission sentence after `Source` |
+| A question | Material-question bar, `Why it matters`, who answers | `[Question]` framing, `action=question` trailer |
+| Unavailable input | Uncertainty routing, provisional `Incomplete`, gap request | `Coverage gaps` section |
+| Incomplete verification | Step 3 cap and withholding; known-blocker precedence | Status paragraph and gap section |
+| Related and full-ledger batches | Step 3 modes; verifier brief gains no syntax | None beyond ordinary rendering |
+| Reopen and follow-up exhaustion | Re-opened row re-falsified; no third batch; incomplete coverage | Withheld claim absent from payload; gap disclosed |
+| Conformance | `conformance.md` rows and `Source` eligibility | `Source` prose position |
+| Changed tests | Rubric Changed tests; Coverage names executed checks | `Coverage` line |
+| Deleted and renamed anchors | `side` from the pinned manifest (step 5 anchor paragraph, unchanged), rubric placement | File link at merge-base, `UNKNOWN` fallback, `fix=` encoding |
+| Delta and disputed re-review | `re-review.md` classification, `disputed` status input | `Disputed`/`Prior findings` sections, delta range |
+| Verified candidate becomes a question | Stable id retained (record) | Trailer type `finding` → `question` |
+| Local range | `local-targets.md`, record identity for local runs | Code-span coordinates, `Source` sentence |
+| Working-tree snapshot | Snapshot identity, tree hash (record) | `Reviewed` line with snapshot and tree |
+| Session mode reaching `session.md` | Record semantics; `session.md` after step 5, when rendering is already loaded | Amendment recomposition uses the recorded `rendering.md` path |
+
+Checks: `test_compose_review.py`, the validator's `--self-test` (117 cases), and the review-context, fingerprint, forge-packet, deleted-file, and verifier-handoff suites all pass unchanged. `compose_review.py` has no `--self-test` flag; its sibling suite covers it. Relative Markdown links in `SKILL.md` and `references/` resolve inside the skill root, so `review-code` still works when installed alone. `git diff --check` passes.
 
 ### Session-carried rechecks (issue #228)
 
