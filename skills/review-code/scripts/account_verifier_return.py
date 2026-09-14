@@ -172,6 +172,7 @@ def main():
     parser.add_argument("--bundle", required=True)
     parser.add_argument("--output", required=True, help="new accounting report, never the raw return")
     args = parser.parse_args()
+    EVENT.update(event="verifier-return-accounted", bundle=args.bundle)
     try:
         bundle = Path(args.bundle)
         data = read_json(bundle / "input.json")
@@ -199,6 +200,7 @@ def main():
                       "accounted": {"candidates": [], "ledger": []},
                       "withheld": {"candidates": manifest["candidate_ids"], "ledger": manifest["ledger_ids"]},
                       "conclusion_accounted": False}
+        EVENT.update(manifest=manifest, report=report)
         report["raw_return"] = str(Path(args.raw_return).resolve())
         report["raw_return_sha256"] = digest(raw)
         with open(args.output, "x", encoding="utf-8") as output:
@@ -216,5 +218,19 @@ def main():
         return 2
 
 
+# What this accounting hands run_events.py; recording never changes the result.
+EVENT = {}
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import time
+
+    started_ns = time.monotonic_ns()
+    status = main()
+    try:
+        import run_events
+
+        run_events.record(EVENT, status, started_ns, "account_verifier_return.py")
+    except Exception:
+        pass
+    raise SystemExit(status)
