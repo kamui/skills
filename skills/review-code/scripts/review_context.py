@@ -2080,6 +2080,10 @@ def main() -> int:
                 "text a store build prints, so a build without --store prints its whole "
                 "output unbounded"
             )
+        if arguments.store:
+            EVENT.update(event="context-built", store=arguments.store, head=arguments.head,
+                         merge_base=arguments.merge_base, prior_head=arguments.prior_head,
+                         target="worktree" if arguments.worktree else "commit-range")
 
     try:
         if arguments.store_from:
@@ -2097,6 +2101,7 @@ def main() -> int:
             arguments.merge_base = run_git([
                 "merge-base", arguments.merge_base or snapshot["source_head"], arguments.head
             ]).strip()
+            EVENT.update(head=arguments.head, merge_base=arguments.merge_base)
         context = build_context(
             arguments.merge_base,
             arguments.head,
@@ -2131,5 +2136,19 @@ def main() -> int:
     return 0
 
 
+# What a --store build hands run_events.py; recording never changes the result.
+EVENT: dict[str, Any] = {}
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import time
+
+    started_ns = time.monotonic_ns()
+    status = main()
+    try:
+        import run_events
+
+        run_events.record(EVENT, status, started_ns, "review_context.py")
+    except Exception:
+        pass
+    raise SystemExit(status)
