@@ -4,14 +4,14 @@ The review is **human-readable, agent-actionable, and mechanically correlatable*
 
 ## Finding comment
 
-The title, trigger, impact, and change must make sense without the trailer. A finding states exactly one non-empty `Triggers when`, `Impact`, and `Change`, in that order, before an optional `Source`; the validator's `finding-fields` and `field-order` rules check that shape, reading labels outside fenced code blocks and code spans so a label quoted inside a suggestion block is example text rather than a second field, while the block itself counts as its field's text. Whether a field's text is sufficient stays the reviewer's judgment. Omit `Source` unless an issue, a change-description promise at its ledger coordinate, a versioned artifact's obligation at its `artifact-` ledger coordinate, or a repository rule materially supports the finding. The two action forms are:
+The title, trigger, impact, and change must make sense without the trailer. A finding states exactly one non-empty `Triggers when`, `Impact`, and `Change`, in that order, before an optional `Source`; `rendering.md` says how the validator reads that shape. Whether a field's text is sufficient stays the reviewer's judgment. Omit `Source` unless an issue, a change-description promise at its ledger coordinate, a versioned artifact's obligation at its `artifact-` ledger coordinate, or a repository rule materially supports the finding. Every finding takes one of two actions, whose tags, trailer fields, and permission sentence `rendering.md` spells:
 
-- `[must-fix]`, `action=must-fix`, and `blocking=true` for an outcome required before merge.
-- `[consider]`, `action=consider`, and `blocking=false` for optional feedback. When present, `Source` follows `Change`; the exact sentence `Closing this without action is a correct response.` is then the final paragraph before the trailer.
+- `must-fix` for an outcome required before merge; the finding is blocking.
+- `consider` for optional feedback; the finding is non-blocking, and closing it without action is a correct response.
 
 Priority and action are separate fields. P0 is inherently `must-fix`; otherwise do not derive action mechanically from priority. In particular, P2/P3 do not mean optional. Priority follows the rubric's impact-and-reach calibration: a confirmed or externally visible low-impact defect renders as a `P3` finding, not at a higher priority and not as an observation. Non-actionable observations use the summary-only form below rather than a finding comment.
 
-The forge anchor and the repair site may differ. The inline API fields identify the changed-line `anchor`; optional trailer field `fix=<path>:<line>` identifies where the author or agent should edit. Omit `fix` when it is the anchor. Name a different fix site in the visible `Change` text as well, because the trailer is never authoritative.
+The forge anchor and the repair site may differ. The inline API fields identify the changed-line `anchor`; an optional `fix` site identifies where the author or agent should edit. Omit `fix` when it is the anchor. Name a different fix site in the visible `Change` text as well, because the trailer is never authoritative.
 
 Stable ids describe the path and defect concept, never a line number. Keep the same id while the same defect survives across heads.
 
@@ -21,7 +21,7 @@ Kinds are compact internal routing aids: `bug`, `compatibility`, `concurrency`, 
 
 Ask only when the rubric's Material questions rule is met: no static evidence could settle the fact, and `Why it matters` names the correctness outcome, acceptance criterion, compatibility or release obligation, or present merge decision the answer changes. A question about a recorded deferral also names, in `Evidence`, the deferral's author and comment, the surface, and the current decision. A question is not a finding, has no priority, requests no code change, and states who or what measurement can answer it. Whole-change questions belong in the review body rather than on an arbitrary line.
 
-When a verified candidate becomes a question because its settling fact is statically unresolvable, retain its stable concept id and change only the trailer type from `finding` to `question`. This keeps later answers and any code-decided finding correlated across runs.
+When a verified candidate becomes a question because its settling fact is statically unresolvable, retain its stable concept id and change only its item type from finding to question, as `rendering.md` renders it. This keeps later answers and any code-decided finding correlated across runs.
 
 ## Observations
 
@@ -46,7 +46,7 @@ Derive one semantic status after findings, questions, coverage, and prior state 
 
 A missing issue required by the repository workflow is a material question: with otherwise complete coverage and no unsettled must-fix finding it yields `Needs Information`, never `Incomplete` for that reason alone.
 
-Always write the semantic status in the body. Add `(advisory)` to `Changes Requested` or `Approved` when using `COMMENT`.
+`rendering.md` owns how the status appears in the body, including its advisory form.
 
 ## Review identity
 
