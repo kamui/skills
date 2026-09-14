@@ -97,6 +97,25 @@ Each decision rule has one owning document; every other document that needs it c
 
 ## Change notes
 
+### Session-carried rechecks (issue #228)
+
+Local session rechecks use the persisted session record as a second prior-state source. `references/re-review.md` owns source selection, continuity, delta eligibility, layer carry-forward, snapshot ref lifetime, and per-run accounting; `local-targets.md` routes session startup there and `session.md` routes the fix/recheck loop and exit. `review-record.md` owns the persisted identity and artifact requirements. A chain reset invalidates prior review state, while an unchanged chained tree needs no new record. Layer decisions survive, amendments are re-derived, and explicit risk acceptance never becomes a technical acceptance or removes blocking status.
+
+The CLI now permits the existing `--prior-head` option with `--worktree`, so snapshot and delta context are produced in one call. It still changes no refs itself; the session owns ref creation and cleanup. CLI tests exercise delta/store output, unchanged trees, chain reset, preservation of index/refs/files, and ref reachability through garbage collection.
+
+**Identifier retained: `v5b-17`.** These state changes apply only to local session rechecks. Pull-request targets still take prior state only from the persisted packet in either mode, and one-shot local runs remain first reviews. The published admission, verification cap, classification, rendering, trailers, and duplicate shortcut are unchanged. Existing composer and validator fixtures are unchanged and pass; instruction replays in the pull request cover all nine acceptance scenarios. These checks establish mechanical behavior and instruction placement, not measured recall, precision, or production speedup.
+
+Word counts use whitespace splitting (`wc -w`); startup is `SKILL.md`, while references load conditionally.
+
+| Instruction | Load condition | Before | After |
+| --- | --- | ---: | ---: |
+| `SKILL.md` | Startup | 5,750 | 5,799 |
+| `references/re-review.md` | Conditional | 952 | 1,756 |
+| `references/session.md` | Conditional | 1,380 | 1,397 |
+| `references/local-targets.md` | Conditional | 1,166 | 1,240 |
+
+`local-targets.md` loads for local targets, `re-review.md` for local-session lifetime/rechecks or packet prior state, and `session.md` only after a session record exists.
+
 ### Local implementation review caller (issue #234)
 
 `implement-publish` now invokes the core in one-shot mode on its committed local base-to-head range from a fresh, resumable general-purpose reviewer. After blocking fixes, the same reviewer re-verifies the fixed stable ids and applies the rubric's Complete inspection rules to the entire fix delta; any newly surviving mandatory candidate receives one verifier batch. That addendum preserves the existing completion condition by covering every change between the reviewed and final heads. A delta too large for complete delta inspection falls back to a fresh-context one-shot review of the full final range. The core retains its read-only source and disposable-test bounds.
