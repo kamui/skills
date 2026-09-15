@@ -170,7 +170,7 @@ Return an immutable review record at named paths in the private directory:
 
 Instead of a record, return a named stop: `target-unresolved` (before any fetch for an unresolved target coordinate, or when no base resolves), `target-closed-unmerged`, `duplicate-review` (existing URL), `snapshot-failed` (snapshot output), `nothing-to-review` (empty working-tree diff), or `script-failure` (script output).
 
-Both modes receive the same complete record for the same resolved inputs and scope; they differ only in asking, and every ask sits before falsification or after the record exists, never mid-review. In a headless session, each ask becomes a line in the report.
+Both modes receive the same complete record for the same resolved inputs and scope; they differ only in asking: one-shot never asks, and every session ask sits before falsification or after the record exists, never mid-review. In a headless session, each ask becomes a line in the report.
 
 | Route | `one-shot` (every skill caller) | `session` (absent `mode`) |
 | --- | --- | --- |
