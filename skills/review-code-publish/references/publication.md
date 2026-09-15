@@ -13,7 +13,7 @@ Authorization changes only the forge event, never the semantic status:
 
 ## Publication invariants
 
-- Re-fetch the head immediately before writing; a stale or unreadable head aborts all publication.
+- Re-fetch the head immediately before writing; a stale or unreadable head aborts all publication. The freshness-and-submission block below makes that a preflight failure with exit 3.
 - Keep retrospective review of a merged pull request non-publishing unless the caller separately and explicitly authorized publication to that merged target.
 - Submit one review body and all new line comments in one forge-native review call. Include file-level comments there only when that batch endpoint documents file subjects; otherwise move their complete prose into the body before the call.
 - A general comment is a fallback only when a non-gating native review is unavailable or refused.
@@ -54,11 +54,53 @@ On GitHub, the `Create a review for a pull request` batch documents line comment
 }
 ```
 
-Post it with `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event forge-written --data role=review -- gh api --method POST repos/{owner}/{repo}/pulls/<pr>/reviews --input batch.json` as `--emit-batch` printed it. GitHub's separate review-comment endpoint documents `subject_type: "file"`, but using it would break this workflow's atomic one-review publication invariant. Use the equivalent forge-native operation elsewhere.
+GitHub's separate review-comment endpoint documents `subject_type: "file"`, but using it would break this workflow's atomic one-review publication invariant. Use the equivalent forge-native operation elsewhere.
+
+### Freshness and review submission
+
+Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it, and `ev` is empty when the record carries no `run_events.py` path:
+
+```sh
+d=<private-dir> ev=<recorded-absolute-run_events.py-path> pr=<pr> reviewed=<reviewed head>
+rm -f "$d/head.txt" "$d/review-response.json"
+forge() { # <forge-fetched|forge-written> <command...>
+  kind=$1; shift
+  if [ -z "$ev" ]; then "$@"
+  elif [ "$kind" = forge-fetched ]; then python3 "$ev" wrap --private-dir "$d" --event forge-fetched --data role=root --data connection=root -- "$@"
+  else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=review -- "$@"; fi
+}
+forge forge-fetched gh api "repos/{owner}/{repo}/pulls/$pr" --jq .head.sha > "$d/head.part" 2> "$d/head.stderr"
+rc=$?
+live=$(cat "$d/head.part")
+batch_head=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["commit_id"])' "$d/batch.json" 2> /dev/null)
+case $live in
+  *[!0-9a-f]*|"") shape=bad ;;
+  *) if [ "${#live}" -eq 40 ]; then shape=ok; else shape=bad; fi ;;
+esac
+if [ "$rc" -ne 0 ]; then reason="head fetch exited $rc"
+elif [ "$shape" != ok ]; then reason="head fetch returned an empty or malformed head"
+elif [ "$batch_head" != "$reviewed" ]; then reason="batch.json commit_id is not the reviewed head"
+elif [ "$live" != "$reviewed" ]; then reason="live head $live is not the reviewed head $reviewed"
+else reason=; fi
+if [ -n "$reason" ]; then
+  echo "preflight failed: $reason; nothing was written"; cat "$d/head.part" "$d/head.stderr"; exit 3
+fi
+mv "$d/head.part" "$d/head.txt"
+echo "preflight passed: live head $live"
+forge forge-written gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "write attempted: review POST exited $rc; re-read the pull request's reviews before one retry"
+  cat "$d/review-response.json" "$d/review-response.stderr"; exit "$rc"
+fi
+echo "review POST exited 0"; cat "$d/review-response.json"
+```
+
+A `preflight failed` line with exit 3 is the freshness route: a failed, empty, malformed, or mismatched head, or a batch whose `commit_id` is not the reviewed head, publishes nothing, no POST runs, and the stale or unreadable head is reported. A `write attempted` line means the POST ran and exits with its own status, whatever that number is; exit 3 after that line is a write failure, never a preflight failure. The block posts the batch unchanged, reviewed `commit_id` included; it checks the head just before the write and is not an atomic compare-and-swap against a concurrent push. The malformed-comment rejection, ambiguous-write reconciliation, one-retry, gating, and retrospective rules above and below still govern what follows each outcome.
 
 ## Authorized gating emission
 
-`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < payload.json > batch.json`. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
+`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < <private-dir>/payload.json > <private-dir>/batch.json`, replacing the advisory batch the freshness-and-submission block posts. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
 
 On this gating path only, the script enforces the first-line grammar `**<Status>[ (advisory)]** — …`: the input advisory suffix is present exactly for `Changes Requested` or `Approved` under `COMMENT`. `APPROVE` requires `Approved`, and `REQUEST_CHANGES` requires `Changes Requested`; a mismatch exits 1. It removes the suffix and re-validates the edited body before printing. The batch is what validated after that one scripted edit. The ordinary `COMMENT` path retains its existing acceptance rules. Report the posted form from `batch.json`, not the advisory form in `payload.json`.
 
