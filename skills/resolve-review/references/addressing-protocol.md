@@ -277,26 +277,28 @@ Targeted rereads stay targeted. To confirm one write or one item, read only that
 - **One inline comment**: `gh api repos/{owner}/{repo}/pulls/comments/<comment_id>`, with no `<n>` in that path.
 - **One general comment**: `gh api repos/{owner}/{repo}/issues/comments/<comment_id>`.
 
-**New since inventory**: step 6 of `resolve-review` runs the block again into a new directory, and both runs must be complete. Then list the ids that the re-fetched collections carry and step 1's did not:
+**New since inventory**: step 6 of `resolve-review` runs the block again into a new directory, and both runs must be complete. Then list the ids that the re-fetched collections carry and step 1's did not. Leave out this round's own writes: pass each id a confirmed write created, such as a disposition reply or the round summary, as `<collection>:<id>` (for example `inline-comments:4011948515` or `general-comments:3201`). Match on those ids, not on the author, because the reviewer and the addresser can be the same identity:
 
 ```sh
-python3 - <step 1 directory> <step 6 directory> <<'PY'
+python3 - <step 1 directory> <step 6 directory> <collection>:<id>... <<'PY'
 import json, sys
+own = set(sys.argv[3:])
 def ids(d, name):
     with open("%s/%s.json" % (d, name), encoding="utf-8") as f:
         return {r["id"] for r in json.load(f)}
 for name in ("reviews", "inline-comments", "general-comments", "threads"):
     for i in sorted(ids(sys.argv[2], name) - ids(sys.argv[1], name), key=str):
-        print("new %s %s" % (name, i))
+        if "%s:%s" % (name, i) not in own:
+            print("new %s %s" % (name, i))
 PY
 ```
 
-Each `new` line is feedback that arrived after the inventory. It is unaddressed, and the round summary says so.
+Each `new` line is feedback that arrived after the inventory, not a write this round made. It is unaddressed, and the round summary says so.
 
 ### Writing review activity
 
 - **Reply to an inline comment**: `gh api --method POST repos/{owner}/{repo}/pulls/<n>/comments/<comment_id>/replies -f body='...'`, addressing the thread's first comment id.
-- **General comment**: `gh pr comment <n> --body-file -` with a heredoc. This is where an addressing summary goes; find an earlier one to update by grepping `issues/<n>/comments` for its `addressed head=` trailer.
+- **General comment**: `gh pr comment <n> --body-file -` with a heredoc. This is where an addressing summary goes; find an earlier one to update by searching the complete `general-comments.json` collection for its `addressed head=` trailer.
 - **Request a re-review**: `gh pr edit <n> --add-reviewer <login>`, or `gh api --method POST repos/{owner}/{repo}/pulls/<n>/requested_reviewers -f 'reviewers[]=<login>'`. Take `<login>` from the review being addressed. Authoring the pull request is no bar to requesting one: GitHub returns 422 (`Review cannot be requested from pull request author`) only when `<login>` is the pull request's own author, or the account cannot review it. Check `<login>` against the author from `gh pr view <n> --json author` before calling, and decide on that comparison alone: where they match, skip the call GitHub is certain to refuse and put `Re-requesting review from @<login>.` in the summary comment instead. Who addressed the round says nothing about who authored the pull request — a maintainer reviewing and later addressing a contributor's pull request is not its author, and that request routes. Where an unforeseen 422 lands after that comment is posted, edit the comment to carry the mention rather than retrying the request or reporting the refusal.
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
 - **Resolve or reopen a thread**: GraphQL only, no REST equivalent.
