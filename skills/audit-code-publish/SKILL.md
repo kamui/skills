@@ -181,4 +181,4 @@ The reviewing rubric is adapted from OpenAI Codex's review rubric; the requireme
 
 The reason it is assembled rather than adopted whole: no published reviewer combines a real requirements axis with serious false-positive machinery. The artifacts with the best precision rubrics never read the issue; the ones that check the change against its spec barely filter. This skill takes the precision rubric from one family and the requirements axis from the other, and adds the verify pass neither publishes.
 
-`references/review-protocol.md` in `code-review-publish-legacy` is the ancestor of the comment shape, the status ladder, the disposition vocabulary, and the round cap. It is directional here, not binding: this skill's finding contract carries fields that protocol has no slot for, and the two are not interchangeable on one pull request.
+`references/review-protocol.md` in `code-review-publish` is the ancestor of the comment shape, the status ladder, the disposition vocabulary, and the round cap. It is directional here, not binding: this skill's finding contract carries fields that protocol has no slot for, and the two are not interchangeable on one pull request.
