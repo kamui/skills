@@ -32,7 +32,7 @@ Re-reviewing, keep the original fixed point as the comparison base and evaluate 
 
 Where a verdict turns on something the code, spec, standards, and history do not answer, raise a question rather than guess a finding — a fabricated finding costs a round and an agent will dutifully "fix" it. Ask a user in the session if there is one; otherwise carry it as a `[Question]` per the protocol.
 
-Normalize each finding to an axis, severity, title, evidence, requested change, and stable id. Severity is a judgment about the merge, not about the finding's interest, and blocking is the default the author will assume: label `[Suggestion]` only where they may act on it or close it unactioned, and leave everything the change should not merge without unmarked. Labelling every finding optional is a review that blocks nothing; labelling none is a review where a nit stops a merge. A baseline smell `code-review` reports as a judgement call is `[Suggestion]`; a documented-standard breach or a Spec finding is blocking unless the author may close it unactioned. These are authoritative for publication; do not merge or rerank the axes.
+Normalize each finding to an axis, severity, title, evidence, requested change, and stable id. Severity is a judgment about the merge, not about the finding's interest, and blocking is the default the author will assume: label `[Suggestion]` only where they may act on it or close it unactioned, and leave everything the change should not merge without unmarked. A baseline smell `code-review` reports as a judgement call is `[Suggestion]`; a documented-standard breach or a Spec finding is blocking unless the author may close it unactioned. These are authoritative for publication; do not merge or rerank the axes.
 
 ### 3. Publish once
 
@@ -40,11 +40,10 @@ Publish through the forge's review system: one review whose body is the summary 
 
 Every completed review reaches one of the protocol's three statuses. Derive it only after the findings, questions, and axis outcomes are complete, using the protocol's ordered ladder.
 
-Forge permission chooses the event, not the status. Submit `REQUEST_CHANGES` or `APPROVE` only where the user or repository workflow authorizes this identity to gate a merge. Otherwise submit `COMMENT` and state the status on the summary's first line, with the per-axis outcome under it. Render a non-gating `Changes Requested` or `Approved` in its advisory form defined by the protocol.
+Forge permission chooses the event, not the status: submit `REQUEST_CHANGES` or `APPROVE` only where the protocol's Where the status goes section authorizes this identity to gate a merge. Otherwise submit `COMMENT` and state the status on the summary's first line, with the per-axis outcome under it. Render a non-gating `Changes Requested` or `Approved` in its advisory form defined by the protocol.
 
-Fall back to a single general pull-request comment holding the summary and results only when the forge has no review system or refuses the review. Authoring the pull request yourself is not such a refusal on GitHub, where `event: COMMENT` is accepted — but that `COMMENT` says nothing about the merge, so the written status line is what carries it there.
+Fall back to a single general pull-request comment only where the protocol's Where a review goes section allows; on your own pull request use its Self-review `gh` verb instead, whose `COMMENT` says nothing about the merge, so the written status line is what carries it there.
 
-- A finding about a whole file attaches to that file, still inside the review; only a finding belonging to neither a line nor a file becomes a general pull-request comment.
 - A prior finding still present gets a reply on its existing thread, not a new comment.
 - A finding at the round cap goes under `## Disputed` in the summary and gets no line comment.
 - A question goes on the code it concerns, counts toward no axis, and is listed under `## Open questions` until answered. A whole-change question follows the protocol's body-level question path.
