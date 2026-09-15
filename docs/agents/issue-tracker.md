@@ -29,6 +29,17 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 Reviewing and replying on a pull request needs verbs this file does not carry (batched review submission, inline replies, GraphQL thread resolution). `review-code` returns the review record without forge writes; `review-code-publish` ships `references/publication.md` for review submission, thread replies, and resolution; `code-review-publish` ships `references/review-protocol.md` and `resolve-review` ships `references/addressing-protocol.md` for their operations. These references apply to this GitHub repository as written.
 
+## Reviewing identity
+
+Reviews publish as the **NitpikBot** GitHub App, not as the human who authored the pull request, so GitHub's review system is usable on a repository where the same person writes and reviews: an app review is not a self-review, and `APPROVE` and `REQUEST_CHANGES` are available to it.
+
+- **Review-run prefix**: `nitpikbot run <owner>/<repo> --`. Every forge write a review makes — the review itself, its inline comments, thread replies, thread resolutions, dismissals — runs through it. Always name the repository; never let the runner infer one from a remote.
+- **Its login**: `nitpikbot run <owner>/<repo> -- gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login`. `gh api user` returns HTTP 403 for an app token and must not be used for it.
+- **Everything else stays the human's**: commits, pushes, opening pull requests, replies to review comments, and addressing summaries. An addressing round has to come from the pull-request author.
+- **The suffix differs by API**: REST calls this identity `nitpikbot[bot]` and GraphQL calls it `nitpikbot`. Compare logins with a trailing `[bot]` ignored on both sides.
+- **No re-review request**: GitHub routes review requests to users and teams only, and `@nitpikbot[bot]` notifies nobody. An addressing round asks this reviewer for nothing; whatever runs the app starts the next review.
+- **Absent runner**: `nitpikbot` is an optional external tool. Where it is missing or cannot authenticate, review as the authenticated user under the ordinary self-review rules rather than failing the run.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a GitHub issue.

@@ -11,6 +11,7 @@ Invoking this skill authorizes publishing a review to the resolved pull request.
 Retrospective review of a merged pull request is non-publishing unless separately authorized.
 This does not authorize changing code, editing the pull request or issue, adding labels, or merging.
 Use a gating event only when the user or repository workflow separately authorizes this identity to gate the merge.
+A caller that resolved a reviewing app distinct from the pull request's author carries that authorization in its packet; a review published under a reviewing app is not a self-review.
 A self-review always uses `COMMENT`.
 
 This workflow is one-shot: finish without pausing for reviewer preferences.
@@ -19,7 +20,8 @@ If `review-code` is not among the installed skills, stop with `missing-dependenc
 ## Inspect
 
 Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
-Pass through supplied phase-1 packets, posting identity, focused-test policy, and up-front inputs under its Caller contract when provided.
+Pass through supplied phase-1 packets, reviewer identity, review-run prefix, focused-test policy, and up-front inputs under its Caller contract when provided.
+With no supplied reviewer identity, resolve it as `references/publication.md` specifies before the review runs, so an unusable reviewing app falls back to the authenticated user before any work is spent.
 Apply the one-shot column of `review-code`'s Return routing table.
 A named stop ends this run with its report; a completed record supplies everything needed below.
 For a merged target without separate publication authorization, report the complete would-be review and finish.

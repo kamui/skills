@@ -259,7 +259,7 @@ Every round ends by asking the identity whose review it addressed to look again.
 
 Where the forge routes review requests, make the ask a review request. A re-request does not clear an earlier `REQUEST_CHANGES`; only a later review from that identity, or a dismissal, does.
 
-Where the forge will not route one — it has no review requests at all, or it refuses this one because the identity to ask is the pull request's own author — the summary carries the ask instead, as a line mentioning that identity: `Re-requesting review from @<login>.` The mention notifies them, which is what the request was for. Settle which form applies before writing the summary, by comparing that identity's login against the pull request's author and nothing else, and never report the forge's refusal on the pull request: the ask is the signal a reader wants, and a paragraph about a rejected API call is noise around it.
+Where the forge will not route one — it has no review requests at all, or it refuses this one because the identity to ask is the pull request's own author — the summary carries the ask instead, as a line mentioning that identity: `Re-requesting review from @<login>.` The mention notifies them, which is what the request was for. An app reviewer is the exception that takes neither form: GitHub routes a review request only to a user or a team, and `@<app>[bot]` notifies nobody, so where the review being addressed carries REST `user.type` of `Bot`, make no request and write no mention — the orchestrator that runs the app triggers its next review. Settle which form applies before writing the summary, by that `user.type` and then by comparing that identity's login against the pull request's author and nothing else, and never report the forge's refusal on the pull request: the ask is the signal a reader wants, and a paragraph about a rejected API call is noise around it.
 
 ## Humans in the loop
 
@@ -271,7 +271,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 `gh api` substitutes `{owner}` and `{repo}` from the clone, so the paths below are copy-pasteable as written.
 
-**Posting identity**: `gh api user --jq .login`. Compare with `gh pr view <n> --json author` to detect a self-review.
+**Posting identity**: `gh api user --jq .login`, or, when `docs/agents/issue-tracker.md` names a reviewing app, that app's login read through the file's review-run prefix as `gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login` — `gh api user` is refused for an app token. Compare with `gh pr view <n> --json author` to detect a self-review, ignoring a trailing `[bot]` on either login.
 
 **Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as reviewed. The collection block below runs this read in the same invocation and saves it as `pr.json`, so only the number `<n>` is needed before it runs.
 

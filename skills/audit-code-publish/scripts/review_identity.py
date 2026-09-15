@@ -7,7 +7,7 @@ Usage: python3 scripts/review_identity.py packet.json --review ID --author LOGIN
 Inputs: a forge-packet/1 from forge_packet.py and a JSON object carrying the
 exact reviewed specs and guidance for context_fingerprint.py. The candidate
 review must have one complete current-contract trailer and match the packet's
-head/base/ref and explicit state/merged, supplied merge-base, issue set, posting identity and recomputed
+head/base/ref and explicit state/merged, supplied merge-base, issue set, reviewer identity and recomputed
 digest. Later activity or an undated thread transition prevents the shortcut;
 this conservative check never makes a relevance or finding judgment.
 
@@ -26,8 +26,18 @@ from urllib.parse import quote
 from context_fingerprint import digest, merge_packet
 from forge_packet import PageError, later_state
 
-WORKFLOW = "v2b-6"
+WORKFLOW = "v2b-7"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
+
+
+def bare(login: str) -> str:
+    """A login without GitHub's REST-only ``[bot]`` suffix.
+
+    GraphQL reports an app as ``nitpik``; REST reports the same app as
+    ``nitpik[bot]``. Comparing the two raw makes an app's own prior review look
+    like another identity's, which would turn every re-review into a first review.
+    """
+    return login[:-5] if isinstance(login, str) and login.endswith("[bot]") else login
 
 
 def check(packet: dict, review_id: str, author: str, merge_base: str, context: str) -> list[str]:
@@ -37,8 +47,8 @@ def check(packet: dict, review_id: str, author: str, merge_base: str, context: s
     if review is None:
         raise ValueError(f"review {review_id} is absent from the packet")
     reasons = []
-    if review["author"] != author:
-        reasons.append("candidate belongs to a different posting identity")
+    if bare(review["author"]) != bare(author):
+        reasons.append("candidate belongs to a different reviewer identity")
     if packet.get("complete") is not True:
         reasons.append("forge coverage incomplete")
     trailers = re.findall(r"<!-- review-run ([^\n]*?) -->", review["body"])

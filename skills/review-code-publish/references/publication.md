@@ -11,6 +11,18 @@ Authorization changes only the forge event, never the semantic status:
 | Needs Information | none | `COMMENT` |
 | Approved | `APPROVE` | `COMMENT` |
 
+## Reviewer identity
+
+The **reviewer identity** is the login this review publishes as. It is the forge CLI's authenticated user unless the caller supplied one, or `docs/agents/issue-tracker.md` names a reviewing app; that file also gives the **review-run prefix**, the command that runs one forge call as the app (for example `<runner> run <owner>/<repo> --`). Pass the repository explicitly in that prefix; never let the runner infer it from a remote, which is the fork on a fork checkout.
+
+Resolve it before `review-code` runs, so an unusable app costs nothing: read the login with `<prefix> gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login`, since `gh api user` is refused for an app token. A prefix that is absent, fails, or cannot authenticate is not an error — fall back to the authenticated user, record that fallback in the report, and publish under the ordinary self-review and gating rules.
+
+Both shell blocks below carry that prefix in `rr`, which they assign empty: fill it in with the prefix when a reviewing app publishes, and leave it empty to publish as the authenticated user. `$rr` is deliberately unquoted at every use, because it is a command prefix of several words rather than one.
+
+Every login comparison against this identity ignores a trailing `[bot]`: REST records carry the suffix that GraphQL's `author{login}` omits for the same app, so an unnormalized compare makes an app's own prior review invisible.
+
+A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with `<prefix> gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message='<why>' -f event=DISMISS`, and dismiss only a review this identity published.
+
 ## Publication invariants
 
 - Re-fetch the head immediately before writing; a stale or unreadable head aborts all publication. The freshness-and-submission block below makes that a preflight failure with exit 3.
@@ -61,6 +73,7 @@ Run the head re-fetch, the equality check, and the single review POST as one she
 
 ```sh
 d=<private-dir> ev=<recorded-absolute-run_events.py-path> pr=<pr> reviewed=<reviewed head>
+rr=  # the review-run prefix when a reviewing app publishes; empty publishes as the authenticated user
 rm -f "$d/head.txt" "$d/review-response.json"
 forge() { # <forge-fetched|forge-written> <command...>
   kind=$1; shift
@@ -85,8 +98,11 @@ if [ -n "$reason" ]; then
   echo "preflight failed: $reason; nothing was written"; cat "$d/head.part" "$d/head.stderr"; exit 3
 fi
 mv "$d/head.part" "$d/head.txt"
+if [ -n "$rr" ] && ! $rr gh api "repos/{owner}/{repo}" --silent 2> "$d/reviewer.stderr"; then
+  echo "preflight failed: the review-run prefix could not authenticate; nothing was written"; cat "$d/reviewer.stderr"; exit 3
+fi
 echo "preflight passed: live head $live"
-forge forge-written gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
+forge forge-written $rr gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
 rc=$?
 if [ "$rc" -ne 0 ]; then
   echo "write attempted: review POST exited $rc; re-read the pull request's reviews before one retry"
@@ -145,6 +161,9 @@ def get(obj, *path):
     for key in path:
         obj = obj.get(key) if isinstance(obj, dict) else None
     return obj
+
+def bare(login):  # REST reports an app as `name[bot]`, GraphQL as `name`
+    return login[:-5] if isinstance(login, str) and login.endswith("[bot]") else login
 
 def number(comment):
     raw = get(comment, "fullDatabaseId")
@@ -313,7 +332,7 @@ def record(i, tag, rc):
         elif not isinstance(nodes, list) or type(earlier) is not bool:
             outcome, reason = "ambiguous", "reconciliation read without comments or pageInfo"
         else:
-            match = [c for c in nodes if get(c, "author", "login") == viewer
+            match = [c for c in nodes if bare(get(c, "author", "login")) == bare(viewer)
                      and number(get(c, "replyTo")) == row["comment_id"] and get(c, "body") == row["body"]]
             if match:
                 outcome, reason = "confirmed", "matching reply already posted"
@@ -377,7 +396,7 @@ else:
     summary()
 PY
 cat > "$d/write-loop.sh" <<'SH'
-d=$1 pr=$2
+d=$1 pr=$2 rr=$3
 w() { python3 "$d/writes.py" "$d" "$@"; }
 mkdir -p "$d/write-responses" || exit 2
 n=$(w validate); rc=$?
@@ -393,10 +412,10 @@ while [ "$i" -lt "$n" ]; do
       [ "$1" = skip ] && break
       base="$d/write-responses/$i.$2"
       if [ "$1" = reply ]; then
-        gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
+        $rr gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
           > "$base.response.json" 2> "$base.stderr"
       else
-        gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
+        $rr gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
       fi
       w record "$i" "$2" "$?" || exit 2
       case $2 in *-read*) after=--no-read ;; *) break ;; esac
@@ -407,12 +426,13 @@ done
 w summary
 SH
 ev=<recorded-absolute-run_events.py-path>
-if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr"
-else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr"; fi
+rr=  # the review-run prefix when a reviewing app publishes; empty publishes as the authenticated user
+if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr" "$rr"
+else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr" "$rr"; fi
 ```
 
 The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), repeats an id, a reply body to one comment, or an action on one thread, or puts any row after its thread's action row refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after every reply on that thread is confirmed; a thread with no reply to post leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.
 
 Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action while any reply on its thread is not confirmed is recorded `blocked` and checked again on a rerun, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
 
-After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.
+After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing; that identity match ignores a trailing `[bot]`, which REST carries and GraphQL omits for the same app. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.

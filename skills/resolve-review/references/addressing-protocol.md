@@ -102,7 +102,7 @@ Every round ends by asking the identity whose review it addressed to look again.
 
 Where the forge routes review requests, make the ask a review request. A re-request does not clear an earlier `REQUEST_CHANGES`; only a later review from that identity, or a dismissal, does.
 
-Where the forge will not route one — it has no review requests at all, or it refuses this one because the identity to ask is the pull request's own author — the summary carries the ask instead, as a line mentioning that identity: `Re-requesting review from @<login>.` The mention notifies them, which is what the request was for. Settle which form applies before writing the summary, by comparing that identity's login against the pull request's author and nothing else, and never report the forge's refusal on the pull request: the ask is the signal a reader wants, and a paragraph about a rejected API call is noise around it.
+Where the forge will not route one — it has no review requests at all, or it refuses this one because the identity to ask is the pull request's own author — the summary carries the ask instead, as a line mentioning that identity: `Re-requesting review from @<login>.` The mention notifies them, which is what the request was for. An app reviewer is the exception that takes neither form: GitHub routes a review request only to a user or a team, and `@<app>[bot]` notifies nobody, so where the review being addressed carries REST `user.type` of `Bot`, make no request and write no mention — the orchestrator that runs the app triggers its next review. Settle which form applies before writing the summary, by that `user.type` and then by comparing that identity's login against the pull request's author and nothing else, and never report the forge's refusal on the pull request: the ask is the signal a reader wants, and a paragraph about a rejected API call is noise around it.
 
 ## Check evidence
 
@@ -135,7 +135,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 `gh api` substitutes `{owner}` and `{repo}` from the clone, so the paths below are copy-pasteable as written.
 
-**Posting identity**: `gh api user --jq .login`. Compare with `gh pr view <n> --json author` to detect a self-review.
+**Posting identity**: `gh api user --jq .login`. This skill always writes as that identity and never as a reviewing app: a round's replies and summary have to come from the pull-request author. Compare with `gh pr view <n> --json author` to detect a self-review, ignoring a trailing `[bot]` on either login.
 
 **Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as addressed. The collection block below runs this read in the same invocation and saves it as `pr.json`, so only the number `<n>` is needed before it runs.
 
@@ -478,6 +478,9 @@ def get(obj, *path):
         obj = obj.get(key) if isinstance(obj, dict) else None
     return obj
 
+def bare(login):  # REST reports an app as `name[bot]`, GraphQL as `name`
+    return login[:-5] if isinstance(login, str) and login.endswith("[bot]") else login
+
 def number(comment):
     raw = get(comment, "fullDatabaseId")
     try:
@@ -645,7 +648,7 @@ def record(i, tag, rc):
         elif not isinstance(nodes, list) or type(earlier) is not bool:
             outcome, reason = "ambiguous", "reconciliation read without comments or pageInfo"
         else:
-            match = [c for c in nodes if get(c, "author", "login") == viewer
+            match = [c for c in nodes if bare(get(c, "author", "login")) == bare(viewer)
                      and number(get(c, "replyTo")) == row["comment_id"] and get(c, "body") == row["body"]]
             if match:
                 outcome, reason = "confirmed", "matching reply already posted"
@@ -709,7 +712,7 @@ else:
     summary()
 PY
 cat > "$d/write-loop.sh" <<'SH'
-d=$1 pr=$2
+d=$1 pr=$2 rr=$3
 w() { python3 "$d/writes.py" "$d" "$@"; }
 mkdir -p "$d/write-responses" || exit 2
 n=$(w validate); rc=$?
@@ -725,10 +728,10 @@ while [ "$i" -lt "$n" ]; do
       [ "$1" = skip ] && break
       base="$d/write-responses/$i.$2"
       if [ "$1" = reply ]; then
-        gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
+        $rr gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
           > "$base.response.json" 2> "$base.stderr"
       else
-        gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
+        $rr gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
       fi
       w record "$i" "$2" "$?" || exit 2
       case $2 in *-read*) after=--no-read ;; *) break ;; esac
@@ -745,4 +748,4 @@ The loop validates the whole file before its first write. A row that is not a JS
 
 Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action while any reply on its thread is not confirmed is recorded `blocked` and checked again on a rerun, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
 
-After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.
+After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing; that identity match ignores a trailing `[bot]`, which REST carries and GraphQL omits for the same app. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.
