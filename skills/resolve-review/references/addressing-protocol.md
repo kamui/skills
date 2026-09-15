@@ -343,6 +343,8 @@ Thread replies, resolutions, and reopenings run through one loop. Write `writes.
 - `action`: `resolve` for `implemented`, `already-addressed`, and `answered` items, and for a thread gone outdated or irrelevant whose work is complete; `reopen` for a thread resolved too early (the fix regressed, a later commit undid it, or a reply over-claimed), with the reply saying why; `none` for `declined`, `needs-info`, and `blocked`. Outdated is a reason to resolve, not a new disposition.
 - `is_resolved` (optional): the thread's `isResolved` from `threads.json`, so an already-satisfied state is skipped rather than written again.
 
+When ledger items share one thread, only one row carries that thread's `action`, and the others carry `none`. The action is `reopen` when any item needs the thread reopened. Otherwise it is `none` when any item is `declined`, `needs-info`, or `blocked`, and `resolve` only when every item on the thread resolves. Each item keeps its own reply row.
+
 A review body's reply and whole-change question answers have no thread and keep their routes, the general comment and the addressing summary.
 
 Run as one shell invocation after replacing `<private-dir>` with step 1's collection directory and `<pr>` with the pull request number:
@@ -475,13 +477,14 @@ def next_step(i, part, no_read):
         skip("skipped", "already confirmed")
     mine = [r for r in results if r["item"] == row["id"] and r["step"] == step and r["kind"] != "skip"]
     same = [r for r in mine if [r["target"], r["body_sha256"]] == list(key)]
-    writes, last = sum(r["kind"] == "write" for r in mine), same[-1]["outcome"] if same else None
+    attempts = lambda kind: len({r["attempt"] for r in mine if r["kind"] == kind})
+    writes, last = attempts("write"), same[-1]["outcome"] if same else None
     if last == "failed":
         skip("blocked", "refused earlier; not retried")
     if last == "ambiguous" and no_read:
         skip("blocked", "reconciliation unsettled; not retried")
     if last == "ambiguous":
-        tag = "%s-read%d" % (step, sum(r["kind"] == "read" for r in mine) + 1)
+        tag = "%s-read%d" % (step, attempts("read") + 1)
         request = {"query": READ, "variables": {"id": row["thread_id"]}}
     elif writes >= 2:
         skip("blocked", "retry budget spent")
@@ -491,6 +494,8 @@ def next_step(i, part, no_read):
         tag = "%s-write%d" % (step, writes + 1)
         request = {"query": "mutation($id:ID!){ %s(input:{threadId:$id}){ thread{ isResolved } } }" % MUTATION[step],
                    "variables": {"id": row["thread_id"]}}
+    kind, attempt = tag.split("-")[1].rstrip("0123456789"), tag.split("-")[1]
+    append(row, i, step, kind, key, "ambiguous", "attempt started; no result recorded", attempt=attempt)
     with open(os.path.join(RAW, "%d.%s.request.json" % (i, tag)), "w", encoding="utf-8") as f:
         json.dump(request, f, ensure_ascii=False)
     print(("reply %s %d" % (tag, row["comment_id"])) if tag.startswith("reply-write") else "graphql " + tag)
@@ -630,6 +635,6 @@ sh "$d/write-loop.sh" "$d" "$pr"
 
 The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), or repeats an id, a reply body to one comment, or an action on one thread refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after that reply is confirmed; a null body leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.
 
-Each attempt keeps its request, raw response, and stderr under `write-responses/` and appends one compact row to `write-results.jsonl`: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action whose reply is not confirmed is recorded `blocked`, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
+Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action whose reply is not confirmed is recorded `blocked`, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
 
-After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.
+After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.

@@ -60,6 +60,15 @@ if kind == "reply":
         state["comments"].setdefault(state["threads"][target], []).append(
             {"fullDatabaseId": str(new), "url": "https://github.test/c/%d" % new, "body": request["body"],
              "author": {"login": state["viewer"]}, "replyTo": {"fullDatabaseId": target}})
+    if mode == "crash":  # the reply lands, then the loop dies before it can record a result
+        state["comments"].setdefault(state["threads"][target], []).append(
+            {"fullDatabaseId": "8999", "url": "https://github.test/c/8999", "body": request["body"],
+             "author": {"login": state["viewer"]}, "replyTo": {"fullDatabaseId": target}})
+        state["log"][-1]["mode"] = mode
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(state, f)
+        os.kill(os.getppid(), 9)
+        sys.exit(1)
     if mode == "ok":
         out = json.dumps({"id": new, "html_url": "https://github.test/c/%d" % new, "in_reply_to_id": int(target),
                           "body": request["body"]})
@@ -229,7 +238,8 @@ class Loop(unittest.TestCase):
                         skipped = {(r["item"], r["reason"]) for r in results if r["kind"] == "skip"}
                         self.assertIn(("d", "thread already in that state"), skipped)
                         self.assertIn(("e", "no thread action"), skipped)
-                        replies = [r for r in results if r["step"] == "reply" and r["kind"] == "write"]
+                        replies = [r for r in results if r["step"] == "reply" and r["kind"] == "write" and "exit" in r]
+                        self.assertEqual(len(replies), 3)
                         self.assertTrue(all(r["outcome"] == "confirmed" and r["created_id"] for r in replies))
                         self.assertNotIn(NASTY, (private / "write-results.jsonl").read_text(encoding="utf-8"))
                         events = private / "run-events.jsonl"
@@ -268,8 +278,20 @@ class Loop(unittest.TestCase):
                 again, state, results = self.run_loop(private)
                 self.assertEqual(again.returncode, 0, again.stdout)
                 self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
-                read = next(r for r in results if r["kind"] == "read")
+                read = next(r for r in results if r["kind"] == "read" and "exit" in r)
                 self.assertEqual((read["outcome"], read["created_id"]), ("confirmed", 9001))
+
+    def test_interrupted_write_is_reconciled_before_any_retry(self):
+        for source in (PUBLICATION, ADDRESSING):
+            with self.subTest(source=source.name):
+                private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"reply:101": ["crash"]})
+                result, state, results = self.run_loop(private, source=source)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual([(r["kind"], r["outcome"]) for r in results], [("write", "ambiguous")])
+                again, state, _ = self.run_loop(private, source=source)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
+                self.assertEqual(len(state["comments"]["T1"]), 1, "an interrupted reply was posted again")
 
     def test_ambiguous_reply_that_was_lost_retries_once(self):
         private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"reply:101": ["lost", "lost"]})
