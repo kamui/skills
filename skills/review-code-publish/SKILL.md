@@ -33,6 +33,7 @@ For authorized gating, regenerate it with `--emit-batch --event` through the abs
 Never locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head immediately before the first write.
+Run that fetch, every write, and the readback below through the recorded `run_events.py` wrapper as the reference's Timing events section classifies them.
 Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule to every prior item.
 
 On a malformed-comment rejection, an ambiguous write, or a refused review, follow the reference's repair, retry, and fallback rules, using `review-code`'s recorded absolute script paths; if compaction dropped the rendering instructions, re-read `references/rendering.md` from the skill root those paths identify.
