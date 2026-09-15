@@ -3,8 +3,9 @@
 
 Usage: python3 scripts/test_check_runs.py [-v]
 Inputs: the Reading check runs block in resolve-review's
-`references/addressing-protocol.md`, and a stub `gh` on PATH that returns
-fixture pages; no forge access.
+`references/addressing-protocol.md`, code-review-publish's peer copy of the
+shared reply vocabulary, and a stub `gh` on PATH that returns fixture pages;
+no forge access.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
 The block must read every page for one full head SHA, retain each run's
@@ -29,6 +30,7 @@ SCRIPTS = Path(__file__).resolve().parent
 SKILLS = SCRIPTS.parent.parent
 RESOLVE = SKILLS / "resolve-review"
 ADDRESSING = RESOLVE / "references" / "addressing-protocol.md"
+PEER = SKILLS / "code-review-publish" / "references" / "review-protocol.md"
 SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
 SHA = "a" * 40
 OTHER = "b" * 40
@@ -188,7 +190,20 @@ class CheckRuns(unittest.TestCase):
         self.assertIn("the protocol's Invalidating rule", skill)
         self.assertIn("each check with the head and input state it establishes", skill)
         for stale in ("run the relevant checks", "rerun affected checks", "and the checks run.", "`pnpm test` green."):
-            self.assertNotIn(stale, skill + protocol)
+            self.assertNotIn(stale, skill + protocol + PEER.read_text(encoding="utf-8"))
+
+    def test_shared_reply_vocabulary_lands_in_both_protocol_copies(self):
+        protocol = ADDRESSING.read_text(encoding="utf-8")
+        peer = PEER.read_text(encoding="utf-8")
+        for shared in ("**Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. "
+                       "`pnpm test` green at `9f1e0aa`.",
+                       "| `implemented` | change made | what changed, the check and the head it passed at, the commit |",
+                       "`pnpm test` green at `5844a3c`. Every other thread resolved."):
+            for name, text in (("addressing-protocol.md", protocol), ("review-protocol.md", peer)):
+                self.assertIn(shared, text, name)
+        self.assertIn("- each check with the head and input state it establishes, any failure that decides the "
+                      "outcome, and any remaining verification gap;", peer)
+        self.assertNotIn("Check evidence", peer)
 
 
 if __name__ == "__main__":
