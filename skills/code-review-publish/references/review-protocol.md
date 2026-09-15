@@ -112,7 +112,7 @@ Resolve a thread when:
 
 A `declined` reply does not resolve its own thread. Declining states a position; the reviewer accepting it is what settles the disagreement, and closing early would hide a live dispute from the round cap.
 
-`resolve-review` resolves each thread as it finishes that thread — reply posted, change live — rather than batching resolutions at the end. Threads sitting at `needs-info` or `blocked` stay open.
+`resolve-review` resolves each thread together with its own confirmed reply and live change. Its ordered write pass posts an item's reply and then resolves that item's thread before moving to the next item, never as a detached sweep of resolutions after the replies. Threads sitting at `needs-info` or `blocked` stay open.
 
 `code-review-publish` resolves what it verdicts `fixed`, `accepted`, or `obsolete`, and its own findings once it withdraws them. A stale thread left from an earlier round is the reviewer's to close, not something the addresser inherits.
 

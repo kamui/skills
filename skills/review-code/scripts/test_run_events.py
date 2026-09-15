@@ -599,11 +599,13 @@ class RunEventTests(unittest.TestCase):
         blocks = []
         for source in sources:
             if source.exists():
-                found = [block for block in re.findall(r"```sh\n(.*?)```", source.read_text(encoding="utf-8"), re.S)
-                         if ("run_events" in block or "run-events" in block)
-                         and "preflight failed" not in block]  # test_command_chains.py runs that chain
-                self.assertTrue(found, f"{source.name} documents no wrapped command")
-                blocks.extend(found)
+                documented = re.findall(r"```sh\n(.*?)```", source.read_text(encoding="utf-8"), re.S)
+                self.assertTrue([block for block in documented if "run_events" in block or "run-events" in block],
+                                f"{source.name} documents no wrapped command")
+                # test_command_chains.py runs the freshness chain; test_thread_writes.py runs the write loop
+                blocks.extend(block for block in documented
+                              if ("run_events" in block or "run-events" in block)
+                              and "preflight failed" not in block and "write-loop.sh" not in block)
         for number, block in enumerate(blocks):
             with self.subTest(block=number):
                 private = self.root / f"documented-{number}"
