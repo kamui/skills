@@ -17,7 +17,7 @@ A **Change**: line names what the reviewer would do; whether it should be done h
 `resolve-review` replies once per item:
 
 ```markdown
-**Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green.
+**Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green at `9f1e0aa`.
 
 <!-- reply to=code/order-ts/duplicated-validation disposition=implemented head=9f1e0aa -->
 ```
@@ -26,7 +26,7 @@ The bold word is the disposition:
 
 | Disposition | Means | The reply carries |
 | --- | --- | --- |
-| `implemented` | change made | what changed, the check run, the commit |
+| `implemented` | change made | what changed, the check and the head it passed at, the commit |
 | `already-addressed` | the code already satisfied it | where |
 | `answered` | a question resolved, no code change | the answer |
 | `declined` | correct to leave as-is, or not this change's job | the reason: technical for a blocking finding, scope or preference for an optional one |
@@ -82,7 +82,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 - `answered` — `question/retry-order`: retries preserve request order
 - `declined` — [axis tag rename](url), open for your verdict
 
-`pnpm test` green. Every other thread resolved.
+`pnpm test` green at `5844a3c`. Every other thread resolved.
 
 <!-- reply to=question/retry-order disposition=answered head=5844a3c -->
 <!-- addressed head=5844a3c -->
@@ -92,7 +92,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 - counts by disposition, each item linked to its thread;
 - a file coordinate the summary names outside a linked thread item rendered as an immutable link at the addressed full head SHA — `https://<host>/<owner>/<repo>/blob/<full sha>/<path>?plain=1#L<line>`, `#L<start>-L<end>` for a range, neither the query nor the fragment for a whole file — with the code-formatted coordinate as its text, never a branch URL or a bare code span;
 - what still needs someone: `declined` awaiting a verdict, `needs-info` awaiting an answer, `blocked` items and their blocker;
-- the checks run;
+- each check under the Check evidence section's Reporting rule: the head and input state it establishes, any failure that decides the outcome, and any remaining verification gap;
 - where the forge will not route a re-review request, one line asking for one by mentioning the reviewing identity;
 - whether the round is finished or waiting — the sentence the reviewer would otherwise open every thread to infer.
 
@@ -103,6 +103,27 @@ Every round ends by asking the identity whose review it addressed to look again.
 Where the forge routes review requests, make the ask a review request. A re-request does not clear an earlier `REQUEST_CHANGES`; only a later review from that identity, or a dismissal, does.
 
 Where the forge will not route one — it has no review requests at all, or it refuses this one because the identity to ask is the pull request's own author — the summary carries the ask instead, as a line mentioning that identity: `Re-requesting review from @<login>.` The mention notifies them, which is what the request was for. Settle which form applies before writing the summary, by comparing that identity's login against the pull request's author and nothing else, and never report the forge's refusal on the pull request: the ask is the signal a reader wants, and a paragraph about a rejected API call is noise around it.
+
+## Check evidence
+
+A **check** is one named verification: a repository command such as a focused test invocation, a suite, a linter, or a build, or a CI check run. Its **evidence** is one recorded result: the command or check-run identity, the full head SHA it ran at, its input state, the exit status or conclusion, and what it covered. Input state is a clean tree at that head, or the uncommitted source, fixtures, generated inputs, dependency and configuration changes, and relevant environment it also saw. Coverage includes skipped tests and matrix legs that did not run.
+
+**Selecting.** For each change, choose the focused commands the repository documents for the behavior it changes and for what depends on that behavior. A test file named after a changed file is a lead, not a selection; follow the callers, fixtures, and configuration the change reaches. A documentation-only change needs a test invocation only when a documented check covers that documentation, such as a docs build or a test that reads it. Changes that share one meaningful check run it once, after the last of them is in place. Repository and caller test policy bounds every choice.
+
+**Reusing.** A successful result stands in for a new run of the same check only when every condition holds:
+
+- it is the same check: the same command and scope, or the same check-run identity;
+- it ran at the exact full head SHA being verified, and a run on uncommitted work counts only for the commit made from exactly that tree;
+- its relevant inputs and environment still match, with no uncommitted source, fixture, generated input, dependency, configuration, or relevant environment change since it ran, whatever `HEAD` says;
+- it passed with the coverage the check requires.
+
+Evidence that meets them is reused wherever the round reaches that check again. Evidence that fails any of them is not reusable.
+
+**Invalidating.** When step 3's findings cause further changes, list the earlier evidence those changes invalidate: every check whose inputs they touch. Rerun the focused checks that cover their effects. Rerun the affected broader suite too when they touch shared dependencies or configuration, change cross-module behavior, or have uncertain reach, however many suites already ran this round. Evidence they do not reach needs no rerun and still establishes only the head and input state it ran with. The step-3 reviewer and future CI do not substitute for this verification before the publication gate.
+
+**CI.** Before citing or reusing CI for a head, read its check runs with the Reading check runs verb below. A check run is reusable evidence only when the read is complete, its `head_sha` is the full candidate SHA, it is `completed` with conclusion `success`, and it runs the required suite or check with the required coverage. A green unrelated job, an incomplete matrix, skipped tests, and a result from a different head or merge commit establish nothing for that check. Missing evidence, including an incomplete read or an unpushed head, is unavailable, never zero work required: run the check or report the gap. This is the exact-head, same-check rule the review rubric applies to CI.
+
+**Reporting.** Replies and the addressing summary name each check with the head and input state it establishes, such as `` `pnpm test` green at `5844a3c` ``. Keep it concise. Name any failed check that decides the outcome and any remaining verification gap. An earlier success never covers a later change it did not run against.
 
 ## Humans in the loop
 
@@ -319,6 +340,89 @@ PY
 ```
 
 Each `new` line is feedback that arrived after the inventory, not a write this round made. It is unaddressed, and the round summary says so.
+
+### Reading check runs
+
+Read the check runs for one full candidate head SHA with the block below, never with a single-page call. Run it as one shell invocation after replacing `<private-dir>` with step 1's collection directory and `<sha>` with the full 40-hex head SHA. It is POSIX `sh` that also runs unchanged under `bash` and `zsh`.
+
+```sh
+d=<private-dir> sha=<sha>
+case $sha in *[!0123456789abcdef]*) len=0 ;; *) len=${#sha} ;; esac
+if [ "$len" -ne 40 ]; then echo "check runs need a full 40-hex head SHA, got '$sha'"; exit 2; fi
+out="$d/check-runs.$sha"
+rm -f "$out.json"
+cat > "$d/check_runs.py" <<'PY'
+import json, os, re, sys
+
+pages_path, sha, out = sys.argv[1:4]
+
+def fail(msg):
+    print("incomplete check-runs %s: %s" % (sha, msg))
+    sys.exit(1)
+
+try:
+    with open(pages_path, encoding="utf-8") as f:
+        pages = json.load(f)
+except OSError as e:
+    print("unreadable %s: %s" % (pages_path, e))
+    sys.exit(2)
+except ValueError as e:
+    fail("malformed JSON: %s" % e)
+if not isinstance(pages, list) or not pages:
+    fail("expected a non-empty array of pages")
+totals, seen, order = set(), {}, []
+for page in pages:
+    if not isinstance(page, dict) or type(page.get("total_count")) is not int \
+            or not isinstance(page.get("check_runs"), list):
+        fail("page without total_count and check_runs")
+    totals.add(page["total_count"])
+    for run in page["check_runs"]:
+        if not isinstance(run, dict) or type(run.get("id")) is not int:
+            fail("check run without an integer id")
+        if run["id"] not in seen:
+            seen[run["id"]] = run
+            order.append(run["id"])
+        elif json.dumps(seen[run["id"]], sort_keys=True) != json.dumps(run, sort_keys=True):
+            fail("check run %d changed during the read" % run["id"])
+if len(totals) != 1:
+    fail("total_count changed during the read")
+total = totals.pop()
+if len(order) != total:
+    fail("%d of %d check runs read" % (len(order), total))
+
+def text(value):
+    return value if isinstance(value, str) else None
+
+records = []
+for run in (seen[i] for i in order):
+    app, suite = run.get("app") or {}, run.get("check_suite") or {}
+    link = text(run.get("details_url")) or text(run.get("html_url")) or ""
+    workflow = re.search(r"/actions/runs/(\d+)", link)
+    records.append(dict(
+        id=run["id"], name=text(run.get("name")), head_sha=text(run.get("head_sha")),
+        at_requested_head=run.get("head_sha") == sha,
+        app=text(app.get("slug")) if isinstance(app, dict) else None,
+        check_suite_id=suite.get("id") if isinstance(suite, dict) else None,
+        workflow_run_id=int(workflow.group(1)) if workflow else None,
+        status=text(run.get("status")), conclusion=text(run.get("conclusion")),
+        url=text(run.get("html_url")) or text(run.get("details_url"))))
+with open(out + ".tmp", "w", encoding="utf-8") as f:
+    json.dump(dict(requested_sha=sha, total_count=total, check_runs=records), f)
+os.replace(out + ".tmp", out)
+for r in records:
+    print("%s%s %s id=%d app=%s workflow_run=%s %s" % (
+        "" if r["at_requested_head"] else "other-head ", r["conclusion"] or r["status"],
+        json.dumps(r["name"]), r["id"], r["app"], r["workflow_run_id"], r["url"]))
+print("complete %s" % out)
+PY
+gh api --paginate --slurp --method GET "repos/{owner}/{repo}/commits/$sha/check-runs" \
+  -f per_page=100 -f filter=latest > "$out.pages.json" 2> "$out.stderr"
+gh_rc=$?; echo "$gh_rc" > "$out.status"
+if [ "$gh_rc" -ne 0 ]; then echo "incomplete check-runs $sha: gh exited $gh_rc, see $out.stderr"; exit 1; fi
+python3 "$d/check_runs.py" "$out.pages.json" "$sha" "$out.json"
+```
+
+The block keeps the raw slurped pages (`check-runs.<sha>.pages.json`), `gh` stderr, and exit status beside the result, and removes any earlier `check-runs.<sha>.json` before reading. It writes that file only when `gh` exits `0`, every page carries `total_count` and `check_runs`, no check run changed during the read, and the distinct runs number exactly `total_count`. Each record retains `requested_sha` at the top level and, per run, `id`, `name`, `head_sha`, `at_requested_head`, the app slug, `check_suite_id`, `workflow_run_id` read from an Actions details URL, `status`, `conclusion`, and the evidence `url`; an unavailable field is null. It prints one line per run, with `other-head` before any run whose `head_sha` differs, then `complete <file>` with exit status `0`. Otherwise it prints `incomplete check-runs <sha>: <reason>` and exits `1`, and exit `2` means the SHA was not a full one or the pages could not be read. An incomplete read is unavailable evidence. `filter=latest` keeps the most recent run of each check, so a rerun's failure replaces an earlier success. Commit statuses posted outside the Checks API are not read here and stay unavailable.
 
 ### Writing review activity
 
