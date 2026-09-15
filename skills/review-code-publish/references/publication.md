@@ -100,7 +100,7 @@ A `preflight failed` line with exit 3 is the freshness route: a failed, empty, m
 
 ## Authorized gating emission
 
-`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < payload.json > batch.json`. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
+`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < <private-dir>/payload.json > <private-dir>/batch.json`, replacing the advisory batch the freshness-and-submission block posts. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
 
 On this gating path only, the script enforces the first-line grammar `**<Status>[ (advisory)]** — …`: the input advisory suffix is present exactly for `Changes Requested` or `Approved` under `COMMENT`. `APPROVE` requires `Approved`, and `REQUEST_CHANGES` requires `Changes Requested`; a mismatch exits 1. It removes the suffix and re-validates the edited body before printing. The batch is what validated after that one scripted edit. The ordinary `COMMENT` path retains its existing acceptance rules. Report the posted form from `batch.json`, not the advisory form in `payload.json`.
 
