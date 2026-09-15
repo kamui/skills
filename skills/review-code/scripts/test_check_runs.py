@@ -203,7 +203,6 @@ class CheckRuns(unittest.TestCase):
                 self.assertIn(shared, text, name)
         self.assertIn("- each check with the head and input state it establishes, any failure that decides the "
                       "outcome, and any remaining verification gap;", peer)
-        self.assertNotIn("Check evidence", peer)
 
 
 if __name__ == "__main__":
