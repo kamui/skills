@@ -658,7 +658,7 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `2bd592b` and on this change.
 | Instruction | Before words / bytes | After words / bytes |
 | --- | ---: | ---: |
 | `review-code/SKILL.md` | 4,953 / 34,036 | 5,040 / 34,579 |
-| `implement-publish/SKILL.md` | 874 / 5,586 | 1,212 / 7,818 |
+| `implement-publish/SKILL.md` | 874 / 5,586 | 1,215 / 7,840 |
 | `resolve-review/SKILL.md` | 1,888 / 11,986 | 2,131 / 13,581 |
 | `finish-it/SKILL.md` | 1,357 / 8,258 | 1,406 / 8,566 |
 
