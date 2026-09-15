@@ -118,30 +118,192 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 **Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as addressed.
 
-### Reading review activity
+### Collecting review activity
 
-- **Reviews**: `gh api repos/{owner}/{repo}/pulls/<n>/reviews --jq '.[] | {id, user: .user.login, state, commit_id, body}'`. `commit_id` is the head that review covered.
-- **Inline comments**: `gh api repos/{owner}/{repo}/pulls/<n>/comments`. Fields that matter: `id`, `in_reply_to_id`, `path`, `original_line`, `line`, `body`. Cite `original_line` for location — `line` becomes `null` once a later push outdates the comment.
-- **General pull-request comments**: `gh api repos/{owner}/{repo}/issues/<n>/comments`. A pull request is an issue, so a summary posted as a general comment lives under `issues`, not `pulls`.
-- **One inline comment**: `gh api repos/{owner}/{repo}/pulls/comments/<comment_id>` — no `<n>` in that path.
-- **Thread resolution state**: GraphQL only; REST does not expose whether a thread is resolved.
+Every list below is a collection: reviews, inline comments, general pull-request comments, and review threads. Fetch each one completely with the block below, not with a single-page `gh api` call. A single call returns one page, and feedback on a later page silently misses the ledger. Run the block as one shell invocation after replacing `<owner>`, `<repo>`, and `<n>`. It is POSIX `sh` that also runs unchanged under `bash` and `zsh`.
 
-  ```sh
-  gh api graphql -f query='
-    query($owner:String!,$repo:String!,$pr:Int!){
-      repository(owner:$owner,name:$repo){ pullRequest(number:$pr){
-        reviewThreads(first:100){ nodes{
-          id isResolved isOutdated path line
-          comments(first:1){ nodes{ databaseId } } } } } } }
-  ' -f owner=<owner> -f repo=<repo> -F pr=<n>
-  ```
+The block writes into a fresh private directory from `mktemp -d`. Each collection keeps its raw slurped pages (`<name>.pages.json`), `gh` stderr (`<name>.stderr`), and `gh` exit status (`<name>.status`). The block records `gh`'s status before anything reads the output, so no formatter downstream can hide a failed continuation page. The flattener runs only after `gh` exits `0`. It rejects any response that is not JSON, any GraphQL `errors` or partial `data`, and any page chain that does not end in `hasNextPage: false`. Exact repeats of one stable id collapse to one record. When one id arrives with different content, as when a comment is edited mid-fetch, the block re-reads that item with its single-item verb and keeps the fresh copy. It never drops either version silently. `<name>.json`, a flat JSON array, is written only when every page is present and valid. REST records keep every field GitHub returned. Each thread record keeps its GraphQL node `id` and adds `firstCommentId`, the numeric REST id of its first comment, read from `fullDatabaseId` or, only when that is absent, from the deprecated `databaseId`.
 
-  `id` is the thread node id needed to resolve it. `comments.nodes[0].databaseId` maps the thread back to its REST comment id.
+The last line reads `complete <dir>` with exit status `0`, or `incomplete <dir>` with exit status `1` after one `incomplete <name>: <reason>` line per failed collection. An incomplete collection is a coverage gap: preserve the directory, report the gap, and never treat feedback missing from it as addressed. The block is not a transactional snapshot. A live pull request can gain feedback while the block runs.
+
+```sh
+d=$(mktemp -d "${TMPDIR:-/tmp}/review-activity.XXXXXX") || exit 2
+cat > "$d/flatten.py" <<'PY'
+import json, os, sys
+
+def fail(msg, code=1):
+    print(msg)
+    sys.exit(code)
+
+def load(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except OSError as e:
+        fail("unreadable %s: %s" % (path, e), 2)
+    except ValueError as e:
+        fail("malformed JSON in %s: %s" % (path, e))
+
+def rest_pages(pages):
+    if not isinstance(pages, list) or not pages:
+        fail("expected a non-empty array of pages")
+    for page in pages:
+        if not isinstance(page, list):
+            fail("page is not an array")
+        for rec in page:
+            if not isinstance(rec, dict) or type(rec.get("id")) is not int:
+                fail("record without an integer id")
+            yield rec["id"], rec
+
+def thread_node(node):
+    if not isinstance(node, dict) or not isinstance(node.get("id"), str):
+        fail("thread without a node id")
+    first = ((node.get("comments") or {}).get("nodes") or [None])[0]
+    if not isinstance(first, dict):
+        fail("thread %s without a first comment" % node["id"])
+    raw = first.get("fullDatabaseId")
+    if raw is None:
+        raw = first.get("databaseId")
+    try:
+        cid = int(raw)
+    except (TypeError, ValueError):
+        fail("thread %s without a first comment id" % node["id"])
+    return node["id"], dict(node, firstCommentId=cid)
+
+def thread_pages(pages):
+    if not isinstance(pages, list) or not pages:
+        fail("expected a non-empty array of pages")
+    for i, page in enumerate(pages):
+        if not isinstance(page, dict) or page.get("errors"):
+            fail("GraphQL errors or a non-object page")
+        try:
+            conn = page["data"]["repository"]["pullRequest"]["reviewThreads"]
+            nodes, info = conn["nodes"], conn["pageInfo"]
+            more, cursor = info["hasNextPage"], info["endCursor"]
+        except (KeyError, TypeError):
+            fail("partial data or missing pageInfo")
+        last = i == len(pages) - 1
+        if not isinstance(nodes, list) or more is not (not last) or (more and not isinstance(cursor, str)):
+            fail("incomplete pagination metadata on page %d" % (i + 1))
+        for node in nodes:
+            yield thread_node(node)
+
+def fresh_record(kind, path):
+    doc = load(path)
+    if kind == "threads":
+        if not isinstance(doc, dict) or doc.get("errors") or not isinstance((doc.get("data") or {}).get("node"), dict):
+            fail("fresh copy %s is an error or partial data" % path)
+        return thread_node(doc["data"]["node"])
+    if not isinstance(doc, dict) or type(doc.get("id")) is not int:
+        fail("fresh copy %s without an integer id" % path)
+    return doc["id"], doc
+
+kind, src, out, fresh_paths = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
+records = thread_pages(load(src)) if kind == "threads" else rest_pages(load(src))
+seen, order, conflicts = {}, [], []
+for key, rec in records:
+    if key not in seen:
+        seen[key] = rec
+        order.append(key)
+    elif json.dumps(seen[key], sort_keys=True) != json.dumps(rec, sort_keys=True) and key not in conflicts:
+        conflicts.append(key)
+fresh = dict(fresh_record(kind, p) for p in fresh_paths)
+missing = [k for k in conflicts if k not in fresh]
+if missing:
+    for k in missing:
+        print("conflict %s" % k)
+    sys.exit(3)
+flat = [fresh.get(k, seen[k]) for k in order]
+with open(out + ".tmp", "w", encoding="utf-8") as f:
+    json.dump(flat, f)
+os.replace(out + ".tmp", out)
+print("%d records" % len(flat))
+PY
+owner=<owner> repo=<repo> pr=<n> incomplete=0
+threads_query='query($owner:String!,$repo:String!,$pr:Int!,$endCursor:String){
+  repository(owner:$owner,name:$repo){ pullRequest(number:$pr){
+    reviewThreads(first:100, after:$endCursor){
+      pageInfo{ hasNextPage endCursor }
+      nodes{ id isResolved isOutdated path line
+        comments(first:1){ nodes{ fullDatabaseId databaseId } } } } } } }'
+thread_node_query='query($id:ID!){ node(id:$id){ ... on PullRequestReviewThread{
+  id isResolved isOutdated path line
+  comments(first:1){ nodes{ fullDatabaseId databaseId } } } } }'
+collect() { # <name> <kind> <single-item path, or "thread"> <gh api arguments...>
+  name=$1 kind=$2 one=$3; shift 3
+  gh api --paginate --slurp "$@" > "$d/$name.pages.json" 2> "$d/$name.stderr"
+  gh_rc=$?; echo "$gh_rc" > "$d/$name.status"
+  if [ "$gh_rc" -ne 0 ]; then
+    echo "incomplete $name: gh exited $gh_rc, see $d/$name.stderr"; incomplete=1; return
+  fi
+  python3 "$d/flatten.py" "$kind" "$d/$name.pages.json" "$d/$name.json" > "$d/$name.result"; rc=$?
+  if [ "$rc" -eq 3 ]; then
+    set --
+    for id in $(sed -n 's/^conflict //p' "$d/$name.result"); do
+      if [ "$one" = thread ]; then
+        gh api graphql -f query="$thread_node_query" -f id="$id" > "$d/$name.fresh.$id.json" 2>> "$d/$name.stderr"
+      else
+        gh api "$one/$id" > "$d/$name.fresh.$id.json" 2>> "$d/$name.stderr"
+      fi || { echo "incomplete $name: re-reading conflicting $id failed, see $d/$name.stderr"; incomplete=1; return; }
+      set -- "$@" "$d/$name.fresh.$id.json"
+    done
+    python3 "$d/flatten.py" "$kind" "$d/$name.pages.json" "$d/$name.json" "$@" > "$d/$name.result"; rc=$?
+  fi
+  if [ "$rc" -ne 0 ]; then
+    echo "incomplete $name: $(tr '\n' ' ' < "$d/$name.result")"; incomplete=1; rm -f "$d/$name.json"
+  fi
+}
+collect reviews rest "repos/$owner/$repo/pulls/$pr/reviews" \
+  --method GET "repos/$owner/$repo/pulls/$pr/reviews" -f per_page=100
+collect inline-comments rest "repos/$owner/$repo/pulls/comments" \
+  --method GET "repos/$owner/$repo/pulls/$pr/comments" -f per_page=100
+collect general-comments rest "repos/$owner/$repo/issues/comments" \
+  --method GET "repos/$owner/$repo/issues/$pr/comments" -f per_page=100
+collect threads threads thread \
+  graphql -f query="$threads_query" -f owner="$owner" -f repo="$repo" -F pr="$pr"
+if [ "$incomplete" -eq 0 ]; then echo "complete $d"; else echo "incomplete $d"; exit 1; fi
+```
+
+The collections, each read from `$d/<name>.json`:
+
+- **Reviews** (`reviews.json`): `id`, `user.login`, `state`, `commit_id`, `body`. `commit_id` is the head that review covered.
+- **Inline comments** (`inline-comments.json`): `id`, `in_reply_to_id`, `user.login`, `path`, `original_line`, `line`, `body`. Cite `original_line` for location, because `line` becomes `null` once a later push outdates the comment. A reply's `in_reply_to_id` names its thread's first comment, so replies on any page correlate to a thread through `firstCommentId`.
+- **General pull-request comments** (`general-comments.json`): `id`, `user.login`, `body`. A pull request is an issue, so a summary posted as a general comment lives under `issues`, not `pulls`.
+- **Review threads** (`threads.json`): GraphQL only, because REST does not expose whether a thread is resolved. `id` is the thread node id needed to resolve it, `isResolved` and `isOutdated` its state, and `firstCommentId` the REST id of its first comment. `comments(first:1)` fetches only that first comment; the paginated inline-comment collection supplies every reply.
+
+Targeted rereads stay targeted. To confirm one write or one item, read only that item, never the whole collection:
+
+- **One review**: `gh api repos/{owner}/{repo}/pulls/<n>/reviews/<review_id>`.
+- **One inline comment**: `gh api repos/{owner}/{repo}/pulls/comments/<comment_id>`, with no `<n>` in that path.
+- **One general comment**: `gh api repos/{owner}/{repo}/issues/comments/<comment_id>`.
+
+**New since inventory**: step 6 of `resolve-review` runs the block again into a new directory, and both runs must be complete. Then list the ids that the re-fetched collections carry and step 1's did not. Leave out this round's own writes: pass each id a confirmed write created, such as a disposition reply or the round summary, as `<collection>:<id>` (for example `inline-comments:4011948515` or `general-comments:3201`). GitHub wraps each inline reply in its own empty review. The command also leaves out a review whose id is the `pull_request_review_id` of an excluded inline reply. Match on those ids, not on the author, because the reviewer and the addresser can be the same identity:
+
+```sh
+python3 - <step 1 directory> <step 6 directory> <collection>:<id>... <<'PY'
+import json, sys
+own = set(sys.argv[3:])
+def load(d, name):
+    with open("%s/%s.json" % (d, name), encoding="utf-8") as f:
+        return json.load(f)
+def ids(d, name):
+    return {r["id"] for r in load(d, name)}
+for c in load(sys.argv[2], "inline-comments"):
+    if "inline-comments:%s" % c["id"] in own and c.get("pull_request_review_id") is not None:
+        own.add("reviews:%s" % c["pull_request_review_id"])
+for name in ("reviews", "inline-comments", "general-comments", "threads"):
+    for i in sorted(ids(sys.argv[2], name) - ids(sys.argv[1], name), key=str):
+        if "%s:%s" % (name, i) not in own:
+            print("new %s %s" % (name, i))
+PY
+```
+
+Each `new` line is feedback that arrived after the inventory, not a write this round made. It is unaddressed, and the round summary says so.
 
 ### Writing review activity
 
 - **Reply to an inline comment**: `gh api --method POST repos/{owner}/{repo}/pulls/<n>/comments/<comment_id>/replies -f body='...'`, addressing the thread's first comment id.
-- **General comment**: `gh pr comment <n> --body-file -` with a heredoc. This is where an addressing summary goes; find an earlier one to update by grepping `issues/<n>/comments` for its `addressed head=` trailer.
+- **General comment**: `gh pr comment <n> --body-file -` with a heredoc. This is where an addressing summary goes; find an earlier one to update by searching the complete `general-comments.json` collection for its `addressed head=` trailer. When that collection is incomplete, run the block again before posting. If it is still incomplete, post no summary and report the gap, because an earlier summary may sit on the missing page.
 - **Request a re-review**: `gh pr edit <n> --add-reviewer <login>`, or `gh api --method POST repos/{owner}/{repo}/pulls/<n>/requested_reviewers -f 'reviewers[]=<login>'`. Take `<login>` from the review being addressed. Authoring the pull request is no bar to requesting one: GitHub returns 422 (`Review cannot be requested from pull request author`) only when `<login>` is the pull request's own author, or the account cannot review it. Check `<login>` against the author from `gh pr view <n> --json author` before calling, and decide on that comparison alone: where they match, skip the call GitHub is certain to refuse and put `Re-requesting review from @<login>.` in the summary comment instead. Who addressed the round says nothing about who authored the pull request — a maintainer reviewing and later addressing a contributor's pull request is not its author, and that request routes. Where an unforeseen 422 lands after that comment is posted, edit the comment to carry the mention rather than retrying the request or reporting the refusal.
 - **Edit a comment**: `gh api --method PATCH repos/{owner}/{repo}/pulls/comments/<id> -f body='...'`; for a general comment, `repos/{owner}/{repo}/issues/comments/<id>`.
 - **Resolve or reopen a thread**: GraphQL only, no REST equivalent.
