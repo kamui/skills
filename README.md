@@ -17,13 +17,14 @@ npx skills@latest add kamui/skills --skill review-code-publish --skill review-co
 npx skills@latest add kamui/skills --skill audit-code-publish
 npx skills@latest add kamui/skills --skill resolve-review
 npx skills@latest add kamui/skills --skill implement-publish --skill review-code
+npx skills@latest add kamui/skills --skill finish-it --skill implement-publish --skill review-code-publish --skill resolve-review --skill review-code
 npx skills@latest add kamui/skills --skill code-review-publish  # legacy, kept for historical purposes
 npx skills@latest add mattpocock/skills --skill code-review    # required by code-review-publish
 ```
 
 Use `review-code-publish` for routine pull-request reviews. Explicitly use `audit-code-publish` for independent investigation of requirements completeness, API conformance, and contracts affected beyond the diff. Originally `code-review-deep-publish`, it retains the Panel workflow, and the [audit roadmap](skills/audit-code-publish/DESIGN.md#positioning) tracks the planned system-guarantee and executable-evidence checks, which have not shipped. Its higher cost and high-risk effectiveness require matched evaluation; no general cost or safety advantage is claimed.
 
-Skill names start with the verb for what the skill does and end in `-publish` when the skill writes to the forge, which leaves `/code-review` to the harness and to skills installed from other sources. Issue #245 renamed `code-review-publish` to `review-code-publish`, `code-audit-publish` to `audit-code-publish`, and `code-review-address` to `resolve-review`. The legacy two-axis reviewer, `code-review-publish-legacy` until then, took the freed `code-review-publish` name afterward and is the one exception to the convention: it is named for the two-axis `code-review` skill from `mattpocock/skills` that it publishes. See `CHANGELOG.md` to migrate an existing install.
+Skill names start with the verb for what the skill does and end in `-publish` when the skill writes to the forge, which leaves `/code-review` to the harness and to skills installed from other sources. Issue #245 renamed `code-review-publish` to `review-code-publish`, `code-audit-publish` to `audit-code-publish`, and `code-review-address` to `resolve-review`. The legacy two-axis reviewer, `code-review-publish-legacy` until then, took the freed `code-review-publish` name afterward and is one of two exceptions to the convention: it is named for the two-axis `code-review` skill from `mattpocock/skills` that it publishes. `finish-it` is the other: it orchestrates the three publishing skills rather than publishing anything of its own, and it is invoked as the phrase a person says, so it carries no `-publish` suffix. See `CHANGELOG.md` to migrate an existing install.
 
 The installer asks which supported agents and installation scope to use.
 
@@ -53,13 +54,13 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-Four skills are model-invocable, so a driving agent can run the loop end to end; the legacy `code-review-publish` is not model-invocable and runs only when invoked by name, and `audit-code-publish` is explicit-only. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `review-code-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+Four skills are model-invocable, so a driving agent can run the loop end to end; the legacy `code-review-publish` and `finish-it` are not model-invocable and run only when invoked by name, and `audit-code-publish` is explicit-only. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `review-code-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
 Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
 ## Skills
 
-The skills compose into a loop: `implement-publish` opens a pull request, `review-code-publish` reviews it, `resolve-review` works the feedback, and the review runs again. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff). `audit-code-publish` occupies the reviewer slot when an independent audit is requested. Its investigation stays bounded by the pull request’s affected contracts and code; it is not an automatic additional review stage.
+The skills compose into a loop: `implement-publish` opens a pull request, `review-code-publish` reviews it, `resolve-review` works the feedback, and the review runs again. `finish-it` drives that loop unattended, one fresh subagent per step. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff). `audit-code-publish` occupies the reviewer slot when an independent audit is requested. Its investigation stays bounded by the pull request’s affected contracts and code; it is not an automatic additional review stage.
 
 ### `review-code`
 
@@ -121,9 +122,21 @@ $implement-publish
 
 The host agent needs access to the forge to create the pull request.
 
+### `finish-it`
+
+Runs one delivery: a spec, issue, branch, or pull request goes through `implement-publish`, one `review-code-publish` review, and rounds of `resolve-review` followed by `review-code-publish`, each step in its own fresh-context subagent that receives a fixed handoff packet and reads everything else from the pull request. It resumes from wherever the pull request already is: given a pull request with one round done it runs two more, and given one with many it still runs at least one. The round total defaults to 3 and is set in the invocation text (`rounds: 5`). The first round always runs, an already-approved pull request included; from the second on it stops early on `Approved` or when a round makes no progress. A prose spec becomes an issue first, so every step has one stable spec source. It never merges.
+
+It is not model-invocable and runs only when invoked by name:
+
+```text
+$finish-it
+```
+
+It requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops before any write when one is missing. The host agent needs access to the forge for every write those skills make.
+
 ## The review handoff
 
-`review-code-publish` and `implement-publish` require `review-code` as the named install-alone exception. Both call it in one-shot mode: the publisher reviews a pull request for posting, while `implement-publish` reviews its local base-to-head range before publication.
+`review-code-publish` and `implement-publish` require `review-code` as one of the two named install-alone exceptions; `finish-it`, which requires all three publishing skills and `review-code`, is the other. Both call it in one-shot mode: the publisher reviews a pull request for posting, while `implement-publish` reviews its local base-to-head range before publication.
 
 `review-code` owns finding admission through [`review-rubric.md`](skills/review-code/references/review-rubric.md), record semantics through [`review-record.md`](skills/review-code/references/review-record.md), and visible output through [`rendering.md`](skills/review-code/references/rendering.md). `review-code-publish` owns forge writes through [`publication.md`](skills/review-code-publish/references/publication.md). `resolve-review` owns replies, dispositions, thread state, and round closeout through its [`addressing-protocol.md`](skills/resolve-review/references/addressing-protocol.md).
 
