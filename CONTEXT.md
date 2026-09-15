@@ -9,7 +9,7 @@ The issue, tickets, or written specification that describes the work a pull requ
 _Avoid_: prompt, context, ticket text
 
 **Round**:
-One addressing pass over a pull request's review feedback followed by the re-review of its result.
+One addressing pass over a pull request's review feedback, skipped when there is nothing to address, followed by a re-review of the pull request.
 _Avoid_: loop, cycle, iteration
 
 **Delivery**:
