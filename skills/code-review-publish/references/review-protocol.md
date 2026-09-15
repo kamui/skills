@@ -1,6 +1,6 @@
 # Review protocol
 
-Mirrored verbatim in `code-review-publish` and `resolve-review`; edit both together.
+`resolve-review` carries the addresser's side of this protocol in its own `references/addressing-protocol.md`; a change to the shared vocabulary lands in both files.
 
 ## Where a review goes
 
