@@ -24,17 +24,16 @@ Authorization changes only the forge event, never the semantic status:
 
 ## Timing events
 
-Run every forge fetch and write this skill makes through the `run_events.py` path the review record carries: `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event <event> --data role=<role> [--data connection=root] -- <command>`, where `<private-dir>` is the directory of the record's private store. Wrap each command of a chain separately so no fetch or write escapes, and keep stdout redirects outside the wrapper. A record without that path runs the same commands unwrapped.
+Run every forge fetch and write this skill makes through the `run_events.py` path the review record carries: `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event <event> --data role=<role> [--data connection=root] -- <command>`, where `<private-dir>` is the directory of the record's private store. Wrap each command of a chain separately so no fetch or write escapes, and keep stdout redirects outside the wrapper. The thread write loop is the one exception: its whole run is wrapped once, and the replies, resolutions, and reconciliation reads inside it are not wrapped again. A record without that path runs the same commands unwrapped.
 
 | Command | Event and data |
 | --- | --- |
-| Head re-fetch before writing, re-read after an ambiguous result, thread re-read, published-review readback | `forge-fetched`, `role=root`, `connection=root` |
+| Head re-fetch before writing, re-read after an ambiguous result, published-review readback | `forge-fetched`, `role=root`, `connection=root` |
 | Review submission | `forge-written`, `role=review` |
-| Each thread reply | `forge-written`, `role=replies` |
-| Each thread resolution | `forge-written`, `role=resolutions` |
+| Each run of the thread write loop, reruns included | `forge-written`, `role=replies` |
 | General-comment fallback | `forge-written`, `role=summary` |
 
-The wrapper exits with the command's status; exit 2 with a `run_events:` line on stderr means it could not run the command, which counts as that fetch or write failing. These events time commands only. A successful wrapped write is not evidence that publication finished; the readback and failure reporting below still decide that.
+The wrapper exits with the command's status; exit 2 with a `run_events:` line on stderr means it could not run the command, which counts as that fetch or write failing. These events time commands only. A successful wrapped write is not evidence that publication finished; the readback and failure reporting below still decide that. The loop's interval covers the whole loop, not each mutation, and its `write-results.jsonl` decides which writes succeeded.
 
 On GitHub, the `Create a review for a pull request` batch documents line comments but not file subjects. Keep file-anchored findings in `Unanchored findings` rather than making a separate write through the review-comment endpoint or inventing an unrelated line. The one-call batch shape is:
 
@@ -106,15 +105,314 @@ On this gating path only, the script enforces the first-line grammar `**<Status>
 
 ## Existing-thread replies and resolution
 
-Post each drafted reply to its recorded comment id with `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event forge-written --data role=replies -- gh api --method POST repos/{owner}/{repo}/pulls/<pr>/comments/<id>/replies -f body='<drafted reply>'`. Use the equivalent structured body input when quoting needs it. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item. Re-read the thread after an ambiguous result before one retry. Report any reply that failed.
+Every drafted reply and thread resolution goes through the thread write loop below, once, after the review posts. Non-publishing retrospective runs write no `writes.jsonl` and run no loop.
 
-For every prior item `review-code` classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: `review-code`'s evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
+For every prior item `review-code` classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: `review-code`'s evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item.
 
-On GitHub, run:
+Write `<private-dir>/writes.jsonl` once from the completed record, one JSON object per prior item per line, with the host's file-writing tool rather than a shell `echo`:
+
+- `id`: the item's stable id.
+- `comment_id`: the numeric id of the thread's first comment; `thread_id`: the thread's GraphQL node id. Both are null for an item without a forge thread.
+- `body`: the drafted reply exactly as drafted, or null when the item has no drafted reply.
+- `action`: `resolve` for `fixed`, `accepted`, and `obsolete`; `none` for `still-open`, `not-verifiable`, disputed items, and items without a forge thread.
+- `is_resolved` (optional): the thread's recorded state. `true` records the already-resolved skip instead of resolving again.
+
+### Thread write loop
+
+Run as one shell invocation after replacing `<private-dir>` and `<pr>`; `ev` is empty when the record carries no `run_events.py` path:
 
 ```sh
-python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event forge-written --data role=resolutions -- \
-gh api graphql -f query='mutation($id:ID!){ resolveReviewThread(input:{threadId:$id}){ thread{ isResolved } } }' -f id=<thread-node-id>
+d=<private-dir> pr=<pr>
+cat > "$d/writes.py" <<'PY'
+import hashlib, json, os, re, sys
+
+d, cmd, args = sys.argv[1], sys.argv[2], sys.argv[3:]
+WRITES, RESULTS = os.path.join(d, "writes.jsonl"), os.path.join(d, "write-results.jsonl")
+RAW = os.path.join(d, "write-responses")
+FIELDS = ("id", "comment_id", "thread_id", "body", "action")
+MUTATION = {"resolve": "resolveReviewThread", "reopen": "unresolveReviewThread"}
+READ = ("query($id:ID!){ viewer{ login } node(id:$id){ ... on PullRequestReviewThread{ isResolved "
+        "comments(last:100){ pageInfo{ hasPreviousPage } nodes{ fullDatabaseId databaseId url body "
+        "author{ login } replyTo{ fullDatabaseId databaseId } } } } } }")
+
+def jsonl(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return [json.loads(line) for line in f.read().split("\n") if line]
+
+def get(obj, *path):
+    for key in path:
+        obj = obj.get(key) if isinstance(obj, dict) else None
+    return obj
+
+def number(comment):
+    raw = get(comment, "fullDatabaseId")
+    try:
+        return int(get(comment, "databaseId") if raw is None else raw)
+    except (TypeError, ValueError):
+        return None
+
+def op(row, step):  # (target, body digest) of a required write, or None
+    if step == "reply":
+        body = row["body"]
+        return None if body is None else (row["comment_id"], hashlib.sha256(body.encode("utf-8")).hexdigest())
+    if step == "none" or row.get("is_resolved") is (step == "resolve"):
+        return None
+    return (row["thread_id"], None)
+
+def confirmed(results, row, step, key):
+    return any(r["item"] == row["id"] and r["step"] == step and r["outcome"] == "confirmed"
+               and [r["target"], r["body_sha256"]] == list(key) for r in results)
+
+def append(row, i, step, kind, key, outcome, reason=None, **extra):
+    rec = dict(item=row["id"], index=i, step=step, kind=kind, target=key[0] if key else None,
+               body_sha256=key[1] if key else None, outcome=outcome, reason=reason, **extra)
+    with open(RESULTS, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+def validate():
+    try:
+        with open(WRITES, encoding="utf-8") as f:
+            text = f.read()
+    except OSError as e:
+        print("unreadable writes.jsonl: %s" % e)
+        sys.exit(2)
+    problems, ids, threads, replies, count = [], set(), {}, set(), 0
+    try:
+        jsonl(RESULTS)
+    except (OSError, ValueError) as e:
+        problems.append("write-results.jsonl is unreadable or malformed: %s" % e)
+    for n, line in enumerate(text.split("\n"), 1):
+        if not line:
+            continue
+        count += 1
+        try:
+            row = json.loads(line)
+        except ValueError:
+            row = None
+        if not isinstance(row, dict):
+            problems.append("line %d: not a JSON object" % n)
+            continue
+        bad = ["missing %s" % k for k in FIELDS if k not in row]
+        bad += ["unknown field %s" % k for k in sorted(set(row) - set(FIELDS) - {"is_resolved"})]
+        if not bad:
+            item, cid, tid, body, action = (row[k] for k in FIELDS)
+            if not isinstance(item, str) or not item:
+                bad.append("id is not a non-empty string")
+            if cid is not None and (type(cid) is not int or cid <= 0):
+                bad.append("comment_id is not a positive integer or null")
+            if tid is not None and (not isinstance(tid, str) or not tid):
+                bad.append("thread_id is not a non-empty string or null")
+            if body is not None and (not isinstance(body, str) or not body):
+                bad.append("body is not a non-empty string or null")
+            if action not in ("resolve", "reopen", "none"):
+                bad.append("action is not resolve, reopen, or none")
+            if row.get("is_resolved") is not None and type(row["is_resolved"]) is not bool:
+                bad.append("is_resolved is not a boolean or null")
+        if not bad:
+            if body is not None and (cid is None or tid is None):
+                bad.append("a reply needs comment_id and thread_id")
+            if action != "none" and tid is None:
+                bad.append("%s needs thread_id" % action)
+            if item in ids:
+                bad.append("duplicate id %s" % item)
+            if action != "none" and tid in threads:
+                bad.append("second thread action on %s" % tid)
+            elif tid in threads:
+                bad.append("row on thread %s follows that thread's action on line %d" % (tid, threads[tid]))
+            if body is not None and (cid, body) in replies:
+                bad.append("duplicate reply to comment %s" % cid)
+            ids.add(item)
+            if action != "none" and tid not in threads:
+                threads[tid] = n
+            if body is not None:
+                replies.add((cid, body))
+        problems += ["line %d: %s" % (n, b) for b in bad]
+    if problems:
+        print("\n".join(problems))
+        sys.exit(1)
+    print(count)
+
+def next_step(i, part, no_read):
+    rows, results = jsonl(WRITES), jsonl(RESULTS)
+    row = rows[i]
+    step = "reply" if part == "reply" else row["action"]
+    key = op(row, step)
+
+    def skip(outcome, reason):
+        append(row, i, step, "skip", key, outcome, reason)
+        print("skip")
+        sys.exit(0)
+    if key is None:
+        skip("skipped", {"reply": "no reply required", "none": "no thread action"}.get(step, "thread already in that state"))
+    if step != "reply" and any(r["thread_id"] == row["thread_id"] and r["body"] is not None
+                               and not confirmed(results, r, "reply", op(r, "reply")) for r in rows):
+        skip("blocked", "reply not confirmed")
+    if confirmed(results, row, step, key):
+        skip("skipped", "already confirmed")
+    mine = [r for r in results if r["item"] == row["id"] and r["step"] == step and r["kind"] != "skip"]
+    same = [r for r in mine if [r["target"], r["body_sha256"]] == list(key)]
+    attempts = lambda kind: len({r["attempt"] for r in mine if r["kind"] == kind})
+    writes, last = attempts("write"), same[-1]["outcome"] if same else None
+    if last == "failed":
+        skip("blocked", "refused earlier; not retried")
+    if last == "ambiguous" and no_read:
+        skip("blocked", "reconciliation unsettled; not retried")
+    if last == "ambiguous":
+        tag = "%s-read%d" % (step, attempts("read") + 1)
+        request = {"query": READ, "variables": {"id": row["thread_id"]}}
+    elif writes >= 2:
+        skip("blocked", "retry budget spent")
+    elif step == "reply":
+        tag, request = "reply-write%d" % (writes + 1), {"body": row["body"]}
+    else:
+        tag = "%s-write%d" % (step, writes + 1)
+        request = {"query": "mutation($id:ID!){ %s(input:{threadId:$id}){ thread{ isResolved } } }" % MUTATION[step],
+                   "variables": {"id": row["thread_id"]}}
+    kind, attempt = tag.split("-")[1].rstrip("0123456789"), tag.split("-")[1]
+    append(row, i, step, kind, key, "ambiguous", "attempt started; no result recorded", attempt=attempt)
+    with open(os.path.join(RAW, "%d.%s.request.json" % (i, tag)), "w", encoding="utf-8") as f:
+        json.dump(request, f, ensure_ascii=False)
+    print(("reply %s %d" % (tag, row["comment_id"])) if tag.startswith("reply-write") else "graphql " + tag)
+
+def refusal(rc, doc, err):
+    code = re.search(r"HTTP (\d{3})", err)
+    if get(doc, "errors") or (code and code.group(1)[0] == "4" and code.group(1) not in ("408", "429")):
+        return "failed", "refused: " + (code.group(0) if code else "GraphQL errors")
+    return "ambiguous", "exit %d without a conclusive refusal" % rc
+
+def record(i, tag, rc):
+    row = jsonl(WRITES)[i]
+    step, attempt = tag.split("-")
+    kind, key, want = ("read" if attempt.startswith("read") else "write"), op(row, step), step == "resolve"
+    base = os.path.join(RAW, "%d.%s" % (i, tag))
+    extra = dict(attempt=attempt, exit=rc, response=base + ".response.json", stderr=base + ".stderr")
+    texts = []
+    for path in (extra["response"], extra["stderr"]):
+        try:
+            with open(path, encoding="utf-8", errors="replace") as f:
+                texts.append(f.read())
+        except OSError:
+            texts.append("")
+    try:
+        doc = json.loads(texts[0])
+    except ValueError:
+        doc = None
+    if kind == "read":
+        node, viewer = get(doc, "data", "node"), get(doc, "data", "viewer", "login")
+        nodes, earlier = get(node, "comments", "nodes"), get(node, "comments", "pageInfo", "hasPreviousPage")
+        state = get(node, "isResolved")
+        if rc != 0 or get(doc, "errors") or not isinstance(node, dict) or not viewer:
+            outcome, reason = "ambiguous", "reconciliation read failed"
+        elif step != "reply":
+            outcome, reason = (("confirmed", "thread already in that state") if state is want else
+                               ("absent", "thread state unchanged") if type(state) is bool else
+                               ("ambiguous", "reconciliation read without isResolved"))
+            extra["is_resolved"] = state
+        elif not isinstance(nodes, list) or type(earlier) is not bool:
+            outcome, reason = "ambiguous", "reconciliation read without comments or pageInfo"
+        else:
+            match = [c for c in nodes if get(c, "author", "login") == viewer
+                     and number(get(c, "replyTo")) == row["comment_id"] and get(c, "body") == row["body"]]
+            if match:
+                outcome, reason = "confirmed", "matching reply already posted"
+                extra.update(url=match[-1].get("url"), created_id=number(match[-1]))
+            elif not earlier:
+                outcome, reason = "absent", "no matching reply on the thread"
+            else:
+                outcome, reason = "ambiguous", "thread has comments before the 100 read"
+    elif step == "reply":
+        if rc == 0 and type(get(doc, "id")) is int and isinstance(get(doc, "html_url"), str) \
+                and get(doc, "in_reply_to_id") == row["comment_id"]:
+            outcome = "confirmed"
+            reason = None if doc.get("body") == row["body"] else "returned body differs from the request"
+            extra.update(url=doc["html_url"], created_id=doc["id"])
+        elif rc == 0:
+            outcome, reason = "ambiguous", "exit 0 without id, html_url, and in_reply_to_id"
+        else:
+            outcome, reason = refusal(rc, doc, texts[1])
+    else:
+        state = get(doc, "data", MUTATION[step], "thread", "isResolved")
+        extra["is_resolved"] = state
+        if rc == 0 and state is want:
+            outcome, reason = "confirmed", None
+        elif rc == 0 and type(state) is bool:
+            outcome, reason = "failed", "returned isResolved %s" % json.dumps(state)
+        elif rc == 0:
+            outcome, reason = "ambiguous", "exit 0 without isResolved"
+        else:
+            outcome, reason = refusal(rc, doc, texts[1])
+    append(row, i, step, kind, key, outcome, reason, **extra)
+    print("%s %s %s: %s%s%s" % (row["id"], step, kind, outcome, "" if reason is None else " (%s)" % reason,
+                                " " + extra["url"] if extra.get("url") else ""))
+
+def summary():
+    results, done, idle, unresolved = jsonl(RESULTS), 0, 0, []
+    for row in jsonl(WRITES):
+        for step in ("reply", row["action"]):
+            key = op(row, step)
+            if key is None:
+                idle += 1
+            elif confirmed(results, row, step, key):
+                done += 1
+            else:
+                last = ([r for r in results if r["item"] == row["id"] and r["step"] == step] or [{}])[-1]
+                unresolved.append("unresolved %s %s: %s%s%s" % (
+                    row["id"], step, last.get("outcome", "not attempted"),
+                    " (%s)" % last["reason"] if last.get("reason") else "",
+                    ", see %s" % last["stderr"] if last.get("stderr") else ""))
+    print("writes: %d confirmed, %d not required, %d unresolved" % (done, idle, len(unresolved)))
+    for line in unresolved:
+        print(line)
+    sys.exit(1 if unresolved else 0)
+
+if cmd == "validate":
+    validate()
+elif cmd == "next":
+    next_step(int(args[0]), args[1], args[2:] == ["--no-read"])
+elif cmd == "record":
+    record(int(args[0]), args[1], int(args[2]))
+else:
+    summary()
+PY
+cat > "$d/write-loop.sh" <<'SH'
+d=$1 pr=$2
+w() { python3 "$d/writes.py" "$d" "$@"; }
+mkdir -p "$d/write-responses" || exit 2
+n=$(w validate); rc=$?
+if [ "$rc" -eq 1 ]; then echo "$n"; echo "writes.jsonl refused; nothing was written"; exit 3; fi
+if [ "$rc" -ne 0 ]; then echo "$n"; exit 2; fi
+i=0
+while [ "$i" -lt "$n" ]; do
+  for part in reply action; do
+    after=
+    while :; do
+      next=$(w next "$i" "$part" $after) || exit 2
+      set -- $next
+      [ "$1" = skip ] && break
+      base="$d/write-responses/$i.$2"
+      if [ "$1" = reply ]; then
+        gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
+          > "$base.response.json" 2> "$base.stderr"
+      else
+        gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
+      fi
+      w record "$i" "$2" "$?" || exit 2
+      case $2 in *-read*) after=--no-read ;; *) break ;; esac
+    done
+  done
+  i=$((i + 1))
+done
+w summary
+SH
+ev=<recorded-absolute-run_events.py-path>
+if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr"
+else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr"; fi
 ```
 
-Confirm `isResolved: true`. If the result is ambiguous, re-read that thread's state before one retry; if resolution is refused or still fails, report the thread as unresolved rather than claiming it closed. Resolve nothing whose drafted reply failed to post. Non-publishing retrospective runs perform neither replies nor resolutions.
+The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), repeats an id, a reply body to one comment, or an action on one thread, or puts any row after its thread's action row refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after every reply on that thread is confirmed; a thread with no reply to post leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.
+
+Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action while any reply on its thread is not confirmed is recorded `blocked` and checked again on a rerun, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
+
+After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.
