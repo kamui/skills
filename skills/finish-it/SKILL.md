@@ -65,7 +65,7 @@ Every subagent receives the same packet and nothing from earlier steps: the repo
 
 Dispatch each step as one **general-purpose** subagent in a fresh context that inherits none of this conversation; use `fork_turns="none"` or the host's equivalent. General-purpose because each underlying skill dispatches its own reviewer or verifier; types without the `Agent` tool are unsuitable. State the tier from step 1 in the dispatch. Brief it to invoke the named skill by name with the packet, and to return its final report.
 
-A subagent's report is a claim. After each step, read the forge for the step's **artifact** before continuing. A missing artifact, an underlying skill's named stop, or an unresolvable spec source or base branch is a failed step, and a failed step ends the delivery with a report naming the step and its reason: no step is retried, and none is skipped. The orchestrator's own forge writes are attempted once; on an ambiguous result read the target before a single retry, then report the failure rather than writing again.
+A subagent's report is a claim. After each step, read the forge for the step's **artifact** before continuing. A missing artifact, an underlying skill's named stop that the step's artifact rule does not accept, or an unresolvable spec source or base branch is a failed step, and a failed step ends the delivery with a report naming the step and its reason: no step is retried, and none is skipped. The orchestrator's own forge writes are attempted once; on an ambiguous result read the target before a single retry, then report the failure rather than writing again.
 
 ### 4. Implement
 
@@ -77,7 +77,7 @@ Artifact: exactly one open pull request whose head is the branch. Record its URL
 
 Brief the subagent to invoke `review-code-publish` on the pull request with the spec source.
 
-Artifact: a review by the posting identity whose reviewed head is the pull request's current head, or a report that one already exists there. Record the status, open questions, and disputed findings.
+Artifact: a review by the posting identity whose reviewed head is the pull request's current head. `review-code-publish`'s `duplicate-review` stop names such a review already there, so it is a successful review step; read that review from the forge. Record the status, open questions, and disputed findings.
 
 ### 6. Rounds
 
@@ -85,7 +85,7 @@ Repeat for each remaining round, in order:
 
 1. **Empty ledger check.** At the current head, the latest review is `Approved`, lists no open question and no disputed finding, and no review thread is unresolved or holds feedback without a reply from the pull-request author. When all hold, skip the resolve and go to the review; the round still counts.
 2. **Prepare the checkout.** Fetch, confirm the working tree is clean, and check out the pull request's head branch at its live head. A dirty tree is a stop, not something to clean up.
-3. **Resolve.** Brief the subagent to invoke `resolve-review` on the pull request. Artifact: a new addressing summary, and a pushed head equal to the local head. Record whether the round added commits.
+3. **Resolve.** Brief the subagent to invoke `resolve-review` on the pull request. Artifact: an addressing summary this pass posted, or the existing same-head summary it updated, carrying an `addressed head=` equal to the pushed head, which equals the local head. Record whether the round added commits.
 4. **Review** as in step 5, on the new head.
 5. **Count the round**, then, from the second round of this delivery on, stop early when the review reached `Approved`, or when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. The first round of a delivery always runs, an already-`Approved` pull request included.
 
