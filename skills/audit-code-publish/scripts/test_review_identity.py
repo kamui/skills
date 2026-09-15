@@ -29,7 +29,7 @@ def fixture() -> dict:
     context = digest(dict(packet["fingerprint"], **INPUTS))
     packet["reviews"][0]["body"] = (
         "Changes Requested (advisory)\n"
-        f"<!-- review-run workflow=v2b-6 head={'a' * 40} base-ref=main state=OPEN merged=false "
+        f"<!-- review-run workflow=v2b-7 head={'a' * 40} base-ref=main state=OPEN merged=false "
         f"base-sha={BASE} merge-base={MERGE} context={context} "
         "issues=acme/payments#123 coverage=complete -->"
     )
@@ -86,7 +86,7 @@ def main() -> int:
         changed = fixture()
         changed["pr"]["state"] = "CLOSED"
         check("closed lifecycle differs at same head", changed, 1, contains="state")
-        check("different identity", fixture(), 1, author="another", contains="posting identity")
+        check("different identity", fixture(), 1, author="another", contains="reviewer identity")
         check("changed merge-base", fixture(), 1, merge="e" * 40, contains="merge-base")
         check("abbreviated SHA", fixture(), 2, merge="abc", contains="40-hex")
         changed = fixture()
@@ -102,7 +102,7 @@ def main() -> int:
               inputs=dict(INPUTS, specs=[{"identity": "doc:1", "text": "Refunds required"}]),
               contains="context")
         changed = fixture()
-        changed["reviews"][0]["body"] = changed["reviews"][0]["body"].replace("v2b-6", "v2b-5")
+        changed["reviews"][0]["body"] = changed["reviews"][0]["body"].replace("v2b-7", "v2b-6")
         check("old workflow", changed, 1, contains="workflow")
         changed = fixture()
         body = changed["reviews"][0]["body"].split()

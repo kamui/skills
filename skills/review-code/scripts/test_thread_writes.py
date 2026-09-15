@@ -59,11 +59,11 @@ if kind == "reply":
         new = state["next_id"]
         state["comments"].setdefault(state["threads"][target], []).append(
             {"fullDatabaseId": str(new), "url": "https://github.test/c/%d" % new, "body": request["body"],
-             "author": {"login": state["viewer"]}, "replyTo": {"fullDatabaseId": target}})
+             "author": {"login": state.get("author_login", state["viewer"])}, "replyTo": {"fullDatabaseId": target}})
     if mode == "crash":  # the reply lands, then the loop dies before it can record a result
         state["comments"].setdefault(state["threads"][target], []).append(
             {"fullDatabaseId": "8999", "url": "https://github.test/c/8999", "body": request["body"],
-             "author": {"login": state["viewer"]}, "replyTo": {"fullDatabaseId": target}})
+             "author": {"login": state.get("author_login", state["viewer"])}, "replyTo": {"fullDatabaseId": target}})
         state["log"][-1]["mode"] = mode
         with open(path, "w", encoding="utf-8") as f:
             json.dump(state, f)
@@ -135,15 +135,16 @@ class Loop(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def fresh(self, rows, plan=None, threads=None, raw=None):
+    def fresh(self, rows, plan=None, threads=None, raw=None, viewer="addresser", author=None):
         self.count += 1
         private = self.root / f"private {self.count}"  # a space checks quoting
         private.mkdir()
         text = raw if raw is not None else "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
         (private / "writes.jsonl").write_text(text, encoding="utf-8")
         state = {"plan": plan or {}, "log": [], "comments": {}, "resolved": {}, "next_id": 9000,
-                 "viewer": "addresser", "threads": threads or {str(r["comment_id"]): r["thread_id"]
-                                                               for r in rows if r.get("comment_id")}}
+                 "viewer": viewer, "author_login": author or viewer,
+                 "threads": threads or {str(r["comment_id"]): r["thread_id"]
+                                        for r in rows if r.get("comment_id")}}
         (private / "state.json").write_text(json.dumps(state), encoding="utf-8")
         return private
 
@@ -310,6 +311,21 @@ class Loop(unittest.TestCase):
                 self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
                 read = next(r for r in results if r["kind"] == "read" and "exit" in r)
                 self.assertEqual((read["outcome"], read["created_id"]), ("confirmed", 9001))
+
+    def test_app_reply_is_reconciled_across_the_bot_suffix(self):
+        # A reviewing app is `nitpik[bot]` to `viewer` and `nitpik` to `author{login}`.
+        # An unnormalized compare reads its own landed reply as absent and posts it twice.
+        for source in (PUBLICATION, ADDRESSING):
+            with self.subTest(source=source.name):
+                private = self.fresh([row("a", 101, "T1", "fixed", "resolve")],
+                                     plan={"reply:101": ["landed"]}, viewer="nitpik[bot]", author="nitpik")
+                result, _, _ = self.run_loop(private, source=source)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                again, state, results = self.run_loop(private, source=source)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
+                read = next(r for r in results if r["kind"] == "read" and "exit" in r)
+                self.assertEqual(read["outcome"], "confirmed")
 
     def test_interrupted_write_is_reconciled_before_any_retry(self):
         for source in (PUBLICATION, ADDRESSING):

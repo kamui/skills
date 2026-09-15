@@ -26,7 +26,7 @@ The **caller** is the skill invoking `review-code`; the **orchestrator** is the 
 | `mode`: `session` or `one-shot` | Absent → `session`. Every skill caller passes `one-shot`. The mode changes only asking behavior, under Return's route table; the skill cannot detect who invoked it. |
 | Target: pull-request coordinate/URL, current branch, range, or working tree | Infer from the prompt in session mode; one-shot requires an explicit target and, for a local target, a base. |
 | User-supplied issues or spec | None |
-| Posting identity | Pull request only: forge CLI's authenticated user; prior-state detection |
+| Reviewer identity | Pull request only: the login reviews publish as — forge CLI's authenticated user unless the caller names a reviewing app; prior-state detection, comparing logins with a trailing `[bot]` ignored |
 | Orchestrator-supplied phase-1 packet | Pull request only; none by default; otherwise `review-code` fetches in step 1 |
 | Focused-test run policy | Rubric's five/ten-minute defaults; caller may tighten bounds or specify none |
 | Inputs supplied up front | None; use supplied artifacts, spec, or missing `merged` before routing a gap |
@@ -145,7 +145,7 @@ After step 5 completes, session mode alone reads [`references/session.md`](refer
 
 Return an immutable review record at named paths in the private directory:
 
-1. Run identity: repository, target kind and target, head, base and its source, merge-base, state and posting identity and packet path when the target is a pull request, merged, tree hash and snapshot metadata when it is the working tree, private-store path, the `run-events.jsonl` path beside it, and the absolute path of every script run, always including `scripts/run_events.py` for the publisher's wrapped commands. Retain absolute reference paths and which were loaded, including the locations of conditional references for later recovery.
+1. Run identity: repository, target kind and target, head, base and its source, merge-base, state and reviewer identity and packet path when the target is a pull request, merged, tree hash and snapshot metadata when it is the working tree, private-store path, the `run-events.jsonl` path beside it, and the absolute path of every script run, always including `scripts/run_events.py` for the publisher's wrapped commands. Retain absolute reference paths and which were loaded, including the locations of conditional references for later recovery.
 2. The rubric's private record: requirement and candidate disposition ledgers, file accounting, verification accounting (batches, verdicts, rulings, the host operation each dispatched batch ran on, whether the follow-up is spent), recorded deferrals, prior-item classifications; on pull-request targets, each item's thread node id and current resolution state from the packet, and each drafted thread reply with its target comment id.
 3. Semantic status and coverage.
 4. `composition.json`, `payload.json` validated at exit 0, the rendered fragments, and emitted `batch.json` at named paths.

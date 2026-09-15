@@ -98,6 +98,14 @@ Each decision rule has one owning document; every other document that needs it c
 
 ## Change notes
 
+### Reviewer identity distinct from the posting identity (issue #277)
+
+**Release change: `v5b-17` → `v5b-18`.** One term, "posting identity", meant both *who writes* and *whose prior reviews are prior state*. A reviewing app splits those: the human still authors commits, the pull request, replies and addressing summaries, while the review publishes as the app. Keying prior state on the writer would make every app re-review a first review — no carried findings, no drafted replies, no duplicate-review shortcut, and `finish-it`'s artifact check would fail and end the delivery. Prior-state detection therefore keys on the **reviewer identity**, and `finish-it` resolves and carries both identities in its packet.
+
+Every comparison against that identity ignores a trailing `[bot]`. GitHub reports one app two ways — REST `nitpikbot[bot]`, GraphQL `author{login}` `nitpikbot` — so the reconciliation read that decides whether an ambiguous reply landed would find its own reply absent and post it twice. `test_thread_writes.py` covers that case against both references.
+
+Admission, verification, rendering, and comment syntax are unchanged; what changed is which prior reviews are recognized as this reviewer's, which is state semantics, so the identifier advances. Audit's `v2b-6` advances to `v2b-7` for the same reason in its duplicate gate. The reviewing app is optional and declared per repository in `docs/agents/issue-tracker.md`; with none declared, or with the runner absent or unable to authenticate, every path behaves exactly as before, which is why the change adds a fallback rather than a dependency (`AGENTS.md` admits no new runtime skill dependency, and `docs/agents/scripts.md` keeps skill scripts to stdlib Python, which RS256 signing cannot be).
+
 ### One-invocation command chains (issue #255)
 
 Two fixed command sequences in this skill and its publisher had no decision between their commands, yet each command ran as its own tool invocation. Step 5 now documents one shell block that runs `compose_review.py --store`, `validate_review.py --emit-batch`, and `validate_review.py --render` in that order. The script arguments, the `payload.json`, `batch.json`, and fragment artifacts, and the repair route (fix the composition input, never the payload, and re-run) are unchanged. The block removes the previous attempt's artifacts, and each stage writes a private `.part` file that is promoted only after exit 0, so an earlier success is never read as this attempt's result. The first non-zero status stops the block with that status. Because the scripts print violations on stdout and the block redirects stdout into the artifact, it prints the failing stage's name, its captured stdout, and its stderr before exiting. The fragments are saved as `fragments.md` and printed. A failed or partial artifact never reaches a later stage.

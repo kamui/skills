@@ -30,7 +30,8 @@ Read `docs/agents/issue-tracker.md` when present. Record:
 
 - **N**, the requested round total: the integer in the invocation text (`rounds: 5`, "with 2 rounds"), otherwise 3. `0` is allowed.
 - The **base branch**: the one the caller names, otherwise the repository's default branch.
-- The **posting identity**: the forge login this session writes as (`gh api user --jq .login`).
+- The **author identity**: the forge login this session writes code, pull requests, replies, and addressing summaries as (`gh api user --jq .login`).
+- The **reviewer identity**: the forge login reviews publish as. It equals the author identity unless `docs/agents/issue-tracker.md` names a reviewing app, in which case run that file's review-run prefix to read it (`gh api user` is refused for an app, so the one call that works is `gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login`). A reviewing app that cannot be resolved is not an error: fall back to the author identity and review under the existing self-review rules.
 - The **subagent tier**: this session's own model tier, unless the caller names another. Every dispatch below states it explicitly.
 
 A base or spec source the caller left ambiguous is settled here, never inside a subagent, which has no user to ask. If it cannot be settled, stop before any write.
@@ -61,7 +62,7 @@ Notes for reading a pull request:
 
 ### 3. The handoff packet
 
-Every subagent receives the same packet and nothing from earlier steps: the repository path, base branch, head branch, pull request URL, issue URL or spec source, round number and rounds remaining, and posting identity. The review subagent never sees the resolver's report; the resolve subagent never sees the review as text. Both read the forge.
+Every subagent receives the same packet and nothing from earlier steps: the repository path, base branch, head branch, pull request URL, issue URL or spec source, round number and rounds remaining, author identity, reviewer identity, and the review-run prefix when one applies. The review subagent never sees the resolver's report; the resolve subagent never sees the review as text. Both read the forge.
 
 Dispatch each step as one **general-purpose** subagent in a fresh context that inherits none of this conversation; use `fork_turns="none"` or the host's equivalent. General-purpose because each underlying skill dispatches its own reviewer or verifier; types without the `Agent` tool are unsuitable. State the tier from step 1 in the dispatch, and run it on an awaited route, a foreground dispatch or supported join whose tool call returns the completed report while this session stays active; an acknowledgment or agent id is not a return. The forge is read for the step's artifact only after the subagent returns. Brief it to invoke the named skill by name with the packet, to wait for every subagent it dispatches to return on an awaited route chosen before each dispatch or continuation — a report that leaves its own reviewer or verifier running has not finished the step — and to return its final report.
 
@@ -77,7 +78,7 @@ Artifact: exactly one open pull request whose head is the branch. Record its URL
 
 Brief the subagent to invoke `review-code-publish` on the pull request with the spec source.
 
-Artifact: a review by the posting identity whose reviewed head is the pull request's current head. `review-code-publish`'s `duplicate-review` stop names such a review already there, so it is a successful review step; read that review from the forge. Record the status, open questions, and disputed findings.
+Artifact: a review by the reviewer identity whose reviewed head is the pull request's current head. Compare logins with a trailing `[bot]` ignored on both sides: GitHub's REST records carry the suffix its GraphQL `author.login` omits, so an unnormalized compare never matches an app's own review. `review-code-publish`'s `duplicate-review` stop names such a review already there, so it is a successful review step; read that review from the forge. Record the status, open questions, and disputed findings.
 
 ### 6. Rounds
 
