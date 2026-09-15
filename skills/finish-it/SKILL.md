@@ -11,7 +11,7 @@ Run one **delivery**: take a spec source to a pull request whose latest publishe
 Three terms carry the skill:
 
 - **Spec source**: the issue, tickets, or written specification the pull request implements.
-- **Round**: one `resolve-review` pass over the pull request's feedback followed by the `review-code-publish` re-review of its result.
+- **Round**: one `resolve-review` pass over the pull request's feedback, skipped when there is nothing to address, followed by a `review-code-publish` re-review.
 - **Delivery**: the whole run, entered at any step of the chain.
 
 ## Boundaries
