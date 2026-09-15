@@ -27,7 +27,7 @@ The pull request under review is a fixed target. Neither skill opens, retargets,
 ```
 
 - Bold title line, axis tag first: `[Code]` or `[Requirements]`.
-- `[Code]` covers correctness, documented repository standards, and implementation quality.
+- `[Code]` covers documented repository standards and code smells, which are judgement calls.
 - `[Requirements]` covers missing, partial, incorrect, or unrequested behavior against the originating spec.
 - A finding is blocking unless it says otherwise. Unmarked means the change should not merge until this is settled, and that is what the author reads it as.
 - Evidence: the `file:line` and concrete behavior; cite the documented rule or originating requirement when one applies.
