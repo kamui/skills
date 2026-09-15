@@ -159,7 +159,26 @@ Carry the Requirements finder's restated requirement list and its met / not-met 
 
 ### 4. Publish once
 
-Follow [`references/publishing.md`](references/publishing.md) for the comment shape's transport, the status ladder, and the forge verbs. For every body-resident whole-file finding or question, join its coordinate to step 1’s full pinned merge-base manifest and retain `{coordinate, side}` in the publication record: `D` with an established pre-image path selects `LEFT`; a file established at head selects `RIGHT`; unestablished path/revision selects `UNKNOWN` and the item names the missing evidence. Keep the pinned `head` and `merge-base` beside this record. Use the Coordinate links contract in the publishing reference to pass those fields unchanged to render/check, including after body repairs or index updates. Render every coordinate fragment the body carries with `python3 scripts/link_coordinate.py` — its `render` command per coordinate, its `check` command against anything already written; on a non-zero exit, report the script's output and stop the step, because a hand-written fragment is not the fallback.
+Follow [`references/publishing.md`](references/publishing.md) for the comment shape's transport, the status ladder, and the forge verbs. For every body-resident whole-file finding or question, join its coordinate to step 1’s full pinned merge-base manifest and retain `{coordinate, side}` in the publication record: `D` with an established pre-image path selects `LEFT`; a file established at head selects `RIGHT`; unestablished path/revision selects `UNKNOWN` and the item names the missing evidence. Keep the pinned `head` and `merge-base` beside this record. Use the Coordinate links contract in the publishing reference to pass those fields unchanged to render/check, including after body repairs or index updates. Render every coordinate fragment the body carries with `python3 scripts/link_coordinate.py` — its `render` command per coordinate, its `check` command against anything already written; on a non-zero exit, report the script's output and stop the step, because a hand-written fragment is not the fallback. Run every `render` for the fixed coordinate list as one shell invocation from the skill root, one `frag` line per coordinate in body order, adding `--old-path <path>` to a rename's line:
+
+```sh
+d=<private-dir> repo_url=<base repository canonical web URL> head=<reviewed full head SHA> mb=<pinned full merge-base SHA>
+f=$(mktemp -d "$d/fragments.XXXXXX") || exit 2
+frag() { # <n> <coordinate> <RIGHT|LEFT|UNKNOWN> [--old-path <path>]
+  n=$1 coord=$2 side=$3; shift 3
+  python3 scripts/link_coordinate.py render --repo-url "$repo_url" --revision "$head" --merge-base "$mb" \
+    --coordinate "$coord" --side "$side" "$@" > "$f/$n.part" 2> "$f/$n.stderr"
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo "fragment $n ($coord) failed with exit $rc; later fragments did not render:"; cat "$f/$n.part" "$f/$n.stderr"; rm -f "$f/$n.part"; exit "$rc"
+  fi
+  mv "$f/$n.part" "$f/$n.md"; printf '%s: ' "$n"; cat "$f/$n.md"
+}
+frag 1 '<coordinate>' <side>
+echo "fragments in $f"
+```
+
+Each attempt writes into a fresh directory, and a fragment file exists only for a render that exited 0. The first failure prints that coordinate's stdout (where violations go) and stderr and stops with its status, so no later fragment, body, `check`, or digest uses it; fix the publication record and re-run the block. Writing the body, `check`, and `output-digest` stay at the steps that depend on them.
 
 Immediately before the first write, repeat the complete logical forge collection into separate freshness files and normalize it; recheck full head/base/ref, explicit state/merged, issue/spec text, discussions and thread state against the reviewed packet, and recheck any external spec inputs. Ignore only fetch bookkeeping (page/file order and cursor placement), not evidence. A failed collection, changed pinned identity, or evidence change stops all writes: report the stale inputs and reassess them before preparing a new payload. A newly merged target still requires separate explicit publication authority. Reuse local pinned guidance blobs; they cannot change at the same base SHA. This freshness collection is separate from the packet used by the finders. The GitHub collection above supplies these fields; on another forge use equivalent read calls.
 

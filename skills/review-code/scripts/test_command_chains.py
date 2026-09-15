@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+"""Run the documented one-invocation command chains against local fixtures.
+
+Usage: python3 scripts/test_command_chains.py
+Inputs: SKILL.md step 5's composition block, the publisher's freshness and
+review-submission block, a disposable Git repository, and a stub `gh` on PATH;
+no forge access and no live writes.
+Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
+
+The composition block must produce the same payload, batch, and fragment bytes
+as the three commands run separately, and stop visibly at the first failing
+stage. The submission block must never POST after a failed, empty, malformed,
+or mismatched head, must exit 3 only on that preflight route, and must keep a
+POST failure's own status under a distinct attempted-write stage.
+"""
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+import test_compose_review as fixtures
+
+SCRIPTS = Path(__file__).resolve().parent
+SKILL = SCRIPTS.parent
+PUBLICATION = SKILL.parent / "review-code-publish" / "references" / "publication.md"
+SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
+
+FAKE_GH = r"""#!/usr/bin/env python3
+import json, os, sys
+args = sys.argv[1:]
+with open(os.environ["GH_LOG"], "a", encoding="utf-8") as log:
+    log.write(json.dumps(args) + "\n")
+if "--method" in args and "POST" in args:
+    rc = int(os.environ.get("GH_POST_RC", "0"))
+    if rc == 0:
+        print(json.dumps({"id": 991, "state": "COMMENTED"}))
+    else:
+        sys.stderr.write("gh: HTTP 502 or timeout; outcome unknown\n")
+    sys.exit(rc)
+mode = os.environ.get("GH_HEAD_MODE", "match")
+if mode == "fail":
+    sys.stderr.write("gh: HTTP 404: Not Found\n")
+    sys.exit(1)
+if mode == "empty":
+    sys.exit(0)
+print({"match": os.environ["GH_HEAD"], "mismatch": "c" * 40, "malformed": "not-a-sha",
+       "short": os.environ["GH_HEAD"][:7], "two-lines": os.environ["GH_HEAD"] + "\n" + os.environ["GH_HEAD"]}[mode])
+"""
+
+EMIT_FAILS = r"""#!/bin/sh
+if [ "$1" = scripts/validate_review.py ] && [ "$2" = --emit-batch ]; then
+  echo "summary.body: injected-batch-violation: emission refused"; exit 1
+fi
+case " $* " in *" --render "*) echo render >> "$CHAIN_LOG" ;; esac
+exec "$REAL_PYTHON" "$@"
+"""
+
+
+def block(text: str, marker: str) -> str:
+    found = [b for b in re.findall(r"```sh\n(.*?)```", text, re.S) if marker in b]
+    assert len(found) == 1, (marker, len(found))
+    return found[0]
+
+
+class Chains(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def sh(self, shell, text, env=None, cwd=None):
+        return subprocess.run([shell, "-c", text], cwd=cwd, env=env, capture_output=True, text=True,
+                              encoding="utf-8", timeout=120)
+
+    def repository(self):
+        repo = self.root / "repo"
+        (repo / "src").mkdir(parents=True)
+
+        def git(*args):
+            return subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, encoding="utf-8",
+                                  check=True).stdout.strip()
+
+        def write(name, count, changed=None):
+            lines = [f"line {i}" if i != changed else f"changed {i}" for i in range(1, count + 1)]
+            (repo / name).write_text("\n".join(lines) + "\n", encoding="utf-8")
+        git("init", "-q")
+        git("config", "user.name", "Test")
+        git("config", "user.email", "test@example.invalid")
+        write("src/payments.ts", 60)
+        write("src/retry-policy.ts", 30)
+        write("src/queue.ts", 10)
+        git("add", ".")
+        git("commit", "-qm", "base")
+        base = git("rev-parse", "HEAD")
+        write("src/payments.ts", 60, 42)
+        write("src/retry-policy.ts", 30, 18)
+        write("src/queue.ts", 10, 5)
+        git("commit", "-qam", "change")
+        return repo, base, git("rev-parse", "HEAD")
+
+    def compositions(self, base, head):
+        full = fixtures.base_composition()
+        full["run"].update(head=head, base_sha=base, merge_base=base, target_kind="range", target="main..HEAD",
+                           change_description="change")
+        full["run"].pop("repository_url")
+        linked = fixtures.base_composition()
+        linked["run"].update(head=head, base_sha=base, merge_base=base)
+        return {"range fixture": full, "pull-request fixture": linked}
+
+    def private(self, repo, base, head, name):
+        private = self.root / name
+        private.mkdir()
+        store = private / f"review-context-{head}.json"
+        subprocess.run([sys.executable, str(SCRIPTS / "review_context.py"), "--merge-base", base, "--head", head,
+                        "--store", str(store)], cwd=repo, capture_output=True, check=True)
+        return private, store
+
+    def composition_block(self, private, store):
+        text = block((SKILL / "SKILL.md").read_text(encoding="utf-8"), "stage compose")
+        return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
+
+    def direct(self, store, composition):
+        def run(args, stdin=None):
+            result = subprocess.run([sys.executable, *args], cwd=SKILL, input=stdin, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            return result.stdout
+        payload = run(["scripts/compose_review.py", "--store", str(store), str(composition)])
+        return payload, run(["scripts/validate_review.py", "--emit-batch"], payload), \
+            run(["scripts/validate_review.py", "--render"], payload)
+
+    def test_composition_chain_is_byte_identical(self):
+        repo, base, head = self.repository()
+        for name, composition in self.compositions(base, head).items():
+            for shell in SHELLS:
+                with self.subTest(fixture=name, shell=shell):
+                    private, store = self.private(repo, base, head, f"{name}-{shell}".replace(" ", "-"))
+                    path = private / "composition.json"
+                    path.write_text(json.dumps(composition), encoding="utf-8")
+                    payload, batch, fragments = self.direct(store, path)
+                    self.assertTrue(fragments.strip())
+                    result = self.sh(shell, self.composition_block(private, store), cwd=SKILL)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual((private / "payload.json").read_bytes(), payload)
+                    self.assertEqual((private / "batch.json").read_bytes(), batch)
+                    self.assertEqual((private / "fragments.md").read_bytes(), fragments)
+                    self.assertEqual(result.stdout, fragments.decode("utf-8"))
+                    self.assertEqual(sorted(p.name for p in private.glob("*.part")), [])
+
+    def test_composition_failure_is_visible_and_stops(self):
+        repo, base, head = self.repository()
+        composition = self.compositions(base, head)["range fixture"]
+        composition["findings"][0].update(priority="P0", action="consider")
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                private, store = self.private(repo, base, head, f"refused-{shell}")
+                (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
+                for stale in ("payload.json", "batch.json", "fragments.md"):
+                    (private / stale).write_text("stale success\n", encoding="utf-8")
+                result = self.sh(shell, self.composition_block(private, store), cwd=SKILL)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("compose failed with exit 1; later stages did not run:", result.stdout)
+                self.assertRegex(result.stdout, r"findings\[0\]")
+                for artifact in ("payload.json", "batch.json", "fragments.md", "payload.json.part"):
+                    self.assertFalse((private / artifact).exists(), artifact)
+        private, store = self.private(repo, base, head, "unreadable")
+        result = self.sh("sh", self.composition_block(private, store), cwd=SKILL)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("compose failed with exit 2", result.stdout)
+        self.assertIn("compose_review", result.stdout)
+
+    def test_batch_validation_failure_is_visible_and_stops(self):
+        repo, base, head = self.repository()
+        composition = self.compositions(base, head)["range fixture"]
+        binary = self.root / "bin"
+        binary.mkdir()
+        (binary / "python3").write_text(EMIT_FAILS, encoding="utf-8")
+        (binary / "python3").chmod(0o755)
+        log = self.root / "chain.log"
+        env = dict(os.environ, PATH=f"{binary}{os.pathsep}{os.environ['PATH']}", REAL_PYTHON=sys.executable,
+                   CHAIN_LOG=str(log))
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                private, store = self.private(repo, base, head, f"emit-{shell}")
+                (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
+                (private / "batch.json").write_text("stale success\n", encoding="utf-8")
+                result = self.sh(shell, self.composition_block(private, store), env=env, cwd=SKILL)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("emit-batch failed with exit 1; later stages did not run:", result.stdout)
+                self.assertIn("injected-batch-violation", result.stdout)
+                self.assertTrue((private / "payload.json").exists())
+                self.assertFalse((private / "batch.json").exists())
+                self.assertFalse((private / "fragments.md").exists())
+                self.assertFalse(log.exists(), "render ran after a failed emission")
+
+    # --- publisher freshness and submission ---------------------------------
+
+    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD):
+        private = Path(tempfile.mkdtemp(dir=self.root))
+        (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
+                                                        "comments": []}), encoding="utf-8")
+        binary = self.root / "gh-bin"
+        if not binary.exists():
+            binary.mkdir()
+            (binary / "gh").write_text(FAKE_GH, encoding="utf-8")
+            (binary / "gh").chmod(0o755)
+        log = private / "gh.log"
+        env = dict(os.environ, PATH=f"{binary}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
+                   GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc))
+        script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
+        text = (block(PUBLICATION.read_text(encoding="utf-8"), "preflight failed")
+                .replace("<private-dir>", shlex.quote(str(private)))
+                .replace("<recorded-absolute-run_events.py-path>", script)
+                .replace("<pr>", "7").replace("<reviewed head>", fixtures.HEAD))
+        self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
+        result = self.sh(shell, text, env=env, cwd=self.root)
+        calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+        events = []
+        if (private / "run-events.jsonl").exists():
+            events = [json.loads(line) for line in (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
+        return result, calls, events, private
+
+    @staticmethod
+    def posts(calls):
+        return [call for call in calls if "POST" in call]
+
+    def test_preflight_failures_never_post(self):
+        cases = [("fail", fixtures.HEAD, "head fetch exited 1"),
+                 ("empty", fixtures.HEAD, "empty or malformed head"),
+                 ("malformed", fixtures.HEAD, "empty or malformed head"),
+                 ("short", fixtures.HEAD, "empty or malformed head"),
+                 ("two-lines", fixtures.HEAD, "empty or malformed head"),
+                 ("mismatch", fixtures.HEAD, "is not the reviewed head " + fixtures.HEAD),
+                 ("match", "d" * 40, "batch.json commit_id is not the reviewed head")]
+        for shell in SHELLS:
+            for wrapped in (True, False):
+                for mode, batch_head, reason in cases:
+                    with self.subTest(shell=shell, wrapped=wrapped, mode=mode, batch=batch_head[:1]):
+                        result, calls, events, private = self.submission(shell, mode, wrapped=wrapped,
+                                                                         batch_head=batch_head)
+                        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                        self.assertTrue(result.stdout.startswith("preflight failed: "), result.stdout)
+                        self.assertIn(reason, result.stdout)
+                        self.assertIn("nothing was written", result.stdout)
+                        self.assertNotIn("write attempted", result.stdout)
+                        self.assertEqual(self.posts(calls), [])
+                        self.assertEqual(len(calls), 1)
+                        self.assertFalse((private / "head.txt").exists())
+                        self.assertFalse((private / "review-response.json").exists())
+                        if mode == "fail":
+                            self.assertIn("HTTP 404", result.stdout)
+                        self.assertEqual([e["event"] for e in events], ["forge-fetched"] if wrapped else [])
+
+    def test_matching_head_posts_once(self):
+        for shell in SHELLS:
+            for wrapped in (True, False):
+                with self.subTest(shell=shell, wrapped=wrapped):
+                    result, calls, events, private = self.submission(shell, wrapped=wrapped)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn(f"preflight passed: live head {fixtures.HEAD}", result.stdout)
+                    self.assertIn('"id": 991', result.stdout)
+                    self.assertEqual(calls[0], ["api", "repos/{owner}/{repo}/pulls/7", "--jq", ".head.sha"])
+                    self.assertEqual(self.posts(calls), [["api", "--method", "POST", "repos/{owner}/{repo}/pulls/7/reviews",
+                                                          "--input", str(private / "batch.json")]])
+                    self.assertEqual((private / "head.txt").read_text(encoding="utf-8").strip(), fixtures.HEAD)
+                    self.assertEqual(json.loads((private / "batch.json").read_text(encoding="utf-8"))["commit_id"],
+                                     fixtures.HEAD)
+                    if wrapped:
+                        self.assertEqual([(e["event"], e["data"]["role"], e["exit"]) for e in events],
+                                         [("forge-fetched", "root", 0), ("forge-written", "review", 0)])
+                        self.assertEqual(events[0]["data"]["connection"], "root")
+                    else:
+                        self.assertEqual(events, [])
+
+    def test_post_failures_keep_their_status_and_stage(self):
+        for shell in SHELLS:
+            for post_rc in (1, 3, 4):
+                with self.subTest(shell=shell, post_rc=post_rc):
+                    result, calls, events, private = self.submission(shell, post_rc=post_rc)
+                    self.assertEqual(result.returncode, post_rc, result.stdout + result.stderr)
+                    self.assertIn("preflight passed", result.stdout)
+                    self.assertNotIn("preflight failed", result.stdout)
+                    self.assertIn(f"write attempted: review POST exited {post_rc}", result.stdout)
+                    self.assertIn("outcome unknown", result.stdout)
+                    self.assertEqual(len(self.posts(calls)), 1, "an ambiguous write must not retry inside the block")
+                    self.assertEqual([(e["event"], e["exit"]) for e in events],
+                                     [("forge-fetched", 0), ("forge-written", post_rc)])
+
+    def test_ambiguous_post_reconciliation_rereads_before_one_retry(self):
+        # The block stops after an ambiguous POST; reconciliation reads before a single retry, and the retry
+        # goes through the same block, so its fresh preflight runs before the second and final POST.
+        result, calls, _, private = self.submission("sh", post_rc=1)
+        self.assertEqual((result.returncode, len(self.posts(calls))), (1, 1))
+        self.assertIn("re-read the pull request's reviews before one retry", result.stdout)
+        self.assertTrue((private / "review-response.stderr").read_text(encoding="utf-8"))
+        retry, calls, _, _ = self.submission("sh", post_rc=0)
+        self.assertEqual(retry.returncode, 0, retry.stdout)
+        self.assertEqual([("POST" in call) for call in calls], [False, True])
+        stale, calls, _, _ = self.submission("sh", head_mode="mismatch")
+        self.assertEqual((stale.returncode, self.posts(calls)), (3, []))
+
+
+if __name__ == "__main__":
+    try:
+        unittest.main()
+    except OSError as error:
+        print(f"test_command_chains: cannot run a subprocess: {error}", file=sys.stderr)
+        raise SystemExit(2)
