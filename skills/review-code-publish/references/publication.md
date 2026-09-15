@@ -178,7 +178,7 @@ def validate():
     except OSError as e:
         print("unreadable writes.jsonl: %s" % e)
         sys.exit(2)
-    problems, ids, threads, replies, count = [], set(), set(), set(), 0
+    problems, ids, threads, replies, count = [], set(), {}, set(), 0
     try:
         jsonl(RESULTS)
     except (OSError, ValueError) as e:
@@ -219,11 +219,13 @@ def validate():
                 bad.append("duplicate id %s" % item)
             if action != "none" and tid in threads:
                 bad.append("second thread action on %s" % tid)
+            elif tid in threads:
+                bad.append("row on thread %s follows that thread's action on line %d" % (tid, threads[tid]))
             if body is not None and (cid, body) in replies:
                 bad.append("duplicate reply to comment %s" % cid)
             ids.add(item)
-            if action != "none":
-                threads.add(tid)
+            if action != "none" and tid not in threads:
+                threads[tid] = n
             if body is not None:
                 replies.add((cid, body))
         problems += ["line %d: %s" % (n, b) for b in bad]
@@ -233,7 +235,8 @@ def validate():
     print(count)
 
 def next_step(i, part, no_read):
-    row, results = jsonl(WRITES)[i], jsonl(RESULTS)
+    rows, results = jsonl(WRITES), jsonl(RESULTS)
+    row = rows[i]
     step = "reply" if part == "reply" else row["action"]
     key = op(row, step)
 
@@ -243,7 +246,8 @@ def next_step(i, part, no_read):
         sys.exit(0)
     if key is None:
         skip("skipped", {"reply": "no reply required", "none": "no thread action"}.get(step, "thread already in that state"))
-    if step != "reply" and row["body"] is not None and not confirmed(results, row, "reply", op(row, "reply")):
+    if step != "reply" and any(r["thread_id"] == row["thread_id"] and r["body"] is not None
+                               and not confirmed(results, r, "reply", op(r, "reply")) for r in rows):
         skip("blocked", "reply not confirmed")
     if confirmed(results, row, step, key):
         skip("skipped", "already confirmed")
@@ -407,8 +411,8 @@ if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr"
 else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr"; fi
 ```
 
-The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), or repeats an id, a reply body to one comment, or an action on one thread refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after that reply is confirmed; a null body leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.
+The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), repeats an id, a reply body to one comment, or an action on one thread, or puts any row after its thread's action row refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after every reply on that thread is confirmed; a thread with no reply to post leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.
 
-Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action whose reply is not confirmed is recorded `blocked`, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
+Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action while any reply on its thread is not confirmed is recorded `blocked` and checked again on a rerun, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
 
 After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.

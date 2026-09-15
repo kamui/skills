@@ -206,6 +206,8 @@ class Loop(unittest.TestCase):
             "duplicate id a": json.dumps(good) + "\n" + json.dumps(row("a", 102, "T2", "y")) + "\n",
             "second thread action on T1": json.dumps(good) + "\n" + json.dumps(row("b", None, "T1", None, "resolve")) + "\n",
             "duplicate reply to comment 101": json.dumps(good) + "\n" + json.dumps(row("b", 101, "T1", "ok")) + "\n",
+            "row on thread T1 follows that thread's action on line 2":
+                json.dumps(good) + "\n" + json.dumps(row("b", 101, "T1", "answered")) + "\n",
         }
         for reason, raw in cases.items():
             with self.subTest(reason=reason):
@@ -266,6 +268,34 @@ class Loop(unittest.TestCase):
         again, state, _ = self.run_loop(private)
         self.assertEqual(again.returncode, 1)
         self.assertEqual(len(state["log"]), 3, "a refused write was retried")
+
+    def test_shared_thread_action_waits_for_every_reply_on_the_thread(self):
+        for source in (PUBLICATION, ADDRESSING):
+            with self.subTest(source=source.name, order="action first"):
+                private = self.fresh([row("a", 101, "T1", "fixed", "resolve"), row("b", 101, "T1", "answered")])
+                result, state, results = self.run_loop(private, source=source)
+                self.assertEqual(result.returncode, 3, result.stdout)
+                self.assertIn("row on thread T1 follows that thread's action on line 1", result.stdout)
+                self.assertEqual((state["log"], results), ([], []))
+            with self.subTest(source=source.name, order="action last, sibling refused"):
+                private = self.fresh([row("a", 101, "T1", "fixed"), row("b", 101, "T1", "answered", "resolve")],
+                                     plan={"reply:101": ["refuse"]})
+                result, state, _ = self.run_loop(private, source=source)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101")])
+                self.assertIn("unresolved b resolve: blocked (reply not confirmed)", result.stdout)
+                again, state, _ = self.run_loop(private, source=source)
+                self.assertEqual((again.returncode, len(state["log"])), (1, 2), again.stdout)
+            with self.subTest(source=source.name, order="action last, sibling lost then retried"):
+                private = self.fresh([row("a", 101, "T1", "fixed"), row("b", 101, "T1", "answered", "resolve")],
+                                     plan={"reply:101": ["lost"]})
+                result, state, _ = self.run_loop(private, source=source)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101")])
+                again, state, _ = self.run_loop(private, source=source)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101"), ("read", "T1"),
+                                                     ("reply", "101"), ("resolve", "T1")])
 
     def test_ambiguous_reply_that_landed_is_reconciled_without_reposting(self):
         for mode in ("landed", "short"):
