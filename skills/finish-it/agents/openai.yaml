@@ -1,0 +1,4 @@
+interface:
+  display_name: "Finish It"
+  short_description: "Implement, review, and resolve rounds until a pull request is delivered"
+  default_prompt: "Use $finish-it to take the linked issue or current pull request through implementation, review, and resolve rounds."
