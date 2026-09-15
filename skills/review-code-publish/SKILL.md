@@ -36,10 +36,7 @@ Re-fetch the pull-request head immediately before the first write.
 If it differs from the reviewed head or cannot be read, publish nothing and report the stale review.
 Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule to every prior item.
 
-For a conclusive malformed-comment rejection, apply `review-code`'s render-and-validate step to the repaired record using its recorded absolute script paths.
-If compaction dropped the rendering instructions, re-read `references/rendering.md` from the `review-code` skill root those paths identify.
-Confirm no review exists before the single retry, as publication.md specifies.
-Use a general comment only for the reference's documented fallback; re-read after an ambiguous write before one retry.
+On a malformed-comment rejection, an ambiguous write, or a refused review, follow the reference's repair, retry, and fallback rules, using `review-code`'s recorded absolute script paths; if compaction dropped the rendering instructions, re-read `references/rendering.md` from the skill root those paths identify.
 
 ## Report
 

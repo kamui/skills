@@ -7,7 +7,7 @@ description: Address every review comment on a pull request, make the warranted 
 
 Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
 
-Read [`references/review-protocol.md`](references/review-protocol.md) first: it defines the comment shape, the severity and status vocabularies, the disposition vocabulary, questions, thread state, the addressing summary, the round cap, and the `gh` verbs.
+Read [`references/addressing-protocol.md`](references/addressing-protocol.md) first: it defines how to read a finding, the reply shape and disposition vocabulary, questions, thread state, the round cap, the addressing summary, and the `gh` verbs.
 
 Invoking this skill authorizes the replies, resolutions, thread actions, pull-request title and description edits, round summary, and re-review request below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
@@ -19,19 +19,19 @@ Read `docs/agents/issue-tracker.md` when present, then resolve the pull request,
 
 Fetch every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Skip automated status messages unless they ask for a change.
 
-Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, priority, action, requested change, and whether this identity already replied. Treat `[Suggestion]` and `[consider]` findings as optional, and `[must-fix]` findings as blocking; for current `review-code-publish` trailers, `action=consider blocking=false` is optional and `action=must-fix blocking=true` is blocking. Anything without one of those optional markers is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
+Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, priority, action, requested change, and whether this identity already replied. Classify each item blocking or optional under the protocol's Reading a finding section; anything without an optional marker is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
 
 ### 2. Evaluate and address each item
 
 Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
 
-Check each item against the current code, the diff, the originating spec, and documented repository standards, then assign a disposition from the protocol. Do not accept feedback on authority — a reviewer, human or agent, can be wrong about this codebase, and can be right in general without being right for this change. A **Change**: line names what the reviewer would do; whether it should be done here is yours to settle. Where the concern is valid but the requested fix is not, implement the better alternative and say so.
+Check each item against the current code, the diff, the originating spec, and documented repository standards, then assign a disposition from the protocol. Do not accept feedback on authority — a reviewer, human or agent, can be wrong about this codebase, and can be right in general without being right for this change. Where the concern is valid but the requested fix is not, implement the better alternative and say so.
 
 A reviewer's `[Question]` is a ledger item like any other: prepare its answer and mark it `answered` in the ledger. Post the answer and resolve the thread in step 4.
 
 A finding you already declined and the reviewer has raised again is a dispute, not a repeat. Answer the reviewer's counter-argument rather than restating the original rationale, and where neither side moves, say plainly that it needs a human call — the protocol's round cap stops it there.
 
-Action sets the bar for a decline, not for whether an item earns a reply. An optional `[Suggestion]` or `[consider]` finding is a proposal to weigh, and the protocol's default on one is to decline: implementing it takes an affirmative reason — a real defect underneath it, a documented standard behind it, or code this change already touches — and where none holds, decline it in a sentence and move on. Weigh it before the fix looks easy, because ease is not a reason. Every blocking or unmarked finding holds the review at `Changes Requested` until the reviewer verdicts it `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
+Action sets the bar for a decline, not for whether an item earns a reply. An optional finding is a proposal to weigh under the protocol's default: decline it in a sentence unless one of the protocol's affirmative reasons holds, and weigh it before the fix looks easy, because ease is not a reason. Every blocking finding holds the review at `Changes Requested` until the reviewer settles it with `fixed`, `accepted`, or `obsolete`, so leaving one unaddressed keeps the pull request from merging — clear those first, and where one is genuinely wrong, decline it with a reason built to convince the reviewer.
 
 Uncertainty resolves to `needs-info`, never to silent compliance or a silent decline — but ask only once the code, spec, standards, and history have failed to answer it. Put the question to a user in the session if there is one; otherwise leave it on the thread, where it outlives this run.
 
@@ -63,9 +63,9 @@ Reconcile the pull request title and description as the protocol's Addressing su
 
 Resolving every thread leaves the pull request looking untouched, since the forge collapses what is resolved. Post one general pull-request comment in the protocol's shape: the head addressed, counts by disposition with each item linked to its thread where it has one, any whole-change answer entries and reply trailers, what still needs someone, and the checks run. A thread link stays the link for a ledger item; where the summary names a further file coordinate outside one, it is the protocol's immutable link at the addressed head, never a bare code span or a branch URL. Say plainly whether the round is finished or waiting — a round ending at `needs-info` or `blocked` is not done, and this is where the reviewer learns that without opening every thread.
 
-One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid. Re-running against the same head updates that comment rather than adding a second.
+One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid.
 
-Ask the identity whose review this round addressed to look again, so the round lands in their queue instead of waiting to be noticed. Where the forge routes review requests, make the ask a review request; authoring the pull request is no bar to that, since GitHub refuses only a request whose target is the pull request's own author. Where the forge will not route one — it routes none, or the target is the pull request's own author — the summary comment carries the ask as a line mentioning that identity, which notifies them just the same. Settle which form applies before writing the summary, by comparing that identity's login against the pull request's author, and never spend the summary explaining that the forge refused the request.
+Ask the identity whose review this round addressed to look again, in the form the protocol's Addressing summary section selects: a review request where the forge routes one, otherwise a mention line in the summary comment. Settle which form applies before writing the summary.
 
 ### 6. Verify
 
