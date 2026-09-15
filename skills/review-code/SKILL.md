@@ -117,9 +117,27 @@ Before returning the record, verify what only judgment settles: every rubric gat
 
 When assembling each finding or question's file anchor, derive its `side` from step 2's **full pinned merge-base manifest**, even on a delta re-review: a `D` entry with its established pre-image path becomes `{"type":"file","path":"<pre-image path>","side":"LEFT"}`. Retain this provenance through body fallback and payload repairs. Use `side: RIGHT` for a file established at head; if the evidence cannot establish the path/revision, retain the reported coordinate with `side: UNKNOWN` and explain the missing evidence in the item. See rendering.md's Summary references for the exact fallback. The composer requires an explicit file side and checks it against the store; it never chooses that side.
 
-Write the composition input the rendering reference's Composition section defines — for each finding, question, observation, and prior item its authoritative fields and authored prose; for the run, its pinned identity, `context` digest, issues, coverage, `merged`, and the summary's status, prose, ambiguities, and coverage gaps — and run `python3 scripts/compose_review.py --store <store> composition.json > payload.json`, with `<store>` the step-2 store. The composer renders, cross-checks, and validates the payload with [`scripts/validate_review.py`](scripts/validate_review.py) as that section defines, and prints it. Never assemble the payload or a coordinate link by hand. A non-zero exit prints violations at their composition-input locations and no payload: report them, fix the composition input — never the payload — and re-run. `python3 scripts/validate_review.py --render < payload.json` prints the same commit-pinned fragments for the returned record. The reference text wins over the scripts: a violation the reviewer believes is a false positive goes to `Ambiguities` under the rubric's Uncertainty routing, and the script is what gets fixed.
+Write the composition input the rendering reference's Composition section defines to `<private-dir>/composition.json` — for each finding, question, observation, and prior item its authoritative fields and authored prose; for the run, its pinned identity, `context` digest, issues, coverage, `merged`, and the summary's status, prose, ambiguities, and coverage gaps. `<private-dir>` is the directory holding the step-2 store `<store>`. Then run this block as one shell invocation from the skill root. It composes `payload.json` with `scripts/compose_review.py`, emits `batch.json` with `scripts/validate_review.py --emit-batch`, and renders `fragments.md` with `--render`, in that order:
 
-Produce `batch.json` with `python3 scripts/validate_review.py --emit-batch < payload.json > batch.json`; never assemble it by hand. On a non-zero exit, fix the composition input and re-run composition and emission; an unresolved failure returns `script-failure` with the script output.
+```sh
+d=<private-dir> store=<store>
+rm -f "$d/payload.json" "$d/batch.json" "$d/fragments.md"
+stage() { # <name> <artifact> <stdin file, or -> <command...>
+  name=$1 out=$2 src=$3; shift 3
+  if [ "$src" = - ]; then "$@" > "$out.part" 2> "$out.stderr"; else "$@" < "$src" > "$out.part" 2> "$out.stderr"; fi
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo "$name failed with exit $rc; later stages did not run:"; cat "$out.part" "$out.stderr"; rm -f "$out.part"; exit "$rc"
+  fi
+  mv "$out.part" "$out"
+}
+stage compose "$d/payload.json" - python3 scripts/compose_review.py --store "$store" "$d/composition.json"
+stage emit-batch "$d/batch.json" "$d/payload.json" python3 scripts/validate_review.py --emit-batch
+stage render "$d/fragments.md" "$d/payload.json" python3 scripts/validate_review.py --render
+cat "$d/fragments.md"
+```
+
+Each stage writes a private `.part` file and promotes it only after exit 0, and the block first removes the previous attempt's artifacts, so a file left from an earlier success is never this attempt's result. The first non-zero status stops the block with that status and prints the failing stage's name, its stdout (where the scripts print violations), and its stderr; no later stage reads a failed or partial artifact. A composer or emission failure names violations at their composition-input locations: report them, fix the composition input — never the payload or batch — and re-run the whole block. An unresolved failure returns `script-failure` with that output. The composer renders, cross-checks, and validates the payload with [`scripts/validate_review.py`](scripts/validate_review.py) as the Composition section defines; the printed fragments are the same commit-pinned fragments the returned record carries. Never assemble the payload, the batch, or a coordinate link by hand. The reference text wins over the scripts: a violation the reviewer believes is a false positive goes to `Ambiguities` under the rubric's Uncertainty routing, and the script is what gets fixed.
 
 After step 5 completes, session mode alone reads [`references/session.md`](references/session.md) and hands the immutable record and routed items to its conversation procedure. One-shot returns them without loading that reference.
 

@@ -116,20 +116,20 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 **Posting identity**: `gh api user --jq .login`. Compare with `gh pr view <n> --json author` to detect a self-review.
 
-**Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as addressed.
+**Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as addressed. The collection block below runs this read in the same invocation and saves it as `pr.json`, so only the number `<n>` is needed before it runs.
 
 ### Collecting review activity
 
-Every list below is a collection: reviews, inline comments, general pull-request comments, and review threads. Fetch each one completely with the block below, not with a single-page `gh api` call. A single call returns one page, and feedback on a later page silently misses the ledger. Run the block as one shell invocation after replacing `<owner>`, `<repo>`, and `<n>`. It is POSIX `sh` that also runs unchanged under `bash` and `zsh`.
+Every list below is a collection: reviews, inline comments, general pull-request comments, and review threads. Fetch each one completely with the block below, not with a single-page `gh api` call. A single call returns one page, and feedback on a later page silently misses the ledger. The same block also reads the pull request metadata above into `pr.json`. Run the block as one shell invocation after replacing `<owner>`, `<repo>`, and `<n>`. It is POSIX `sh` that also runs unchanged under `bash` and `zsh`.
 
-The block writes into a fresh private directory from `mktemp -d`. Each collection keeps its raw slurped pages (`<name>.pages.json`), `gh` stderr (`<name>.stderr`), and `gh` exit status (`<name>.status`). The block records `gh`'s status before anything reads the output, so no formatter downstream can hide a failed continuation page. The flattener runs only after `gh` exits `0`. It rejects any response that is not JSON, any GraphQL `errors` or partial `data`, and any page chain that does not end in `hasNextPage: false`. Exact repeats of one stable id collapse to one record. When one id arrives with different content, as when a comment is edited mid-fetch, the block re-reads that item with its single-item verb and keeps the fresh copy. It never drops either version silently. `<name>.json`, a flat JSON array, is written only when every page is present and valid. REST records keep every field GitHub returned. Each thread record keeps its GraphQL node `id` and adds `firstCommentId`, the numeric REST id of its first comment, read from `fullDatabaseId` or, only when that is absent, from the deprecated `databaseId`.
+The block writes into a fresh private directory from `mktemp -d`, one distinct file set per read. The metadata read keeps its raw output (`pr.raw.json`), stderr (`pr.stderr`), and exit status (`pr.status`), and `pr.json` is written only when `gh` exits `0` and the output is a JSON object with an integer `number` and a full 40-hex `headRefOid`. Each collection keeps its raw slurped pages (`<name>.pages.json`), `gh` stderr (`<name>.stderr`), and `gh` exit status (`<name>.status`). The block records `gh`'s status before anything reads the output, so no formatter downstream can hide a failed continuation page. The flattener runs only after `gh` exits `0`. It rejects any response that is not JSON, any GraphQL `errors` or partial `data`, and any page chain that does not end in `hasNextPage: false`. Exact repeats of one stable id collapse to one record. When one id arrives with different content, as when a comment is edited mid-fetch, the block re-reads that item with its single-item verb and keeps the fresh copy. It never drops either version silently. `<name>.json`, a flat JSON array, is written only when every page is present and valid. REST records keep every field GitHub returned. Each thread record keeps its GraphQL node `id` and adds `firstCommentId`, the numeric REST id of its first comment, read from `fullDatabaseId` or, only when that is absent, from the deprecated `databaseId`.
 
-The last line reads `complete <dir>` with exit status `0`, or `incomplete <dir>` with exit status `1` after one `incomplete <name>: <reason>` line per failed collection. An incomplete collection is a coverage gap: preserve the directory, report the gap, and never treat feedback missing from it as addressed. The block is not a transactional snapshot. A live pull request can gain feedback while the block runs.
+The last line reads `complete <dir>` with exit status `0`, or `incomplete <dir>` with exit status `1` after one `incomplete <name>: <reason>` line per failed read, `pr` included. An incomplete collection is a coverage gap: preserve the directory, report the gap, and never treat feedback missing from it as addressed. Files that did arrive in an incomplete directory are not a complete inventory. The block is not a transactional snapshot. A live pull request can gain feedback while the block runs.
 
 ```sh
 d=$(mktemp -d "${TMPDIR:-/tmp}/review-activity.XXXXXX") || exit 2
 cat > "$d/flatten.py" <<'PY'
-import json, os, sys
+import json, os, re, sys
 
 def fail(msg, code=1):
     print(msg)
@@ -198,7 +198,20 @@ def fresh_record(kind, path):
         fail("fresh copy %s without an integer id" % path)
     return doc["id"], doc
 
+def write(out, value):
+    with open(out + ".tmp", "w", encoding="utf-8") as f:
+        json.dump(value, f)
+    os.replace(out + ".tmp", out)
+
 kind, src, out, fresh_paths = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
+if kind == "pr":
+    doc = load(src)
+    if not isinstance(doc, dict) or type(doc.get("number")) is not int \
+            or not re.fullmatch(r"[0-9a-f]{40}", str(doc.get("headRefOid"))):
+        fail("pull request metadata without an integer number and a full headRefOid")
+    write(out, doc)
+    print("pull request %d at %s" % (doc["number"], doc["headRefOid"]))
+    sys.exit(0)
 records = thread_pages(load(src)) if kind == "threads" else rest_pages(load(src))
 seen, order, conflicts = {}, [], []
 for key, rec in records:
@@ -214,9 +227,7 @@ if missing:
         print("conflict %s" % k)
     sys.exit(3)
 flat = [fresh.get(k, seen[k]) for k in order]
-with open(out + ".tmp", "w", encoding="utf-8") as f:
-    json.dump(flat, f)
-os.replace(out + ".tmp", out)
+write(out, flat)
 print("%d records" % len(flat))
 PY
 owner=<owner> repo=<repo> pr=<n> incomplete=0
@@ -253,6 +264,14 @@ collect() { # <name> <kind> <single-item path, or "thread"> <gh api arguments...
     echo "incomplete $name: $(tr '\n' ' ' < "$d/$name.result")"; incomplete=1; rm -f "$d/$name.json"
   fi
 }
+gh pr view "$pr" --repo "$owner/$repo" --json number,url,author,headRefName,baseRefName,headRefOid,state,body \
+  > "$d/pr.raw.json" 2> "$d/pr.stderr"
+gh_rc=$?; echo "$gh_rc" > "$d/pr.status"
+if [ "$gh_rc" -ne 0 ]; then
+  echo "incomplete pr: gh exited $gh_rc, see $d/pr.stderr"; incomplete=1
+elif ! python3 "$d/flatten.py" pr "$d/pr.raw.json" "$d/pr.json" > "$d/pr.result"; then
+  echo "incomplete pr: $(tr '\n' ' ' < "$d/pr.result")"; incomplete=1; rm -f "$d/pr.json"
+fi
 collect reviews rest "repos/$owner/$repo/pulls/$pr/reviews" \
   --method GET "repos/$owner/$repo/pulls/$pr/reviews" -f per_page=100
 collect inline-comments rest "repos/$owner/$repo/pulls/comments" \
@@ -266,6 +285,7 @@ if [ "$incomplete" -eq 0 ]; then echo "complete $d"; else echo "incomplete $d"; 
 
 The collections, each read from `$d/<name>.json`:
 
+- **Pull request metadata** (`pr.json`): the object the Resolve the pull request verb returns. `headRefOid` is the head SHA, and `headRefName` the branch.
 - **Reviews** (`reviews.json`): `id`, `user.login`, `state`, `commit_id`, `body`. `commit_id` is the head that review covered.
 - **Inline comments** (`inline-comments.json`): `id`, `in_reply_to_id`, `user.login`, `path`, `original_line`, `line`, `body`. Cite `original_line` for location, because `line` becomes `null` once a later push outdates the comment. A reply's `in_reply_to_id` names its thread's first comment, so replies on any page correlate to a thread through `firstCommentId`.
 - **General pull-request comments** (`general-comments.json`): `id`, `user.login`, `body`. A pull request is an issue, so a summary posted as a general comment lives under `issues`, not `pulls`.

@@ -600,7 +600,8 @@ class RunEventTests(unittest.TestCase):
         for source in sources:
             if source.exists():
                 found = [block for block in re.findall(r"```sh\n(.*?)```", source.read_text(encoding="utf-8"), re.S)
-                         if "run_events" in block or "run-events" in block]
+                         if ("run_events" in block or "run-events" in block)
+                         and "preflight failed" not in block]  # test_command_chains.py runs that chain
                 self.assertTrue(found, f"{source.name} documents no wrapped command")
                 blocks.extend(found)
         for number, block in enumerate(blocks):
