@@ -189,7 +189,8 @@ class CheckRuns(unittest.TestCase):
         self.assertIn("under the protocol's Check evidence section", skill)
         self.assertIn("the protocol's Invalidating rule", skill)
         self.assertIn("each check with the head and input state it establishes", skill)
-        for stale in ("run the relevant checks", "rerun affected checks", "and the checks run.", "`pnpm test` green."):
+        for stale in ("run the relevant checks", "rerun affected checks", "and the checks run.",
+                      "- the checks run;", "`pnpm test` green."):
             self.assertNotIn(stale, skill + protocol + PEER.read_text(encoding="utf-8"))
 
     def test_shared_reply_vocabulary_lands_in_both_protocol_copies(self):
