@@ -51,7 +51,7 @@ Read the forge and pick the first step from the entry table. A bare number is a 
 
 Notes for reading a pull request:
 
-- "Latest" is by forge timestamp across reviews from any identity and addressing summaries. A human review is a review.
+- "Latest" is by forge timestamp, a comment's last edit when it has one, across reviews from any identity and addressing summaries. A human review is a review.
 - A pull request with no linked issue is reviewed from its own text; `review-code` handles that.
 - An issue's open pull request is found by `gh pr list --state open --search "<number>"` and confirmed by a closing reference in the body.
 
@@ -85,7 +85,7 @@ Repeat for each remaining round, in order:
 
 1. **Empty ledger check.** At the current head, the latest review is `Approved`, lists no open question and no disputed finding, and no review thread is unresolved or holds feedback without a reply from the pull-request author. When all hold, skip the resolve and go to the review; the round still counts.
 2. **Prepare the checkout.** Fetch, confirm the working tree is clean, and check out the pull request's head branch at its live head. A dirty tree is a stop, not something to clean up.
-3. **Resolve.** Brief the subagent to invoke `resolve-review` on the pull request. Artifact: an addressing summary this pass posted, or the existing same-head summary it updated, carrying an `addressed head=` equal to the pushed head, which equals the local head. Record whether the round added commits.
+3. **Resolve.** Brief the subagent to invoke `resolve-review` on the pull request. Artifact: an addressing summary this pass posted, or the existing same-head summary it updated, its last edit later than the review this round addressed, carrying an `addressed head=` equal to the pushed head, which equals the local head. Record whether the round added commits.
 4. **Review** as in step 5, on the new head.
 5. **Count the round**, then, from the second round of this delivery on, stop early when the review reached `Approved`, or when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. The first round of a delivery always runs, an already-`Approved` pull request included.
 
