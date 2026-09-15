@@ -19,7 +19,7 @@ Read `docs/agents/issue-tracker.md` when present, then resolve the pull request,
 
 Fetch every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Skip automated status messages unless they ask for a change.
 
-Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, priority, action, requested change, and whether this identity already replied. Classify each item blocking or optional under the protocol's Reading a finding section; anything without an optional marker is blocking, a human's comment included. A review body is its own ledger item when it carries feedback its inline comments do not.
+Build a ledger keyed by finding id, falling back to the comment id for anything without a trailer. Record author, location, thread, resolution state, priority, action, requested change, and whether this identity already replied. Classify each item blocking or optional under the protocol's Reading a finding section. A review body is its own ledger item when it carries feedback its inline comments do not.
 
 ### 2. Evaluate and address each item
 
@@ -53,7 +53,7 @@ If this round added commits, push them to the pull request's existing head branc
 
 Every item earns a reply, pushing back included — a rejected finding is answered, not ignored. Post one reply per ledger item lacking one, in the protocol's shape, carrying the evidence its disposition requires. Queue each whole-change question's answer entry and reply trailer for the round's addressing summary rather than posting a separate general comment. Reply to a review body when it holds feedback its threads do not; leave the per-thread detail in the threads.
 
-Resolve each thread as you finish it, not in a batch at the end: reply posted and change live, then resolve. That covers items implemented, already addressed, or answered, and threads gone outdated or irrelevant — the file deleted, the approach replaced. Leave `needs-info` and `blocked` threads open, and resolve nothing whose reply or code change is still missing. A `declined` thread stays open too: declining states a position, and the reviewer accepting it is what settles the disagreement. Where only the reviewer can resolve, report that instead of claiming it.
+Resolve each thread as you finish it, under the protocol's Thread state section. That covers items implemented, already addressed, or answered, and threads gone outdated or irrelevant — the file deleted, the approach replaced. Leave `needs-info` and `blocked` threads open, and resolve nothing whose reply or code change is still missing. A `declined` thread stays open too, under that section. Where only the reviewer can resolve, report that instead of claiming it.
 
 Re-addressing a pull request, reopen any thread resolved too early — the fix regressed, a later commit undid it, or the earlier reply claimed more than the code delivered — and say why in a new reply on it.
 

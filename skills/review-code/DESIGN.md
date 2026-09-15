@@ -98,6 +98,21 @@ Each decision rule has one owning document; every other document that needs it c
 
 ## Change notes
 
+### Pull-request pinning behind its branch (issue #251)
+
+The `### Pull-request target only` subsection of `SKILL.md` step 1 — pinning, the persisted forge fetch with its root and continuation queries, `forge_packet.py normalize`, prior-state detection, and recorded deferrals — moved verbatim into `references/pull-request-target.md`, which a `pull-request` target reads at step 1 exactly as a `range` or `worktree` target reads `references/local-targets.md`. The conditional-reference paragraph near the top of `SKILL.md` no longer enumerates files, since each is named at the step that reaches it, and step 1 no longer restates `local-targets.md`'s session-recheck sentence. `forge_packet.py`'s docstring names the new reference. The audit skill's copy of the fetch is unchanged.
+
+**Identifier retained: `v5b-17`.** No rule changed; every sentence survives in `SKILL.md` or the new reference.
+
+Counts use whitespace splitting (`wc -w`) and bytes (`wc -c`) on `origin/main` at `eb93c91` and on this change.
+
+| Instruction | Load | Before words / bytes | After words / bytes |
+| --- | --- | ---: | ---: |
+| `SKILL.md` | Startup | 5,317 / 37,253 | 4,537 / 31,120 |
+| `references/pull-request-target.md` | Step 1, pull request only | — | 732 / 5,596 |
+
+A pull-request review loads 48 fewer words than before (the collapsed paragraph and the deleted sentence); a local-target review loads 780 fewer.
+
 ### Legacy reviewer takes `code-review-publish`
 
 `code-review-publish-legacy` became `code-review-publish`, the name #245 freed. It is the one skill outside the verb-first convention, named for the two-axis `code-review` skill from `mattpocock/skills` that it publishes. Step 2 previously ran a code-review skill the user named, otherwise the best-matching model-invoked review skill, otherwise its own review of both axes. It now invokes that `code-review` skill by name at the pull request's head, stops when it is not installed, and maps Standards and Spec to Code and Requirements. `code-review` has no dedicated correctness pass: its Standards axis checks documented standards and a smell baseline, and its Spec axis catches incorrect implementations of requirements. The protocol's `[Code]` axis therefore narrows from correctness, documented standards, and implementation quality to documented standards and code smells, in both byte-identical copies. A defect outside the spec is not claimed as covered. Its frontmatter now sets `disable-model-invocation: true`, so Claude Code no longer offers it for automatic invocation; `agents/openai.yaml` already disabled implicit invocation in Codex. Both byte-identical `review-protocol.md` copies and current cross-references followed. Before #245 this name meant the integrated reviewer, so research records that use it mean what `review-code-publish` now is.

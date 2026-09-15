@@ -8,7 +8,7 @@ compatibility: Requires git and Python 3.9+ on macOS or Linux
 
 Review the pull request, verify what the review found, publish what survives.
 
-This is the independent-discovery audit, formerly `code-review-deep-publish`. Investigate the requirements and affected contracts of one pull request, including relevant unchanged consumers. `review-code-publish` owns the routine path. The current implementation retains the Panel workflow; the future system-guarantee and executable-evidence work is tracked in `DESIGN.md`.
+This is the independent-discovery audit. Investigate the requirements and affected contracts of one pull request, including relevant unchanged consumers.
 
 Independent parallel finders discover candidates, and a fresh-context verifier checks them before publication. Preserve independent discovery while improving verification and publishing. Historical evaluation comparators use pinned snapshots; their purpose does not constrain improvements to this live skill.
 
@@ -175,10 +175,4 @@ Finish with the short form: status, run identity, coverage, counts, questions, o
 
 ## Why this shape
 
-The goals, the research behind them, and the decisions they forced are in [`DESIGN.md`](DESIGN.md), including the ones still contested.
-
-The reviewing rubric is adapted from OpenAI Codex's review rubric; the requirements axis from Qodo pr-agent's ticket-compliance prompt; the scope-creep bucket from Matt Pocock's `code-review`; the exclusion taxonomy from Anthropic's `code-review` plugin. All permissively licensed — see [`references/ATTRIBUTION.md`](references/ATTRIBUTION.md).
-
-The reason it is assembled rather than adopted whole: no published reviewer combines a real requirements axis with serious false-positive machinery. The artifacts with the best precision rubrics never read the issue; the ones that check the change against its spec barely filter. This skill takes the precision rubric from one family and the requirements axis from the other, and adds the verify pass neither publishes.
-
-`references/review-protocol.md` in `code-review-publish` is the ancestor of the comment shape, the status ladder, the disposition vocabulary, and the round cap. It is directional here, not binding: this skill's finding contract carries fields that protocol has no slot for, and the two are not interchangeable on one pull request.
+The goals, research, and decisions are in [`DESIGN.md`](DESIGN.md); the adapted sources and their licenses are in [`references/ATTRIBUTION.md`](references/ATTRIBUTION.md). `references/review-protocol.md` in `code-review-publish` is the ancestor of the comment shape, the status ladder, the disposition vocabulary, and the round cap; it is directional here, not binding, and the two skills' output is not interchangeable on one pull request.
