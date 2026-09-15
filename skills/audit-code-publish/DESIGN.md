@@ -878,3 +878,9 @@ Step 4 rendered each body coordinate with its own `link_coordinate.py render` ca
 `scripts/test_link_coordinate.py` runs the published block under every available `sh`, `bash`, `zsh`, and `dash`. The inputs are ordinary RIGHT, deleted LEFT, RIGHT line, UNKNOWN whole-file, and rename coordinates, and each fragment must match a direct render. A failing `UNKNOWN` line must exit 1 with its visible violation and leave only the earlier fragment. Rendering goes from one tool invocation per coordinate to one invocation per publication record. That is a mechanical count, not a model-request, time, or cost claim; #265 owns the matched assessment.
 
 **Identifier retained: `v2b-6`.** Script arguments, fragment bytes, trailers, and digests are unchanged. `SKILL.md` grows from 5,198 words / 34,526 bytes to 5,399 / 35,898 (`wc -w`, `wc -c` on `origin/main` at `5ca40b5`).
+
+## Grouped opening read (issue #256)
+
+The opening reads `references/finding-format.md` before anything else, and step 1 reads the repository's `docs/agents/issue-tracker.md` when present. When that file is already known to be present at the opening, both now load in one tool invocation if the complete output fits the host's limit. Otherwise they use bounded or separate reads at the same point, recovering every missing portion, and a host without multi-read support reads consecutively. When its presence is not yet known, the existing order stands and step 1 reads it. `input-identity.md` stays after collection, `publishing.md` stays at step 4, and finder and verifier brief contents are unchanged.
+
+**Identifier retained: `v2b-6`.** No admission, verification, rendering, or state rule changed. `SKILL.md` grows from 5,399 words / 35,898 bytes to 5,467 / 36,333 (`wc -w`, `wc -c` on `origin/main` at `1141dc4`).

@@ -606,3 +606,26 @@ The core moves from `code-review-inspect` to `review-code` with `git mv`. `/code
 Historical split/run notes below their original headings retain the old skill names and identifiers as evidence of what ran then. Current installation, caller, and snapshot guidance uses `review-code`.
 
 **Mechanical validation.** Every shipped script is covered by its self-test or sibling CLI suite: validator (117 cases), context store, fingerprint, forge packet, deleted-file links, verifier handoff/return (12 tests), and composition. The added composition cases emit a complete `issues=none` review with its whole-change required-issue question and `Needs Information`, reject an unjustified `Incomplete`, and retain blocker and genuine-gap precedence. All scripts parse as Python 3.9; local runtime Markdown links, YAML metadata/frontmatter, rename/version sweeps, and `git diff --check` pass. The skill quick validator cannot start without PyYAML; Ruby YAML parsing supplies the frontmatter check. These mechanical checks and the PR instruction replays establish no measured recall, precision, or production speedup.
+
+## Grouped reference reads (issue #256)
+
+Three load points name references that are independently available at the same moment. The opening now reads `review-rubric.md` and `review-record.md` together. Step 3 reads `verifier.md` and `verifier-handoff.md` together when verification is required, and it adds `verifier-concurrency.md` to that read only when the first batch already carries a `concurrency` or `invariant` candidate. Otherwise that reference loads when a later batch first requires it. Step 1 pairs the target reference with the base version of `docs/agents/issue-tracker.md` only when the base commit is resolved before that reference is read. That covers a caller's explicit base SHA or fully qualified ref, or a supplied packet's `baseRefOid`. A short base name is not resolved yet, because `local-targets.md` prefers `origin/<base>`; a pull request without a packet learns its base from the fetch. In those cases the issue tracker still loads after the reference's procedure. `rendering.md` stays at step 5, and `re-review.md`, `conformance.md`, and `session.md` keep their conditional points.
+
+Each grouped read uses one tool invocation when the complete output fits the host's limit. Otherwise it uses bounded or separate reads at the same logical point and recovers every missing portion, and a host without multi-read support reads consecutively. No reference loads earlier for a hypothetical branch. The set of references, their applicability rules, and the rule that base-branch guidance is never replaced by the working-tree copy are unchanged. Each instruction still arrives before the work it governs.
+
+### Instruction replay
+
+These are paper replays of the edited load points, not production runs or time measurements.
+
+| Case | Load sequence |
+| --- | --- |
+| One-shot range, caller base `origin/main` resolved to a SHA before step 1 | Opening: rubric + record. Step 1: `local-targets.md` + `git show <base>:docs/agents/issue-tracker.md` in one invocation. |
+| Session "review the current branch", base inferred | Opening: rubric + record. Step 1: `local-targets.md` alone; after base inference resolves `origin/main`, the base issue tracker. |
+| Pull request with no packet | Step 1: `pull-request-target.md` alone; the issue tracker at `baseRefOid` after the fetch. |
+| No verification: the only survivor is a `consider` `bug` finding with no mandatory trigger, so no candidate or clean-verdict batch runs | Step 3 reads no verifier reference; step 5 reads `rendering.md`. |
+| Clean-verdict batch only (no material survivor) | Step 3: `verifier.md` + `verifier-handoff.md`; no concurrency reference because no candidate carries that kind. |
+| First batch holds a `concurrency` candidate | Step 3: `verifier.md` + `verifier-handoff.md` + `verifier-concurrency.md` in one invocation. |
+| Only the follow-up batch holds an `invariant` candidate | Step 3: the pair for the first batch; `verifier-concurrency.md` when the follow-up is built. |
+| Combined output exceeds the host's tool-output limit | The same references at the same point through bounded or separate reads, each truncated portion re-read before the step continues. |
+
+**Workflow retained: `v5b-17`.** Only read timing within existing load points changed; admission, verification, rendering, and state semantics are unchanged. `SKILL.md` grows from 4,796 words / 32,989 bytes to 4,953 / 34,036 (`wc -w`, `wc -c` on `origin/main` at `1141dc4`). The step count is mechanical; fewer tool invocations are not fewer model requests, and #265 owns the matched assessment.

@@ -7,7 +7,7 @@ description: Address every review comment on a pull request, make the warranted 
 
 Evaluate every review comment, make the warranted changes, and reply to every one. A disagreement or a no-change decision still earns a reply.
 
-Read [`references/addressing-protocol.md`](references/addressing-protocol.md) first: it defines how to read a finding, the reply shape and disposition vocabulary, questions, thread state, the round cap, the addressing summary, and the `gh` verbs.
+Read [`references/addressing-protocol.md`](references/addressing-protocol.md) first: it defines how to read a finding, the reply shape and disposition vocabulary, questions, thread state, the round cap, the addressing summary, and the `gh` verbs. When the repository's `docs/agents/issue-tracker.md` is known to be present, read it with the protocol in one tool invocation when the complete output fits the host's output limit; otherwise use bounded or separate reads here and recover every missing portion, and a host without multi-read support reads them consecutively.
 
 Invoking this skill authorizes the replies, resolutions, thread actions, pull-request title and description edits, round summary, and re-review request below. Fixes land as commits on the pull request's existing head branch, so its threads keep pointing at the code they describe — this skill opens no pull request of its own. Commits and pushes otherwise follow the repository's normal conventions.
 
@@ -15,7 +15,7 @@ Invoking this skill authorizes the replies, resolutions, thread actions, pull-re
 
 ### 1. Inventory the feedback
 
-Read `docs/agents/issue-tracker.md` when present, then resolve the pull request number. Ask before editing code if it is ambiguous.
+Read `docs/agents/issue-tracker.md` when present, unless the opening read already loaded it, then resolve the pull request number. Ask before editing code if it is ambiguous.
 
 Run the protocol's collection block once. That one invocation saves the pull request metadata, with its head SHA and branch, and every piece of review feedback: inline comments, their thread resolution state, review bodies, and general pull-request comments that carry feedback. Record the block's directory for step 6. When a collection comes back incomplete, report the coverage gap. Address only the feedback the block did fetch, and give no disposition that depends on a missing item. Skip automated status messages unless they ask for a change.
 
