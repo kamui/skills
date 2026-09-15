@@ -18,6 +18,7 @@ npx skills@latest add kamui/skills --skill audit-code-publish
 npx skills@latest add kamui/skills --skill resolve-review
 npx skills@latest add kamui/skills --skill implement-publish --skill review-code
 npx skills@latest add kamui/skills --skill code-review-publish  # legacy, kept for historical purposes
+npx skills@latest add mattpocock/skills --skill code-review    # required by code-review-publish
 ```
 
 Use `review-code-publish` for routine pull-request reviews. Explicitly use `audit-code-publish` for independent investigation of requirements completeness, API conformance, and contracts affected beyond the diff. Originally `code-review-deep-publish`, it retains the Panel workflow, and the [audit roadmap](skills/audit-code-publish/DESIGN.md#positioning) tracks the planned system-guarantee and executable-evidence checks, which have not shipped. Its higher cost and high-risk effectiveness require matched evaluation; no general cost or safety advantage is claimed.
@@ -84,7 +85,7 @@ The host agent needs access to the pull request to publish the review.
 
 ### `code-review-publish`
 
-The original two-axis reviewer, kept for historical purposes. It reviews a change along two axes — **Code** (correctness and implementation quality) and **Requirements** (fidelity to the originating spec) — and publishes the findings as line comments under one status, using the shared review protocol below. It is not model-invocable: `review-code-publish` should be used instead, and this skill runs only when explicitly invoked by name:
+The original two-axis reviewer, kept for historical purposes. It runs the [`code-review`](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md) skill from `mattpocock/skills`, which must be installed, at the pull request's head. Its **Standards** findings become **Code** and its **Spec** findings become **Requirements**. It publishes them as line comments under one status, using the shared review protocol below. It is not model-invocable: `review-code-publish` should be used instead, and this skill runs only when explicitly invoked by name:
 
 ```text
 $code-review-publish
