@@ -11,6 +11,9 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
+import shlex
+import signal
 import stat
 import subprocess
 import sys
@@ -24,6 +27,29 @@ SCRIPTS = Path(__file__).resolve().parent
 DOMAIN = {"host": "h", "boot": "b", "boot_source": "linux:boot_id", "implementation": "mono"}
 HEAD = "a" * 40
 S = 1_000_000_000
+
+ECHO_CHILD = r"""
+import os, sys
+data = sys.stdin.buffer.read()
+sys.stdout.buffer.write(b"out:" + data + b"\xff\x00no-newline")
+sys.stderr.buffer.write(b"err:\xfe" + os.environ.get("RUN_EVENTS_PROBE", "").encode("utf-8"))
+sys.exit(int(sys.argv[1]) if len(sys.argv) > 1 else 0)
+"""
+
+WAITING_CHILD = r"""
+import os, signal, sys, time
+mode = sys.argv[2]
+if mode == "exit-zero":
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+elif mode == "ignore":
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+with open(sys.argv[1] + ".tmp", "w") as handle:
+    handle.write(str(os.getpid()))
+os.rename(sys.argv[1] + ".tmp", sys.argv[1])
+time.sleep(60)
+"""
+
+FAKE_GH = "#!/usr/bin/env python3\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n"
 
 
 def event(name, start, end, exit=0, clock=None, **data):
@@ -51,6 +77,26 @@ def accounted(batch, end, exit=0, **counts):
 
 def payload(end, exit=0):
     return event("payload-composed", end - 1, end, exit=exit, head=HEAD, target_kind="range")
+
+
+def wrapped(name, start, end, exit=0, clock=None, argv0="gh", **data):
+    item = event(name, start, end, exit=exit, clock=clock, argv0=argv0, signal=None, cancelled=None, **data)
+    item["origin"]["script"] = "run_events.py"
+    return item
+
+
+def fetched(start, end, role="root", connection="root", **kw):
+    return wrapped("forge-fetched", start, end, role=role, connection=connection, **kw)
+
+
+def tested(start, end, **kw):
+    kw.setdefault("head", HEAD)
+    kw.setdefault("command", "python3 -m unittest test_a")
+    return wrapped("focused-test-ran", start, end, argv0="python3", **kw)
+
+
+def written(start, end, role="review", **kw):
+    return wrapped("forge-written", start, end, role=role, **kw)
 
 
 class RunEventTests(unittest.TestCase):
@@ -371,6 +417,307 @@ class RunEventTests(unittest.TestCase):
         self.assertEqual(verification["complete_ledger_nonzero_rows"], 1)
         self.assertEqual(verification["ledger_rows_unknown"], 1)
         self.assertEqual(verification["batches"][0]["ledger_rows"], 0)
+
+    # --- wrap ---------------------------------------------------------------
+
+    def wrap(self, *args, stdin=None, env=None):
+        return subprocess.run([sys.executable, str(SCRIPTS / "run_events.py"), "wrap", *map(str, args)],
+                              input=stdin, capture_output=True, env=env, timeout=60)
+
+    def events_in(self, private):
+        path = Path(private) / "run-events.jsonl"
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+    def assert_one_wrapper_line(self, result):
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertEqual(result.stdout, b"")
+        lines = result.stderr.decode("utf-8").splitlines()
+        self.assertEqual(len(lines), 1, lines)
+        self.assertTrue(lines[0].startswith("run_events:"), lines)
+
+    def test_wrap_preserves_streams_environment_and_status(self):
+        child = self.root / "echo.py"
+        child.write_text(ECHO_CHILD, encoding="utf-8")
+        private = self.root / "private"
+        private.mkdir()
+        env = dict(os.environ, RUN_EVENTS_PROBE="probe-é")
+        stdin = b"in\x00\xffbytes\r\nno-final-newline"
+        for code in (0, 1, 2, 42):
+            with self.subTest(code=code):
+                direct = subprocess.run([sys.executable, str(child), str(code)], input=stdin, capture_output=True,
+                                        env=env, timeout=60)
+                result = self.wrap("--private-dir", private, "--event", "forge-fetched", "--data", "role=root",
+                                   "--data", "connection=root", "--", sys.executable, child, code, stdin=stdin, env=env)
+                self.assertEqual(direct.returncode, code)
+                self.assertEqual((result.returncode, result.stdout, result.stderr),
+                                 (code, direct.stdout, direct.stderr))
+        dump = [sys.executable, "-c", "import json, os, sys; sys.stdout.write(json.dumps(dict(os.environ), sort_keys=True))"]
+        direct = subprocess.run(dump, capture_output=True, env=env, timeout=60)
+        result = self.wrap("--private-dir", private, "--event", "focused-test-ran", "--data", f"head={HEAD}",
+                           "--", *dump, env=env)
+        self.assertEqual((result.returncode, result.stdout), (0, direct.stdout))
+        self.assertEqual(json.loads(result.stdout)["RUN_EVENTS_PROBE"], "probe-é")
+
+        events = self.events_in(private)
+        self.assertEqual([e["exit"] for e in events], [0, 1, 2, 42, 0])
+        self.assertEqual({e["origin"]["script"] for e in events}, {"run_events.py"})
+        self.assertEqual(stat.S_IMODE((private / "run-events.jsonl").stat().st_mode), 0o600)
+        self.assertEqual((events[0]["data"]["role"], events[0]["data"]["argv0"]), ("root", sys.executable))
+        self.assertEqual(events[4]["data"]["command"], " ".join(dump))
+        self.assertIsNone(events[4]["policy"])
+        summary, _ = self.summarize(events, "--completion-mode", "result")
+        self.assertEqual(summary["violations"], [])
+        fetches = summary["commands"]["forge_fetches"]
+        self.assertEqual((fetches["event_count"], fetches["failed_attempts"]), (4, 3))
+        self.assertEqual([a["exit"] for a in fetches["attempts"]], [0, 1, 2, 42])
+        self.assertEqual(summary["commands"]["focused_tests"]["attempts"][0]["head"], HEAD)
+
+    def test_wrap_argument_errors_never_run_the_child(self):
+        marker = self.root / "ran"
+        touch = [sys.executable, "-c", f"open({str(marker)!r}, 'w').close()"]
+        private = self.root / "private"
+        private.mkdir()
+        fetch = ["--event", "forge-fetched", "--data", "role=root", "--data", "connection=root"]
+        cases = {
+            "missing private dir": [*fetch, "--", *touch],
+            "missing event": ["--private-dir", private, "--data", "role=root", "--", *touch],
+            "missing separator": ["--private-dir", private, *fetch, *touch],
+            "missing command": ["--private-dir", private, *fetch, "--"],
+            "unknown event": ["--private-dir", private, "--event", "forge-read", "--", *touch],
+            "unknown fetch role": ["--private-dir", private, "--event", "forge-fetched", "--data", "role=other",
+                                   "--data", "connection=root", "--", *touch],
+            "root with a connection": ["--private-dir", private, "--event", "forge-fetched", "--data", "role=root",
+                                       "--data", "connection=reviews", "--", *touch],
+            "continuation named root": ["--private-dir", private, "--event", "forge-fetched", "--data",
+                                        "role=continuation", "--data", "connection=root", "--", *touch],
+            "missing role": ["--private-dir", private, "--event", "forge-fetched", "--data", "connection=root",
+                             "--", *touch],
+            "short head": ["--private-dir", private, "--event", "focused-test-ran", "--data", "head=abc123",
+                           "--", *touch],
+            "derived command": ["--private-dir", private, "--event", "focused-test-ran", "--data", f"head={HEAD}",
+                                "--data", "command=rm", "--", *touch],
+            "duplicate role": ["--private-dir", private, "--event", "forge-written", "--data", "role=review",
+                               "--data", "role=replies", "--", *touch],
+            "malformed data": ["--private-dir", private, "--event", "forge-written", "--data", "rolereview",
+                               "--", *touch],
+            "unknown write role": ["--private-dir", private, "--event", "forge-written", "--data", "role=publish",
+                                   "--", *touch],
+        }
+        for name, args in cases.items():
+            with self.subTest(name=name):
+                self.assert_one_wrapper_line(self.wrap(*args))
+                self.assertFalse(marker.exists())
+        self.assertFalse((private / "run-events.jsonl").exists())
+
+    def test_wrap_unexecutable_child(self):
+        private = self.root / "private"
+        private.mkdir()
+        not_executable = self.root / "not-executable.sh"
+        not_executable.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        not_executable.chmod(0o644)
+        for command in (self.root / "missing-program", not_executable):
+            with self.subTest(command=command.name):
+                self.assert_one_wrapper_line(self.wrap("--private-dir", private, "--event", "forge-written",
+                                                       "--data", "role=review", "--", command))
+        events = self.events_in(private)
+        self.assertEqual([(e["event"], e["exit"]) for e in events], [("forge-written", 2)] * 2)
+
+    def test_unusable_private_dir_changes_nothing(self):
+        child = self.root / "echo.py"
+        child.write_text(ECHO_CHILD, encoding="utf-8")
+        blocked = self.root / "blocked"
+        (blocked / "run-events.jsonl").mkdir(parents=True)
+        readonly = self.root / "readonly"
+        readonly.mkdir()
+        readonly.chmod(0o500)
+        try:
+            direct = subprocess.run([sys.executable, str(child), "42"], input=b"x", capture_output=True, timeout=60)
+            for directory in (self.root / "missing", blocked, readonly):
+                with self.subTest(directory=directory.name):
+                    result = self.wrap("--private-dir", directory, "--event", "forge-written", "--data",
+                                       "role=replies", "--", sys.executable, child, "42", stdin=b"x")
+                    self.assertEqual((result.returncode, result.stdout, result.stderr),
+                                     (42, direct.stdout, direct.stderr))
+            self.assertFalse((self.root / "missing").exists())
+            if os.geteuid() != 0:
+                self.assertFalse((readonly / "run-events.jsonl").exists())
+        finally:
+            readonly.chmod(0o700)
+
+    def test_child_killed_by_a_signal_is_not_success(self):
+        private = self.root / "private"
+        private.mkdir()
+        result = self.wrap("--private-dir", private, "--event", "forge-fetched", "--data", "role=ci", "--data",
+                           "connection=ci", "--", sys.executable, "-c",
+                           "import os, signal; os.kill(os.getpid(), signal.SIGTERM)")
+        self.assertEqual((result.returncode, result.stderr), (128 + signal.SIGTERM, b""))
+        recorded = self.events_in(private)[0]
+        self.assertEqual((recorded["exit"], recorded["data"]["signal"], recorded["data"]["cancelled"]),
+                         (128 + signal.SIGTERM, "SIGTERM", None))
+
+    def test_caller_cancellation_stops_the_child_and_is_not_success(self):
+        child = self.root / "waiting.py"
+        child.write_text(WAITING_CHILD, encoding="utf-8")
+        cases = (("default", 1, 128 + signal.SIGTERM, "SIGTERM"),
+                 ("exit-zero", 1, 128 + signal.SIGTERM, None),
+                 ("ignore", 2, 128 + signal.SIGKILL, "SIGKILL"))
+        for mode, deliveries, expected, child_signal in cases:
+            with self.subTest(mode=mode):
+                private = self.root / f"cancel-{mode}"
+                private.mkdir()
+                ready = self.root / f"ready-{mode}"
+                wrapper = subprocess.Popen([sys.executable, str(SCRIPTS / "run_events.py"), "wrap", "--private-dir",
+                                            str(private), "--event", "focused-test-ran", "--data", f"head={HEAD}",
+                                            "--", sys.executable, str(child), str(ready), mode])
+                try:
+                    deadline = time.monotonic() + 20
+                    while not ready.exists() and time.monotonic() < deadline:
+                        time.sleep(0.05)
+                    pid = int(ready.read_text(encoding="utf-8"))
+                    for _ in range(deliveries):
+                        wrapper.send_signal(signal.SIGTERM)
+                        time.sleep(0.5)
+                    self.assertEqual(wrapper.wait(timeout=20), expected)
+                finally:
+                    if wrapper.poll() is None:
+                        wrapper.kill()
+                with self.assertRaises(ProcessLookupError):
+                    os.kill(pid, 0)
+                recorded = self.events_in(private)[0]
+                self.assertEqual((recorded["exit"], recorded["data"]["cancelled"], recorded["data"]["signal"]),
+                                 (expected, "SIGTERM", child_signal))
+
+    def test_documented_wrapped_commands_run(self):
+        sources = [SCRIPTS.parent / "references" / "pull-request-target.md",
+                   SCRIPTS.parent.parent / "review-code-publish" / "references" / "publication.md"]
+        binary = self.root / "bin"
+        binary.mkdir()
+        (binary / "gh").write_text(FAKE_GH, encoding="utf-8")
+        (binary / "gh").chmod(0o755)
+        env = dict(os.environ, PATH=str(binary) + os.pathsep + os.environ.get("PATH", ""))
+        script = shlex.quote(str(SCRIPTS / "run_events.py"))
+        blocks = []
+        for source in sources:
+            if source.exists():
+                found = [block for block in re.findall(r"```sh\n(.*?)```", source.read_text(encoding="utf-8"), re.S)
+                         if "run_events" in block or "run-events" in block]
+                self.assertTrue(found, f"{source.name} documents no wrapped command")
+                blocks.extend(found)
+        for number, block in enumerate(blocks):
+            with self.subTest(block=number):
+                private = self.root / f"documented-{number}"
+                private.mkdir()
+                text = (block.replace("<run-events-script>", script)
+                        .replace("<recorded-absolute-run_events.py-path>", script)
+                        .replace("<private-dir>", shlex.quote(str(private))))
+                text = re.sub(r"<[A-Za-z][A-Za-z0-9_.-]*>", "7", text)
+                result = subprocess.run(["sh", "-c", text], cwd=self.root, env=env, capture_output=True,
+                                        text=True, encoding="utf-8", timeout=60)
+                self.assertEqual((result.returncode, result.stderr), (0, ""), text)
+                events = self.events_in(private)
+                self.assertEqual([e["data"]["argv0"] for e in events], ["gh"])
+                self.summarize(events)
+                saved = sorted(private.glob("forge-*.json"))
+                for path in saved:
+                    argv = json.loads(path.read_text(encoding="utf-8"))
+                    self.assertIn("-F", argv)
+                    self.assertIn("owner={owner}", argv)
+
+    # --- wrapped-event summary ----------------------------------------------
+
+    def test_wrapped_events_validate(self):
+        events = [fetched(0, 1), context(), fetched(2, 3, "continuation", "reviewThreads"),
+                  fetched(3, 4, "issue", "issue"), fetched(3, 5, "ci", "ci"), tested(4, 6), payload(8),
+                  written(9, 10), written(10, 11, "replies"), written(11, 12, "resolutions"),
+                  written(12, 13, "summary")]
+        summary, _ = self.summarize(events, "--completion-mode", "result")
+        self.assertEqual((summary["event_count"], summary["violations"], summary["complete"]), (11, [], True))
+        self.assertEqual(summary["commands"]["publication_writes"]["by_role"],
+                         {"review": 1, "replies": 1, "resolutions": 1, "summary": 1})
+        cases = [("role must be one of", fetched(1, 2, role="other")),
+                 ("requires connection=root", fetched(1, 2, connection="reviews")),
+                 ("must name the requested connection", fetched(1, 2, "continuation", "ci")),
+                 ("connection must name", fetched(1, 2, "continuation", "bad name")),
+                 ("full lowercase commit SHA", tested(1, 2, head="abc")),
+                 ("data.command", tested(1, 2, command=None)),
+                 ("role must be one of", written(1, 2, role="publish")),
+                 ("argv0", fetched(1, 2, argv0="")),
+                 ("identity fields", fetched(1, 2, role=["root"]))]
+        for needle, line in cases:
+            with self.subTest(needle=needle):
+                summary, result = self.summarize([line], code=1)
+                self.assertIn(needle, result.stdout)
+                self.assertEqual(summary["event_count"], 0)
+
+    def test_overlapping_commands_are_counted_once(self):
+        events = [fetched(0, 10), context(), fetched(5, 15, "continuation", "reviews", exit=1),
+                  fetched(20, 25, "issue", "issue"), tested(3, 8), tested(6, 9, exit=1), payload(30),
+                  written(31, 40), written(35, 45, "replies", exit=1)]
+        summary, _ = self.summarize(events, "--completion-mode", "result")
+        commands = summary["commands"]
+        for group, count, failed, union in (("forge_fetches", 3, 1, 20.0), ("focused_tests", 2, 1, 6.0),
+                                            ("publication_writes", 2, 1, 14.0)):
+            with self.subTest(group=group):
+                self.assertEqual((commands[group]["event_count"], commands[group]["failed_attempts"]), (count, failed))
+                self.assertEqual((commands[group]["union_seconds"]["seconds"],
+                                  commands[group]["union_seconds"]["status"]), (union, "captured"))
+        self.assertEqual([a["exit"] for a in commands["forge_fetches"]["attempts"]], [0, 1, 0])
+        for group in ("forge_fetches", "focused_tests", "publication_writes"):
+            self.assertFalse([key for key in commands[group] if "sum" in key], commands[group])
+        span = summary["durations"]["observed_span"]
+        self.assertEqual(span["seconds"], 45.0)
+        self.assertIn("not root elapsed", span["basis"])
+        self.assertEqual(len(summary["script_failures"]), 3)
+        self.assertTrue(summary["complete"])
+
+    def test_independent_wrapped_events_may_append_out_of_order(self):
+        events = [context(), fetched(0, 1), fetched(20, 40, "ci", "ci"),
+                  fetched(10, 30, "continuation", "reviews"), tested(5, 12), payload(50)]
+        summary, _ = self.summarize(events, "--completion-mode", "result")
+        self.assertEqual((summary["clock"]["status"], summary["violations"]), ("single-domain", []))
+        self.assertEqual(summary["commands"]["forge_fetches"]["union_seconds"]["seconds"], 31.0)
+        self.assertEqual(summary["durations"]["context_to_validated_payload"]["seconds"], 48.0)
+        self.assertTrue(summary["complete"])
+
+        summary, result = self.summarize([context(20), fetched(1, 2), payload(10)], code=1)
+        self.assertIn("ended_ns precedes", result.stdout)
+        self.assertEqual(summary["clock"]["status"], "out-of-order")
+
+        other = dict(DOMAIN, boot="rebooted")
+        summary, _ = self.summarize([context(), fetched(3, 4, clock=other), payload(9)], "--completion-mode", "result")
+        self.assertEqual(summary["clock"]["status"], "mixed")
+        self.assertIsNone(summary["commands"]["forge_fetches"]["union_seconds"]["seconds"])
+
+        for name, lines in (("started before", [context(), payload(20), written(10, 25)]),
+                            ("appended before", [context(), written(21, 25), payload(20)])):
+            with self.subTest(name=name):
+                summary, result = self.summarize(lines, "--completion-mode", "result", code=1)
+                self.assertIn("forge write precedes the validated payload", result.stdout)
+                self.assertFalse(summary["complete"])
+
+    def test_writes_never_complete_publication(self):
+        scenarios = {
+            "review written": [context(), payload(10), fetched(11, 12), written(12, 14)],
+            "partial reply loop": [context(), payload(10), written(11, 13), written(13, 20, "replies", exit=1)],
+            "no writes": [context(), payload(10)],
+            "later failure": [context(), payload(10), written(11, 13), written(14, 15, "resolutions"),
+                              fetched(16, 17), written(18, 19, "summary", exit=1)],
+        }
+        for name, events in scenarios.items():
+            with self.subTest(name=name):
+                self.count += 1
+                sidecar = self.root / f"{self.count}-publication-timing.json"
+                summary, _ = self.summarize(events, "--completion-mode", "publication", "--timing-sidecar", sidecar)
+                self.assertEqual(summary["boundaries"]["final_result"]["status"], "unavailable")
+                self.assertIn("caller or runtime evidence", summary["boundaries"]["final_result"]["reason"])
+                self.assertIsNone(json.loads(sidecar.read_text(encoding="utf-8"))["completed_at"])
+                self.assertFalse(summary["complete"])
+                writes = summary["commands"]["publication_writes"]
+                expected = [e["exit"] for e in events if e["event"] == "forge-written"]
+                self.assertEqual([a["exit"] for a in writes["attempts"]], expected)
+                if not expected:
+                    self.assertEqual(writes["union_seconds"]["status"], "unavailable")
+                    self.assertIn("unknown, not zero", writes["union_seconds"]["reason"])
 
     def test_mixed_heads_are_a_violation(self):
         other = payload(10)

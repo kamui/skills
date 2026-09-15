@@ -183,6 +183,14 @@ class HandoffTests(unittest.TestCase):
         self.assertNotIn("## Conformance verifier procedure", ordinary)
         self.assertNotIn("Intent, approval, or a benchmark alone", ordinary)
 
+    def test_brief_embeds_focused_test_rules_without_primary_wrapper(self):
+        brief = (self.build() / "brief.md").read_text(encoding="utf-8")
+        self.assertIn("## Focused-test safety and execution", brief)
+        self.assertIn("run the changed test or the smallest affected group once", brief)
+        self.assertNotIn("run_events.py", brief)
+        self.assertNotIn("wrap --private-dir", brief)
+        self.assertNotIn("Primary focused-test recording", brief)
+
     def test_build_refusals(self):
         variants = []
         for repository in (".", "relative/checkout"):

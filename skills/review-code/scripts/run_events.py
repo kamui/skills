@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record and summarize a review run's timing events at its script seams.
+"""Record and summarize a review run's timing events at its script and command seams.
 
 The scripts every run invokes in fixed order append one event each to
 ``run-events.jsonl`` in the run's private directory: ``review_context.py``
@@ -12,21 +12,49 @@ mechanical and silent: it prints nothing, never changes a script's output or
 exit status, and any failure simply leaves the event out, which the summary
 reports as a measurement gap. The model neither writes nor narrates events.
 
+``wrap`` launches one existing forge fetch, focused test, or forge write that
+the caller supplies and appends one event around it. It holds no forge request
+logic, and stdout redirects stay outside it.
+
 Usage::
 
     python3 scripts/run_events.py summarize <private-dir>/run-events.jsonl --output summary.json
         [--completion-mode result|publication|render-only] [--timing-sidecar timing.json]
+    python3 scripts/run_events.py wrap --private-dir <dir> --event <name> [--data key=value ...] -- <command> [args...]
 
-Exit codes: ``0`` summary written; ``1`` summary written with content
-violations (invalid lines, out-of-order or inconsistent boundaries), one per
-stdout line; ``2`` the events file cannot be read, an output path already
+``summarize`` exit codes: ``0`` summary written; ``1`` summary written with
+content violations (invalid lines, out-of-order or inconsistent boundaries), one
+per stdout line; ``2`` the events file cannot be read, an output path already
 exists or cannot be written, or an argument is invalid, named on stderr.
+
+``wrap`` supersedes that convention for the child's status: it exits with the
+child's own status (0, 1, 2, 42, ...), and a child killed by signal N exits
+``128 + N``. Invalid wrapper arguments, including a missing required argument,
+and a command that cannot be executed exit ``2`` with one ``run_events:`` line
+on stderr; a child's own exit 2 adds no such line. ``--event`` is
+``forge-fetched`` (``--data role=`` and ``--data connection=``),
+``focused-test-ran`` (``--data head=``), or ``forge-written`` (``--data role=``).
+The child inherits stdin, stdout, stderr, inheritable descriptors, the
+environment and the working directory; the wrapper reads and writes none of
+them. A missing, unwritable or otherwise unusable ``--private-dir`` changes
+nothing about the child and prints nothing: the event is simply absent. A
+command that cannot be executed still records its failed attempt.
+
+Cancellation: SIGINT, SIGTERM or SIGHUP delivered to the wrapper is forwarded to
+the child, and a second one kills it. A terminal Ctrl-C that already reached
+the child's process group is therefore delivered to the child twice. The wrapper
+always waits for the child, records ``data.cancelled``, and never exits 0 after
+a cancellation: a child that exits 0 anyway yields ``128 + N``. A signal the
+wrapper inherited as ignored stays ignored and is not forwarded. SIGKILL to the
+wrapper alone cannot be forwarded; the child shares the wrapper's process group,
+so a process-group kill reaches both.
 
 Event schema (one JSON object per line, ``format: review-run-event/1``)::
 
     {
       "format": "review-run-event/1",
-      "event": "context-built" | "verifier-brief-built" | "verifier-return-accounted" | "payload-composed",
+      "event": "context-built" | "verifier-brief-built" | "verifier-return-accounted" | "payload-composed"
+               | "forge-fetched" | "focused-test-ran" | "forge-written",
       "exit": 0,                                  # the script's exit status
       "origin": {"script": "compose_review.py", "pid": 123,
                  "harness": {"name": "claude-code", "source": "env:CLAUDECODE", "session": "<id>"}},
@@ -56,14 +84,36 @@ the installed skill root is a clean git checkout. ``data`` per event:
 - ``payload-composed``: ``target_kind`` (``pull-request`` when the composition
   omits it, the composer's default), ``head``, ``merge_base``, ``status``,
   ``coverage``, ``findings``, ``questions``.
+- Wrapped events (``origin.script`` is ``run_events.py``, ``policy`` is null,
+  ``exit`` is the wrapper's status) all carry ``argv0`` (the command's first
+  argument), ``signal`` (the signal that killed the child, or null) and
+  ``cancelled`` (the signal that cancelled the wrapper, or null). Their
+  ``started_ns`` and ``ended_ns`` bracket launch to reap, which includes the
+  wrapper's launch and reap overhead but not its interpreter start.
+- ``forge-fetched``: ``role`` (``root``, ``continuation``, ``issue`` or ``ci``)
+  and ``connection`` (``root`` for role root, ``ci`` for role ci, otherwise the
+  requested connection's name).
+- ``focused-test-ran``: ``head`` (full commit SHA the test ran at) and
+  ``command``, the wrapped argv joined with spaces: display-only provenance,
+  never an executable reconstruction.
+- ``forge-written``: ``role`` (``review``, ``replies``, ``resolutions`` or
+  ``summary``). A wrapped write loop is one event; its result file, not the
+  event, records each write's outcome.
 
 Summary. Durations subtract only monotonic readings from one clock domain
-(same host, boot identity and clock implementation) whose events are in
-non-decreasing file order; anything else is null with its reason. Wall-clock
-``ended_at`` values are provenance, never subtracted. The summary separates
-captured intervals between recorded boundaries, labelled proxies, and fields
-no script can observe (root dispatch, primary inspection, focused tests,
-verifier idle wait, publication, caller mode, usage). A verifier batch's
+(same host, boot identity and clock implementation) whose script events are in
+non-decreasing file order; anything else is null with its reason. Wrapped
+events are exempt from file order: each takes its timestamp before appending, so
+independent commands can finish and append in either order. A forge write that
+started before the first validated payload ended, or that precedes it in the
+file, is a violation. Wall-clock ``ended_at`` values are provenance, never
+subtracted. The summary separates captured intervals between recorded
+boundaries, labelled proxies, and fields no event can observe (root dispatch,
+primary inspection, verifier idle wait, complete publication, caller mode,
+usage). ``commands`` reports forge fetches, focused tests and publication
+writes separately: each group's event count, every attempt with its status
+(failures included), and the union of its intervals counted once. Overlapping
+spans are never summed, and a group with no event is unknown, not zero. A verifier batch's
 brief-to-accounting bracket contains dispatch, worker lifetime, the raw save
 and the join; it is not the primary's waiting time, and overlapping brackets
 report their union once beside their sum. A complete-ledger batch with zero
@@ -75,8 +125,9 @@ authoritative usage record, and absent values are null, never zero.
 (``completion_mode``, ``root_dispatched_at``, ``payload_validated_at``,
 ``completed_at``) from the validated payload's ``ended_at``. Root dispatch is
 null because no script observes it; ``completed_at`` equals the payload for
-``result`` and ``render-only`` and is null for ``publication``, whose forge
-write no script performs.
+``result`` and ``render-only`` and is null for ``publication``: a wrapped write
+times one command, and no event proves every required write and readback
+finished.
 """
 from __future__ import annotations
 
@@ -87,6 +138,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import signal
 import stat
 import subprocess
 import sys
@@ -95,19 +147,30 @@ import time
 EVENT_FORMAT = "review-run-event/1"
 SUMMARY_FORMAT = "review-run-summary/1"
 EVENTS_NAME = "run-events.jsonl"
-EVENTS = ("context-built", "verifier-brief-built", "verifier-return-accounted", "payload-composed")
+COMMAND_EVENTS = ("forge-fetched", "focused-test-ran", "forge-written")
+EVENTS = ("context-built", "verifier-brief-built", "verifier-return-accounted", "payload-composed") + COMMAND_EVENTS
 MODES = ("result", "publication", "render-only")
 SKILL_ROOT = Path(__file__).resolve().parent.parent
+FETCH_ROLES = ("root", "continuation", "issue", "ci")
+WRITE_ROLES = ("review", "replies", "resolutions", "summary")
+WRAP_KEYS = {"forge-fetched": ("role", "connection"), "focused-test-ran": ("head",), "forge-written": ("role",)}
+COMMAND_FIELDS = {"forge-fetched": ("role", "connection"), "focused-test-ran": ("head", "command"),
+                  "forge-written": ("role",)}
+FULL_SHA = re.compile(r"[0-9a-f]{40}(?:[0-9a-f]{24})?")
+CONNECTION = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
+FORWARDED_SIGNALS = ("SIGINT", "SIGTERM", "SIGHUP")
 
 NOT_OBSERVED = {
     "root_dispatch": "the caller dispatches the review before any script runs",
-    "collection": "forge fetches and packet normalization record no event; only the context build is timed",
+    "collection": "only forge fetches run through run_events.py wrap are timed; packet normalization and any "
+                  "unwrapped fetch record no event",
     "primary_inspection": "inspection and falsification run in the model between script calls",
-    "focused_tests": "focused tests run as arbitrary commands no script wraps",
+    "focused_tests": "only focused tests run through run_events.py wrap are timed; verifier tests are never wrapped",
     "verifier_dispatch_and_join": "the worker is dispatched after the brief is built and joined before accounting; "
                                   "only those two script boundaries are recorded",
     "primary_idle_wait": "the primary may keep working while a batch runs, so no bracket measures waiting",
-    "publication": "the publisher's forge write is not a script; its review timestamp is on another clock",
+    "publication": "wrapped forge writes are timed one command or loop at a time, but no event proves every required "
+                   "write and readback finished; complete-publication timing needs caller or runtime evidence",
     "caller_mode": "one-shot or session mode is not passed to any script",
     "usage": "no script observes an authoritative per-request usage record",
 }
@@ -236,6 +299,14 @@ def _data(name: str, stash: dict) -> tuple:
             "status": _text(summary.get("status")), "coverage": _text(run.get("coverage")),
             "findings": _count(composition.get("findings", [] if composition else None)),
             "questions": _count(composition.get("questions", [] if composition else None))}
+    if name in COMMAND_EVENTS:
+        argv = stash.get("argv") if isinstance(stash.get("argv"), list) else []
+        data = dict(stash.get("data") or {})
+        data.update(argv0=_text(argv[0]) if argv else None, signal=_text(stash.get("signal")),
+                    cancelled=_text(stash.get("cancelled")))
+        if name == "focused-test-ran":
+            data["command"] = " ".join(argv)
+        return _absolute(stash.get("private_dir")), data
     return None, {}
 
 
@@ -279,9 +350,32 @@ def record(stash: dict, status, started_ns: int, script: str) -> None:
 
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)")
 DATA_STRINGS = ("head", "merge_base", "prior_head", "target", "target_kind", "run_id", "batch_id", "phase",
-                "mode", "status", "coverage", "store", "bundle")
+                "mode", "status", "coverage", "store", "bundle", "role", "connection", "argv0", "command",
+                "signal", "cancelled")
 DATA_COUNTS = ("candidates", "ledger_rows", "full_ledger_rows", "findings", "questions")
 DATA_TALLIES = ("supplied", "returned", "withheld")
+
+
+def _command_data_error(name: str, data: dict) -> str:
+    """Why a wrapped event's caller-supplied data breaks its rule, or ''. Shared by wrap and summarize."""
+    role = data.get("role")
+    if name == "forge-fetched":
+        connection = data.get("connection")
+        if role not in FETCH_ROLES:
+            return "forge-fetched role must be one of " + ", ".join(FETCH_ROLES)
+        if not isinstance(connection, str) or not CONNECTION.fullmatch(connection):
+            return "forge-fetched connection must name the requested connection, root, or ci"
+        if role in ("root", "ci") and connection != role:
+            return f"forge-fetched role={role} requires connection={role}"
+        if role not in ("root", "ci") and connection in ("root", "ci"):
+            return f"forge-fetched role={role} must name the requested connection, not {connection}"
+    elif name == "focused-test-ran":
+        head = data.get("head")
+        if not isinstance(head, str) or not FULL_SHA.fullmatch(head):
+            return "focused-test-ran head must be a full lowercase commit SHA"
+    elif name == "forge-written" and role not in WRITE_ROLES:
+        return "forge-written role must be one of " + ", ".join(WRITE_ROLES)
+    return ""
 
 
 def _timestamp(value) -> bool:
@@ -342,6 +436,12 @@ def _valid(event) -> str:
     for name in ("structurally_complete", "conclusion_accounted"):
         if data.get(name) is not None and not isinstance(data.get(name), bool):
             return f"data.{name} must be a boolean or null"
+    if event["event"] in COMMAND_EVENTS:
+        if not data.get("argv0"):
+            return "data.argv0 must be a non-empty string"
+        if event["event"] == "focused-test-ran" and not data.get("command"):
+            return "focused-test-ran data.command must be a non-empty string"
+        return _command_data_error(event["event"], data)
     return ""
 
 
@@ -401,7 +501,9 @@ def summarize(lines, events_path: str, mode) -> tuple:
     else:
         clock_status, domain = "single-domain", domains.pop()
     if domain is not None:
-        for earlier, later in zip(events, events[1:]):
+        # Script events keep file order; independent wrapped commands may append in either order.
+        core = [event for event in events if event["event"] not in COMMAND_EVENTS]
+        for earlier, later in zip(core, core[1:]):
             if later["ended_ns"] < earlier["ended_ns"]:
                 violations.append(f"line {later['_line']}: ended_ns precedes line {earlier['_line']}")
                 clock_status, domain = "out-of-order", None
@@ -510,6 +612,46 @@ def summarize(lines, events_path: str, mode) -> tuple:
                                   "status": "proxy", "basis": "wall time covered by any batch bracket, counted once"},
     }
 
+    # A forge write publishes a validated payload, so it cannot start before the first one exists.
+    if payloads:
+        first = payloads[0]
+        for write in by("forge-written"):
+            if write["_line"] < first["_line"] or (timed and write["started_ns"] < first["ended_ns"]):
+                violations.append(f"line {write['_line']}: forge write precedes the validated payload "
+                                  f"at line {first['_line']}")
+
+    def command_group(name, basis):
+        group = by(name)
+        spans = [(e["started_ns"], e["ended_ns"]) for e in group]
+        if not timed:
+            union = {"seconds": None, "status": "unavailable", "basis": basis, "reason": f"clock {clock_status}"}
+        elif not spans:
+            union = {"seconds": None, "status": "unavailable", "basis": basis,
+                     "reason": "no wrapped command of this kind was recorded; unknown, not zero"}
+        else:
+            union = {"seconds": _union_seconds(spans), "status": "captured", "basis": basis}
+        by_role = {}
+        for e in group:
+            if e["data"].get("role"):
+                by_role[e["data"]["role"]] = by_role.get(e["data"]["role"], 0) + 1
+        attempts = [dict({field: e["data"].get(field) for field in COMMAND_FIELDS[name]},
+                         line=e["_line"], exit=e["exit"], signal=e["data"].get("signal"),
+                         cancelled=e["data"].get("cancelled"), argv0=e["data"].get("argv0"),
+                         ended_at=e["ended_at"], seconds=_seconds(e["started_ns"], e["ended_ns"]) if timed else None)
+                    for e in group]
+        return {"event_count": len(group), "failed_attempts": sum(1 for e in group if e["exit"] != 0),
+                "by_role": by_role, "union_seconds": union, "attempts": attempts}
+
+    commands = {
+        "note": "only commands run through run_events.py wrap are recorded; overlapping intervals count once "
+                "and are never summed as elapsed time",
+        "forge_fetches": command_group("forge-fetched", "wall time covered by any wrapped forge fetch, counted once"),
+        "focused_tests": command_group("focused-test-ran", "wall time covered by any wrapped focused test, counted once"),
+        "publication_writes": command_group(
+            "forge-written", "wall time covered by any wrapped forge write, counted once; a wrapped loop is one "
+                             "interval whose result file records each write; not complete publication"),
+    }
+
     last_join = None
     if payload is not None:
         joins = [a for key in order for a in batches[key]["accountings"] if a["_line"] < payload["_line"]]
@@ -528,7 +670,8 @@ def summarize(lines, events_path: str, mode) -> tuple:
             "no accounting precedes a validated payload"),
         "observed_span": duration(min(e["started_ns"] for e in events) if events else None,
                                   max(e["ended_ns"] for e in events) if events else None, "proxy",
-                                  "first recorded script entry to last exit; not root elapsed", "no events"),
+                                  "first recorded script or wrapped command start to last exit; excludes root "
+                                  "dispatch, so not root elapsed", "no events"),
     }
 
     if mode is None:
@@ -570,6 +713,7 @@ def summarize(lines, events_path: str, mode) -> tuple:
         },
         "durations": durations,
         "verification": verification,
+        "commands": commands,
         "script_failures": failures,
         "usage": {"status": "unavailable", "reason": NOT_OBSERVED["usage"], "input_tokens": None,
                   "cache_write_tokens": None, "cache_read_tokens": None, "output_tokens": None, "cost": None},
@@ -589,7 +733,116 @@ def _write_new(path: str, value) -> None:
         handle.write(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
+# --- Wrapping ----------------------------------------------------------------
+
+class _ArgumentError(Exception):
+    pass
+
+
+class _WrapParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise _ArgumentError(message)
+
+
+def _wrap_arguments(argv):
+    parser = _WrapParser(prog="run_events.py wrap", allow_abbrev=False,
+                         description="Run one command and record its interval; exits with the command's status.")
+    parser.add_argument("--private-dir", required=True, help="the run's private directory; unusable means no event")
+    parser.add_argument("--event", required=True, choices=COMMAND_EVENTS)
+    parser.add_argument("--data", action="append", default=[], metavar="KEY=VALUE",
+                        help="forge-fetched: role, connection; focused-test-ran: head; forge-written: role")
+    if "--" not in argv:
+        parser.parse_args(argv)  # --help exits here; otherwise report a missing argument first
+        raise _ArgumentError("expected -- followed by the command to run")
+    split = argv.index("--")
+    args = parser.parse_args(argv[:split])
+    command = argv[split + 1:]
+    if not command or not command[0]:
+        raise _ArgumentError("expected a command after --")
+    data = {}
+    for item in args.data:
+        key, separator, value = item.partition("=")
+        if not separator or not key:
+            raise _ArgumentError(f"--data {item!r} must be key=value")
+        if key not in WRAP_KEYS[args.event]:
+            raise _ArgumentError(f"--data {key} is not accepted for {args.event}; "
+                                 f"accepted: {', '.join(WRAP_KEYS[args.event])}")
+        if key in data:
+            raise _ArgumentError(f"--data {key} given twice")
+        data[key] = value
+    reason = _command_data_error(args.event, data)
+    if reason:
+        raise _ArgumentError(reason)
+    return args, data, command
+
+
+def _signal_name(number: int) -> str:
+    try:
+        return signal.Signals(number).name
+    except ValueError:
+        return f"signal {number}"
+
+
+def wrap(argv) -> int:
+    try:
+        args, data, command = _wrap_arguments(argv)
+    except _ArgumentError as error:
+        print(f"run_events: wrap: {error}", file=sys.stderr)
+        return 2
+    stash = {"event": args.event, "private_dir": args.private_dir, "data": data, "argv": command,
+             "signal": None, "cancelled": None}
+    state = {"child": None, "cancelled": None, "received": 0, "sent": 0}
+
+    def deliver():
+        child = state["child"]
+        while child is not None and state["sent"] < state["received"]:
+            state["sent"] += 1
+            try:
+                if state["sent"] == 1:
+                    child.send_signal(state["cancelled"])
+                else:
+                    child.kill()
+            except OSError:
+                pass
+
+    def cancel(number, _frame):
+        if state["cancelled"] is None:
+            state["cancelled"] = number
+        state["received"] += 1
+        deliver()
+
+    for name in FORWARDED_SIGNALS:
+        number = getattr(signal, name, None)
+        if number is not None and signal.getsignal(number) is not signal.SIG_IGN:
+            signal.signal(number, cancel)
+
+    started_ns = time.monotonic_ns()
+    try:
+        child = subprocess.Popen(command, close_fds=False)
+    except (OSError, ValueError) as error:
+        record(stash, 2, started_ns, "run_events.py")
+        reason = error.strerror if isinstance(error, OSError) and error.strerror else str(error)
+        print(f"run_events: wrap: cannot execute {command[0]}: {reason}", file=sys.stderr)
+        return 2
+    state["child"] = child
+    deliver()  # a cancellation that arrived during launch
+    returncode = child.wait()
+    status = returncode
+    if returncode < 0:
+        status = 128 - returncode
+        stash["signal"] = _signal_name(-returncode)
+    if state["cancelled"] is not None:
+        stash["cancelled"] = _signal_name(state["cancelled"])
+        if status == 0:
+            status = 128 + state["cancelled"]
+    record(stash, status, started_ns, "run_events.py")
+    return status
+
+
 def main() -> int:
+    argv = sys.argv[1:]
+    if argv[:1] == ["wrap"]:
+        return wrap(argv[1:])
     parser = argparse.ArgumentParser(description="Summarize a review run's recorded timing events.")
     sub = parser.add_subparsers(dest="command", required=True)
     summary_parser = sub.add_parser("summarize", help="summarize one run-events.jsonl")
@@ -597,7 +850,9 @@ def main() -> int:
     summary_parser.add_argument("--output", required=True, help="new summary JSON path; never overwritten")
     summary_parser.add_argument("--completion-mode", choices=MODES)
     summary_parser.add_argument("--timing-sidecar", help="new research timing sidecar path; needs --completion-mode")
-    args = parser.parse_args()
+    sub.add_parser("wrap", help="run one forge fetch, focused test, or forge write and record its interval; "
+                                "see the module docstring")
+    args = parser.parse_args(argv)
     if args.timing_sidecar and not args.completion_mode:
         parser.error("--timing-sidecar requires --completion-mode")
     try:
