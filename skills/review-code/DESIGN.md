@@ -646,3 +646,20 @@ The publisher used to post each drafted reply and each resolution as its own wra
 | --- | --- | ---: | ---: |
 | `review-code-publish/SKILL.md` | Publisher startup | 507 / 3,635 | 514 / 3,684 |
 | `review-code-publish/references/publication.md` | Publisher, before writing | 1,269 / 9,212 | 3,546 / 26,562 |
+
+## Awaited verifier completion (issue #273)
+
+Issue #269 told the primary to join every dispatched batch, but a harness can offer background dispatch without offering a wait that returns the batch to the same turn. Step 3 now makes background dispatch, and the concurrent finishing of `consider` falsifications it enables, eligible only when the harness can both dispatch in the background and wait for and reconcile the return before the record is returned. Otherwise the batch is dispatched after the pass on a route whose tool call returns the completed batch, such as a foreground dispatch. An acknowledgment, agent id, or pending notice is not a returned batch. With no such route, no batch is dispatched and verification is reported incomplete with `review-wait-unavailable` under `Coverage gaps`. A failed or still-pending batch takes the existing incomplete-verification rule and never earns a replacement worker or a restored allowance.
+
+The same awaited-route rule lands in `implement-publish` and `resolve-review` for every reviewer phase, with a **fresh continuation** fallback that replaces a completed reviewer's next phase when the host's resumption only acknowledges. `finish-it` names the awaited route for its step dispatches and adds the phase, pending agent id, and missing artifact to a failed-step report. The trigger was a `finish-it` delivery on Claude Code 2.1.271 whose implement step resumed its reviewer with `SendMessage`, received only an acknowledgment, ended its turn, and was forced to hand back; the reviewer's approval arrived seven minutes later and was lost. A probe on this change's implement step reproduced the operation's shape: a foreground `Agent` dispatch returned the subagent's result within the tool call, while `SendMessage` to the finished agent returned `Resuming agent` and the resumed result arrived only as a later message.
+
+Counts use `wc -w` and `wc -c` on `origin/main` at `2bd592b` and on this change.
+
+| Instruction | Before words / bytes | After words / bytes |
+| --- | ---: | ---: |
+| `review-code/SKILL.md` | 4,953 / 34,036 | 5,040 / 34,579 |
+| `implement-publish/SKILL.md` | 874 / 5,586 | 1,215 / 7,840 |
+| `resolve-review/SKILL.md` | 1,888 / 11,986 | 2,131 / 13,581 |
+| `finish-it/SKILL.md` | 1,357 / 8,258 | 1,406 / 8,566 |
+
+**Workflow retained: `v5b-17`.** On a harness with a usable wait, which batches run, what they carry, the one-initial-plus-one-follow-up cap, reconciliation, rendering, and record state are unchanged; the rule only removes an early-dispatch path whose return could never be reconciled. On a harness without one, the outcome is the existing incomplete-verification state, now named, rather than a silently lost verdict. No script, fixture, or trailer changed.
