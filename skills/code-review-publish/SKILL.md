@@ -1,6 +1,7 @@
 ---
-name: code-review-publish-legacy
-description: "Legacy: review an issue-linked pull request along two axes (Code and Requirements) and publish the findings as line comments and a review summary under the shared review-protocol.md. Kept for historical purposes only: review-code-publish supersedes it with one integrated reviewer, calibrated consequence-triggered verification, and a mechanically validated output contract, so use review-code-publish instead. Not invoked automatically; only when the caller explicitly asks for the legacy review protocol."
+name: code-review-publish
+description: "Legacy: run the mattpocock/skills code-review skill on an issue-linked pull request, map its Standards and Spec axes to Code and Requirements, and publish the findings as line comments and a review summary under the shared review-protocol.md. Kept for historical purposes only: review-code-publish supersedes it with one integrated reviewer, calibrated consequence-triggered verification, and a mechanically validated output contract, so use review-code-publish instead. Not invoked automatically; only when the caller explicitly asks for the legacy review protocol."
+disable-model-invocation: true
 ---
 
 # Publish code review (legacy)
@@ -21,13 +22,17 @@ Fetch any earlier review from the posting identity: its `commit_id`, its finding
 
 ### 2. Run the review
 
-Honor a code-review skill the user names. Otherwise invoke the model-invoked review skill whose description best matches the change, passing it the fixed point, the spec source, and — re-reviewing — the earlier reviewed head. Failing that, review both axes directly: **Code** (correctness, documented repository standards, and code quality) and **Requirements** (missing, partial, incorrect, or unrequested behavior against the originating spec). Classify both axes with the protocol's outcomes. With no spec, do not invent requirements: mark Requirements `Not applicable` unless the user or repository workflow requires a spec; where one is required, ask for it and mark the axis Waiting for information. If an operational failure prevents classification, stop before publishing and report it. If the selected reviewer calls these axes Standards and Spec, map them to Code and Requirements before publication.
+Invoke the `code-review` skill from `mattpocock/skills` by name, `/code-review` or `$code-review`, and no other reviewer. Invoke the installed skill, not a built-in `/code-review` command of the same name. Where it is not installed, stop before publishing and report the install command: `npx skills@latest add mattpocock/skills --skill code-review`. Never substitute your own review for it.
+
+It reviews `git diff <fixed-point>...HEAD`, so run it with `HEAD` at the pull request's head SHA. Where the current checkout is elsewhere or has uncommitted changes, run it from a temporary detached worktree at that SHA and remove the worktree afterward. Pass it the fixed point and the spec source from step 1, or state that there is none, so it reports "no spec available" rather than asking.
+
+Map its axes before publication: **Standards** findings become **Code**, and **Spec** findings become **Requirements**. Classify both axes with the protocol's outcomes. With no spec, do not invent requirements: mark Requirements `Not applicable` unless the user or repository workflow requires a spec; where one is required, ask for it and mark the axis Waiting for information. If `code-review` fails or returns a report that cannot be classified, stop before publishing and report it.
 
 Re-reviewing, keep the original fixed point as the comparison base and evaluate the full pull-request diff, using the earlier head only to locate intervening changes. Verdict every prior finding against the current code.
 
 Where a verdict turns on something the code, spec, standards, and history do not answer, raise a question rather than guess a finding — a fabricated finding costs a round and an agent will dutifully "fix" it. Ask a user in the session if there is one; otherwise carry it as a `[Question]` per the protocol.
 
-Normalize each finding to an axis, severity, title, evidence, requested change, and stable id. Severity is a judgment about the merge, not about the finding's interest, and blocking is the default the author will assume: label `[Suggestion]` only where they may act on it or close it unactioned, and leave everything the change should not merge without unmarked. Labelling every finding optional is a review that blocks nothing; labelling none is a review where a nit stops a merge. These are authoritative for publication; do not merge or rerank the axes.
+Normalize each finding to an axis, severity, title, evidence, requested change, and stable id. Severity is a judgment about the merge, not about the finding's interest, and blocking is the default the author will assume: label `[Suggestion]` only where they may act on it or close it unactioned, and leave everything the change should not merge without unmarked. Labelling every finding optional is a review that blocks nothing; labelling none is a review where a nit stops a merge. A baseline smell `code-review` reports as a judgement call is `[Suggestion]`; a documented-standard breach or a Spec finding is blocking unless the author may close it unactioned. These are authoritative for publication; do not merge or rerank the axes.
 
 ### 3. Publish once
 

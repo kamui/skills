@@ -1,6 +1,6 @@
 interface:
   display_name: "Publish Code Review (Legacy)"
   short_description: "Legacy two-axis PR review; use review-code-publish instead"
-  default_prompt: "Use $code-review-publish-legacy only when explicitly asked for the legacy two-axis review protocol."
+  default_prompt: "Use $code-review-publish only when explicitly asked for the legacy two-axis review protocol."
 policy:
   allow_implicit_invocation: false
