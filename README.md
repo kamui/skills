@@ -125,7 +125,7 @@ The host agent needs access to the forge to create the pull request.
 
 `review-code-publish` and `implement-publish` require `review-code` as the named install-alone exception. Both call it in one-shot mode: the publisher reviews a pull request for posting, while `implement-publish` reviews its local base-to-head range before publication.
 
-`review-code` owns finding admission through [`review-rubric.md`](skills/review-code/references/review-rubric.md), record semantics through [`review-record.md`](skills/review-code/references/review-record.md), and visible output through [`rendering.md`](skills/review-code/references/rendering.md). `review-code-publish` owns forge writes through [`publication.md`](skills/review-code-publish/references/publication.md). `resolve-review` owns replies, dispositions, thread state, and round closeout through its [`review-protocol.md`](skills/resolve-review/references/review-protocol.md).
+`review-code` owns finding admission through [`review-rubric.md`](skills/review-code/references/review-rubric.md), record semantics through [`review-record.md`](skills/review-code/references/review-record.md), and visible output through [`rendering.md`](skills/review-code/references/rendering.md). `review-code-publish` owns forge writes through [`publication.md`](skills/review-code-publish/references/publication.md). `resolve-review` owns replies, dispositions, thread state, and round closeout through its [`addressing-protocol.md`](skills/resolve-review/references/addressing-protocol.md).
 
 A published finding is understandable from visible prose alone: its title states priority and action, and its `Triggers when`, `Impact`, and `Change` fields explain the defect and requested outcome. Optional findings explicitly say they may be closed without action. Hidden trailers add stable ids, reviewed heads, and correlation metadata for agents, but human comments without trailers remain first-class input.
 
@@ -137,7 +137,7 @@ The internal `workflow=v5b-17` trailer versions review behavior for deduplicatio
 
 ## The review protocol
 
-`code-review-publish` and `resolve-review` each ship `references/review-protocol.md`. It fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
+`code-review-publish` ships `references/review-protocol.md`, and `resolve-review` ships its addresser-side subset as `references/addressing-protocol.md`. The protocol fixes one shape for a finding comment and one for a reply, so both stay readable to a person and parseable by an agent:
 
 ```markdown
 **[Code] Duplicated validation in `parseOrder`**
@@ -165,4 +165,4 @@ Resolving every thread is what makes a round invisible: the forge collapses reso
 
 Re-reviewing, `code-review-publish` verdicts each prior finding against the code rather than against its reply — `fixed`, `accepted`, `obsolete`, or `not-fixed`. A decline does not close its own thread: the addresser states the position, and the reviewer's `accepted` verdict is what settles it, so a disagreement cannot be closed by the party that lost it. A finding declined once and then verified still unfixed is **disputed**: it stops being re-posted and is listed in the summary for a person to settle. Two rounds is the cap on any one finding, which is what keeps an unattended loop from re-litigating the same point forever.
 
-The two copies of the file are byte-identical because skills install one at a time and neither can point at the other's copy. Edit them together.
+Skills install one at a time, so neither file can point at the other; a change to the shared vocabulary lands in both.

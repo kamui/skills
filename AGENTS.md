@@ -16,9 +16,9 @@ Use the default five-role label vocabulary. See `docs/agents/triage-labels.md`.
 
 Use the single-context layout. See `docs/agents/domain.md`.
 
-### Mirrored reference
+### Shared protocol vocabulary
 
-`references/review-protocol.md` is byte-identical in `code-review-publish` and `resolve-review`. Skills install one at a time, so neither can point at the other's copy. Edit both together and `diff` them before committing.
+`code-review-publish/references/review-protocol.md` and `resolve-review/references/addressing-protocol.md` share the reply, disposition, verdict, and thread-state vocabulary. Skills install one at a time, so neither can point at the other's copy; a change to that vocabulary lands in both.
 
 ### Runtime review dependency
 
