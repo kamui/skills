@@ -114,7 +114,7 @@ Three events are added. `forge-fetched` carries `role` (`root|continuation|issue
 
 **Command count.** This is a mechanical count of documented forms, not of model requests. Eight command forms gain the wrapper prefix: the root query, continuation, issue query, CI read, focused test, review submission, reply, and resolution. Five fetch or write classes without a spelled-out command are classified in the publisher's table. No command is added or removed. The pull-request `mktemp -d` moves from step 2 to step 1. Tool calls are not model requests, and no time, cost, or quality effect is claimed. #265 owns the matched assessment.
 
-**Identifier retained: `v5b-17`.** Admission, verification triggers and caps, rendering, record state, trailers, and the duplicate shortcut are unchanged. The four existing scripts' stdout and exit statuses are unchanged, and every existing suite passes without edits. Only `test_run_events.py` gains tests; no ordering test was loosened. The new tests use synthetic events and local commands, so no production speedup follows from them.
+**Identifier retained: `v5b-17`.** Admission, verification triggers and caps, rendering, record state, trailers, and the duplicate shortcut are unchanged. The four existing scripts' stdout and exit statuses are unchanged, and every existing suite passes without edits. `test_run_events.py` gains the wrapper and summary tests, and `test_verifier_handoff.py` gains one test that a built brief carries no wrapper form; no existing test was edited, and no ordering test was loosened. The new tests use synthetic events and local commands, so no production speedup follows from them.
 
 Counts use whitespace splitting (`wc -w`) and bytes (`wc -c`) on `origin/main` at `2f606c0` and on this change.
 
