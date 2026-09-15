@@ -136,7 +136,7 @@ It requires `implement-publish`, `review-code-publish`, `resolve-review`, and `r
 
 ## The review handoff
 
-`review-code-publish` and `implement-publish` require `review-code` as the named install-alone exception. Both call it in one-shot mode: the publisher reviews a pull request for posting, while `implement-publish` reviews its local base-to-head range before publication.
+`review-code-publish` and `implement-publish` require `review-code` as one of the two named install-alone exceptions; `finish-it`, which requires all three publishing skills and `review-code`, is the other. Both call it in one-shot mode: the publisher reviews a pull request for posting, while `implement-publish` reviews its local base-to-head range before publication.
 
 `review-code` owns finding admission through [`review-rubric.md`](skills/review-code/references/review-rubric.md), record semantics through [`review-record.md`](skills/review-code/references/review-record.md), and visible output through [`rendering.md`](skills/review-code/references/rendering.md). `review-code-publish` owns forge writes through [`publication.md`](skills/review-code-publish/references/publication.md). `resolve-review` owns replies, dispositions, thread state, and round closeout through its [`addressing-protocol.md`](skills/resolve-review/references/addressing-protocol.md).
 

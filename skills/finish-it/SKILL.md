@@ -1,6 +1,6 @@
 ---
 name: finish-it
-description: "Take a spec, issue, branch, or pull request through implement-publish, review-code-publish, and rounds of resolve-review, each step in a fresh subagent, resuming from wherever the pull request already is."
+description: "Take a spec, issue, branch, or pull request through implement-publish, review-code-publish, and rounds of resolve-review, each step in a fresh subagent, resuming from wherever the pull request already is. Invoke only when the caller asks for finish-it by name."
 disable-model-invocation: true
 ---
 
@@ -65,7 +65,7 @@ Every subagent receives the same packet and nothing from earlier steps: the repo
 
 Dispatch each step as one **general-purpose** subagent in a fresh context that inherits none of this conversation; use `fork_turns="none"` or the host's equivalent. General-purpose because each underlying skill dispatches its own reviewer or verifier; types without the `Agent` tool are unsuitable. State the tier from step 1 in the dispatch. Brief it to invoke the named skill by name with the packet, and to return its final report.
 
-A subagent's report is a claim. After each step, read the forge for the step's **artifact** before continuing; a missing artifact is a failed step.
+A subagent's report is a claim. After each step, read the forge for the step's **artifact** before continuing. A missing artifact, an underlying skill's named stop, or an unresolvable spec source or base branch is a failed step, and a failed step ends the delivery with a report naming the step and its reason: no step is retried, and none is skipped. The orchestrator's own forge writes are attempted once; on an ambiguous result read the target before a single retry, then report the failure rather than writing again.
 
 ### 4. Implement
 
@@ -90,7 +90,5 @@ Repeat for each remaining round, in order:
 5. **Count the round**, then, from the second round of this delivery on, stop early when the review reached `Approved`, or when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. The first round of a delivery always runs, an already-`Approved` pull request included.
 
 ### 7. Report
-
-Attempt each forge write once; on an ambiguous result read the target before a single retry, then report the failure rather than writing again.
 
 Finish with the pull request URL and head SHA, the final review status, rounds run this delivery and D found at entry, disputed findings, open questions, and any step that stopped with its reason. Every file coordinate is the forge's immutable link at the reported head.
