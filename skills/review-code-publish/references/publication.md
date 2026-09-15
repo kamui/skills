@@ -22,6 +22,20 @@ Authorization changes only the forge event, never the semantic status:
 
 - On a conclusive malformed-comment rejection, apply `review-code`'s render-and-validate step to the repaired record, confirm no review exists, and retry once.
 
+## Timing events
+
+Run every forge fetch and write this skill makes through the `run_events.py` path the review record carries: `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event <event> --data role=<role> [--data connection=root] -- <command>`, where `<private-dir>` is the directory of the record's private store. Wrap each command of a chain separately so no fetch or write escapes, and keep stdout redirects outside the wrapper. A record without that path runs the same commands unwrapped.
+
+| Command | Event and data |
+| --- | --- |
+| Head re-fetch before writing, re-read after an ambiguous result, thread re-read, published-review readback | `forge-fetched`, `role=root`, `connection=root` |
+| Review submission | `forge-written`, `role=review` |
+| Each thread reply | `forge-written`, `role=replies` |
+| Each thread resolution | `forge-written`, `role=resolutions` |
+| General-comment fallback | `forge-written`, `role=summary` |
+
+The wrapper exits with the command's status; exit 2 with a `run_events:` line on stderr means it could not run the command, which counts as that fetch or write failing. These events time commands only. A successful wrapped write is not evidence that publication finished; the readback and failure reporting below still decide that.
+
 On GitHub, the `Create a review for a pull request` batch documents line comments but not file subjects. Keep file-anchored findings in `Unanchored findings` rather than making a separate write through the review-comment endpoint or inventing an unrelated line. The one-call batch shape is:
 
 ```json
@@ -40,7 +54,7 @@ On GitHub, the `Create a review for a pull request` batch documents line comment
 }
 ```
 
-Post it with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/reviews --input batch.json` as `--emit-batch` printed it. GitHub's separate review-comment endpoint documents `subject_type: "file"`, but using it would break this workflow's atomic one-review publication invariant. Use the equivalent forge-native operation elsewhere.
+Post it with `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event forge-written --data role=review -- gh api --method POST repos/{owner}/{repo}/pulls/<pr>/reviews --input batch.json` as `--emit-batch` printed it. GitHub's separate review-comment endpoint documents `subject_type: "file"`, but using it would break this workflow's atomic one-review publication invariant. Use the equivalent forge-native operation elsewhere.
 
 ## Authorized gating emission
 
@@ -50,13 +64,14 @@ On this gating path only, the script enforces the first-line grammar `**<Status>
 
 ## Existing-thread replies and resolution
 
-Post each drafted reply to its recorded comment id with `gh api --method POST repos/{owner}/{repo}/pulls/<pr>/comments/<id>/replies -f body='<drafted reply>'`. Use the equivalent structured body input when quoting needs it. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item. Re-read the thread after an ambiguous result before one retry. Report any reply that failed.
+Post each drafted reply to its recorded comment id with `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event forge-written --data role=replies -- gh api --method POST repos/{owner}/{repo}/pulls/<pr>/comments/<id>/replies -f body='<drafted reply>'`. Use the equivalent structured body input when quoting needs it. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item. Re-read the thread after an ambiguous result before one retry. Report any reply that failed.
 
 For every prior item `review-code` classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: `review-code`'s evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve.
 
 On GitHub, run:
 
 ```sh
+python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event forge-written --data role=resolutions -- \
 gh api graphql -f query='mutation($id:ID!){ resolveReviewThread(input:{threadId:$id}){ thread{ isResolved } } }' -f id=<thread-node-id>
 ```
 

@@ -4,9 +4,12 @@ Read at step 1 for a pull request, after the target kind is inferred. `SKILL.md`
 
 Resolve the repository, pull request, posting identity, base ref and SHA, head SHA, merge-base, state, and merged state. Return `target-closed-unmerged` when the target is closed without merge: it is abandoned or rejected. Invocation permits reviewing a draft. A merged pull request is reviewable only when invoked as a retrospective or audit review; record any separately explicit merged-target publication authorization for the summary Mode line; `review-code` itself never publishes.
 
-Fetch the pull request, its closing issues with their comments, and its reviews, review threads, and comments as **one persisted logical collection**: run the root query below once, then one continuation query per bounded connection whose `pageInfo.hasNextPage` is `true`, repeating each with the returned `endCursor` until it is `false`, and save every response as returned to its own file (`> forge-1.json`, `> forge-2.json`, …), a failed call included. Fetch each explicitly referenced non-closing issue from the resolution order above once with the issue query below and save it the same way. Then run `python3 scripts/forge_packet.py normalize forge-*.json > packet.json` exactly once and keep the packet as the private record's forge section; do not fetch these again later. The helper only normalizes the saved JSON and names a gap for every connection that did not finish; on a non-zero exit, report its output and stop the step. On GitHub:
+Before the fetch, create the pull-request private directory outside the working tree with `mktemp -d`, never a predictable shared path; step 2 reuses it. `<run-events-script>` is the absolute path of this skill's `scripts/run_events.py`, so each fetch still runs in the reviewed repository. Run every forge fetch in this file as `python3 <run-events-script> wrap --private-dir <private-dir> --event forge-fetched --data role=<role> --data connection=<connection> -- <fetch command>`, with any stdout redirect outside the wrapper. The wrapper exits with the fetch's own status and appends one timing event; exit 2 with a `run_events:` line on stderr means the wrapper could not run the fetch, which is a failed call.
+
+Fetch the pull request, its closing issues with their comments, and its reviews, review threads, and comments as **one persisted logical collection**: run the root query below once (`role=root`, `connection=root`), then one continuation query per bounded connection whose `pageInfo.hasNextPage` is `true`, repeating each with the returned `endCursor` until it is `false`, and save every response as returned to its own file (`> <private-dir>/forge-1.json`, `> <private-dir>/forge-2.json`, …), a failed call included. Fetch each explicitly referenced non-closing issue from the resolution order above once with the issue query below and save it the same way. Then run `python3 scripts/forge_packet.py normalize <private-dir>/forge-*.json > <private-dir>/packet.json` exactly once and keep the packet as the private record's forge section; do not fetch these again later. The helper only normalizes the saved JSON and names a gap for every connection that did not finish; on a non-zero exit, report its output and stop the step. On GitHub:
 
 ```sh
+python3 <run-events-script> wrap --private-dir <private-dir> --event forge-fetched --data role=root --data connection=root -- \
 gh api graphql -F owner='{owner}' -F name='{repo}' -F number=<pr> -f query='
 query($owner:String!,$name:String!,$number:Int!){
   repository(owner:$owner,name:$name){ url
@@ -18,15 +21,17 @@ query($owner:String!,$name:String!,$number:Int!){
       reviews(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} state body submittedAt updatedAt lastEditedAt commit{oid} url } }
       reviewThreads(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ id isResolved isOutdated path line originalLine diffSide
         comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt replyTo{ fullDatabaseId } pullRequestReview{ fullDatabaseId } url } } } }
-      comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url } } } } }' > forge-1.json
+      comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url } } } } }' > <private-dir>/forge-1.json
 ```
 
-Continuations bind `after` to the connection's `endCursor` (`-F after=<cursor>`, declared as `$after:String`) and return the same node fields and `totalCount pageInfo{ hasNextPage endCursor }` as above:
+Continuations run with `role=continuation`, bind `after` to the connection's `endCursor` (`-F after=<cursor>`, declared as `$after:String`), and return the same node fields and `totalCount pageInfo{ hasNextPage endCursor }` as above:
 
-- a pull-request connection: `repository(owner:$owner,name:$name){ pullRequest(number:$number){ reviews(first:100,after:$after){ … } } }`, and likewise for `reviewThreads`, `comments`, and `closingIssuesReferences`;
-- an issue's comments: `repository(owner:$owner,name:$name){ issue(number:$issue){ number url comments(first:100,after:$after){ … } } }`;
-- a thread's comments: `node(id:$thread){ ... on PullRequestReviewThread { id comments(first:100,after:$after){ … } } }`;
-- an explicitly referenced issue: the issue shape with `number title body url updatedAt lastEditedAt` and its `comments(first:100)` connection, no `after`.
+- a pull-request connection, whose name is its `connection`: `repository(owner:$owner,name:$name){ pullRequest(number:$number){ reviews(first:100,after:$after){ … } } }`, and likewise for `reviewThreads`, `comments`, and `closingIssuesReferences`;
+- an issue's comments (`connection=issue-comments`): `repository(owner:$owner,name:$name){ issue(number:$issue){ number url comments(first:100,after:$after){ … } } }`;
+- a thread's comments (`connection=thread-comments`): `node(id:$thread){ ... on PullRequestReviewThread { id comments(first:100,after:$after){ … } } }`;
+- an explicitly referenced issue (`role=issue`, `connection=issue`): the issue shape with `number title body url updatedAt lastEditedAt` and its `comments(first:100)` connection, no `after`.
+
+When step 3 reads current CI for the pushed head, run each CI read, such as `gh pr checks <pr>`, through the same wrapper with `--data role=ci --data connection=ci`, redirecting its stdout to a new file in `<private-dir>`.
 
 `fullDatabaseId` is the stable numeric id the fingerprint and re-review rules use; `databaseId` is deprecated on review and review-comment types and is accepted only as a fallback. `lastEditedAt` is `null` until an object is edited. Thread resolution carries no timestamp, which the re-review reference's later-state check accounts for.
 
