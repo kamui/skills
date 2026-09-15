@@ -116,7 +116,9 @@ Counts use whitespace splitting (`wc -w`) and bytes (`wc -c`) on `origin/main` a
 | --- | --- | ---: | ---: |
 | `SKILL.md` | Startup | 4,624 / 31,742 | 4,796 / 32,989 |
 | `review-code-publish/SKILL.md` | Publisher startup | 481 / 3,458 | 507 / 3,635 |
-| `review-code-publish/references/publication.md` | Publisher, before writing | 867 / 6,304 | 1,261 / 9,113 |
+| `review-code-publish/references/publication.md` | Publisher, before writing | 867 / 6,304 | 1,269 / 9,212 |
+
+The authorized gating emission now writes `<private-dir>/batch.json` from `<private-dir>/payload.json`. That is the batch the submission block posts, so a gating batch written elsewhere cannot leave the block posting the advisory one.
 
 ### Verifier batch join (issue #269)
 
