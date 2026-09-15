@@ -30,10 +30,9 @@ Read [`references/publication.md`](references/publication.md) now and follow its
 Use the returned `batch.json` for the common `COMMENT` path.
 An `issue-required` routed item appears as a `[Question]` in the review body; `Issue fit` states that the ledger came from the pull-request text. With otherwise complete coverage and no unsettled must-fix finding, the status is `Needs Information`, never `Incomplete` for this reason alone.
 For authorized gating, regenerate it with `--emit-batch --event` through the absolute validator path recorded by `review-code`; the script owns the suffix change.
-Never edit the batch by hand or locate scripts through a sibling-relative path.
+Never locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head immediately before the first write.
-If it differs from the reviewed head or cannot be read, publish nothing and report the stale review.
 Post the batch in one forge-native review call, then post each drafted reply on its existing thread and apply the reference's thread-resolution rule to every prior item.
 
 On a malformed-comment rejection, an ambiguous write, or a refused review, follow the reference's repair, retry, and fallback rules, using `review-code`'s recorded absolute script paths; if compaction dropped the rendering instructions, re-read `references/rendering.md` from the skill root those paths identify.
