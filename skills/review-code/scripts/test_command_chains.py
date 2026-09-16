@@ -38,6 +38,11 @@ import json, os, sys
 args = sys.argv[1:]
 with open(os.environ["GH_LOG"], "a", encoding="utf-8") as log:
     log.write(json.dumps(args) + "\n")
+if os.environ.get("GH_TOKEN_LOG"):
+    with open(os.environ["GH_TOKEN_LOG"], "a", encoding="utf-8") as tokens:
+        tokens.write(json.dumps({"args": args, "token": os.environ.get("GH_TOKEN")}) + "\n")
+if "--silent" in args:  # the preflight's token check
+    sys.exit(0)
 if "--method" in args and "POST" in args:
     rc = int(os.environ.get("GH_POST_RC", "0"))
     if rc == 0:
@@ -204,7 +209,7 @@ class Chains(unittest.TestCase):
 
     # --- publisher freshness and submission ---------------------------------
 
-    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD):
+    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD, tok=""):
         private = Path(tempfile.mkdtemp(dir=self.root))
         (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
                                                         "comments": []}), encoding="utf-8")
@@ -215,12 +220,18 @@ class Chains(unittest.TestCase):
             (binary / "gh").chmod(0o755)
         log = private / "gh.log"
         env = dict(os.environ, PATH=f"{binary}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
-                   GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc))
+                   GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc),
+                   GH_TOKEN_LOG=str(private / "token.log"))
+        env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (block(PUBLICATION.read_text(encoding="utf-8"), "preflight failed")
                 .replace("<private-dir>", shlex.quote(str(private)))
                 .replace("<recorded-absolute-run_events.py-path>", script)
                 .replace("<pr>", "7").replace("<reviewed head>", fixtures.HEAD))
+        if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
+            marker = "tok=  #"
+            self.assertIn(marker, text)
+            text = text.replace(marker, "tok=%s  #" % shlex.quote(tok), 1)
         self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
         result = self.sh(shell, text, env=env, cwd=self.root)
         calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
@@ -232,6 +243,41 @@ class Chains(unittest.TestCase):
     @staticmethod
     def posts(calls):
         return [call for call in calls if "POST" in call]
+
+    @staticmethod
+    def tokens(private):
+        path = private / "token.log"
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
+
+    def test_app_token_is_acquired_in_preflight_and_reused_by_the_post(self):
+        # The command is several words. Expanded bare in command position it would be one
+        # command name under zsh, which is the failure this block runs through `sh -c` to avoid.
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                result, calls, events, private = self.submission(shell, tok="printf %s app-token-xyz")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("preflight passed", result.stdout)
+                self.assertEqual(len(self.posts(calls)), 1, calls)
+                seen = self.tokens(private)
+                checks = [r for r in seen if "--silent" in r["args"]]
+                self.assertEqual(len(checks), 1, "the preflight checks the token exactly once")
+                self.assertEqual(checks[0]["token"], "app-token-xyz")
+                posted = [r for r in seen if "POST" in r["args"]]
+                self.assertEqual([r["token"] for r in posted], ["app-token-xyz"],
+                                 "the POST reuses the token the preflight acquired")
+                self.assertNotIn("app-token-xyz", json.dumps(calls), "a token never reaches argv")
+
+    def test_unusable_app_token_is_a_preflight_failure_that_writes_nothing(self):
+        for shell in SHELLS:
+            for tok, reason in (("printf %s ", "prints nothing"), ("false unused-argument", "exits non-zero")):
+                with self.subTest(shell=shell, tok=reason):
+                    result, calls, events, private = self.submission(shell, tok=tok)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertIn("preflight failed: the review-token command", result.stdout)
+                    self.assertIn("nothing was written", result.stdout)
+                    self.assertNotIn("write attempted", result.stdout)
+                    self.assertEqual(self.posts(calls), [])
+                    self.assertFalse((private / "review-response.json").exists())
 
     def test_preflight_failures_never_post(self):
         cases = [("fail", fixtures.HEAD, "head fetch exited 1"),
