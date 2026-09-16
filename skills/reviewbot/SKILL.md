@@ -71,7 +71,7 @@ End by printing the exact block to paste into that repository's `docs/agents/iss
 `scripts/review_token.py` has two subcommands and no others; `GH_TOKEN=$(python3 scripts/review_token.py token …) gh …` is how an ad-hoc call runs as the app.
 
 - `token --client-id <id> <owner>/<repo>` prints an installation token scoped to that one repository on stdout, and nothing else. Tokens cache under `~/.cache/reviewbot/<client id>/<owner>/<repo>.json` (`REVIEWBOT_CACHE_DIR` overrides the root), directories mode 700 and files mode 600, written through a `.part` rename, and are reused while more than five minutes remain; `REVIEWBOT_NO_CACHE=1` always mints. A cache that cannot be written is a warning on stderr, and the minted token is still printed.
-- `whoami --client-id <id> <owner>/<repo>` prints `app: <name> (<slug>)`, `rest login: <slug>[bot]`, `graphql login: <login>` read with the minted token through the GraphQL viewer query, `installation: <id> on <owner>/<repo>`, `permissions: …`, and `review-token command: …`.
+- `whoami --client-id <id> <owner>/<repo>` prints `app: <name> (<slug>)`, `rest login: <slug>[bot]`, `graphql login: <login>` read with the minted token through the GraphQL viewer query, `installation: <id> on <owner>/<repo>`, `permissions: …`, and `review-token command: …`. A cached token the probe refuses is dropped, with a warning on stderr, and minted again once.
 
 Both take `--key <path>` (or `REVIEWBOT_KEY`) and `--api <url>` (or `REVIEWBOT_API`, default `https://api.github.com`; GitHub Enterprise passes `https://<host>/api/v3`, from which the GraphQL endpoint `<host>/api/graphql` is derived). The script warns on stderr when the key is group- or world-readable.
 

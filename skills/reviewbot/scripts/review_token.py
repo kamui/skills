@@ -17,7 +17,8 @@ always mints. No config file is read.
 `token` prints the installation token, and nothing else, on stdout. `whoami`
 prints the app's name and slug, its REST login (<slug>[bot]), its GraphQL
 login read with the minted token, the installation id and permissions, and
-the review-token command a publisher runs to obtain the token.
+the review-token command a publisher runs to obtain the token. A cached token
+the probe refuses is dropped and minted again, once.
 
 Exit 0: success.
 Exit 1: the forge answered and refused: the app is not installed on the
@@ -233,20 +234,34 @@ def cmd_token(args: argparse.Namespace) -> int:
     return 0
 
 
+def probe(api: str, token: str, origin: str) -> str:
+    try:
+        viewer = request(graphql_url(api), token, {"query": "{viewer{login}}"})
+        return viewer["data"]["viewer"]["login"]
+    except Refused as error:
+        raise Refused(f"the {origin} token failed the probe: {error}") from error
+    except (KeyError, TypeError) as error:
+        raise Refused(f"the {origin} token failed the probe: GraphQL returned no viewer login") from error
+
+
 def cmd_whoami(args: argparse.Namespace) -> int:
     owner, name = args.repo
     key = resolve_key(args.key, args.client_id)
     jwt = app_jwt(key, args.client_id)
     app = request(f"{args.api}/app", jwt)
     install = installation(args.api, jwt, owner, name)
+    path = cache_path(args.client_id, owner, name)
+    cached = os.environ.get("REVIEWBOT_NO_CACHE") != "1" and cached_token(path) is not None
     token = mint_token(args.api, key, args.client_id, owner, name, jwt, install)
     try:
-        viewer = request(graphql_url(args.api), token, {"query": "{viewer{login}}"})
-        login = viewer["data"]["viewer"]["login"]
+        login = probe(args.api, token, "cached" if cached else "minted")
     except Refused as error:
-        raise Refused(f"the minted token failed the probe: {error}") from error
-    except (KeyError, TypeError) as error:
-        raise Refused("the minted token failed the probe: GraphQL returned no viewer login") from error
+        if not cached:
+            raise
+        print(f"review_token: warning: {error}; dropping {path} and minting again", file=sys.stderr)
+        path.unlink(missing_ok=True)
+        token = mint_token(args.api, key, args.client_id, owner, name, jwt, install)
+        login = probe(args.api, token, "minted")
     slug = app.get("slug", "")
     permissions = install.get("permissions") or {}
     script = shlex.quote(str(Path(__file__).resolve()))
