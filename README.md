@@ -20,6 +20,7 @@ npx skills@latest add kamui/skills --skill implement-publish --skill review-code
 npx skills@latest add kamui/skills --skill finish-it --skill implement-publish --skill review-code-publish --skill resolve-review --skill review-code
 npx skills@latest add kamui/skills --skill code-review-publish  # legacy, kept for historical purposes
 npx skills@latest add mattpocock/skills --skill code-review    # required by code-review-publish
+npx skills@latest add kamui/skills --skill reviewbot           # optional: publish reviews as a GitHub App
 ```
 
 Use `review-code-publish` for routine pull-request reviews. Explicitly use `audit-code-publish` for independent investigation of requirements completeness, API conformance, and contracts affected beyond the diff. Originally `code-review-deep-publish`, it retains the Panel workflow, and the [audit roadmap](skills/audit-code-publish/DESIGN.md#positioning) tracks the planned system-guarantee and executable-evidence checks, which have not shipped. Its higher cost and high-risk effectiveness require matched evaluation; no general cost or safety advantage is claimed.
@@ -54,9 +55,9 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-Four skills are model-invocable, so a driving agent can run the loop end to end; the legacy `code-review-publish` and `finish-it` are not model-invocable and run only when invoked by name, and `audit-code-publish` is explicit-only. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `review-code-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+Four skills are model-invocable, so a driving agent can run the loop end to end, and `reviewbot` is model-invocable so those skills can reach it; the legacy `code-review-publish` and `finish-it` are not model-invocable and run only when invoked by name, and `audit-code-publish` is explicit-only. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `review-code-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
-Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
+Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`; `reviewbot` needs `openssl` instead. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
 ## Skills
 
@@ -133,6 +134,27 @@ $finish-it
 ```
 
 It requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops before any write when one is missing. The host agent needs access to the forge for every write those skills make.
+
+### `reviewbot`
+
+Optional. Mints a GitHub App's installation token and resolves the identity a repository declares as its reviewing app, so a review can publish as the app rather than as the pull request's author. Its script, `scripts/review_token.py`, has two subcommands: `token` prints a short-lived token scoped to one named repository, and `whoami` reports the app, both login forms, the installation, and the exact review-token command a publisher runs. A dependent calls its Resolve entry point with the client id and the pull request's base repository, and on any failure (not installed, no key, key unreadable, app not installed on the repository, forge refusal, network failure) falls back to the authenticated user and withholds gating. A person invokes it as `$reviewbot` to create and install the app and place the key; see [Reviewing as a GitHub App](#reviewing-as-a-github-app).
+
+```text
+$reviewbot
+```
+
+## Reviewing as a GitHub App
+
+A repository that wants its reviews published under a GitHub App declares the app in `docs/agents/issue-tracker.md`:
+
+```text
+## Reviewing identity
+
+- **Reviewing app**: <app name>
+- **Client id**: <client id>
+```
+
+An optional third field, **Review-token command**, gives a literal shell command for a repository whose token comes from somewhere else; when present it is used as-is. Creating the app, choosing its permissions, installing it on every reviewed repository, and placing its private key at `~/.config/reviewbot/<client id>.pem` are walked through in [`skills/reviewbot/references/setup.md`](skills/reviewbot/references/setup.md). The key is the only per-machine item and never lives in a repository or under the synced skills directory.
 
 ## The review handoff
 
