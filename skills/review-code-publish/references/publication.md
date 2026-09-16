@@ -26,10 +26,11 @@ Every login comparison against this identity ignores a trailing `[bot]`: REST re
 A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with that token in the environment, as one `sh -c` argument so the timing wrapper can exec it:
 
 ```sh
-sh -c 'GH_TOKEN=$(<review-token command>) gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message="$1" -f event=DISMISS' _ '<why>'
+sh -c 'GH_TOKEN=$(<review-token command>) || exit 3; [ -n "$GH_TOKEN" ] || exit 3; export GH_TOKEN
+gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message="$1" -f event=DISMISS' _ '<why>'
 ```
 
-Dismiss only a review this identity published. The token is computed inside that shell, so it reaches the forge through the environment and never through the recorded `argv`. The message travels as a positional argument rather than inside the quoted command: written into that string it would be expanded again by the inner shell, and a dismissal reason carrying a backtick, a `$`, or a code span would be executed or corrupted on its way to the forge. It is still a single-quoted argument of the outer shell, so a reason containing a single quote is quoted the ordinary way.
+Dismiss only a review this identity published. The token is computed inside that shell, so it reaches the forge through the environment and never through the recorded `argv`. An empty one exits 3 with nothing dismissed rather than falling through: `gh` reads an empty `GH_TOKEN` as no token at all and would dismiss the app's review as the authenticated user. A non-empty token the forge refuses needs no separate check here, because this single write is where it would be refused, visibly. The message travels as a positional argument rather than inside the quoted command: written into that string it would be expanded again by the inner shell, and a dismissal reason carrying a backtick, a `$`, or a code span would be executed or corrupted on its way to the forge. It is still a single-quoted argument of the outer shell, so a reason containing a single quote is quoted the ordinary way, as is a review-token command that contains one.
 
 ## Publication invariants
 
