@@ -712,7 +712,7 @@ else:
     summary()
 PY
 cat > "$d/write-loop.sh" <<'SH'
-d=$1 pr=$2 rr=$3
+d=$1 pr=$2
 w() { python3 "$d/writes.py" "$d" "$@"; }
 mkdir -p "$d/write-responses" || exit 2
 n=$(w validate); rc=$?
@@ -728,10 +728,10 @@ while [ "$i" -lt "$n" ]; do
       [ "$1" = skip ] && break
       base="$d/write-responses/$i.$2"
       if [ "$1" = reply ]; then
-        $rr gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
+        gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
           > "$base.response.json" 2> "$base.stderr"
       else
-        $rr gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
+        gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
       fi
       w record "$i" "$2" "$?" || exit 2
       case $2 in *-read*) after=--no-read ;; *) break ;; esac
