@@ -363,15 +363,20 @@ class Chains(unittest.TestCase):
         calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
         return result, calls, private
 
-    def test_a_dismissal_without_a_token_writes_nothing(self):
+    def test_a_dismissal_without_a_token_writes_nothing_and_says_why(self):
         # `gh` reads an empty GH_TOKEN as no token at all, so falling through would dismiss
-        # the app's review as the authenticated user.
+        # the app's review as the authenticated user. Each guard names its own route, so a
+        # runner that failed is distinguishable from one that printed an empty token.
+        cases = (("printf %s ", "prints nothing", "the review-token command printed no token"),
+                 ("false unused-argument", "exits non-zero", "the review-token command failed"))
         for shell in SHELLS:
-            for tok, reason in (("printf %s ", "prints nothing"), ("false unused-argument", "exits non-zero")):
+            for tok, reason, expected in cases:
                 with self.subTest(shell=shell, tok=reason):
                     result, calls, _ = self.dismissal(shell, tok=tok)
                     self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
                     self.assertEqual(calls, [])
+                    self.assertIn(expected, result.stdout)
+                    self.assertIn("nothing was dismissed", result.stdout)
 
     def test_the_dismissal_runs_wrapped_and_keeps_its_message_literal(self):
         why = 'superseded by the `id -un` review at $HOME, a \\ and a "quote" \u2014 done'
