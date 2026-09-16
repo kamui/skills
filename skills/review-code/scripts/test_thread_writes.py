@@ -343,15 +343,19 @@ class Loop(unittest.TestCase):
         # command name under zsh, which is why the block runs it through `sh -c`.
         rows = [row("a", 101, "T1", "fixed", "resolve")]
         for shell in SHELLS:
-            with self.subTest(shell=shell):
-                private = self.fresh(rows)
-                result, state, _ = self.run_loop(private, shell, tok="printf %s app-token-xyz")
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertEqual(state["checks"], ["app-token-xyz"], "the token is proved exactly once")
-                self.assertEqual({call["token"] for call in state["log"]}, {"app-token-xyz"},
-                                 "every write in the loop runs under the token")
-                self.assertNotIn("app-token-xyz", json.dumps([call["args"] for call in state["log"]]),
-                                 "a token never reaches argv")
+            for wrapped in (False, True):
+                with self.subTest(shell=shell, wrapped=wrapped):
+                    private = self.fresh(rows)
+                    result, state, _ = self.run_loop(private, shell, wrapped=wrapped, tok="printf %s app-token-xyz")
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(state["checks"], ["app-token-xyz"], "the token is proved exactly once")
+                    self.assertEqual({call["token"] for call in state["log"]}, {"app-token-xyz"},
+                                     "every write in the loop runs under the token, wrapped or not")
+                    self.assertNotIn("app-token-xyz", json.dumps([call["args"] for call in state["log"]]),
+                                     "a token never reaches argv")
+                    if wrapped:
+                        events = (private / "run-events.jsonl").read_text(encoding="utf-8")
+                        self.assertNotIn("app-token-xyz", events, "a token never reaches a recorded event")
 
     def test_unusable_app_token_stops_the_loop_before_its_first_write(self):
         # A token the forge refuses would fail every reply, and `refused earlier; not retried`

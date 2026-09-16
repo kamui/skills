@@ -19,17 +19,17 @@ Resolve it before `review-code` runs, so an unusable app costs nothing: read the
 
 Both shell blocks below carry that command in `tok`, which they assign empty: fill it in when a reviewing app publishes, and leave it empty to publish as the authenticated user. Each block runs it through `sh -c` and exports the token it prints, rather than expanding a command prefix in command position: an unquoted multiword expansion splits into words under `sh`, `bash`, and `dash` but not under `zsh`, where the whole string is read as one command name. Keeping the token in the environment also keeps it out of `argv`, which the timing wrapper records.
 
-Each block then proves that token with `gh api "repos/{owner}/{repo}" --silent` before its first write, and exits 3 with nothing written when the command is absent, fails, prints nothing, or prints a token the forge refuses. Non-empty is not usable: a token minted against the wrong repository, or one whose installation was suspended after the review posted, passes an emptiness test and is then refused on every write. In the thread write loop that refusal is terminal — each reply records `failed`, every rerun skips it as `refused earlier; not retried`, and the thread actions behind those replies stay `blocked` — so the round's replies and resolutions would never publish against that results file.
+Each block then proves that token with `gh api "repos/{owner}/{repo}" --silent` before its first write, and exits 3 with nothing written when a filled-in `tok` fails, prints nothing, or prints a token the forge refuses. An empty `tok` is not that case: no app was declared, and the block writes as the authenticated user. Non-empty is not usable: a token minted against the wrong repository, or one whose installation was suspended after the review posted, passes an emptiness test and is then refused on every write. In the thread write loop that refusal is terminal — each reply records `failed`, every rerun skips it as `refused earlier; not retried`, and the thread actions behind those replies stay `blocked` — so the round's replies and resolutions would never publish against that results file.
 
 Every login comparison against this identity ignores a trailing `[bot]`: REST records carry the suffix that GraphQL's `author{login}` omits for the same app, so an unnormalized compare makes an app's own prior review invisible.
 
 A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with that token in the environment, as one `sh -c` argument so the timing wrapper can exec it:
 
 ```sh
-sh -c 'GH_TOKEN=$(<review-token command>) gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message="<why>" -f event=DISMISS'
+sh -c 'GH_TOKEN=$(<review-token command>) gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message="$1" -f event=DISMISS' _ '<why>'
 ```
 
-Dismiss only a review this identity published. The token is computed inside that shell, so it reaches the forge through the environment and never through the recorded `argv`.
+Dismiss only a review this identity published. The token is computed inside that shell, so it reaches the forge through the environment and never through the recorded `argv`. The message travels as a positional argument rather than inside the quoted command: written into that string it would be expanded again by the inner shell, and a dismissal reason carrying a backtick, a `$`, or a code span would be executed or corrupted on its way to the forge. It is still a single-quoted argument of the outer shell, so a reason containing a single quote is quoted the ordinary way.
 
 ## Publication invariants
 
@@ -54,7 +54,7 @@ Run every forge fetch and write this skill makes through the `run_events.py` pat
 | Dismissal of a superseded gate, as its single `sh -c` argument | `forge-written`, `role=review` |
 | General-comment fallback | `forge-written`, `role=summary` |
 
-A dismissal shares `role=review` because it writes that review's state; the wrapper's roles are a fixed vocabulary, and a command beginning with a `GH_TOKEN=` assignment is not one the wrapper can exec, which is why the dismissal is written as a single `sh -c` argument. The reviewer identity's own token check is the one forge call outside this table: it authenticates the publisher rather than reading or writing review state, and it runs inside the preflight boundary, before the first wrapped command of the block it guards.
+A dismissal shares `role=review` because it writes that review's state; the wrapper's roles are a fixed vocabulary, and a command beginning with a `GH_TOKEN=` assignment is not one the wrapper can exec, which is why the dismissal is written as a single `sh -c` argument. The reviewer identity's own calls are the forge calls outside this table: the login read above, and each block's token check. They authenticate the publisher rather than reading or writing review state, and each block's check gates that block's writes.
 
 The wrapper exits with the command's status; exit 2 with a `run_events:` line on stderr means it could not run the command, which counts as that fetch or write failing. These events time commands only. A successful wrapped write is not evidence that publication finished; the readback and failure reporting below still decide that. The loop's interval covers the whole loop, not each mutation, and its `write-results.jsonl` decides which writes succeeded.
 

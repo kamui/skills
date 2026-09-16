@@ -456,22 +456,22 @@ Targeted rereads stay targeted. To confirm one write or one item, read only that
 
 ### Writing review activity
 
-Where `docs/agents/issue-tracker.md` names a reviewing app, the posting identity resolved above is that app, and the review's own writes run as it: the review POST, the review-body update, the verdict replies it leaves on findings, the threads it resolves or reopens, and any dismissal. The addressing round's writes stay the pull request's author — disposition replies, the addressing summary, the re-review request — because an addressing round has to come from the author. A review write left as a bare `gh api` publishes as the authenticated user, and the next run's prior-review lookup, keyed on that app login, then finds nothing, so every re-review restarts as a first review with no carried findings.
+Where `docs/agents/issue-tracker.md` names a reviewing app, the posting identity resolved above is that app, and the review's own writes below run as it: **One review carrying every line comment**, **Update a review body**, **Supersede or dismiss a review**, **Resolve or reopen a thread** for a thread the review settles, and **Reply to an inline comment** for a verdict it writes. The addressing round's writes stay the pull request's author: the same reply verb used for a disposition reply, **General comment** for the addressing summary, and **Request a re-review**. A review write left as a bare `gh api` publishes as the authenticated user, and the next run's prior-review lookup, keyed on that app login, then finds nothing, so every re-review restarts as a first review with no carried findings.
 
-Acquire the token once, before the first of those writes, and export it:
+Acquire the token in the shell invocation that makes the write, and export it only once it is proved:
 
 ```sh
 app=$(sh -c '<review-token command>') || app=
-if [ -n "$app" ] && GH_TOKEN=$app gh api "repos/{owner}/{repo}" --silent; then
-  GH_TOKEN=$app; export GH_TOKEN
-else
-  echo "no usable app token; publishing as the authenticated user"
+if [ -z "$app" ] || ! GH_TOKEN=$app gh api "repos/{owner}/{repo}" --silent; then
+  echo "the review-token command yielded no usable token; nothing was written"; exit 3
 fi
+GH_TOKEN=$app; export GH_TOKEN
+<the review write this invocation makes>
 ```
 
-Run the command through `sh -c` rather than expanding it in command position, where a multiword command is read as one command name under `zsh`. Name the repository in the command; never let the runner infer one from a remote, which is the fork on a fork checkout. Keep the token in the environment, never on a command line, and export it only once it is proved, so an unusable one leaves whatever credential the authenticated user already had in place. Prove it before the first write rather than testing it for emptiness alone: a token minted against the wrong repository, or one whose installation was suspended, is non-empty and then refused on every write.
+Run the command through `sh -c` rather than expanding it in command position, where a multiword command is read as one command name under `zsh`. Name the repository in the command; never let the runner infer one from a remote, which is the fork on a fork checkout. Keep the token in the environment, never on a command line, and export it only once it is proved, so an unusable one leaves whatever credential the authenticated user already had in place. Acquire it in the same shell invocation as the write it covers, as the block above does: an exported variable does not survive to the next invocation, and a write run in a shell of its own publishes as the authenticated user however the previous one ended. Prove it before the first write rather than testing it for emptiness alone: a token minted against the wrong repository, or one whose installation was suspended, is non-empty and then refused on every write.
 
-A command that is absent, that fails, or whose token cannot authenticate is not an error. Publish as the authenticated user, record the fallback, and re-derive the event under the self-review rule below first: `APPROVE` and `REQUEST_CHANGES` are refused with 422 on a pull request that user authored, while they are available to an app.
+The fallback to the authenticated user belongs to identity resolution, not to publication. A command that is absent, that fails, or whose token cannot authenticate is not an error when step 1 resolves the posting identity: resolve the authenticated user instead, record the fallback, and review under the self-review rule below. Once the run has resolved the app, though, its prior-state matching and its event derive from that login, so a token that stops working at publication time writes nothing and reports the unusable token. Publishing that same review as the authenticated user would leave it invisible to the next run's app-keyed lookup, and `APPROVE` and `REQUEST_CHANGES` are refused with 422 on a pull request that user authored, while they are available to an app.
 
 - **One review carrying every line comment** — a single call producing a single timeline entry:
 
