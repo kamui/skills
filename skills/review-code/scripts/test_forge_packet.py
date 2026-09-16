@@ -15,8 +15,8 @@ GraphQL queries and pin what issue #132 requires of it:
 - a missing or failed continuation is a named gap, never complete coverage,
   and the truncated packet cannot pass the later-state check or share a digest
   with the complete one;
-- a reply edited after a review without a code change is later state, while the
-  candidate review's own original comments are not;
+- edited candidate reviews, original comments, and marked replies are later
+  state; unedited publication replies and their empty containers are excluded;
 - an undated thread resolution is never silently unchanged, whether the thread
   is resolved now or predates the review and may have been un-resolved since;
 - a page carrying the forge's HTTP error body is a named gap, not exit 2.
@@ -448,7 +448,7 @@ def case_missing_or_failed_continuation(directory: Path) -> None:
 
 
 def case_later_state(directory: Path) -> None:
-    """Edited replies are later state; the review's own comments are not; undated thread state is never silent."""
+    """Edits to replies and original comments are later state; undated thread state is never silent."""
     case = "later-state"
     threads = connection(
         [
@@ -463,7 +463,7 @@ def case_later_state(directory: Path) -> None:
                     False,
                 ),
             ),
-            thread("PRRT_2", connection([thread_comment(6000, T0, "900", edited=AFTER)], 1, False), resolved=True),
+            thread("PRRT_2", connection([thread_comment(6000, T0, "900")], 1, False), resolved=True),
             thread("PRRT_3", connection([thread_comment(7000, BEFORE, "800")], 1, False), resolved=False),
             thread("PRRT_4", connection([thread_comment(8000, T0, "900")], 1, False), resolved=False),
         ],
@@ -485,10 +485,10 @@ def case_later_state(directory: Path) -> None:
         fail(case, f"expected exit 1 with later state, got {result.returncode}: {result.stdout!r} {result.stderr!r}")
     if not any(line.startswith("reply thread=PRRT_1 id=5001") and AFTER in line for line in lines):
         fail(case, f"a reply edited after the review was not reported: {lines}")
-    # 5000 and 6000 are the candidate review's own original comments, both edited
-    # after it, so only the `own` exclusion can keep them out of the report.
-    if any("id=5000" in line or "id=6000" in line for line in lines):
-        fail(case, f"the candidate review's own comments were reported as later state: {lines}")
+    if not any(line.startswith("thread-comment thread=PRRT_1 id=5000") for line in lines):
+        fail(case, f"the candidate's edited original comment was not reported: {lines}")
+    if any("id=6000" in line or "id=8000" in line for line in lines):
+        fail(case, f"the candidate's unedited original comment was reported: {lines}")
     if any(line.startswith("review id=800") for line in lines):
         fail(case, f"an earlier review was reported as later state: {lines}")
     if not any(line.startswith("thread-state thread=PRRT_2") and "resolved:" in line for line in lines):
@@ -501,6 +501,9 @@ def case_later_state(directory: Path) -> None:
     # from an earlier review, nothing is later: exit 0.
     clean = copy.deepcopy(page)
     pr = clean["data"]["repository"]["pullRequest"]
+    original = pr["reviewThreads"]["nodes"][0]["comments"]["nodes"][0]
+    original["lastEditedAt"] = None
+    original["updatedAt"] = T0
     reply = pr["reviewThreads"]["nodes"][0]["comments"]["nodes"][1]
     reply["lastEditedAt"] = None
     reply["updatedAt"] = BEFORE
@@ -533,6 +536,86 @@ def case_later_state(directory: Path) -> None:
     result = run("later-state", path, "--review", "999")
     if result.returncode != 2 or "not in the packet" not in result.stderr:
         fail(case, f"unknown review id must exit 2: {result.returncode} {result.stderr!r}")
+
+
+def case_publication_artifacts(directory: Path) -> None:
+    """Only unedited marked publication artifacts are silent, never author dispositions."""
+    marker = "<!-- prior-item id=bug/retry classification=fixed head=" + "a" * 40 + " -->"
+    reply = thread_comment(5002, AFTER, "901", reply_to="5000")
+    reply["body"] = "Fixed.\n\n" + marker
+    container = review(901, AFTER)
+    container["body"] = ""
+    page = root(
+        closing=connection([], 0, False),
+        reviews=connection([review(800, BEFORE), review(900, T0), container], 3, False),
+        threads=connection([thread("PRRT_1", connection([
+            thread_comment(5000, BEFORE, "800"), reply,
+        ], 2, False), resolved=True)], 1, False),
+    )
+    state_line = (
+        "thread-state thread=PRRT_1 path=src/retry.ts resolved: no timestamp; "
+        "settle against the candidate review's recorded prior-item classification or treat as later state"
+    )
+
+    def check(name: str, fixture: dict[str, Any], expected: list[str]) -> None:
+        packet = normalize(name, directory, {name + ".json": fixture})
+        if packet is None:
+            return
+        result = run("later-state", write(directory, name + "-packet.json", packet), "--review", "900")
+        if result.returncode != 1 or result.stdout.splitlines() != expected:
+            fail(name, f"expected exit 1 and {expected!r}, got {result.returncode}: {result.stdout!r} {result.stderr!r}")
+
+    check("publication shape", page, [state_line])
+    for classification in ("accepted", "obsolete", "still-open"):
+        variant = copy.deepcopy(page)
+        variant["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"][0]["comments"]["nodes"][1]["body"] = marker.replace("fixed", classification)
+        check(classification, variant, [state_line])
+
+    for name in ("edited reply", "nonempty container", "edited container", "mixed container",
+                 "author disposition", "wrong head", "wrong author", "malformed marker",
+                 "nontrailer marker", "edited candidate", "bot suffix", "empty container"):
+        variant = copy.deepcopy(page)
+        pr = variant["data"]["repository"]["pullRequest"]
+        comments = pr["reviewThreads"]["nodes"][0]["comments"]
+        marked = comments["nodes"][1]
+        box = pr["reviews"]["nodes"][2]
+        review_line = f"review id=901 by reviewer at {AFTER}"
+        reply_line = f"reply thread=PRRT_1 id=5002 at {AFTER}"
+        expected = [review_line, reply_line]
+        if name == "edited reply":
+            marked["lastEditedAt"] = AFTER
+        elif name == "nonempty container":
+            box["body"] = "Independent review text"
+            expected = [review_line, state_line]
+        elif name == "edited container":
+            box["lastEditedAt"] = AFTER
+            expected = [review_line, state_line]
+        elif name == "mixed container":
+            comments["nodes"].append(thread_comment(5003, AFTER, "901", reply_to="5000"))
+            comments["totalCount"] = 3
+            expected = [review_line, f"reply thread=PRRT_1 id=5003 at {AFTER}"]
+        elif name == "author disposition":
+            marked["body"] = "Declined.\n<!-- reply to=bug/retry disposition=declined head=" + "a" * 40 + " -->"
+        elif name == "wrong head":
+            marked["body"] = marker.replace("a" * 40, "b" * 40)
+        elif name == "wrong author":
+            marked["author"] = {"login": "someone-else"}
+        elif name == "malformed marker":
+            marked["body"] = marker.replace("classification=fixed", "classification=implemented")
+        elif name == "nontrailer marker":
+            marked["body"] = marker + "\nAdditional text"
+        elif name == "edited candidate":
+            pr["reviews"]["nodes"][1]["lastEditedAt"] = AFTER
+            expected = [f"review id=900 by reviewer at {AFTER}", state_line]
+        elif name == "bot suffix":
+            marked["author"] = {"login": "reviewer[bot]"}
+            box["author"] = {"login": "reviewer[bot]"}
+            expected = [state_line]
+        elif name == "empty container":
+            comments["nodes"].pop()
+            comments["totalCount"] = 1
+            expected = [review_line, state_line]
+        check(name, variant, expected)
 
 
 def case_explicit_issue_page(directory: Path) -> None:
@@ -618,6 +701,7 @@ CASES = (
     case_duplicate_page_items,
     case_missing_or_failed_continuation,
     case_later_state,
+    case_publication_artifacts,
     case_explicit_issue_page,
     case_shape_errors,
 )
