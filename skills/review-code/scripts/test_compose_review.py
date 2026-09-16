@@ -536,7 +536,7 @@ def main() -> int:
     assert body.startswith("**Needs Information** — 1 open question.")
     assert "**[Question] Which originating issue applies?**" in body
     assert required_issue["summary"]["issue_fit"] in body
-    assert "issues=none coverage=complete" in body and "workflow=v5b-18" in body
+    assert "issues=none coverage=complete" in body and "workflow=v5b-19" in body
     assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
     assert payload["items"][0]["id"] == "workflow/required-issue"
     wrong = copy.deepcopy(required_issue)
