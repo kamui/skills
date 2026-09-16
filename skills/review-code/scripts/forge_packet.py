@@ -34,7 +34,13 @@ review's submission time (or after `--after`), one line per packet gap, and one
 unchanged and that carries no later comment: every resolved thread, and every
 thread predating the review, since one resolved when the review ran can have
 been un-resolved since without leaving a timestamp. A thread the candidate
-review created and left unresolved is the one silent case. Exit 0 means the packet is complete
+review created and left unresolved is the one silent case. Unedited candidate
+reviews and their original comments are excluded, as are unedited replies with
+this reviewer's prior-item trailer naming the candidate's commit, and empty,
+unedited reviews holding only those replies. Edited records remain eligible.
+Excluding publication replies leaves thread-state settling intact: a resolved
+pre-existing thread still prints its thread-state line and exits 1.
+Exit 0 means the packet is complete
 and nothing later exists, so the deduplication rule may consider the candidate;
 exit 1 means the lines on stdout stand between the run and that shortcut.
 
@@ -71,6 +77,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -708,6 +715,35 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
                 return stamp
         return None
 
+    def same_author(record: dict[str, Any]) -> bool:
+        author = (record.get("author") or "").removesuffix("[bot]")
+        candidate_author = (candidate.get("author") or "").removesuffix("[bot]")
+        return bool(author) and author == candidate_author
+
+    def publication_reply(comment: dict[str, Any]) -> bool:
+        marker = re.search(
+            r"<!-- prior-item id=[^\s<>]+ classification=(?:fixed|accepted|obsolete|still-open) "
+            r"head=([0-9a-f]{40}) -->\s*\Z", comment.get("body") or "",
+        )
+        return bool(
+            comment.get("reply_to") and same_author(comment)
+            and comment.get("last_edited_at") is None
+            and marker and marker.group(1) == candidate.get("commit")
+        )
+
+    review_comments: dict[Optional[str], list[dict[str, Any]]] = {}
+    for thread in packet["threads"]:
+        for comment in thread["comments"]:
+            review_comments.setdefault(comment.get("review_id"), []).append(comment)
+
+    def publication_container(review: dict[str, Any]) -> bool:
+        comments = review_comments.get(review["id"], [])
+        return bool(
+            same_author(review) and review.get("body") == ""
+            and review.get("last_edited_at") is None
+            and comments and all(publication_reply(comment) for comment in comments)
+        )
+
     pr = packet["pr"]
     stamp = later(pr.get("last_edited_at"))
     if stamp:
@@ -721,7 +757,7 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
             if stamp:
                 lines.append(f"issue-comment {issue['coordinate']} id={comment['id']} at {stamp}")
     for review in packet["reviews"]:
-        if review["id"] == review_id:
+        if (review["id"] == review_id and review.get("last_edited_at") is None) or publication_container(review):
             continue
         stamp = later(review.get("submitted_at"), review.get("last_edited_at"), review.get("updated_at"))
         if stamp:
@@ -735,8 +771,8 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
         pre_existing = any(comment.get("review_id") != review_id for comment in thread["comments"])
         for comment in thread["comments"]:
             own = comment.get("review_id") == review_id and comment.get("reply_to") is None
-            if own:
-                continue  # the candidate review's own original comments
+            if (own and comment.get("last_edited_at") is None) or publication_reply(comment):
+                continue
             stamp = later(comment.get("created_at"), comment.get("last_edited_at"), comment.get("updated_at"))
             if stamp:
                 kind = "reply" if comment.get("reply_to") else "thread-comment"
@@ -897,6 +933,27 @@ def self_test() -> int:
         any(line.startswith("thread-state thread=PRRT_1") and "unresolved" in line for line in lines),
         str(lines),
     )
+
+    published = copy.deepcopy(reopened)
+    pr = published["data"]["repository"]["pullRequest"]
+    thread = pr["reviewThreads"]["nodes"][0]
+    thread["isResolved"] = True
+    reply = copy.deepcopy(thread["comments"]["nodes"][0])
+    reply.update({
+        "fullDatabaseId": "5001", "replyTo": {"fullDatabaseId": "5000"},
+        "pullRequestReview": {"fullDatabaseId": "901"},
+        "createdAt": "2026-09-01T09:01:00Z", "updatedAt": "2026-09-01T09:01:00Z",
+        "body": "Fixed.\n<!-- prior-item id=bug/retry classification=fixed head=" + "a" * 40 + " -->",
+    })
+    thread["comments"] = connection([thread["comments"]["nodes"][0], reply], 2, False)
+    container = copy.deepcopy(pr["reviews"]["nodes"][0])
+    container.update({"fullDatabaseId": "901", "body": "", "submittedAt": reply["createdAt"], "updatedAt": reply["createdAt"]})
+    pr["reviews"] = connection([pr["reviews"]["nodes"][0], container], 2, False)
+    lines = later_state(normalize([("root", published)]), "900", None)
+    check("publication leaves thread-state", lines == [
+        "thread-state thread=PRRT_1 path=src/retry.ts resolved: no timestamp; "
+        "settle against the candidate review's recorded prior-item classification or treat as later state"
+    ], str(lines))
 
     http_error = normalize([("root", sample_root()), ("page2", {"message": "rate limited"})])
     check("http error body is a gap", not http_error["complete"], str(http_error["gaps"]))
