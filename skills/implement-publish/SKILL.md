@@ -57,7 +57,7 @@ Update that one's body if it exists; otherwise `gh pr create --base <base> --hea
 
 - summarize the change;
 - reference every issue resolved in step 1, each with its disposition: **closes** it, using the forge's closing keyword so the merge closes the issue; **partially implements** it, naming what remains open; or **affects** it, stating how. When the spec lives outside the forge, name and link the specification instead;
-- list the verification performed, naming each check with the head and input state it establishes and any remaining verification gap.
+- list the verification performed, naming each check with the head and input state it establishes, each piece of acceptance evidence with its criterion and the head and input state it was exercised at, and any remaining verification gap.
 
 Leave issue status, labels, and assignees alone.
 
