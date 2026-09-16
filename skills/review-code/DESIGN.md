@@ -811,6 +811,6 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `cb3d7e7` and on this change.
 
 | Instruction | Before words / bytes | After words / bytes |
 | --- | ---: | ---: |
-| `resolve-review/SKILL.md` | 2,309 / 14,643 | 2,841 / 17,918 |
+| `resolve-review/SKILL.md` | 2,309 / 14,643 | 2,883 / 18,172 |
 
 **Workflow retained: `v5b-19`.** Nothing changes review admission, verification, rendering, record state, publication, or any fenced program; the change adds timestamps and one report section. The issue's text names `v5b-17`, the identifier current when it was written, and `v5b-19` is that identifier today.

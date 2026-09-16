@@ -68,7 +68,7 @@ Resolve each thread together with its confirmed reply, under the protocol's Thre
 
 Re-addressing a pull request, reopen any thread resolved too early — the fix regressed, a later commit undid it, or the earlier reply claimed more than the code delivered — and say why in a new reply on it.
 
-Post the thread replies, resolutions, and reopenings by writing `writes.jsonl` from the step-3-checked drafts and running the protocol's thread write loop once. Reconcile and retry only through the loop's rerun rules, and report every `unresolved` line it prints.
+Post the thread replies, resolutions, and reopenings by writing `writes.jsonl` from the step-3-checked drafts and running the protocol's thread write loop once. Reconcile and retry only through the loop's rerun rules, and report every `unresolved` line it prints. Record step 4's writes — this write-loop run — as a paired step-boundary event under step 1's timeline rule.
 
 ### 5. Close out the round
 
@@ -78,7 +78,7 @@ Resolving every thread leaves the pull request looking untouched, since the forg
 
 One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid.
 
-Ask the identity whose review this round addressed to look again, in the form the protocol's Addressing summary section selects: a review request where the forge routes one, a mention line in the summary comment where it does not, and neither for an app reviewer. Settle which form applies before writing the summary.
+Ask the identity whose review this round addressed to look again, in the form the protocol's Addressing summary section selects: a review request where the forge routes one, a mention line in the summary comment where it does not, and neither for an app reviewer. Settle which form applies before writing the summary. Record step 5's closeout — the summary comment and any re-review request — as a paired step-boundary event under step 1's timeline rule.
 
 ### 6. Verify
 
