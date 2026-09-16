@@ -20,7 +20,8 @@ If `review-code` is not among the installed skills, stop with `missing-dependenc
 ## Inspect
 
 Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
-Pass through supplied phase-1 packets, reviewer identity, review-token command, focused-test policy, and up-front inputs under its Caller contract when provided.
+Pass through supplied phase-1 packets, reviewer identity, focused-test policy, and up-front inputs under its Caller contract when provided.
+A supplied review-token command stays here rather than travelling with them: `references/publication.md` spends it on the writes below, and `review-code` never publishes.
 With no supplied reviewer identity, resolve it as `references/publication.md` specifies before the review runs, so an unusable reviewing app falls back to the authenticated user before any work is spent.
 Apply the one-shot column of `review-code`'s Return routing table.
 A named stop ends this run with its report; a completed record supplies everything needed below.
