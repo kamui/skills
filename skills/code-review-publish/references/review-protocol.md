@@ -56,7 +56,7 @@ The `id` slugs the axis (`code` or `requirements`), file, and finding title — 
 `resolve-review` replies once per item:
 
 ```markdown
-**Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green.
+**Implemented** in `9f1e0aa` — extracted `assertOrderShape`; both call sites use it. `pnpm test` green at `9f1e0aa`.
 
 <!-- reply to=code/order-ts/duplicated-validation disposition=implemented head=9f1e0aa -->
 ```
@@ -65,7 +65,7 @@ The bold word is the disposition:
 
 | Disposition | Means | The reply carries |
 | --- | --- | --- |
-| `implemented` | change made | what changed, the check run, the commit |
+| `implemented` | change made | what changed, the check and the head it passed at, the commit |
 | `already-addressed` | the code already satisfied it | where |
 | `answered` | a question resolved, no code change | the answer |
 | `declined` | correct to leave as-is, or not this change's job | the reason: technical for a blocking finding, scope or preference for an optional one |
@@ -239,7 +239,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 - `answered` — `question/retry-order`: retries preserve request order
 - `declined` — [axis tag rename](url), open for your verdict
 
-`pnpm test` green. Every other thread resolved.
+`pnpm test` green at `5844a3c`. Every other thread resolved.
 
 <!-- reply to=question/retry-order disposition=answered head=5844a3c -->
 <!-- addressed head=5844a3c -->
@@ -249,7 +249,7 @@ Resolving every thread leaves a pull request looking untouched. The forge collap
 - counts by disposition, each item linked to its thread;
 - a file coordinate the summary names outside a linked thread item rendered as an immutable link at the addressed full head SHA — `https://<host>/<owner>/<repo>/blob/<full sha>/<path>?plain=1#L<line>`, `#L<start>-L<end>` for a range, neither the query nor the fragment for a whole file — with the code-formatted coordinate as its text, never a branch URL or a bare code span;
 - what still needs someone: `declined` awaiting a verdict, `needs-info` awaiting an answer, `blocked` items and their blocker;
-- the checks run;
+- each check with the head and input state it establishes, any failure that decides the outcome, and any remaining verification gap;
 - where the forge will not route a re-review request, one line asking for one by mentioning the reviewing identity;
 - whether the round is finished or waiting — the sentence the reviewer would otherwise open every thread to infer.
 

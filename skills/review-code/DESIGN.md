@@ -663,3 +663,35 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `2bd592b` and on this change.
 | `finish-it/SKILL.md` | 1,357 / 8,258 | 1,406 / 8,566 |
 
 **Workflow retained: `v5b-17`.** On a harness with a usable wait, which batches run, what they carry, the one-initial-plus-one-follow-up cap, reconciliation, rendering, and record state are unchanged; the rule only removes an early-dispatch path whose return could never be reconciled. On a harness without one, the outcome is the existing incomplete-verification state, now named, rather than a silently lost verdict. No script, fixture, or trailer changed.
+
+## Check evidence in resolve-review (issue #263)
+
+`resolve-review` said "run the relevant checks" and "rerun affected checks" without defining either, so a round could rerun an unchanged suite at every step or skip a rerun after a late shared-configuration fix. The addressing protocol now carries one Check evidence section with five rules: Selecting, Reusing, Invalidating, CI, and Reporting. Steps 2, 3, 5, and 6 point at it instead of restating it, and the protocol's examples qualify success by head. The rules restate the exact-head, same-check principle this skill's rubric already applies to CI in the addresser's terms. Skills install alone, so the protocol carries its own copy rather than pointing at the rubric.
+
+**Shared vocabulary.** `AGENTS.md` makes the reply, disposition, verdict, and thread-state wording shared between this protocol and `code-review-publish/references/review-protocol.md`, and all four edited sites were byte-identical across the two copies before this change. Three take the same new wording in both: the `implemented` reply example, the `implemented` row of the disposition table, and the addressing-summary example. The fourth, the summary's checks bullet, diverges only because the new wording cross-references a Check evidence section the peer copy does not have, so that copy carries the Reporting rule's substance inline instead. `test_check_runs.py` asserts the three shared sites carry identical text in both copies and that the peer's bullet carries that substance, and its retired-phrasing scan now covers the peer copy too, so the copies cannot drift back unnoticed.
+
+**Choices.** Reuse needs the same check, the exact full head SHA, unchanged relevant inputs and environment, and the required coverage, so a clean-looking `HEAD` with a dirty fixture or dependency change does not qualify. A run on uncommitted work counts only for the commit made from exactly that tree. Invalidation does not cap suite runs per round: a late fix to shared configuration or with uncertain reach reruns the affected suite even when one already ran. Evidence a later change does not reach is not rerun, but it still reports only the head it ran at, so the summary cannot let an earlier success cover a later change. The step-3 reviewer and future CI are named as non-substitutes, and the publication gate is unchanged.
+
+**CI read.** The Reading check runs block paginates `repos/{owner}/{repo}/commits/<sha>/check-runs` with `--paginate --slurp`, `per_page=100`, and `filter=latest`, so a failed rerun replaces an earlier success of the same check. It refuses anything but a full lowercase 40-hex SHA before calling `gh`, using an explicit character list because a `0-9a-f` bracket range matches uppercase in some locales. The inline stdlib Python writes `check-runs.<sha>.json` only after `gh` exits 0, every page has `total_count` and `check_runs`, no id changed during the read, and the distinct count equals `total_count`. It removes any earlier result first, so an incomplete rerun cannot leave a stale complete file. A run whose `head_sha` differs is kept and flagged `other-head` rather than dropped, because the model decides reuse. Commit statuses outside the Checks API are not read and stay unavailable. The block lives in the protocol rather than under `scripts/`, like the collection block, so `resolve-review` still ships no script.
+
+**Instruction replays.** These are desk replays of the revised text against each case in the issue, not model runs.
+
+| Case | Rule that decides it | Outcome |
+| --- | --- | --- |
+| Unchanged head, suite passed earlier at that SHA on a clean tree | Reusing | Reuse the result; step 3 or 5 is no reason to rerun it. |
+| A green lint job at the candidate SHA, test suite never ran | CI | Unrelated job establishes nothing; the suite is run or reported as a gap. |
+| Actions matrix with one leg `in_progress`, or tests reported skipped | Reusing, CI | Coverage incomplete; not reusable. A complete matrix at the SHA is reusable. |
+| Same `HEAD`, uncommitted fixture or lockfile edit since the run | Reusing | Inputs changed; not reusable despite the unchanged `HEAD`. |
+| Step-3 finding fixes one function covered by a documented focused test | Invalidating, Reporting | Focused test reruns at the new head; the earlier suite is reported at its own head. |
+| Step-3 finding changes shared build or test configuration | Invalidating | The affected broader suite reruns even though one already ran this round. |
+| No-code round of answers and declines | Selecting, Reusing | Nothing selects a new run; the step-3 draft check still runs. |
+
+Counts use `wc -w` and `wc -c` on `origin/main` at `8083849` and on this change. One CI read is one shell invocation over every page; that is a mechanical count, not a model-request, time, cost, or quality claim, and #265 owns that assessment.
+
+| Instruction | Before words / bytes | After words / bytes |
+| --- | ---: | ---: |
+| `resolve-review/SKILL.md` | 2,131 / 13,581 | 2,205 / 14,049 |
+| `resolve-review/references/addressing-protocol.md` | 6,347 / 45,642 | 7,554 / 54,160 |
+| `code-review-publish/references/review-protocol.md` | 5,977 / 39,900 | 6,004 / 40,063 |
+
+**Workflow retained: `v5b-17`.** The review core's admission, verification, rendering, record state, trailers, and thread-state mappings are unchanged. The change governs only which checks the addresser runs and how it reports them, and the thread write loop is byte-identical. `scripts/test_check_runs.py` runs the documented block against offline fixtures under `sh`, `bash`, `zsh`, and `dash`. The fixtures cover a two-page complete read, a failed page, a short or shifting count, a changed duplicate, malformed and error pages, an `other-head` run, an empty head, removal of a stale result, and refused SHAs.
