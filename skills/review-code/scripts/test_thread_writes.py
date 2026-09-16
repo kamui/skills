@@ -40,6 +40,11 @@ args = sys.argv[1:]
 path = os.environ["GH_STATE"]
 with open(path, encoding="utf-8") as f:
     state = json.load(f)
+if "--silent" in args:  # the block's token check
+    state["checks"].append(os.environ.get("GH_TOKEN"))
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(state, f)
+    sys.exit(int(os.environ.get("GH_SILENT_RC", "0")))
 request = None
 if "--input" in args:
     with open(args[args.index("--input") + 1], encoding="utf-8") as f:
@@ -51,7 +56,8 @@ else:
     kind, target = "reply", re.search(r"comments/(\d+)/replies", " ".join(args)).group(1)
 plan = state["plan"].get("%s:%s" % (kind, target), [])
 mode = plan.pop(0) if plan else "ok"
-state["log"].append({"kind": kind, "target": target, "args": args, "input": request, "mode": mode})
+state["log"].append({"kind": kind, "target": target, "args": args, "input": request, "mode": mode,
+                     "token": os.environ.get("GH_TOKEN")})
 out, err, rc = "", "", 0
 if kind == "reply":
     if mode in ("ok", "landed", "short"):
@@ -141,19 +147,24 @@ class Loop(unittest.TestCase):
         private.mkdir()
         text = raw if raw is not None else "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
         (private / "writes.jsonl").write_text(text, encoding="utf-8")
-        state = {"plan": plan or {}, "log": [], "comments": {}, "resolved": {}, "next_id": 9000,
+        state = {"plan": plan or {}, "log": [], "checks": [], "comments": {}, "resolved": {}, "next_id": 9000,
                  "viewer": viewer, "author_login": author or viewer,
                  "threads": threads or {str(r["comment_id"]): r["thread_id"]
                                         for r in rows if r.get("comment_id")}}
         (private / "state.json").write_text(json.dumps(state), encoding="utf-8")
         return private
 
-    def run_loop(self, private, shell="sh", source=PUBLICATION, wrapped=False):
+    def run_loop(self, private, shell="sh", source=PUBLICATION, wrapped=False, tok="", silent_rc=0):
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (loop_block(source).replace("<private-dir>", shlex.quote(str(private))).replace("<pr>", "7")
                 .replace("<recorded-absolute-run_events.py-path>", script))
+        if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
+            marker = "tok=  #"
+            self.assertIn(marker, text)
+            text = text.replace(marker, "tok=%s  #" % shlex.quote(tok), 1)
         env = dict(os.environ, PATH=f"{self.binary}{os.pathsep}{os.environ['PATH']}",
-                   GH_STATE=str(private / "state.json"))
+                   GH_STATE=str(private / "state.json"), GH_SILENT_RC=str(silent_rc))
+        env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
         result = subprocess.run([shell, "-c", text], cwd=private, env=env, capture_output=True, text=True,
                                 encoding="utf-8", timeout=120)
         state = json.loads((private / "state.json").read_text(encoding="utf-8"))
@@ -326,6 +337,38 @@ class Loop(unittest.TestCase):
                 self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
                 read = next(r for r in results if r["kind"] == "read" and "exit" in r)
                 self.assertEqual(read["outcome"], "confirmed")
+
+    def test_app_token_is_proved_before_the_loop_and_reaches_every_write(self):
+        # The command is several words: expanded bare in command position it would be one
+        # command name under zsh, which is why the block runs it through `sh -c`.
+        rows = [row("a", 101, "T1", "fixed", "resolve")]
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                private = self.fresh(rows)
+                result, state, _ = self.run_loop(private, shell, tok="printf %s app-token-xyz")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(state["checks"], ["app-token-xyz"], "the token is proved exactly once")
+                self.assertEqual({call["token"] for call in state["log"]}, {"app-token-xyz"},
+                                 "every write in the loop runs under the token")
+                self.assertNotIn("app-token-xyz", json.dumps([call["args"] for call in state["log"]]),
+                                 "a token never reaches argv")
+
+    def test_unusable_app_token_stops_the_loop_before_its_first_write(self):
+        # A token the forge refuses would fail every reply, and `refused earlier; not retried`
+        # then skips it on every rerun, so the round could never publish against this results file.
+        rows = [row("a", 101, "T1", "fixed", "resolve")]
+        cases = [("printf %s ", 0, "prints nothing"), ("false unused-argument", 0, "exits non-zero"),
+                 ("printf %s stale-token", 22, "the forge refuses the token")]
+        for shell in SHELLS:
+            for tok, silent_rc, reason in cases:
+                with self.subTest(shell=shell, tok=reason):
+                    private = self.fresh(rows)
+                    result, state, _ = self.run_loop(private, shell, tok=tok, silent_rc=silent_rc)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertIn("no usable token", result.stdout)
+                    self.assertIn("no reply or resolution was written", result.stdout)
+                    self.assertEqual(state["log"], [])
+                    self.assertFalse((private / "write-results.jsonl").exists())
 
     def test_interrupted_write_is_reconciled_before_any_retry(self):
         for source in (PUBLICATION, ADDRESSING):

@@ -456,6 +456,23 @@ Targeted rereads stay targeted. To confirm one write or one item, read only that
 
 ### Writing review activity
 
+Where `docs/agents/issue-tracker.md` names a reviewing app, the posting identity resolved above is that app, and the review's own writes run as it: the review POST, the review-body update, the verdict replies it leaves on findings, the threads it resolves or reopens, and any dismissal. The addressing round's writes stay the pull request's author — disposition replies, the addressing summary, the re-review request — because an addressing round has to come from the author. A review write left as a bare `gh api` publishes as the authenticated user, and the next run's prior-review lookup, keyed on that app login, then finds nothing, so every re-review restarts as a first review with no carried findings.
+
+Acquire the token once, before the first of those writes, and export it:
+
+```sh
+app=$(sh -c '<review-token command>') || app=
+if [ -n "$app" ] && GH_TOKEN=$app gh api "repos/{owner}/{repo}" --silent; then
+  GH_TOKEN=$app; export GH_TOKEN
+else
+  echo "no usable app token; publishing as the authenticated user"
+fi
+```
+
+Run the command through `sh -c` rather than expanding it in command position, where a multiword command is read as one command name under `zsh`. Name the repository in the command; never let the runner infer one from a remote, which is the fork on a fork checkout. Keep the token in the environment, never on a command line, and export it only once it is proved, so an unusable one leaves whatever credential the authenticated user already had in place. Prove it before the first write rather than testing it for emptiness alone: a token minted against the wrong repository, or one whose installation was suspended, is non-empty and then refused on every write.
+
+A command that is absent, that fails, or whose token cannot authenticate is not an error. Publish as the authenticated user, record the fallback, and re-derive the event under the self-review rule below first: `APPROVE` and `REQUEST_CHANGES` are refused with 422 on a pull request that user authored, while they are available to an app.
+
 - **One review carrying every line comment** — a single call producing a single timeline entry:
 
   ```sh
