@@ -32,6 +32,8 @@ RESOLVE = SKILLS / "resolve-review"
 ADDRESSING = RESOLVE / "references" / "addressing-protocol.md"
 PEER = SKILLS / "code-review-publish" / "references" / "review-protocol.md"
 SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
+ROUTES = [(shell, False) for shell in SHELLS] + [("sh", True)]
+LAUNCHER = RESOLVE / "scripts" / "run_block.py"
 SHA = "a" * 40
 OTHER = "b" * 40
 
@@ -78,7 +80,7 @@ class CheckRuns(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def read(self, stdout, rc=0, stderr="", sha=SHA, shell="sh", private=None):
+    def read(self, stdout, rc=0, stderr="", sha=SHA, shell="sh", private=None, launcher=False):
         if private is None:
             self.count += 1
             private = self.root / f"private {self.count}"  # a space checks quoting
@@ -86,10 +88,15 @@ class CheckRuns(unittest.TestCase):
         fixture = self.root / f"fixture-{self.count}.json"
         fixture.write_text(json.dumps({"stdout": stdout, "rc": rc, "stderr": stderr}), encoding="utf-8")
         log = private / "gh.log"
-        text = block().replace("<private-dir>", shlex.quote(str(private))).replace("<sha>", shlex.quote(sha))
         env = dict(os.environ, PATH=f"{self.root / 'bin'}{os.pathsep}{os.environ['PATH']}",
                    GH_FIXTURE=str(fixture), GH_LOG=str(log))
-        result = subprocess.run([shell, "-c", text], cwd=private, env=env, capture_output=True, text=True,
+        if launcher:
+            command = [sys.executable, str(LAUNCHER), str(ADDRESSING), "--marker", "check-runs", "--",
+                       f"private-dir={private}", f"sha={sha}"]
+        else:
+            text = block().replace("<private-dir>", shlex.quote(str(private))).replace("<sha>", shlex.quote(sha))
+            command = [shell, "-c", text]
+        result = subprocess.run(command, cwd=private, env=env, capture_output=True, text=True,
                                 encoding="utf-8", timeout=60)
         calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
         out = private / f"check-runs.{sha}.json"
@@ -99,9 +106,9 @@ class CheckRuns(unittest.TestCase):
         fixture = pages([run(1, "unit (py3.9)"), run(2, "lint", workflow=None, app="other-ci")],
                         [run(3, "unit (py3.12)", conclusion=None, status="in_progress"),
                          run(4, "docs", conclusion="skipped")])
-        for shell in SHELLS:
-            with self.subTest(shell=shell):
-                result, calls, doc, private = self.read(fixture, shell=shell)
+        for shell, launcher in ROUTES:
+            with self.subTest(shell=shell, launcher=launcher):
+                result, calls, doc, private = self.read(fixture, shell=shell, launcher=launcher)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(len(calls), 1)
                 args = calls[0]
@@ -126,15 +133,21 @@ class CheckRuns(unittest.TestCase):
                 self.assertEqual((private / f"check-runs.{SHA}.status").read_text(encoding="utf-8").strip(), "0")
 
     def test_other_head_run_is_flagged(self):
-        result, _, doc, _ = self.read(pages([run(1, "unit"), run(2, "unit", head=OTHER)]))
-        self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertEqual([r["at_requested_head"] for r in doc["check_runs"]], [True, False])
-        self.assertIn('other-head success "unit" id=2', result.stdout)
+        for launcher in (False, True):
+            with self.subTest(launcher=launcher):
+                result, _, doc, _ = self.read(pages([run(1, "unit"), run(2, "unit", head=OTHER)]),
+                                              launcher=launcher)
+                self.assertEqual(result.returncode, 0, result.stdout)
+                self.assertEqual([r["at_requested_head"] for r in doc["check_runs"]], [True, False])
+                self.assertIn('other-head success "unit" id=2', result.stdout)
 
     def test_empty_head_is_complete_with_no_runs(self):
-        result, _, doc, _ = self.read(json.dumps([{"total_count": 0, "check_runs": []}]))
-        self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertEqual((doc["total_count"], doc["check_runs"]), (0, []))
+        for launcher in (False, True):
+            with self.subTest(launcher=launcher):
+                result, _, doc, _ = self.read(json.dumps([{"total_count": 0, "check_runs": []}]),
+                                              launcher=launcher)
+                self.assertEqual(result.returncode, 0, result.stdout)
+                self.assertEqual((doc["total_count"], doc["check_runs"]), (0, []))
 
     def test_incomplete_reads_leave_no_result(self):
         cases = {
@@ -150,32 +163,38 @@ class CheckRuns(unittest.TestCase):
             "check run without an integer id": dict(stdout=json.dumps([{"total_count": 1, "check_runs": [{}]}])),
         }
         for reason, case in cases.items():
-            for shell in SHELLS:
-                with self.subTest(reason=reason, shell=shell):
-                    result, _, doc, _ = self.read(shell=shell, **case)
+            for shell, launcher in ROUTES:
+                with self.subTest(reason=reason, shell=shell, launcher=launcher):
+                    result, _, doc, _ = self.read(shell=shell, launcher=launcher, **case)
                     self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                     self.assertIn(f"incomplete check-runs {SHA}: {reason}", result.stdout)
                     self.assertNotIn("complete /", result.stdout)
                     self.assertIsNone(doc)
 
     def test_identical_repeat_collapses_but_short_count_stays_incomplete(self):
-        result, _, doc, _ = self.read(pages([run(1, "unit")], [run(1, "unit")], total=2))
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("1 of 2 check runs read", result.stdout)
-        self.assertIsNone(doc)
+        for launcher in (False, True):
+            with self.subTest(launcher=launcher):
+                result, _, doc, _ = self.read(pages([run(1, "unit")], [run(1, "unit")], total=2),
+                                              launcher=launcher)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("1 of 2 check runs read", result.stdout)
+                self.assertIsNone(doc)
 
     def test_incomplete_rerun_removes_an_earlier_result(self):
-        _, _, doc, private = self.read(pages([run(1, "unit")]))
-        self.assertIsNotNone(doc)
-        result, _, doc, _ = self.read("", rc=1, private=private)
-        self.assertEqual(result.returncode, 1)
-        self.assertIsNone(doc)
+        for launcher in (False, True):
+            with self.subTest(launcher=launcher):
+                _, _, doc, private = self.read(pages([run(1, "unit")]), launcher=launcher)
+                self.assertIsNotNone(doc)
+                result, _, doc, _ = self.read("", rc=1, private=private, launcher=launcher)
+                self.assertEqual(result.returncode, 1)
+                self.assertIsNone(doc)
 
     def test_abbreviated_or_invalid_sha_is_refused_before_gh(self):
         for sha in ("a" * 7, "A" * 40, "g" * 40, "a" * 41, ""):
-            for shell in SHELLS:
-                with self.subTest(sha=sha, shell=shell):
-                    result, calls, doc, _ = self.read(pages([run(1, "unit")]), sha=sha, shell=shell)
+            for shell, launcher in ROUTES:
+                with self.subTest(sha=sha, shell=shell, launcher=launcher):
+                    result, calls, doc, _ = self.read(pages([run(1, "unit")]), sha=sha, shell=shell,
+                                                      launcher=launcher)
                     self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                     self.assertIn("check runs need a full 40-hex head SHA", result.stdout)
                     self.assertEqual((calls, doc), ([], None))

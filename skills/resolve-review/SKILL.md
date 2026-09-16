@@ -1,6 +1,7 @@
 ---
 name: resolve-review
 description: Address every review comment on a pull request, make the warranted changes, and reply to each one. Use when review feedback on a pull request needs working through, including as the fix step of a review loop.
+compatibility: Requires git and Python 3.9+ on macOS or Linux
 ---
 
 # Resolve code review

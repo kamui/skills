@@ -31,11 +31,12 @@ SCRIPTS = Path(__file__).resolve().parent
 SKILLS = SCRIPTS.parent.parent
 PUBLICATION = SKILLS / "review-code-publish" / "references" / "publication.md"
 ADDRESSING = SKILLS / "resolve-review" / "references" / "addressing-protocol.md"
+LAUNCHER = SKILLS / "resolve-review" / "scripts" / "run_block.py"
 SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
 NASTY = "Line \"one\"\n\tback\\slash $(touch pwned) `touch pwned2` $HOME 'q' — ünïcödé 🚀 sep\n\n"
 
 FAKE_GH = r"""#!/usr/bin/env python3
-import json, os, re, sys
+import json, os, re, subprocess, sys
 args = sys.argv[1:]
 path = os.environ["GH_STATE"]
 with open(path, encoding="utf-8") as f:
@@ -56,8 +57,10 @@ else:
     kind, target = "reply", re.search(r"comments/(\d+)/replies", " ".join(args)).group(1)
 plan = state["plan"].get("%s:%s" % (kind, target), [])
 mode = plan.pop(0) if plan else "ok"
+repository = (subprocess.run(["git", "remote", "get-url", "origin"], cwd=os.getcwd(), capture_output=True,
+                             text=True).stdout.strip() if os.environ.get("GH_RECORD_CONTEXT") else None)
 state["log"].append({"kind": kind, "target": target, "args": args, "input": request, "mode": mode,
-                     "token": os.environ.get("GH_TOKEN")})
+                     "token": os.environ.get("GH_TOKEN"), "cwd": os.getcwd(), "repository": repository})
 out, err, rc = "", "", 0
 if kind == "reply":
     if mode in ("ok", "landed", "short"):
@@ -154,7 +157,8 @@ class Loop(unittest.TestCase):
         (private / "state.json").write_text(json.dumps(state), encoding="utf-8")
         return private
 
-    def run_loop(self, private, shell="sh", source=PUBLICATION, wrapped=False, tok="", silent_rc=0):
+    def run_loop(self, private, shell="sh", source=PUBLICATION, wrapped=False, tok="", silent_rc=0,
+                 launcher=False, launcher_path=LAUNCHER, cwd=None, record_context=False):
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (loop_block(source).replace("<private-dir>", shlex.quote(str(private))).replace("<pr>", "7")
                 .replace("<recorded-absolute-run_events.py-path>", script))
@@ -163,9 +167,13 @@ class Loop(unittest.TestCase):
             self.assertIn(marker, text)
             text = text.replace(marker, "tok=%s  #" % shlex.quote(tok), 1)
         env = dict(os.environ, PATH=f"{self.binary}{os.pathsep}{os.environ['PATH']}",
-                   GH_STATE=str(private / "state.json"), GH_SILENT_RC=str(silent_rc))
+                   GH_STATE=str(private / "state.json"), GH_SILENT_RC=str(silent_rc),
+                   GH_RECORD_CONTEXT="1" if record_context else "")
         env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
-        result = subprocess.run([shell, "-c", text], cwd=private, env=env, capture_output=True, text=True,
+        env.pop("GH_REPO", None)  # the documented addressing invocation clears another-repository overrides
+        command = ([sys.executable, str(launcher_path), str(source), "--marker", "write-loop.sh", "--",
+                    f"private-dir={private}", "pr=7"] if launcher else [shell, "-c", text])
+        result = subprocess.run(command, cwd=cwd or private, env=env, capture_output=True, text=True,
                                 encoding="utf-8", timeout=120)
         state = json.loads((private / "state.json").read_text(encoding="utf-8"))
         results_path = private / "write-results.jsonl"
@@ -266,6 +274,14 @@ class Loop(unittest.TestCase):
                         again, state, _ = self.run_loop(private, shell, source, wrapped)
                         self.assertEqual(again.returncode, 0, again.stdout)
                         self.assertEqual(len(state["log"]), 6, "a confirmed write ran again")
+        private = self.fresh(rows)
+        result, state, results = self.run_loop(private, source=ADDRESSING, launcher=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.calls(state), [("reply", "101"), ("resolve", "T1"), ("resolve", "T2"),
+                                             ("reply", "103"), ("reply", "106"), ("reopen", "T6")])
+        self.assertEqual(state["log"][0]["input"], {"body": NASTY})
+        self.assertEqual(len([r for r in results if r["step"] == "reply" and r["kind"] == "write"
+                              and "exit" in r]), 3)
 
     def test_failed_reply_blocks_its_action_and_later_items_continue(self):
         rows = [row("a", 101, "T1", "fixed", "resolve"), row("b", 102, "T2", "fixed too", "resolve")]
@@ -282,29 +298,29 @@ class Loop(unittest.TestCase):
         self.assertEqual(len(state["log"]), 3, "a refused write was retried")
 
     def test_shared_thread_action_waits_for_every_reply_on_the_thread(self):
-        for source in (PUBLICATION, ADDRESSING):
-            with self.subTest(source=source.name, order="action first"):
+        for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
+            with self.subTest(source=source.name, launcher=launcher, order="action first"):
                 private = self.fresh([row("a", 101, "T1", "fixed", "resolve"), row("b", 101, "T1", "answered")])
-                result, state, results = self.run_loop(private, source=source)
+                result, state, results = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(result.returncode, 3, result.stdout)
                 self.assertIn("row on thread T1 follows that thread's action on line 1", result.stdout)
                 self.assertEqual((state["log"], results), ([], []))
-            with self.subTest(source=source.name, order="action last, sibling refused"):
+            with self.subTest(source=source.name, launcher=launcher, order="action last, sibling refused"):
                 private = self.fresh([row("a", 101, "T1", "fixed"), row("b", 101, "T1", "answered", "resolve")],
                                      plan={"reply:101": ["refuse"]})
-                result, state, _ = self.run_loop(private, source=source)
+                result, state, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(result.returncode, 1, result.stdout)
                 self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101")])
                 self.assertIn("unresolved b resolve: blocked (reply not confirmed)", result.stdout)
-                again, state, _ = self.run_loop(private, source=source)
+                again, state, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual((again.returncode, len(state["log"])), (1, 2), again.stdout)
-            with self.subTest(source=source.name, order="action last, sibling lost then retried"):
+            with self.subTest(source=source.name, launcher=launcher, order="action last, sibling lost then retried"):
                 private = self.fresh([row("a", 101, "T1", "fixed"), row("b", 101, "T1", "answered", "resolve")],
                                      plan={"reply:101": ["lost"]})
-                result, state, _ = self.run_loop(private, source=source)
+                result, state, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(result.returncode, 1, result.stdout)
                 self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101")])
-                again, state, _ = self.run_loop(private, source=source)
+                again, state, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(again.returncode, 0, again.stdout)
                 self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101"), ("read", "T1"),
                                                      ("reply", "101"), ("resolve", "T1")])
@@ -326,13 +342,13 @@ class Loop(unittest.TestCase):
     def test_app_reply_is_reconciled_across_the_bot_suffix(self):
         # A reviewing app is `nitpik[bot]` to `viewer` and `nitpik` to `author{login}`.
         # An unnormalized compare reads its own landed reply as absent and posts it twice.
-        for source in (PUBLICATION, ADDRESSING):
-            with self.subTest(source=source.name):
+        for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
+            with self.subTest(source=source.name, launcher=launcher):
                 private = self.fresh([row("a", 101, "T1", "fixed", "resolve")],
                                      plan={"reply:101": ["landed"]}, viewer="nitpik[bot]", author="nitpik")
-                result, _, _ = self.run_loop(private, source=source)
+                result, _, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(result.returncode, 1, result.stdout)
-                again, state, results = self.run_loop(private, source=source)
+                again, state, results = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(again.returncode, 0, again.stdout)
                 self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
                 read = next(r for r in results if r["kind"] == "read" and "exit" in r)
@@ -375,13 +391,13 @@ class Loop(unittest.TestCase):
                     self.assertFalse((private / "write-results.jsonl").exists())
 
     def test_interrupted_write_is_reconciled_before_any_retry(self):
-        for source in (PUBLICATION, ADDRESSING):
-            with self.subTest(source=source.name):
+        for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
+            with self.subTest(source=source.name, launcher=launcher):
                 private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"reply:101": ["crash"]})
-                result, state, results = self.run_loop(private, source=source)
+                result, state, results = self.run_loop(private, source=source, launcher=launcher)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual([(r["kind"], r["outcome"]) for r in results], [("write", "ambiguous")])
-                again, state, _ = self.run_loop(private, source=source)
+                again, state, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(again.returncode, 0, again.stdout)
                 self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
                 self.assertEqual(len(state["comments"]["T1"]), 1, "an interrupted reply was posted again")
@@ -451,6 +467,26 @@ class Loop(unittest.TestCase):
         result, state, _ = self.run_loop(private)
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertEqual([c["input"]["body"] for c in state["log"]], ["first draft", "corrected draft"])
+
+    def test_launcher_preserves_target_checkout_repository_context(self):
+        target = self.root / "target checkout"
+        installed = self.root / "installed skill"
+        target.mkdir()
+        shutil.copytree(SKILLS / "resolve-review", installed)
+        for path, remote in ((target, "https://github.test/target/repository.git"),
+                             (installed, "https://github.test/wrong/skill.git")):
+            subprocess.run(["git", "init", "-q"], cwd=path, check=True)
+            subprocess.run(["git", "remote", "add", "origin", remote], cwd=path, check=True)
+        private = self.fresh([row("a", 101, "T1", "fixed", "resolve")])
+        source = installed / "references" / "addressing-protocol.md"
+        launcher = installed / "scripts" / "run_block.py"
+        result, state, _ = self.run_loop(private, source=source, launcher=True, launcher_path=launcher, cwd=target,
+                                         record_context=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(state["log"])
+        self.assertEqual({Path(call["cwd"]).resolve() for call in state["log"]}, {target.resolve()})
+        self.assertEqual({call["repository"] for call in state["log"]},
+                         {"https://github.test/target/repository.git"})
 
 
 if __name__ == "__main__":
