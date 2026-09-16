@@ -743,7 +743,6 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `0682437` and on this change.
 
 **Workflow retained: `v5b-17`.** Nothing in the review core changes: admission, verification, rendering, record state, trailers, scripts, and fixtures are untouched, and the reviewer, continuation, awaited-route, and publication rules of `implement-publish` are unchanged apart from the checks the step runs and how it reports them.
 
-
 ## Publication artifacts and edited prior state (issue #280)
 
 A classification reply posts after its review and GitHub gives it a separate container review. Those two records previously defeated the duplicate-review shortcut on every unchanged-head round. The reviewer now drafts a `prior-item` trailer with the stable id, classification, and full reviewed head. `later-state` excludes an unedited marked reply only when its author matches the candidate review's author and its head matches the candidate's commit. It excludes an unedited empty container only when it holds at least one comment and every comment qualifies. In a mixed container, the container and unmarked reply print; the marked reply still qualifies independently. Empty containers without comments remain visible because they provide no evidence of a publication reply.
@@ -757,3 +756,27 @@ Workflow `v5b-18` advances to `v5b-19`. Issue #277 already allocated the issue's
 `AGENTS.md` binds shared vocabulary only between the legacy reviewer protocol and the addresser protocol. This new review-core classification marker changes neither copy, so no mirrored edit is owed. Publication order, the opaque thread write loop, thread resolution, addresser trailers, and publisher gates are unchanged; no runtime dependency is added.
 
 Instruction counts use `wc -w` against base `8111161d0ba7cb0b9466d4c19928a0c713c47c80`. `references/re-review.md` grows from 1,765 to 1,941 words, all on the prior-state branch. `SKILL.md` remains 5,090 words, `references/review-record.md` remains 1,528, and `references/rendering.md` remains 2,484. These counts describe instruction load, not a measured review-cost reduction.
+## Reference block launcher for resolve-review (issue #285)
+
+An observed addressing round copied the collection and thread-write blocks from the protocol into tool calls. Those calls emitted 20.4 KB across 439 lines. Copying the programs also made a transcription error part of the forge-write path. The protocol remains the source of each program, but `resolve-review/scripts/run_block.py` now selects and runs a block directly from that file.
+
+**Contract.** The launcher selects the one `sh` fence that contains a caller-supplied marker. Zero or several matches exit 2 before execution. The selected fence must contain one line made only of shell assignments, with at least one `<placeholder>` value. The caller supplies the same placeholder names as `name=value` arguments. The launcher rewrites each placeholder value to its positional parameter and passes the argument values to `sh`, so spaces, quotes, backticks, command substitutions, and dollar expansions never enter the program text. It writes the bound block to a temporary file, inherits the caller's environment and working directory, and returns the block's status without mapping it. Launcher failures exit 2 with a `run_block:` stderr line. A block exit 2 has no such prefix.
+
+The protocol invokes the launcher by absolute paths resolved from the installed skill root while the caller remains in the target repository checkout. The write-loop invocation clears an unrelated `GH_REPO` override before it runs, so GitHub CLI's `repos/{owner}/{repo}` expansion uses the target checkout. The collection, check-run, and write-loop fence bodies are byte-identical to `origin/main`. Their markers remain unique, and their placeholder sets are `{owner, repo, n}`, `{private-dir, sha}`, and `{private-dir, pr}`. No selected block uses a positional parameter at top level outside a function or quoted heredoc. The nested `write-loop.sh` keeps its own explicit parameters.
+
+**Rejected options.** Separate collection and thread-write programs would remove the once-per-round read of the block bodies too, but they would move forge calls into skill scripts, require a rule change in `docs/agents/scripts.md`, replace seventeen established shell-loop cases with a Python implementation, and create another install-alone copy for `review-code-publish`. An inline Python launcher in the protocol would still need extraction from prose before it could be tested. Substituting shell-quoted values into the program would splice caller data into code, while positional parameters keep the two separate.
+
+The existing direct route still runs under `sh`, `bash`, `zsh`, and `dash`. The launcher adds one `sh` route for the addressing copy and the check-run fixtures. One local run measured `test_thread_writes.py` at 26.06 seconds before and 30.97 seconds after, an increase of 4.91 seconds. `test_check_runs.py` measured 2.46 seconds before and 4.07 seconds after, an increase of 1.61 seconds. These are single local wall-clock observations, not benchmarks.
+
+Counts use `wc -w` and `wc -c` on `origin/main` at `8111161` and on this change.
+
+| Artifact | Before words / bytes | After words / bytes |
+| --- | ---: | ---: |
+| `resolve-review/SKILL.md` | 2,299 / 14,581 | 2,309 / 14,643 |
+| `resolve-review/references/addressing-protocol.md` | 7,728 / 55,223 | 7,945 / 57,032 |
+| `resolve-review/scripts/run_block.py` | 0 / 0 | 445 / 4,431 |
+| `resolve-review/scripts/test_run_block.py` | 0 / 0 | 530 / 7,354 |
+| `review-code/scripts/test_thread_writes.py` | 2,460 / 28,821 | 2,688 / 31,972 |
+| `review-code/scripts/test_check_runs.py` | 979 / 11,646 | 1,056 / 12,923 |
+
+**Workflow retained: `v5b-19`.** The launcher changes how the existing programs reach `sh`. It does not change review admission, verification, rendering, publication, or any fenced program, so the workflow identifier stays the same.

@@ -141,7 +141,15 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 ### Collecting review activity
 
-Every list below is a collection: reviews, inline comments, general pull-request comments, and review threads. Fetch each one completely with the block below, not with a single-page `gh api` call. A single call returns one page, and feedback on a later page silently misses the ledger. The same block also reads the pull request metadata above into `pr.json`. Run the block as one shell invocation after replacing `<owner>`, `<repo>`, and `<n>`. It is POSIX `sh` that also runs unchanged under `bash` and `zsh`.
+Every list below is a collection: reviews, inline comments, general pull-request comments, and review threads. Fetch each one completely with the block below, not with a single-page `gh api` call. A single call returns one page, and feedback on a later page silently misses the ledger. The same block also reads the pull request metadata above into `pr.json`.
+
+From the target repository checkout, bind `resolve_skill_root` to the absolute installed `resolve-review` skill root and run:
+
+```console
+python3 "$resolve_skill_root/scripts/run_block.py" "$resolve_skill_root/references/addressing-protocol.md" --marker flatten.py -- "owner=$owner" "repo=$repo" "n=$pr_number"
+```
+
+The launcher selects the block below, binds its placeholder values as positional arguments, and runs it with POSIX `sh`. The block also runs unchanged under `bash` and `zsh`. The launcher and reference paths come from the installed skill root, but the working directory stays in the target repository checkout. If the launcher exits 2 with a `run_block:` line, report that line and stop the step. A block exit keeps the meanings documented below.
 
 The block writes into a fresh private directory from `mktemp -d`, one distinct file set per read. The metadata read keeps its raw output (`pr.raw.json`), stderr (`pr.stderr`), and exit status (`pr.status`), and `pr.json` is written only when `gh` exits `0` and the output is a JSON object with an integer `number` and a full 40-hex `headRefOid`. Each collection keeps its raw slurped pages (`<name>.pages.json`), `gh` stderr (`<name>.stderr`), and `gh` exit status (`<name>.status`). The block records `gh`'s status before anything reads the output, so no formatter downstream can hide a failed continuation page. The flattener runs only after `gh` exits `0`. It rejects any response that is not JSON, any GraphQL `errors` or partial `data`, and any page chain that does not end in `hasNextPage: false`. Exact repeats of one stable id collapse to one record. When one id arrives with different content, as when a comment is edited mid-fetch, the block re-reads that item with its single-item verb and keeps the fresh copy. It never drops either version silently. `<name>.json`, a flat JSON array, is written only when every page is present and valid. REST records keep every field GitHub returned. Each thread record keeps its GraphQL node `id` and adds `firstCommentId`, the numeric REST id of its first comment, read from `fullDatabaseId` or, only when that is absent, from the deprecated `databaseId`.
 
@@ -343,7 +351,13 @@ Each `new` line is feedback that arrived after the inventory, not a write this r
 
 ### Reading check runs
 
-Read the check runs for one full candidate head SHA with the block below, never with a single-page call. Run it as one shell invocation after replacing `<private-dir>` with step 1's collection directory and `<sha>` with the full 40-hex head SHA. It is POSIX `sh` that also runs unchanged under `bash` and `zsh`.
+Read the check runs for one full candidate head SHA with the block below, never with a single-page call. From the target repository checkout, use the same absolute `resolve_skill_root` and run:
+
+```console
+python3 "$resolve_skill_root/scripts/run_block.py" "$resolve_skill_root/references/addressing-protocol.md" --marker check-runs -- "private-dir=$collection_dir" "sha=$head_sha"
+```
+
+The launcher binds the collection directory and full 40-hex candidate head SHA, then runs the selected block with POSIX `sh`. The block also runs unchanged under `bash` and `zsh`. The working directory stays in the target repository checkout. If the launcher exits 2 with a `run_block:` line, report that line and stop the step. A block exit keeps the meanings documented below.
 
 ```sh
 d=<private-dir> sha=<sha>
@@ -451,7 +465,14 @@ When ledger items share one thread, only the thread's last row carries its `acti
 
 A review body's reply and whole-change question answers have no thread and keep their routes, the general comment and the addressing summary.
 
-Run as one shell invocation after replacing `<private-dir>` with step 1's collection directory and `<pr>` with the pull request number:
+From the target repository checkout, use the same absolute `resolve_skill_root`, clear any `GH_REPO` override that points elsewhere, and run:
+
+```console
+unset GH_REPO
+python3 "$resolve_skill_root/scripts/run_block.py" "$resolve_skill_root/references/addressing-protocol.md" --marker write-loop.sh -- "private-dir=$collection_dir" "pr=$pr_number"
+```
+
+The launcher binds the collection directory and pull request number, then runs the selected block with POSIX `sh`. The block also runs unchanged under `bash` and `zsh`. Its `repos/{owner}/{repo}` paths resolve from the target checkout because the launcher does not change directories and no other-repository override remains. If the launcher exits 2 with a `run_block:` line, report that line and stop the step. A block exit keeps the meanings documented below.
 
 ```sh
 d=<private-dir> pr=<pr>
@@ -746,6 +767,6 @@ sh "$d/write-loop.sh" "$d" "$pr"
 
 The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), repeats an id, a reply body to one comment, or an action on one thread, or puts any row after its thread's action row refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after every reply on that thread is confirmed; a thread with no reply to post leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.
 
-Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action while any reply on its thread is not confirmed is recorded `blocked` and checked again on a rerun, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run.
+Each attempt keeps its request, raw response, and stderr under `write-responses/`. Before its `gh` call it appends a started row to `write-results.jsonl`, and after the call a compact result row: item, step, kind (`write`, `read`, or `skip`), target, body digest, exit, outcome, reason, returned URL, created comment id or `isResolved`, and the file paths. A reply is `confirmed` only when the response carries an integer `id`, an `html_url`, and an `in_reply_to_id` equal to the target comment. A thread action is `confirmed` only when it returns the requested `isResolved`, and a returned opposite state is `failed`. An exit 0 without those fields is `ambiguous`. A non-zero exit is `failed` for GraphQL errors or an HTTP 4xx refusal other than 408 or 429, and `ambiguous` otherwise. A thread action while any reply on its thread is not confirmed is recorded `blocked` and checked again on a rerun, and an action already in the requested state or `none` is `skipped`. The loop prints one line per attempt, then `writes: <n> confirmed, <n> not required, <n> unresolved` with one `unresolved` line per required operation that is not confirmed. It exits 0 only when none is unresolved and 1 otherwise; an all-skipped or already-confirmed run exits 0. Exit 2 means the loop could not run. Exit 3 means `writes.jsonl` was refused and nothing was written.
 
 After reading the results, reconcile by running the same block again. It re-validates and skips every confirmed operation, matching item, target, and exact body digest, so an earlier confirmation never covers a changed body or target. An attempt with a started row and no result row, as when the loop is interrupted mid-write, counts as `ambiguous`. For an operation whose last attempt was `ambiguous`, it first reads that thread's `isResolved`, the posting identity (`viewer`), and the thread's last 100 comments. A reply from that identity to the target comment with the exact body, stable trailer included, or the requested thread state confirms the operation without writing; that identity match ignores a trailing `[bot]`, which REST carries and GraphQL omits for the same app. A read showing neither permits the single retry of that operation alone. A failed read, or a thread with comments before the window, stays `ambiguous` with nothing retried. Each operation has at most two write attempts across every run against one results file, and a `failed` refusal is not retried. A reply confirmed before a failed action is never posted again, and a reply confirmed on a rerun is followed by its still-required action in the same run. Report every `unresolved` line as a reply or thread that failed to publish; never claim it closed.
