@@ -207,10 +207,17 @@ def write_cache(path: Path, record: dict) -> None:
 
 
 def mint_token(
-    api: str, key: Path, client_id: str, owner: str, name: str, jwt: str | None = None, install: dict | None = None
+    api: str,
+    key: Path,
+    client_id: str,
+    owner: str,
+    name: str,
+    jwt: str | None = None,
+    install: dict | None = None,
+    use_cache: bool = True,
 ) -> str:
     path = cache_path(client_id, owner, name)
-    if os.environ.get("REVIEWBOT_NO_CACHE") != "1":
+    if use_cache and os.environ.get("REVIEWBOT_NO_CACHE") != "1":
         token = cached_token(path)
         if token:
             return token
@@ -259,8 +266,11 @@ def cmd_whoami(args: argparse.Namespace) -> int:
         if not cached:
             raise
         print(f"review_token: warning: {error}; dropping {path} and minting again", file=sys.stderr)
-        path.unlink(missing_ok=True)
-        token = mint_token(args.api, key, args.client_id, owner, name, jwt, install)
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as unlink_error:
+            print(f"review_token: warning: cannot remove the token cache at {path}: {unlink_error.strerror}", file=sys.stderr)
+        token = mint_token(args.api, key, args.client_id, owner, name, jwt, install, use_cache=False)
         login = probe(args.api, token, "minted")
     slug = app.get("slug", "")
     permissions = install.get("permissions") or {}

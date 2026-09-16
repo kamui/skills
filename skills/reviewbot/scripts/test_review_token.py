@@ -383,6 +383,24 @@ class ReviewToken(unittest.TestCase):
         self.assertEqual(self.mints(), 2)
         self.assertEqual(json.loads(self.cache_file().read_text(encoding="utf-8"))["token"], "ghs_test2")
 
+    def test_whoami_still_re_mints_when_the_cached_token_cannot_be_removed(self):
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root ignores directory modes")
+        first = self.run_script("token", INSTALLED)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        with self.forge.lock:
+            self.forge.tokens[0] = "revoked"
+        self.cache_file().parent.chmod(0o500)
+        try:
+            result = self.run_script("whoami", INSTALLED)
+        finally:
+            self.cache_file().parent.chmod(0o700)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("graphql login: reviewer\n", result.stdout)
+        self.assertIn("cannot remove the token cache", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual(self.mints(), 2)
+
     def test_repository_must_be_owner_slash_repo(self):
         for bad in ("widgets", "acme/", "/widgets", "a/b/c", "../x"):
             result = self.run_script("token", bad)
