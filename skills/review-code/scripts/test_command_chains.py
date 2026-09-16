@@ -13,9 +13,10 @@ as the three commands run separately, and stop visibly at the first failing
 stage. The submission block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
 POST failure's own status under a distinct attempted-write stage. Every token
-acquisition must publish its write under a proved token, write nothing when the
-token is missing or refused, and keep the token and the dismissal message out of
-`argv` and out of the inner shell's expansions.
+acquisition must publish its write under a proved token and write nothing when
+the token is missing or refused; the dismissal, whose single write is its own
+proof, must write nothing when the token is missing. Neither the token nor the
+dismissal message may reach `argv` or the inner shell's expansions.
 """
 from __future__ import annotations
 
