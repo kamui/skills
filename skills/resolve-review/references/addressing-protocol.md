@@ -135,7 +135,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 `gh api` substitutes `{owner}` and `{repo}` from the clone, so the paths below are copy-pasteable as written.
 
-**Posting identity**: `gh api user --jq .login`. This skill always writes as that identity and never as a reviewing app: a round's replies and summary have to come from the pull-request author. Compare with `gh pr view <n> --json author` to detect a self-review, ignoring a trailing `[bot]` on either login.
+**Posting identity**: `gh api user --jq .login`. This skill always writes as that identity and never as a reviewing app: an app reviews, and the replies and summary are the addresser's own. Compare with `gh pr view <n> --json author` to detect a self-review, ignoring a trailing `[bot]` on either login.
 
 **Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as addressed. The collection block below runs this read in the same invocation and saves it as `pr.json`, so only the number `<n>` is needed before it runs.
 
