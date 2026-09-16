@@ -225,6 +225,20 @@ class ReviewToken(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o700, directory)
         self.assertFalse(path.with_name(path.name + ".part").exists())
 
+    def test_unwritable_cache_still_prints_the_token(self):
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root ignores directory modes")
+        self.cache.mkdir()
+        self.cache.chmod(0o500)
+        try:
+            result = self.run_script("token", INSTALLED)
+        finally:
+            self.cache.chmod(0o700)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "ghs_test1\n")
+        self.assertIn("cannot write the token cache", result.stderr)
+        self.assertFalse(self.cache_file().exists())
+
     def test_key_resolution_order(self):
         home = self.case / "home"
         config = home / ".config" / "reviewbot"
@@ -326,8 +340,11 @@ class ReviewToken(unittest.TestCase):
         )
         with self.forge.lock:
             paths = [path for _, path, _ in self.forge.requests]
+            jwts = list(self.forge.jwts)
         self.assertIn("/graphql", paths)
         self.assertNotIn("/api/graphql", paths)
+        self.assertEqual(paths.count("/repos/acme/widgets/installation"), 1, paths)
+        self.assertEqual(len(set(jwts)), 1, "whoami signed more than one JWT")
 
     def test_whoami_derives_the_enterprise_graphql_url(self):
         result = self.run_script("whoami", INSTALLED, api=self.forge.url + "/api/v3")

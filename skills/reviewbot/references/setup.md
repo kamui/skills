@@ -45,7 +45,7 @@ python3 scripts/review_token.py whoami --client-id <Client ID> <owner>/<repo>
 
 prints the app name and slug, `rest login: <slug>[bot]`, `graphql login`, the installation id and its permissions, and the review-token command a publisher runs. The tracker doc needs only the app name and client id; `whoami` reports the login.
 
-Expect the two login lines to differ only by the `[bot]` suffix. REST records carry it and GraphQL `author{login}` omits it, while the GraphQL `viewer` probe run here has been seen to carry it; consumers compare logins with a trailing `[bot]` ignored on both sides, and the Resolve entry point reports the bare slug.
+The `rest login` line always carries the `[bot]` suffix, which REST records carry and GraphQL `author{login}` omits. The `graphql login` line shows what the `viewer` query returned for the minted token, which on GitHub.com has been seen to carry the suffix as well, so the two lines may read the same. Consumers compare logins with a trailing `[bot]` ignored on both sides, and the Resolve entry point reports the bare slug from the `app:` line.
 
 ## 6. Declare it in the repository
 
