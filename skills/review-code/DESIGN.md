@@ -743,6 +743,39 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `0682437` and on this change.
 
 **Workflow retained: `v5b-17`.** Nothing in the review core changes: admission, verification, rendering, record state, trailers, scripts, and fixtures are untouched, and the reviewer, continuation, awaited-route, and publication rules of `implement-publish` are unchanged apart from the checks the step runs and how it reports them.
 
+## Delta re-verification in resolve-review (issue #284)
+
+The `finish-it` delivery for #279 took about 126 minutes before an approved review. These are the recorded figures that prompted this change. Each step subagent ran at the Opus tier on an awaited route, and the orchestrator spent about one minute between steps in total.
+
+| Step | Wall clock | Tool uses | Subagent tokens | Internal fan-out |
+| --- | ---: | ---: | ---: | --- |
+| `implement-publish` | 39.0 min | 42 | 97.5k | 1 isolated `review-code` reviewer, 1 fresh-continuation reviewer, and its verifier batch |
+| `review-code-publish` (round 0) | 18.5 min | 65 | 188k | 1 reviewer pass and 1 verifier batch over 13 disposition rows |
+| `resolve-review` (round 1) | 45.4 min | 67 | 180k | 4 sequential isolated reviewers: assessment at `3e10f46`, draft check at `e307f65`, re-verification at `8660bbf`, and final re-verification at `3fcb88e` |
+| `review-code-publish` (round 1) | 20.5 min | 65 | 208k | 1 reviewer pass and 1 verifier batch over 16 disposition rows |
+| `review-code-publish` (round 2) | 3.0 min | 26 | 59k | none; it took the `duplicate-review` preflight stop |
+
+**Runtime observation after the change.** One offline Claude Code exercise used a disposable repository with an incomplete first fix. It took 3m27s overall. Three sequential Sonnet reviewers reported 82,367 tokens and 19 tool uses: the full assessment took 45.9s and 27,381 tokens, the fresh-continuation draft check took 40.7s and 27,668 tokens, and the final delta re-verification took 35.8s and 27,318 tokens. The first two phases found the stale focused-test assertion and unsupported draft claims. After the fix, the final reviewer inspected only the complete fix delta and the four items from the prior phase, then covered the final head and revised drafts. This is one synthetic runtime observation, not a before-and-after cost claim.
+
+The four `resolve-review` phases were not duplicate work. Each phase found a problem, which led to a commit and another phase. The chain fixed eight items, including two code defects, an incorrect commit SHA in a reply, and an unsupported draft claim. The cost came from each fresh continuation reassessing the whole round even though only the newest fix and drafts had changed.
+
+**Delta coverage.** The first assessment and draft check still cover the whole round. Each later phase receives the prior covered head, the new head, and the prior phase's items. It re-verifies those items with bounded reads, inspects the complete fix delta, and checks the revised drafts. The retained assessment and evidence continue to cover the unchanged part of the round. A large delta takes the existing escape into a fresh full assessment. Assessment-before-drafts remains observable because a fresh continuation writes its delta assessment before it reads the separately stored draft file.
+
+**Cycle bound.** The first re-verification still runs after fixes from the full-round pass. From that point, only a blocking defect introduced by the fixes or an unsupported reply or disposition claim earns another commit and re-verification. The addresser weighs an optional finding under step 2. If accepted, it records the finding in the round summary and step-6 report instead of changing the head again. Any further commit still voids coverage of the earlier head, and the last phase still covers the final head and draft set. An unresolved blocking defect keeps the existing stop.
+
+**Awaiting and tiers.** Delta re-verification changes phase scope, not phase routing. Every phase still uses an awaited route selected before dispatch, and a fresh continuation replaces a completed reviewer rather than running beside a pending one. `resolve-review` now states the same tier rule as `implement-publish`: a caller's reviewer tier wins; otherwise a top-tier addresser uses the next lower tier and any other addresser uses the harness default. A verifier inherits that tier, and a fresh continuation keeps it. `finish-it` now distinguishes the step subagent's tier from an optional `reviewer tier: <name>` field in the packet, so the packet tier does not silently override an underlying skill's reviewer rule.
+
+**Instruction replays.** A no-code round still runs the full assessment and draft check. A blocking defect or unsupported draft claim found during re-verification earns the required fix, invalidated-check runs, commit, and next delta phase. An optional re-verification finding appears in the round summary and final report without a commit. With no nested tier override, a top-tier `finish-it` session sends its own tier only to the step subagent and `resolve-review` selects the next lower reviewer tier. With `reviewer tier: <name>`, every step passes that name to its reviewer dispatch.
+
+Counts use `wc -w` and `wc -c` on this branch at `c09e41a` before issue #284 and on this change.
+
+| Instruction | Before words / bytes | After words / bytes |
+| --- | ---: | ---: |
+| `resolve-review/SKILL.md` | 2,841 / 17,918 | 3,120 / 19,647 |
+| `finish-it/SKILL.md` | 1,593 / 9,836 | 1,684 / 10,379 |
+
+**Workflow retained: `v5b-19`.** Review admission, verification triggers, rendering, record state, and publication do not change. The phase scope, cycle continuation rule, and model-tier handoff change only how the existing addressing review reaches its final covered head.
+
 ## Publication artifacts and edited prior state (issue #280)
 
 A classification reply posts after its review and GitHub gives it a separate container review. Those two records previously defeated the duplicate-review shortcut on every unchanged-head round. The reviewer now drafts a `prior-item` trailer with the stable id, classification, and full reviewed head. `later-state` excludes an unedited marked reply only when its author matches the candidate review's author and its head matches the candidate's commit. It excludes an unedited empty container only when it holds at least one comment and every comment qualifies. In a mixed container, the container and unmarked reply print; the marked reply still qualifies independently. Empty containers without comments remain visible because they provide no evidence of a publication reply.
