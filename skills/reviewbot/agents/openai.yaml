@@ -1,4 +1,0 @@
-interface:
-  display_name: "Reviewbot"
-  short_description: "Set up or check the GitHub App that publishes reviews"
-  default_prompt: "Use $reviewbot to set up the reviewing GitHub App and check it against a repository."
