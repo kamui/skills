@@ -35,7 +35,7 @@ For authorized gating, regenerate it with `--emit-batch --event` through the abs
 Never locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head, check it, and post the batch in one forge-native review call with the reference's freshness-and-submission block, one shell invocation.
-Exit 3 after `preflight failed` means nothing was written: report the stale or unreadable head and stop.
+Exit 3 means nothing was written, from that block or from the thread write loop: report what it printed — a stale or unreadable head, or a review-token command that yielded no usable token — and stop.
 Run that fetch, every write, and the readback below through the recorded `run_events.py` wrapper as the reference's Timing events section classifies them.
 After the review posts, write `writes.jsonl` for every prior item and run the reference's thread write loop once for its replies and thread resolutions, wrapped as one `role=replies` event.
 

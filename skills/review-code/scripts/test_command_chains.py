@@ -346,24 +346,38 @@ class Chains(unittest.TestCase):
                         self.assertTrue(all(r["token"] != "authenticated-user-token" for r in seen),
                                         "the probe runs under the app token, never the user's")
 
+    def dismissal(self, shell, tok="printf %s dismissal-token", why="superseded"):
+        private = Path(tempfile.mkdtemp(dir=self.root))
+        log = private / "gh.log"
+        env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
+                   GH_TOKEN_LOG=str(private / "token.log"))
+        env.pop("GH_TOKEN", None)
+        text = (block(PUBLICATION.read_text(encoding="utf-8"), "dismissals")
+                .replace("<review-token command>", tok)
+                .replace("<pr>", "7").replace("<review id>", "2").replace("<why>", why))
+        wrapped = "%s %s wrap --private-dir %s --event forge-written --data role=review -- %s" % (
+            shlex.quote(sys.executable), shlex.quote(str(SCRIPTS / "run_events.py")),
+            shlex.quote(str(private)), text.strip())
+        result = self.sh(shell, wrapped, env=env, cwd=self.root)
+        calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+        return result, calls, private
+
+    def test_a_dismissal_without_a_token_writes_nothing(self):
+        # `gh` reads an empty GH_TOKEN as no token at all, so falling through would dismiss
+        # the app's review as the authenticated user.
+        for shell in SHELLS:
+            for tok, reason in (("printf %s ", "prints nothing"), ("false unused-argument", "exits non-zero")):
+                with self.subTest(shell=shell, tok=reason):
+                    result, calls, _ = self.dismissal(shell, tok=tok)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertEqual(calls, [])
+
     def test_the_dismissal_runs_wrapped_and_keeps_its_message_literal(self):
         why = 'superseded by the `id -un` review at $HOME, a \\ and a "quote" \u2014 done'
         for shell in SHELLS:
             with self.subTest(shell=shell):
-                private = Path(tempfile.mkdtemp(dir=self.root))
-                log = private / "gh.log"
-                env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
-                           GH_TOKEN_LOG=str(private / "token.log"))
-                env.pop("GH_TOKEN", None)
-                text = (block(PUBLICATION.read_text(encoding="utf-8"), "dismissals")
-                        .replace("<review-token command>", "printf %s dismissal-token")
-                        .replace("<pr>", "7").replace("<review id>", "2").replace("<why>", why))
-                wrapped = "%s %s wrap --private-dir %s --event forge-written --data role=review -- %s" % (
-                    shlex.quote(sys.executable), shlex.quote(str(SCRIPTS / "run_events.py")),
-                    shlex.quote(str(private)), text.strip())
-                result = self.sh(shell, wrapped, env=env, cwd=self.root)
+                result, calls, private = self.dismissal(shell, why=why)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
                 self.assertEqual(len(calls), 1, calls)
                 self.assertIn("message=" + why, calls[0], "the message reaches the forge unexpanded")
                 self.assertNotIn("dismissal-token", json.dumps(calls), "a token never reaches argv")
