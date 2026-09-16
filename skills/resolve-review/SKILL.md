@@ -71,7 +71,7 @@ Resolving every thread leaves the pull request looking untouched, since the forg
 
 One comment, however large the round. The per-item detail is already in the threads; a summary that restates it makes the reviewer read everything twice, and a comment per item is what the threads exist to avoid.
 
-Ask the identity whose review this round addressed to look again, in the form the protocol's Addressing summary section selects: a review request where the forge routes one, otherwise a mention line in the summary comment. Settle which form applies before writing the summary.
+Ask the identity whose review this round addressed to look again, in the form the protocol's Addressing summary section selects: a review request where the forge routes one, a mention line in the summary comment where it does not, and neither for an app reviewer. Settle which form applies before writing the summary.
 
 ### 6. Verify
 
