@@ -803,7 +803,7 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `1911a83` and on this change.
 
 | Instruction | Before words / bytes | After words / bytes |
 | --- | ---: | ---: |
-| `resolve-review/SKILL.md` | 3,184 / 20,046 | 3,512 / 22,131 |
+| `resolve-review/SKILL.md` | 3,184 / 20,046 | 3,509 / 22,112 |
 
 **Runtime observation still owed.** The issue asks for one observation from the first `resolve-review` round run with the changed skill installed, after `scripts/sync-global-skills`: the assessment names what it reused and any check it ran with its reason, and it runs no full suite without a stated Invalidating reason, with its reported tokens, wall clock, and tool uses recorded beside the 100,416 / 421 s / 30 figures above. The delivery's own addressing round runs the previously installed skill and does not count, so that observation follows the merge and the sync. It is one observation either way, not a measured claim.
 
