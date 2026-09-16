@@ -6,12 +6,12 @@ Usage: python3 scripts/review_token.py token --client-id ID OWNER/REPO
 
 Inputs: the app's client id, the repository the token is scoped to (always
 named; never inferred from a remote), and the app's private key, resolved as
---key, then REVIEWBOT_KEY, then ~/.config/reviewbot/<client id>.pem, then
-~/.config/reviewbot/key.pem. --api or REVIEWBOT_API replaces the forge base
+--key, then REVIEW_BOT_KEY, then ~/.config/review-bot/<client id>.pem, then
+~/.config/review-bot/key.pem. --api or REVIEW_BOT_API replaces the forge base
 (default https://api.github.com; a base ending in /api/v3 is GitHub
-Enterprise). REVIEWBOT_CACHE_DIR replaces ~/.cache/reviewbot, where minted
+Enterprise). REVIEW_BOT_CACHE_DIR replaces ~/.cache/review-bot, where minted
 tokens live under <client id>/<owner>/<repo>.json (directories 700, files
-600) and are reused while more than five minutes remain; REVIEWBOT_NO_CACHE=1
+600) and are reused while more than five minutes remain; REVIEW_BOT_NO_CACHE=1
 always mints. No config file is read.
 
 `token` prints the installation token, and nothing else, on stdout. `whoami`
@@ -82,10 +82,10 @@ def graphql_url(api: str) -> str:
 def resolve_key(option: str | None, client_id: str) -> Path:
     if option:
         candidates = [Path(option)]
-    elif os.environ.get("REVIEWBOT_KEY"):
-        candidates = [Path(os.environ["REVIEWBOT_KEY"])]
+    elif os.environ.get("REVIEW_BOT_KEY"):
+        candidates = [Path(os.environ["REVIEW_BOT_KEY"])]
     else:
-        config = Path("~/.config/reviewbot").expanduser()
+        config = Path("~/.config/review-bot").expanduser()
         candidates = [config / f"{client_id}.pem", config / "key.pem"]
     for path in candidates:
         if path.is_file():
@@ -133,7 +133,7 @@ def request(url: str, bearer: str, body: dict | None = None) -> dict:
         "Authorization": f"Bearer {bearer}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "reviewbot",
+        "User-Agent": "review-bot",
     }
     if data is not None:
         headers["Content-Type"] = "application/json"
@@ -172,7 +172,7 @@ def installation(api: str, jwt: str, owner: str, name: str) -> dict:
 
 
 def cache_path(client_id: str, owner: str, name: str) -> Path:
-    root = os.environ.get("REVIEWBOT_CACHE_DIR") or "~/.cache/reviewbot"
+    root = os.environ.get("REVIEW_BOT_CACHE_DIR") or "~/.cache/review-bot"
     return Path(root).expanduser() / client_id / owner / f"{name}.json"
 
 
@@ -217,7 +217,7 @@ def mint_token(
     use_cache: bool = True,
 ) -> str:
     path = cache_path(client_id, owner, name)
-    if use_cache and os.environ.get("REVIEWBOT_NO_CACHE") != "1":
+    if use_cache and os.environ.get("REVIEW_BOT_NO_CACHE") != "1":
         token = cached_token(path)
         if token:
             return token
@@ -258,7 +258,7 @@ def cmd_whoami(args: argparse.Namespace) -> int:
     app = request(f"{args.api}/app", jwt)
     install = installation(args.api, jwt, owner, name)
     path = cache_path(args.client_id, owner, name)
-    cached = os.environ.get("REVIEWBOT_NO_CACHE") != "1" and cached_token(path) is not None
+    cached = os.environ.get("REVIEW_BOT_NO_CACHE") != "1" and cached_token(path) is not None
     token = mint_token(args.api, key, args.client_id, owner, name, jwt, install)
     try:
         login = probe(args.api, token, "cached" if cached else "minted")
@@ -288,10 +288,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Mint a GitHub App installation token or report the app's identity.")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--client-id", required=True, help="the app's client id, the JWT issuer")
-    common.add_argument("--key", help="private key path; else REVIEWBOT_KEY, then ~/.config/reviewbot")
+    common.add_argument("--key", help="private key path; else REVIEW_BOT_KEY, then ~/.config/review-bot")
     common.add_argument(
         "--api",
-        default=os.environ.get("REVIEWBOT_API") or DEFAULT_API,
+        default=os.environ.get("REVIEW_BOT_API") or DEFAULT_API,
         help="forge REST base; GitHub Enterprise uses https://<host>/api/v3",
     )
     common.add_argument("repo", type=split_repo, metavar="OWNER/REPO", help="the repository the token is scoped to")
