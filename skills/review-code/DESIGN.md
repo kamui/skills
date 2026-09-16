@@ -653,7 +653,9 @@ Issue #269 told the primary to join every dispatched batch, but a harness can of
 
 The same awaited-route rule lands in `implement-publish` and `resolve-review` for every reviewer phase, with a **fresh continuation** fallback that replaces a completed reviewer's next phase when the host's resumption only acknowledges. `finish-it` names the awaited route for its step dispatches and adds the phase, pending agent id, and missing artifact to a failed-step report. The trigger was a `finish-it` delivery on Claude Code 2.1.271 whose implement step resumed its reviewer with `SendMessage`, received only an acknowledgment, ended its turn, and was forced to hand back; the reviewer's approval arrived seven minutes later and was lost. A probe on this change's implement step reproduced the operation's shape: a foreground `Agent` dispatch returned the subagent's result within the tool call, while `SendMessage` to the finished agent returned `Resuming agent` and the resumed result arrived only as a later message.
 
-Counts use `wc -w` and `wc -c` on `origin/main` at `2bd592b` and on this change.
+**Naming the operation that waited.** The first change said to choose an awaited route but never said to report which one was used, so a step could satisfy it in prose while having waited on nothing. `implement-publish` step 4 and `resolve-review` step 3 now name the host operation each reviewer phase actually ran on, and both skills' closing reports carry it, which is what makes the rule checkable from a run's record rather than from its source text. The same pass states that a reviewer which fails or returns a partial result keeps its existing failure and coverage routing instead of the `review-wait-unavailable` stop, so a worker failure is never relabelled as an unsupported wait; makes `resolve-review`'s fresh continuation general-purpose, matching `implement-publish`'s; and has that continuation write its assessment out as an artifact before it reads the separately stored drafts, carrying it back with the draft check at the end of the same awaited dispatch, so assessment-before-drafts ordering is evidenced rather than asserted and "returns" cannot be read as a hand-back mid-phase. `review-code` step 3 chooses its verifier batch's route the same way and records the operation each batch ran on, which the returned record's verification accounting now carries, so the one remaining phase kind #273 names is no longer assertable in prose alone. `README.md`'s account of the pre-publication review follows.
+
+Counts use `wc -w` and `wc -c` on `origin/main` at `2bd592b` and on the first change.
 
 | Instruction | Before words / bytes | After words / bytes |
 | --- | ---: | ---: |
@@ -662,7 +664,15 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `2bd592b` and on this change.
 | `resolve-review/SKILL.md` | 1,888 / 11,986 | 2,131 / 13,581 |
 | `finish-it/SKILL.md` | 1,357 / 8,258 | 1,406 / 8,566 |
 
-**Workflow retained: `v5b-17`.** On a harness with a usable wait, which batches run, what they carry, the one-initial-plus-one-follow-up cap, reconciliation, rendering, and record state are unchanged; the rule only removes an early-dispatch path whose return could never be reconciled. On a harness without one, the outcome is the existing incomplete-verification state, now named, rather than a silently lost verdict. No script, fixture, or trailer changed.
+The follow-on pass measures against `origin/main` at `0682437`, which already carries the first change and #263's `resolve-review` growth.
+
+| Instruction | Before words / bytes | After words / bytes |
+| --- | ---: | ---: |
+| `review-code/SKILL.md` | 5,040 / 34,579 | 5,070 / 34,773 |
+| `implement-publish/SKILL.md` | 1,215 / 7,840 | 1,251 / 8,032 |
+| `resolve-review/SKILL.md` | 2,205 / 14,049 | 2,290 / 14,540 |
+
+**Workflow retained: `v5b-17`.** On a harness with a usable wait, which batches run, what they carry, the one-initial-plus-one-follow-up cap, reconciliation, and rendering are unchanged; the rule only removes an early-dispatch path whose return could never be reconciled. The follow-on pass adds one item to the returned record's verification accounting, the host operation each dispatched batch ran on. That is a private-record disclosure to the caller: no admission, verdict, status, rendered comment, trailer, or script output reads it, and the published state semantics the identifier versions are untouched. On a harness without one, the outcome is the existing incomplete-verification state, now named, rather than a silently lost verdict. No script, fixture, or trailer changed.
 
 ## Check evidence in resolve-review (issue #263)
 
