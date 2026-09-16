@@ -21,7 +21,7 @@ Follow the repository's branch and commit conventions. If the current branch is 
 
 Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
 
-End with the work committed on the branch and the relevant checks run. Keep implementation and review local until step 5.
+End with the work committed on the branch and its checks run. A **check** is one named verification — a focused test invocation, a suite, a linter, or a build — and its evidence is one result: the command, the full head SHA it ran at, its input state, and what it covered. Select the focused commands the repository documents for the behavior the work changes and for what depends on that behavior; a test file named after a changed file is a lead, not a selection, and a documentation-only change needs a test invocation only when a documented check covers that documentation. Changes that share one meaningful check run it once, after the last of them is in place. Run the broader suite as well when the work touches shared dependencies or configuration, changes cross-module behavior, or has uncertain reach. An earlier success stands in for a rerun only when it is the same check at the exact full head SHA being verified, with its relevant inputs and environment unchanged and the coverage the check requires; a run on uncommitted work counts only for the commit made from exactly that tree. Every result establishes only the head and input state it ran at, and a later commit inherits nothing from it. Keep implementation and review local until step 5.
 
 ### 4. Review before publishing
 
@@ -31,7 +31,9 @@ Run every reviewer phase in this step, the first review and each continuation be
 
 Brief the reviewer to invoke `review-code` with `mode: one-shot` on the range from the base to the committed head, passing every spec source resolved in step 1 as the user-supplied spec. Have it return the complete would-be review — summary, findings, questions, and coverage — plus the routed items and record paths needed to resume. The core builds its own context, so do not pass a merge-base diff command. Its read-only bound applies: the reviewed source is never changed, while focused tests run only in a disposable environment under the rubric's Changed tests section.
 
-Read the returned review. Treat every `must-fix` finding as blocking and every `consider` finding as optional; report coverage gaps and unresolved questions. Evaluate every finding against the code and spec. Fix warranted defects, rerun affected checks, and commit the fixes. Record an evidence-based reason for declining a finding; a disputed blocking defect remains unresolved.
+Read the returned review. Treat every `must-fix` finding as blocking and every `consider` finding as optional; report coverage gaps and unresolved questions. Evaluate every finding against the code and spec. Fix warranted defects, rerun the checks those fixes invalidate, and commit the fixes. Record an evidence-based reason for declining a finding; a disputed blocking defect remains unresolved.
+
+The checks a fix invalidates are the ones whose inputs it touches. Rerun the focused checks covering their effects, and rerun the affected broader suite too when the fixes reach shared dependencies or configuration, change cross-module behavior, or have uncertain reach, however many suites already ran this step. Select and reuse under step 3's rules, so fixes sharing one meaningful check run it once after the last of them is in place. A check the fixes do not reach needs no rerun and still establishes only the head it ran at. Neither the reviewer nor future CI substitutes for this verification before the publication gate.
 
 After committing fixes, continue the same reviewer with the new head and the stable ids fixed when resuming it is awaited. When the host's resumption returns before its result, as a message-based resume that acknowledges and runs in the background does, choose a **fresh continuation** before sending anything: one new isolated general-purpose reviewer at the same tier, dispatched on an awaited route. It replaces the completed reviewer's next phase; it is never a second reviewer beside a pending one, a retry of a failed review, or a way past a partial result. Brief it to invoke `review-code` with `mode: one-shot` for the rubric, verification, and record rules the addendum applies, with the repository, applicable instructions and every spec source, the base and full reviewed and final head SHAs, the original record paths, the complete review and its routed items, the fixed stable ids, every unresolved or disputed finding and material question, and the existing finding, coverage, and verification state, including whether the follow-up batch is spent. It first confirms each record path is readable and belongs to that review and reviewed head; missing or mismatched state is a reported coverage gap, never a clean addendum.
 
@@ -51,7 +53,7 @@ Update that one's body if it exists; otherwise `gh pr create --base <base> --hea
 
 - summarize the change;
 - reference every issue resolved in step 1, each with its disposition: **closes** it, using the forge's closing keyword so the merge closes the issue; **partially implements** it, naming what remains open; or **affects** it, stating how. When the spec lives outside the forge, name and link the specification instead;
-- list the verification performed.
+- list the verification performed, naming each check with the head it establishes and any remaining verification gap.
 
 Leave issue status, labels, and assignees alone.
 
