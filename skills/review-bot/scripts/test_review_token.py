@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/test_review_token.py [-v]
 Inputs: a throwaway RSA key from `openssl genrsa` and an http.server fake forge
-reached through --api and REVIEWBOT_CACHE_DIR; nothing outside the temp dir.
+reached through --api and REVIEW_BOT_CACHE_DIR; nothing outside the temp dir.
 Exit 0: checks pass; 1: assertion failure; 2: openssl or a subprocess cannot run.
 """
 from __future__ import annotations
@@ -149,7 +149,7 @@ class ReviewToken(unittest.TestCase):
         environment = {
             "PATH": os.environ["PATH"],
             "HOME": str(self.case / "home"),
-            "REVIEWBOT_CACHE_DIR": str(self.cache),
+            "REVIEW_BOT_CACHE_DIR": str(self.cache),
         }
         environment.update(env or {})
         command = [sys.executable, str(SCRIPT), args[0], "--client-id", CLIENT_ID, "--api", api or self.forge.url]
@@ -214,7 +214,7 @@ class ReviewToken(unittest.TestCase):
         self.assertEqual(stale.stdout, "ghs_test2\n")
         self.assertEqual(self.mints(), 2)
 
-        disabled = self.run_script("token", INSTALLED, env={"REVIEWBOT_NO_CACHE": "1"})
+        disabled = self.run_script("token", INSTALLED, env={"REVIEW_BOT_NO_CACHE": "1"})
         self.assertEqual(disabled.returncode, 0, disabled.stderr)
         self.assertEqual(disabled.stdout, "ghs_test3\n")
         self.assertEqual(self.mints(), 3)
@@ -244,7 +244,7 @@ class ReviewToken(unittest.TestCase):
 
     def test_key_resolution_order(self):
         home = self.case / "home"
-        config = home / ".config" / "reviewbot"
+        config = home / ".config" / "review-bot"
         config.mkdir(parents=True)
         not_a_key = self.case / "not-a-key.pem"
         not_a_key.write_text("not a key\n", encoding="utf-8")
@@ -255,32 +255,32 @@ class ReviewToken(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "key.pem fallback: " + result.stderr)
 
         (config / "key.pem").write_bytes(not_a_key.read_bytes())
-        result = self.run_script("token", INSTALLED, key=False, env={"REVIEWBOT_NO_CACHE": "1"})
+        result = self.run_script("token", INSTALLED, key=False, env={"REVIEW_BOT_NO_CACHE": "1"})
         self.assertEqual(result.returncode, 2, "key.pem is not a key: " + result.stderr)
         (config / (CLIENT_ID + ".pem")).write_bytes(self.key.read_bytes())
         (config / (CLIENT_ID + ".pem")).chmod(0o600)
-        result = self.run_script("token", INSTALLED, key=False, env={"REVIEWBOT_NO_CACHE": "1"})
+        result = self.run_script("token", INSTALLED, key=False, env={"REVIEW_BOT_NO_CACHE": "1"})
         self.assertEqual(result.returncode, 0, "<client id>.pem beats key.pem: " + result.stderr)
 
         (config / (CLIENT_ID + ".pem")).write_bytes(not_a_key.read_bytes())
-        result = self.run_script("token", INSTALLED, key=False, env={"REVIEWBOT_NO_CACHE": "1"})
+        result = self.run_script("token", INSTALLED, key=False, env={"REVIEW_BOT_NO_CACHE": "1"})
         self.assertEqual(result.returncode, 2, "<client id>.pem is not a key: " + result.stderr)
         result = self.run_script(
-            "token", INSTALLED, key=False, env={"REVIEWBOT_NO_CACHE": "1", "REVIEWBOT_KEY": str(self.key)}
+            "token", INSTALLED, key=False, env={"REVIEW_BOT_NO_CACHE": "1", "REVIEW_BOT_KEY": str(self.key)}
         )
-        self.assertEqual(result.returncode, 0, "REVIEWBOT_KEY beats the config dir: " + result.stderr)
+        self.assertEqual(result.returncode, 0, "REVIEW_BOT_KEY beats the config dir: " + result.stderr)
 
         result = self.run_script(
-            "token", INSTALLED, "--key", str(self.other_key), env={"REVIEWBOT_NO_CACHE": "1", "REVIEWBOT_KEY": str(not_a_key)},
+            "token", INSTALLED, "--key", str(self.other_key), env={"REVIEW_BOT_NO_CACHE": "1", "REVIEW_BOT_KEY": str(not_a_key)},
             key=False,
         )
-        self.assertEqual(result.returncode, 0, "--key beats REVIEWBOT_KEY: " + result.stderr)
+        self.assertEqual(result.returncode, 0, "--key beats REVIEW_BOT_KEY: " + result.stderr)
 
     def test_missing_key_exits_2_naming_the_path(self):
         result = self.run_script("token", INSTALLED, key=False)
         self.assertEqual(result.returncode, 2)
         self.assertEqual(result.stdout, "")
-        expected = self.case / "home" / ".config" / "reviewbot" / (CLIENT_ID + ".pem")
+        expected = self.case / "home" / ".config" / "review-bot" / (CLIENT_ID + ".pem")
         self.assertIn(str(expected), result.stderr)
         self.assertEqual(self.mints(), 0)
 

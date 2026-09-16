@@ -30,12 +30,12 @@ Install App, pick the account, then "Only select repositories" and add **every**
 General page, Private keys, Generate a private key. GitHub keeps no copy: the download is the only one, and a lost key means generating a new one. Place it and lock it down:
 
 ```sh
-mkdir -p ~/.config/reviewbot && chmod 700 ~/.config/reviewbot
-mv ~/Downloads/<app>.<date>.private-key.pem ~/.config/reviewbot/<Client ID>.pem
-chmod 600 ~/.config/reviewbot/<Client ID>.pem
+mkdir -p ~/.config/review-bot && chmod 700 ~/.config/review-bot
+mv ~/Downloads/<app>.<date>.private-key.pem ~/.config/review-bot/<Client ID>.pem
+chmod 600 ~/.config/review-bot/<Client ID>.pem
 ```
 
-The script also accepts `~/.config/reviewbot/key.pem` when there is one app on the machine, and `--key` or `REVIEWBOT_KEY` for any other location. Never place the key in a repository or under the synced skills directory: anyone holding it can post as the app. On any exposure, generate a new key on the app's settings page and delete the old one there.
+The script also accepts `~/.config/review-bot/key.pem` when there is one app on the machine, and `--key` or `REVIEW_BOT_KEY` for any other location. Never place the key in a repository or under the synced skills directory: anyone holding it can post as the app. On any exposure, generate a new key on the app's settings page and delete the old one there.
 
 ## 5. Check it
 
@@ -60,4 +60,4 @@ Paste into `docs/agents/issue-tracker.md`:
 
 ## GitHub Enterprise
 
-Pass `--api https://<host>/api/v3` (or set `REVIEWBOT_API`); the GraphQL endpoint `https://<host>/api/graphql` is derived from it. On a python.org macOS build without root certificates, run `Install Certificates.command` from the Python application folder or point `SSL_CERT_FILE` at a CA bundle; the script names both on a TLS verification failure.
+Pass `--api https://<host>/api/v3` (or set `REVIEW_BOT_API`); the GraphQL endpoint `https://<host>/api/graphql` is derived from it. On a python.org macOS build without root certificates, run `Install Certificates.command` from the Python application folder or point `SSL_CERT_FILE` at a CA bundle; the script names both on a TLS verification failure.
