@@ -121,7 +121,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-19"
+WORKFLOW = "v5b-20"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -1580,7 +1580,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
 
     def wrong_workflow(payload):
         payload["summary"]["trailer"] = payload["summary"]["trailer"].replace(
-            f"workflow={WORKFLOW}", "workflow=v5b-18"
+            f"workflow={WORKFLOW}", "workflow=v5b-19"
         )
 
     def malformed_trailer(payload):
