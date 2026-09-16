@@ -33,7 +33,7 @@ Do not create an observation merely to preserve a dropped candidate. The fact it
 
 ## Replies and prior state
 
-[`re-review.md`](re-review.md), loaded by `SKILL.md` step 1 when prior state comes from the posting identity or the same local session, defines reply dispositions, reply trailers, the duplicate-review shortcut, delta scope, and the prior-item classification whose outcomes feed the `disputed` status input and populate the `Disputed` and `Prior findings` summary sections defined in `rendering.md`.
+[`re-review.md`](re-review.md), loaded by `SKILL.md` step 1 when prior state comes from the reviewer identity or the same local session, defines reply dispositions, reply trailers, the duplicate-review shortcut, delta scope, and the prior-item classification whose outcomes feed the `disputed` status input and populate the `Disputed` and `Prior findings` summary sections defined in `rendering.md`.
 
 ## Status
 
