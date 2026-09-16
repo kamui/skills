@@ -133,6 +133,25 @@ The caller retains a publication record `{coordinate, side}` derived from the fu
 
 Render each fragment with the script's `render` command, and `check` a fragment already written whenever the body is assembled or updated; a non-zero exit stops the step — report the script's output and fix the inputs, never the fragment by hand. File links sit beside the comment links, not in place of them: a comment link reaches the thread, a file link reaches the code the finding was read against.
 
+## The reviewer identity's token
+
+Where `docs/agents/issue-tracker.md` names a reviewing app, the reviewer identity SKILL step 1 resolved is that app, and every write this review makes has to come from it: the review POST and its phase-2 body update, thread replies, thread resolutions and reopenings, and dismissals. A write left as a bare `gh api` publishes as the authenticated user instead, and the next run's prior-review lookup — keyed on the reviewer identity — then finds nothing, so every re-review restarts as a first review with no carried findings and the duplicate gate never fires.
+
+Acquire the token once, before the first write, with that file's review-token command:
+
+```sh
+app=$(sh -c '<review-token command>') || app=
+if [ -n "$app" ] && GH_TOKEN=$app gh api "repos/{owner}/{repo}" --silent; then
+  GH_TOKEN=$app; export GH_TOKEN
+else
+  echo "no usable app token; publishing as the authenticated user"
+fi
+```
+
+Run the command through `sh -c` rather than expanding it in command position, where a multiword command is read as one command name under `zsh`. Name the repository in the command; never let the runner infer one from a remote, which is the fork on a fork checkout. Keep the token in the environment, never on a command line, and export it only once it is proved, so an unusable one leaves whatever credential the authenticated user already had in place. Prove it before the first write rather than testing it for emptiness alone: a token minted against the wrong repository, or one whose installation was suspended, is non-empty and then refused on every write.
+
+A command that is absent, that fails, or whose token cannot authenticate is not an error. Publish as the authenticated user, record the fallback in the report, and re-derive the event under the self-review rules above before writing — the app identity step 1 resolved no longer holds, and `APPROVE` or `REQUEST_CHANGES` on a pull request the authenticated user authored is refused with 422.
+
 ## One review, one call
 
 **Apply SKILL step 4's complete input freshness check before the first write.** A stale or unreadable head/base, changed evidence, or missing state stops publication until reassessed; a newly merged target requires separate explicit authority.

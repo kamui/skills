@@ -42,7 +42,7 @@ if os.environ.get("GH_TOKEN_LOG"):
     with open(os.environ["GH_TOKEN_LOG"], "a", encoding="utf-8") as tokens:
         tokens.write(json.dumps({"args": args, "token": os.environ.get("GH_TOKEN")}) + "\n")
 if "--silent" in args:  # the preflight's token check
-    sys.exit(0)
+    sys.exit(int(os.environ.get("GH_SILENT_RC", "0")))
 if "--method" in args and "POST" in args:
     rc = int(os.environ.get("GH_POST_RC", "0"))
     if rc == 0:
@@ -209,7 +209,8 @@ class Chains(unittest.TestCase):
 
     # --- publisher freshness and submission ---------------------------------
 
-    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD, tok=""):
+    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD, tok="",
+                   silent_rc=0):
         private = Path(tempfile.mkdtemp(dir=self.root))
         (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
                                                         "comments": []}), encoding="utf-8")
@@ -221,7 +222,7 @@ class Chains(unittest.TestCase):
         log = private / "gh.log"
         env = dict(os.environ, PATH=f"{binary}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
                    GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc),
-                   GH_TOKEN_LOG=str(private / "token.log"))
+                   GH_TOKEN_LOG=str(private / "token.log"), GH_SILENT_RC=str(silent_rc))
         env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (block(PUBLICATION.read_text(encoding="utf-8"), "preflight failed")
@@ -268,10 +269,14 @@ class Chains(unittest.TestCase):
                 self.assertNotIn("app-token-xyz", json.dumps(calls), "a token never reaches argv")
 
     def test_unusable_app_token_is_a_preflight_failure_that_writes_nothing(self):
+        # A token the forge refuses is non-empty, so emptiness alone does not settle it: minted
+        # against the wrong repository, or an installation suspended since it was issued.
+        cases = (("printf %s ", 0, "prints nothing"), ("false unused-argument", 0, "exits non-zero"),
+                 ("printf %s stale-token", 22, "the forge refuses the token"))
         for shell in SHELLS:
-            for tok, reason in (("printf %s ", "prints nothing"), ("false unused-argument", "exits non-zero")):
+            for tok, silent_rc, reason in cases:
                 with self.subTest(shell=shell, tok=reason):
-                    result, calls, events, private = self.submission(shell, tok=tok)
+                    result, calls, events, private = self.submission(shell, tok=tok, silent_rc=silent_rc)
                     self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
                     self.assertIn("preflight failed: the review-token command", result.stdout)
                     self.assertIn("nothing was written", result.stdout)
