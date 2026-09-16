@@ -44,7 +44,7 @@ figure is a general current cost promise.
 
 ## v2b
 
-Workflow identifier: `v2b-6`. Issue #84 adds the deleted-file provenance contract described below. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
+Workflow identifier: `v2b-7`. Issue #277 keys the duplicate gate's prior review on the reviewer identity, as recorded in [Reviewer identity distinct from the posting identity](#reviewer-identity-distinct-from-the-posting-identity-issue-277). Issue #84 adds the deleted-file provenance contract described below. Issue #166 adds complete forge input identity and same-head review eligibility in [C20](#c20-complete-input-identity-and-same-head-changes). Issue #160 increments `v2b-3` to `v2b-4` for the verification
 change recorded in [C19](#c19-isolated-verification-and-verdict-accounting): the verifier runs
 in a genuinely non-inheriting worker or verification is incomplete, candidates and ledger rows carry
 a risk kind and ledger rows a per-run id, and every candidate verdict and acquittal ruling is
@@ -884,3 +884,9 @@ Step 4 rendered each body coordinate with its own `link_coordinate.py render` ca
 The opening reads `references/finding-format.md` before anything else, and step 1 reads the repository's `docs/agents/issue-tracker.md` when present. When that file is already known to be present at the opening, both now load in one tool invocation if the complete output fits the host's limit. Otherwise they use bounded or separate reads at the same point, recovering every missing portion, and a host without multi-read support reads consecutively. When its presence is not yet known, the existing order stands and step 1 reads it. `input-identity.md` stays after collection, `publishing.md` stays at step 4, and finder and verifier brief contents are unchanged.
 
 **Identifier retained: `v2b-6`.** No admission, verification, rendering, or state rule changed. `SKILL.md` grows from 5,399 words / 35,898 bytes to 5,467 / 36,333 (`wc -w`, `wc -c` on `origin/main` at `1141dc4`).
+
+## Reviewer identity distinct from the posting identity (issue #277)
+
+One term, "posting identity", meant both *who writes to the forge* and *whose prior reviews count as prior state*. A reviewing GitHub App splits those: the human still authors commits, the pull request, replies and addressing summaries, while the review publishes as the app. This audit's duplicate gate therefore selects its candidate prior review from the **reviewer identity**, and `scripts/review_identity.py` matches logins with a trailing `[bot]` ignored on both sides, because REST reports the app as `nitpikbot[bot]` where the GraphQL packet reports `nitpikbot`. Without that, the app's own prior audit is invisible and every re-audit restarts as a first one. Each block that writes a review acquires the app token in the invocation that writes, and every addressing write stays the authenticated user's. The app is optional and declared per repository in `docs/agents/issue-tracker.md`; with none declared, or with the runner absent or unable to authenticate, the reviewer identity is the authenticated user and every path behaves exactly as before.
+
+**Release change: `v2b-6` → `v2b-7`.** Admission, verification, rendering, and the finder and verifier grammars are unchanged; what changed is which prior reviews the duplicate gate recognizes as this reviewer's, which is state semantics. `references/input-identity.md` now requires the trailer to read `workflow=v2b-7`, so a `v2b-6` trailer no longer suppresses. The paired routine release is `v5b-18`. One fresh audit per open pull request at its next run is accepted.

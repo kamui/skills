@@ -133,6 +133,25 @@ The caller retains a publication record `{coordinate, side}` derived from the fu
 
 Render each fragment with the script's `render` command, and `check` a fragment already written whenever the body is assembled or updated; a non-zero exit stops the step — report the script's output and fix the inputs, never the fragment by hand. File links sit beside the comment links, not in place of them: a comment link reaches the thread, a file link reaches the code the finding was read against.
 
+## The reviewer identity's token
+
+Where `docs/agents/issue-tracker.md` names a reviewing app, the reviewer identity SKILL step 1 resolved is that app, and every write this review makes has to come from it: the review POST and its phase-2 body update, thread replies, thread resolutions and reopenings, and dismissals. A write left as a bare `gh api` publishes as the authenticated user instead, and the next run's prior-review lookup — keyed on the reviewer identity — then finds nothing, so every re-review restarts as a first review with no carried findings and the duplicate gate never fires.
+
+Acquire the token in the shell invocation that makes the write, with that file's review-token command. Every write command below is written bare; where an app publishes, each of them runs inside this block:
+
+```sh
+app=$(sh -c '<review-token command>') || app=
+if [ -z "$app" ] || ! GH_TOKEN=$app gh api "repos/{owner}/{repo}" --silent; then
+  echo "the review-token command yielded no usable token; nothing was written"; exit 3
+fi
+GH_TOKEN=$app; export GH_TOKEN
+<the review write this invocation makes>
+```
+
+Run the command through `sh -c` rather than expanding it in command position, where a multiword command is read as one command name under `zsh`. Name the repository in the command; never let the runner infer one from a remote, which is the fork on a fork checkout. Keep the token in the environment, never on a command line, and, as this block does, export it only once it is proved, so an unusable one leaves whatever credential the authenticated user already had in place. Acquire it in the same shell invocation as the write it covers, as the block above does: an exported variable does not survive to the next invocation, and a write run in a shell of its own publishes as the authenticated user however the previous one ended. Prove it before the first write rather than testing it for emptiness alone: a token minted against the wrong repository, or one whose installation was suspended, is non-empty and then refused on every write.
+
+The fallback to the authenticated user belongs to identity resolution, not to publication. A command that is absent, that fails, or whose token cannot authenticate is not an error in SKILL step 1: resolve the authenticated user instead, record the fallback in the report, and review under the ordinary self-review rules above. Once the run has resolved the app, though, its prior-state matching, its duplicate gate and its event all derive from that login, so a token that stops working at publication time writes nothing and reports the unusable token. Publishing that same review as the authenticated user would leave it invisible to the next run's app-keyed lookup — the re-review would restart as a first review — and `APPROVE` or `REQUEST_CHANGES` on that user's own pull request is refused with 422 anyway.
+
 ## One review, one call
 
 **Apply SKILL step 4's complete input freshness check before the first write.** A stale or unreadable head/base, changed evidence, or missing state stops publication until reassessed; a newly merged target requires separate explicit authority.
@@ -159,10 +178,10 @@ Validate every anchor against the diff before submitting — `git diff <base>...
 End the body with a run trailer, so a later run can correlate what this one covered without re-deriving it:
 
 ```
-<!-- review-run workflow=v2b-6 head=<full 40-hex sha> base-ref=<branch> state=<OPEN|CLOSED|MERGED> merged=<true|false> base-sha=<full 40-hex sha> merge-base=<full 40-hex sha> context=<full 64-hex sha256> output=<full 64-hex sha256> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
+<!-- review-run workflow=v2b-7 head=<full 40-hex sha> base-ref=<branch> state=<OPEN|CLOSED|MERGED> merged=<true|false> base-sha=<full 40-hex sha> merge-base=<full 40-hex sha> context=<full 64-hex sha256> output=<full 64-hex sha256> issues=<owner/repo#n,...|none> coverage=<complete|incomplete> -->
 ```
 
-Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2b-6` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs, explicit `state`/`merged`, and recomputed `context` are this run's identity record. Compute and check them under [`input-identity.md`](input-identity.md); a prior trailer without the digest is readable history but cannot suppress a current-contract review. Percent-encode spaces and percent signs in `base-ref`.
+Values are single tokens with no spaces; list issues sorted and comma-separated. Every SHA in a trailer is full-width, 40 hex characters — trailers are machine-read across rounds and abbreviations are ambiguous over time. Short SHAs stay fine in visible prose. `workflow=v2b-7` identifies which reviewer contract produced the run, so a later run knows whose trailer vocabulary it is reading; the trailer's pinned SHAs, explicit `state`/`merged`, and recomputed `context` are this run's identity record. Compute and check them under [`input-identity.md`](input-identity.md); a prior trailer without the digest is readable history but cannot suppress a current-contract review. Percent-encode spaces and percent signs in `base-ref`.
 
 Before submission, save the exact prospective body and original line-comment bodies as review JSON with `body` and `comments` (`[{"body": "…"}, …]`, empty for a body-only review), and run `python3 scripts/forge_packet.py output-digest review.json`. Put the returned digest in the run trailer as `output`. The helper removes the entire run trailer from the hashed body to avoid a self-reference, preserves all other body bytes, sorts comment bodies while retaining duplicates, and hashes canonical UTF-8 JSON with SHA-256. It uses no ids or timestamps, so it works before comment ids exist. The pinned code identity covers coordinates; published comment coordinates are immutable. On non-zero exit, report the output and stop the write.
 

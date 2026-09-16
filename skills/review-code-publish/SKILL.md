@@ -11,6 +11,7 @@ Invoking this skill authorizes publishing a review to the resolved pull request.
 Retrospective review of a merged pull request is non-publishing unless separately authorized.
 This does not authorize changing code, editing the pull request or issue, adding labels, or merging.
 Use a gating event only when the user or repository workflow separately authorizes this identity to gate the merge.
+A caller that resolved a reviewing app distinct from the pull request's author carries an explicit gating authorization in its packet, and that authorization is what permits a gating event here; a review published under a reviewing app is not a self-review.
 A self-review always uses `COMMENT`.
 
 This workflow is one-shot: finish without pausing for reviewer preferences.
@@ -19,7 +20,9 @@ If `review-code` is not among the installed skills, stop with `missing-dependenc
 ## Inspect
 
 Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
-Pass through supplied phase-1 packets, posting identity, focused-test policy, and up-front inputs under its Caller contract when provided.
+Pass through supplied phase-1 packets, reviewer identity, focused-test policy, and up-front inputs under its Caller contract when provided.
+A supplied review-token command stays here rather than travelling with them: `references/publication.md` spends it on the writes below, and `review-code` never publishes.
+With no supplied reviewer identity, resolve it as `references/publication.md` specifies before the review runs, so an unusable reviewing app falls back to the authenticated user before any work is spent.
 Apply the one-shot column of `review-code`'s Return routing table.
 A named stop ends this run with its report; a completed record supplies everything needed below.
 For a merged target without separate publication authorization, report the complete would-be review and finish.
@@ -33,7 +36,8 @@ For authorized gating, regenerate it with `--emit-batch --event` through the abs
 Never locate scripts through a sibling-relative path.
 
 Re-fetch the pull-request head, check it, and post the batch in one forge-native review call with the reference's freshness-and-submission block, one shell invocation.
-Exit 3 after `preflight failed` means nothing was written: report the stale or unreadable head and stop.
+Exit 3 means nothing was written on that block's `preflight failed` route and on the thread write loop's pre-write exits: report what it printed — a stale or unreadable head, a review-token command that yielded no usable token, or a refused `writes.jsonl` — and stop.
+An exit 3 the block prints after its `write attempted` line is a failed review POST, not a preflight failure, and takes the repair, retry, and fallback rules below instead.
 Run that fetch, every write, and the readback below through the recorded `run_events.py` wrapper as the reference's Timing events section classifies them.
 After the review posts, write `writes.jsonl` for every prior item and run the reference's thread write loop once for its replies and thread resolutions, wrapped as one `role=replies` event.
 
