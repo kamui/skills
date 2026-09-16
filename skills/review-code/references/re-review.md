@@ -1,6 +1,6 @@
 # Re-review and prior state
 
-Read at local-session start for snapshot lifetime, on a requested local-session recheck, or when `SKILL.md` step 1 finds prior state from the posting identity. It owns review state across heads: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the review record's `disputed` status input and rendering.md's `Disputed` and `Prior findings` sections.
+Read at local-session start for snapshot lifetime, on a requested local-session recheck, or when `SKILL.md` step 1 finds prior state from the reviewer identity. It owns review state across heads: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the review record's `disputed` status input and rendering.md's `Disputed` and `Prior findings` sections.
 
 ## Prior-state sources
 
@@ -32,7 +32,7 @@ Each recheck has its own initial-plus-follow-up verification cap; step 3 still i
 
 ## Prior state from the packet
 
-Read prior state from the packet `SKILL.md` step 1 persisted, never from a second fetch. Record the reviewed heads, stable ids, and unresolved requests of the posting identity's prior reviews, and take the prior head from the earlier review's run trailer (`head=`); step 2 passes it as `--prior-head`. Every review, thread comment, reply, issue comment, and pull-request comment in the packet carries the forge's stable numeric `id`, `created_at` (or `submitted_at`), and `last_edited_at`, which is `null` until the object is edited; a thread carries `is_resolved`, which has no timestamp. A reply edited after the prior review, without any code change, is later state and is re-read as prose. `python3 scripts/forge_packet.py later-state packet.json --review <prior review id>` lists everything created or edited after a review, and its `thread-state` lines name each thread whose undated resolved state cannot be ruled unchanged — every resolved thread, and every thread predating that review, which may have been un-resolved since — so a thread is never assumed unchanged.
+Read prior state from the packet `SKILL.md` step 1 persisted, never from a second fetch. Record the reviewed heads, stable ids, and unresolved requests of the reviewer identity's prior reviews, matched with a trailing `[bot]` ignored on both sides, and take the prior head from the earlier review's run trailer (`head=`); step 2 passes it as `--prior-head`. Every review, thread comment, reply, issue comment, and pull-request comment in the packet carries the forge's stable numeric `id`, `created_at` (or `submitted_at`), and `last_edited_at`, which is `null` until the object is edited; a thread carries `is_resolved`, which has no timestamp. A reply edited after the prior review, without any code change, is later state and is re-read as prose. `python3 scripts/forge_packet.py later-state packet.json --review <prior review id>` lists everything created or edited after a review, and its `thread-state` lines name each thread whose undated resolved state cannot be ruled unchanged — every resolved thread, and every thread predating that review, which may have been un-resolved since — so a thread is never assumed unchanged.
 
 ## Duplicate-review shortcut
 

@@ -14,11 +14,11 @@ Read [`references/review-protocol.md`](references/review-protocol.md) first: it 
 
 ### 1. Resolve the targets
 
-Read `docs/agents/issue-tracker.md` when present, then resolve the pull request, its head SHA, the originating issue serving as spec source, and the posting identity. The fixed point defaults to the merge-base of the pull request with its base branch, which is what the pull request already means; take a different one only when the user supplies it. Ask before any external write if the pull request or issue is ambiguous.
+Read `docs/agents/issue-tracker.md` when present, then resolve the pull request, its head SHA, the originating issue serving as spec source, and the posting identity, which is the reviewing app's login where `docs/agents/issue-tracker.md` names one. The fixed point defaults to the merge-base of the pull request with its base branch, which is what the pull request already means; take a different one only when the user supplies it. Ask before any external write if the pull request or issue is ambiguous.
 
 Where the change has no pull request, stop and report that. A review publishes to a pull request that already exists; opening one is `implement-publish`'s job.
 
-Fetch any earlier review from the posting identity: its `commit_id`, its finding and question ids, the replies and thread state, and any general comments answering whole-change questions. An earlier review at a different head makes this run a re-review.
+Fetch any earlier review from the posting identity, matching logins with a trailing `[bot]` ignored: its `commit_id`, its finding and question ids, the replies and thread state, and any general comments answering whole-change questions. An earlier review at a different head makes this run a re-review.
 
 ### 2. Run the review
 

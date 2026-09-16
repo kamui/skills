@@ -3,15 +3,20 @@
 
 Usage: python3 scripts/test_command_chains.py
 Inputs: SKILL.md step 5's composition block, the publisher's freshness and
-review-submission block, a disposable Git repository, and a stub `gh` on PATH;
-no forge access and no live writes.
+review-submission block, its dismissal command, the app-token acquisition
+blocks in `audit-code-publish` and `code-review-publish`, a disposable Git
+repository, and a stub `gh` on PATH; no forge access and no live writes.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
 The composition block must produce the same payload, batch, and fragment bytes
 as the three commands run separately, and stop visibly at the first failing
 stage. The submission block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
-POST failure's own status under a distinct attempted-write stage.
+POST failure's own status under a distinct attempted-write stage. Every token
+acquisition must publish its write under a proved token and write nothing when
+the token is missing or refused; the dismissal, whose single write is its own
+proof, must write nothing when the token is missing. Neither the token nor the
+dismissal message may reach `argv` or the inner shell's expansions.
 """
 from __future__ import annotations
 
@@ -31,6 +36,8 @@ import test_compose_review as fixtures
 SCRIPTS = Path(__file__).resolve().parent
 SKILL = SCRIPTS.parent
 PUBLICATION = SKILL.parent / "review-code-publish" / "references" / "publication.md"
+TOKEN_BLOCKS = {"audit": SKILL.parent / "audit-code-publish" / "references" / "publishing.md",
+                "legacy": SKILL.parent / "code-review-publish" / "references" / "review-protocol.md"}
 SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
 
 FAKE_GH = r"""#!/usr/bin/env python3
@@ -38,6 +45,14 @@ import json, os, sys
 args = sys.argv[1:]
 with open(os.environ["GH_LOG"], "a", encoding="utf-8") as log:
     log.write(json.dumps(args) + "\n")
+if os.environ.get("GH_TOKEN_LOG"):
+    with open(os.environ["GH_TOKEN_LOG"], "a", encoding="utf-8") as tokens:
+        tokens.write(json.dumps({"args": args, "token": os.environ.get("GH_TOKEN")}) + "\n")
+if "--silent" in args:  # the preflight's token check
+    sys.exit(int(os.environ.get("GH_SILENT_RC", "0")))
+if "--method" in args and "PUT" in args:  # a dismissal
+    print(json.dumps({"id": 992, "state": "DISMISSED"}))
+    sys.exit(0)
 if "--method" in args and "POST" in args:
     rc = int(os.environ.get("GH_POST_RC", "0"))
     if rc == 0:
@@ -204,23 +219,34 @@ class Chains(unittest.TestCase):
 
     # --- publisher freshness and submission ---------------------------------
 
-    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD):
-        private = Path(tempfile.mkdtemp(dir=self.root))
-        (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
-                                                        "comments": []}), encoding="utf-8")
+    def gh_binary(self):
         binary = self.root / "gh-bin"
         if not binary.exists():
             binary.mkdir()
             (binary / "gh").write_text(FAKE_GH, encoding="utf-8")
             (binary / "gh").chmod(0o755)
+        return binary
+
+    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD, tok="",
+                   silent_rc=0):
+        private = Path(tempfile.mkdtemp(dir=self.root))
+        (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
+                                                        "comments": []}), encoding="utf-8")
+        binary = self.gh_binary()
         log = private / "gh.log"
         env = dict(os.environ, PATH=f"{binary}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
-                   GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc))
+                   GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc),
+                   GH_TOKEN_LOG=str(private / "token.log"), GH_SILENT_RC=str(silent_rc))
+        env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (block(PUBLICATION.read_text(encoding="utf-8"), "preflight failed")
                 .replace("<private-dir>", shlex.quote(str(private)))
                 .replace("<recorded-absolute-run_events.py-path>", script)
                 .replace("<pr>", "7").replace("<reviewed head>", fixtures.HEAD))
+        if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
+            marker = "tok=  #"
+            self.assertIn(marker, text)
+            text = text.replace(marker, "tok=%s  #" % shlex.quote(tok), 1)
         self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
         result = self.sh(shell, text, env=env, cwd=self.root)
         calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
@@ -232,6 +258,142 @@ class Chains(unittest.TestCase):
     @staticmethod
     def posts(calls):
         return [call for call in calls if "POST" in call]
+
+    @staticmethod
+    def tokens(private):
+        path = private / "token.log"
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
+
+    def test_app_token_is_acquired_in_preflight_and_reused_by_the_post(self):
+        # The command is several words. Expanded bare in command position it would be one
+        # command name under zsh, which is the failure this block runs through `sh -c` to avoid.
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                result, calls, events, private = self.submission(shell, tok="printf %s app-token-xyz")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("preflight passed", result.stdout)
+                self.assertEqual(len(self.posts(calls)), 1, calls)
+                seen = self.tokens(private)
+                checks = [r for r in seen if "--silent" in r["args"]]
+                self.assertEqual(len(checks), 1, "the preflight checks the token exactly once")
+                self.assertEqual(checks[0]["token"], "app-token-xyz")
+                posted = [r for r in seen if "POST" in r["args"]]
+                self.assertEqual([r["token"] for r in posted], ["app-token-xyz"],
+                                 "the POST reuses the token the preflight acquired")
+                self.assertNotIn("app-token-xyz", json.dumps(calls), "a token never reaches argv")
+
+    def test_unusable_app_token_is_a_preflight_failure_that_writes_nothing(self):
+        # A token the forge refuses is non-empty, so emptiness alone does not settle it: minted
+        # against the wrong repository, or an installation suspended since it was issued.
+        cases = (("printf %s ", 0, "prints nothing"), ("false unused-argument", 0, "exits non-zero"),
+                 ("printf %s stale-token", 22, "the forge refuses the token"))
+        for shell in SHELLS:
+            for tok, silent_rc, reason in cases:
+                with self.subTest(shell=shell, tok=reason):
+                    result, calls, events, private = self.submission(shell, tok=tok, silent_rc=silent_rc)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertIn("preflight failed: the review-token command", result.stdout)
+                    self.assertIn("nothing was written", result.stdout)
+                    self.assertNotIn("write attempted", result.stdout)
+                    self.assertEqual(self.posts(calls), [])
+                    self.assertFalse((private / "review-response.json").exists())
+
+    # --- the app token in the other publishers and in the dismissal ---------
+
+    def token_run(self, shell, source, tok, silent_rc=0):
+        private = Path(tempfile.mkdtemp(dir=self.root))
+        log, tokens = private / "gh.log", private / "token.log"
+        env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
+                   GH_TOKEN_LOG=str(tokens), GH_SILENT_RC=str(silent_rc), GH_TOKEN="authenticated-user-token")
+        text = (block(source.read_text(encoding="utf-8"), "review-token command")
+                .replace("<review-token command>", tok)
+                .replace("<the review write this invocation makes>",
+                         'gh api --method POST "repos/{owner}/{repo}/pulls/7/reviews" --input /dev/null'))
+        result = self.sh(shell, text, env=env, cwd=self.root)
+        calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+        seen = [json.loads(line) for line in tokens.read_text(encoding="utf-8").splitlines()] if tokens.exists() else []
+        return result, calls, seen
+
+    def test_the_other_publishers_write_under_a_proved_app_token(self):
+        # The acquisition and the write share one invocation: an exported variable does not
+        # survive to the next one, and a write in a shell of its own goes out as the user.
+        for name, source in TOKEN_BLOCKS.items():
+            raw = block(source.read_text(encoding="utf-8"), "review-token command")
+            self.assertIn("<the review write this invocation makes>", raw, name)
+            for shell in SHELLS:
+                with self.subTest(source=name, shell=shell):
+                    result, calls, seen = self.token_run(shell, source, "printf %s app-token-xyz")
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    checks = [r for r in seen if "--silent" in r["args"]]
+                    self.assertEqual([r["token"] for r in checks], ["app-token-xyz"],
+                                     "the token is proved exactly once, under the app")
+                    posted = [r for r in seen if "POST" in r["args"]]
+                    self.assertEqual([r["token"] for r in posted], ["app-token-xyz"],
+                                     "the write runs under the token the acquisition proved")
+                    self.assertNotIn("app-token-xyz", json.dumps(calls), "a token never reaches argv")
+
+    def test_the_other_publishers_write_nothing_without_a_usable_token(self):
+        cases = (("printf %s ", 0, "prints nothing"), ("false unused-argument", 0, "exits non-zero"),
+                 ("printf %s stale-token", 22, "the forge refuses the token"))
+        for name, source in TOKEN_BLOCKS.items():
+            for shell in SHELLS:
+                for tok, silent_rc, reason in cases:
+                    with self.subTest(source=name, shell=shell, tok=reason):
+                        result, calls, seen = self.token_run(shell, source, tok, silent_rc)
+                        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                        self.assertIn("no usable token", result.stdout)
+                        self.assertIn("nothing was written", result.stdout)
+                        self.assertEqual([call for call in calls if "POST" in call], [])
+                        self.assertTrue(all(r["token"] != "authenticated-user-token" for r in seen),
+                                        "the probe runs under the app token, never the user's")
+
+    def dismissal(self, shell, tok="printf %s dismissal-token", why="superseded"):
+        private = Path(tempfile.mkdtemp(dir=self.root))
+        log = private / "gh.log"
+        env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
+                   GH_TOKEN_LOG=str(private / "token.log"))
+        env.pop("GH_TOKEN", None)
+        text = (block(PUBLICATION.read_text(encoding="utf-8"), "dismissals")
+                .replace("<review-token command>", tok)
+                .replace("<pr>", "7").replace("<review id>", "2").replace("<why>", why))
+        wrapped = "%s %s wrap --private-dir %s --event forge-written --data role=review -- %s" % (
+            shlex.quote(sys.executable), shlex.quote(str(SCRIPTS / "run_events.py")),
+            shlex.quote(str(private)), text.strip())
+        result = self.sh(shell, wrapped, env=env, cwd=self.root)
+        calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+        return result, calls, private
+
+    def test_a_dismissal_without_a_token_writes_nothing_and_says_why(self):
+        # `gh` reads an empty GH_TOKEN as no token at all, so falling through would dismiss
+        # the app's review as the authenticated user. Each guard names its own route, so a
+        # runner that failed is distinguishable from one that printed an empty token.
+        cases = (("printf %s ", "prints nothing", "the review-token command printed no token"),
+                 ("false unused-argument", "exits non-zero", "the review-token command failed"))
+        for shell in SHELLS:
+            for tok, reason, expected in cases:
+                with self.subTest(shell=shell, tok=reason):
+                    result, calls, _ = self.dismissal(shell, tok=tok)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertEqual(calls, [])
+                    self.assertIn(expected, result.stdout)
+                    self.assertIn("nothing was dismissed", result.stdout)
+
+    def test_the_dismissal_runs_wrapped_and_keeps_its_message_literal(self):
+        why = 'superseded by the `id -un` review at $HOME, a \\ and a "quote" \u2014 done'
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                result, calls, private = self.dismissal(shell, why=why)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(len(calls), 1, calls)
+                self.assertIn("message=" + why, calls[0], "the message reaches the forge unexpanded")
+                self.assertNotIn("dismissal-token", json.dumps(calls), "a token never reaches argv")
+                seen = [json.loads(line) for line in (private / "token.log").read_text(encoding="utf-8").splitlines()]
+                self.assertEqual([r["token"] for r in seen], ["dismissal-token"])
+                events = [json.loads(line) for line in
+                          (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
+                self.assertEqual([(e["event"], e["data"]["role"], e["data"]["argv0"], e["exit"]) for e in events],
+                                 [("forge-written", "review", "sh", 0)])
+                self.assertNotIn("dismissal-token", json.dumps(events))
 
     def test_preflight_failures_never_post(self):
         cases = [("fail", fixtures.HEAD, "head fetch exited 1"),

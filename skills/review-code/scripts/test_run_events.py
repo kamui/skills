@@ -177,7 +177,7 @@ class RunEventTests(unittest.TestCase):
                                                          "payload-composed"])
         self.assertEqual([e["exit"] for e in events], [0, 0, 0, 1, 0])
         self.assertEqual(events[0]["data"]["head"], head)
-        self.assertEqual(events[0]["policy"]["workflow"], "v5b-17")
+        self.assertEqual(events[0]["policy"]["workflow"], "v5b-18")
         self.assertEqual(events[2]["data"]["returned"], {"confirmed": 1, "refuted": 0, "holds": 0, "re_open": 0})
         self.assertEqual(events[4]["data"]["target_kind"], "range")
 
