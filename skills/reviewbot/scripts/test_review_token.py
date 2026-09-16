@@ -12,6 +12,7 @@ import base64
 import datetime as dt
 import json
 import os
+import shlex
 import stat
 import subprocess
 import sys
@@ -41,6 +42,7 @@ class Forge(ThreadingHTTPServer):
         self.requests: list[tuple[str, str, str]] = []
         self.jwts: list[str] = []
         self.tokens: list[str] = []
+        self.refuse_probe = False
         self.lock = threading.Lock()
 
     @property
@@ -93,7 +95,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.server.tokens.append(token)
                 return self.reply(201, {"token": token, "expires_at": expires_in(3600), "permissions": {"pull_requests": "write"}})
             if method == "POST" and path == "/graphql":
-                if self.bearer() in self.server.tokens:
+                if self.bearer() in self.server.tokens and not self.server.refuse_probe:
                     return self.reply(200, {"data": {"viewer": {"login": "reviewer"}}})
                 return self.reply(401, {"message": "Bad credentials"})
             return self.reply(404, {"message": "no route for %s %s" % (method, self.path)})
@@ -141,6 +143,7 @@ class ReviewToken(unittest.TestCase):
             self.forge.requests.clear()
             self.forge.jwts.clear()
             self.forge.tokens.clear()
+            self.forge.refuse_probe = False
 
     def run_script(self, *args: str, env: dict | None = None, api: str | None = None, key: bool = True):
         environment = {
@@ -326,7 +329,10 @@ class ReviewToken(unittest.TestCase):
         self.assertIn("network failure", result.stderr)
 
     def test_whoami_prints_both_logins_and_the_installation(self):
-        result = self.run_script("whoami", INSTALLED)
+        shared = self.case / "shared.pem"
+        shared.write_bytes(self.key.read_bytes())
+        shared.chmod(0o644)
+        result = self.run_script("whoami", INSTALLED, "--key", str(shared), key=False)
         self.assertEqual(result.returncode, 0, result.stderr)
         lines = result.stdout.splitlines()
         self.assertEqual(lines[0], "app: Reviewer App (reviewer)")
@@ -336,15 +342,14 @@ class ReviewToken(unittest.TestCase):
         self.assertEqual(lines[4], "permissions: issues: write, pull_requests: write")
         self.assertEqual(
             lines[5],
-            "review-token command: python3 %s token --client-id %s acme/widgets" % (SCRIPT, CLIENT_ID),
+            "review-token command: python3 %s token --client-id %s acme/widgets" % (shlex.quote(str(SCRIPT)), CLIENT_ID),
         )
         with self.forge.lock:
             paths = [path for _, path, _ in self.forge.requests]
-            jwts = list(self.forge.jwts)
         self.assertIn("/graphql", paths)
         self.assertNotIn("/api/graphql", paths)
         self.assertEqual(paths.count("/repos/acme/widgets/installation"), 1, paths)
-        self.assertEqual(len(set(jwts)), 1, "whoami signed more than one JWT")
+        self.assertEqual(result.stderr.count("readable by other users"), 1, "whoami signed more than one JWT")
 
     def test_whoami_derives_the_enterprise_graphql_url(self):
         result = self.run_script("whoami", INSTALLED, api=self.forge.url + "/api/v3")
@@ -357,14 +362,26 @@ class ReviewToken(unittest.TestCase):
         self.assertNotIn("/graphql", paths)
 
     def test_whoami_with_a_refused_probe_exits_1(self):
-        first = self.run_script("token", INSTALLED)
-        self.assertEqual(first.returncode, 0, first.stderr)
         with self.forge.lock:
-            self.forge.tokens.clear()
+            self.forge.refuse_probe = True
         result = self.run_script("whoami", INSTALLED)
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
-        self.assertIn("failed the probe", result.stderr)
+        self.assertIn("the minted token failed the probe", result.stderr)
+        self.assertEqual(self.mints(), 1)
+
+    def test_whoami_replaces_a_cached_token_the_probe_refuses(self):
+        first = self.run_script("token", INSTALLED)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        with self.forge.lock:
+            self.forge.tokens[0] = "revoked"
+        result = self.run_script("whoami", INSTALLED)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("graphql login: reviewer\n", result.stdout)
+        self.assertIn("the cached token failed the probe", result.stderr)
+        self.assertIn(str(self.cache_file()), result.stderr)
+        self.assertEqual(self.mints(), 2)
+        self.assertEqual(json.loads(self.cache_file().read_text(encoding="utf-8"))["token"], "ghs_test2")
 
     def test_repository_must_be_owner_slash_repo(self):
         for bad in ("widgets", "acme/", "/widgets", "a/b/c", "../x"):
