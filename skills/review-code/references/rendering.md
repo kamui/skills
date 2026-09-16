@@ -73,7 +73,7 @@ Keep the body useful without duplicating inline comments:
 
 - [Question] Must retries preserve request order? — anchor [`src/queue.ts`](https://github.com/acme/payments/blob/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/src/queue.ts) (file)
 
-<!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5b-19 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->
+<!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5b-20 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->
 ```
 
 Trailer fields are single ASCII tokens separated by spaces. Every commit SHA in every trailer is the full 40 lowercase hexadecimal characters; visible prose may abbreviate it. Percent-encode spaces and percent signs inside coordinate values. Represent issues as sorted, comma-separated `owner/repo#number` coordinates, or `issues=none`; never put literal spaces in the value. The anchor coordinate is the durable summary reference: `path:line` for a single-line anchor, `path:start-end` for a range, or `path` plus the visible `(file)` marker for a file anchor. Add the fix coordinate when it differs. The caller reports forge URLs after publication without editing the review body.
