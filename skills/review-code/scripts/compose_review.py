@@ -177,11 +177,14 @@ contradicts ``coverage=complete``; check evidence at the reviewed head is
 a different head with the reason the delta leaves it unaffected -- a
 result is never relabelled at the reviewed head; at most two batches are
 recorded and ``follow_up_spent`` is true exactly when a second one was
-dispatched; and with no material survivor (a ``must-fix`` at any kind, or a
-``consider`` of kind ``bug``, ``concurrency``, ``invariant``, ``security``,
-or ``performance``) the clean verdict is ``stands`` over a recorded batch
-or ``outstanding``, never ``not-required``. ``routed.unresolved`` and
-``routed.disputed`` name rendered or prior item ids.
+dispatched; and with no material survivor -- a ``must-fix`` at any kind, a
+``consider`` of kind ``bug``, ``compatibility``, ``concurrency``,
+``invariant``, ``security``, or ``performance``, or a ``survivor`` row the
+reviewer marks ``"material": true`` because its claim is an externally
+observable compatibility break under another kind -- the clean verdict is
+``stands`` over a recorded batch or ``outstanding``, never
+``not-required``. ``routed.unresolved`` and ``routed.disputed`` name
+rendered or prior item ids.
 
 A file anchor names its ``side`` explicitly -- ``LEFT`` for a file the change
 deletes, ``RIGHT`` for a file present at the head, ``UNKNOWN`` when the pinned
@@ -228,7 +231,7 @@ REQUIREMENT_CLASSES = ("acceptance", "supporting", "artifact")
 REQUIREMENT_DISPOSITIONS = ("met", "partial", "not-verifiable")
 VERIFICATIONS = ("independent-confirmed", "primary-confirmed")
 MANDATORY_KINDS = ("security", "compatibility")
-MATERIAL_CONSIDER_KINDS = ("bug", "concurrency", "invariant", "security", "performance")
+MATERIAL_CONSIDER_KINDS = ("bug", "compatibility", "concurrency", "invariant", "security", "performance")
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
 EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "failed", "unavailable")
 CLEAN_VERDICTS = ("stands", "outstanding", "not-required")
@@ -862,18 +865,19 @@ def translate(line: str, locations: list[str]) -> str:
     return ITEM_INDEX_RE.sub(replace, line)
 
 
-def read_rows(report: vr.Report, location: str, value: Any, keys: tuple[str, ...]) -> list[dict[str, Any]]:
-    """Objects whose named keys are non-empty single lines; a row missing one is reported and skipped."""
+def read_rows(report: vr.Report, location: str, value: Any, keys: tuple[str, ...]) -> list[tuple[str, dict[str, Any]]]:
+    """``(location, row)`` for each object whose named keys are non-empty single lines, at its input index; a row
+    missing one is reported and skipped, and later violations still name the surviving rows' own indexes."""
     if not isinstance(value, list):
         report.add(location, "schema", f"`{location.rsplit('.', 1)[-1]}` must be a list of objects")
         return []
-    rows: list[dict[str, Any]] = []
+    rows: list[tuple[str, dict[str, Any]]] = []
     for index, raw in enumerate(value):
         where = f"{location}[{index}]"
         if not isinstance(raw, dict):
             report.add(where, "schema", "expected an object")
         elif all(read_line(report, where, raw, key) is not None for key in keys):
-            rows.append(raw)
+            rows.append((where, raw))
     return rows
 
 
@@ -917,21 +921,23 @@ def read_record(
         report.add("record.ledger", "schema", "`ledger` must be an object with `requirements` and `candidates`")
         ledger = {}
     requirements = read_rows(report, "record.ledger.requirements", ledger.get("requirements"), ("source", "class", "disposition", "evidence"))
-    for index, row in enumerate(requirements):
-        where = f"record.ledger.requirements[{index}]"
+    for where, row in requirements:
         if row["class"] not in REQUIREMENT_CLASSES:
             report.add(where, "ledger", f"`class` must be one of {list(REQUIREMENT_CLASSES)}")
         if row["disposition"] not in REQUIREMENT_DISPOSITIONS:
             report.add(where, "ledger", f"`disposition` must be one of {list(REQUIREMENT_DISPOSITIONS)}")
     candidates = read_rows(report, "record.ledger.candidates", ledger.get("candidates"), ("id", "kind", "disposition", "evidence"))
     rows: dict[str, tuple[str, dict[str, Any]]] = {}
-    for index, row in enumerate(candidates):
-        where = f"record.ledger.candidates[{index}]"
+    material = False
+    for where, row in candidates:
         if row["kind"] not in vr.KINDS:
             report.add(where, "ledger", f"`kind` must be one of {list(vr.KINDS)}")
         if row["id"] in rows:
             report.add(where, "stable-id", f"candidate `{row['id']}` is already listed by {rows[row['id']][0]}; a stable id names one defect concept")
         rows[row["id"]] = (where, row)
+        if "material" in row and not isinstance(row["material"], bool):
+            report.add(where, "schema", "`material` must be a boolean when present")
+        material = material or (row.get("material") is True and row["disposition"] == "survivor")
     rendered: dict[str, tuple[str, dict[str, Any]]] = {f["id"]: ("finding", f) for f in findings}
     rendered.update({q["id"]: ("question", q) for q in questions})
     confirmed = False
@@ -955,12 +961,11 @@ def read_record(
     for identity, (where, row) in rows.items():
         if row["disposition"] in ("survivor", "question") and identity not in rendered:
             report.add(where, "ledger", f"`{identity}` is a {row['disposition']} with no rendered item; a withheld candidate carries the disposition that withholds it")
-    fields["ledger"] = {"requirements": requirements, "candidates": candidates}
+    fields["ledger"] = {"requirements": [r for _w, r in requirements], "candidates": [r for _w, r in candidates]}
 
     files = read_rows(report, "record.files", record.get("files"), ("path", "state"))
     states: dict[str, str] = {}
-    for index, row in enumerate(files):
-        where = f"record.files[{index}]"
+    for where, row in files:
         if row["state"] not in FILE_STATES:
             report.add(where, "file-accounting", f"`state` must be one of {list(FILE_STATES)}")
         if row["state"] == "ignored":
@@ -976,11 +981,10 @@ def read_record(
             report.add("record.files", "file-accounting", f"`{path}` is in the pinned merge-base manifest and has no accounting row")
         for path in sorted(states.keys() - manifest):
             report.add("record.files", "file-accounting", f"`{path}` is not in the pinned merge-base manifest; accounting covers changed files")
-    fields["files"] = files
+    fields["files"] = [r for _w, r in files]
 
     evidence = read_rows(report, "record.check_evidence", record.get("check_evidence", []), ("check", "head", "outcome"))
-    for index, row in enumerate(evidence):
-        where = f"record.check_evidence[{index}]"
+    for where, row in evidence:
         if row["outcome"] not in EVIDENCE_OUTCOMES:
             report.add(where, "check-evidence", f"`outcome` must be one of {list(EVIDENCE_OUTCOMES)}")
         elif not vr.COMMIT_SHA_RE.match(row["head"]):
@@ -994,17 +998,17 @@ def read_record(
                 report.add(where, "check-evidence", f"`{row['outcome']}` evidence is attributed to the reviewed head; a result from another head is `historical` and is never relabelled")
             if row["outcome"] == "reviewer-executed":
                 read_line(report, where, row, "reason")
-    fields["check_evidence"] = evidence
+    fields["check_evidence"] = [r for _w, r in evidence]
 
     verification = record.get("verification")
     if not isinstance(verification, dict):
         report.add("record.verification", "schema", "`verification` must be an object with `batches`, `follow_up_spent`, `clean_verdict`, and `outstanding`")
         verification = {}
     batches = read_rows(report, "record.verification.batches", verification.get("batches", []), ("name", "bundle", "raw_return", "accounting", "operation"))
-    for index, batch in enumerate(batches):
+    for where, batch in batches:
         for key in ("bundle", "raw_return", "accounting"):
             if not batch[key].startswith("/"):
-                report.add(f"record.verification.batches[{index}].{key}", "record-paths", "must be an absolute path")
+                report.add(f"{where}.{key}", "record-paths", "must be an absolute path")
     if len(batches) > BATCH_CAP:
         report.add("record.verification.batches", "verification", "the cap is one initial plus one follow-up batch; a worker change grants no further batch")
     spent = verification.get("follow_up_spent")
@@ -1016,7 +1020,7 @@ def read_record(
     clean = verification.get("clean_verdict")
     if clean not in CLEAN_VERDICTS:
         report.add("record.verification.clean_verdict", "verification", f"`clean_verdict` must be one of {list(CLEAN_VERDICTS)}")
-    material = any(f["action"] == "must-fix" or f["kind"] in MATERIAL_CONSIDER_KINDS for f in findings)
+    material = material or any(f["action"] == "must-fix" or f["kind"] in MATERIAL_CONSIDER_KINDS for f in findings)
     if clean == "not-required" and not material:
         report.add("record.verification.clean_verdict", "verification", "no material survivor remains, so the complete candidate ledger needs a clean-verdict attack: `stands` when a batch ruled, `outstanding` when no permitted batch could carry it")
     if clean == "stands" and not batches:
@@ -1025,7 +1029,7 @@ def read_record(
         report.add("record.verification.batches", "verification", "`independent-confirmed` names a verifier verdict, and no batch is recorded")
     if (clean == "outstanding" or outstanding) and coverage != "incomplete":
         report.add("record.verification", "coverage-gaps", "outstanding verification contradicts `run.coverage=complete`; budget exhaustion never establishes a clean verdict")
-    fields["verification"] = {"batches": batches, "follow_up_spent": spent, "clean_verdict": clean, "outstanding": outstanding}
+    fields["verification"] = {"batches": [b for _w, b in batches], "follow_up_spent": spent, "clean_verdict": clean, "outstanding": outstanding}
 
     routed = record.get("routed", {})
     if not isinstance(routed, dict):

@@ -351,6 +351,21 @@ def implementation_gate() -> None:
     hygiene["record"]["verification"]["clean_verdict"] = "stands"
     record, _ = gate(hygiene, "hygiene survivor with clean verdict")
     assert "1 consider finding" in record["summary"]["body"]
+    # A surviving compatibility consider is material, and so is a survivor the reviewer marks material under another kind.
+    compatibility = mutate(**{"findings": [consider(kind="compatibility")], "questions": [], "observations": [], "summary.status": "Approved"})
+    compatibility["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "compatibility", "disposition": "survivor",
+                                                        "verification": "independent-confirmed", "evidence": "src/payments.ts:50"}]
+    gate(compatibility, "compatibility consider is material; not-required composes")
+    marked = copy.deepcopy(hygiene)
+    marked["record"]["verification"]["clean_verdict"] = "not-required"
+    marked["record"]["ledger"]["candidates"][0]["material"] = True
+    gate(marked, "reviewer-marked material survivor; not-required composes")
+    marked["record"]["ledger"]["candidates"][0]["material"] = "yes"
+    refused(marked, "schema", "material must be boolean", "--profile", "implementation-gate", needle="material")
+    # A malformed row is reported and skipped, and a later row's violation still names its own input index.
+    shifted = mutate(**{"record.ledger.requirements": [{"source": "issue-123/criterion-1"},
+                                                       {"source": "issue-123/criterion-2", "class": "wish", "disposition": "met", "evidence": "x:1"}]})
+    refused(shifted, "ledger", "violation at the input index", "--profile", "implementation-gate", needle="record.ledger.requirements[1]: ledger")
     question = mutate(**{"findings": [], "observations": [], "summary.status": "Needs Information", "record.verification.clean_verdict": "stands"})
     question["record"]["ledger"]["candidates"] = composition["record"]["ledger"]["candidates"][1:]
     record, _ = gate(question, "material question outcome")
