@@ -205,14 +205,16 @@ def write_cache(path: Path, record: dict) -> None:
     os.replace(part, path)
 
 
-def mint_token(api: str, key: Path, client_id: str, owner: str, name: str) -> str:
+def mint_token(
+    api: str, key: Path, client_id: str, owner: str, name: str, jwt: str | None = None, install: dict | None = None
+) -> str:
     path = cache_path(client_id, owner, name)
     if os.environ.get("REVIEWBOT_NO_CACHE") != "1":
         token = cached_token(path)
         if token:
             return token
-    jwt = app_jwt(key, client_id)
-    install = installation(api, jwt, owner, name)
+    jwt = jwt or app_jwt(key, client_id)
+    install = install or installation(api, jwt, owner, name)
     record = request(f"{api}/app/installations/{install['id']}/access_tokens", jwt, {"repositories": [name]})
     token = record.get("token")
     if not isinstance(token, str) or not token:
@@ -220,7 +222,7 @@ def mint_token(api: str, key: Path, client_id: str, owner: str, name: str) -> st
     try:
         write_cache(path, record)
     except OSError as error:
-        raise Unavailable(f"cannot write the token cache at {path}: {error.strerror}") from error
+        print(f"review_token: warning: cannot write the token cache at {path}: {error.strerror}", file=sys.stderr)
     return token
 
 
@@ -237,7 +239,7 @@ def cmd_whoami(args: argparse.Namespace) -> int:
     jwt = app_jwt(key, args.client_id)
     app = request(f"{args.api}/app", jwt)
     install = installation(args.api, jwt, owner, name)
-    token = mint_token(args.api, key, args.client_id, owner, name)
+    token = mint_token(args.api, key, args.client_id, owner, name, jwt, install)
     try:
         viewer = request(graphql_url(args.api), token, {"query": "{viewer{login}}"})
         login = viewer["data"]["viewer"]["login"]
