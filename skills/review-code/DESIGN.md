@@ -668,7 +668,7 @@ The follow-on pass measures against `origin/main` at `0682437`, which already ca
 
 | Instruction | Before words / bytes | After words / bytes |
 | --- | ---: | ---: |
-| `review-code/SKILL.md` | 5,040 / 34,579 | 5,069 / 34,765 |
+| `review-code/SKILL.md` | 5,040 / 34,579 | 5,070 / 34,773 |
 | `implement-publish/SKILL.md` | 1,215 / 7,840 | 1,251 / 8,032 |
 | `resolve-review/SKILL.md` | 2,205 / 14,049 | 2,290 / 14,540 |
 
