@@ -13,15 +13,15 @@ Authorization changes only the forge event, never the semantic status:
 
 ## Reviewer identity
 
-The **reviewer identity** is the login this review publishes as. It is the forge CLI's authenticated user unless the caller supplied one, or `docs/agents/issue-tracker.md` names a reviewing app; that file also gives the **review-run prefix**, the command that runs one forge call as the app (for example `<runner> run <owner>/<repo> --`). Pass the repository explicitly in that prefix; never let the runner infer it from a remote, which is the fork on a fork checkout.
+The **reviewer identity** is the login this review publishes as. It is the forge CLI's authenticated user unless the caller supplied one, or `docs/agents/issue-tracker.md` names a reviewing app; that file also gives the **review-token command**, a shell command that prints a short-lived token for the app (for example `<runner> token <owner>/<repo>`). Name the repository explicitly in that command; never let the runner infer it from a remote, which is the fork on a fork checkout.
 
-Resolve it before `review-code` runs, so an unusable app costs nothing: read the login with `<prefix> gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login`, since `gh api user` is refused for an app token. A prefix that is absent, fails, or cannot authenticate is not an error — fall back to the authenticated user, record that fallback in the report, and publish under the ordinary self-review and gating rules.
+Resolve it before `review-code` runs, so an unusable app costs nothing: read the login with that token in the environment — `GH_TOKEN=$(sh -c '<review-token command>') gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login` — since `gh api user` is refused for an app token. A command that is absent, that fails, or whose token cannot authenticate is not an error — fall back to the authenticated user, record that fallback in the report, and publish under the ordinary self-review and gating rules.
 
-Both shell blocks below carry that prefix in `rr`, which they assign empty: fill it in with the prefix when a reviewing app publishes, and leave it empty to publish as the authenticated user. `$rr` is deliberately unquoted at every use, because it is a command prefix of several words rather than one.
+Both shell blocks below carry that command in `tok`, which they assign empty: fill it in when a reviewing app publishes, and leave it empty to publish as the authenticated user. Each block runs it through `sh -c` and exports the token it prints, rather than expanding a command prefix in command position: an unquoted multiword expansion splits into words under `sh`, `bash`, and `dash` but not under `zsh`, where the whole string is read as one command name. Keeping the token in the environment also keeps it out of `argv`, which the timing wrapper records.
 
 Every login comparison against this identity ignores a trailing `[bot]`: REST records carry the suffix that GraphQL's `author{login}` omits for the same app, so an unnormalized compare makes an app's own prior review invisible.
 
-A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with `<prefix> gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message='<why>' -f event=DISMISS`, and dismiss only a review this identity published.
+A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with that token in the environment: `gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message='<why>' -f event=DISMISS`, and dismiss only a review this identity published.
 
 ## Publication invariants
 
@@ -73,7 +73,7 @@ Run the head re-fetch, the equality check, and the single review POST as one she
 
 ```sh
 d=<private-dir> ev=<recorded-absolute-run_events.py-path> pr=<pr> reviewed=<reviewed head>
-rr=  # the review-run prefix when a reviewing app publishes; empty publishes as the authenticated user
+tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
 rm -f "$d/head.txt" "$d/review-response.json"
 forge() { # <forge-fetched|forge-written> <command...>
   kind=$1; shift
@@ -98,11 +98,15 @@ if [ -n "$reason" ]; then
   echo "preflight failed: $reason; nothing was written"; cat "$d/head.part" "$d/head.stderr"; exit 3
 fi
 mv "$d/head.part" "$d/head.txt"
-if [ -n "$rr" ] && ! $rr gh api "repos/{owner}/{repo}" --silent 2> "$d/reviewer.stderr"; then
-  echo "preflight failed: the review-run prefix could not authenticate; nothing was written"; cat "$d/reviewer.stderr"; exit 3
+if [ -n "$tok" ]; then
+  GH_TOKEN=$(sh -c "$tok" 2> "$d/reviewer.stderr") || GH_TOKEN=
+  export GH_TOKEN
+  if [ -z "$GH_TOKEN" ] || ! gh api "repos/{owner}/{repo}" --silent 2>> "$d/reviewer.stderr"; then
+    echo "preflight failed: the review-token command yielded no usable token; nothing was written"; cat "$d/reviewer.stderr"; exit 3
+  fi
 fi
 echo "preflight passed: live head $live"
-forge forge-written $rr gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
+forge forge-written gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
 rc=$?
 if [ "$rc" -ne 0 ]; then
   echo "write attempted: review POST exited $rc; re-read the pull request's reviews before one retry"
@@ -396,7 +400,7 @@ else:
     summary()
 PY
 cat > "$d/write-loop.sh" <<'SH'
-d=$1 pr=$2 rr=$3
+d=$1 pr=$2
 w() { python3 "$d/writes.py" "$d" "$@"; }
 mkdir -p "$d/write-responses" || exit 2
 n=$(w validate); rc=$?
@@ -412,10 +416,10 @@ while [ "$i" -lt "$n" ]; do
       [ "$1" = skip ] && break
       base="$d/write-responses/$i.$2"
       if [ "$1" = reply ]; then
-        $rr gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
+        gh api --method POST "repos/{owner}/{repo}/pulls/$pr/comments/$3/replies" --input "$base.request.json" \
           > "$base.response.json" 2> "$base.stderr"
       else
-        $rr gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
+        gh api graphql --input "$base.request.json" > "$base.response.json" 2> "$base.stderr"
       fi
       w record "$i" "$2" "$?" || exit 2
       case $2 in *-read*) after=--no-read ;; *) break ;; esac
@@ -426,9 +430,14 @@ done
 w summary
 SH
 ev=<recorded-absolute-run_events.py-path>
-rr=  # the review-run prefix when a reviewing app publishes; empty publishes as the authenticated user
-if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr" "$rr"
-else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr" "$rr"; fi
+tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
+if [ -n "$tok" ]; then
+  GH_TOKEN=$(sh -c "$tok") || GH_TOKEN=
+  export GH_TOKEN
+  if [ -z "$GH_TOKEN" ]; then echo "the review-token command yielded no token; no reply or resolution was written"; exit 3; fi
+fi
+if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr"
+else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr"; fi
 ```
 
 The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), repeats an id, a reply body to one comment, or an action on one thread, or puts any row after its thread's action row refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after every reply on that thread is confirmed; a thread with no reply to post leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.

@@ -271,7 +271,7 @@ If this repo's `docs/agents/issue-tracker.md` names a forge other than GitHub, f
 
 `gh api` substitutes `{owner}` and `{repo}` from the clone, so the paths below are copy-pasteable as written.
 
-**Posting identity**: `gh api user --jq .login`, or, when `docs/agents/issue-tracker.md` names a reviewing app, that app's login read through the file's review-run prefix as `gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login` — `gh api user` is refused for an app token. Compare with `gh pr view <n> --json author` to detect a self-review, ignoring a trailing `[bot]` on either login.
+**Posting identity**: `gh api user --jq .login`, or, when `docs/agents/issue-tracker.md` names a reviewing app, that app's login read with that file's review-token command in the environment as `GH_TOKEN=$(sh -c '<review-token command>') gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login` — `gh api user` is refused for an app token. Compare with `gh pr view <n> --json author` to detect a self-review, ignoring a trailing `[bot]` on either login.
 
 **Resolve the pull request**: `gh pr view <n> --json number,url,author,headRefName,baseRefName,headRefOid,state,body`. `headRefOid` is the head SHA to record as reviewed. The collection block below runs this read in the same invocation and saves it as `pr.json`, so only the number `<n>` is needed before it runs.
 
