@@ -36,8 +36,16 @@ def parse_args() -> argparse.Namespace:
     parser = Parser(add_help=True)
     parser.add_argument("reference")
     parser.add_argument("--marker", required=True)
-    parser.add_argument("bindings", nargs="*")
-    return parser.parse_args()
+    raw = sys.argv[1:]
+    try:
+        separator = raw.index("--")
+    except ValueError:
+        if "-h" in raw or "--help" in raw:
+            return parser.parse_args(raw)
+        fail("bindings must follow --")
+    args = parser.parse_args(raw[:separator])
+    args.bindings = raw[separator + 1 :]
+    return args
 
 
 def select(reference: Path, marker: str) -> str:
