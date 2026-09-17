@@ -315,6 +315,7 @@ def implementation_gate() -> None:
         ("ledger", mutate(**{"record.ledger.candidates.0.id": "payments/other"})),
         ("ledger", mutate(**{"record.ledger.candidates.2.disposition": "survivor"})),
         ("ledger", mutate(**{"record.ledger.candidates.1.disposition": "survivor"})),
+        ("ledger", mutate(**{"record.ledger.candidates.0.kind": "maintainability"})),
         ("ledger", mutate(**{"record.ledger.requirements.0.class": "wish"})),
         ("verification", mutate(**{"record.ledger.candidates.0.verification": "primary-confirmed"})),
         ("stable-id", mutate(**{"record.routed.unresolved": ["payments/unknown"]})),

@@ -164,7 +164,8 @@ never judgments: a requirement row has a source, a class (``acceptance``,
 ``supporting``, ``artifact``) and a disposition (``met``, ``partial``,
 ``not-verifiable``); candidate ids are unique; every rendered finding is a
 ``survivor`` row and every rendered question a ``question`` row, a
-``survivor`` or ``question`` row is rendered, and a rendered finding names
+``survivor`` or ``question`` row is rendered, a rendered finding's row
+names the same ``kind`` the finding does, and a rendered finding names
 its ``verification`` -- ``independent-confirmed`` for a ``must-fix``,
 ``security``, or ``compatibility`` finding, which requires a recorded batch,
 otherwise ``primary-confirmed``; every file is ``reviewed``, ``ignored``
@@ -951,6 +952,8 @@ def read_record(
             report.add(where, "ledger", f"`{identity}` renders as a {item_type}, so its disposition is `{expected}`, not `{row['disposition']}`")
         if item_type != "finding":
             continue
+        if row["kind"] != item["kind"]:
+            report.add(where, "ledger", f"`{identity}` renders as a `{item['kind']}` finding, so its row's `kind` is `{item['kind']}`, not `{row['kind']}`")
         verification = row.get("verification")
         mandatory = "must-fix" if item["action"] == "must-fix" else item["kind"] if item["kind"] in MANDATORY_KINDS else None
         if mandatory is not None and verification != "independent-confirmed":
