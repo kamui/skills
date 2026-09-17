@@ -218,6 +218,221 @@ def local_targets() -> None:
     print("ok local targets: identity, source kinds, code spans, and unchanged pull-request fixture")
 
 
+def batch_paths(name: str) -> dict:
+    return {"name": name, "bundle": f"/tmp/x/{name}", "raw_return": f"/tmp/x/{name}/raw-return.json",
+            "accounting": f"/tmp/x/{name}/accounting.json", "operation": "Agent run_in_background=false"}
+
+
+def gate_composition() -> dict:
+    """The contract example as a committed local range with the private record's accounting."""
+    value = base_composition()
+    value["run"].pop("repository_url")
+    value["run"].update(target_kind="range", target="main..HEAD", change_description="Keep the key", specs=["spec/retries"])
+    value["record"] = {
+        "repository": "/repo",
+        "paths": {"private_dir": "/tmp/x", "store": f"/tmp/x/review-context-{HEAD}.json", "composition": "/tmp/x/composition.json",
+                  "addenda": "/tmp/x/addenda", "evidence_packet": "/tmp/x/evidence.md"},
+        "ledger": {
+            "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
+                              "evidence": "src/payments.ts:42 creates a key per attempt"}],
+            "candidates": [
+                {"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "survivor",
+                 "verification": "independent-confirmed", "evidence": "src/payments.ts:42"},
+                {"id": "queue/retry-order", "kind": "bug", "disposition": "question", "evidence": "src/queue.ts:5"},
+                {"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped", "evidence": "src/retry-policy.ts:20"},
+            ],
+        },
+        "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/retry-policy.ts", "state": "reviewed"},
+                  {"path": "src/queue.ts", "state": "reviewed"}, {"path": "docs/notes.md", "state": "ignored", "reason": "generated"}],
+        "check_evidence": [
+            {"check": "python3 scripts/test_retry.py", "head": HEAD, "outcome": "accepted", "reason": "same command, clean tree, output read"},
+            {"check": "python3 scripts/test_queue.py", "head": PRIOR, "outcome": "historical", "reason": "the delta reaches none of its inputs"},
+            {"check": "python3 scripts/test_payments.py", "head": HEAD, "outcome": "reviewer-executed", "reason": "the fixture changed since the supplied run"},
+        ],
+        "verification": {"batches": [batch_paths("initial")], "follow_up_spent": False, "clean_verdict": "not-required", "outstanding": []},
+        "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []},
+    }
+    return value
+
+
+def gate(composition: dict, name: str, *args: str) -> tuple[dict, str]:
+    result = run(COMPOSER, json.dumps(composition), "--profile", "implementation-gate", *args)
+    assert result.returncode == 0, (name, result.returncode, result.stdout, result.stderr)
+    record = json.loads(result.stdout)
+    assert record["schema"] == "implementation-gate-record/1" and record["profile"] == "implementation-gate", name
+    assert record["workflow"] == vr.WORKFLOW and record["run"]["head"] == composition["run"]["head"], name
+    assert record["run"]["target"] == composition["run"]["target"] and record["run"]["repository"] == composition["record"]["repository"], name
+    assert run(VALIDATOR, result.stdout).returncode == 0, name  # the record is a superset of the validator payload
+    return record, result.stdout
+
+
+def implementation_gate() -> None:
+    # The same authoritative fixture through both profiles: identical findings, questions, status, coverage, ids, and accounting.
+    composition = gate_composition()
+    plain = copy.deepcopy(composition)
+    plain.pop("record")
+    payload = json.loads(run(COMPOSER, json.dumps(plain)).stdout)
+    assert run(COMPOSER, json.dumps(composition)).stdout == run(COMPOSER, json.dumps(plain)).stdout, "publishable output is unchanged by a record section"
+    record, stdout = gate(composition, "gate fixture")
+    assert record["summary"] == payload["summary"] and record["items"] == payload["items"], "profiles render the same review"
+    assert record["status"] == "Changes Requested" and record["run"]["coverage"] == "complete"
+    assert [item["id"] for item in record["items"] if item["type"] != "observation"] == ["payments/retry-idempotency", "queue/retry-order"]
+    assert record["record"]["verification"] == composition["record"]["verification"], "verification accounting is carried as given"
+    assert [e["outcome"] for e in record["record"]["check_evidence"]] == ["accepted", "historical", "reviewer-executed"], "reused evidence keeps its outcomes"
+    assert record["record"]["paths"]["addenda"] == "/tmp/x/addenda" and record["run"]["issues"] == ["acme/payments#123"]
+    assert run(COMPOSER, json.dumps(composition), "--profile", "implementation-gate").stdout == stdout, "record composition is deterministic"
+    print("ok implementation-gate: same review as publishable, validator-readable record, accounting carried")
+
+    # Both profiles reject equivalent semantic contradictions with the same lines.
+    def mutate(**changes):
+        value = copy.deepcopy(composition)
+        for path, new in changes.items():
+            target = value
+            keys = path.split(".")
+            for key in keys[:-1]:
+                target = target[int(key)] if key.isdigit() else target[key]
+            if new is None:
+                del target[keys[-1]]
+            else:
+                target[keys[-1]] = new
+        return value
+
+    contradictions = [
+        ("priority-action", mutate(**{"findings.0.blocking": False})),
+        ("stable-id", mutate(**{"questions.0.id": "payments/retry-idempotency"})),
+        ("status-consistency", mutate(**{"summary.status": "Approved"})),
+        ("check-evidence", mutate(**{"record.check_evidence.1.head": HEAD})),
+        ("check-evidence", mutate(**{"record.check_evidence.0.head": PRIOR})),
+        ("schema", mutate(**{"record.check_evidence.2.reason": None})),
+        ("verification", mutate(**{"record.verification.follow_up_spent": True})),
+        ("verification", mutate(**{"record.verification.batches": [batch_paths("a"), batch_paths("b"), batch_paths("c")]})),
+        ("verification", mutate(**{"record.verification.batches": [], "record.verification.clean_verdict": "stands"})),
+        ("verification", mutate(**{"record.verification.batches": []})),
+        ("coverage-gaps", mutate(**{"record.verification.outstanding": ["clean-verdict attack over the complete ledger"]})),
+        ("coverage-gaps", mutate(**{"record.files.0.state": "unreviewed"})),
+        ("file-accounting", mutate(**{"record.files.1.path": "src/payments.ts"})),
+        ("schema", mutate(**{"record.files.3.reason": None})),
+        ("ledger", mutate(**{"record.ledger.candidates.0.id": "payments/other"})),
+        ("ledger", mutate(**{"record.ledger.candidates.2.disposition": "survivor"})),
+        ("ledger", mutate(**{"record.ledger.candidates.1.disposition": "survivor"})),
+        ("ledger", mutate(**{"record.ledger.candidates.0.kind": "maintainability"})),
+        ("ledger", mutate(**{"record.ledger.requirements.0.class": "wish"})),
+        ("verification", mutate(**{"record.ledger.candidates.0.verification": "primary-confirmed"})),
+        ("stable-id", mutate(**{"record.routed.unresolved": ["payments/unknown"]})),
+        ("coverage-gaps", mutate(**{"record.routed.unrecoverable_inputs": ["the spec's benchmark artifact"]})),
+        ("record-paths", mutate(**{"record.paths.addenda": None})),
+        ("record-paths", mutate(**{"record.paths.store": "relative/store.json"})),
+        ("schema", mutate(**{"record.verification": None})),
+    ]
+    for rule, bad in contradictions:
+        publishable = refused(bad, rule, f"publishable rejects {rule}")
+        gated = refused(bad, rule, f"implementation-gate rejects {rule}", "--profile", "implementation-gate")
+        assert publishable == gated, (rule, publishable, gated)
+    for name, bad in (("worktree", mutate(**{"run.target_kind": "worktree", "run.tree": "e" * 40})),
+                      ("pull-request", mutate(**{"run.target_kind": "pull-request", "run.merged": False})),
+                      ("prior head", mutate(**{"run.prior_head": PRIOR})),
+                      ("missing record", plain)):
+        refused(bad, "profile", f"implementation-gate refuses {name}", "--profile", "implementation-gate")
+    print("ok implementation-gate: both profiles refuse the same contradictions; profile-only refusals named")
+
+    # Outcomes: clean, material question, and incomplete with an exhausted follow-up allowance; blocking is the fixture above.
+    clean = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
+                      "record.verification.clean_verdict": "stands"})
+    clean["record"]["ledger"]["candidates"] = [{"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped", "evidence": "src/retry-policy.ts:20"}]
+    record, _ = gate(clean, "clean outcome")
+    assert record["status"] == "Approved" and record["summary"]["body"].startswith("**Approved (advisory)** — no findings.")
+    refused(mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
+                      "record.ledger.candidates": clean["record"]["ledger"]["candidates"]}),
+            "verification", "clean review without a clean-verdict attack", "--profile", "implementation-gate",
+            needle="clean_verdict")
+    hygiene = mutate(**{"findings": [consider()], "questions": [], "observations": [], "summary.status": "Approved"})
+    hygiene["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "maintainability", "disposition": "survivor",
+                                                  "verification": "primary-confirmed", "evidence": "src/payments.ts:50"}]
+    refused(hygiene, "verification", "surviving hygiene switches nothing off", "--profile", "implementation-gate", needle="clean_verdict")
+    hygiene["record"]["verification"]["clean_verdict"] = "stands"
+    record, _ = gate(hygiene, "hygiene survivor with clean verdict")
+    assert "1 consider finding" in record["summary"]["body"]
+    # A surviving compatibility consider is material, and so is a survivor the reviewer marks material under another kind.
+    compatibility = mutate(**{"findings": [consider(kind="compatibility")], "questions": [], "observations": [], "summary.status": "Approved"})
+    compatibility["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "compatibility", "disposition": "survivor",
+                                                        "verification": "independent-confirmed", "evidence": "src/payments.ts:50"}]
+    gate(compatibility, "compatibility consider is material; not-required composes")
+    marked = copy.deepcopy(hygiene)
+    marked["record"]["verification"]["clean_verdict"] = "not-required"
+    marked["record"]["ledger"]["candidates"][0]["material"] = True
+    gate(marked, "reviewer-marked material survivor; not-required composes")
+    marked["record"]["ledger"]["candidates"][0]["material"] = "yes"
+    refused(marked, "schema", "material must be boolean", "--profile", "implementation-gate", needle="material")
+    # A malformed row is reported and skipped, and a later row's violation still names its own input index.
+    shifted = mutate(**{"record.ledger.requirements": [{"source": "issue-123/criterion-1"},
+                                                       {"source": "issue-123/criterion-2", "class": "wish", "disposition": "met", "evidence": "x:1"}]})
+    refused(shifted, "ledger", "violation at the input index", "--profile", "implementation-gate", needle="record.ledger.requirements[1]: ledger")
+    question = mutate(**{"findings": [], "observations": [], "summary.status": "Needs Information", "record.verification.clean_verdict": "stands"})
+    question["record"]["ledger"]["candidates"] = composition["record"]["ledger"]["candidates"][1:]
+    record, _ = gate(question, "material question outcome")
+    assert record["status"] == "Needs Information" and record["items"][0]["type"] == "question"
+    incomplete = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Incomplete", "run.coverage": "incomplete",
+                           "summary.coverage_gaps": ["clean-verdict attack over the complete ledger: follow-up batch spent"],
+                           "record.verification.batches": [batch_paths("initial"), batch_paths("follow-up")],
+                           "record.verification.follow_up_spent": True, "record.verification.clean_verdict": "outstanding",
+                           "record.verification.outstanding": ["clean-verdict attack over the complete updated ledger"]})
+    incomplete["record"]["ledger"]["candidates"] = clean["record"]["ledger"]["candidates"]
+    record, _ = gate(incomplete, "incomplete after exhausted follow-up")
+    assert record["status"] == "Incomplete" and record["record"]["verification"]["follow_up_spent"] is True
+    refused(mutate(**{"record.verification.batches": [batch_paths("initial"), batch_paths("follow-up")]}),
+            "verification", "two batches with follow-up unspent", "--profile", "implementation-gate", needle="follow_up_spent")
+    print("ok implementation-gate: clean, blocking, material-question, and incomplete outcomes; exhausted follow-up")
+
+    # Deleted and renamed evidence against a real store: file accounting is exactly the pinned manifest.
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory) / "repo"
+        root.mkdir()
+        def git(*args):
+            return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8", check=True).stdout.strip()
+        git("init", "-q")
+        git("config", "user.name", "Test")
+        git("config", "user.email", "test@example.invalid")
+        for name in ("gone.txt", "old.txt", "kept.txt"):
+            (root / name).write_text("\n".join(f"{name} line {i}" for i in range(1, 21)) + "\n", encoding="utf-8")
+        git("add", ".")
+        git("commit", "-qm", "base")
+        base = git("rev-parse", "HEAD")
+        git("rm", "-q", "gone.txt")
+        git("mv", "old.txt", "new.txt")
+        (root / "kept.txt").write_text("changed\n" + "\n".join(f"kept.txt line {i}" for i in range(2, 21)) + "\n", encoding="utf-8")
+        git("add", "-A")
+        git("commit", "-qm", "Delete, rename, edit")
+        head = git("rev-parse", "HEAD")
+        store = Path(directory) / f"review-context-{head}.json"
+        subprocess.run([sys.executable, str(CONTEXT_SCRIPT), "--merge-base", base, "--head", head, "--store", str(store)],
+                       cwd=root, capture_output=True, check=True)
+        manifest = {e["path"]: e["status"] for e in json.loads(store.read_text(encoding="utf-8"))["context"]["manifest"]}
+        assert manifest["gone.txt"] == "D" and manifest["new.txt"].startswith("R") and manifest["kept.txt"] == "M", manifest
+        value = gate_composition()
+        value["run"].update(head=head, base_sha=base, merge_base=base, target="main..HEAD", change_description="Delete, rename, edit")
+        value["findings"][0].update(anchor={"type": "file", "path": "gone.txt", "side": "LEFT"},
+                                    fix={"path": "kept.txt", "start_line": 1}, change="In `kept.txt`, restore the guard the deleted file carried.")
+        value["questions"][0]["anchor"] = {"type": "line", "path": "new.txt", "start_line": 1, "end_line": 1, "side": "RIGHT"}
+        value["record"]["paths"]["store"] = str(store)
+        value["record"]["files"] = [{"path": "gone.txt", "state": "reviewed"}, {"path": "new.txt", "state": "reviewed"}, {"path": "kept.txt", "state": "reviewed"}]
+        for item in value["record"]["check_evidence"]:
+            if item["outcome"] != "historical":
+                item["head"] = head
+        record, _ = gate(value, "deleted and renamed evidence", "--store", str(store))
+        assert "anchor `gone.txt (file)`; fix `kept.txt:1`" in record["summary"]["body"], record["summary"]["body"]
+        assert run(COMPOSER, json.dumps(value), "--store", str(store)).returncode == 0
+        value["record"]["files"].pop()
+        line = refused(value, "file-accounting", "manifest path without accounting", "--profile", "implementation-gate", "--store", str(store), needle="kept.txt")
+        assert line == refused(value, "file-accounting", "publishable manifest accounting", "--store", str(store))
+        value["record"]["files"].append({"path": "kept.txt", "state": "reviewed"})
+        value["record"]["files"].append({"path": "old.txt", "state": "reviewed"})
+        refused(value, "file-accounting", "pre-image path is not a manifest path", "--profile", "implementation-gate", "--store", str(store), needle="old.txt")
+        value["record"]["files"].pop()
+        value["findings"][0]["anchor"]["side"] = "RIGHT"
+        refused(value, "anchor-provenance", "deleted file on the RIGHT", "--profile", "implementation-gate", "--store", str(store))
+    print("ok implementation-gate: deleted and renamed evidence, file accounting against the pinned manifest")
+
+
 def main() -> int:
     # Ordinary finding, whole-change question, observation: the contract example, byte for byte where the contract renders it.
     contract = base_composition()
@@ -536,7 +751,7 @@ def main() -> int:
     assert body.startswith("**Needs Information** — 1 open question.")
     assert "**[Question] Which originating issue applies?**" in body
     assert required_issue["summary"]["issue_fit"] in body
-    assert "issues=none coverage=complete" in body and "workflow=v5b-20" in body
+    assert "issues=none coverage=complete" in body and "workflow=v5b-21" in body
     assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
     assert payload["items"][0]["id"] == "workflow/required-issue"
     wrong = copy.deepcopy(required_issue)
@@ -696,6 +911,7 @@ def main() -> int:
     assert not_object.returncode == 1 and "schema" in not_object.stdout, not_object
     print("ok input: unreadable input exits 2, non-object exits 1")
     local_targets()
+    implementation_gate()
     return 0
 
 
