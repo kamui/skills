@@ -217,6 +217,57 @@ class Chains(unittest.TestCase):
                 self.assertFalse((private / "fragments.md").exists())
                 self.assertFalse(log.exists(), "render ran after a failed emission")
 
+    # --- implementation-gate profile ---------------------------------------
+
+    def gate_block(self, private, store):
+        text = block((SKILL / "SKILL.md").read_text(encoding="utf-8"), "stage record")
+        return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
+
+    def gate_composition(self, base, head, store):
+        value = fixtures.gate_composition()
+        value["run"].update(head=head, base_sha=base, merge_base=base)
+        value["record"]["paths"]["store"] = str(store)
+        value["record"]["files"] = [{"path": p, "state": "reviewed"} for p in ("src/payments.ts", "src/retry-policy.ts", "src/queue.ts")]
+        for item in value["record"]["check_evidence"]:
+            if item["outcome"] != "historical":
+                item["head"] = head
+        return value
+
+    def test_implementation_gate_chain_is_byte_identical(self):
+        repo, base, head = self.repository()
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                private, store = self.private(repo, base, head, f"gate-{shell}")
+                path = private / "composition.json"
+                path.write_text(json.dumps(self.gate_composition(base, head, store)), encoding="utf-8")
+                direct = subprocess.run([sys.executable, "scripts/compose_review.py", "--profile", "implementation-gate",
+                                         "--store", str(store), str(path)], cwd=SKILL, capture_output=True)
+                self.assertEqual(direct.returncode, 0, direct.stdout + direct.stderr)
+                result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual((private / "record.json").read_bytes(), direct.stdout)
+                self.assertEqual(result.stdout, f"record {private}/record.json\n")
+                self.assertTrue((private / "addenda").is_dir(), "the block creates the addenda directory a continuation appends to")
+                for absent in ("payload.json", "batch.json", "fragments.md"):
+                    self.assertFalse((private / absent).exists(), absent)
+                self.assertEqual(sorted(p.name for p in private.glob("*.part")), [])
+
+    def test_implementation_gate_failure_is_visible_and_stops(self):
+        repo, base, head = self.repository()
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                private, store = self.private(repo, base, head, f"gate-refused-{shell}")
+                composition = self.gate_composition(base, head, store)
+                composition["record"]["verification"]["follow_up_spent"] = True
+                (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
+                (private / "record.json").write_text("stale success\n", encoding="utf-8")
+                result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("record failed with exit 1; later stages did not run:", result.stdout)
+                self.assertIn("follow_up_spent", result.stdout)
+                for artifact in ("record.json", "record.json.part"):
+                    self.assertFalse((private / artifact).exists(), artifact)
+
     # --- publisher freshness and submission ---------------------------------
 
     def gh_binary(self):
