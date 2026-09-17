@@ -247,6 +247,7 @@ class Chains(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual((private / "record.json").read_bytes(), direct.stdout)
                 self.assertEqual(result.stdout, f"record {private}/record.json\n")
+                self.assertTrue((private / "addenda").is_dir(), "the block creates the addenda directory a continuation appends to")
                 for absent in ("payload.json", "batch.json", "fragments.md"):
                     self.assertFalse((private / absent).exists(), absent)
                 self.assertEqual(sorted(p.name for p in private.glob("*.part")), [])
