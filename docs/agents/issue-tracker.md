@@ -31,15 +31,17 @@ Reviewing and replying on a pull request needs verbs this file does not carry (b
 
 ## Reviewing identity
 
-Reviews publish as the **NitpikBot** GitHub App, not as the human who authored the pull request, so GitHub's review system is usable on a repository where the same person writes and reviews: an app review is not a self-review, and `APPROVE` and `REQUEST_CHANGES` are available to it.
+- **Reviewing app**: NitpikBot
+- **Client id**: Iv23liUX65fu007Gg3DF
 
-- **Review-token command**: `nitpikbot token <owner>/<repo>`, which prints a short-lived installation token. The publication blocks run it through `sh -c` and export `GH_TOKEN` for every forge write a review makes — the review itself, its inline comments, thread replies, thread resolutions, dismissals. Always name the repository; never let the runner infer one from a remote. Keep the token in the environment rather than in a command line: the timing wrapper records `argv`.
-- **Ad-hoc calls**: `nitpikbot run <owner>/<repo> -- <command>` runs one command as the app. Write it out literally; held in a shell variable and expanded in command position it would run as a single command name under `zsh`.
-- **Its login**: `nitpikbot run <owner>/<repo> -- gh api graphql -f query='{viewer{login}}' --jq .data.viewer.login`, or the same call with `GH_TOKEN` from the token command. `gh api user` returns HTTP 403 for an app token and must not be used for it.
+Resolve the app through the optional `review-bot` skill using this client id and the pull request's base repository. It returns the reviewer login and review-token command. The key belongs at `~/.config/review-bot/Iv23liUX65fu007Gg3DF.pem`, or the path in `REVIEW_BOT_KEY`, and never in a repository or the synced skills directory.
+
+- **Literal override**: a repository may add a **Review-token command** field for another token source. Use it as-is without consulting `review-bot`.
+- **Ad-hoc calls**: `GH_TOKEN=$(python3 <path> token --client-id Iv23liUX65fu007Gg3DF kamui/skills) gh …`, using the script path returned by `review-bot` and preserving its shell quoting. Keep the token in the environment rather than in a command line.
 - **Everything else stays the human's**: commits, pushes, opening pull requests, replies to review comments, and addressing summaries. An addressing round has to come from the pull-request author.
 - **The suffix differs by API**: REST calls this identity `nitpikbot[bot]` and GraphQL calls it `nitpikbot`. Compare logins with a trailing `[bot]` ignored on both sides.
 - **No re-review request**: GitHub routes review requests to users and teams only, and `@nitpikbot[bot]` notifies nobody. An addressing round asks this reviewer for nothing; whatever runs the app starts the next review.
-- **Absent runner**: `nitpikbot` is an optional external tool. Where it is missing or cannot authenticate, review as the authenticated user under the ordinary self-review rules rather than failing the run.
+- **Fallback**: if `review-bot` is absent or returns any `unavailable` result, publish as the authenticated user, record the reason in the report, and withhold gating. A literal command that is absent, fails, or cannot authenticate takes the same fallback. Resolution never stops the run; a token refused at publication still stops the write.
 
 ## When a skill says "publish to the issue tracker"
 
