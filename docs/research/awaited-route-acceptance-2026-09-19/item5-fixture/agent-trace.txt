@@ -29,3 +29,12 @@ agent-a60680f0d70134565.jsonl lines=16 models=claude-opus-5×16 efforts=high×16
 ## a63df28a032f2d9e9
 >>> 2026-09-19T18:05:12.190Z Agent type=general-purpose model=opus bg=False desc=Verify follow-up batch
 <<< 2026-09-19T18:07:56.664Z RESULT for Agent@2026-09-19T18:05:12.190Z:   This agent's report was delivered to you as a message from "a60680f0d70134565" (its SubagentHandback call). Read it there; it is not repeated here.    agentId: a60680f0d70134565 (use SendMessage with to: 'a60680f0d70134565', summary: '<5-10 word recap>' to
+
+# This session's own dispatches of the three fixture reviewers (main transcript fcf23a64-8c8a-4642-a1ba-58405fdc44cb.jsonl):
+# each was run_in_background=true; the Agent tool result was an async-launch acknowledgment and the report arrived as a task notification.
+  2026-09-19T17:35:37.720Z Agent subagent_type=general-purpose model=opus run_in_background=True description='Fixture initial gate review (R0)'
+    tool result at 2026-09-19T17:35:39.168Z: 'Async agent launched successfully. (This tool result is inte'...
+  2026-09-19T17:48:36.060Z Agent subagent_type=general-purpose model=opus run_in_background=True description='Case P: pending-verifier continuation'
+    tool result at 2026-09-19T17:48:37.071Z: 'Async agent launched successfully. (This tool result is inte'...
+  2026-09-19T17:59:14.601Z Agent subagent_type=general-purpose model=opus run_in_background=True description='Case D: disputed-blocker continuation'
+    tool result at 2026-09-19T17:59:15.758Z: 'Async agent launched successfully. (This tool result is inte'...
