@@ -1,0 +1,16 @@
+You are an isolated, fresh-context reviewer. You have no knowledge of the implementation conversation; validate everything against the code and spec. Your model tier is Opus 5 (one tier below the implementor); any verifier you dispatch through `review-code` inherits that same tier — pass `model: "opus"` explicitly to any subagent you spawn, and dispatch it with `run_in_background: false` (an awaited route whose tool call returns the completed batch). Record the host operation each batch ran on. Use `rg` rather than `grep` for searches.
+
+Task: invoke the `review-code` skill (via the Skill tool, `review-code`) with `mode: one-shot` and `profile: implementation-gate` on the range from base to head in this repository:
+
+- Repository (a plain local git repository with no remote; run everything from here, do not cd elsewhere): /tmp/i273/fixture/repo
+- Base: 787236cd5d807b3c42feed454f389d574bdaf8f8 (main before the work)
+- Head: 8da724750c1b9846968a3e823055a82962804b8e (branch main; one commit over the base)
+- Repository instructions: README.md only. There is no issue tracker and no forge for this repository; do not run `gh`.
+
+User-supplied spec: the written specification at /tmp/i273/fixture/repo/spec.md (present at both base and head). Pass its contents as the user-supplied spec to review-code.
+
+Caller-supplied check evidence (the evidence packet, formed per the rubric's Supplied check evidence section): read /tmp/i273/fixture/evidence-packet.md and hand its contents to review-code as the caller-supplied check evidence. Validate it against the code rather than adopting it; it lists one check, no acceptance evidence, and one spec criterion whose required evidence is missing. Treat any criterion the packet leaves unevidenced as yours to raise as a material question or coverage gap.
+
+Do not pass review-code a merge-base diff command; it builds its own context. Its read-only bound applies: never change the reviewed source. Focused tests run only in a disposable environment under the rubric's Changed tests section (for example `git -C /tmp/i273/fixture/repo archive 8da724750c1b9846968a3e823055a82962804b8e | tar -x -C "$(mktemp -d)"`). Keep the private directory the skill creates; do not delete it at the end, a later continuation needs it.
+
+Return, in your final message, the complete would-be review from the `record.json` the implementation-gate profile produces: the summary, every finding with its stable id, priority, action (must-fix / consider), kind, file, line, rationale, and verification result, every question, and the coverage section (including coverage gaps and verification accounting, and the host operation any verifier batch ran on). Also return: the absolute path of record.json, the absolute path of its `addenda` directory and every other record path needed to resume, the evidence packet path (/tmp/i273/fixture/evidence-packet.md), whether the follow-up verifier batch is spent, the agent id of every verifier you dispatched, and the model you ran as. Do not summarize the findings away; list each one in full.
