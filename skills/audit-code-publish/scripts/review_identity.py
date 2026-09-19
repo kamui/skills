@@ -33,8 +33,8 @@ SHA = re.compile(r"[0-9a-f]{40}\Z")
 def bare(login: str) -> str:
     """A login without GitHub's REST-only ``[bot]`` suffix.
 
-    GraphQL reports an app as ``nitpik``; REST reports the same app as
-    ``nitpik[bot]``. Comparing the two raw makes an app's own prior review look
+    GraphQL reports an app as ``reviewer``; REST reports the same app as
+    ``reviewer[bot]``. Comparing the two raw makes an app's own prior review look
     like another identity's, which would turn every re-review into a first review.
     """
     return login[:-5] if isinstance(login, str) and login.endswith("[bot]") else login

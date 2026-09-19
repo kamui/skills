@@ -14,7 +14,7 @@ Read [`references/review-protocol.md`](references/review-protocol.md) first: it 
 
 ### 1. Resolve the targets
 
-Read `docs/agents/issue-tracker.md` when present, then resolve the pull request, its head SHA, the originating issue serving as spec source, and the posting identity, which is the reviewing app's login where `docs/agents/issue-tracker.md` names one. The fixed point defaults to the merge-base of the pull request with its base branch, which is what the pull request already means; take a different one only when the user supplies it. Ask before any external write if the pull request or issue is ambiguous.
+Read `docs/agents/issue-tracker.md` when present, then resolve the pull request, its head SHA, the originating issue serving as spec source, and the posting identity under `references/review-protocol.md`'s Posting identity rule. The tracker doc declares the reviewing app and client id, or a literal review-token command used as-is. For an app without a literal command, invoke `review-bot` when installed and take its returned login and command. Its absence or any `unavailable` result falls back to the authenticated user, records the reason in the report, and withholds gating; resolution never stops the run. A token refused at publication still stops the write. The fixed point defaults to the merge-base of the pull request with its base branch, which is what the pull request already means; take a different one only when the user supplies it. Ask before any external write if the pull request or issue is ambiguous.
 
 Where the change has no pull request, stop and report that. A review publishes to a pull request that already exists; opening one is `implement-publish`'s job.
 
