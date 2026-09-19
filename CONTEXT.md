@@ -15,3 +15,11 @@ _Avoid_: loop, cycle, iteration
 **Delivery**:
 The whole run that takes a spec source to a pull request whose latest review status has been reached through one or more rounds. It never merges.
 _Avoid_: pipeline, chain, ship
+
+**Reviewing app**:
+The GitHub App a repository declares as the identity its reviews publish under.
+_Avoid_: bot, nitpikbot
+
+**Review-token command**:
+The shell command a publisher runs to obtain the reviewing app's short-lived token, produced by `review-bot` or given literally in the tracker doc.
+_Avoid_: token script, auth command

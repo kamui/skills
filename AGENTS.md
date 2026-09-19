@@ -22,7 +22,7 @@ Use the single-context layout. See `docs/agents/domain.md`.
 
 ### Runtime review dependency
 
-`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. These are the two named exceptions to installing skills alone; no other runtime skill dependency is introduced.
+`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. These are the two named exceptions to installing skills alone. `review-bot` is optional for `review-code-publish`, `code-review-publish`, `audit-code-publish`, and `finish-it`; its absence is a recorded fallback to the authenticated user with gating withheld, never a stop or a third install-alone exception.
 
 ### Global skill sync
 
