@@ -1,0 +1,1 @@
+{"agent_tool_parameters": ["description", "isolation", "model", "prompt", "subagent_type"], "tools": ["Agent", "Bash", "Edit", "Glob", "Grep", "ListAgents", "Read", "ReportFindings", "ScheduleWakeup", "Skill", "ToolSearch", "Workflow", "Write"]}
