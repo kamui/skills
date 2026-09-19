@@ -340,12 +340,12 @@ class Loop(unittest.TestCase):
                 self.assertEqual((read["outcome"], read["created_id"]), ("confirmed", 9001))
 
     def test_app_reply_is_reconciled_across_the_bot_suffix(self):
-        # A reviewing app is `nitpik[bot]` to `viewer` and `nitpik` to `author{login}`.
+        # A reviewing app is `reviewer[bot]` to `viewer` and `reviewer` to `author{login}`.
         # An unnormalized compare reads its own landed reply as absent and posts it twice.
         for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
             with self.subTest(source=source.name, launcher=launcher):
                 private = self.fresh([row("a", 101, "T1", "fixed", "resolve")],
-                                     plan={"reply:101": ["landed"]}, viewer="nitpik[bot]", author="nitpik")
+                                     plan={"reply:101": ["landed"]}, viewer="reviewer[bot]", author="reviewer")
                 result, _, _ = self.run_loop(private, source=source, launcher=launcher)
                 self.assertEqual(result.returncode, 1, result.stdout)
                 again, state, results = self.run_loop(private, source=source, launcher=launcher)

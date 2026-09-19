@@ -16,13 +16,14 @@ A self-review always uses `COMMENT`.
 
 This workflow is one-shot: finish without pausing for reviewer preferences.
 If `review-code` is not among the installed skills, stop with `missing-dependency: review-code`.
+`review-bot` is optional. Its absence falls back to the authenticated user, records the reason in the report, and withholds gating; it never produces a missing-dependency stop.
 
 ## Inspect
 
 Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
 Pass through supplied phase-1 packets, reviewer identity, focused-test policy, and up-front inputs under its Caller contract when provided.
 A supplied review-token command stays here rather than travelling with them: `references/publication.md` spends it on the writes below, and `review-code` never publishes.
-With no supplied reviewer identity, resolve it as `references/publication.md` specifies before the review runs, so an unusable reviewing app falls back to the authenticated user before any work is spent.
+With no supplied reviewer identity, resolve it before the review runs as `references/publication.md` specifies. The tracker doc declares the reviewing app and client id, or a literal review-token command used as-is. For an app without a literal command, invoke `review-bot` when installed and take its returned login and command. Any `unavailable` result falls back to the authenticated user, records the reason in the report, and withholds gating. Resolution never stops the run; a token refused at publication still stops the write.
 Apply the one-shot column of `review-code`'s Return routing table.
 A named stop ends this run with its report; a completed record supplies everything needed below.
 For a merged target without separate publication authorization, report the complete would-be review and finish.
