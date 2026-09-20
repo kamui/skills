@@ -108,7 +108,7 @@ Drop the candidate when decisive evidence contradicts it or the reviewer has not
 
 ## Observations
 
-Route an accurate fact to `Observations` when it fails finding admission specifically on meaningful or proven consequence, or when a verifier reports a relevant aside outside its candidate verdicts. The fact still needs a decisive repository evidence pointer. An observation is explicitly non-actionable: it has no priority, action, stable finding id, or anchor comment, and its sentence uses descriptive language without `should` or `must`. `review-record.md` caps this summary-only channel; `rendering.md` renders it. A fact that might meet the finding gates with more available static work remains a candidate, not an observation. A fact that passes gates 1 and 4 at any priority is a finding, not an observation: admit it, or drop it on the gate it actually fails, rather than routing it to `Observations` to avoid publishing a low-priority `consider`. When a candidate fails only gate 4, its ledger row names which reason applies: `observation (consequence absent)` when the fact stands with no consequence to prove, or `dropped (consequence unproven)` when a consequence may exist and the available static work did not establish it. A verifier aside becomes a finding only through full primary admission and whatever verification `SKILL.md` step 3 then requires. A safety assertion about a supplied candidate is never an observation: it is a scoped acquittal inside that candidate's verdict under [`verifier.md`](verifier.md)'s Scoped safety rulings, and `SKILL.md` step 3 says what the primary does with one.
+Route an accurate fact to `Observations` when it fails finding admission specifically on meaningful or proven consequence, or when a verifier reports a relevant aside outside its candidate verdicts. The fact still needs a decisive repository evidence pointer. An observation is explicitly non-actionable: it has no priority, action, stable finding id, or anchor comment, and its sentence uses descriptive language without `should` or `must`. A fact that might meet the finding gates with more available static work remains a candidate, not an observation. A fact that passes gates 1 and 4 at any priority is a finding, not an observation: admit it, or drop it on the gate it actually fails, rather than routing it to `Observations` to avoid publishing a low-priority `consider`. When a candidate fails only gate 4, its ledger row names which reason applies: `observation (consequence absent)` when the fact stands with no consequence to prove, or `dropped (consequence unproven)` when a consequence may exist and the available static work did not establish it. A verifier aside becomes a finding only through full primary admission and whatever verification `SKILL.md` step 3 then requires. A safety assertion about a supplied candidate is never an observation: it is a scoped acquittal inside that candidate's verdict under [`verifier.md`](verifier.md)'s Scoped safety rulings, and `SKILL.md` step 3 says what the primary does with one.
 
 ## Uncertainty routing
 
@@ -137,48 +137,7 @@ A P2 can be `must-fix`. P0 is inherently `must-fix`; otherwise do not infer acti
 
 ## Private finding record
 
-Retain enough structure to verify, deduplicate, re-review, and publish safely:
-
-```yaml
-# A survivor record; a dropped candidate retains only the compact ledger row described below.
-id: stable-path-and-concept-id
-anchor:
-  type: line
-  path: src/example.ts
-  start_line: 42
-  end_line: 44
-  side: RIGHT
-fix: src/retry-policy.ts:18
-priority: P1
-action: must-fix
-blocking: true
-kind: bug
-title: Preserve the idempotency key across retries
-claim: A new idempotency key is created for every retry attempt
-trigger: Response timeout after the server commits the charge
-impact: The retry can submit a second non-idempotent charge
-evidence:
-  - src/example.ts:42 creates a key per attempt
-support:
-  inspected:
-    - retry caller and payment-client tests
-  checks:
-    - timeout-after-commit path traced manually
-  uncertainty: none
-requirement_source: issue-123/acceptance-criterion-2  # or pr-body/"<quoted promise>" on a pull request, commit-<sha7>/"<quoted promise>" on a local target, or artifact-<identity>@<version>/<path>:<name> for a versioned obligation
-change: Reuse one key for every attempt of the logical charge
-verification: independent-confirmed
-disposition: survivor
-falsification: No unchanged guard prevents the timeout-after-commit trace
-```
-
-For a whole-file finding, use this anchor shape instead:
-
-```yaml
-anchor:
-  type: file
-  path: skills/job-runner/SKILL.md
-```
+Retain enough structure to verify, deduplicate, re-review, and publish safely. A survivor keeps the fields the verifier handoff projects — `id`, `kind`, `priority`, `action`, `title`, `claim`, `trigger`, `impact`, `change`, `anchor`, optional `fix` as `path:line`, `evidence`, and any `requirement_source` — as `python3 scripts/build_verifier_prompt.py --example` prints them, plus its `blocking`, its private `support`, its `verification` (`independent-confirmed` or `primary-confirmed`), its `disposition`, and its one-line `falsification`. A line anchor carries `path`, `start_line`, `end_line`, and `side`; a whole-file anchor is `type: file` with `path`.
 
 `claim` is a flat, falsifiable statement about the changed artifact. `support` records the primary reviewer's process, reasoning, and uncertainty; it stays private and is withheld from an independent verifier. It is budgeted at three entries total across `inspected`, `checks`, and `uncertainty`, each one line; anything longer is argument, and argument is not evidence. Evidence citations may be passed to the verifier without the support narrative. Keep `disposition` and its decisive falsification evidence for every raised candidate, including dropped candidates, so a clean-verdict verifier can attack the acquittals. For every candidate that is not a survivor, the retained ledger row is at most a one-line `claim`, the `kind`, the one-word `disposition`, a one-line falsification reason, and one decisive evidence pointer in `path:line` form; survivors keep the full record shape shown above.
 
