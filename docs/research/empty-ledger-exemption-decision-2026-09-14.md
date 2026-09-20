@@ -8,6 +8,8 @@ enlarged, and the shipped skill is unchanged.
 
 ## Decision
 
+> Superseded on 2026-09-20: `v5b-22` removed the empty-ledger sentence and runs the no-material-survivor batch only when the ledger holds an attackable row. See the `v5b-21` → `v5b-22` section of `skills/review-code/DESIGN.md`. The decision below is retained as recorded.
+
 **Insufficient evidence; no change.** Keep `review-code` step 3's sentence "An empty ledger still
 requires the batch; its conclusion covers only that empty ledger." The inspected evidence has no
 explicit zero-row candidate disposition ledger and no timing or usage for any empty batch. The saving
