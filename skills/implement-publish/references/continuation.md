@@ -1,27 +1,21 @@
 # Continue a review after fixes
 
-Before each continuation, update the verification results under [step 3's verification rules](../SKILL.md#3-implement). Group checks and acceptance observations sharing an invalidation decision and its reason. Reference earlier results rather than copying them. Neither the reviewer nor future CI substitutes for the implementer's verification before publication.
+Update verification results under [step 3's rules](../SKILL.md#3-implement). Group results sharing a retention or invalidation reason; reference earlier results instead of copying them.
 
-After committing fixes, choose the route before sending anything. Both routes must meet [step 4's awaited-route requirement](../SKILL.md#4-review-before-publishing).
+After committing fixes, choose a route under [step 4's awaited-completion rules](../SKILL.md#4-review-before-publishing):
 
-| Host resumption behavior | Route |
-| --- | --- |
-| Returns the completed result on an awaited route | Resume the same reviewer with the new head, updated results, and fixed stable ids. |
-| Returns before the result, such as an acknowledgment followed by background work | Dispatch a **fresh continuation**: one isolated general-purpose reviewer at the same tier, on an awaited route. |
+- Resume the same reviewer if the host can resume and await its completed result. Dispatch followed by a supported wait qualifies; an acknowledgment alone does not.
+- Otherwise use a fresh isolated reviewer meeting step 4's requirements, at the same tier, on an awaited route. This continues a completed review; it cannot replace pending, failed or partial work.
 
-A fresh continuation replaces a completed reviewer's next phase. It cannot run beside a pending reviewer, retry a failed review, or bypass a partial result.
+For either route, brief an implementation-gate addendum applying `review-code`'s rubric, verification and record rules. Use the continuation procedure below, not its initial-review procedure. Supply:
 
-Brief the fresh reviewer to invoke `review-code` with `mode: one-shot` for the addendum's rubric, verification, and record rules. Supply:
+- Full previously reviewed and final head SHAs, updated verification results with retention/invalidation reasons, and fixed finding ids.
+- Original record and ordered addendum paths, plus references for the repository, applicable instructions, every spec and base. Reuse saved references rather than restating their content.
 
-- Repository, applicable instructions, every spec source, base, and full reviewed and final head SHAs.
-- Original record paths, updated verification results with invalidation decisions, complete review and routed items, fixed stable ids, unresolved or disputed findings and material questions, and existing finding, coverage, and verification state, including whether the follow-up batch is spent.
+Read the record and addenda to establish current findings, unresolved or disputed items, questions, coverage and verification allowance. Validate their repository and head chain. Missing or mismatched required state leaves coverage incomplete. Open supporting artifacts only as needed for review; assess unavailable evidence under `review-code`'s Supplied check evidence rules.
 
-It first checks that every record path is readable and belongs to the review and reviewed head. Missing or mismatched state is a coverage gap. Validate supplied results under `review-code`'s Supplied check evidence rules. Unusable results cannot settle an obligation; an unresolved required exercise or check is a coverage gap. Missing optional metadata alone does not prevent a clean addendum.
+Recheck each fixed finding at the final head with bounded reads and focused tests. Inspect the complete fix delta (`git diff <reviewed head>...<final head>`) under the rubric's Complete inspection rules. Independently check retention and invalidation decisions against that delta using step 3's verification rules.
 
-Either continuation appends an addendum in the original record's named `addenda` directory, leaving the record unchanged. It re-verifies each fixed finding at the new head using bounded reads and focused tests, and inspects the complete fix delta (`git diff <reviewed head>...<final head>`) under the rubric's Complete inspection rules.
+Falsify new candidates under the rubric. For all new candidates meeting `review-code`'s mandatory-verification trigger, await one verifier batch within the remaining allowance. Preserve stable ids, verification accounting, test restrictions and batch limits across workers. Unresolved blockers and incomplete required verification prevent publication.
 
-The reviewer independently checks every invalidation decision against that delta. Checks remain owed when it reaches their inputs, environment, or covered behavior; acceptance exercises remain owed when it reaches their criterion, method, or inputs. Retained evidence keeps its original head.
-
-Falsify every new candidate. Dispatch one verifier batch containing all new candidates meeting `review-code`'s mandatory-verification trigger, and await its result. Preserve stable ids, verification accounting, test restrictions, and the batch cap across workers; changing workers grants no extra batch. Unsettled findings remain blocking.
-
-If the delta is too large to inspect, replace the addendum with a fresh-context one-shot review of the full base-to-final-head range, accounting for every outstanding finding and question.
+Append the result in the original record's `addenda` directory, leaving earlier records unchanged. If the delta is too large to inspect, instead use a fresh-context full base-to-final-head review under step 4, carrying outstanding findings, questions and verification accounting without resetting the batch allowance.
