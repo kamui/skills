@@ -1078,4 +1078,4 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `22ebf36` and on this change.
 | Hygiene survivors beside an attackable acquittal | Complete ledger attached or its own batch | Unchanged |
 | Verdicts refute the last material finding | Follow-up attack over the updated ledger | Unchanged: a refuted row is attackable whatever its kind |
 
-**What is forgone.** The verifier's one-citation check on `maintainability` and `requirement` acquittals that assert no safety premise. The five-step attack is never forgone: every row that qualifies for it is attackable by kind or by the reviewer's mark. Related-acquittal mode, the one-initial-plus-one-follow-up cap, reconciliation, and every admission and rendering rule are unchanged.
+**What is forgone.** The verifier's one-citation check on `maintainability` and `requirement` acquittals that assert no safety premise. The five-step attack is never forgone: every row that qualifies for it is attackable by kind, by refutation, or by the reviewer's mark. Related-acquittal mode, the one-initial-plus-one-follow-up cap, reconciliation, and every admission and rendering rule are unchanged.
