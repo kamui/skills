@@ -12,10 +12,10 @@ For either route, brief an implementation-gate addendum applying `review-code`'s
 - Full previously reviewed and final head SHAs, updated verification results with retention/invalidation reasons, and fixed finding ids.
 - Original record and ordered addendum paths, plus references for the repository, applicable instructions, every spec and base. Reuse saved references rather than restating their content.
 
-Read the record and addenda to establish current findings, unresolved or disputed items, questions, coverage and verification allowance. Validate their repository and head chain. Missing or mismatched required state leaves coverage incomplete. Open supporting artifacts only as needed for review; assess unavailable evidence under `review-code`'s Supplied check evidence rules.
+Read the record and addenda to establish current findings, unresolved or disputed items, questions, coverage and verification allowance. Validate their repository and head chain. Missing or mismatched required state leaves coverage incomplete. Open supporting artifacts only as needed for review; assess unavailable evidence under `review-code`'s `references/check-evidence.md`.
 
 Recheck each fixed finding at the final head with bounded reads and focused tests. Inspect the complete fix delta (`git diff <reviewed head>...<final head>`) under the rubric's Complete inspection rules. Independently check retention and invalidation decisions against that delta using step 3's verification rules.
 
 Falsify new candidates under the rubric. For all new candidates meeting `review-code`'s mandatory-verification trigger, await one verifier batch within the remaining allowance. Preserve stable ids, verification accounting, test restrictions and batch limits across workers. Unresolved blockers and incomplete required verification prevent publication.
 
-Append the result in the original record's `addenda` directory, leaving earlier records unchanged. If the delta is too large to inspect, instead use a fresh-context full base-to-final-head review under step 4, carrying outstanding findings, questions and verification accounting without resetting the batch allowance.
+Append the result as the addendum `review-code`'s `references/review-record.md` defines, in the original record's `addenda` directory, leaving earlier records unchanged. If the delta is too large to inspect, instead use a fresh-context full base-to-final-head review under step 4, carrying outstanding findings, questions and verification accounting without resetting the batch allowance.

@@ -4,6 +4,7 @@
 Usage:
     python3 scripts/context_fingerprint.py [INPUT | --json JSON]
     python3 scripts/context_fingerprint.py --packet packet.json [INPUT | --json JSON]
+    python3 scripts/context_fingerprint.py --example    # print a minimal INPUT
 
 INPUT is a JSON object with `pr`, `issues`, `specs`, and `guidance` as the
 review record defines them (`-` or omitted reads stdin). With `--packet`, the
@@ -215,6 +216,20 @@ def merge_packet(payload: Any, packet_path: str) -> dict[str, Any]:
     return merged
 
 
+# What --example prints: one local-range input with every field the review record names.
+EXAMPLE = {
+    "pr": {"title": "main...HEAD", "body": "Add retries for charge submission\n"},
+    "issues": [{
+        "coordinate": "acme/payments#123", "title": "Retries must reuse one idempotency key",
+        "body": "Acceptance criterion 2: one key per logical charge.",
+        "comments": [{"id": 1001, "author": "octocat", "created_at": "2026-09-01T12:00:00Z",
+                      "updated_at": "2026-09-01T12:00:00Z", "body": "Confirmed on the payments service."}],
+    }],
+    "specs": [{"identity": "/abs/path/to/spec.md", "text": "Retries reuse one idempotency key per logical charge."}],
+    "guidance": [{"path": "AGENTS.md", "blob_sha": "c" * 40}],
+}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Print the v5b review context SHA-256 for a structured JSON input."
@@ -225,7 +240,11 @@ def main() -> int:
         "--packet",
         help="forge packet from forge_packet.py normalize; supplies pr and issues",
     )
+    parser.add_argument("--example", action="store_true", help="print a minimal input object, then exit")
     args = parser.parse_args()
+    if args.example:
+        print(json.dumps(EXAMPLE, indent=2))
+        return 0
 
     try:
         if args.json is not None:

@@ -611,7 +611,7 @@ class RunEventTests(unittest.TestCase):
                 private = self.root / f"documented-{number}"
                 private.mkdir()
                 text = (block.replace("<run-events-script>", script)
-                        .replace("<recorded-absolute-run_events.py-path>", script)
+                        .replace("<skill-root>/scripts/run_events.py", script)
                         .replace("<private-dir>", shlex.quote(str(private))))
                 text = re.sub(r"<[A-Za-z][A-Za-z0-9_.-]*>", "7", text)
                 result = subprocess.run(["sh", "-c", text], cwd=self.root, env=env, capture_output=True,
