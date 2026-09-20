@@ -63,6 +63,8 @@ query($owner:String!,$name:String!,$number:Int!){
       comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url } } } } }' > forge-root.json
 ```
 
+Immediately after the root query succeeds, and before any continuation page, build the **changed-file manifest** from `git diff <base>...<head> --name-status` with the `baseRefOid` and `headRefOid` it returned. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view. Nothing is dispatched here; the continuation pages, the shared block, guidance closure, the fingerprint, and the duplicate gate below all still precede the finders.
+
 Continuations bind `after` to the connection's `endCursor` (`-F after=<cursor>`, declared as `$after:String`) and return the same node fields and `totalCount pageInfo{ hasNextPage endCursor }` as above:
 
 - a pull-request connection: `repository(owner:$owner,name:$name){ pullRequest(number:$number){ reviews(first:100,after:$after){ … } } }`, and likewise for `reviewThreads`, `comments`, and `closingIssuesReferences`;
@@ -75,8 +77,6 @@ Continuations bind `after` to the connection's `endCursor` (`-F after=<cursor>`,
 `baseRepository.url` is `summary.repository_url`. Compute the merge-base locally with `git merge-base <baseRefOid> <headRefOid>`; the forge does not return it. On another forge, make the equivalent smallest set of calls.
 
 Packet gaps remain coverage gaps even when both finders finish. Read [`references/input-identity.md`](references/input-identity.md) now for fingerprint membership, input normalization and the duplicate gate. First-review, re-review, deferral extraction and hashing all consume this same packet. Any external spec discussion unavailable or truncated is a named coverage gap too; record the missing source/slice in the run record.
-
-Build the **changed-file manifest** from `git diff <base>...<head> --name-status` before spawning anything. It is the checklist the finders must return against, and it must include deletions, renames, binaries, generated files, and anything the forge omitted from its patch view.
 
 When the run conditions permit test execution, run the repository's permitted test suites **once** here and write the one-line result summary per suite to a UTF-8 file. Finders and the verifier may run a single focused test that decides a candidate; they do not re-run a suite.
 
