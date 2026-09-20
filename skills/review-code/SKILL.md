@@ -30,7 +30,7 @@ The **caller** is the skill invoking `review-code`; the **orchestrator** is the 
 | Reviewer identity | Pull request only: the login reviews publish as — forge CLI's authenticated user unless the caller names a reviewing app; prior-state detection, comparing logins with a trailing `[bot]` ignored |
 | Orchestrator-supplied phase-1 packet | Pull request only; none by default; otherwise `review-code` fetches in step 1 |
 | Focused-test run policy | Rubric's five/ten-minute defaults; caller may tighten bounds or specify none |
-| Caller-supplied check evidence | None; each supplied item carries the fields the rubric's Supplied check evidence section requires, and only that section accepts, retains, or discards it |
+| Caller-supplied check evidence | None; a compact summary may share context across checks under the rubric's Supplied check evidence rules, which govern acceptance, retention, and unavailable results |
 | Inputs supplied up front | None; use supplied artifacts, spec, or missing `merged` before routing a gap |
 | Merged-target publication authorization | None; only the retrospective Mode line uses it |
 | Duplicate-review shortcut | `on`; session caller uses `off` only after the user requests a fresh review despite an existing one |

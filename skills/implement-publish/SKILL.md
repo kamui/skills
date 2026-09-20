@@ -21,11 +21,13 @@ Follow the repository's branch and commit conventions. If the current branch is 
 
 Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
 
-Use this **evidence format** throughout:
+Save **verification results** as a short summary using `review-code`'s **Supplied check evidence** rules:
 
-- Every record includes the full head SHA and actual input state it was exercised at, the runtime, host, or environment configuration the result depends on, and readable output or an immutable artifact location. Input state identifies whether the tree was clean or dirty and any uncommitted source, fixtures, generated inputs, dependency or configuration changes the exercise saw.
-- **Check evidence** records one result of a named verification, such as a focused test, suite, linter, or build. Include the command or check-run identity and scope, exit status or conclusion, whether it finished, and claimed coverage, including anything skipped.
-- **Acceptance evidence** records a spec criterion, the method used to exercise it, and the observed result. Keep this separate from check evidence; it needs no command identity.
+- State the full commit SHA and clean/dirty input state once per group of results. Name the repository's documented environment or record the relevant runtime when none is documented; describe only relevant deviations and dirty inputs.
+- Use one line per check: command or check-run identity, result, and readable output or artifact reference. Add scope when the command does not make it clear, and report skips, incomplete runs, or other coverage limits. A pass means the check finished successfully.
+- For required acceptance exercises that checks do not settle, record the criterion, method and observation under the same shared context. List missing required evidence and its reason.
+
+Keep logs in referenced artifacts, rather than copying them into the summary. Per-result exceptions override shared context; retain each result's original commit when adding later runs.
 
 Apply these **verification rules** to both implementation and review fixes:
 
@@ -35,9 +37,9 @@ Apply these **verification rules** to both implementation and review fixes:
 - Reuse an earlier success only for the same check at the exact full head SHA being verified, with unchanged relevant inputs and environment and sufficient coverage. A run on uncommitted work counts only for the commit made from exactly that tree.
 - Retain unaffected evidence at its original head and input state without rerunning it solely because the head changed. It cannot satisfy a check explicitly required at the new head. If a fix's reach is uncertain, rerun potentially affected checks.
 
-End with the work committed and its checks run and recorded in the evidence format above. Keep implementation and review local until step 5.
+End with the work committed and its checks run and recorded as above. Keep implementation and review local until step 5.
 
-Record acceptance evidence only when a check does not settle a criterion and the spec requires it to be exercised. Record observations, excluding conclusions that the criterion is satisfied. Add no live exercises or checks solely to fill this record. List missing required evidence as a gap with its reason.
+Record observations rather than conclusions that a criterion is satisfied. Add no live exercises or checks solely to fill the summary.
 
 Repeat an acceptance exercise at the new head if fixes reach its criterion, method, or inputs; otherwise retain its evidence as above. Record any required exercise that could not be repeated as a gap with its reason.
 
@@ -49,7 +51,7 @@ Every review and continuation must use an **awaited** route that delivers its co
 
 Brief the reviewer to invoke `review-code` with `mode: one-shot` and `profile: implementation-gate` on the range from the base to the committed head, passing every spec source resolved in step 1 as the user-supplied spec. Require the complete output defined in its Return section, including `record.json` and the paths needed to resume. Supply target refs, leaving context construction, review execution, and artifact generation to `review-code` under its own rules.
 
-Supply an **evidence packet** containing every check and acceptance record in step 3's format, plus every criterion whose required evidence is missing. Pass checks as `review-code`'s caller-supplied check evidence under the rubric's Supplied check evidence rules. Include only evidence and artifact references; exclude implementation conversation, rationale, and conclusions about correctness or satisfied criteria. The reviewer validates the packet against the code and raises unevidenced criteria as material questions or coverage gaps. Save the packet where a fresh continuation can read it, and retain its path with the review record's paths.
+Give the reviewer the saved verification results and missing required evidence. Pass checks as `review-code`'s caller-supplied check evidence. Include observations and artifact references without implementation discussion or correctness claims. The reviewer validates results it relies on and reports material verification gaps. Keep the results' path with the review record so another reviewer can continue.
 
 Read the returned review. Treat every `must-fix` finding as blocking and every `consider` finding as optional; report coverage gaps and unresolved questions. Evaluate every finding against the code and spec. Fix warranted defects, verify them under step 3's rules, and commit the fixes. Record an evidence-based reason for declining a finding; a disputed blocking defect remains unresolved.
 
@@ -63,7 +65,7 @@ Use the resolved forge's available CLI, API, or integration. Push the reviewed h
 
 - summarize the change;
 - link every issue resolved in step 1 with its disposition: **closes**, using supported automatic closure on merge when available and noting when unavailable; **partially implements**, naming what remains open; or **affects**, stating how. For a spec outside the forge, name and link it;
-- list the verification performed, naming each check with the head and input state it establishes, each piece of acceptance evidence with its criterion and the head and input state it was exercised at, and any remaining verification gap.
+- summarize verification results and remaining gaps, sharing head and input state across checks and acceptance observations where they match. Identify each acceptance criterion and keep historical results attributed to their original head.
 
 Leave issue status, labels, and assignees alone.
 
