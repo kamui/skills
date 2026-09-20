@@ -1099,3 +1099,23 @@ Every paragraph of the runtime set was sorted by who consumes it: the reviewer a
 | `pull-request-target.md` | `fullDatabaseId`/`databaseId` fallback and `lastEditedAt` note | `forge_packet.py` normalizes both ids; `re-review.md` states the timestamp semantics |
 
 **Bytes** (`wc -c` on `origin/main` at `bb88d7a` against this change): always-loaded set `SKILL.md` + rubric + record + `rendering.md` 105,209 → 92,664; `verifier-handoff.md` 10,450 → 9,346; `re-review.md` 13,185 → 12,424; `local-targets.md` 8,593 → 8,288; `pull-request-target.md` 12,904 → 12,566. Not removed: pointers that load a conditional reference or carry an ordering constraint, every rule tied to an issue in this file, the professional-defaults sections, and session mode.
+
+## Interactive use without a session layer (user request, 2026-09-20)
+
+**Workflow retained: `v5b-22`.** The review record, the one-shot column of the route table, every named stop, the batch cap, and the published record are unchanged. Session mode still asks before falsification and presents the record and routed questions afterward, as `README.md` describes; what changed is what happens when the user answers.
+
+Issue #232's local-target design gave session mode a second, mutable artifact beside the immutable record: a session layer of numbered user decisions, a session record carrying evidence-justified amendments, recomposition and validation after every amendment, both records shown side by side each turn, one further verifier batch per session under explicit authorization, and a `refs/review-code/session/` ref chain so a working-tree recheck could review only the delta through `--worktree --parent`. That machinery existed to make answering a question cheap without a second review. It cost `references/session.md` (9,519 bytes) plus the session halves of `re-review.md` and `local-targets.md` and a route-table column of pointers, and no run since early September exercised it.
+
+`SKILL.md` now ends with an Interactive use section of two paragraphs. An answer, a supplied input, a chosen reading, or changed code starts a new run from step 1 with that answer as an up-front input, in its own private directory and under its own batch cap, and the earlier record's path is reported beside the new one. A user's acceptance of residual risk is reported beside the finding and changes nothing in it, the same rule the session layer applied. A fix request is outside the review, and nothing from a session reaches the forge.
+
+| Removed | Was in | Replaced by |
+| --- | --- | --- |
+| Session layer, session record, amendments, side-by-side display | `session.md` | A fresh run per answer; the record stays immutable |
+| One further verifier batch per session | `session.md` | Each run's own initial-plus-follow-up cap |
+| Session snapshot lifetime: `refs/review-code/session/<id>/<n>` protection, stale-ref reporting, exit cleanup | `re-review.md` | Nothing; a working tree is snapshotted afresh each run, and the saved record keeps the snapshot identity and manifest |
+| Session recheck: `--worktree --parent` chaining, `chain: chained`/`reset`, unchanged-tree probe, delta review of a local session record, layer seeding | `re-review.md`, `local-targets.md` | Every local run is a first review; `re-review.md` loads only for pull-request prior state |
+| Local-session persistence paragraph | `review-record.md` | The Return section's run identity |
+
+**What is lost.** Answering a question without a second review; local delta rechecks with prior-item classification; the authorized extra batch. Each costs one more full run, which is rare and now cheaper after the 2026-09-20 changes. `review_context.py` keeps `--worktree --parent` and `--prior-head`, and `test_review_context.py` keeps its ref-protection test, because the script's behavior is unchanged and a caller may still chain snapshots itself.
+
+**Bytes** (`wc -c`, `origin/main` at `4d6e05e` against this change): `session.md` 9,519 → 0; `re-review.md` 12,424 → 7,190; `local-targets.md` 8,288 → 6,707; `review-record.md` 14,813 → 14,320; `SKILL.md` 35,792 → 36,520 for the new section. The always-loaded set goes from 92,664 to 92,899; the savings fall on every local run (`local-targets.md`), every re-review (`re-review.md`), and every session (`session.md`).
