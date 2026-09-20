@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/build_verifier_prompt.py input.json --ledger ledger.json
        --output <new-directory>
-Input: the JSON schema in references/verifier-handoff.md (run, batch, sources,
+Input: the JSON schema in references/verifier-handoff.md; ``--example`` prints one (run, batch, sources,
 run_policy, candidates, ledger_ids); --ledger is the authoritative full
 candidate disposition ledger. Fields are projected through explicit allowlists.
 Exit 0: bundle written and path printed; 1: content violations, one per stdout
@@ -259,8 +259,14 @@ def render(data):
                     section("## Changed tests\n", "## Falsify every candidate\n")]
     records = data["candidates"] + data["ledger"]
     if any("released_compatibility" in item for item in records):
-        instructions.append("**Released compatibility.**" +
-                            section("**Released compatibility.**", "A requirement finding still needs concrete evidence."))
+        released = (refs / "released-compatibility.md").read_text(encoding="utf-8")
+        require(released.count("**Released compatibility.**") == 1, "released-compatibility", "instruction boundary changed")
+        instructions.append("**Released compatibility.**" + released.split("**Released compatibility.**", 1)[1])
+    if any(item.get("test_evidence") for item in records):
+        evidence = (refs / "check-evidence.md").read_text(encoding="utf-8")
+        marker = "The caller may supply a compact verification summary."
+        require(evidence.count(marker) == 1, "check-evidence", "instruction boundary changed")
+        instructions.append("## Supplied check evidence\n\n" + marker + evidence.split(marker, 1)[1])
     if any("conformance" in item for item in records):
         instructions.append("## Conformance verifier procedure\n" + (refs / "conformance.md").read_text(encoding="utf-8").split("## Verifier brief\n", 1)[1])
     if any(item["kind"] in {"concurrency", "invariant"} for item in data["candidates"]):
@@ -272,10 +278,16 @@ def render(data):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input")
-    parser.add_argument("--ledger", required=True)
-    parser.add_argument("--output", required=True, help="new private bundle directory; never overwritten")
+    parser.add_argument("input", nargs="?")
+    parser.add_argument("--ledger")
+    parser.add_argument("--output", help="new private bundle directory; never overwritten")
+    parser.add_argument("--example", action="store_true", help="print a minimal input object and full-ledger row, then exit")
     args = parser.parse_args()
+    if args.example:
+        print(json.dumps(EXAMPLE, indent=2))
+        return 0
+    if not (args.input and args.ledger and args.output):
+        parser.error("input, --ledger and --output are required")
     EVENT.update(event="verifier-brief-built", output=args.output)
     temporary = None
     try:
@@ -305,6 +317,43 @@ def main():
         if temporary is not None:
             shutil.rmtree(temporary)
 
+
+# What --example prints: one candidate-only batch input and one full-ledger row.
+EXAMPLE = {
+    "input": {
+        "run": {"id": "review-<head7>", "repository": "/abs/path/to/checkout", "base": "b" * 40, "head": "a" * 40,
+                "merge_base": "b" * 40},
+        "batch": {"id": "initial", "phase": "initial", "mode": "candidate-only"},
+        "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect.",
+        "sources": [{"coordinate": "issue-123/acceptance-criterion-2", "text": "Retries must reuse one idempotency key."}],
+        "candidates": [{
+            "id": "payments/retry-idempotency", "kind": "bug", "priority": "P1", "action": "must-fix",
+            "title": "Preserve the idempotency key across retries",
+            "claim": "A new idempotency key is created for every retry attempt",
+            "trigger": "Response timeout after the server commits the charge",
+            "impact": "The retry can submit a second non-idempotent charge",
+            "change": "Reuse one key for every attempt of the logical charge",
+            "anchor": {"type": "line", "path": "src/example.ts", "start_line": 42, "end_line": 44, "side": "RIGHT"},
+            "fix": "src/retry-policy.ts:18",
+            "evidence": [{"coordinate": "src/example.ts:42", "text": "const key = newKey();"}],
+            "ranges": {"anchor": {"coordinate": "src/example.ts:42-44", "text": "src/example.ts: +42,3"},
+                       "fix": {"coordinate": "src/retry-policy.ts:18", "text": "src/retry-policy.ts: +18,1"}},
+            "requirement_source": "issue-123/acceptance-criterion-2",
+            "test_evidence": [{"command": "pnpm test payments", "head": "a" * 40, "exit_status": 1,
+                               "output": "FAIL retries reuse key"}],
+        }],
+        "ledger_ids": [],
+    },
+    "ledger": [{
+        "id": "payments/retry-idempotency", "kind": "bug", "claim": "A new idempotency key is created for every retry attempt",
+        "disposition": "survivor", "falsification": "No unchanged guard prevents the timeout-after-commit trace",
+        "evidence": {"coordinate": "src/example.ts:42", "text": "const key = newKey();"},
+    }, {
+        "id": "payments/retry-budget", "kind": "maintainability", "claim": "The retry budget is unbounded",
+        "disposition": "dropped", "falsification": "prevented: the caller bounds attempts before dispatch",
+        "evidence": {"coordinate": "src/retry-policy.ts:20", "text": "if (attempt >= MAX_ATTEMPTS) return;"},
+    }],
+}
 
 # What this build hands run_events.py; recording never changes the result.
 EVENT = {}
