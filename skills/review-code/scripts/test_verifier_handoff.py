@@ -203,6 +203,7 @@ class HandoffTests(unittest.TestCase):
         with_evidence = (self.build(data) / "brief.md").read_text(encoding="utf-8")
         self.assertIn("## Supplied check evidence", with_evidence)
         self.assertIn("A new head is an invalidation boundary", with_evidence)
+        self.assertNotIn("SKILL.md", with_evidence)
 
     def test_example_input_builds(self):
         result = self.run_cli("build_verifier_prompt.py", "--example")

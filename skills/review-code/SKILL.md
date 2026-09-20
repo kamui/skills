@@ -12,7 +12,7 @@ Review one target — a pull request, a range, or the working tree — without m
 
 This file owns the order of work and every batch transition. Read these two references now, each as its own complete read:
 
-- [`references/review-rubric.md`](references/review-rubric.md) owns inspection scope, finding admission, supplied check evidence, uncertainty routing (question, observation, ambiguity, unrecoverable input), and priorities.
+- [`references/review-rubric.md`](references/review-rubric.md) owns inspection scope, finding admission, uncertainty routing (question, observation, ambiguity, unrecoverable input), and priorities.
 - [`references/review-record.md`](references/review-record.md) owns finding fields, statuses, coverage, and review identity. Comment syntax, trailers, and composition belong to [`references/rendering.md`](references/rendering.md), which loads at step 5.
 
 Conditional references load only on their branch, at the step that names each.
