@@ -1062,3 +1062,20 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `22ebf36` and on this change.
 | --- | --- | ---: | ---: |
 | `SKILL.md` | Startup | 5,744 / 39,418 | 5,849 / 40,054 |
 | `references/pull-request-target.md` | Pull request, step 1 | 943 / 7,182 | 1,640 / 12,904 |
+
+## Attackable rows narrow the clean-verdict batch (user request, 2026-09-20)
+
+**Release change: `v5b-21` → `v5b-22`.** Issue #185 made the clean-verdict attack depend on what was acquitted, and issue #202 extended it to every surface; both dispatched the complete-ledger batch whenever no material finding survived, an empty ledger included. Two measured single-file documentation reviews each ran that batch over ledgers of only `requirement` and `maintainability` acquittals (five rows, then one) and each returned `clean verdict stands`; the verifier's attack-depth rule gives such rows a one-citation check, so the batch bought little, and the #202 record itself says the rule changed exposure only, found no eligible regression comparison, and measured cost ratios of 1.613 and 2.754 against the control.
+
+`SKILL.md` step 3 now defines an **attackable** row — any `kind` but `maintainability` or `requirement`, or a row the reviewer marks `attackable: true` because its acquittal rests on a safety premise — and dispatches the no-material-survivor batch only when the ledger holds one. The follow-up attack after reconciliation takes the same condition; a refuted material candidate is attackable by kind, so refuting the last material finding still triggers it. `compose_review.py` refuses `not-required` only when no material survivor remains and an attackable row exists.
+
+| Ledger with no material survivor | Under `v5b-21` | Under `v5b-22` |
+| --- | --- | --- |
+| Empty | Initial clean-verdict batch; conclusion covers the empty ledger | No batch; `not-required` |
+| Only `maintainability` and `requirement` acquittals on cited facts | Initial clean-verdict batch | No batch; `not-required`; the Coverage line says so |
+| Same, one row marked `attackable` for a safety premise | Initial clean-verdict batch | Unchanged |
+| Any `bug`, `concurrency`, `invariant`, `security`, `compatibility`, or `performance` row | Initial clean-verdict batch | Unchanged |
+| Hygiene survivors beside an attackable acquittal | Complete ledger attached or its own batch | Unchanged |
+| Verdicts refute the last material finding | Follow-up attack over the updated ledger | Unchanged: the refuted row is attackable by kind |
+
+**What is forgone.** The verifier's one-citation check on `maintainability` and `requirement` acquittals that assert no safety premise. The five-step attack is never forgone: every row that qualifies for it is attackable by kind or by the reviewer's mark. Related-acquittal mode, the one-initial-plus-one-follow-up cap, reconciliation, and every admission and rendering rule are unchanged.
