@@ -185,8 +185,9 @@ dispatched; and with no material survivor -- a ``must-fix`` at any kind, a
 reviewer marks ``"material": true`` because its claim is an externally
 observable compatibility break under another kind -- and at least one
 *attackable* ledger row -- any ``kind`` but ``maintainability`` or
-``requirement``, or a row the reviewer marks ``"attackable": true`` because
-its acquittal rests on a safety premise -- the clean verdict is ``stands``
+``requirement``, any row a verifier ``refuted`` whatever its kind, or a row
+the reviewer marks ``"attackable": true`` because its acquittal rests on a
+safety premise -- the clean verdict is ``stands``
 over a recorded batch or ``outstanding``, never ``not-required``; with no
 attackable row, an empty ledger included, ``not-required`` is the only
 consistent value short of a recorded batch. ``routed.unresolved`` and
@@ -238,7 +239,7 @@ REQUIREMENT_DISPOSITIONS = ("met", "partial", "not-verifiable")
 VERIFICATIONS = ("independent-confirmed", "primary-confirmed")
 MANDATORY_KINDS = ("security", "compatibility")
 MATERIAL_CONSIDER_KINDS = ("bug", "compatibility", "concurrency", "invariant", "security", "performance")
-UNATTACKABLE_KINDS = ("maintainability", "requirement")  # a row of these kinds is attackable only when marked
+UNATTACKABLE_KINDS = ("maintainability", "requirement")  # a row of these kinds is attackable only when refuted or marked
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
 EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "failed", "unavailable")
 CLEAN_VERDICTS = ("stands", "outstanding", "not-required")
@@ -948,7 +949,7 @@ def read_record(
         material = material or (row.get("material") is True and row["disposition"] == "survivor")
         if "attackable" in row and not isinstance(row["attackable"], bool):
             report.add(where, "schema", "`attackable` must be a boolean when present")
-        attackable = attackable or row["kind"] not in UNATTACKABLE_KINDS or row.get("attackable") is True
+        attackable = attackable or row["kind"] not in UNATTACKABLE_KINDS or row["disposition"] == "refuted" or row.get("attackable") is True
     rendered: dict[str, tuple[str, dict[str, Any]]] = {f["id"]: ("finding", f) for f in findings}
     rendered.update({q["id"]: ("question", q) for q in questions})
     confirmed = False

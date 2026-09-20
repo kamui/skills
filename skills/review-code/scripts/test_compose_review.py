@@ -359,6 +359,16 @@ def implementation_gate() -> None:
                                {"id": "queue/empty-pop", "kind": "bug", "disposition": "dropped", "evidence": "src/queue.ts:19"}]})
     refused(attackable, "verification", "clean review with an attackable acquittal and no clean-verdict attack", "--profile", "implementation-gate",
             needle="clean_verdict")
+    # A verifier-refuted must-fix requirement finding is attackable whatever its kind: the follow-up attack stays owed.
+    refuted = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
+                        "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
+                            {"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "refuted",
+                             "evidence": "src/retry-policy.ts:18 already reuses the key"}]})
+    refused(refuted, "verification", "refuted requirement blocker without a follow-up clean-verdict attack", "--profile", "implementation-gate",
+            needle="clean_verdict")
+    refuted["record"]["verification"] = {"batches": [batch_paths("initial"), batch_paths("follow-up")], "follow_up_spent": True,
+                                         "clean_verdict": "stands", "outstanding": []}
+    gate(refuted, "refuted requirement blocker with the follow-up attack recorded")
     hygiene = mutate(**{"findings": [consider()], "questions": [], "observations": [], "summary.status": "Approved"})
     hygiene["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "maintainability", "disposition": "survivor",
                                                   "verification": "primary-confirmed", "evidence": "src/payments.ts:50"},
