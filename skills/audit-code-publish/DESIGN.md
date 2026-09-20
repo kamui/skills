@@ -890,3 +890,15 @@ The opening reads `references/finding-format.md` before anything else, and step 
 One term, "posting identity", meant both *who writes to the forge* and *whose prior reviews count as prior state*. A reviewing GitHub App splits those: the human still authors commits, the pull request, replies and addressing summaries, while the review publishes as the app. This audit's duplicate gate therefore selects its candidate prior review from the **reviewer identity**, and `scripts/review_identity.py` matches logins with a trailing `[bot]` ignored on both sides, because REST reports the app as `nitpikbot[bot]` where the GraphQL packet reports `nitpikbot`. Without that, the app's own prior audit is invisible and every re-audit restarts as a first one. Each block that writes a review acquires the app token in the invocation that writes, and every addressing write stays the authenticated user's. The app is optional and declared per repository in `docs/agents/issue-tracker.md`; with none declared, or with the runner absent or unable to authenticate, the reviewer identity is the authenticated user and every path behaves exactly as before.
 
 **Release change: `v2b-6` → `v2b-7`.** Admission, verification, rendering, and the finder and verifier grammars are unchanged; what changed is which prior reviews the duplicate gate recognizes as this reviewer's, which is state semantics. `references/input-identity.md` now requires the trailer to read `workflow=v2b-7`, so a `v2b-6` trailer no longer suppresses. The paired routine release is `v5b-18`. One fresh audit per open pull request at its next run is accepted.
+
+## Manifest before continuation pages (issue #258)
+
+The changed-file manifest needs only the pinned `baseRefOid` and `headRefOid` the root query returns, so step 1 now builds it immediately after that query succeeds and before any continuation page, instead of after the packet is normalized. It is the same `git diff <base>...<head> --name-status` command, run once; nothing is dispatched there, and the shared block, guidance closure, fingerprint, and duplicate gate keep their places before the finders. This is a reordering of one mechanical command, not a consolidation: the invocation count is unchanged and no time, cost, or quality effect is claimed.
+
+**Identifier retained: `v2b-7`.** Admission, verification, rendering, the finder and verifier grammars, and the duplicate gate are unchanged.
+
+Counts use `wc -w` and `wc -c` on `origin/main` at `22ebf36` and on this change.
+
+| Instruction | Before words / bytes | After words / bytes |
+| --- | ---: | ---: |
+| `SKILL.md` | 5,552 / 36,912 | 5,591 / 37,180 |
