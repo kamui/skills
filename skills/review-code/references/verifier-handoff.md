@@ -29,7 +29,7 @@ Write one JSON object per model-selected batch; `python3 scripts/build_verifier_
 }
 ```
 
-`phase` is `initial` or `follow-up`. `mode` is `candidate-only` (nonempty candidates, no ledger rows), `complete-ledger` (the full ledger, including empty), or `related-acquittal` (the explicitly selected rows). Either ledger mode permits candidates beside its rows or no candidates. Keep stable finding IDs unchanged. The builder does not infer mode, material survivors, or which follow-up work is eligible.
+`phase` is `initial` or `follow-up`. `mode` is `candidate-only` (nonempty candidates, no ledger rows), `complete-ledger` (the full ledger; the builder accepts an empty one, though step 3 never dispatches it), or `related-acquittal` (the explicitly selected rows). Either ledger mode permits candidates beside its rows or no candidates. Keep stable finding IDs unchanged. The builder does not infer mode, material survivors, or which follow-up work is eligible.
 
 Each candidate requires `id`, `kind`, `priority`, `action`, `title`, `claim`, `trigger`, `impact`, `change`, `anchor`, `evidence`, and `ranges`. Strings retain their exact content. Kinds and actions are the review record's vocabulary; priority is P0–P3. `anchor` uses the private record's object: `type: line`, `path`, positive `start_line`, `end_line`, and `side: LEFT|RIGHT|UNKNOWN`; a file anchor uses `type: file`, `path`, and optional `side`. Optional `fix` is the existing `path:line` string. `evidence` is a nonempty array of evidence objects as defined in [verifier-return.md](verifier-return.md). `ranges` maps `anchor` and, if present, `fix` to those evidence objects: preserve the `review_context.py` range lines and their coordinates, or name unavailable ranges explicitly.
 
