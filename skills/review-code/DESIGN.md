@@ -1035,7 +1035,7 @@ On a pull-request first review, step 1 fetched the root page in one invocation a
 
 **Unchanged paths.** A supplied phase-1 packet replaces the fetch and runs neither the guard nor the build. A re-review always defers, since the identity's prior state is on the page, so the duplicate-review shortcut still precedes any build and the `--prior-head` and `--base-ref` build is untouched. A root-query failure prints the saved response and stops with the fetch's exit status; a build failure prints the build's stdout and stderr and stops with its status, which is the existing non-zero-exit rule for that script.
 
-**Instruction replay.** Desk replays of the revised text against each acceptance criterion; the block cases are executed by `test_command_chains.py` under every available shell.
+**Instruction replay.** Desk replays of the revised text against each acceptance criterion; the block cases are executed by `test_command_chains.py`, the proven-first-review, prior-review, failed-root-query, and failed-build cases under every available shell and the remaining deferral cases under `sh`.
 
 | Case | Rule that decides it | Outcome |
 | --- | --- | --- |
@@ -1060,4 +1060,4 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `22ebf36` and on this change.
 | Instruction | Load | Before words / bytes | After words / bytes |
 | --- | --- | ---: | ---: |
 | `SKILL.md` | Startup | 5,744 / 39,418 | 5,842 / 40,011 |
-| `references/pull-request-target.md` | Pull request, step 1 | 943 / 7,182 | 1,593 / 12,613 |
+| `references/pull-request-target.md` | Pull request, step 1 | 943 / 7,182 | 1,591 / 12,613 |
