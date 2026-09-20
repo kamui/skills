@@ -1,6 +1,6 @@
 # Re-review and prior state
 
-Read at local-session start for snapshot lifetime, on a requested local-session recheck, or when `SKILL.md` step 1 finds prior state from the reviewer identity. It owns review state across heads: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the review record's `disputed` status input and rendering.md's `Disputed` and `Prior findings` sections.
+Read at local-session start for snapshot lifetime, on a requested local-session recheck, or when `SKILL.md` step 1 finds prior state from the reviewer identity: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the `disputed` status input and the `Disputed` and `Prior findings` summary sections.
 
 ## Prior-state sources
 
@@ -46,28 +46,7 @@ A delta review's summary names the delta range (`<prior head>..<head>`) in its f
 
 ## Replies and prior state
 
-Read replies as prose first. Recognize these visible dispositions when present:
-
-| Disposition | Meaning | Required evidence |
-| --- | --- | --- |
-| `implemented` | the requested change was made | what changed, commit, verification |
-| `already-addressed` | current code already satisfies it | the decisive location or behavior |
-| `answered` | a question was resolved without code | the answer and its source |
-| `declined` | the author intentionally leaves it unchanged | technical or product rationale |
-| `needs-info` | action needs a missing answer | the smallest focused question |
-| `blocked` | the change is warranted but cannot proceed | blocker and next step |
-
-An agent reply may carry this optional trailer:
-
-```markdown
-**Implemented** in `9f1e0aa` — retries now reuse the logical charge's key.
-
-**Verification:** `pnpm test payments` passes with a timeout-after-commit case.
-
-<!-- reply to=payments/retry-idempotency disposition=implemented head=9f1e0aa0b1c2d3e4f5061728394a5b6c7d8e9f01 -->
-```
-
-Never require or add a trailer on a human's behalf. Verify replies against current code. A reply states intent; it does not prove outcome.
+Read replies as prose first. An addresser reply may state a disposition — `implemented`, `already-addressed`, `answered`, `declined`, `needs-info`, or `blocked` — with its evidence, and an agent reply may end with the trailer `<!-- reply to=<stable id> disposition=<disposition> head=<full SHA> -->`. Never require or add a trailer on a human's behalf. Verify replies against current code. A reply states intent; it does not prove outcome.
 
 On re-review, classify each prior item as `fixed`, `accepted`, `obsolete`, `still-open`, or `not-verifiable`. For packet prior state, retain each item's thread node id with its classification for the caller's thread actions; `review-code` does not mutate forge thread state. `Accepted` means the rereviewer verified that technical evidence makes the finding fail the rubric, or an authorized human explicitly accepted the residual risk; the author's `declined` disposition alone is not acceptance. Keep the other states open; for packet prior state, draft a reply for the existing thread rather than creating a duplicate, and the caller posts it. A declined item that remains after one verified re-review becomes `disputed`; list it for a person and stop re-posting it.
 

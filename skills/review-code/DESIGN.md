@@ -1079,3 +1079,23 @@ Counts use `wc -w` and `wc -c` on `origin/main` at `22ebf36` and on this change.
 | Verdicts refute the last material finding | Follow-up attack over the updated ledger | Unchanged: a refuted row is attackable whatever its kind |
 
 **What is forgone.** The verifier's one-citation check on `maintainability` and `requirement` acquittals that assert no safety premise. The five-step attack is never forgone: every row that qualifies for it is attackable by kind, by refutation, or by the reviewer's mark. Related-acquittal mode, the one-initial-plus-one-follow-up cap, reconciliation, and every admission and rendering rule are unchanged.
+
+## Runtime references carry reviewer text only (user request, 2026-09-20)
+
+**Workflow retained: `v5b-22`.** No admission, verification, rendering, or state rule changes. This is the first of the prose-eviction changes the 2026-09-20 analysis ranked; the pull-request eligibility guard extraction and the professional-defaults trim follow separately, and session mode awaits a product decision.
+
+Every paragraph of the runtime set was sorted by who consumes it: the reviewer at run time, a script, a maintainer, or the isolated verifier. Text whose only consumer is a script or a maintainer moved to the script's docstring or `--help`, to this file, or out of the package. The Rule ownership table above stays the maintainers' map of where each rule lives; the runtime documents no longer restate it.
+
+| Removed from | What it was | Where it lives now |
+| --- | --- | --- |
+| `rendering.md` | Rendered finding, question, observation, and summary templates; three overlapping inventories of what the composer renders, what it refuses, and what `validate_review.py` checks; the link-format rules and the `summary-reference` rule's failure cases; the deferred rename-link design note | `compose_review.py --example` piped through the composer prints the rendered result; the scripts print each violation by rule name; the design note is this file's #84 section |
+| `rendering.md`, kept | Authored `Source` coordinate forms; the `Intent`, `Issue fit`, and `Coverage` line rules; status paragraph and section order; the 200-word budget; file-anchor `side` derivation from the pinned manifest; the store checks; comment repair | In place, under shorter headings |
+| `verifier-handoff.md` | Field-by-field candidate and ledger-row schema; the builder's inclusion inventory | `build_verifier_prompt.py --example`; the builder refuses by field. The `test_evidence` projection rule, the `sources` rule, the conformance and released-compatibility inputs, and the compact row form stay |
+| `review-rubric.md` | YAML survivor record and file-anchor example | One sentence naming the survivor's fields; `build_verifier_prompt.py --example` prints them |
+| `re-review.md` | Addresser disposition table and reply-trailer example | One sentence naming the six dispositions and the trailer; the prior-item trailer the reviewer writes stays as a block |
+| `review-record.md` | Ownership pointers to `rendering.md` and `re-review.md`; the Replies and prior state pointer section; the implementation-gate record's field-by-field contents | The Rule ownership table; `compose_review.py --example --profile implementation-gate` |
+| `SKILL.md` | Ownership bullets in the opening; `--from`/`--path`/`--chunk` recovery detail; the step-5 restatement of the composer's validation and promotion mechanics | `review_context.py --help`; the two step-5 blocks are byte-unchanged and `test_command_chains.py` still extracts them |
+| `local-targets.md` | `GIT_INDEX_FILE` snapshot mechanics, clean-filter note, `gc.pruneExpire` note | `review_context.py`'s docstring and `docs/agents/scripts.md`; the submodule and coverage rule stays |
+| `pull-request-target.md` | `fullDatabaseId`/`databaseId` fallback and `lastEditedAt` note | `forge_packet.py` normalizes both ids; `re-review.md` states the timestamp semantics |
+
+**Bytes** (`wc -c` on `origin/main` at `bb88d7a` against this change): always-loaded set `SKILL.md` + rubric + record + `rendering.md` 105,209 → 92,660; `verifier-handoff.md` 10,450 → 9,346; `re-review.md` 13,185 → 12,424; `local-targets.md` 8,593 → 8,288; `pull-request-target.md` 12,904 → 12,566. Not removed: pointers that load a conditional reference or carry an ordering constraint, every rule tied to an issue in this file, the professional-defaults sections, and session mode.

@@ -8,6 +8,12 @@ that touched each changed path. It never calls `gh` or prints a whole file.
 With --worktree it writes unreferenced loose objects and a temporary index,
 leaving the real index, refs, and working files unchanged; configured clean
 filters run (including on untracked files) and retain their normal side effects.
+The temporary GIT_INDEX_FILE is seeded with ``git read-tree HEAD``, then ``git
+add -A``, ``git write-tree``, and ``git commit-tree``, so working files win over
+staging (staged deletions with the file still on disk, staged-then-edited
+files); submodules enter as gitlinks at their checked-out commits. The snapshot
+objects survive the configured ``gc.pruneExpire`` but ``git gc --prune=now``
+can remove them; the saved record keeps the snapshot identity and manifest.
 
 Usage:
     python3 scripts/review_context.py --worktree [--merge-base SHA] [--parent SHA] [--json]
