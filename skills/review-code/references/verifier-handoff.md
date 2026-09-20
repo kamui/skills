@@ -1,6 +1,6 @@
 # Mechanical verifier handoff
 
-Read when step 3 selects a verifier batch. The primary owns eligibility, relatedness, phase, and the one-initial-plus-one-follow-up cap in `SKILL.md`; these commands perform no dispatch or review judgment. Scripts and references are installed within this skill, with no audit-skill dependency.
+Read when step 3 selects a verifier batch. These commands perform no dispatch or review judgment; eligibility, relatedness, phase, and the batch cap stay with `SKILL.md` step 3.
 
 ## Isolation
 
@@ -10,28 +10,9 @@ The generated brief is the worker's complete instruction set: it embeds the veri
 
 ## Build input
 
-Write one JSON object per model-selected batch; `python3 scripts/build_verifier_prompt.py --example` prints a minimal input and ledger row. Keep the authoritative **full candidate disposition ledger** separately as a JSON array of rows. `--ledger` reads that full ledger, not a selected copy. The builder selects the explicitly listed IDs from it and projects allowed fields; in complete-ledger mode it refuses any omitted authoritative ID. In related-acquittal mode it checks the explicit selection without determining relatedness.
+`python3 scripts/build_verifier_prompt.py --example` prints the input: `run` (id, repository, and full base, head, and merge-base SHAs), `batch` (`id`, `phase` `initial` or `follow-up`, and `mode`), `run_policy`, `sources`, `candidates`, and `ledger_ids`. Keep the authoritative **full candidate disposition ledger** separately as a JSON array of rows; `--ledger` reads that full ledger, never a selected copy. The builder selects the listed IDs from it and projects allowed fields: in complete-ledger mode it refuses any omitted authoritative ID, and in related-acquittal mode it checks the explicit selection without determining relatedness. `mode` is `candidate-only` (candidates, no rows), `complete-ledger`, or `related-acquittal`; either ledger mode permits candidates beside its rows or none. The builder does not infer mode, material survivors, or which follow-up work is eligible, and refuses by field any record missing a required field or carrying a disallowed one. Keep stable finding IDs unchanged.
 
-```json
-{
-  "run": {
-    "id": "<unique private review run ID>",
-    "repository": "<absolute checkout path>",
-    "base": "<full base SHA>",
-    "head": "<full head SHA>",
-    "merge_base": "<full merge-base SHA>"
-  },
-  "batch": {"id": "<unique batch ID within run>", "phase": "initial", "mode": "candidate-only"},
-  "run_policy": "<focused-test run policy, including any tighter limits or no execution>",
-  "sources": [{"coordinate": "<issue/spec or base-branch rule coordinate>", "text": "<raw source>"}],
-  "candidates": [],
-  "ledger_ids": []
-}
-```
-
-`phase` is `initial` or `follow-up`. `mode` is `candidate-only` (nonempty candidates, no ledger rows), `complete-ledger` (the full ledger; the builder accepts an empty one, though step 3 never dispatches it), or `related-acquittal` (the explicitly selected rows). Either ledger mode permits candidates beside its rows or no candidates. Keep stable finding IDs unchanged. The builder does not infer mode, material survivors, or which follow-up work is eligible.
-
-Each candidate requires `id`, `kind`, `priority`, `action`, `title`, `claim`, `trigger`, `impact`, `change`, `anchor`, `evidence`, and `ranges`. Strings retain their exact content. Kinds and actions are the review record's vocabulary; priority is P0–P3. `anchor` uses the private record's object: `type: line`, `path`, positive `start_line`, `end_line`, and `side: LEFT|RIGHT|UNKNOWN`; a file anchor uses `type: file`, `path`, and optional `side`. Optional `fix` is the existing `path:line` string. `evidence` is a nonempty array of evidence objects as defined in [verifier-return.md](verifier-return.md). `ranges` maps `anchor` and, if present, `fix` to those evidence objects: preserve the `review_context.py` range lines and their coordinates, or name unavailable ranges explicitly.
+A candidate carries the survivor record's fields; `evidence` is a nonempty array of evidence objects as [verifier-return.md](verifier-return.md) defines them, and `ranges` maps `anchor` and, if present, `fix` to those objects: preserve the `review_context.py` range lines and their coordinates, or name unavailable ranges explicitly. A ledger row is the compact form: `id`, `kind`, one-line `claim`, one-word `disposition`, one-line `falsification` preserving any refutation basis, safety scope, and unresolved settling fact, and one decisive `evidence` object; compact survivor records into this form too when supplying the complete ledger. The builder never derives a falsification reason from private support.
 
 Optional `test_evidence` is an array of `{command, head, exit_status, output}` for focused checks the claim relies on: strings except integer `exit_status`; `head` must equal the pinned head and `output` carries decisive raw lines. An unavailable check is `{unavailable: "<reason>"}`. Preserve the command's test identity. Empty or omitted test evidence makes no assertion that execution ran.
 
@@ -45,9 +26,7 @@ Candidates and ledger rows may additionally carry:
 - `conformance`: `{coordinate, version, artifact, consumer_sites}`; the last two are nonempty evidence arrays with the pinned artifact version/delta location, artifact-side citation, and inspected consumer definitions/aliases/re-exports/conditional sites (or the search and sites that supplied nothing). Required for an `artifact-` requirement source. The builder includes the conformance verifier procedure.
 - `released_compatibility`: `{coordinate, promise, scope, documentation, tests, callers, release_decision}`. The last four are nonempty evidence arrays, including unavailable inputs. Supply this for every promised released-contract candidate or row; semantic applicability belongs to the primary. The builder includes the rubric's Released compatibility procedure.
 
-The builder includes the concurrency reference only for a `concurrency` or `invariant` candidate and the check-evidence rules only when a record carries `test_evidence`. It always includes the verifier procedure, return encoding, focused-test safety bounds, and supplied run policy. A source entry with `unavailable` may retain its known `coordinate`; name the missing source and what could supply it.
-
-Projection constructs every nested object from allowed fields. Private `support`, confidence, conclusions, and narrative argument fields are omitted; it never deletes matching words from evidence or rewrites claims. The model must put raw sources and compact scoped falsification reasons in the documented fields, not smuggle persuasion into them. An allowlist cannot judge prose.
+A source entry with `unavailable` may retain its known `coordinate`; name the missing source and what could supply it. Projection omits private `support`, confidence, conclusions, and narrative argument fields, and never deletes matching words from evidence or rewrites claims. Put raw sources and compact scoped falsification reasons in the documented fields, not persuasion; an allowlist cannot judge prose.
 
 ## Commands and artifacts
 
