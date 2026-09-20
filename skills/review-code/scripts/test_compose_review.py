@@ -912,6 +912,12 @@ def main() -> int:
     print("ok input: unreadable input exits 2, non-object exits 1")
     local_targets()
     implementation_gate()
+    for profile in ("publishable", "implementation-gate"):
+        shown = run(COMPOSER, "", "--example", "--profile", profile)
+        assert shown.returncode == 0 and shown.stderr == "", ("example", profile, shown.stderr)
+        example = run(COMPOSER, shown.stdout, "--profile", profile)
+        assert example.returncode == 0, ("example composes", profile, example.stdout)
+    print("ok example: --example prints a composition that composes under both profiles")
     return 0
 
 
