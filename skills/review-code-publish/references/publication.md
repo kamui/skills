@@ -85,7 +85,7 @@ GitHub's separate review-comment endpoint documents `subject_type: "file"`, but 
 
 ### Freshness and review submission
 
-Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it, and `ev` is empty when the record carries no `run_events.py` path:
+Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it, and `ev` is empty when the record names no skill root:
 
 ```sh
 d=<private-dir> ev=<skill-root>/scripts/run_events.py pr=<pr> reviewed=<reviewed head>
@@ -155,7 +155,7 @@ Write `<private-dir>/writes.jsonl` once from the completed record, one JSON obje
 
 ### Thread write loop
 
-Run as one shell invocation after replacing `<private-dir>` and `<pr>`; `ev` is empty when the record carries no `run_events.py` path:
+Run as one shell invocation after replacing `<private-dir>` and `<pr>`; `ev` is empty when the record names no skill root:
 
 ```sh
 d=<private-dir> pr=<pr>

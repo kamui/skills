@@ -46,7 +46,7 @@ Count that authorization as spent on dispatch, including a failed or incomplete 
 
 ## Validate every amendment
 
-After each amendment, derive the session status under `review-record.md`, retaining stable ids and the pinned code identity. Update the session copy of the authoritative composition fields and authored prose under `rendering.md`; keep layer coordinates in its private companion. Use step 5's composer, validation/render, and batch-emission procedure with the recorded absolute scripts and store, staging each revision at new private paths and making it current only after every command exits 0. Preserve the original artifacts and prior trailers. An amendment that closes a private ledger row may leave the rendered fields unchanged; it still requires recomposition and validation.
+After each amendment, derive the session status under `review-record.md`, retaining stable ids and the pinned code identity. Update the session copy of the authoritative composition fields and authored prose under `rendering.md`; keep layer coordinates in its private companion. Use step 5's composer, validation/render, and batch-emission procedure with the scripts under the recorded skill root and the store, staging each revision at new private paths and making it current only after every command exits 0. Preserve the original artifacts and prior trailers. An amendment that closes a private ledger row may leave the rendered fields unchanged; it still requires recomposition and validation.
 
 On a non-zero exit, report the violations, repair the composition input, and repeat that procedure. An unresolved failure returns `script-failure`; retain the last valid session record and mark the attempted amendment pending, never present an unvalidated revision as current.
 
