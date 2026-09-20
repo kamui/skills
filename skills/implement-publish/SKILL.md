@@ -42,30 +42,30 @@ Finish with committed changes and recorded verification results. Keep implementa
 
 ### 4. Review before publishing
 
-Spawn one resumable **general-purpose** reviewer capable of dispatching a verifier. Give it a fresh context with no implementation conversation, using `fork_turns="none"` or equivalent. Report the selected tier.
+Before dispatching any review or continuation, choose an **awaited** route that returns its completed result while this step stays active, without changing global runtime settings. An acknowledgment is not completion; never hand back with a phase pending. If no route exists, stop before dispatch with `review-wait-unavailable`, naming the phase, missing operation and pending work. Failed or partial reviews instead follow the coverage gate below.
 
-Every review and continuation must use an **awaited** route that delivers its completed result while this step stays active: foreground dispatch (`run_in_background: false` or equivalent), blocking continuation, supported join, or runtime-managed suspension that resumes this step without a final hand-back. Acknowledgments, agent ids, pending notices, and delays do not establish completion. Choose the route before dispatch from available tools or established host behavior, without changing global runtime settings. Name each phase's actual host operation in the final report. If no awaited route exists, stop before dispatch with `review-wait-unavailable`, naming the phase, missing operation, and pending work. Handing back with a phase pending fails this step. Failed or partial reviews follow the coverage rules below, not this unavailable-route stop.
+Spawn one resumable **general-purpose** reviewer capable of dispatching a verifier, with a fresh context excluding the implementation conversation (`fork_turns="none"` or equivalent). Brief it to:
 
-Brief the reviewer to invoke `review-code` with `mode: one-shot` and `profile: implementation-gate` on the range from the base to the committed head, passing every spec source resolved in step 1 as the user-supplied spec. Require the complete output defined in its Return section, including `record.json` and the paths needed to resume. Supply target refs, leaving context construction, review execution, and artifact generation to `review-code` under its own rules.
+- Invoke `review-code` with `mode: one-shot` and `profile: implementation-gate`, reviewing the base-to-committed-head range with explicit refs and every spec source from step 1 as user-supplied specs.
+- Use step 3's saved verification results and missing required evidence, passing checks as caller-supplied check evidence. Supply observations and artifact references without implementation rationale or correctness claims.
+- Return the complete output defined in `review-code`'s Return section, including `record.json` and continuation paths. Keep the verification results' path with the review record.
 
-Give the reviewer the saved verification results and missing required evidence. Pass checks as `review-code`'s caller-supplied check evidence. Include observations and artifact references without implementation discussion or correctness claims. The reviewer validates results it relies on and reports material verification gaps. Keep the results' path with the review record so another reviewer can continue.
+Evaluate findings against the code and spec. Treat `must-fix` as blocking and `consider` as optional. Report coverage gaps and unresolved questions. Fix warranted defects, verify under step 3 and commit. Give evidence-based reasons for declining findings; disputed blockers remain unresolved.
 
-Read the returned review. Treat every `must-fix` finding as blocking and every `consider` finding as optional; report coverage gaps and unresolved questions. Evaluate every finding against the code and spec. Fix warranted defects, verify them under step 3's rules, and commit the fixes. Record an evidence-based reason for declining a finding; a disputed blocking defect remains unresolved.
+After committing fixes, read and follow [the continuation procedure](references/continuation.md) before choosing or dispatching the next phase, and include it in the continuation brief.
 
-After committing fixes, read and follow [the continuation procedure](references/continuation.md) before choosing or dispatching the next reviewer phase. Include that reference in the continuation brief.
-
-Publish only after review covers the final committed head with no blocking defects or material coverage gaps. Any later commit requires review. If an isolated reviewer is unavailable or a blocker remains unresolved, report it and stop before publishing. Hand back the review results only after step 5 pushes the reviewed head and its pull request exists.
+Require review of the final committed head with no blocking defects or material coverage gaps; any later commit requires review. If isolated review is unavailable or this gate remains unmet, report why and stop before publishing. Otherwise proceed through step 5 before returning.
 
 ### 5. Open the pull request
 
-Use the resolved forge's available CLI, API, or integration. Push the reviewed head through its supported workflow, then find any open pull request matching the source repository and branch and target repository and branch. Update its body if one exists; otherwise create one with a title and body. End with exactly one pull request at the reviewed head. Its body must:
+Using the resolved forge's tools, push the reviewed head and find an open pull request matching both source and target repositories and branches. Update its body if found; otherwise create one with a title and body. Finish with exactly one pull request at the reviewed head. Its body must:
 
 - summarize the change;
-- link every issue resolved in step 1 with its disposition: **closes**, using supported automatic closure on merge when available and noting when unavailable; **partially implements**, naming what remains open; or **affects**, stating how. For a spec outside the forge, name and link it;
-- summarize verification results and remaining gaps, sharing head and input state across checks and acceptance observations where they match. Identify each acceptance criterion and keep historical results attributed to their original head.
+- link every issue from step 1 as **closes**, **partially implements** with remaining work, or **affects** with its impact. For closure, use supported automatic closure on merge or note its unavailability. Name and link external specs;
+- summarize step 3's verification results and gaps, identifying acceptance criteria and preserving each result's head and input state, shared where they match.
 
-Leave issue status, labels, and assignees alone.
+Leave issue status, labels and assignees alone.
 
-Attempt each write once; on an ambiguous result read the target before a single retry, then report the failure rather than writing again.
+Attempt each write once; on an ambiguous result read the target before a single retry, then report unresolved failure rather than writing again.
 
-Finish with the pull request link, head SHA, branch, spec source, review outcome, the host operation each reviewer phase ran on, any remaining optional findings, and anything that failed.
+Finish with the pull request link, head SHA, branch, spec source, review outcome, remaining optional findings and anything that failed.
