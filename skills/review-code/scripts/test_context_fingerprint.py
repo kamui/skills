@@ -422,7 +422,18 @@ def case_errors() -> None:
     expect_error("payload is not JSON", None, "", dumps="{not json")
 
 
+def case_example() -> None:
+    shown = subprocess.run([sys.executable, str(SCRIPT), "--example"], capture_output=True, text=True, encoding="utf-8", check=False)
+    if shown.returncode != 0 or shown.stderr:
+        fail("example", f"--example exited {shown.returncode}: {shown.stderr.strip()}")
+        return
+    value = digest("example digests", json.loads(shown.stdout))
+    if value is not None and value != digest("example again", json.loads(shown.stdout)):
+        fail("example", "the printed example does not digest deterministically")
+
+
 CASES = (
+    case_example,
     case_key_order_invariance,
     case_type_normalization,
     case_absent_fields_normalize,

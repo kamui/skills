@@ -31,6 +31,7 @@ Usage::
     python3 scripts/compose_review.py --store <dir>/review-context-<head>.json composition.json > payload.json
     python3 scripts/compose_review.py --profile implementation-gate --store <store> composition.json > record.json
     python3 scripts/compose_review.py - < composition.json
+    python3 scripts/compose_review.py --example [--profile implementation-gate]   # print a minimal input
 
 Exit codes: ``0`` the composed payload validated and was printed as JSON;
 ``1`` one or more violations, one line each as ``<location>: <rule>:
@@ -1163,6 +1164,69 @@ def load_json(path: str, what: str) -> Any:
         raise SystemExit(2)
 
 
+def example_composition(profile: str) -> dict[str, Any]:
+    """The docstring's example as a composition input; ``--example`` prints it and it composes at exit 0."""
+    head, base, merge_base = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678", "b2c3d4e5f60718293a4b5c6d7e8f90123456789a", "d4e5f60718293a4b5c6d7e8f90123456789abcde"
+    finding = {
+        "id": "payments/retry-idempotency", "title": "Preserve the idempotency key across retries",
+        "priority": "P1", "action": "must-fix", "kind": "requirement",
+        "trigger": "The server commits a charge but its response times out and the client retries.",
+        "impact": "The retry uses a new idempotency key and can submit a second charge.",
+        "change": "In `src/retry-policy.ts`, reuse one idempotency key across every attempt for the same logical charge.",
+        "source": "Issue #123, acceptance criterion 2.",
+        "anchor": {"type": "line", "path": "src/payments.ts", "start_line": 42, "end_line": 42, "side": "RIGHT"},
+        "fix": {"path": "src/retry-policy.ts", "start_line": 18},
+    }
+    composition: dict[str, Any] = {
+        "run": {"head": head, "base_ref": "main", "base_sha": base, "merge_base": merge_base,
+                "context": "91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e",
+                "issues": ["acme/payments#123"], "coverage": "complete", "merged": False},
+        "summary": {"status": "Changes Requested",
+                    "intent": "Add retries for charge submission without changing payment semantics.",
+                    "issue_fit": "Partial — retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open.",
+                    "coverage": "Complete merge-base diff reviewed; payment callers inspected; focused `retry-policy` test run once at the head: pass."},
+        "findings": [finding],
+        "questions": [{"id": "queue/retry-order", "title": "Must retries preserve request order?",
+                       "evidence": "The new queue retries at the tail, while existing callers consume it as FIFO. The issue, tests, and history do not establish whether reordering is allowed.",
+                       "why_it_matters": "The answer determines whether this is a merge-blocking regression.",
+                       "answer": "Confirm whether retry order is part of the contract; the maintainer answer settles whether the candidate should re-open as a finding.",
+                       "anchor": {"type": "file", "path": "src/queue.ts", "side": "RIGHT"}}],
+        "observations": [{"fact": "The first configuration sentence covers same-shard re-points more broadly than the implementation does.",
+                          "evidence": "`redis.conf:1903`, `src/replication.c:2701`."}],
+    }
+    if profile == "publishable":
+        composition["run"]["repository_url"] = "https://github.com/acme/payments"
+        return composition
+    composition["run"].update({"target_kind": "range", "target": "main...HEAD", "change_description": "Add retries for charge submission",
+                               "specs": ["/abs/path/to/spec.md"]})
+    private = "/tmp/review-code-XXXXXX"
+    composition["record"] = {
+        "repository": "/abs/path/to/checkout",
+        "paths": {"private_dir": private, "store": f"{private}/review-context-{head}.json",
+                  "composition": f"{private}/composition.json", "addenda": f"{private}/addenda",
+                  "skill_root": "/abs/path/to/skills/review-code", "evidence_packet": "/abs/path/to/results.md",
+                  "spec": "/abs/path/to/spec.md"},
+        "ledger": {
+            "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
+                              "evidence": "src/payments.ts:42 creates a key per attempt"}],
+            "candidates": [{"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "survivor",
+                            "verification": "independent-confirmed", "evidence": "src/payments.ts:42"},
+                           {"id": "queue/retry-order", "kind": "bug", "disposition": "question", "evidence": "src/queue.ts:7"},
+                           {"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped",
+                            "evidence": "src/retry-policy.ts:20 bounds the budget"}],
+        },
+        "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/queue.ts", "state": "reviewed"},
+                  {"path": "docs/notes.md", "state": "ignored", "reason": "generated changelog"}],
+        "check_evidence": [{"check": "pnpm test payments", "head": head, "outcome": "accepted",
+                            "reason": "same command, clean tree at the reviewed head, full output read"}],
+        "verification": {"batches": [{"name": "initial", "bundle": f"{private}/initial", "raw_return": f"{private}/initial/raw-return.json",
+                                      "accounting": f"{private}/initial/accounting.json", "operation": "Agent run_in_background=false"}],
+                         "follow_up_spent": False, "clean_verdict": "not-required", "outstanding": []},
+        "routed": {"unresolved": ["queue/retry-order"], "disputed": [], "unrecoverable_inputs": []},
+    }
+    return composition
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Compose the validator payload of a review-code review from authoritative fields and authored prose."
@@ -1178,7 +1242,11 @@ def main() -> int:
         choices=PROFILES,
         help="publishable prints the validator payload (default); implementation-gate prints one validated local record for a committed range and requires the `record` section",
     )
+    parser.add_argument("--example", action="store_true", help="print a minimal composition input for the profile, then exit")
     args = parser.parse_args()
+    if args.example:
+        print(json.dumps(example_composition(args.profile), indent=2))
+        return 0
     if args.store is not None:
         EVENT.update(event="payload-composed", store=args.store)
     composition = load_json(args.input, "composition input")

@@ -191,6 +191,27 @@ class HandoffTests(unittest.TestCase):
         self.assertNotIn("wrap --private-dir", brief)
         self.assertNotIn("Primary focused-test recording", brief)
 
+    def test_brief_is_self_contained_for_the_worker(self):
+        brief = (self.build() / "brief.md").read_text(encoding="utf-8")
+        self.assertIn("Read nothing outside this brief", brief)
+        self.assertNotIn("SKILL.md", brief)
+        self.assertNotIn("What the primary does with the return", brief)
+        self.assertNotIn("## Supplied check evidence", brief)
+        data = input_data()
+        data["candidates"][0]["test_evidence"] = [{"command": "pytest tests/test_a.py", "head": HEAD,
+                                                   "exit_status": 0, "output": "1 passed"}]
+        with_evidence = (self.build(data) / "brief.md").read_text(encoding="utf-8")
+        self.assertIn("## Supplied check evidence", with_evidence)
+        self.assertIn("A new head is an invalidation boundary", with_evidence)
+        self.assertNotIn("SKILL.md", with_evidence)
+
+    def test_example_input_builds(self):
+        result = self.run_cli("build_verifier_prompt.py", "--example")
+        example = json.loads(result.stdout)
+        example["input"]["run"]["repository"] = str(self.root)
+        bundle = self.build(example["input"], example["ledger"])
+        self.assertTrue((bundle / "brief.md").exists())
+
     def test_build_refusals(self):
         variants = []
         for repository in (".", "relative/checkout"):

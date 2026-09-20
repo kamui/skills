@@ -467,7 +467,7 @@ class Chains(unittest.TestCase):
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (block(PUBLICATION.read_text(encoding="utf-8"), "preflight failed")
                 .replace("<private-dir>", shlex.quote(str(private)))
-                .replace("<recorded-absolute-run_events.py-path>", script)
+                .replace("<skill-root>/scripts/run_events.py", script)
                 .replace("<pr>", "7").replace("<reviewed head>", fixtures.HEAD))
         if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
             marker = "tok=  #"

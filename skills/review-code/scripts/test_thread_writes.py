@@ -161,7 +161,7 @@ class Loop(unittest.TestCase):
                  launcher=False, launcher_path=LAUNCHER, cwd=None, record_context=False):
         script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (loop_block(source).replace("<private-dir>", shlex.quote(str(private))).replace("<pr>", "7")
-                .replace("<recorded-absolute-run_events.py-path>", script))
+                .replace("<skill-root>/scripts/run_events.py", script))
         if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
             marker = "tok=  #"
             self.assertIn(marker, text)

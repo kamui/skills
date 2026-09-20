@@ -49,7 +49,7 @@ Dismiss only a review this identity published. The token is computed inside that
 
 ## Timing events
 
-Run every forge fetch and write this skill makes through the `run_events.py` path the review record carries: `python3 <recorded-absolute-run_events.py-path> wrap --private-dir <private-dir> --event <event> --data role=<role> [--data connection=root] -- <command>`, where `<private-dir>` is the directory of the record's private store. Wrap each command of a chain separately so no fetch or write escapes, and keep stdout redirects outside the wrapper. The thread write loop is the one exception: its whole run is wrapped once, and the replies, resolutions, and reconciliation reads inside it are not wrapped again. A record without that path runs the same commands unwrapped.
+Run every forge fetch and write this skill makes through `run_events.py` under the skill root the review record carries: `python3 <skill-root>/scripts/run_events.py wrap --private-dir <private-dir> --event <event> --data role=<role> [--data connection=root] -- <command>`, where `<private-dir>` is the directory of the record's private store. Wrap each command of a chain separately so no fetch or write escapes, and keep stdout redirects outside the wrapper. The thread write loop is the one exception: its whole run is wrapped once, and the replies, resolutions, and reconciliation reads inside it are not wrapped again. A record without that path runs the same commands unwrapped.
 
 | Command | Event and data |
 | --- | --- |
@@ -85,10 +85,10 @@ GitHub's separate review-comment endpoint documents `subject_type: "file"`, but 
 
 ### Freshness and review submission
 
-Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it, and `ev` is empty when the record carries no `run_events.py` path:
+Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it, and `ev` is empty when the record names no skill root:
 
 ```sh
-d=<private-dir> ev=<recorded-absolute-run_events.py-path> pr=<pr> reviewed=<reviewed head>
+d=<private-dir> ev=<skill-root>/scripts/run_events.py pr=<pr> reviewed=<reviewed head>
 tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
 rm -f "$d/head.txt" "$d/review-response.json"
 forge() { # <forge-fetched|forge-written> <command...>
@@ -135,7 +135,7 @@ A `preflight failed` line with exit 3 is the freshness route: a failed, empty, m
 
 ## Authorized gating emission
 
-`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <recorded-absolute-validate_review.py-path> --emit-batch --event <REQUEST_CHANGES|APPROVE> < <private-dir>/payload.json > <private-dir>/batch.json`, replacing the advisory batch the freshness-and-submission block posts. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
+`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <skill-root>/scripts/validate_review.py --emit-batch --event <REQUEST_CHANGES|APPROVE> < <private-dir>/payload.json > <private-dir>/batch.json`, replacing the advisory batch the freshness-and-submission block posts. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
 
 On this gating path only, the script enforces the first-line grammar `**<Status>[ (advisory)]** — …`: the input advisory suffix is present exactly for `Changes Requested` or `Approved` under `COMMENT`. `APPROVE` requires `Approved`, and `REQUEST_CHANGES` requires `Changes Requested`; a mismatch exits 1. It removes the suffix and re-validates the edited body before printing. The batch is what validated after that one scripted edit. The ordinary `COMMENT` path retains its existing acceptance rules. Report the posted form from `batch.json`, not the advisory form in `payload.json`.
 
@@ -155,7 +155,7 @@ Write `<private-dir>/writes.jsonl` once from the completed record, one JSON obje
 
 ### Thread write loop
 
-Run as one shell invocation after replacing `<private-dir>` and `<pr>`; `ev` is empty when the record carries no `run_events.py` path:
+Run as one shell invocation after replacing `<private-dir>` and `<pr>`; `ev` is empty when the record names no skill root:
 
 ```sh
 d=<private-dir> pr=<pr>
@@ -445,7 +445,7 @@ while [ "$i" -lt "$n" ]; do
 done
 w summary
 SH
-ev=<recorded-absolute-run_events.py-path>
+ev=<skill-root>/scripts/run_events.py
 tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
 if [ -n "$tok" ]; then
   GH_TOKEN=$(sh -c "$tok" 2> "$d/reviewer.stderr") || GH_TOKEN=
