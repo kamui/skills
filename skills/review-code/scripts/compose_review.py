@@ -187,11 +187,11 @@ observable compatibility break under another kind -- and at least one
 *attackable* ledger row -- any ``kind`` but ``maintainability`` or
 ``requirement``, any row a verifier ``refuted`` whatever its kind, or a row
 the reviewer marks ``"attackable": true`` because its acquittal rests on a
-safety premise -- the clean verdict is ``stands``
-over a recorded batch or ``outstanding``, never ``not-required``; with no
-attackable row, an empty ledger included, ``not-required`` is the only
-consistent value short of a recorded batch. ``routed.unresolved`` and
-``routed.disputed`` name rendered or prior item ids.
+safety premise -- the clean verdict is ``stands`` over a recorded batch or
+``outstanding``, never ``not-required``; with no attackable row, an empty
+ledger included, ``not-required`` is the only consistent value short of a
+recorded batch. ``routed.unresolved`` and ``routed.disputed`` name rendered
+or prior item ids.
 
 A file anchor names its ``side`` explicitly -- ``LEFT`` for a file the change
 deletes, ``RIGHT`` for a file present at the head, ``UNKNOWN`` when the pinned
