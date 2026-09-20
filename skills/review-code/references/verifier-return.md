@@ -33,7 +33,7 @@ Optional `corrections` contains only `trigger`, `impact`, `priority`, `action`, 
 
 Ledger records require `id`, `ruling` (`holds` or `re-open`), and nonempty `evidence`. A `re-open` also requires `failed_step`, naming the contradicted/unsupported premise or missing settling fact. Its meaning is `disposition <id> does not hold; re-open it`. Neither a candidate verdict nor a batch conclusion substitutes for a row ruling.
 
-Only `complete-ledger` mode requires a `conclusion` field. Encode its one batch conclusion as `"clean verdict stands"` when every supplied ledger ruling is `holds`, or `{"re_open": ["<id>", "<id>"]}` listing exactly the re-opened ledger IDs. An empty complete ledger still returns `"clean verdict stands"`. Candidate-only and related-acquittal modes omit `conclusion`; mixed batches apply their selected ledger mode only to the ledger portion.
+Only `complete-ledger` mode requires a `conclusion` field. Encode its one batch conclusion as `"clean verdict stands"` when every supplied ledger ruling is `holds`, or `{"re_open": ["<id>", "<id>"]}` listing exactly the re-opened ledger IDs. A complete ledger is dispatched only when it holds an attackable row, so it arrives non-empty; should an empty one arrive, still return `"clean verdict stands"`. Candidate-only and related-acquittal modes omit `conclusion`; mixed batches apply their selected ledger mode only to the ledger portion.
 
 `duplicate_groups` is an array of arrays, each suggesting at least two supplied candidate IDs for merging; the primary decides. `observation` is `null` or one object with `fact` and nonempty `evidence`, subject to the reference's non-actionable aside rule. Safety assertions and ledger contradictions stay in their records, never the aside.
 
