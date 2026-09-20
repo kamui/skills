@@ -62,7 +62,7 @@ Event schema (one JSON object per line, ``format: review-run-event/1``)::
                 "implementation": "clock_gettime(CLOCK_MONOTONIC)"},
       "started_ns": 1, "ended_ns": 2,             # monotonic ns: script main entry and exit
       "ended_at": "2026-09-14T12:00:00.250000Z",  # wall clock (UTC) read with ended_ns
-      "policy": {"workflow": "v5b-21", "commit": "<sha>", "commit_source": "git:skill-root"},
+      "policy": {"workflow": "v5b-22", "commit": "<sha>", "commit_source": "git:skill-root"},
       "data": {...}
     }
 

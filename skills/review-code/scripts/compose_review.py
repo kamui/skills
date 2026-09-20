@@ -139,7 +139,7 @@ Input schema (JSON object)::
                           "verification": "independent-confirmed", "evidence": "src/payments.ts:42"},
                          {"id": "queue/retry-order", "kind": "bug", "disposition": "question", "evidence": "..."},
                          {"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped",
-                          "evidence": "src/retry-policy.ts:20 bounds the budget"}]
+                          "evidence": "src/retry-policy.ts:20 bounds the budget"}]  # optional "attackable": true, "material": true
         },
         "files": [{"path": "src/payments.ts", "state": "reviewed"},
                   {"path": "docs/notes.md", "state": "ignored", "reason": "generated changelog"}],
@@ -183,10 +183,14 @@ dispatched; and with no material survivor -- a ``must-fix`` at any kind, a
 ``consider`` of kind ``bug``, ``compatibility``, ``concurrency``,
 ``invariant``, ``security``, or ``performance``, or a ``survivor`` row the
 reviewer marks ``"material": true`` because its claim is an externally
-observable compatibility break under another kind -- the clean verdict is
-``stands`` over a recorded batch or ``outstanding``, never
-``not-required``. ``routed.unresolved`` and ``routed.disputed`` name
-rendered or prior item ids.
+observable compatibility break under another kind -- and at least one
+*attackable* ledger row -- any ``kind`` but ``maintainability`` or
+``requirement``, or a row the reviewer marks ``"attackable": true`` because
+its acquittal rests on a safety premise -- the clean verdict is ``stands``
+over a recorded batch or ``outstanding``, never ``not-required``; with no
+attackable row, an empty ledger included, ``not-required`` is the only
+consistent value short of a recorded batch. ``routed.unresolved`` and
+``routed.disputed`` name rendered or prior item ids.
 
 A file anchor names its ``side`` explicitly -- ``LEFT`` for a file the change
 deletes, ``RIGHT`` for a file present at the head, ``UNKNOWN`` when the pinned
@@ -234,6 +238,7 @@ REQUIREMENT_DISPOSITIONS = ("met", "partial", "not-verifiable")
 VERIFICATIONS = ("independent-confirmed", "primary-confirmed")
 MANDATORY_KINDS = ("security", "compatibility")
 MATERIAL_CONSIDER_KINDS = ("bug", "compatibility", "concurrency", "invariant", "security", "performance")
+UNATTACKABLE_KINDS = ("maintainability", "requirement")  # a row of these kinds is attackable only when marked
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
 EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "failed", "unavailable")
 CLEAN_VERDICTS = ("stands", "outstanding", "not-required")
@@ -931,6 +936,7 @@ def read_record(
     candidates = read_rows(report, "record.ledger.candidates", ledger.get("candidates"), ("id", "kind", "disposition", "evidence"))
     rows: dict[str, tuple[str, dict[str, Any]]] = {}
     material = False
+    attackable = False
     for where, row in candidates:
         if row["kind"] not in vr.KINDS:
             report.add(where, "ledger", f"`kind` must be one of {list(vr.KINDS)}")
@@ -940,6 +946,9 @@ def read_record(
         if "material" in row and not isinstance(row["material"], bool):
             report.add(where, "schema", "`material` must be a boolean when present")
         material = material or (row.get("material") is True and row["disposition"] == "survivor")
+        if "attackable" in row and not isinstance(row["attackable"], bool):
+            report.add(where, "schema", "`attackable` must be a boolean when present")
+        attackable = attackable or row["kind"] not in UNATTACKABLE_KINDS or row.get("attackable") is True
     rendered: dict[str, tuple[str, dict[str, Any]]] = {f["id"]: ("finding", f) for f in findings}
     rendered.update({q["id"]: ("question", q) for q in questions})
     confirmed = False
@@ -1025,8 +1034,8 @@ def read_record(
     if clean not in CLEAN_VERDICTS:
         report.add("record.verification.clean_verdict", "verification", f"`clean_verdict` must be one of {list(CLEAN_VERDICTS)}")
     material = material or any(f["action"] == "must-fix" or f["kind"] in MATERIAL_CONSIDER_KINDS for f in findings)
-    if clean == "not-required" and not material:
-        report.add("record.verification.clean_verdict", "verification", "no material survivor remains, so the complete candidate ledger needs a clean-verdict attack: `stands` when a batch ruled, `outstanding` when no permitted batch could carry it")
+    if clean == "not-required" and not material and attackable:
+        report.add("record.verification.clean_verdict", "verification", "no material survivor remains and the ledger holds an attackable row, so the complete candidate ledger needs a clean-verdict attack: `stands` when a batch ruled, `outstanding` when no permitted batch could carry it")
     if clean == "stands" and not batches:
         report.add("record.verification.clean_verdict", "verification", "`stands` names a batch ruling over the complete ledger, and no batch is recorded")
     if confirmed and not batches:
