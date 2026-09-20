@@ -399,6 +399,11 @@ class Chains(unittest.TestCase):
         with self.subTest(case="invalid head field"):
             result, private, _ = self.root_block("sh", repo, self.root_page(base, head[:7]))
             self.assert_deferred(result, private, "required root fields missing or invalid")
+        with self.subTest(case="guard exits without a verdict"):
+            # `data` is a truthy non-object, so the guard raises before its own isinstance checks.
+            result, private, _ = self.root_block("sh", repo, {"data": "x"})
+            self.assert_deferred(result, private, "eligibility guard failed with exit 1")
+            self.assertIn("AttributeError", result.stderr, "the guard's own failure stays visible")
 
     def test_root_block_defers_missing_commits_and_an_unresolved_merge_base(self):
         repo, base, head = self.repository()
