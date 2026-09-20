@@ -341,13 +341,38 @@ def implementation_gate() -> None:
     clean["record"]["ledger"]["candidates"] = [{"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped", "evidence": "src/retry-policy.ts:20"}]
     record, _ = gate(clean, "clean outcome")
     assert record["status"] == "Approved" and record["summary"]["body"].startswith("**Approved (advisory)** — no findings.")
-    refused(mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
-                      "record.ledger.candidates": clean["record"]["ledger"]["candidates"]}),
-            "verification", "clean review without a clean-verdict attack", "--profile", "implementation-gate",
+    # No attackable row: hygiene and requirement acquittals, or an empty ledger, need no clean-verdict batch.
+    unattackable = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
+                             "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
+                                 {"id": "payments/retry-doc", "kind": "requirement", "disposition": "dropped", "evidence": "docs/api.md:3"}]})
+    gate(unattackable, "maintainability and requirement acquittals only; not-required composes")
+    gate(mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved", "record.ledger.candidates": []}),
+         "empty ledger; not-required composes")
+    marked_row = copy.deepcopy(unattackable)
+    marked_row["record"]["ledger"]["candidates"][0]["attackable"] = True
+    refused(marked_row, "verification", "a row marked attackable restores the clean-verdict obligation", "--profile", "implementation-gate",
             needle="clean_verdict")
+    marked_row["record"]["ledger"]["candidates"][0]["attackable"] = "yes"
+    refused(marked_row, "schema", "attackable must be boolean", "--profile", "implementation-gate", needle="attackable")
+    attackable = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
+                           "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
+                               {"id": "queue/empty-pop", "kind": "bug", "disposition": "dropped", "evidence": "src/queue.ts:19"}]})
+    refused(attackable, "verification", "clean review with an attackable acquittal and no clean-verdict attack", "--profile", "implementation-gate",
+            needle="clean_verdict")
+    # A verifier-refuted must-fix requirement finding is attackable whatever its kind: the follow-up attack stays owed.
+    refuted = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
+                        "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
+                            {"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "refuted",
+                             "evidence": "src/retry-policy.ts:18 already reuses the key"}]})
+    refused(refuted, "verification", "refuted requirement blocker without a follow-up clean-verdict attack", "--profile", "implementation-gate",
+            needle="clean_verdict")
+    refuted["record"]["verification"] = {"batches": [batch_paths("initial"), batch_paths("follow-up")], "follow_up_spent": True,
+                                         "clean_verdict": "stands", "outstanding": []}
+    gate(refuted, "refuted requirement blocker with the follow-up attack recorded")
     hygiene = mutate(**{"findings": [consider()], "questions": [], "observations": [], "summary.status": "Approved"})
     hygiene["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "maintainability", "disposition": "survivor",
-                                                  "verification": "primary-confirmed", "evidence": "src/payments.ts:50"}]
+                                                  "verification": "primary-confirmed", "evidence": "src/payments.ts:50"},
+                                                 {"id": "queue/empty-pop", "kind": "bug", "disposition": "dropped", "evidence": "src/queue.ts:19"}]
     refused(hygiene, "verification", "surviving hygiene switches nothing off", "--profile", "implementation-gate", needle="clean_verdict")
     hygiene["record"]["verification"]["clean_verdict"] = "stands"
     record, _ = gate(hygiene, "hygiene survivor with clean verdict")
@@ -751,7 +776,7 @@ def main() -> int:
     assert body.startswith("**Needs Information** — 1 open question.")
     assert "**[Question] Which originating issue applies?**" in body
     assert required_issue["summary"]["issue_fit"] in body
-    assert "issues=none coverage=complete" in body and "workflow=v5b-21" in body
+    assert "issues=none coverage=complete" in body and "workflow=v5b-22" in body
     assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
     assert payload["items"][0]["id"] == "workflow/required-issue"
     wrong = copy.deepcopy(required_issue)
