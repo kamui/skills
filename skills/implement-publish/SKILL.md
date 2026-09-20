@@ -19,29 +19,26 @@ Follow the repository's branch and commit conventions. If the current branch is 
 
 ### 3. Implement
 
-Honor an implementation skill the user names. Otherwise invoke the model-invoked implementation skill whose description best matches the work; invoking this skill authorizes reaching it. Failing that, implement directly.
+Use the implementation skill the user names, otherwise the best-matching model-invoked implementation skill. Implement directly if none applies.
 
-Save **verification results** as a short summary using `review-code`'s **Supplied check evidence** rules:
+Read **Supplied check evidence** in `review-code`'s `references/review-rubric.md` for the verification format and reuse criteria. Save a compact summary:
 
-- State the full commit SHA and clean/dirty input state once per group of results. Name the repository's documented environment or record the relevant runtime when none is documented; describe only relevant deviations and dirty inputs.
-- Use one line per check: command or check-run identity, result, and readable output or artifact reference. Add scope when the command does not make it clear, and report skips, incomplete runs, or other coverage limits. A pass means the check finished successfully.
-- For required acceptance exercises that checks do not settle, record the criterion, method and observation under the same shared context. List missing required evidence and its reason.
+- Shared full commit SHA, clean/dirty input state and relevant environment.
+- One line per check: command or check-run identity, result and readable output reference. Include relevant exceptions and coverage limits; link to logs instead of copying them.
+- For required acceptance exercises that checks do not settle: criterion, method and observation under the same shared context, without correctness claims.
 
-Keep logs in referenced artifacts, rather than copying them into the summary. Per-result exceptions override shared context; retain each result's original commit when adding later runs.
+For initial implementation and review fixes, report missing required evidence and why it is missing. Do not add verification solely to populate the summary.
 
-Apply these **verification rules** to both implementation and review fixes:
+Apply these **verification rules** to implementation and review fixes:
 
-- Select the repository's documented focused checks for changed behavior and its dependents. A matching test filename is only a lead. Documentation-only changes need tests only when a documented check covers that documentation.
-- Run a shared check once after all related changes are in place. Group review fixes sharing that check into one continuation.
-- Rerun checks whose inputs, environment, or covered behavior the fixes reach. Run the affected broader suite too when changes touch shared dependencies or configuration, change cross-module behavior, or have uncertain reach, regardless of earlier suite runs.
-- Reuse an earlier success only for the same check at the exact full head SHA being verified, with unchanged relevant inputs and environment and sufficient coverage. A run on uncommitted work counts only for the commit made from exactly that tree.
-- Retain unaffected evidence at its original head and input state without rerunning it solely because the head changed. It cannot satisfy a check explicitly required at the new head. If a fix's reach is uncertain, rerun potentially affected checks.
+- Run the repository's documented focused checks for changed behavior and its dependents. Documentation-only changes need tests only when documented checks cover them.
+- Batch related changes before running shared checks once; group review fixes sharing a check into one continuation.
+- Rerun checks when changes may affect their inputs, environment or covered behavior. Run the affected broader suite for shared dependency or configuration changes, cross-module changes, or uncertain impact, even if it passed earlier.
+- Reuse success only for the same check at the exact head, with unchanged relevant inputs and environment and sufficient coverage. Uncommitted runs count only for the commit made from exactly that tree.
+- Repeat required acceptance exercises when changes affect their criterion, method or inputs.
+- Retain unaffected results at their original head and input state without rerunning solely because the head changed. They cannot satisfy checks explicitly required at the new head.
 
-End with the work committed and its checks run and recorded as above. Keep implementation and review local until step 5.
-
-Record observations rather than conclusions that a criterion is satisfied. Add no live exercises or checks solely to fill the summary.
-
-Repeat an acceptance exercise at the new head if fixes reach its criterion, method, or inputs; otherwise retain its evidence as above. Record any required exercise that could not be repeated as a gap with its reason.
+Finish with committed changes and recorded verification results. Keep implementation and review local until step 5.
 
 ### 4. Review before publishing
 
