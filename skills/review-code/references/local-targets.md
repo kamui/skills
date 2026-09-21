@@ -25,11 +25,11 @@ For a working tree, record real `HEAD`, compute its merge-base with the resolved
 python3 scripts/review_context.py --worktree --merge-base <pinned merge-base> --store <private-dir>/review-context.json
 ```
 
-This is also step 2's context build: retain its output and store and do not snapshot or build again there. A non-zero exit is reported with the script's output: `snapshot-failed` when named by the snapshot operation, otherwise `script-failure`. The output's `snapshot` object/section prints `head`, `tree`, `source_head`, `parent`, `chain`, and `dirty_submodules`. Pin `head` as the run head and save all these fields plus the manifest. A working-tree snapshot with an empty manifest and no dirty submodule content returns `nothing-to-review`. An empty explicitly requested range can still produce a record with an empty ledger.
+This is also step 2's context build: retain its output and store and do not snapshot or build again there. A non-zero exit is reported with the script's output: `snapshot-failed` when named by the snapshot operation, otherwise `script-failure`. The output's `snapshot` object/section prints `head`, `tree`, `source_head`, and `dirty_submodules`, plus `parent` and `chain` fields no run reads. Pin `head` as the run head and save `head`, `tree`, `source_head`, `dirty_submodules`, and the manifest. A working-tree snapshot with an empty manifest and no dirty submodule content returns `nothing-to-review`. An empty explicitly requested range can still produce a record with an empty ledger.
 
 The snapshot leaves the real index, refs, and working files unchanged, and working files win over staging; `review_context.py`'s docstring describes the mechanism. Submodules are gitlinks at their checked-out commits; dirty submodule content is unreviewed and must be named under Coverage gaps, making coverage incomplete unless the user deliberately set it aside with a reason.
 
-Snapshots are unreferenced loose objects that `git gc --prune=now` can remove; the saved record retains snapshot identity and the manifest after that.
+Snapshots are unreferenced loose objects that `git gc --prune=now` can remove; the saved record retains snapshot identity and the manifest after that. Refs under `refs/review-code/session/` are leftovers from earlier versions of this skill; report them and delete them with `git update-ref -d` only on the user's authorization.
 
 ## Description and record inputs
 
