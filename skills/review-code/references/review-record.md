@@ -19,13 +19,11 @@ Kinds are compact internal routing aids: `bug`, `compatibility`, `concurrency`, 
 
 ## Comment quality
 
-Use one comment per distinct defect. Choose the smallest useful changed range, normally no more than 5–10 lines. The comment must let a person or agent act without opening another document merely to understand the request: a short imperative title and the fields the review record's Finding comment defines, where `Change` states the outcome to implement, not a vague instruction to investigate, and `Source` cites an issue requirement, a change-description promise or versioned artifact obligation at its ledger coordinate, or a repository rule only when it materially supports the finding. Use a matter-of-fact tone without praise, blame, filler, or a restatement of the location already supplied by the inline anchor.
+One comment per distinct defect, under a short imperative title, anchored on the smallest honest changed range or changed file that identifies it, in a matter-of-fact tone: `Change` states the outcome to implement, not an instruction to investigate, and a person or agent can act on the comment without opening another document. Keep an ordinary finding to roughly 160 words before its trailer and at most two decisive evidence facts; exceed that only when the extra context prevents a materially wrong fix.
 
-Keep an ordinary finding to roughly 160 words before its trailer. Use at most two decisive evidence facts; exceed the budget only when the extra context prevents a materially wrong fix.
+For drift proven by several equally honest changed lines, anchor the changed line that states the rule being drifted from; if more than one remains, choose the lexicographically first path, then the smallest range. Never attach a finding to an unrelated changed line merely to obtain an inline comment; a file-anchored finding renders in the summary body when the forge cannot carry it inline.
 
-Distinguish placement from repair. The `anchor` is the smallest honest changed range or changed file that identifies the finding; `fix` is the actual location the author or agent should edit when it differs. For drift proven by several equally honest changed lines, choose the changed line that states the rule being drifted from; if more than one remains, choose the lexicographically first path, then the smallest range. A file anchor on a file the change deletes carries `side: LEFT`. Never attach a finding to an unrelated changed line merely to obtain an inline comment; a file-anchored finding renders in the summary body when the forge cannot carry it inline.
-
-Use a suggestion block only for a small exact replacement that completely fixes the finding. Preserve indentation and diff side. Otherwise request behavior in prose rather than guessing a patch.
+Use a suggestion block only for a small exact replacement that completely fixes the finding, preserving indentation and diff side; otherwise request the behavior in prose rather than guessing a patch.
 
 ## Question comment
 
