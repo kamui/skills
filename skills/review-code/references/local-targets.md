@@ -11,11 +11,10 @@ An explicit working-tree request, or a session prompt naming nothing or “my ch
 For a branch or working tree, resolve the base in this order:
 
 1. The caller's explicit base. A detached HEAD requires this; without it, session asks and one-shot returns `target-unresolved`.
-2. An open pull request for the branch: `gh pr view <branch> --json state,baseRefName,url`. Use `baseRefName` only when state is `OPEN`. Mention the PR URL and its role in base inference in the report; do not fetch its review packet or substitute its pushed head for local HEAD.
-3. The remote's default branch: `gh repo view --json defaultBranchRef` or `git remote show origin`.
-4. `origin/HEAD`, when set, via `git symbolic-ref refs/remotes/origin/HEAD`.
+2. The base of the branch's open pull request (`gh pr view <branch> --json state,baseRefName,url`, `OPEN` only). Report the PR URL as the base source; neither fetch its review packet nor substitute its pushed head for local HEAD.
+3. The remote's default branch, then `origin/HEAD` when set.
 
-For a short base branch name (explicit or inferred), prefer `origin/<base>` over a possibly stale local `<base>`; an explicit SHA or fully qualified ref keeps its exact meaning. Pin the resolved base SHA and record which source supplied it. If the current branch is the resolved base branch, set base to real `HEAD`: a working-tree review then contains only uncommitted changes. With no resolvable base, session asks before falsification and stops if unanswered; one-shot returns `target-unresolved`. These read-only forge lookups inform the base only. Failure of an optional lookup is recoverable through the next source.
+For a short base branch name (explicit or inferred), prefer `origin/<base>` over a possibly stale local `<base>`; an explicit SHA or fully qualified ref keeps its exact meaning. Pin the resolved base SHA and record which source supplied it. If the current branch is the resolved base branch, set base to real `HEAD`: a working-tree review then contains only uncommitted changes. With no resolvable base, session asks before falsification and stops if unanswered; one-shot returns `target-unresolved`. A failed optional lookup falls through to the next source.
 
 ## Snapshot and context
 
