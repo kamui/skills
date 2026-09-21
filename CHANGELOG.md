@@ -124,6 +124,8 @@
 
 ### Removed
 
+- `review-code`'s session layer. `references/session.md` is deleted, with the session record, its amendments, the side-by-side display, the one further verifier batch per session, the `refs/review-code/session/` snapshot ref chain, and the local session recheck that reviewed only the delta through `--worktree --parent`. Session mode still asks before falsification and presents the record and routed questions afterward; `SKILL.md`'s new Interactive use section says that an answer, a supplied input, a chosen reading, or changed code starts a fresh run with that answer as an up-front input, under its own batch cap, with the earlier record's path reported beside the new one, and that a fix request is outside the review. Every local run is a first review in its own `mktemp -d` directory, and `re-review.md` loads only for pull-request prior state. `review_context.py` keeps `--worktree --parent` and `--prior-head` and its ref-protection test. The one-shot column, every named stop, the batch cap, and the published record are unchanged; workflow `v5b-22` is retained. `session.md` 9,519 → 0, `re-review.md` 12,424 → 7,208, `local-targets.md` 8,288 → 6,967, `review-record.md` 14,813 → 14,315, `SKILL.md` 35,792 → 36,604 (user request, 2026-09-20).
+
 - Reactions from the review protocol and both skills that used it. A reaction repeated what the reply's disposition and trailer already said, its main reader is an agent that reads the reply body rather than the reaction, and posting one cost a request per comment.
 
 ## [0.0.2] - 2026-08-29
