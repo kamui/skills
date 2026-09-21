@@ -19,7 +19,7 @@ Kinds are compact internal routing aids: `bug`, `compatibility`, `concurrency`, 
 
 ## Comment quality
 
-One comment per distinct defect, anchored on the smallest honest changed range or changed file that identifies it, in a matter-of-fact tone: `Change` states the outcome to implement, not an instruction to investigate, and a person or agent can act on the comment without opening another document. Keep an ordinary finding to roughly 160 words before its trailer and at most two decisive evidence facts; exceed that only when the extra context prevents a materially wrong fix.
+One comment per distinct defect, under a short imperative title, anchored on the smallest honest changed range or changed file that identifies it, in a matter-of-fact tone: `Change` states the outcome to implement, not an instruction to investigate, and a person or agent can act on the comment without opening another document. Keep an ordinary finding to roughly 160 words before its trailer and at most two decisive evidence facts; exceed that only when the extra context prevents a materially wrong fix.
 
 For drift proven by several equally honest changed lines, anchor the changed line that states the rule being drifted from; if more than one remains, choose the lexicographically first path, then the smallest range. Never attach a finding to an unrelated changed line merely to obtain an inline comment; a file-anchored finding renders in the summary body when the forge cannot carry it inline.
 
