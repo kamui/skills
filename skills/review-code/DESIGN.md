@@ -1119,3 +1119,16 @@ Issue #232's local-target design gave session mode a second, mutable artifact be
 **What is lost.** Answering a question without a second review; local delta rechecks with prior-item classification; the authorized extra batch. Each costs one more full run, which is rare and now cheaper after the 2026-09-20 changes. `review_context.py` keeps `--worktree --parent` and `--prior-head`, and `test_review_context.py` keeps its ref-protection test, because the script's behavior is unchanged and a caller may still chain snapshots itself.
 
 **Bytes** (`wc -c`, `origin/main` at `4d6e05e` against this change): `session.md` 9,519 → 0; `re-review.md` 12,424 → 7,208; `local-targets.md` 8,288 → 6,967; `review-record.md` 14,813 → 14,315; `SKILL.md` 35,792 → 36,604 for the new section. The always-loaded set goes from 92,664 to 92,978; the savings fall on every local run (`local-targets.md`), every re-review (`re-review.md`), and every session (`session.md`).
+
+## Professional-default prose trimmed (user request, 2026-09-21)
+
+**Workflow retained: `v5b-22`.** No admission, priority, action, anchor, or base-resolution rule changes. This is rank 5 of the 2026-09-20 prose-eviction table: text stating what a competent reviewer does unprompted, trimmed around the sentences that encode a demonstrated failure or a determinism rule.
+
+| Section | Kept verbatim or in equivalent words | Removed |
+| --- | --- | --- |
+| `review-record.md` Comment quality | One comment per defect; the 160-word and two-fact budget; the multi-file drift anchor tiebreak (change map F1.6); the unrelated-line prohibition; the suggestion-block rule | The `Source` rule, the anchor-versus-fix distinction, and the deleted-file `side`, each already stated in the Finding comment section, `rendering.md`, or `SKILL.md` step 5; the 5–10-line guidance and the tone list |
+| `review-rubric.md` Falsify every candidate | The gate-2 guarantee test with its `git show <merge-base>:<path>` citation, the `kind=requirement` rule, the gate-6 intent check, the repository-wide peer-set sweep for drift, and the drop rule | The numbered list around them; the generic steps become one sentence |
+| `local-targets.md` base inference | The four-source order, `OPEN`-only pull-request bases, the rule not to substitute a pull request's pushed head for local HEAD, the `origin/<base>` preference, and pinned-base recording | The `gh repo view` and `git symbolic-ref` command tutorial; two sentences saying lookups are read-only and fall through |
+| `review-rubric.md` Priorities and blocking | Everything | Nothing: the P0–P3 glossary fixes the meaning re-reviews compare against, and issue #139 owns the calibration text |
+
+**Bytes** (`wc -c`, `origin/main` at `c4f09b4` against this change): `review-record.md` 14,315 → 13,614; `review-rubric.md` 32,606 → 32,569; `local-targets.md` 6,967 → 6,739. The always-loaded set goes from 92,978 to 92,240. The rubric's list scaffolding was nearly all of what the falsification steps could lose; the rest of that section is the rules the table keeps.

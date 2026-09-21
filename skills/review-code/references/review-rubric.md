@@ -91,16 +91,7 @@ Each outcome is distinct and carries its own evidence:
 
 ## Falsify every candidate
 
-Before admitting a candidate, actively try to disprove it:
-
-1. Trace the alleged trigger through the current code.
-2. Check whether unchanged surrounding code prevents the failure.
-3. Check relevant callers, tests, types, configuration, and CI evidence.
-4. For a Code candidate, confirm gate 2 by its guarantee test: state which of its two introduced-here conditions applies and cite the base-branch guarantee (`git show <merge-base>:<path>`) and the head-branch code that no longer provides it. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation.
-5. Confirm under gate 6 that the issue, change description, rules, and review record do not make it intentional.
-6. Verify any rule or requirement citation and its scope.
-7. Search current review threads and CI output for the same issue where they exist.
-8. Confirm a valid, minimal changed-line or file anchor.
+Before admitting a candidate, actively try to disprove it: trace the alleged trigger through the current code; check whether unchanged surrounding code, callers, tests, types, configuration, or CI evidence prevents the failure; search current review threads and CI output for the same issue where they exist; verify any rule or requirement citation and its scope; and confirm a valid, minimal changed-line or file anchor. For a Code candidate, confirm gate 2 by its guarantee test: state which of its two introduced-here conditions applies and cite the base-branch guarantee (`git show <merge-base>:<path>`) and the head-branch code that no longer provides it. For `kind=requirement`, confirm instead that the requirement made this change responsible for the missing outcome; pre-existing state is not a refutation. Confirm under gate 6 that the issue, change description, rules, and review record do not make it intentional.
 
 For propagation or synchronization drift, first establish the peer set: search the whole repository, case-insensitively, for the rule's old wording as well as its new vocabulary — consumers restate a rule in their own words and keep the phrases the change replaced. A sweep confined to the changed file's directory, or keyed to one exact sentence, does not establish that no consumer exists. Then compare the peer artifacts at the merge-base and inspect the last commit that changed the shared rule or vocabulary; use that history to decide whether the files are intentionally distinct or normally move in lockstep.
 
