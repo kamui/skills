@@ -2,14 +2,14 @@
 """Run the documented one-invocation command chains against local fixtures.
 
 Usage: python3 scripts/test_command_chains.py
-Inputs: SKILL.md step 5's composition block, the pull-request target's root
+Inputs: SKILL.md step 5's `finalize_review.py` commands, the pull-request target's root
 fetch and guarded early-build block, the publisher's freshness and
 review-submission block, its dismissal command, the app-token acquisition
 blocks in `audit-code-publish` and `code-review-publish`, a disposable Git
 repository, and a stub `gh` on PATH; no forge access and no live writes.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
-The composition block must produce the same payload, batch, and fragment bytes
+The finalize command must produce the same payload, batch, and fragment bytes
 as the three commands run separately, and stop visibly at the first failing
 stage. The submission block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
@@ -85,12 +85,19 @@ print({"match": os.environ["GH_HEAD"], "mismatch": "c" * 40, "malformed": "not-a
 """
 
 EMIT_FAILS = r"""#!/bin/sh
-if [ "$1" = scripts/validate_review.py ] && [ "$2" = --emit-batch ]; then
-  echo "summary.body: injected-batch-violation: emission refused"; exit 1
-fi
+case "$1" in */validate_review.py)
+  if [ "$2" = --emit-batch ]; then echo "summary.body: injected-batch-violation: emission refused"; exit 1; fi ;;
+esac
 case " $* " in *" --render "*) echo render >> "$CHAIN_LOG" ;; esac
 exec "$REAL_PYTHON" "$@"
 """
+
+
+def command(text: str, gate: bool) -> str:
+    found = [c for c in re.findall(r"`(python3 scripts/finalize_review\.py [^`]*)`", text)
+             if ("--profile implementation-gate" in c) == gate]
+    assert len(found) == 1, (gate, found)
+    return found[0]
 
 
 def block(text: str, marker: str) -> str:
@@ -155,7 +162,7 @@ class Chains(unittest.TestCase):
         return private, store
 
     def composition_block(self, private, store):
-        text = block((SKILL / "SKILL.md").read_text(encoding="utf-8"), "stage compose")
+        text = command((SKILL / "SKILL.md").read_text(encoding="utf-8"), gate=False)
         return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
 
     def direct(self, store, composition):
@@ -234,7 +241,7 @@ class Chains(unittest.TestCase):
     # --- implementation-gate profile ---------------------------------------
 
     def gate_block(self, private, store):
-        text = block((SKILL / "SKILL.md").read_text(encoding="utf-8"), "stage record")
+        text = command((SKILL / "SKILL.md").read_text(encoding="utf-8"), gate=True)
         return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
 
     def gate_composition(self, base, head, store):

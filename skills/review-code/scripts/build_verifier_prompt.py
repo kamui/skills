@@ -250,13 +250,11 @@ def make_manifest(data, brief, ledger_hash):
 def render(data):
     refs = Path(__file__).resolve().parent.parent / "references"
     verifier = (refs / "verifier.md").read_text(encoding="utf-8")
-    rubric = (refs / "review-rubric.md").read_text(encoding="utf-8")
-    # Heading/paragraph boundaries are deliberate, checked rather than guessed.
-    def section(start, end):
-        require(rubric.count(start) == 1 and rubric.count(end) == 1, "rubric", "instruction boundary changed")
-        return rubric.split(start, 1)[1].split(end, 1)[0]
-    instructions = [verifier, "## Focused-test safety and execution\n" +
-                    section("## Changed tests\n", "## Falsify every candidate\n")]
+    tests = (refs / "changed-tests.md").read_text(encoding="utf-8")
+    # Heading boundaries are deliberate, checked rather than guessed.
+    start, end = "## Inspect and run\n", "## Primary focused-test recording\n"
+    require(tests.count(start) == 1 and tests.count(end) == 1, "changed-tests", "instruction boundary changed")
+    instructions = [verifier, "## Focused-test safety and execution\n" + tests.split(start, 1)[1].split(end, 1)[0]]
     records = data["candidates"] + data["ledger"]
     if any("released_compatibility" in item for item in records):
         released = (refs / "released-compatibility.md").read_text(encoding="utf-8")
