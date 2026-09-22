@@ -22,7 +22,7 @@ After the follow-up, re-falsify any re-opened row but run no third batch. A row 
 
 Run each permitted batch in a genuinely fresh context that does not inherit the primary review conversation, its chain of reasoning, or prior finder output. In a harness with fork controls, use an empty or minimal fork such as `fork_turns=none`; otherwise start an equivalent clean worker. If the runtime cannot provide that isolation, do not imitate independent verification in the primary context: report mandatory verification as incomplete under `SKILL.md` step 3.
 
-The generated brief is the worker's complete instruction set: it embeds the verifier's procedure (`verifier.md`), the return encoding (`verifier-return.md`), the rubric's focused-test bounds, and, when the records call for them, the concurrency, conformance, released-compatibility, and check-evidence procedures. The primary reads none of those worker files to dispatch; it reads this reference and `verifier-return.md`, whose vocabulary the accounting report and reconciliation use.
+The generated brief is the worker's complete instruction set: it embeds the verifier's procedure (`verifier.md`), the return encoding (`verifier-return.md`), `changed-tests.md`'s focused-test bounds, and, when the records call for them, the concurrency, conformance, released-compatibility, and check-evidence procedures. The primary reads none of those worker files to dispatch; it reads this reference and `verifier-return.md`, whose vocabulary the accounting report and reconciliation use.
 
 ## Build input
 
