@@ -10,8 +10,8 @@ input path, and the sensitivity of the digest to every semantic field.
 
 Run with ``python3 scripts/test_context_fingerprint.py``. Exit 0 when every
 case passes; exit 1 after printing one line per failed case. Standard library
-only; no network, git, or filesystem access beyond invoking the script under
-test. The script is exercised through its real stdin interface with
+only; no network access, and git only in the case that derives `guidance`
+from a disposable repository. The script is exercised through its real stdin interface with
 ``subprocess`` so that CLI-level behavior, including its error exits, is what
 gets tested.
 """
@@ -432,6 +432,59 @@ def case_example() -> None:
         fail("example", "the printed example does not digest deterministically")
 
 
+def case_derived_guidance() -> None:
+    import tempfile
+    case = "derived guidance"
+    with tempfile.TemporaryDirectory() as root:
+        repo = Path(root) / "repo"
+
+        def git(*args: str) -> str:
+            return subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, encoding="utf-8",
+                                  check=True).stdout.strip()
+
+        def write(path: str, text: str) -> None:
+            (repo / path).parent.mkdir(parents=True, exist_ok=True)
+            (repo / path).write_text(text, encoding="utf-8")
+
+        repo.mkdir()
+        git("init", "-q")
+        git("config", "user.name", "Test")
+        git("config", "user.email", "test@example.invalid")
+        for path in ("AGENTS.md", "CLAUDE.md", "CONTEXT.md", "README.md", "a/AGENTS.md", "a/b/CLAUDE.md",
+                     "a/b/x.txt", "c/AGENTS.md", "c/y.txt", "e/AGENTS.md", "docs/agents/issue-tracker.md"):
+            write(path, f"{path}\n")
+        git("add", ".")
+        git("commit", "-qm", "base")
+        base = git("rev-parse", "HEAD")
+        write("a/b/x.txt", "changed\n")
+        write("AGENTS.md", "head-branch edit\n")
+        (repo / "d").mkdir()
+        git("mv", "c/y.txt", "d/y.txt")
+        git("commit", "-qam", "change")
+        head = git("rev-parse", "HEAD")
+        store = Path(root) / "store.json"
+        subprocess.run([sys.executable, str(SCRIPT.parent / "review_context.py"), "--merge-base", base, "--head", head,
+                        "--store", str(store)], cwd=repo, capture_output=True, check=True)
+        expected = [{"path": path, "blob_sha": git("rev-parse", f"{base}:{path}")}
+                    for path in ("AGENTS.md", "CLAUDE.md", "CONTEXT.md", "a/AGENTS.md", "a/b/CLAUDE.md", "c/AGENTS.md")]
+        payload = dict(BASE, guidance=expected)
+        explicit = run(payload).stdout.strip()
+
+        def derived(value: Any, *extra: str) -> subprocess.CompletedProcess[str]:
+            return subprocess.run([sys.executable, str(SCRIPT), "--guidance-base", base, "--store", str(store), *extra],
+                                  cwd=repo, input=json.dumps(value), capture_output=True, text=True, encoding="utf-8")
+
+        result = derived({key: value for key, value in payload.items() if key != "guidance"})
+        if result.returncode != 0 or result.stdout.strip() != explicit:
+            fail(case, f"derived digest differs from the explicit membership: {result.stdout}{result.stderr}")
+        if derived(dict(payload)).returncode != 2:
+            fail(case, "input carrying guidance beside --store must exit 2")
+        lone = subprocess.run([sys.executable, str(SCRIPT), "--guidance-base", base], cwd=repo, input="{}",
+                              capture_output=True, text=True, encoding="utf-8")
+        if lone.returncode != 2:
+            fail(case, "--guidance-base without --store must exit 2")
+
+
 CASES = (
     case_example,
     case_key_order_invariance,
@@ -444,6 +497,7 @@ CASES = (
     case_comments_complete,
     case_packet_input,
     case_errors,
+    case_derived_guidance,
 )
 
 

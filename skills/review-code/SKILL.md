@@ -100,46 +100,9 @@ Before returning the record, verify what only judgment settles: every rubric gat
 
 Derive each finding or question's file-anchor `side` from step 2's **full pinned merge-base manifest**, even on a delta re-review: a `D` entry becomes its pre-image path with `side: LEFT`, a file established at head `RIGHT`, and unestablished provenance `UNKNOWN` with the missing evidence explained in the item. Retain that provenance through body fallback and payload repairs; the composer checks the side and never chooses it.
 
-Write the composition input to `<private-dir>/composition.json` — for each finding, question, observation, and prior item its authoritative fields and authored prose; for the run, its pinned identity, `context` digest, issues, coverage, `merged`, and the summary's status, prose, ambiguities, and coverage gaps. `<private-dir>` is the directory holding the step-2 store `<store>`. Under the `implementation-gate` profile, the composition input also carries a `record` section — ledgers, file accounting, check-evidence accounting, verification accounting, routed items, and paths — in the shape `python3 scripts/compose_review.py --example --profile implementation-gate` prints; its `paths` carry the composer's four required keys, `skill_root`, and the caller-supplied evidence and spec paths, nothing more. Under the default `publishable` profile, run this block as one shell invocation from the skill root. It composes `payload.json` with `scripts/compose_review.py`, emits `batch.json` with `scripts/validate_review.py --emit-batch`, and renders `fragments.md` with `--render`, in that order:
+Write the composition input to `<private-dir>/composition.json` — for each finding, question, observation, and prior item its authoritative fields and authored prose; for the run, its pinned identity, `context` digest, issues, coverage, `merged`, and the summary's status, prose, ambiguities, and coverage gaps. `<private-dir>` is the directory holding the step-2 store `<store>`. Under the `implementation-gate` profile, the composition input also carries a `record` section — ledgers, file accounting, check-evidence accounting, verification accounting, routed items, and paths — in the shape `python3 scripts/compose_review.py --example --profile implementation-gate` prints; its `paths` carry the composer's four required keys, `skill_root`, and the caller-supplied evidence and spec paths, nothing more. Then run `python3 scripts/finalize_review.py --store <store> <private-dir>`, or under `implementation-gate` `python3 scripts/finalize_review.py --profile implementation-gate --store <store> <private-dir>`, from the skill root. Under `publishable` it composes `payload.json`, emits `batch.json`, renders `fragments.md`, and prints the fragments. Under `implementation-gate` it writes `record.json` beside the `addenda` directory that continuations append to and prints the record's path; no batch and no fragment file exist in this profile, and the reviewer already holds the record's content as the composition input and does not read it back.
 
-```sh
-d=<private-dir> store=<store>
-rm -f "$d/payload.json" "$d/batch.json" "$d/fragments.md"
-stage() { # <name> <artifact> <stdin file, or -> <command...>
-  name=$1 out=$2 src=$3; shift 3
-  if [ "$src" = - ]; then "$@" > "$out.part" 2> "$out.stderr"; else "$@" < "$src" > "$out.part" 2> "$out.stderr"; fi
-  rc=$?
-  if [ "$rc" -ne 0 ]; then
-    echo "$name failed with exit $rc; later stages did not run:"; cat "$out.part" "$out.stderr"; rm -f "$out.part"; exit "$rc"
-  fi
-  mv "$out.part" "$out"
-}
-stage compose "$d/payload.json" - python3 scripts/compose_review.py --store "$store" "$d/composition.json"
-stage emit-batch "$d/batch.json" "$d/payload.json" python3 scripts/validate_review.py --emit-batch
-stage render "$d/fragments.md" "$d/payload.json" python3 scripts/validate_review.py --render
-cat "$d/fragments.md"
-```
-
-The first non-zero status stops the block and prints the failing stage's name, its stdout (where the scripts print violations), and its stderr; no later stage reads a failed or partial artifact. Violations name their composition-input locations: report them, fix the composition input — never the payload or batch — and re-run the whole block. An unresolved failure returns `script-failure` with that output. Never assemble the payload, the batch, or a coordinate link by hand. The reference text wins over the scripts: a violation the reviewer believes is a false positive goes to `Ambiguities` under the rubric's Uncertainty routing, and the script is what gets fixed.
-
-Under the `implementation-gate` profile, run this block instead, under the same failure and repair rules. Its one stage composes and validates the record and writes `record.json` beside the `addenda` directory that continuations append to; no batch and no fragment file exist in this profile. The block prints the record's path; the reviewer already holds its content as the composition input and does not read it back:
-
-```sh
-d=<private-dir> store=<store>
-rm -f "$d/record.json"
-mkdir -p "$d/addenda" || exit 2
-stage() { # <name> <artifact> <stdin file, or -> <command...>
-  name=$1 out=$2 src=$3; shift 3
-  if [ "$src" = - ]; then "$@" > "$out.part" 2> "$out.stderr"; else "$@" < "$src" > "$out.part" 2> "$out.stderr"; fi
-  rc=$?
-  if [ "$rc" -ne 0 ]; then
-    echo "$name failed with exit $rc; later stages did not run:"; cat "$out.part" "$out.stderr"; rm -f "$out.part"; exit "$rc"
-  fi
-  mv "$out.part" "$out"
-}
-stage record "$d/record.json" - python3 scripts/compose_review.py --profile implementation-gate --store "$store" "$d/composition.json"
-echo "record $d/record.json"
-```
+A non-zero exit names the failing stage and prints its violations, which name composition-input locations: report them, fix the composition input — never the payload or batch — and re-run. An unresolved failure returns `script-failure` with that output. Never assemble the payload, the batch, or a coordinate link by hand. The reference text wins over the scripts: a violation the reviewer believes is a false positive goes to `Ambiguities` under the rubric's Uncertainty routing, and the script is what gets fixed.
 
 After step 5 completes, one-shot returns the record and routed items; session mode presents them under Interactive use below.
 
@@ -147,12 +110,12 @@ After step 5 completes, one-shot returns the record and routed items; session mo
 
 Return an immutable review record at named paths in the private directory:
 
-1. Run identity: repository, target kind and target, head, base and its source, merge-base, `profile`, state and reviewer identity and packet path when the target is a pull request, merged, tree hash and snapshot metadata when it is the working tree, the private directory and store path, and the absolute skill root under which every script (`scripts/<name>.py`) and reference a caller may need resolves.
-2. The rubric's private record: requirement and candidate disposition ledgers, file accounting, verification accounting (batches, verdicts, rulings, the host operation each dispatched batch ran on, whether the follow-up is spent), check accounting under `references/check-evidence.md`'s Recording rule — every supplied item with its disposition and the head it is attributed to, beside every check the reviewer ran and its selection reason — recorded deferrals, prior-item classifications; on pull-request targets, each item's thread node id and current resolution state from the packet, and each drafted thread reply with its target comment id.
+1. Run identity: repository, target kind and target, head, base and its source, merge-base, `profile`, the private directory and store path, and the absolute skill root under which every script and reference a caller may need resolves; on a pull request also its state, merged, reviewer identity, and packet path; on a working tree its tree hash and snapshot metadata.
+2. The rubric's private record: requirement and candidate ledgers, file accounting, verification accounting (batches, verdicts, rulings, each batch's host operation, whether the follow-up is spent), check accounting under `references/check-evidence.md`'s Recording rule, recorded deferrals, and prior-item classifications; on a pull request, each item's thread node id and resolution state and each drafted thread reply with its target comment id.
 3. Semantic status and coverage.
-4. Under `publishable`: `composition.json`, `payload.json` validated at exit 0, the rendered fragments, and emitted `batch.json` at named paths. Under `implementation-gate`: `composition.json` and `record.json` (`implementation-gate-record/1`) at named paths, the one validated local record that carries items 1 through 3 and 6 in its `run`, `record`, `status`, and `summary` fields, plus the `addenda` directory a continuation appends to under [`references/continuation-addendum.md`](references/continuation-addendum.md) while this record stays unchanged. No batch and no fragment file exist in this profile, and none is fabricated.
+4. Step 5's artifacts: under `publishable`, `composition.json`, `payload.json`, `fragments.md`, and `batch.json`; under `implementation-gate`, `composition.json` and `record.json` (`implementation-gate-record/1`), which carries items 1 through 3 and 6, plus the `addenda` directory a continuation appends to under [`references/continuation-addendum.md`](references/continuation-addendum.md) while the record stays unchanged. Neither profile fabricates the other's artifacts.
 5. The complete would-be review: summary, findings, and questions as prose with the script-rendered commit-pinned links.
-6. Routed items and what each gates: ambiguities with both readings and the applied reading, unrecoverable inputs, and open material questions with how an answer settles each, including `issue-required` when the repository workflow requires an issue and none resolves.
+6. Routed items and what each gates: ambiguities with both readings and the applied reading, unrecoverable inputs, and open material questions with how an answer settles each, including `issue-required`.
 
 Instead of a record, return a named stop: `target-unresolved` (before any fetch for an unresolved target coordinate, or when no base resolves), `target-closed-unmerged`, `duplicate-review` (existing URL), `snapshot-failed` (snapshot output), `nothing-to-review` (empty working-tree diff), or `script-failure` (script output).
 
