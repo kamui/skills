@@ -1132,3 +1132,11 @@ Issue #232's local-target design gave session mode a second, mutable artifact be
 | `review-rubric.md` Priorities and blocking | Everything | Nothing: the P0–P3 glossary fixes the meaning re-reviews compare against, and issue #139 owns the calibration text |
 
 **Bytes** (`wc -c`, `origin/main` at `c4f09b4` against this change): `review-record.md` 14,315 → 13,646; `review-rubric.md` 32,606 → 32,569; `local-targets.md` 6,967 → 6,739. The always-loaded set goes from 92,978 to 92,272. The rubric's list scaffolding was nearly all of what the falsification steps could lose; the rest of that section is the rules the table keeps.
+
+## First-review eligibility guard moved to a script (user request, 2026-09-22)
+
+**Workflow retained: `v5b-22`.** Rank 7 of the 2026-09-20 prose-eviction table. The 42-line Python heredoc that decided the [early first-review build](#early-first-review-context-build-issue-258) moves, check for check and reason for reason, into `forge_packet.py eligibility`, which already reads saved forge pages. The root invocation now calls it through a `<forge-packet-script>` absolute path, as it calls `run_events.py` and `review_context.py`, so it still runs in the reviewed repository. The conditions, reasons, and verdict lines are unchanged: they now live in the script's docstring, and `pull-request-target.md` says only what the verdict means for step 2.
+
+The block keeps its shell around the guard: the root-query failure exit, the `deferred: eligibility guard failed with exit <status>` fallback with stderr left visible, the private build to `context-build.out`, and the build-failure exit. `test_command_chains.py` runs the block with the same cases and assertions, including the guard that raises on a truthy non-object `data`; `test_run_events.py` binds the new placeholder in its documented-command replay.
+
+**Bytes** (`wc -c`, `origin/main` at `160d120` against this change): `pull-request-target.md` 12,566 → 8,775. It is conditional, loaded only for a pull-request target, so the always-loaded set is unchanged at 92,272.
