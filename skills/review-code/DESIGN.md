@@ -1164,8 +1164,8 @@ The block keeps its shell around the guard: the root-query failure exit, the `de
 
 ## Modes in one paragraph (user request, 2026-09-22)
 
-**Workflow retained: `v5b-22`.** No asking, routing, or record rule changes. `session` and `one-shot` were described in a nine-row route table under Return, a two-paragraph Interactive use section, and eight sentences across the Caller table, Boundaries, steps 1, 2, and 5. They are now one Modes paragraph that `SKILL.md`'s other sections point to.
+**Workflow retained: `v5b-22`.** No asking, routing, or record rule changes. `session` and `one-shot` were described in a nine-row route table under Return, a two-paragraph Interactive use section, and nine sentences across the Caller table, Boundaries, steps 1, 2, and 5. They are now one Modes paragraph that `SKILL.md`'s other sections point to.
 
 `one-shot`'s column mostly restated outcomes other sections already own: `issue-required` in step 1's Originating issues, provisional `Incomplete` with a `Coverage gaps` request in the rubric's Uncertainty routing, `Ambiguities`, and `[Question]` items. The paragraph keeps only its two stops and the rule that it uses only what the caller passed, and points to those owners for the rest. `session`'s asks stay complete: before falsification, the target or base, the dirty-snapshot confirmation, the required issue, and the scope directives and recoverable inputs; after the record, every routed item; and the duplicate-review, immutable-record, fresh-run, residual-risk, fix-request, and no-forge rules. Step 1 keeps its sequencing rule that a session-supplied issue is read before the ledger is built. `review-code-publish` pointed at "the one-shot column of Return's routing table" and now points at the Modes section.
 
-**Bytes** (`wc -c`, `origin/main` at `bc5adfd` against this change): `SKILL.md` 27,782 → 26,069. The always-loaded set goes from 72,586 to 70,873. `review-code-publish/SKILL.md` 5,194 → 5,241.
+**Bytes** (`wc -c`, `origin/main` at `bc5adfd` against this change): `SKILL.md` 27,782 → 26,134. The always-loaded set goes from 72,586 to 70,938. `review-code-publish/SKILL.md` 5,194 → 5,241.

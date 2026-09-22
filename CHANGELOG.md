@@ -52,7 +52,7 @@
 
 ### Changed
 
-- `review-code` describes its two modes in one Modes paragraph instead of a route table, an Interactive use section, and scattered sentences (user request, 2026-09-22). Asking behavior is unchanged, workflow `v5b-22` is retained, and the always-loaded set goes from 72,586 to 70,873 bytes. `review-code-publish` points at the Modes section.
+- `review-code` describes its two modes in one Modes paragraph instead of a route table, an Interactive use section, and scattered sentences (user request, 2026-09-22). Asking behavior is unchanged, workflow `v5b-22` is retained, and the always-loaded set goes from 72,586 to 70,938 bytes. `review-code-publish` points at the Modes section.
 
 - `review-code` loads less up front (user request, 2026-09-22). Batch composition, dispatch, reconciliation, and the follow-up move to `references/verifier-handoff.md`, read only when a batch runs; changed-test rules to the new `references/changed-tests.md`; recorded deferrals to `references/pull-request-target.md`; and the continuation addendum to the new `references/continuation-addendum.md`. Step 5 is one `scripts/finalize_review.py` command, and `context_fingerprint.py --guidance-base --store` derives the guidance set. Rules stated twice keep one owner, and `scripts/test_instruction_budget.py` holds the always-loaded set to 73,000 bytes. Workflow `v5b-22` is retained; the always-loaded set goes from 92,272 to 72,586 bytes.
 
