@@ -5,6 +5,7 @@ Usage:
     python3 scripts/context_fingerprint.py [INPUT | --json JSON]
     python3 scripts/context_fingerprint.py --packet packet.json [INPUT | --json JSON]
     python3 scripts/context_fingerprint.py --example    # print a minimal INPUT
+    ... --guidance-base BASE --store STORE             # derive `guidance` too
 
 INPUT is a JSON object with `pr`, `issues`, `specs`, and `guidance` as the
 review record defines them (`-` or omitted reads stdin). With `--packet`, the
@@ -12,6 +13,15 @@ review record defines them (`-` or omitted reads stdin). With `--packet`, the
 that `forge_packet.py normalize` wrote, so the digest is computed over the same
 normalized records the review read; the optional INPUT then supplies only
 `specs` and `guidance`, and may not carry `pr` or `issues` of its own.
+
+With `--guidance-base BASE --store STORE`, the script derives `guidance`
+itself, and INPUT may not carry it: the sorted blobs, tracked at BASE, of root
+`AGENTS.md`, `CLAUDE.md`, and `CONTEXT.md`, and of every `AGENTS.md` or
+`CLAUDE.md` in an ancestor directory of a changed path. Changed paths are each
+`path` and rename `old_path` in the store's merge-base manifest. The set is
+exhaustive: linked files, `docs/agents/issue-tracker.md`, ADRs, design docs,
+READMEs, skill files, and head-branch versions never enter it. This reads the
+local git repository with `git ls-tree`.
 
 On local targets, supply the same schema directly: `pr.title` is the range
 as written or `worktree tree=<tree hash>`; `pr.body` holds only the real
@@ -24,7 +34,8 @@ when false, so digests of inputs without them are unchanged.
 
 Exit codes:
     0  the digest was printed
-    2  the input cannot be read or violates the schema; the reason is on stderr
+    2  the input cannot be read or violates the schema, or `git ls-tree` fails;
+       the reason is on stderr
 """
 
 from __future__ import annotations
@@ -32,6 +43,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 import sys
 from typing import Any
 
@@ -216,6 +228,36 @@ def merge_packet(payload: Any, packet_path: str) -> dict[str, Any]:
     return merged
 
 
+def derive_guidance(base: str, store_path: str) -> list[dict[str, str]]:
+    """The base-branch instruction files that apply to the store's changed paths."""
+    with open(store_path, encoding="utf-8") as store_file:
+        store = json.load(store_file)
+    context = mapping(mapping(store, "store").get("context"), "store.context")
+    wanted = {"AGENTS.md", "CLAUDE.md", "CONTEXT.md"}
+    for index, raw_entry in enumerate(sequence(context.get("manifest"), "store.context.manifest")):
+        entry = mapping(raw_entry, f"store.context.manifest[{index}]")
+        for changed in (entry.get("path"), entry.get("old_path")):
+            if not isinstance(changed, str) or not changed:
+                continue
+            parts = changed.split("/")[:-1]
+            for depth in range(1, len(parts) + 1):
+                directory = "/".join(parts[:depth])
+                wanted.update({f"{directory}/AGENTS.md", f"{directory}/CLAUDE.md"})
+    listing = subprocess.run(["git", "ls-tree", "-r", "-z", "--full-tree", base],
+                             capture_output=True, text=True, encoding="utf-8")
+    if listing.returncode != 0:
+        raise ValueError(f"git ls-tree {base} failed: {listing.stderr.strip()}")
+    guidance = []
+    for record in listing.stdout.split("\0"):
+        if not record:
+            continue
+        meta, path = record.split("\t", 1)
+        _mode, kind, blob_sha = meta.split(" ")
+        if kind == "blob" and path in wanted:
+            guidance.append({"path": path, "blob_sha": blob_sha})
+    return guidance
+
+
 # What --example prints: one local-range input with every field the review record names.
 EXAMPLE = {
     "pr": {"title": "main...HEAD", "body": "Add retries for charge submission\n"},
@@ -240,8 +282,12 @@ def main() -> int:
         "--packet",
         help="forge packet from forge_packet.py normalize; supplies pr and issues",
     )
+    parser.add_argument("--guidance-base", help="base commit whose instruction files form `guidance`; needs --store")
+    parser.add_argument("--store", help="review_context.py store whose manifest names the changed paths")
     parser.add_argument("--example", action="store_true", help="print a minimal input object, then exit")
     args = parser.parse_args()
+    if (args.guidance_base is None) != (args.store is None):
+        parser.error("--guidance-base and --store go together")
     if args.example:
         print(json.dumps(EXAMPLE, indent=2))
         return 0
@@ -252,8 +298,9 @@ def main() -> int:
                 parser.error("input and --json are mutually exclusive")
             payload = json.loads(args.json)
         elif args.input == "-":
-            raw = "" if sys.stdin.isatty() and args.packet is not None else sys.stdin.read()
-            if args.packet is not None and not raw.strip():
+            optional = args.packet is not None or args.store is not None
+            raw = "" if sys.stdin.isatty() and optional else sys.stdin.read()
+            if optional and not raw.strip():
                 payload = {}  # no specs or guidance were supplied
             else:
                 payload = json.loads(raw)
@@ -262,6 +309,11 @@ def main() -> int:
                 payload = json.load(input_file)
         if args.packet is not None:
             payload = merge_packet(payload, args.packet)
+        if args.store is not None:
+            payload = dict(mapping(payload, "input"))
+            if "guidance" in payload:
+                raise ValueError("input must not carry guidance when --store derives it")
+            payload["guidance"] = derive_guidance(args.guidance_base, args.store)
         print(digest(payload))
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(f"context_fingerprint: {error}", file=sys.stderr)
