@@ -148,7 +148,7 @@ When a continuation's delta is too large to inspect, it runs a full base-to-fina
 - **Open state.** It carries the open findings and questions, `routed`, and every `outstanding` entry.
 - **Allowance.** It sets the spent flags from that state, with `verification.allowance.carried_from` naming the latest chain file by absolute path. Its own batches spend only what the carried flags leave unspent.
 - **Confirmations.** It carries each `confirmed` candidate task whose finding is still open. The task's `batch` becomes `carried:<chain file>#<batch name>`, where the chain file is the absolute path of the record or addendum whose `verification.batches` holds that batch. A bare batch name from a version-2 file is always rewritten this way, never copied, because a bare name resolves against the replacement's own batches.
-- **Trigger.** A carried task keeps its `trigger`. A confirmation mapped from version 1 has none, so it takes `must-fix` when its finding is `must-fix`, and otherwise the finding's `kind` (`security` or `compatibility`).
+- **Trigger.** A carried task keeps its `trigger`. A confirmation mapped from version 1 has none, so it takes `must-fix` when its finding is `must-fix`, the finding's `kind` when that is `security` or `compatibility`, and `optional` otherwise. Version 1 also confirmed `consider` findings of other kinds, and rule 1 requires a mandatory trigger only for the first two cases.
 
 ## Version transition
 
