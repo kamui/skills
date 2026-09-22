@@ -1140,3 +1140,24 @@ Issue #232's local-target design gave session mode a second, mutable artifact be
 The block keeps its shell around the guard: the root-query failure exit, the `deferred: eligibility guard failed with exit <status>` fallback with stderr left visible, the private build to `context-build.out`, and the build-failure exit. `test_command_chains.py` runs the block with the same cases and assertions, including the guard that raises on a truthy non-object `data`; `test_run_events.py` binds the new placeholder in its documented-command replay.
 
 **Bytes** (`wc -c`, `origin/main` at `160d120` against this change): `pull-request-target.md` 12,566 → 8,775. It is conditional, loaded only for a pull-request target, so the always-loaded set is unchanged at 92,272.
+
+## Structural load reduction (user request, 2026-09-22)
+
+**Workflow retained: `v5b-22`.** No admission, verification, rendering, or state rule changes. Sentence-level trimming had stopped paying (#324 saved 706 bytes), so this change moves rules to where they are needed rather than rewording them: text that only some runs use loads on that branch, mechanical rules become script behavior, and a rule stated in two files keeps one owner.
+
+| Moved | From | To | Loaded |
+| --- | --- | --- | --- |
+| Batch modes, mixed batches, dispatch, reconcile, follow-up, after the follow-up | `SKILL.md` step 3 | `verifier-handoff.md` Batches | When a batch is required |
+| Changed tests and primary focused-test recording | `review-rubric.md` | `changed-tests.md` | When the change adds or changes a test function, or before any focused test |
+| Recorded deferrals | `review-rubric.md` | `pull-request-target.md` | Pull-request targets, the only ones that record deferrals |
+| Continuation addendum | `review-record.md` | `continuation-addendum.md` | Continuations; `implement-publish`'s continuation reference points there |
+| Step 5's two shell blocks | `SKILL.md` | `scripts/finalize_review.py` | Same stages, messages, artifacts, and exit statuses |
+| Guidance-set membership | `review-record.md` | `context_fingerprint.py --guidance-base --store` | Derived from the base commit and the store's manifest |
+
+`SKILL.md` step 3 keeps what decides whether any batch runs — the mandatory triggers, material survivors, attackable rows, the `clean_verdict: not-required` record — plus the batch cap and the rule never to end the turn with a batch pending, because a run with no batch never reads the handoff. The verifier brief's focused-test section is byte-identical; `build_verifier_prompt.py` now takes it from `changed-tests.md`'s Inspect and run section, and only three pointers in the brief's embedded text change.
+
+**One owner each.** Action and priority semantics stay in the rubric's Priorities and blocking section; observation and question rendering, file coverage states, and the packet-gap reporting rule stay in `review-record.md`; base-branch guidance precedence stays in `SKILL.md`'s Boundaries; the concurrency/invariant kind rule stays in `review-record.md`. `review-record.md`'s profile paragraph, which restated the Caller table and Return list, is cut to its identity rule, and `verifier-handoff.md` loses its second statement of the full-ledger row shape.
+
+**Budget.** `scripts/test_instruction_budget.py` fails when `SKILL.md`, the rubric, the review record, and `rendering.md` together exceed 73,000 bytes. A new rule goes into a script, a branch-loaded reference, or the place of text it supersedes; the budget rises only with an entry here saying why.
+
+**Bytes** (`wc -c`, `origin/main` at `160d120` against this change): `SKILL.md` 36,604 → 27,782; `review-rubric.md` 32,569 → 25,655; `review-record.md` 13,646 → 9,675; `rendering.md` unchanged at 9,453. The always-loaded set goes from 92,272 to 72,565. Branch-loaded files grow where the text moved: `verifier-handoff.md` 9,346 → 16,245, `pull-request-target.md` 12,566 → 14,021, and the new `changed-tests.md` 5,018 and `continuation-addendum.md` 1,558.
