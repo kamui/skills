@@ -23,6 +23,7 @@ Decide whether one change is safe to merge, and say why, without changing its co
 | Reviewer identity | Pull request only; the forge CLI's user unless the caller names an app |
 | Phase-1 packet, check evidence, test-run policy, scope directives | None, except the [`changed-tests.md`](references/changed-tests.md) defaults |
 | Merged-target publication authorization | None; only the retrospective Mode line uses it |
+| Inputs supplied up front | None; use supplied artifacts, spec, or missing `merged` before routing a gap |
 | Duplicate-review shortcut | `on` |
 
 A pull-request target reads [`references/pull-request-target.md`](references/pull-request-target.md); a range or working tree reads [`references/local-targets.md`](references/local-targets.md). Each pins the head, base, and merge-base, builds the context store, and names the record inputs. A target or base that does not resolve returns `target-unresolved`.
@@ -102,4 +103,4 @@ Both modes produce the same record from the same inputs.
 - **Before review:** an unresolved target or base, confirmation before snapshotting a bare dirty prompt, which issue applies when a required one is missing, and scope directives.
 - **After the record exists:** it presents the review and each routed item as a question.
 
-An answer or changed code starts a new run with its own allowance. Nothing from a session reaches the forge; `review-code-publish` publishes.
+On a duplicate review, `session` reports the existing review and runs a fresh one, with the shortcut `off`, only when the user asks. An answer or changed code starts a new run, with the answer as an up-front input and its own allowance. Nothing from a session reaches the forge; `review-code-publish` publishes.
