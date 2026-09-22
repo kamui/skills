@@ -62,7 +62,7 @@ Scope: the local record that `implementation-gate` returns, and the addendum tha
          "premise": "One sentence the no-blocker conclusion depends on.",
          "evidence": "path:line", "batch": "initial",
          "ruling": "holds | fails | unresolved | withheld | pending",
-         "reopened_as": "payments/lookup-miss"}                            // only when ruling is fails
+         "reopened_as": "payments/lookup-miss"}                            // a candidate when fails; a question when unresolved
       ],
       "batches": [
         {"name": "initial", "phase": "initial", "bundle": "/abs/initial",
@@ -70,7 +70,8 @@ Scope: the local record that `implementation-gate` returns, and the addendum tha
          "accounting": "/abs/initial/accounting.json",
          "operation": "Agent run_in_background=false"}
       ],
-      "allowance": {"initial_spent": true, "follow_up_spent": false},
+      "allowance": {"initial_spent": true, "follow_up_spent": false,
+                    "carried_from": null},           // or the absolute path of the record/addendum a replacement carried spent flags from
       "outstanding": ["premise-2: follow-up spent before its re-opened candidate could be confirmed"]
     },
     "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}
@@ -92,9 +93,9 @@ These checks catch contradictions only; they make no judgments. Kept from versio
 New or changed:
 
 1. **Mandatory confirmation.** A rendered finding that is `must-fix`, or whose `kind` is `security` or `compatibility`, has a candidate task with the same `id`, a mandatory `trigger`, and `ruling: confirmed`. This replaces version 1's `verification: independent-confirmed` check.
-2. **Task integrity.** Task ids are unique. Each task `batch` names a recorded batch, or is null when the ruling is `pending`. A `withheld` or `pending` task other than `optional` appears in `outstanding`.
-3. **Allowance.** `initial_spent` is true exactly when one or more batches are recorded. `follow_up_spent` is true exactly when two are recorded.
-4. **Coverage.** Non-empty `outstanding` or an `unreviewed` file contradicts `coverage=complete`. A `fails` premise needs `reopened_as`, naming a rendered item or an `outstanding` entry.
+2. **Task integrity.** Task ids are unique. Each task `batch` names a recorded batch, or is null when the ruling is `pending`. A `withheld` or `pending` task other than `optional` appears in `outstanding`. An `unresolved` safety-premise task appears in `outstanding` or names a rendered question in `reopened_as`.
+3. **Allowance.** `initial_spent` is true whenever one or more batches are recorded, and `follow_up_spent` whenever two are. A flag may be true without its recorded batch only when `carried_from` names the earlier record or addendum whose spent allowance a replacement review carried; a flag is never false while its batch is recorded or carried.
+4. **Coverage.** Non-empty `outstanding` or an `unreviewed` file contradicts `coverage=complete`. A `fails` premise needs `reopened_as`, naming a rendered item or an `outstanding` entry. An `unresolved` premise with no rendered question contradicts `coverage=complete`.
 5. **No premise ledger check.** The composer does not decide whether a premise check was needed. That is the reviewer's judgment about the affected behavior. The composer checks only the internal consistency of the tasks that are present.
 
 The instructions keep the rule that when the conclusion is `Approved` or `Needs Information` on a high-risk change, safety-premise tasks are present or explain the gap in `outstanding`. No script enforces it, because deciding which area a change affects is a judgment.
@@ -145,10 +146,10 @@ Unresolved state that must survive a fix or worker change:
 A continuation run under version-2 instructions may meet a version-1 chain: a record written before activation, possibly with `implementation-gate-addendum/1` files. It handles the chain this way:
 
 1. **Validate the chain.** Check that the record `schema` and each addendum `format` are known, the `repository` matches, and the head chain is unbroken (each `reviewed_head` equals the previous head). A missing file, an unknown format, or a broken chain is **rejected as incomplete**. The continuation reports the missing or mismatched state as a coverage gap and returns `Incomplete`. It does not start over.
-2. **Map version-1 state.** Open items come from `items` and `fixed_findings`. `routed` carries over as is. The spent allowance is the number of batches recorded across the record and every version-1 addendum: one or more means `initial_spent`, two means `follow_up_spent`. A version-1 addendum's `follow_up_spent: true` also sets it. Nothing resets the allowance, and a reinterpretation never grants a batch.
+2. **Map version-1 state.** Open items are the record's `items` plus every version-1 addendum's `findings` and `questions`, in chain order; an id leaves the open set only when a later `fixed_findings` entry classifies it `fixed`. `routed` carries over as is. The spent allowance is the number of batches recorded across the record and every version-1 addendum: one or more means `initial_spent`, two means `follow_up_spent`. A version-1 addendum's `follow_up_spent: true` also sets it. Nothing resets the allowance, and a reinterpretation never grants a batch.
 3. **Carry obligations.** Version-1 `outstanding` entries carry over verbatim.
 4. **Resolve the clean-verdict obligation.** A version-1 `clean_verdict: outstanding` becomes one outstanding entry, `v1-clean-verdict`. The continuation either discharges it with safety-premise tasks within the remaining allowance, when the final-head review touches a high-risk area, or closes it as `superseded-by-v2-policy` with the reason recorded in `coverage_gaps`. Closing it never records a `stands` verdict. Candidate rows with `independent-confirmed` count as `confirmed` candidate tasks. Other ledger rows are ignored, because version 2 has no ledger.
-5. **Write version 2.** The continuation writes `implementation-gate-addendum/2` with `record_format: implementation-gate-record/1`. A full replacement review writes a new version-2 record and carries forward the open state and the spent allowance from step 2.
+5. **Write version 2.** The continuation writes `implementation-gate-addendum/2` with `record_format: implementation-gate-record/1`. A full replacement review writes a new version-2 record, carries forward the open state from step 2, and sets the spent flags from step 2 with `allowance.carried_from` naming the latest chain file.
 
 A version-2 reviewer never writes a version-1 file. A version-1 reviewer handed a version-2 chain rejects it as incomplete under its existing rule for missing or mismatched state.
 

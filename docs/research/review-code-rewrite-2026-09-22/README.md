@@ -4,7 +4,7 @@ This is the design stage of [#328](https://github.com/kamui/skills/issues/328), 
 
 | File | Contents |
 | --- | --- |
-| [SKILL.draft.md](SKILL.draft.md) | The new entrypoint: 1,091 words of body |
+| [SKILL.draft.md](SKILL.draft.md) | The new entrypoint: 1,134 words of body |
 | [private-contracts.md](private-contracts.md) | `implementation-gate-record/2` and `implementation-gate-addendum/2`, the version-1 transition, and a consumer for each retained field |
 | [consumers.md](consumers.md) | Heading and marker extraction, timing events, public contracts, and cross-skill command tests, each with an owning ticket |
 | [comparison.md](comparison.md) | Baseline pin, matched conditions, bounds, and ten reviewer-input cases |
@@ -17,7 +17,8 @@ This is the design stage of [#328](https://github.com/kamui/skills/issues/328), 
 - **What does incomplete mean?** No blocker is known, but something required did not finish:
   - a changed file stayed unreviewed;
   - a required check or input was missing;
-  - required verification had no awaited route, failed, or needed a batch after the allowance was spent.
+  - required verification had no awaited route, failed, or needed a batch after the allowance was spent;
+  - a safety premise stayed `unresolved` without becoming a question.
 - **What does the result contain?**
   - status and summary;
   - findings, questions, and observations;
