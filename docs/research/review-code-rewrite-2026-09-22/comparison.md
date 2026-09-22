@@ -21,7 +21,7 @@ Instruction size at the pin: word counts from `wc -w`. They cover instructions o
 | Separate verifier context: `verifier.md` 2,219, `verifier-return.md` 531, and the `changed-tests.md` slice | ≥ 3,445 |
 | `build_verifier_prompt.py --example` brief (candidate-only, one candidate, records included) | 4,476 |
 | Helper text loaded at the baseline: `compose_review.py --example --profile implementation-gate` 444, `review_context.py --help` 324 | 768 |
-| Draft entrypoint ([SKILL.draft.md](SKILL.draft.md)), body only | 1,091 |
+| Draft entrypoint ([SKILL.draft.md](SKILL.draft.md)), body only | 1,134 |
 
 The draft figure is the entrypoint alone. Measure the treatment's full load after #332, the same way, before any run.
 

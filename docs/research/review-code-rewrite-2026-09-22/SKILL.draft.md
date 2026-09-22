@@ -22,6 +22,7 @@ Decide whether one change is safe to merge, and say why, without changing its co
 | Issues or specs | None |
 | Reviewer identity | Pull request only; the forge CLI's user unless the caller names an app |
 | Phase-1 packet, check evidence, test-run policy, scope directives | None, except the [`changed-tests.md`](references/changed-tests.md) defaults |
+| Merged-target publication authorization | None; only the retrospective Mode line uses it |
 | Duplicate-review shortcut | `on` |
 
 A pull-request target reads [`references/pull-request-target.md`](references/pull-request-target.md); a range or working tree reads [`references/local-targets.md`](references/local-targets.md). Each pins the head, base, and merge-base, builds the context store, and names the record inputs. A target or base that does not resolve returns `target-unresolved`.
@@ -52,13 +53,13 @@ A fresh-context verifier receives claims and cited evidence, never the primary's
 
 It publishes only when `confirmed`. A `refuted` candidate is dropped, or routed as a question when its basis is an unresolved fact. Refuting one candidate does not establish that the change is safe.
 
-**Safety-premise check.** Run this check when the review would conclude with no blocker, and the change affects security or authorization, data integrity, a destructive migration, released compatibility, or a concurrency or failover invariant. Name the few concrete premises that conclusion rests on, drawn from the affected behavior; for example, "the lookup always succeeds before `updateShardId()` runs." The verifier attacks each premise by tracing its opposite branch and rules `holds`, `fails`, or `unresolved`. A premise that fails reopens as a candidate. That candidate still needs full admission and, if mandatory, confirmation. This check has no exhaustive candidate ledger.
+**Safety-premise check.** Run this check when the review would conclude with no blocker, and the change affects security or authorization, data integrity, a destructive migration, released compatibility, or a concurrency or failover invariant. Name the few concrete premises that conclusion rests on, drawn from the affected behavior; for example, "the lookup always succeeds before `updateShardId()` runs." The verifier attacks each premise by tracing its opposite branch and rules `holds`, `fails`, or `unresolved`. A premise that fails reopens as a candidate. An `unresolved` premise is not a pass: it becomes a material question when an answer could change the decision, and otherwise stays outstanding. That candidate still needs full admission and, if mandatory, confirmation. This check has no exhaustive candidate ledger.
 
 **Optional scrutiny.** Add any other candidate or premise to a batch when proving or refuting it needs a difficult cross-module reconstruction. Optional work never makes the review incomplete.
 
 **Allowance.** One initial batch and at most one follow-up, across the review and every continuation of it. Batches are awaited: never hand back while one is pending. A worker change, repair, or new session grants no extra batch.
 
-**Incomplete.** Required verification that cannot finish leaves coverage incomplete: no awaited route, a failed or withheld return, a spent allowance, or a new mandatory candidate after the follow-up. Findings already confirmed still publish.
+**Incomplete.** Required verification that cannot finish leaves coverage incomplete: no awaited route, a failed or withheld return, a spent allowance, a new mandatory candidate after the follow-up, or an `unresolved` premise with no question. Findings already confirmed still publish.
 
 ## Result
 
