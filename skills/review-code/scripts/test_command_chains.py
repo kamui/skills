@@ -319,6 +319,7 @@ class Chains(unittest.TestCase):
         text = (block(TARGET.read_text(encoding="utf-8"), "early-build.txt")
                 .replace("<private-dir>", shlex.quote(str(private))).replace("<reviewer-login>", shlex.quote(reviewer))
                 .replace("<run-events-script>", shlex.quote(str(SCRIPTS / "run_events.py")))
+                .replace("<forge-packet-script>", shlex.quote(str(SCRIPTS / "forge_packet.py")))
                 .replace("<review-context-script>", shlex.quote(str(SCRIPTS / "review_context.py"))).replace("<pr>", "7"))
         self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
         result = self.sh(shell, text, env=env, cwd=repo)

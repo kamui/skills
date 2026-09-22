@@ -611,6 +611,7 @@ class RunEventTests(unittest.TestCase):
                 private = self.root / f"documented-{number}"
                 private.mkdir()
                 text = (block.replace("<run-events-script>", script)
+                        .replace("<forge-packet-script>", shlex.quote(str(SCRIPTS / "forge_packet.py")))
                         .replace("<skill-root>/scripts/run_events.py", script)
                         .replace("<private-dir>", shlex.quote(str(private))))
                 text = re.sub(r"<[A-Za-z][A-Za-z0-9_.-]*>", "7", text)
