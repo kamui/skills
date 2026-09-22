@@ -15,7 +15,7 @@ These consumers split reference files on literal text. Renaming or moving the te
 
 | Consumer | Extracts | From | Rewrite impact | Owner |
 | --- | --- | --- | --- | --- |
-| `build_verifier_prompt.py` `render()` | The whole file | `references/verifier.md`, `verifier-return.md` | The Clean-verdict task and the complete-ledger/related-acquittal wording give way to the safety-premise task. The brief is regenerated from the new text. | #331 |
+| `build_verifier_prompt.py` `render()` | The whole file | `references/verifier.md`, `verifier-return.md` | The Clean-verdict task and the complete-ledger/related-acquittal wording give way to the safety-premise task. The brief is regenerated from the new text. README's layout folds `verifier-return.md` into `verification.md`, which the primary loads: either keep a separate verifier-facing return file, or have the builder extract a marked section so the worker never receives dispatch or reconciliation instructions. | #331, #332 |
 | `build_verifier_prompt.py` | `## Inspect and run` … `## Primary focused-test recording` | `references/changed-tests.md` | Keep both headings, or change the boundaries and the file together. | #331, #332 |
 | `build_verifier_prompt.py` | `**Released compatibility.**` to EOF | `references/released-compatibility.md` | Keep the marker. | #332 |
 | `build_verifier_prompt.py` | `The caller may supply a compact verification summary.` to EOF | `references/check-evidence.md` | Keep the sentence. `implement-publish` also cites this file by name. | #332 |
@@ -53,7 +53,7 @@ These interfaces are preserved. The only change is the workflow identifier in th
 | Prior-item classifications, drafted replies, thread node ids, `writes.jsonl` | `re-review.md`, `publication.md` | `review-code-publish` thread writes | Unchanged. |
 | Stops: `target-unresolved`, `target-closed-unmerged`, `duplicate-review`, `snapshot-failed`, `nothing-to-review`, `script-failure` | `SKILL.md` | `review-code-publish`, `implement-publish`, `finish-it` (through them) | Names unchanged. |
 | Review status values | `review-record.md`, `STATUSES` | `finish-it` stop on `Approved`, `implement-publish` gate | Unchanged. |
-| Caller inputs: `mode`, `profile`, target, issues/spec, reviewer identity, phase-1 packet, check evidence, test policy, scope directives, shortcut, merged authorization | `SKILL.md` Caller table | `review-code-publish`, `implement-publish`, `finish-it`, `audit-code-publish` (identity only) | Names unchanged. The draft groups four rarely used inputs into one table row, but their names stay. |
+| Caller inputs: `mode`, `profile`, target, issues/spec, reviewer identity, phase-1 packet, check evidence, test policy, scope directives, inputs supplied up front, shortcut, merged authorization | `SKILL.md` Caller table | `review-code-publish`, `implement-publish`, `finish-it`, `audit-code-publish` (identity only) | Names unchanged. The draft groups four rarely used inputs into one table row, but their names stay. |
 
 ## Private record consumers
 

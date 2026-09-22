@@ -4,7 +4,7 @@ This is the design stage of [#328](https://github.com/kamui/skills/issues/328), 
 
 | File | Contents |
 | --- | --- |
-| [SKILL.draft.md](SKILL.draft.md) | The new entrypoint: 1,134 words of body |
+| [SKILL.draft.md](SKILL.draft.md) | The new entrypoint: 1183 words of body |
 | [private-contracts.md](private-contracts.md) | `implementation-gate-record/2` and `implementation-gate-addendum/2`, the version-1 transition, and a consumer for each retained field |
 | [consumers.md](consumers.md) | Heading and marker extraction, timing events, public contracts, and cross-skill command tests, each with an owning ticket |
 | [comparison.md](comparison.md) | Baseline pin, matched conditions, bounds, and ten reviewer-input cases |
