@@ -662,7 +662,7 @@ def main() -> int:
     assert "— anchor `reported/path.ts` (file)\n" in payload["summary"]["body"] and f"{BLOB}/reported" not in payload["summary"]["body"]
     legacy = base_composition()
     legacy["questions"][0]["anchor"] = {"type": "file", "path": "src/queue.ts"}
-    refused(legacy, "anchor-provenance", "file anchor without side", needle="questions[0].anchor")
+    refused(legacy, "anchor-provenance", "file anchor without side or store", needle="questions[0].anchor")
     bad = base_composition()
     bad["findings"][0]["anchor"] = {"type": "line", "path": "src/payments.ts", "start_line": 44, "end_line": 42, "side": "RIGHT"}
     refused(bad, "anchor-shape", "reversed line anchor")
@@ -671,7 +671,7 @@ def main() -> int:
     refused(bad, "anchor-provenance", "file anchor with a bad side")
     print("ok anchors: LEFT line, deleted file, UNKNOWN, missing or malformed provenance refused")
 
-    # The pinned manifest checks anchor provenance without deciding it.
+    # The pinned manifest checks supplied anchor provenance and derives an omitted file side.
     with tempfile.TemporaryDirectory() as directory:
         store_path = Path(directory) / f"review-context-{HEAD}.json"
         repo = Path(directory) / "repo"
@@ -738,6 +738,43 @@ def main() -> int:
         undeleted["questions"][0]["anchor"]["side"] = "LEFT"
         refused(pinned(undeleted), "anchor-provenance", "present file marked LEFT", "--store", str(store_path))
         refused(pinned(unknown), "anchor-provenance", "path outside the manifest", "--store", str(store_path), needle="reported/path.ts")
+
+        # An omitted file side is derived from the pinned manifest into the same payload an explicit side composes.
+        for path, side, revision in (("src/legacy-queue.ts", "LEFT", base), ("src/payments.ts", "RIGHT", head),
+                                     ("src/queue.ts", "RIGHT", head), ("src/retry-policy.ts", "RIGHT", head)):
+            explicit = base_composition()
+            explicit["questions"][0]["anchor"] = {"type": "file", "path": path, "side": side}
+            omitted = copy.deepcopy(explicit)
+            del omitted["questions"][0]["anchor"]["side"]
+            expected, _, raw = composed(pinned(explicit), f"explicit {side} {path}", "--store", str(store_path))
+            derived, _, derived_raw = composed(pinned(omitted), f"derived {side} {path}", "--store", str(store_path))
+            assert derived_raw == raw, (path, "an omitted side composes the explicit side's bytes")
+            assert derived["items"][1]["anchor"] == {"type": "file", "path": path, "side": side}, derived["items"][1]
+            assert f"anchor [`{path}`]({REPO}/blob/{revision}/{path}) (file)" in derived["summary"]["body"], path
+        repeated = base_composition()
+        repeated["findings"][0]["anchor"] = {"type": "file", "path": "src/payments.ts"}
+        repeated["findings"].append(consider(anchor={"type": "file", "path": "src/payments.ts"}, fix={"path": "src/payments.ts", "start_line": 5}))
+        payload, _, _ = composed(pinned(repeated), "two omitted sides on one path", "--store", str(store_path))
+        assert [item["anchor"] for item in payload["items"][:2]] == [{"type": "file", "path": "src/payments.ts", "side": "RIGHT"}] * 2
+        pre_image = base_composition()
+        pre_image["questions"][0]["anchor"] = {"type": "file", "path": "src/old-queue.ts"}
+        refused(pinned(pre_image), "anchor-provenance", "omitted side on a rename pre-image", "--store", str(store_path),
+                needle="not in the pinned merge-base manifest")
+        ambiguous_store = Path(directory) / "ambiguous.json"
+        ambiguous = copy.deepcopy(store)
+        ambiguous["context"]["manifest"] += [{**entry, "status": "X"} for entry in store["context"]["manifest"] if entry["path"] == "src/payments.ts"]
+        ambiguous["context"]["manifest"].append({"status": "U", "path": "src/conflicted.ts", "old_path": None, "insertions": "0",
+                                                 "deletions": "0", "new": False, "lines": 1})
+        ambiguous_store.write_text(json.dumps(ambiguous), encoding="utf-8")
+        for path in ("src/payments.ts", "src/conflicted.ts"):
+            unestablished = base_composition()
+            unestablished["questions"][0]["anchor"] = {"type": "file", "path": path}
+            refused(pinned(unestablished), "anchor-provenance", f"unestablished revision for {path}", "--store", str(ambiguous_store),
+                    needle="does not establish one revision")
+            unestablished["questions"][0]["anchor"]["side"] = "UNKNOWN"
+            payload, _, _ = composed(pinned(unestablished), f"explicit UNKNOWN for {path}", "--store", str(ambiguous_store))
+            assert f"— anchor `{path}` (file)\n" in payload["summary"]["body"], path
+        print("ok manifest derivation: deleted, present, renamed, and added file sides; unestablished revisions need an explicit side")
         stale = base_composition()
         stale["run"]["head"] = PRIOR
         refused(pinned(stale), "run-identity", "store built for another head", "--store", str(store_path))
