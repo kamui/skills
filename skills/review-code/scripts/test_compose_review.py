@@ -11,9 +11,11 @@ Refusal fixtures assert the rule name and that no payload is printed.
 """
 from __future__ import annotations
 
+import atexit
 import copy
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -218,9 +220,44 @@ def local_targets() -> None:
     print("ok local targets: identity, source kinds, code spans, and unchanged pull-request fixture")
 
 
+# Verifier artifacts the record's tasks name; the composer reads each batch's accounting report.
+ARTIFACTS = tempfile.mkdtemp(prefix="compose-review-test-")
+atexit.register(shutil.rmtree, ARTIFACTS, True)
+
+
 def batch_paths(name: str, phase: str | None = None) -> dict:
-    return {"name": name, "phase": phase or name, "bundle": f"/tmp/x/{name}", "raw_return": f"/tmp/x/{name}/raw-return.json",
-            "accounting": f"/tmp/x/{name}/accounting.json", "operation": "Agent run_in_background=false"}
+    return {"name": name, "phase": phase or name, "bundle": f"{ARTIFACTS}/{name}", "raw_return": f"{ARTIFACTS}/{name}/raw-return.json",
+            "accounting": f"{ARTIFACTS}/{name}/accounting.json", "operation": "Agent run_in_background=false"}
+
+
+def write_accounting(path: str, tasks: list) -> None:
+    """An accounting report, in the shape account_verifier_return.py writes, that establishes each task's ruling."""
+    report = {"format": "verifier-accounting/2", "accounted": {"candidates": [], "premises": []},
+              "withheld": {"candidates": [], "premises": []}, "return": {"candidates": [], "premises": []}}
+    for task in tasks:
+        role = "candidates" if task["type"] == "candidate" else "premises"
+        if task["ruling"] == "withheld":
+            report["withheld"][role].append(task["id"])
+            continue
+        report["accounted"][role].append(task["id"])
+        if role == "premises":
+            record = {"id": task["id"], "ruling": task["ruling"]}
+        elif task["ruling"] == "confirmed":
+            record = {"id": task["id"], "verdict": "confirmed", "basis": "decisive"}
+        else:
+            record = {"id": task["id"], "verdict": "refuted", "basis": "unresolved" if task["ruling"] == "unresolved" else "contradicted"}
+        report["return"][role].append(record)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(report), encoding="utf-8")
+
+
+def chain_file(name: str, confirmed: list) -> str:
+    """A version-2 addendum whose initial batch's accounting confirms each id, as a replacement record's chain file."""
+    path = f"{ARTIFACTS}/chain/{name}.json"
+    batch = dict(batch_paths("initial"), accounting=f"{ARTIFACTS}/chain/{name}-accounting.json")
+    write_accounting(batch["accounting"], [{"id": i, "type": "candidate", "ruling": "confirmed"} for i in confirmed])
+    Path(path).write_text(json.dumps({"format": "implementation-gate-addendum/2", "verification": {"batches": [batch]}}), encoding="utf-8")
+    return path
 
 
 def candidate_task(identity: str = "payments/retry-idempotency", trigger: str = "must-fix", batch: str | None = "initial",
@@ -237,6 +274,8 @@ def premise_task(identity: str = "premise-1", ruling: str = "holds", batch: str 
 def verification(tasks: list, batches: list, initial: bool | None = None, follow_up: bool | None = None,
                  outstanding: list | None = None, carried_from: str | None = None) -> dict:
     phases = {b["phase"] for b in batches}
+    for batch in batches:
+        write_accounting(batch["accounting"], [t for t in tasks if t.get("batch") == batch["name"]])
     return {"tasks": tasks, "batches": batches,
             "allowance": {"initial_spent": bool(phases) if initial is None else initial,
                           "follow_up_spent": "follow-up" in phases if follow_up is None else follow_up,
@@ -363,9 +402,30 @@ def implementation_gate() -> None:
     record, _ = gate(outcome("Approved", [], []), "clean outcome with no verification")
     assert record["status"] == "Approved" and record["summary"]["body"].startswith("**Approved (advisory)** — no findings.")
     assert record["record"]["verification"]["allowance"] == {"initial_spent": False, "follow_up_spent": False, "carried_from": None}
-    # A refuted and an unresolved candidate withhold their findings; neither needs outstanding work.
-    gate(outcome("Approved", [candidate_task(ruling="refuted"), candidate_task("queue/empty-pop", "data-integrity", ruling="unresolved")],
-                 [batch_paths("initial")]), "refuted and unresolved candidates publish nothing")
+    # A refuted candidate is dropped; an unresolved one is dropped only when optional.
+    gate(outcome("Approved", [candidate_task(ruling="refuted"), candidate_task("queue/empty-pop", "optional", ruling="unresolved")],
+                 [batch_paths("initial")]), "refuted and optional unresolved candidates publish nothing")
+    # A required unresolved candidate becomes a question with its id or stays outstanding, never an Approved drop.
+    refused(outcome("Approved", [candidate_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
+            "unresolved must-fix candidate dropped from an Approved record", "--profile", "implementation-gate", needle="required candidate")
+    gate(outcome("Needs Information", [candidate_task("queue/retry-order", "data-integrity", ruling="unresolved")], [batch_paths("initial")],
+                 questions=copy.deepcopy(composition["questions"])), "unresolved required candidate routed to its question")
+    gate(outcome("Incomplete", [candidate_task(ruling="unresolved")], [batch_paths("initial")],
+                 outstanding=["payments/retry-idempotency: settling fact unavailable"]), "unresolved required candidate left outstanding")
+    # A ruling stands only on the accounting report of the batch it names.
+    mismatched = copy.deepcopy(composition)
+    write_accounting(mismatched["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="refuted")])
+    refused(mismatched, "verification", "confirmed task over an accounting that refuted it", "--profile", "implementation-gate",
+            needle="establishes `refuted`, not `confirmed`")
+    missing = copy.deepcopy(composition)
+    missing["record"]["verification"]["batches"][0]["accounting"] = f"{ARTIFACTS}/absent/accounting.json"
+    refused(missing, "verification", "confirmed task over a missing accounting report", "--profile", "implementation-gate", needle="cannot be read")
+    unaccounted = copy.deepcopy(composition)
+    write_accounting(unaccounted["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="withheld")])
+    refused(unaccounted, "verification", "confirmed task the accounting withheld", "--profile", "implementation-gate",
+            needle="establishes `withheld`, not `confirmed`")
+    write_accounting(composition["record"]["verification"]["batches"][0]["accounting"], composition["record"]["verification"]["tasks"])
+    gate(composition, "fixture composes again once its accounting is rewritten")
     # High-risk no-blocker conclusion: a premise that holds approves, and a question can carry an unresolved one.
     record, _ = gate(outcome("Approved", [premise_task()], [batch_paths("initial")]), "safety premise holds")
     assert record["record"]["verification"]["tasks"][0]["type"] == "safety-premise"
@@ -419,7 +479,7 @@ def implementation_gate() -> None:
     print("ok implementation-gate: confirmed, refuted, unresolved, premise, new-blocker, missing-evidence, and exhausted outcomes")
 
     # A replacement record carries the chain's confirmations and spent allowance; its own batches spend only what is left.
-    chain = "/tmp/x/addenda/addendum-" + "c" * 40 + ".json"
+    chain = chain_file("addendum-" + "c" * 40, ["payments/retry-idempotency"])
     carried = outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
                       initial=True, follow_up=False, carried_from=chain)
     record, _ = gate(carried, "replacement record carries a confirmation and the spent initial batch")
@@ -430,6 +490,19 @@ def implementation_gate() -> None:
     gate(outcome("Incomplete", [candidate_task("queue/lost-ack", batch=None, ruling="pending")], [], findings=[],
                  initial=True, follow_up=True, carried_from=chain, outstanding=["v1-clean-verdict: superseded-by-v2-policy", "queue/lost-ack: allowance spent by the chain"]),
          "replacement record with an exhausted carried allowance")
+    # The reviewer's reproduction: a carried confirmation whose chain file and carried_from do not exist.
+    absent = f"{ARTIFACTS}/chain/missing.json"
+    line = refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{absent}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                           initial=True, carried_from=absent), "verification", "carried confirmation from a missing chain file",
+                   "--profile", "implementation-gate", needle="cannot be read")
+    assert "allowance.carried_from" in line and "record.verification.tasks[0]" in line, line
+    other = chain_file("addendum-other", ["queue/unrelated"])
+    refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{other}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                    initial=True, carried_from=other), "verification", "carried batch that never confirmed this id",
+            "--profile", "implementation-gate", needle="does not account for `payments/retry-idempotency`")
+    refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#follow-up")], [], findings=copy.deepcopy(composition["findings"]),
+                    initial=True, carried_from=chain), "verification", "carried batch name the chain file does not record",
+            "--profile", "implementation-gate", needle="records no batch `follow-up`")
     for name, bad in (
         ("carried task without carried_from", outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [],
                                                      findings=copy.deepcopy(composition["findings"]), initial=True)),
@@ -1012,7 +1085,13 @@ def main() -> int:
     for profile in ("publishable", "implementation-gate"):
         shown = run(COMPOSER, "", "--example", "--profile", profile)
         assert shown.returncode == 0 and shown.stderr == "", ("example", profile, shown.stderr)
-        example = run(COMPOSER, shown.stdout, "--profile", profile)
+        value = json.loads(shown.stdout)
+        if profile == "implementation-gate":  # the example's accounting report has to exist to establish its rulings
+            batch = value["record"]["verification"]["batches"][0]
+            batch["accounting"] = f"{ARTIFACTS}/example/accounting.json"
+            write_accounting(batch["accounting"], value["record"]["verification"]["tasks"])
+            assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "the example names an accounting report that does not exist"
+        example = run(COMPOSER, json.dumps(value), "--profile", profile)
         assert example.returncode == 0, ("example composes", profile, example.stdout)
     print("ok example: --example prints a composition that composes under both profiles")
     return 0
