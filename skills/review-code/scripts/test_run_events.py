@@ -183,7 +183,7 @@ class RunEventTests(unittest.TestCase):
                                                          "payload-composed"])
         self.assertEqual([e["exit"] for e in events], [0, 0, 0, 1, 0])
         self.assertEqual(events[0]["data"]["head"], head)
-        self.assertEqual(events[0]["policy"]["workflow"], "v5b-23")
+        self.assertEqual(events[0]["policy"]["workflow"], "v5b-24")
         self.assertEqual(events[1]["data"]["premises"], 1)
         self.assertNotIn("mode", events[1]["data"])
         self.assertEqual(events[2]["data"]["supplied"], {"candidates": 1, "premises": 1})

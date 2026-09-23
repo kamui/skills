@@ -14,11 +14,15 @@ The reviewer judges evidence, admission, priority, and whether a safety area app
 
 | Concern | Current owner |
 | --- | --- |
-| Target resolution and pinned context | [`SKILL.md`](SKILL.md) steps 1–2, the conditional [local](references/local-targets.md) or [pull-request](references/pull-request-target.md) target reference, and [`review_context.py`](scripts/review_context.py) |
+| Target resolution and pinned context | [`SKILL.md`](SKILL.md) Caller and Strategy, the conditional [local](references/local-targets.md) or [pull-request](references/pull-request-target.md) target reference, and [`review_context.py`](scripts/review_context.py) |
 | Finding admission, issue fit, inspection, uncertainty, priority | [`review-rubric.md`](references/review-rubric.md); [changed tests](references/changed-tests.md), [conformance](references/conformance.md), [released compatibility](references/released-compatibility.md), and [check evidence](references/check-evidence.md) load when applicable |
-| Verification triggers and batch allowance | [`SKILL.md`](SKILL.md) step 3; [handoff](references/verifier-handoff.md) and [return](references/verifier-return.md) govern a dispatched batch, and the [verifier brief](references/verifier.md) governs its worker |
-| Record meaning, output profiles, and rendered syntax | [`review-record.md`](references/review-record.md), [`rendering.md`](references/rendering.md), and the [composer](scripts/compose_review.py) and [validator](scripts/validate_review.py) |
+| Verification triggers and batch allowance | [`SKILL.md`](SKILL.md) Verification; [handoff](references/verifier-handoff.md) and [return](references/verifier-return.md) govern a dispatched batch, and the [verifier brief](references/verifier.md) governs its worker |
+| Record meaning, output profiles, and rendered syntax | [`SKILL.md`](SKILL.md) Return, [`rendering.md`](references/rendering.md), and the [composer](scripts/compose_review.py) and [validator](scripts/validate_review.py) |
 | Prior reviews and implementation continuations | [`re-review.md`](references/re-review.md) and [`continuation-addendum.md`](references/continuation-addendum.md), respectively |
 | Publication | [`review-code-publish`](../review-code-publish/SKILL.md) and its [publication reference](../review-code-publish/references/publication.md) |
 
-Keep dated evidence and superseded decisions in [HISTORY.md](HISTORY.md). Update this file when the current architecture or rule ownership changes. The [instruction budget check](scripts/test_instruction_budget.py) requires a dated entry here before its 73,000-byte limit rises; that rationale belongs with the current design.
+Keep dated evidence and superseded decisions in [HISTORY.md](HISTORY.md). Update this file when the current architecture or rule ownership changes. The [instruction budget check](scripts/test_instruction_budget.py) requires a dated entry here before any measured-load limit rises; that rationale belongs with the current design.
+
+## Concise runtime strategy, issue #332, 2026-09-22
+
+Workflow `v5b-24` removes mandatory reading/search recipes and replaces the runtime manual with the strategy draft, selective procedures, and composer examples. It supersedes the historical inspection recipes and 73 KB budget; #331's verification policy and version-2 state remain. The always-loaded ceiling is now 26 KB, with separate limits for runtime total, expanded primary paths, and generated verifier briefs. [The runtime report](../../docs/research/review-code-rewrite-2026-09-22/runtime-layout.md) records the layout, justified entrypoint exception, baseline comparison, and limits. Word counts make no quality, latency, or cost claim; #333 owns the bounded comparison.

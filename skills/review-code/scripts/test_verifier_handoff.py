@@ -17,6 +17,8 @@ import sys
 import tempfile
 import unittest
 
+import build_verifier_prompt as builder
+
 SCRIPTS = Path(__file__).resolve().parent
 HEAD = "a" * 40
 BASE = "b" * 40
@@ -137,8 +139,8 @@ class HandoffTests(unittest.TestCase):
 
     def test_brief_carries_the_safety_premise_task(self):
         brief = (self.build(input_data([], [premise()])) / "brief.md").read_text(encoding="utf-8")
-        self.assertIn("## Safety-premise task", brief)
-        self.assertIn("Trace the *opposite* branch", brief)
+        self.assertIn("## Safety premises and scoped safety rulings", brief)
+        self.assertIn("Trace the opposite branch", brief)
         self.assertIn("updateShardId()", brief)
         self.assertNotIn("PRIVATE_", brief)
 
@@ -215,6 +217,17 @@ class HandoffTests(unittest.TestCase):
         self.assertIn("## Supplied check evidence", with_evidence)
         self.assertIn("A new head is an invalidation boundary", with_evidence)
         self.assertNotIn("SKILL.md", with_evidence)
+        self.assertNotIn("## Primary accounting", with_evidence)
+        self.assertNotIn("Account for supplied checks", with_evidence)
+
+    def test_instruction_sections_reject_missing_duplicate_or_reversed_boundaries(self):
+        source = self.root / "instruction.md"
+        for content in ("start\nbody", "end\nstart\nbody", "start\nstart\nend\n"):
+            source.write_text(content, encoding="utf-8")
+            with self.assertRaises(builder.ContentError):
+                builder.section(self.root, source.name, "start\n", "end\n")
+        source.write_text("preface\nstart\nworker\nend\nprimary\n", encoding="utf-8")
+        self.assertEqual(builder.section(self.root, source.name, "start\n", "end\n"), "worker\n")
 
     def test_example_input_builds(self):
         result = self.run_cli("build_verifier_prompt.py", "--example")
