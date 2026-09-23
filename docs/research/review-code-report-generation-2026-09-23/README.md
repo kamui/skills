@@ -4,7 +4,7 @@
 
 ## Method
 
-[`demo.py`](demo.py) copies each baseline cell's committed private directory into a temporary directory. It rewrites only the private-directory prefix in `composition.json`, then runs this checkout's finalizer with `--compact` on the saved composition. No composition field is added. Public outputs are compared with the committed baseline bytes after mapping the prefix back; the gate record is compared with its `finalization` removed. [`demo.json`](demo.json) holds the rows. The continuation cell is out of scope because it writes an addendum, which has no finalizer until #345.
+[`demo.py`](demo.py) copies each baseline cell's committed private directory into a temporary directory. It rewrites only the private-directory prefix in `composition.json`, then runs this checkout's finalizer with `--compact` on the saved composition. No composition field is added. Public outputs are compared with the committed baseline bytes after mapping the prefix back; the gate record is compared with its `finalization` removed. [`demo.json`](demo.json) holds the rows. The continuation cell is out of scope because it writes an addendum, which has no finalizer until #345. Since #343 the finalizer refuses these compositions' baseline skill root and unrelocated raw-return paths as conflicts, so this demonstration reproduces with the #342 finalizer at `7b93ce3`; [#343's demonstration](../review-code-metadata-derivation-2026-09-23/README.md) relocates both.
 
 ```sh
 python3 docs/research/review-code-report-generation-2026-09-23/demo.py --output docs/research/review-code-report-generation-2026-09-23/demo.json

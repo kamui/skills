@@ -1,0 +1,71 @@
+[
+  {
+    "cell": "publishable",
+    "profile": "publishable",
+    "mechanical_leaves_removed": 16,
+    "baseline_composition_leaves": 85,
+    "derived_composition_leaves": 69,
+    "transcribed": {
+      "exit": 0,
+      "failed_stage": null,
+      "public_bytes_match_baseline": {
+        "payload.json": true,
+        "batch.json": true,
+        "fragments.md": true
+      },
+      "context_matches_baseline": true
+    },
+    "derived": {
+      "exit": 0,
+      "failed_stage": null,
+      "public_bytes_match_baseline": {
+        "payload.json": true,
+        "batch.json": true,
+        "fragments.md": true
+      },
+      "context_matches_baseline": true
+    },
+    "arms_identical": true
+  },
+  {
+    "cell": "required-verification",
+    "profile": "publishable",
+    "mechanical_leaves_removed": 8,
+    "baseline_composition_leaves": 46,
+    "derived_composition_leaves": 38,
+    "transcribed": {
+      "exit": 1,
+      "failed_stage": "accounting",
+      "output": "accounting failed with exit 1; later stages did not run:\nrecord: accounting: finalization requires the private `record` accounting for either profile; nothing is defaulted\n"
+    },
+    "derived": {
+      "exit": 1,
+      "failed_stage": "accounting",
+      "output": "accounting failed with exit 1; later stages did not run:\nrecord: accounting: finalization requires the private `record` accounting for either profile; nothing is defaulted\n"
+    }
+  },
+  {
+    "cell": "implementation-gate",
+    "profile": "implementation-gate",
+    "mechanical_leaves_removed": 13,
+    "baseline_composition_leaves": 97,
+    "derived_composition_leaves": 84,
+    "transcribed": {
+      "exit": 0,
+      "failed_stage": null,
+      "public_bytes_match_baseline": {
+        "record.json": true
+      },
+      "context_matches_baseline": true
+    },
+    "derived": {
+      "exit": 0,
+      "failed_stage": null,
+      "public_bytes_match_baseline": {
+        "record.json": true
+      },
+      "context_matches_baseline": true
+    },
+    "arms_identical": true
+  }
+]
