@@ -393,9 +393,12 @@ class Chain(unittest.TestCase):
     # --- replacements -------------------------------------------------------------
 
     def replacement(self, predecessor: Path, *, carried_from: str | None = None, batch: str | None = None,
-                    drop_question=False) -> Path:
+                    drop_question=False, lower=False) -> Path:
         def carry(composition, _private):
             composition["run"]["head"] = F1
+            if lower:
+                composition["findings"][0].update(priority="P3", action="consider")
+                composition["summary"]["status"] = "Needs Information"
             ref = batch or f"carried:{predecessor}#initial"
             composition["record"]["verification"] = {
                 "tasks": [fixtures.candidate_task(batch=ref)], "batches": [],
@@ -512,6 +515,9 @@ class Chain(unittest.TestCase):
                 result = self.compose(record, self.store(HEAD, F1), self.continuation(replaced_by_full_review=str(replacement), **base))
                 self.refused(result, "carried-state", needle)
                 self.no_new_addendum(record, F1)
+        # A replacement cannot lower an unsettled blocker, even with a status its own items support.
+        lowered = self.continuation(fixed_findings=[], status="Needs Information", replaced_by_full_review=str(self.replacement(record, lower=True)))
+        self.refused(self.compose(record, self.store(HEAD, F1), lowered), "carried-state", f"carries open must-fix `{FINDING}` as \"consider\"")
         missing = self.compose(record, self.store(HEAD, F1), self.continuation(replaced_by_full_review=str(self.root / "absent.json"), **base))
         self.refused(missing, "chain", "cannot be read")
 
