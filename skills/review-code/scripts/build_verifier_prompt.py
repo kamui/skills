@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""Build an isolated verifier brief and accounting manifest from selected records.
+"""Build an isolated verifier brief and accounting manifest from one batch's tasks.
 
-Usage: python3 scripts/build_verifier_prompt.py input.json --ledger ledger.json
-       --output <new-directory>
+Usage: python3 scripts/build_verifier_prompt.py input.json --output <new-directory>
 Input: the JSON schema in references/verifier-handoff.md; ``--example`` prints one (run, batch, sources,
-run_policy, candidates, ledger_ids); --ledger is the authoritative full
-candidate disposition ledger. Fields are projected through explicit allowlists.
+run_policy, candidates, premises). A batch carries candidate tasks, safety-premise
+tasks, or both; fields are projected through explicit allowlists.
 Exit 0: bundle written and path printed; 1: content violations, one per stdout
 line, no bundle; 2: unreadable input or unwritable output, named on stderr.
-No forge calls, candidate admission, relatedness inference, or evidence judgment.
+No forge calls, candidate admission, task selection, or evidence judgment.
 """
 from __future__ import annotations
 
@@ -24,7 +23,7 @@ import tempfile
 
 KINDS = {"bug", "compatibility", "concurrency", "invariant", "security",
          "performance", "maintainability", "requirement"}
-MODES = {"candidate-only", "complete-ledger", "related-acquittal"}
+AREAS = {"security", "data-integrity", "destructive-migration", "compatibility", "concurrency"}
 BASES = {"contradicted", "prevented", "intentional", "pre-existing",
          "no-consequence", "unresolved"}
 
@@ -160,46 +159,32 @@ def candidate(value, where, head):
     return result
 
 
-def ledger_row(value, where):
-    result = fields(value, ("id", "kind", "claim", "disposition", "falsification"), where)
-    choice(result["kind"], KINDS, where + ".kind")
-    for name in ("claim", "disposition", "falsification"):
-        require("\n" not in result[name] and "\r" not in result[name], where + "." + name, "expected one line")
-    require(not any(c.isspace() for c in result["disposition"]), where + ".disposition", "expected one word")
-    result["evidence"] = evidence(value.get("evidence"), where + ".evidence")
+def premise(value, where):
+    result = fields(value, ("id", "area", "premise"), where)
+    choice(result["area"], AREAS, where + ".area")
+    require("\n" not in result["premise"] and "\r" not in result["premise"], where + ".premise", "expected one sentence on one line")
+    result["evidence"] = evidence_list(value.get("evidence"), where + ".evidence")
     conditional(value, result, where)
     return result
 
 
-def project(data, ledger):
+def project(data):
     obj(data, "input")
     run = fields(data.get("run"), ("id", "repository", "base", "head", "merge_base"), "run")
     require(Path(run["repository"]).is_absolute(), "run.repository", "expected absolute checkout path")
     for name in ("base", "head", "merge_base"):
         sha(run[name], "run." + name)
-    batch = fields(data.get("batch"), ("id", "phase", "mode"), "batch")
+    batch = fields(data.get("batch"), ("id", "phase"), "batch")
     choice(batch["phase"], {"initial", "follow-up"}, "batch.phase")
-    choice(batch["mode"], MODES, "batch.mode")
     candidates = [candidate(item, f"candidates[{i}]", run["head"])
                   for i, item in enumerate(seq(data.get("candidates"), "candidates"))]
-    unique_ids([item["id"] for item in candidates], "candidates")
-    # Validate/project only selected rows; complete mode selects all. The full
-    # ledger supplies authoritative membership without inferring relatedness.
-    rows = seq(ledger, "full ledger")
-    ids = [string(obj(row, "full ledger row").get("id"), "full ledger row.id") for row in rows]
-    unique_ids(ids, "full ledger")
-    selected = unique_ids(data.get("ledger_ids"), "ledger_ids")
-    require(set(selected) <= set(ids), "ledger_ids", "unknown ID in selected set")
-    if batch["mode"] == "complete-ledger":
-        require(set(selected) == set(ids), "ledger_ids", "complete-ledger omits authoritative IDs")
-    elif batch["mode"] == "candidate-only":
-        require(not selected and bool(candidates), "batch.mode", "candidate-only needs candidates and no ledger rows")
-    else:
-        require(bool(selected), "batch.mode", "related-acquittal needs selected ledger rows")
-    by_id = dict(zip(ids, rows))
-    selected_rows = [ledger_row(by_id[key], f"ledger[{key}]") for key in selected]
+    premises = [premise(item, f"premises[{i}]")
+                for i, item in enumerate(seq(data.get("premises", []), "premises"))]
+    require(bool(candidates or premises), "input", "a batch carries at least one candidate or safety-premise task")
+    # One task id names one task: a premise never shares an id with a candidate.
+    unique_ids([item["id"] for item in candidates + premises], "task ids")
     sources = evidence_list(data.get("sources"), "sources")
-    for item in candidates + selected_rows:
+    for item in candidates + premises:
         source = item.get("requirement_source", "")
         if source.startswith(("pr-title", "pr-body")):
             require({"pr-title", "pr-body"} <= {s.get("coordinate") for s in sources},
@@ -211,7 +196,7 @@ def project(data, ledger):
                     "sources", "commit requirement needs its raw commit message")
     return {"run": run, "batch": batch, "sources": sources,
             "run_policy": string(data.get("run_policy"), "run_policy"),
-            "candidates": candidates, "ledger": selected_rows}
+            "candidates": candidates, "premises": premises}
 
 
 def json_text(value):
@@ -239,12 +224,12 @@ def read_json(path):
     return parse_json(Path(path).read_text(encoding="utf-8"))
 
 
-def make_manifest(data, brief, ledger_hash):
-    return {"format": "verifier-manifest/1", "run": data["run"], "batch": data["batch"],
+def make_manifest(data, brief):
+    return {"format": "verifier-manifest/2", "run": data["run"], "batch": data["batch"],
             "candidate_ids": [item["id"] for item in data["candidates"]],
-            "ledger_ids": [item["id"] for item in data["ledger"]],
+            "premise_ids": [item["id"] for item in data["premises"]],
             "input_sha256": digest(json_text(data).encode("utf-8")),
-            "brief_sha256": digest(brief), "full_ledger_sha256": ledger_hash}
+            "brief_sha256": digest(brief)}
 
 
 def render(data):
@@ -255,7 +240,7 @@ def render(data):
     start, end = "## Inspect and run\n", "## Primary focused-test recording\n"
     require(tests.count(start) == 1 and tests.count(end) == 1, "changed-tests", "instruction boundary changed")
     instructions = [verifier, "## Focused-test safety and execution\n" + tests.split(start, 1)[1].split(end, 1)[0]]
-    records = data["candidates"] + data["ledger"]
+    records = data["candidates"] + data["premises"]
     if any("released_compatibility" in item for item in records):
         released = (refs / "released-compatibility.md").read_text(encoding="utf-8")
         require(released.count("**Released compatibility.**") == 1, "released-compatibility", "instruction boundary changed")
@@ -277,23 +262,21 @@ def render(data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", nargs="?")
-    parser.add_argument("--ledger")
     parser.add_argument("--output", help="new private bundle directory; never overwritten")
-    parser.add_argument("--example", action="store_true", help="print a minimal input object and full-ledger row, then exit")
+    parser.add_argument("--example", action="store_true", help="print a minimal input object, then exit")
     args = parser.parse_args()
     if args.example:
         print(json.dumps(EXAMPLE, indent=2))
         return 0
-    if not (args.input and args.ledger and args.output):
-        parser.error("input, --ledger and --output are required")
+    if not (args.input and args.output):
+        parser.error("input and --output are required")
     EVENT.update(event="verifier-brief-built", output=args.output)
     temporary = None
     try:
-        ledger = read_json(args.ledger)
-        data = project(read_json(args.input), ledger)
-        EVENT.update(projected=data, ledger=ledger)
+        data = project(read_json(args.input))
+        EVENT.update(projected=data)
         brief = render(data)
-        manifest = make_manifest(data, brief, digest(json_text(ledger).encode("utf-8")))
+        manifest = make_manifest(data, brief)
         output = Path(args.output)
         if output.exists():
             raise OSError(f"output already exists: {output}")
@@ -316,40 +299,33 @@ def main():
             shutil.rmtree(temporary)
 
 
-# What --example prints: one candidate-only batch input and one full-ledger row.
+# What --example prints: one batch input with a candidate task and a safety-premise task.
 EXAMPLE = {
-    "input": {
-        "run": {"id": "review-<head7>", "repository": "/abs/path/to/checkout", "base": "b" * 40, "head": "a" * 40,
-                "merge_base": "b" * 40},
-        "batch": {"id": "initial", "phase": "initial", "mode": "candidate-only"},
-        "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect.",
-        "sources": [{"coordinate": "issue-123/acceptance-criterion-2", "text": "Retries must reuse one idempotency key."}],
-        "candidates": [{
-            "id": "payments/retry-idempotency", "kind": "bug", "priority": "P1", "action": "must-fix",
-            "title": "Preserve the idempotency key across retries",
-            "claim": "A new idempotency key is created for every retry attempt",
-            "trigger": "Response timeout after the server commits the charge",
-            "impact": "The retry can submit a second non-idempotent charge",
-            "change": "Reuse one key for every attempt of the logical charge",
-            "anchor": {"type": "line", "path": "src/example.ts", "start_line": 42, "end_line": 44, "side": "RIGHT"},
-            "fix": "src/retry-policy.ts:18",
-            "evidence": [{"coordinate": "src/example.ts:42", "text": "const key = newKey();"}],
-            "ranges": {"anchor": {"coordinate": "src/example.ts:42-44", "text": "src/example.ts: +42,3"},
-                       "fix": {"coordinate": "src/retry-policy.ts:18", "text": "src/retry-policy.ts: +18,1"}},
-            "requirement_source": "issue-123/acceptance-criterion-2",
-            "test_evidence": [{"command": "pnpm test payments", "head": "a" * 40, "exit_status": 1,
-                               "output": "FAIL retries reuse key"}],
-        }],
-        "ledger_ids": [],
-    },
-    "ledger": [{
-        "id": "payments/retry-idempotency", "kind": "bug", "claim": "A new idempotency key is created for every retry attempt",
-        "disposition": "survivor", "falsification": "No unchanged guard prevents the timeout-after-commit trace",
-        "evidence": {"coordinate": "src/example.ts:42", "text": "const key = newKey();"},
-    }, {
-        "id": "payments/retry-budget", "kind": "maintainability", "claim": "The retry budget is unbounded",
-        "disposition": "dropped", "falsification": "prevented: the caller bounds attempts before dispatch",
-        "evidence": {"coordinate": "src/retry-policy.ts:20", "text": "if (attempt >= MAX_ATTEMPTS) return;"},
+    "run": {"id": "review-<head7>", "repository": "/abs/path/to/checkout", "base": "b" * 40, "head": "a" * 40,
+            "merge_base": "b" * 40},
+    "batch": {"id": "initial", "phase": "initial"},
+    "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect.",
+    "sources": [{"coordinate": "issue-123/acceptance-criterion-2", "text": "Retries must reuse one idempotency key."}],
+    "candidates": [{
+        "id": "payments/retry-idempotency", "kind": "bug", "priority": "P1", "action": "must-fix",
+        "title": "Preserve the idempotency key across retries",
+        "claim": "A new idempotency key is created for every retry attempt",
+        "trigger": "Response timeout after the server commits the charge",
+        "impact": "The retry can submit a second non-idempotent charge",
+        "change": "Reuse one key for every attempt of the logical charge",
+        "anchor": {"type": "line", "path": "src/example.ts", "start_line": 42, "end_line": 44, "side": "RIGHT"},
+        "fix": "src/retry-policy.ts:18",
+        "evidence": [{"coordinate": "src/example.ts:42", "text": "const key = newKey();"}],
+        "ranges": {"anchor": {"coordinate": "src/example.ts:42-44", "text": "src/example.ts: +42,3"},
+                   "fix": {"coordinate": "src/retry-policy.ts:18", "text": "src/retry-policy.ts: +18,1"}},
+        "requirement_source": "issue-123/acceptance-criterion-2",
+        "test_evidence": [{"command": "pnpm test payments", "head": "a" * 40, "exit_status": 1,
+                           "output": "FAIL retries reuse key"}],
+    }],
+    "premises": [{
+        "id": "premise-1", "area": "data-integrity",
+        "premise": "The charge lookup always succeeds before `submitCharge()` records the charge",
+        "evidence": [{"coordinate": "src/charges.ts:31", "text": "const charge = await lookup(id);"}],
     }],
 }
 

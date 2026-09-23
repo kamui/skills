@@ -46,7 +46,7 @@ caller receives unchanged) prints the validator payload that
 committed local ``range`` reviewed under ``mode: one-shot`` by a caller that
 consumes the record itself (``implement-publish`` step 4): the composition
 is validated by exactly the same rules, then printed as one local record,
-``implementation-gate-record/1``, whose top-level ``summary`` and ``items``
+``implementation-gate-record/2``, whose top-level ``summary`` and ``items``
 are the validated payload (so ``validate_review.py < record.json`` still
 exits 0) beside the pinned run, its status, and the ``record`` section
 below. No batch is projected and no fragment file is rendered: a local
@@ -61,8 +61,8 @@ Every profile runs the semantic record checks: run identity and the
 anchor provenance against the pinned manifest, finding fields and their
 order, priority/action/blocking agreement, duplicate stable ids, question
 form, the observation cap, status against unsettled blockers and coverage,
-coverage gaps, and — when a ``record`` section is supplied — the ledger,
-file-accounting, check-evidence, verification, and routed-item
+coverage gaps, and — when a ``record`` section is supplied — the
+requirement, file-accounting, check-evidence, verification, and routed-item
 contradictions listed with that section. ``validate_review.py``'s
 ``summary-reference`` blob-link rule, the ``--emit-batch`` projection, and
 the gating ``--event`` grammar are specific to a forge payload: the first
@@ -133,15 +133,8 @@ Input schema (JSON object)::
           "addenda": "/tmp/x/addenda",           # continuations append addendum-<n>.json here; the record itself never changes
           "evidence_packet": "/tmp/x/evidence.md" # optional; any further named path is kept as given
         },
-        "ledger": {
-          "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance",
-                            "disposition": "partial", "evidence": "src/payments.ts:42 ..."}],
-          "candidates": [{"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "survivor",
-                          "verification": "independent-confirmed", "evidence": "src/payments.ts:42"},
-                         {"id": "queue/retry-order", "kind": "bug", "disposition": "question", "evidence": "..."},
-                         {"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped",
-                          "evidence": "src/retry-policy.ts:20 bounds the budget"}]  # optional "attackable": true, "material": true
-        },
+        "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance",
+                          "disposition": "partial", "evidence": "src/payments.ts:42 ..."}],
         "files": [{"path": "src/payments.ts", "state": "reviewed"},
                   {"path": "docs/notes.md", "state": "ignored", "reason": "generated changelog"}],
         "check_evidence": [{"check": "python3 scripts/test_x.py", "head": "<reviewed head>", "outcome": "accepted",
@@ -149,11 +142,27 @@ Input schema (JSON object)::
                            {"check": "python3 scripts/test_y.py", "head": "<earlier head>", "outcome": "historical",
                             "reason": "the delta reaches none of its inputs"}],
         "verification": {
-          "batches": [{"name": "initial", "bundle": "/tmp/x/initial", "raw_return": "/tmp/x/initial/raw-return.json",
+          "tasks": [
+            {"id": "payments/retry-idempotency", "type": "candidate",
+             "trigger": "must-fix",              # must-fix | security | data-integrity | destructive-migration
+                                                 # | compatibility | prior-must-fix | optional
+             "batch": "initial",                 # a recorded batch name; null only while pending;
+                                                 # "carried:/abs/chain-file#<batch>" when carried
+             "ruling": "confirmed"},             # confirmed | refuted | unresolved | withheld | pending
+            {"id": "premise-1", "type": "safety-premise",
+             "area": "data-integrity",           # security | data-integrity | destructive-migration
+                                                 # | compatibility | concurrency
+             "premise": "One sentence the no-blocker conclusion depends on.",
+             "evidence": "src/charges.ts:31", "batch": "initial",
+             "ruling": "holds",                  # holds | fails | unresolved | withheld | pending
+             "reopened_as": "..."}               # optional; required when fails
+          ],
+          "batches": [{"name": "initial", "phase": "initial", "bundle": "/tmp/x/initial",
+                       "raw_return": "/tmp/x/initial/raw-return.json",
                        "accounting": "/tmp/x/initial/accounting.json", "operation": "Agent run_in_background=false"}],
-          "follow_up_spent": false,
-          "clean_verdict": "not-required",       # stands | outstanding | not-required
-          "outstanding": []                      # mandatory work no permitted batch could carry
+          "allowance": {"initial_spent": true, "follow_up_spent": false,
+                        "carried_from": null},   # or the chain file a replacement record carried spent flags from
+          "outstanding": []                      # required work that did not finish, one line each, "<task id>: <why>"
         },
         "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}
       }
@@ -162,37 +171,34 @@ Input schema (JSON object)::
 The ``record`` section carries the private record's accounting so the
 printed local record is complete without the composition conversation.
 Its checks are contradictions between fields the reviewer already decided,
-never judgments: a requirement row has a source, a class (``acceptance``,
+never judgments. A requirement row has a source, a class (``acceptance``,
 ``supporting``, ``artifact``) and a disposition (``met``, ``partial``,
-``not-verifiable``); candidate ids are unique; every rendered finding is a
-``survivor`` row and every rendered question a ``question`` row, a
-``survivor`` or ``question`` row is rendered, a rendered finding's row
-names the same ``kind`` the finding does, and a rendered finding names
-its ``verification`` -- ``independent-confirmed`` for a ``must-fix``,
-``security``, or ``compatibility`` finding, which requires a recorded batch,
-otherwise ``primary-confirmed``; every file is ``reviewed``, ``ignored``
-with a reason, or ``unreviewed``, once, and with ``--store`` the files are
-exactly the pinned manifest's paths; an ``unreviewed`` file, outstanding
-verification, an ``outstanding`` clean verdict, or an unrecoverable input
-contradicts ``coverage=complete``; check evidence at the reviewed head is
-``accepted``, ``reviewer-executed`` (with its selection reason),
-``failed``, or ``unavailable``, and ``historical`` evidence is attributed to
-a different head with the reason the delta leaves it unaffected -- a
-result is never relabelled at the reviewed head; at most two batches are
-recorded and ``follow_up_spent`` is true exactly when a second one was
-dispatched; and with no material survivor -- a ``must-fix`` at any kind, a
-``consider`` of kind ``bug``, ``compatibility``, ``concurrency``,
-``invariant``, ``security``, or ``performance``, or a ``survivor`` row the
-reviewer marks ``"material": true`` because its claim is an externally
-observable compatibility break under another kind -- and at least one
-*attackable* ledger row -- any ``kind`` but ``maintainability`` or
-``requirement``, any row a verifier ``refuted`` whatever its kind, or a row
-the reviewer marks ``"attackable": true`` because its acquittal rests on a
-safety premise -- the clean verdict is ``stands`` over a recorded batch or
-``outstanding``, never ``not-required``; with no attackable row, an empty
-ledger included, ``not-required`` is the only consistent value short of a
-recorded batch. ``routed.unresolved`` and ``routed.disputed`` name rendered
-or prior item ids.
+``not-verifiable``). Every file is ``reviewed``, ``ignored`` with a reason,
+or ``unreviewed``, once, and with ``--store`` the files are exactly the
+pinned manifest's paths. Check evidence at the reviewed head is
+``accepted``, ``reviewer-executed`` (with its selection reason), ``failed``,
+or ``unavailable``, and ``historical`` evidence is attributed to a
+different head with the reason the delta leaves it unaffected -- a result
+is never relabelled at the reviewed head.
+
+Verification tasks have unique ids. A rendered finding that is
+``must-fix``, or whose ``kind`` is ``security`` or ``compatibility``, has a
+candidate task with its id, a trigger other than ``optional``, and ruling
+``confirmed``. A task names a recorded batch, is null only while
+``pending``, or names ``carried:<absolute chain file>#<batch>`` when a
+replacement record carried it, which requires ``allowance.carried_from``.
+A ``withheld`` or ``pending`` task other than ``optional``, and an
+``unresolved`` premise that names no rendered question in ``reopened_as``,
+appear in ``outstanding`` as ``<task id>`` or ``<task id>: <reason>``. A
+``fails`` premise names in ``reopened_as`` a rendered item or an id that
+``outstanding`` names. At most two batches are recorded, one per phase; a
+recorded or carried batch sets its spent flag, and without
+``carried_from`` each flag is true only with its batch recorded. Whether a
+safety-premise check was needed is the reviewer's judgment and is not
+checked. An ``unreviewed`` file, an ``outstanding`` entry, or an
+unrecoverable input contradicts ``coverage=complete``.
+``routed.unresolved`` and ``routed.disputed`` name rendered or prior item
+ids.
 
 A file anchor's ``side`` is ``LEFT`` for a file the change deletes, ``RIGHT``
 for a file present at the head, and ``UNKNOWN`` when the evidence cannot
@@ -238,17 +244,18 @@ UNANCHORED_NOTE = (
 )
 ITEM_INDEX_RE = re.compile(r"items\[(?P<index>[0-9]+)\]")
 PROFILES = ("publishable", "implementation-gate")
-RECORD_SCHEMA = "implementation-gate-record/1"
+RECORD_SCHEMA = "implementation-gate-record/2"
 RECORD_PATHS = ("private_dir", "store", "composition", "addenda")
 REQUIREMENT_CLASSES = ("acceptance", "supporting", "artifact")
 REQUIREMENT_DISPOSITIONS = ("met", "partial", "not-verifiable")
-VERIFICATIONS = ("independent-confirmed", "primary-confirmed")
 MANDATORY_KINDS = ("security", "compatibility")
-MATERIAL_CONSIDER_KINDS = ("bug", "compatibility", "concurrency", "invariant", "security", "performance")
-UNATTACKABLE_KINDS = ("maintainability", "requirement")  # a row of these kinds is attackable only when refuted or marked
+TRIGGERS = ("must-fix", "security", "data-integrity", "destructive-migration", "compatibility", "prior-must-fix", "optional")
+PREMISE_AREAS = ("security", "data-integrity", "destructive-migration", "compatibility", "concurrency")
+CANDIDATE_RULINGS = ("confirmed", "refuted", "unresolved", "withheld", "pending")
+PREMISE_RULINGS = ("holds", "fails", "unresolved", "withheld", "pending")
+PHASES = ("initial", "follow-up")
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
 EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "failed", "unavailable")
-CLEAN_VERDICTS = ("stands", "outstanding", "not-required")
 BATCH_CAP = 2  # one initial plus one follow-up
 
 
@@ -923,6 +930,128 @@ def read_lines(report: vr.Report, location: str, value: Any) -> list[str]:
     return value
 
 
+def names_task(entries: list[str], identity: str) -> bool:
+    """Whether an ``outstanding`` entry names a task: the id alone, or the id followed by ``:`` and a reason."""
+    return any(entry == identity or entry.startswith(identity + ":") for entry in entries)
+
+
+def read_verification(
+    report: vr.Report, verification: Any, coverage: Any, findings: list[dict[str, Any]], questions: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Check verification tasks, batches, allowance, and outstanding work for contradictions; see the docstring."""
+    where = "record.verification"
+    rendered = rendered_ids(findings, questions)
+    if not isinstance(verification, dict):
+        report.add(where, "schema", "`verification` must be an object with `tasks`, `batches`, `allowance`, and `outstanding`")
+        verification = {}
+    outstanding = read_lines(report, f"{where}.outstanding", verification.get("outstanding", []))
+    if outstanding and coverage != "incomplete":
+        report.add(f"{where}.outstanding", "coverage-gaps", "outstanding verification contradicts `run.coverage=complete`; required work that did not finish never establishes safety")
+
+    batches = read_rows(report, f"{where}.batches", verification.get("batches", []), ("name", "phase", "bundle", "raw_return", "accounting", "operation"))
+    names: set[str] = set()
+    phases: set[str] = set()
+    for location, batch in batches:
+        for key in ("bundle", "raw_return", "accounting"):
+            if not batch[key].startswith("/"):
+                report.add(f"{location}.{key}", "record-paths", "must be an absolute path")
+        if batch["phase"] not in PHASES:
+            report.add(location, "verification", f"`phase` must be one of {list(PHASES)}")
+        elif batch["phase"] in phases:
+            report.add(location, "verification", f"a second `{batch['phase']}` batch; the allowance is one initial plus one follow-up batch")
+        if batch["name"] in names:
+            report.add(location, "verification", f"batch `{batch['name']}` is recorded twice")
+        names.add(batch["name"])
+        phases.add(batch["phase"])
+    if len(batches) > BATCH_CAP:
+        report.add(f"{where}.batches", "verification", "the cap is one initial plus one follow-up batch; a worker change grants no further batch")
+
+    allowance = verification.get("allowance")
+    if not isinstance(allowance, dict) or not all(isinstance(allowance.get(k), bool) for k in ("initial_spent", "follow_up_spent")):
+        report.add(f"{where}.allowance", "schema", "`allowance` must be an object with boolean `initial_spent` and `follow_up_spent`")
+        allowance = {"initial_spent": None, "follow_up_spent": None}
+    carried_from = allowance.get("carried_from")
+    if carried_from is not None and (not isinstance(carried_from, str) or not carried_from.startswith("/")):
+        report.add(f"{where}.allowance.carried_from", "record-paths", "must be null or the absolute path of the record or addendum a replacement carried its allowance from")
+        carried_from = None
+
+    tasks = read_rows(report, f"{where}.tasks", verification.get("tasks", []), ("id", "type", "ruling"))
+    by_id: dict[str, dict[str, Any]] = {}
+    carried = False
+    for location, task in tasks:
+        identity = task["id"]
+        if identity in by_id:
+            report.add(location, "stable-id", f"task `{identity}` is listed twice; a task id names one task")
+        by_id[identity] = task
+        if task["type"] == "candidate":
+            if task.get("trigger") not in TRIGGERS:
+                report.add(location, "verification", f"a candidate task's `trigger` must be one of {list(TRIGGERS)}")
+            if task["ruling"] not in CANDIDATE_RULINGS:
+                report.add(location, "verification", f"a candidate task's `ruling` must be one of {list(CANDIDATE_RULINGS)}")
+        elif task["type"] == "safety-premise":
+            if task.get("area") not in PREMISE_AREAS:
+                report.add(location, "verification", f"a safety-premise task's `area` must be one of {list(PREMISE_AREAS)}")
+            for key in ("premise", "evidence"):
+                read_line(report, location, task, key)
+            if task["ruling"] not in PREMISE_RULINGS:
+                report.add(location, "verification", f"a safety-premise task's `ruling` must be one of {list(PREMISE_RULINGS)}")
+            reopened = task.get("reopened_as")
+            if reopened is not None and not (isinstance(reopened, str) and reopened.strip() and "\n" not in reopened):
+                report.add(location, "schema", "`reopened_as` must be a one-line item id when present")
+                reopened = None
+            if task["ruling"] == "fails" and not (reopened in rendered or (reopened and names_task(outstanding, reopened))):
+                report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as a rendered item or an `outstanding` entry")
+            if task["ruling"] == "unresolved" and reopened not in {q["id"] for q in questions} and not names_task(outstanding, identity):
+                report.add(location, "verification", f"premise `{identity}` is unresolved, so it names a rendered question in `reopened_as` or stays in `outstanding`")
+        else:
+            report.add(location, "verification", "`type` must be `candidate` or `safety-premise`")
+            continue
+        batch = task.get("batch")
+        if task["ruling"] == "pending" and batch is None:
+            pass
+        elif isinstance(batch, str) and batch.startswith("carried:"):
+            carried = True
+            chain_file, _, chain_batch = batch[len("carried:"):].partition("#")
+            if not chain_file.startswith("/") or not chain_batch:
+                report.add(location, "verification", "a carried task's `batch` is `carried:<absolute chain file>#<batch name>`")
+            if carried_from is None:
+                report.add(location, "verification", "a carried task needs `allowance.carried_from` naming the chain it was carried from")
+        elif batch not in names:
+            report.add(location, "verification", f"task `{identity}` names batch {json.dumps(batch)}, which is not recorded; only a `pending` task has none")
+        if task["ruling"] in ("withheld", "pending") and task.get("trigger") != "optional" and not names_task(outstanding, identity):
+            report.add(location, "verification", f"`{identity}` is {task['ruling']} required work, so `outstanding` names it")
+
+    for finding in findings:
+        mandatory = "must-fix" if finding["action"] == "must-fix" else finding["kind"] if finding["kind"] in MANDATORY_KINDS else None
+        task = by_id.get(finding["id"], {})
+        if mandatory is not None and not (task.get("type") == "candidate" and task.get("trigger") not in (None, "optional")
+                                          and task.get("ruling") == "confirmed"):
+            report.add(f"{where}.tasks", "verification", f"rendered finding `{finding['id']}` is {mandatory}, which requires a candidate task with its id, a mandatory `trigger`, and `ruling: confirmed`; a candidate still needing mandatory confirmation stays unpublished")
+
+    spent = {"initial": allowance["initial_spent"], "follow-up": allowance["follow_up_spent"]}
+    flag = {"initial": "initial_spent", "follow-up": "follow_up_spent"}
+    for phase in phases & set(PHASES):
+        if spent[phase] is False:
+            report.add(f"{where}.allowance.{flag[phase]}", "verification", f"`{flag[phase]}` is false while a `{phase}` batch is recorded")
+    if "follow-up" in phases and spent["initial"] is False:
+        report.add(f"{where}.allowance.initial_spent", "verification", "a follow-up batch is recorded, so the initial batch is spent")
+    if carried and spent["initial"] is False:
+        report.add(f"{where}.allowance.initial_spent", "verification", "a carried task names a batch its chain spent, so `initial_spent` is true")
+    if carried_from is None:
+        for phase in PHASES:
+            if spent[phase] is True and phase not in phases:
+                report.add(f"{where}.allowance.{flag[phase]}", "verification", f"`{flag[phase]}` is true with no `{phase}` batch recorded and no `carried_from`; only a replacement record carries spent allowance")
+        if "follow-up" in phases and "initial" not in phases:
+            report.add(f"{where}.batches", "verification", "a follow-up batch without an initial one needs `allowance.carried_from`")
+    return {"tasks": [t for _w, t in tasks], "batches": [b for _w, b in batches],
+            "allowance": {"initial_spent": spent["initial"], "follow_up_spent": spent["follow-up"], "carried_from": carried_from},
+            "outstanding": outstanding}
+
+
+def rendered_ids(findings: list[dict[str, Any]], questions: list[dict[str, Any]]) -> set[str]:
+    return {item["id"] for item in findings + questions}
+
+
 def read_record(
     report: vr.Report,
     record: Any,
@@ -951,58 +1080,14 @@ def read_record(
             report.add(f"record.paths.{key}", "record-paths", "must be an absolute path")
     fields["paths"] = paths
 
-    ledger = record.get("ledger")
-    if not isinstance(ledger, dict):
-        report.add("record.ledger", "schema", "`ledger` must be an object with `requirements` and `candidates`")
-        ledger = {}
-    requirements = read_rows(report, "record.ledger.requirements", ledger.get("requirements"), ("source", "class", "disposition", "evidence"))
+    requirements = read_rows(report, "record.requirements", record.get("requirements"), ("source", "class", "disposition", "evidence"))
     for where, row in requirements:
         if row["class"] not in REQUIREMENT_CLASSES:
-            report.add(where, "ledger", f"`class` must be one of {list(REQUIREMENT_CLASSES)}")
+            report.add(where, "requirements", f"`class` must be one of {list(REQUIREMENT_CLASSES)}")
         if row["disposition"] not in REQUIREMENT_DISPOSITIONS:
-            report.add(where, "ledger", f"`disposition` must be one of {list(REQUIREMENT_DISPOSITIONS)}")
-    candidates = read_rows(report, "record.ledger.candidates", ledger.get("candidates"), ("id", "kind", "disposition", "evidence"))
-    rows: dict[str, tuple[str, dict[str, Any]]] = {}
-    material = False
-    attackable = False
-    for where, row in candidates:
-        if row["kind"] not in vr.KINDS:
-            report.add(where, "ledger", f"`kind` must be one of {list(vr.KINDS)}")
-        if row["id"] in rows:
-            report.add(where, "stable-id", f"candidate `{row['id']}` is already listed by {rows[row['id']][0]}; a stable id names one defect concept")
-        rows[row["id"]] = (where, row)
-        if "material" in row and not isinstance(row["material"], bool):
-            report.add(where, "schema", "`material` must be a boolean when present")
-        material = material or (row.get("material") is True and row["disposition"] == "survivor")
-        if "attackable" in row and not isinstance(row["attackable"], bool):
-            report.add(where, "schema", "`attackable` must be a boolean when present")
-        attackable = attackable or row["kind"] not in UNATTACKABLE_KINDS or row["disposition"] == "refuted" or row.get("attackable") is True
-    rendered: dict[str, tuple[str, dict[str, Any]]] = {f["id"]: ("finding", f) for f in findings}
-    rendered.update({q["id"]: ("question", q) for q in questions})
-    confirmed = False
-    for identity, (item_type, item) in rendered.items():
-        if identity not in rows:
-            report.add("record.ledger.candidates", "ledger", f"rendered {item_type} `{identity}` has no candidate row; every rendered item is a ledger survivor")
-            continue
-        where, row = rows[identity]
-        expected = "survivor" if item_type == "finding" else "question"
-        if row["disposition"] != expected:
-            report.add(where, "ledger", f"`{identity}` renders as a {item_type}, so its disposition is `{expected}`, not `{row['disposition']}`")
-        if item_type != "finding":
-            continue
-        if row["kind"] != item["kind"]:
-            report.add(where, "ledger", f"`{identity}` renders as a `{item['kind']}` finding, so its row's `kind` is `{item['kind']}`, not `{row['kind']}`")
-        verification = row.get("verification")
-        mandatory = "must-fix" if item["action"] == "must-fix" else item["kind"] if item["kind"] in MANDATORY_KINDS else None
-        if mandatory is not None and verification != "independent-confirmed":
-            report.add(where, "verification", f"`{identity}` is {mandatory}, which requires `verification: independent-confirmed`; a candidate still needing mandatory confirmation stays unpublished")
-        elif verification not in VERIFICATIONS:
-            report.add(where, "verification", f"a rendered finding carries `verification` of one of {list(VERIFICATIONS)}")
-        confirmed = confirmed or verification == "independent-confirmed"
-    for identity, (where, row) in rows.items():
-        if row["disposition"] in ("survivor", "question") and identity not in rendered:
-            report.add(where, "ledger", f"`{identity}` is a {row['disposition']} with no rendered item; a withheld candidate carries the disposition that withholds it")
-    fields["ledger"] = {"requirements": [r for _w, r in requirements], "candidates": [r for _w, r in candidates]}
+            report.add(where, "requirements", f"`disposition` must be one of {list(REQUIREMENT_DISPOSITIONS)}")
+    fields["requirements"] = [r for _w, r in requirements]
+    rendered = rendered_ids(findings, questions)
 
     files = read_rows(report, "record.files", record.get("files"), ("path", "state"))
     states: dict[str, str] = {}
@@ -1041,36 +1126,7 @@ def read_record(
                 read_line(report, where, row, "reason")
     fields["check_evidence"] = [r for _w, r in evidence]
 
-    verification = record.get("verification")
-    if not isinstance(verification, dict):
-        report.add("record.verification", "schema", "`verification` must be an object with `batches`, `follow_up_spent`, `clean_verdict`, and `outstanding`")
-        verification = {}
-    batches = read_rows(report, "record.verification.batches", verification.get("batches", []), ("name", "bundle", "raw_return", "accounting", "operation"))
-    for where, batch in batches:
-        for key in ("bundle", "raw_return", "accounting"):
-            if not batch[key].startswith("/"):
-                report.add(f"{where}.{key}", "record-paths", "must be an absolute path")
-    if len(batches) > BATCH_CAP:
-        report.add("record.verification.batches", "verification", "the cap is one initial plus one follow-up batch; a worker change grants no further batch")
-    spent = verification.get("follow_up_spent")
-    if not isinstance(spent, bool):
-        report.add("record.verification.follow_up_spent", "schema", "`follow_up_spent` must be a boolean")
-    elif spent != (len(batches) >= BATCH_CAP):
-        report.add("record.verification.follow_up_spent", "verification", f"`follow_up_spent` is {str(spent).lower()} with {plural(len(batches), 'batch')} recorded; the follow-up is spent exactly when a second batch was dispatched")
-    outstanding = read_lines(report, "record.verification.outstanding", verification.get("outstanding", []))
-    clean = verification.get("clean_verdict")
-    if clean not in CLEAN_VERDICTS:
-        report.add("record.verification.clean_verdict", "verification", f"`clean_verdict` must be one of {list(CLEAN_VERDICTS)}")
-    material = material or any(f["action"] == "must-fix" or f["kind"] in MATERIAL_CONSIDER_KINDS for f in findings)
-    if clean == "not-required" and not material and attackable:
-        report.add("record.verification.clean_verdict", "verification", "no material survivor remains and the ledger holds an attackable row, so the complete candidate ledger needs a clean-verdict attack: `stands` when a batch ruled, `outstanding` when no permitted batch could carry it")
-    if clean == "stands" and not batches:
-        report.add("record.verification.clean_verdict", "verification", "`stands` names a batch ruling over the complete ledger, and no batch is recorded")
-    if confirmed and not batches:
-        report.add("record.verification.batches", "verification", "`independent-confirmed` names a verifier verdict, and no batch is recorded")
-    if (clean == "outstanding" or outstanding) and coverage != "incomplete":
-        report.add("record.verification", "coverage-gaps", "outstanding verification contradicts `run.coverage=complete`; budget exhaustion never establishes a clean verdict")
-    fields["verification"] = {"batches": [b for _w, b in batches], "follow_up_spent": spent, "clean_verdict": clean, "outstanding": outstanding}
+    fields["verification"] = read_verification(report, record.get("verification"), coverage, findings, questions)
 
     routed = record.get("routed", {})
     if not isinstance(routed, dict):
@@ -1104,7 +1160,7 @@ def compose(
         if run["prior_head"] is not None:
             report.add("run.prior_head", "profile", "a one-shot local range is a first review; a continuation appends an addendum beside the record instead of a delta re-review")
     if profile == "implementation-gate" and "record" not in composition:
-        report.add("record", "profile", "`implementation-gate` returns one local record, so the composition carries `record`: ledgers, file accounting, check evidence, verification accounting, routed items, and paths")
+        report.add("record", "profile", "`implementation-gate` returns one local record, so the composition carries `record`: requirements, file accounting, check evidence, verification accounting, routed items, and paths")
     summary = read_summary(report, composition.get("summary"), run["coverage"] if run else None)
     head = run["head"] if run and isinstance(run["head"], str) else "0" * 40
 
@@ -1245,22 +1301,21 @@ def example_composition(profile: str) -> dict[str, Any]:
                   "composition": f"{private}/composition.json", "addenda": f"{private}/addenda",
                   "skill_root": "/abs/path/to/skills/review-code", "evidence_packet": "/abs/path/to/results.md",
                   "spec": "/abs/path/to/spec.md"},
-        "ledger": {
-            "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
-                              "evidence": "src/payments.ts:42 creates a key per attempt"}],
-            "candidates": [{"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "survivor",
-                            "verification": "independent-confirmed", "evidence": "src/payments.ts:42"},
-                           {"id": "queue/retry-order", "kind": "bug", "disposition": "question", "evidence": "src/queue.ts:7"},
-                           {"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped",
-                            "evidence": "src/retry-policy.ts:20 bounds the budget"}],
-        },
+        "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
+                          "evidence": "src/payments.ts:42 creates a key per attempt"}],
         "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/queue.ts", "state": "reviewed"},
                   {"path": "docs/notes.md", "state": "ignored", "reason": "generated changelog"}],
         "check_evidence": [{"check": "pnpm test payments", "head": head, "outcome": "accepted",
                             "reason": "same command, clean tree at the reviewed head, full output read"}],
-        "verification": {"batches": [{"name": "initial", "bundle": f"{private}/initial", "raw_return": f"{private}/initial/raw-return.json",
-                                      "accounting": f"{private}/initial/accounting.json", "operation": "Agent run_in_background=false"}],
-                         "follow_up_spent": False, "clean_verdict": "not-required", "outstanding": []},
+        "verification": {
+            "tasks": [{"id": "payments/retry-idempotency", "type": "candidate", "trigger": "must-fix", "batch": "initial", "ruling": "confirmed"},
+                      {"id": "premise-1", "type": "safety-premise", "area": "data-integrity",
+                       "premise": "The charge lookup always succeeds before `submitCharge()` records the charge.",
+                       "evidence": "src/charges.ts:31", "batch": "initial", "ruling": "holds"}],
+            "batches": [{"name": "initial", "phase": "initial", "bundle": f"{private}/initial", "raw_return": f"{private}/initial/raw-return.json",
+                         "accounting": f"{private}/initial/accounting.json", "operation": "Agent run_in_background=false"}],
+            "allowance": {"initial_spent": True, "follow_up_spent": False, "carried_from": None},
+            "outstanding": []},
         "routed": {"unresolved": ["queue/retry-order"], "disputed": [], "unrecoverable_inputs": []},
     }
     return composition
