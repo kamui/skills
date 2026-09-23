@@ -30,12 +30,12 @@ python3 docs/research/review-code-instruction-trim-2026-09-23/measure.py \
 
 | Path | Before: bytes / words | After: bytes / words | Bytes | Commands (before = after) | Limit after (before) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| runtime total | 91,790 / 12,858 | 87,777 / 12,285 | −4,013 | 21 | 88,000 (92,000) |
+| runtime total | 91,790 / 12,858 | 87,803 / 12,289 | −3,987 | 21 | 88,000 (92,000) |
 | always loaded | 25,953 / 3,531 | 24,894 / 3,377 | −1,059 | 6 | 25,000 (26,000) |
 | local publishable | 48,374 / 6,535 | 46,819 / 6,317 | −1,555 | 8 | 47,000 (new) |
 | PR publishable | 50,209 / 6,677 | 49,042 / 6,515 | −1,167 | 10 | 50,000 (new) |
 | implementation-gate | 48,281 / 6,514 | 46,726 / 6,296 | −1,555 | 8 | 47,000 (new) |
-| required verifier | 64,138 / 8,474 | 61,563 / 8,096 | −2,575 | 13 | 62,000 (PR primary 67,000) |
+| required verifier | 64,138 / 8,474 | 61,589 / 8,100 | −2,549 | 13 | 62,000 (PR primary 67,000) |
 | re-review | 57,963 / 7,813 | 55,571 / 7,477 | −2,392 | 13 | 56,000 (new) |
 | continuation | 44,481 / 6,056 | 43,270 / 5,882 | −1,211 | 11 | 44,000 (new) |
 | verifier example brief, every branch | 22,941 / 3,075 | 22,941 / 3,075 | 0 | 0 | 24,000 (unchanged) |
