@@ -27,6 +27,9 @@ On local targets, supply the same schema directly: `pr.title` is the range
 as written or `worktree tree=<tree hash>`; `pr.body` holds only the real
 commit messages since merge-base, never snapshot messages or uncommitted text.
 
+`finalize_review.py --fingerprint-input INPUT` computes this same digest from
+a saved INPUT file at finalization, with these functions.
+
 Per issue, `comments_available: false` records that no comments could be
 obtained and `comments_complete: false` records that a paginated comment
 connection was left truncated. Each key is added to the normalized issue only

@@ -2,17 +2,49 @@
 """Compose, validate, and write review-code's step-5 artifacts and report in one call.
 
 Usage:
-    python3 scripts/finalize_review.py --store STORE [--packet PACKET] [--compact] PRIVATE_DIR
-    python3 scripts/finalize_review.py --profile implementation-gate --store STORE [--compact] PRIVATE_DIR
+    python3 scripts/finalize_review.py --store STORE [--packet PACKET] [--fingerprint-input FILE] [--compact] PRIVATE_DIR
+    python3 scripts/finalize_review.py --profile implementation-gate --store STORE [--fingerprint-input FILE] [--compact] PRIVATE_DIR
     python3 scripts/finalize_review.py --check [--profile implementation-gate] PRIVATE_DIR
 
 Reads PRIVATE_DIR/composition.json. Finalization requires its private
 accounting for both profiles: a `record` section naming `repository`,
-`paths`, `requirements`, `files`, `check_evidence`, `verification` (`tasks`,
+`requirements`, `files`, `check_evidence`, `verification` (`tasks`,
 `batches`, `allowance`, `outstanding`) and `routed` (`unresolved`,
 `disputed`, `unrecoverable_inputs`), each explicitly, empty lists included.
-Nothing is defaulted, and the composer checks their content. Each prior item
-may add `reply` (drafted reply prose, or null), `thread_id` and
+Nothing is defaulted, and the composer checks their content.
+
+Mechanical fields an authoritative saved input already owns may be omitted,
+and are filled before anything else runs; an explicit copy that disagrees is
+refused, and an omitted field no input establishes is named:
+
+    store              run.head, run.merge_base; with a working-tree snapshot,
+                       run.target_kind (worktree) and run.tree
+    --packet           run.target_kind (pull-request), run.base_ref,
+                       run.base_sha, run.merged, run.repository_url,
+                       run.issues; its pinned head must be the store's
+    --fingerprint-input  the saved context_fingerprint.py input (`specs`
+                       alone with --packet, which supplies `pr` and
+                       `issues`). A range's run.target (`pr.title`), a local
+                       target's run.change_description (`pr.body`, byte for
+                       byte) and run.specs (spec identities), run.issues
+                       without a packet, and run.context: its digest, with
+                       guidance derived at run.base_sha exactly as
+                       context_fingerprint.py --guidance-base does. An
+                       explicit `context`, such as one computed early for the
+                       duplicate-review shortcut, must equal it. A working
+                       tree's `pr.title` must be `worktree tree=<run.tree>`.
+    a local target     run.merged (false)
+    this run           record.paths private_dir, store, composition,
+                       skill_root, and addenda for the gate
+    each batch         `name` and `phase` from its bundle's manifest.json,
+                       `raw_return` from its accounting report, whose
+                       manifest_sha256 must match that manifest
+
+Without --fingerprint-input, `run.context` is required as before. Judgments
+are never derived: coverage, status, requirement dispositions, file states,
+task selection and rulings stay authored and checked.
+
+Each prior item may add `reply` (drafted reply prose, or null), `thread_id` and
 `comment_id`: both null for an item without a forge thread, otherwise the
 thread's node id and its first comment's numeric id in the read-only
 `--packet`. A reply needs a thread, a `disputed` item has none, and the
@@ -21,10 +53,12 @@ and `still-open` replies. These fields never reach the payload.
 
 Stages, in order:
 
+    derive      fill and check the mechanical fields above      -> nothing
     accounting  the checks above                                -> nothing
-    compose     compose_review.py --store STORE composition.json  -> payload.json (publishable)
+    compose     compose_review.py --store STORE - < the derived composition
+                                                                  -> payload.json (publishable)
     record      compose_review.py --profile implementation-gate --store STORE
-                composition.json                                  -> record.json  (implementation-gate)
+                - < the derived composition                       -> record.json  (implementation-gate)
     emit-batch  validate_review.py --emit-batch < payload.json    -> batch.json   (publishable)
     render      validate_review.py --render < payload.json        -> fragments.md (publishable)
     report      the summary body, the full body of each line-anchored finding and
@@ -35,11 +69,12 @@ Every output is staged as `<artifact>.part` and promoted only after every
 stage passed, with `report.md` last: it is the success marker. A new gate
 record, and the retained publishable composition (rewritten in place before
 promotion), carry `finalization`: this protocol, the profile, the absolute
-report path, and each prior item's id, classification, thread ids and
-rendered reply body (or null). Consumers accept new-protocol output only
-with that report present; a record or composition without `finalization`
-predates it. The gate creates PRIVATE_DIR/addenda, where continuations
-append.
+report path, the absolute store, packet and fingerprint input paths (null
+when not given) that reproduce the digest, and each prior item's id,
+classification, thread ids and rendered reply body (or null). Consumers
+accept new-protocol output only with that report present; a record or
+composition without `finalization` predates it. The gate creates
+PRIVATE_DIR/addenda, where continuations append.
 
 Before modifying anything, a run is refused when an addenda directory (this
 directory's, or the one an existing record names) holds any entry, or when an
@@ -79,6 +114,8 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import copy
+import hashlib
 import json
 import os
 import re
@@ -88,9 +125,11 @@ from pathlib import Path
 from typing import Any
 
 import compose_review as cr
+import context_fingerprint as cf
 import validate_review as vr
 
 SCRIPTS = Path(__file__).resolve().parent
+SKILL_ROOT = SCRIPTS.parent
 ARTIFACTS = {"publishable": ("payload.json", "batch.json", "fragments.md"), "implementation-gate": ("record.json",)}
 REPORT = "report.md"
 RECORD_SECTIONS = ("repository", "paths", "requirements", "files", "check_evidence", "verification", "routed")
@@ -98,6 +137,11 @@ VERIFICATION_SECTIONS = ("tasks", "batches", "allowance", "outstanding")
 ROUTED_SECTIONS = ("unresolved", "disputed", "unrecoverable_inputs")
 TRAILED = ("fixed", "accepted", "obsolete", "still-open")
 LEGACY_SCHEMA = "implementation-gate-record/2"
+LOCAL = ("range", "worktree")
+# Where the finalizer fills a key, the keys take the order compositions have always written them in, so a derived
+# record serializes as a transcribed one did; a fully written object keeps its own order.
+PATH_ORDER = ("private_dir", "store", "composition", "addenda", "skill_root")
+BATCH_ORDER = ("name", "phase", "bundle", "raw_return", "accounting", "operation")
 
 
 class Stop(Exception):
@@ -114,12 +158,12 @@ def fail(stage: str, status: int, output: str) -> Stop:
     return Stop(status)
 
 
-def read_json(path: Path, what: str) -> Any:
+def read_json(path: Path, what: str, stage: str = "derive") -> Any:
     try:
         with open(path, encoding="utf-8") as handle:
             return json.load(handle)
     except (OSError, ValueError) as error:
-        raise fail("accounting", 2, f"finalize_review: cannot read {what} {path}: {error}\n")
+        raise fail(stage, 2, f"finalize_review: cannot read {what} {path}: {error}\n")
 
 
 def run(stage: str, command: list[str], stdin: bytes | None = None) -> bytes:
@@ -131,6 +175,181 @@ def run(stage: str, command: list[str], stdin: bytes | None = None) -> bytes:
     if result.returncode != 0:
         raise fail(stage, result.returncode, (result.stdout + result.stderr).decode("utf-8", "replace"))
     return result.stdout
+
+
+# --- derive -------------------------------------------------------------------
+
+
+def same_path(explicit: Any, owned: str) -> bool:
+    return isinstance(explicit, str) and (os.path.abspath(explicit) == os.path.abspath(owned)
+                                          or os.path.realpath(explicit) == os.path.realpath(owned))
+
+
+def same_set(explicit: Any, owned: list[str]) -> bool:
+    return isinstance(explicit, list) and all(isinstance(v, str) for v in explicit) and sorted(explicit) == sorted(owned)
+
+
+def settle(report: vr.Report, holder: dict[str, Any], key: str, owned: Any, where: str, source: str, same: Any = None) -> None:
+    """Fill an omitted mechanical field from the input that owns it; refuse an explicit copy that disagrees."""
+    if owned is None:
+        if key not in holder:
+            report.add(where, "derived-field", f"`{key}` is omitted and {source} does not establish it")
+    elif key not in holder:
+        holder[key] = owned
+    elif not (same(holder[key], owned) if same else holder[key] == owned):
+        report.add(where, "derived-field", f"`{key}={json.dumps(holder[key], ensure_ascii=False)}` conflicts with "
+                   f"{json.dumps(owned, ensure_ascii=False)} from {source}; omit it and the finalizer supplies it")
+
+
+def ordered(value: dict[str, Any], written: set[str], order: tuple[str, ...]) -> dict[str, Any]:
+    if set(value) == written:
+        return value
+    return {**{key: value[key] for key in order if key in value}, **{k: v for k, v in value.items() if k not in order}}
+
+
+def text_or_none(value: Any) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
+def derive_packet(report: vr.Report, run: dict[str, Any], packet: dict[str, Any], context: dict[str, Any]) -> None:
+    pr = packet.get("pr")
+    if not isinstance(pr, dict):
+        report.add("packet", "schema", "the packet carries no `pr` section; normalize the saved pages with forge_packet.py")
+        return
+    settle(report, run, "target_kind", "pull-request", "run", "the packet")
+    pinned = text_or_none(pr.get("head_sha"))
+    if pinned is not None and isinstance(context.get("head"), str) and pinned != context["head"]:
+        report.add("run.head", "derived-field", f"the packet pins head `{pinned}`, but the store was built for `{context['head']}`")
+    settle(report, run, "base_ref", text_or_none(pr.get("base_ref")), "run", "the packet")
+    settle(report, run, "base_sha", text_or_none(pr.get("base_sha")), "run", "the packet")
+    settle(report, run, "merged", pr.get("merged") if isinstance(pr.get("merged"), bool) else None, "run", "the packet")
+    settle(report, run, "repository_url", text_or_none(packet.get("repository_url")), "run", "the packet")
+    fingerprint = packet.get("fingerprint")
+    issues = fingerprint.get("issues") if isinstance(fingerprint, dict) else None
+    coordinates = [issue.get("coordinate") for issue in issues if isinstance(issue, dict)] if isinstance(issues, list) else []
+    coordinates = coordinates if isinstance(issues, list) and all(isinstance(c, str) for c in coordinates) else None
+    settle(report, run, "issues", coordinates, "run", "the packet's fingerprint issues", same_set)
+
+
+def derive_context(report: vr.Report, args: argparse.Namespace, run: dict[str, Any], packet: Any) -> None:
+    """Fields the saved fingerprint input owns, and the digest over it computed by context_fingerprint.py's rules."""
+    if args.fingerprint_input is None:
+        if "context" not in run:
+            report.add("run", "derived-field", "`context` is omitted; pass --fingerprint-input so the finalizer computes it from the saved inputs")
+        return
+    saved = read_json(Path(args.fingerprint_input), "fingerprint input")
+    if not isinstance(saved, dict):
+        report.add("fingerprint", "schema", "the fingerprint input must be a JSON object")
+        return
+    if "guidance" in saved:
+        report.add("fingerprint.guidance", "schema", "the finalizer derives `guidance` at the base from the store; omit it")
+        return
+    if packet is None and "pr" not in saved:
+        report.add("fingerprint.pr", "schema", "`pr` is required unless --packet supplies it")
+        return
+    try:
+        inputs = cf.merge_packet(saved, args.packet) if packet is not None else dict(saved)
+        normalized = cf.normalize(inputs)
+    except (OSError, ValueError) as error:
+        report.add("fingerprint", "schema", str(error))
+        return
+    source = "the fingerprint input"
+    if packet is None:
+        settle(report, run, "issues", [issue["coordinate"] for issue in normalized["issues"]], "run", f"{source}'s `issues`", same_set)
+    kind = run.get("target_kind", "pull-request")
+    if kind in LOCAL:
+        title = normalized["pr"]["title"]
+        if kind == "range":
+            settle(report, run, "target", title or None, "run", f"{source}'s `pr.title`")
+        elif isinstance(run.get("tree"), str) and title != f"worktree tree={run['tree']}":
+            report.add("fingerprint.pr.title", "derived-field",
+                       f"a working tree's `pr.title` is `worktree tree={run.get('tree')}`, not {json.dumps(title, ensure_ascii=False)}")
+        settle(report, run, "change_description", normalized["pr"]["body"], "run", f"{source}'s `pr.body`")
+        settle(report, run, "specs", [spec["identity"] for spec in normalized["specs"]], "run", f"{source}'s `specs`", same_set)
+    base = run.get("base_sha")
+    if report.lines or not (isinstance(base, str) and vr.COMMIT_SHA_RE.fullmatch(base)):
+        return  # a refused field or an unusable base leaves no inputs to digest; the composer names the base
+    try:
+        inputs["guidance"] = cf.derive_guidance(base, args.store)
+    except (OSError, ValueError) as error:
+        raise fail("derive", 2, f"finalize_review: cannot derive guidance at `{base}` from `{args.store}`: {error}\n")
+    digest = cf.digest(inputs)
+    if run.setdefault("context", digest) != digest:
+        report.add("run.context", "derived-field",
+                   f"`context={run['context']}` is not the digest of the saved inputs, `{digest}`; a digest computed earlier, "
+                   "such as for the duplicate-review shortcut, would bind this review to another context, so recompute "
+                   "that decision from the saved inputs")
+
+
+def derive_batch(report: vr.Report, where: str, batch: dict[str, Any]) -> None:
+    """A batch's identity from its bundle manifest and its raw return from the accounting report reconciled."""
+    bundle, accounting = batch.get("bundle"), batch.get("accounting")
+    manifest_bytes, identity = None, {}
+    if isinstance(bundle, str):
+        try:
+            manifest_bytes = (Path(bundle) / "manifest.json").read_bytes()
+            manifest = json.loads(manifest_bytes)
+            identity = manifest["batch"] if isinstance(manifest, dict) and isinstance(manifest.get("batch"), dict) else {}
+        except (OSError, ValueError):
+            manifest_bytes = None
+    source = f"bundle manifest `{bundle}/manifest.json`"
+    settle(report, batch, "name", text_or_none(identity.get("id")), where, source)
+    settle(report, batch, "phase", text_or_none(identity.get("phase")), where, source)
+    reconciled: Any = {}
+    if isinstance(accounting, str):
+        reconciled, _why = cr.load_object(accounting)
+        reconciled = reconciled or {}
+    settle(report, batch, "raw_return", text_or_none(reconciled.get("raw_return")), where, f"accounting report `{accounting}`", same_path)
+    hashed = reconciled.get("manifest_sha256")
+    if manifest_bytes is not None and isinstance(hashed, str) and hashed != hashlib.sha256(manifest_bytes).hexdigest():
+        report.add(where, "derived-field", f"accounting report `{accounting}` accounts a return to another manifest than `{bundle}/manifest.json`")
+
+
+def derive_run(report: vr.Report, args: argparse.Namespace, run: dict[str, Any], packet: Any, store: Any) -> None:
+    """Run identity from the store, the packet and the fingerprint input."""
+    context = store.get("context") if isinstance(store, dict) and isinstance(store.get("context"), dict) else {}
+    settle(report, run, "head", text_or_none(context.get("head")), "run", "the store")
+    settle(report, run, "merge_base", text_or_none(context.get("merge_base")), "run", "the store")
+    snapshot = context.get("snapshot") if isinstance(context.get("snapshot"), dict) else None
+    if snapshot is not None:
+        settle(report, run, "target_kind", "worktree", "run", "the store's working-tree snapshot")
+    if run.get("target_kind") == "worktree":
+        settle(report, run, "tree", text_or_none((snapshot or {}).get("tree")), "run", "the store's snapshot")
+    if isinstance(packet, dict) and packet.get("schema") == "forge-packet/1":
+        derive_packet(report, run, packet, context)
+    if run.get("target_kind") in LOCAL:
+        settle(report, run, "merged", False, "run", "a local target")
+    derive_context(report, args, run, packet)
+
+
+def derive(args: argparse.Namespace, private: Path, composition: Any, packet: Any, store: Any) -> tuple[Any, list[str]]:
+    """The composition with omitted mechanical fields filled from the inputs that own them, and every conflict."""
+    report = vr.Report()
+    if not isinstance(composition, dict):
+        return composition, []  # the accounting check names the malformed input
+    composition = copy.deepcopy(composition)
+    if isinstance(composition.get("run"), dict):
+        derive_run(report, args, composition["run"], packet, store)
+    record = composition.get("record")
+    if isinstance(record, dict):
+        paths = record.setdefault("paths", {})
+        if isinstance(paths, dict):
+            written = set(paths)
+            owned = {"private_dir": str(private), "store": os.path.abspath(args.store),
+                     "composition": str(private / "composition.json"), "skill_root": str(SKILL_ROOT)}
+            if args.profile == "implementation-gate":
+                owned["addenda"] = str(private / "addenda")
+            for key, value in owned.items():
+                settle(report, paths, key, value, "record.paths", "this finalizer run", same_path)
+            record["paths"] = ordered(paths, written, PATH_ORDER)
+        verification = record.get("verification")
+        batches = verification.get("batches") if isinstance(verification, dict) else None
+        for index, batch in enumerate(batches if isinstance(batches, list) else []):
+            if isinstance(batch, dict):
+                written = set(batch)
+                derive_batch(report, f"record.verification.batches[{index}]", batch)
+                batches[index] = ordered(batch, written, BATCH_ORDER)
+    return composition, report.lines
 
 
 # --- accounting ---------------------------------------------------------------
@@ -379,14 +598,18 @@ def finalize(args: argparse.Namespace, private: Path) -> int:
     composition_path = private / "composition.json"
     composition = read_json(composition_path, "composition")
     packet = read_json(Path(args.packet), "packet") if args.packet else None
+    composition, violations = derive(args, private, composition, packet, read_json(Path(args.store), "store"))
+    if violations:
+        raise fail("derive", 1, "".join(line + "\n" for line in violations))
     violations = check_accounting(composition, packet)
     if violations:
         raise fail("accounting", 1, "".join(line + "\n" for line in violations))
 
-    compose = [str(SCRIPTS / "compose_review.py"), "--store", args.store, str(composition_path)]
+    compose = [str(SCRIPTS / "compose_review.py"), "--store", args.store, "-"]
     if args.profile == "implementation-gate":
         compose[1:1] = ["--profile", "implementation-gate"]
-    composed = run("record" if args.profile == "implementation-gate" else "compose", compose)
+    composed = run("record" if args.profile == "implementation-gate" else "compose", compose,
+                   json.dumps(composition, ensure_ascii=False).encode("utf-8"))
     staged: dict[str, bytes] = {}
     if args.profile == "publishable":
         validate = str(SCRIPTS / "validate_review.py")
@@ -397,10 +620,12 @@ def finalize(args: argparse.Namespace, private: Path) -> int:
 
     outputs = output_paths(args.profile, private)
     replies = rendered_replies(composition)
+    given = {"store": args.store, "packet": args.packet, "fingerprint_input": args.fingerprint_input}
+    given = {name: os.path.abspath(path) if path else None for name, path in given.items()}
     finalization = {"protocol": cr.FINALIZATION_PROTOCOL, "profile": args.profile,
-                    "report": str(private / REPORT), "replies": replies}
+                    "report": str(private / REPORT), "inputs": given, "replies": replies}
     try:
-        inputs = [("packet", Path(os.path.abspath(args.packet)))] if args.packet else []
+        inputs = [(name, Path(path)) for name, path in given.items() if path and name != "store"]
         report = render_report(args.profile, composition, payload, replies, outputs[:-1] + inputs)
     except (KeyError, TypeError, AttributeError) as error:  # the composer validated these shapes
         raise fail("report", 1, f"finalize_review: cannot render the report from the validated input: {error!r}\n")
@@ -502,7 +727,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--profile", choices=cr.PROFILES, default="publishable")
     parser.add_argument("--store", help="the step-2 review-context store")
-    parser.add_argument("--packet", help="the run's forge packet, read-only; prior-item thread ids are checked against it")
+    parser.add_argument("--packet", help="the run's forge packet, read-only; supplies pull-request identity and checks prior-item thread ids")
+    parser.add_argument("--fingerprint-input", help="the saved context_fingerprint.py input, read-only; supplies local target fields and the digest")
     parser.add_argument("--compact", action="store_true", help="print status, coverage, and output paths instead of the default")
     parser.add_argument("--check", action="store_true", help="read-only: report whether PRIVATE_DIR holds consumable output")
     parser.add_argument("private_dir", help="directory holding composition.json")
