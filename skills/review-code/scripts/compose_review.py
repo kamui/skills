@@ -18,12 +18,13 @@ the payload can never drift from what validated; ``validate_review.py
 --emit-batch`` projects that payload into the forge batch exactly as before.
 
 The script decides no review judgment. It does not admit or drop an item,
-choose a priority, action, kind, status or classification, derive an anchor's
-side, or select which observations publish. Input whose fields contradict
+choose a priority, action, kind, status or classification, choose a line
+anchor's side, or select which observations publish. Input whose fields contradict
 each other or omit a judgment is refused with the field named; nothing is
 resolved on the reviewer's behalf. It performs no forge call and reads no
 repository: ``--store`` reads the run's persisted review context only to check
-anchors against the pinned merge-base manifest and the run identity.
+anchors against the pinned merge-base manifest and the run identity, and to
+derive an omitted file-anchor side the manifest establishes.
 
 Usage::
 
@@ -193,11 +194,15 @@ ledger included, ``not-required`` is the only consistent value short of a
 recorded batch. ``routed.unresolved`` and ``routed.disputed`` name rendered
 or prior item ids.
 
-A file anchor names its ``side`` explicitly -- ``LEFT`` for a file the change
-deletes, ``RIGHT`` for a file present at the head, ``UNKNOWN`` when the pinned
-manifest cannot establish the path or revision -- because the side is the
-reviewer's provenance judgment from the full merge-base manifest and the
-composer must not default it. Paths are given raw, as the manifest lists
+A file anchor's ``side`` is ``LEFT`` for a file the change deletes, ``RIGHT``
+for a file present at the head, and ``UNKNOWN`` when the evidence cannot
+establish the path or revision. With ``--store`` the anchor may omit it: the
+composer derives ``LEFT`` from a ``D`` entry of the full pinned merge-base
+manifest and ``RIGHT`` from an ``A``, ``C``, ``M``, ``R``, or ``T`` entry, writes
+it into the payload's anchor, and refuses the anchor when the manifest cannot
+establish one side, so the reviewer names ``side`` there, ``UNKNOWN``
+included. Without ``--store`` a file anchor names ``side``; nothing defaults
+it. A supplied side is checked against the manifest, never replaced. Paths are given raw, as the manifest lists
 them; the composer percent-encodes a fix coordinate for the trailer and the
 payload, and ``validate_review.py`` decodes it once when linking. A prior
 item is accounted for in the summary only: its thread reply is drafted and
@@ -225,6 +230,7 @@ CLASSIFICATIONS = ("fixed", "accepted", "obsolete", "still-open", "not-verifiabl
 OPEN_CLASSIFICATIONS = ("still-open", "not-verifiable", "disputed")
 PRIOR_ACTIONS = ("must-fix", "consider", "question")
 FILE_SIDES = ("LEFT", "RIGHT", "UNKNOWN")
+MANIFEST_FILE_SIDES = {"D": "LEFT", "A": "RIGHT", "C": "RIGHT", "M": "RIGHT", "R": "RIGHT", "T": "RIGHT"}
 MODE_DEFAULT = "**Mode:** Retrospective review of merged pull request; publication disabled."
 MODE_AUTHORIZED = "**Mode:** Retrospective review of merged pull request; publication separately authorized."
 UNANCHORED_NOTE = (
@@ -324,14 +330,7 @@ def check_anchor_input(report: vr.Report, location: str, anchor: Any) -> None:
     if not isinstance(anchor, dict):
         report.add(location, "schema", "`anchor` must be an object")
         return
-    if anchor.get("type") == "file" and "side" not in anchor:
-        report.add(
-            location,
-            "anchor-provenance",
-            "a file anchor names its `side` explicitly: `LEFT` for a file the change deletes, `RIGHT` for a file at the head, "
-            "or `UNKNOWN` when the pinned manifest cannot establish the path or revision; derive it from the full merge-base manifest",
-        )
-    elif anchor.get("type") == "file" and anchor.get("side") not in FILE_SIDES:
+    if anchor.get("type") == "file" and "side" in anchor and anchor["side"] not in FILE_SIDES:
         report.add(location, "anchor-provenance", f"a file anchor's `side` is one of {list(FILE_SIDES)}, not `{anchor.get('side')!r}`")
     vr.check_anchor(report, location, anchor)
 
@@ -699,8 +698,22 @@ def check_identities(
             )
 
 
+def require_file_sides(report: vr.Report, items: list[tuple[str, dict[str, Any]]]) -> None:
+    """Without a store there is no pinned manifest to derive a file anchor's side from."""
+    for location, item in items:
+        anchor = item.get("anchor")
+        if isinstance(anchor, dict) and anchor.get("type") == "file" and "side" not in anchor:
+            report.add(
+                f"{location}.anchor",
+                "anchor-provenance",
+                "without `--store` a file anchor names its `side`: `LEFT` for a file the change deletes, `RIGHT` for a file at the head, "
+                "or `UNKNOWN` when the path or revision is unestablished; with `--store` the pinned manifest supplies it",
+            )
+
+
 def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], items: list[tuple[str, dict[str, Any]]]) -> None:
-    """Check anchors against the persisted review context's pinned manifest and run identity."""
+    """Check anchors against the persisted review context's pinned manifest and run identity, and derive an
+    omitted file-anchor side the manifest establishes."""
     if store.get("format") != rc.STORE_FORMAT or not isinstance(store.get("context"), dict):
         report.add("store", "schema", f"expected a `{rc.STORE_FORMAT}` envelope with a `context` object from review_context.py --store")
         return
@@ -719,10 +732,12 @@ def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], i
     known: set[str] = set()
     deleted: set[str] = set()
     added: set[str] = set()
+    file_sides: dict[str, set[str | None]] = {}
     for entry in manifest:
         if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
             continue
         known.add(entry["path"])
+        file_sides.setdefault(entry["path"], set()).add(MANIFEST_FILE_SIDES.get(str(entry.get("status", ""))[:1]))
         if str(entry.get("status", "")).startswith("D"):
             deleted.add(entry["path"])
         if str(entry.get("status", "")).startswith("A"):
@@ -734,6 +749,18 @@ def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], i
         path = anchor["path"]
         if path not in known:
             report.add(f"{location}.anchor", "anchor-provenance", f"`{path}` is not in the pinned merge-base manifest; an anchor names a changed file")
+            continue
+        if anchor.get("type") == "file" and "side" not in anchor:
+            derived = file_sides[path]
+            if len(derived) == 1 and None not in derived:
+                item["anchor"] = {**anchor, "side": derived.pop()}
+            else:
+                report.add(
+                    f"{location}.anchor",
+                    "anchor-provenance",
+                    f"the pinned manifest does not establish one revision for `{path}`, so the file anchor names its `side`: "
+                    "`UNKNOWN` with the missing evidence explained in the item, unless other evidence establishes `LEFT` or `RIGHT`",
+                )
             continue
         side = anchor.get("side")
         if path in deleted and side == "RIGHT":
@@ -1118,7 +1145,9 @@ def compose(
             priors.append((f"prior_items[{index}]", prior))
 
     check_identities(report, [(l, f) for l, f, _t in findings], [(l, q) for l, q, _t in questions], priors)
-    if store is not None and run is not None:
+    if store is None:
+        require_file_sides(report, [(l, i) for l, i, _t in findings + questions])
+    elif run is not None:
         check_store(report, store, run, [(l, i) for l, i, _t in findings + questions])
     if run is not None and summary is not None:
         check_status(report, summary["status"], run["coverage"], [f for _l, f, _t in findings], [q for _l, q, _t in questions], [p for _l, p in priors])

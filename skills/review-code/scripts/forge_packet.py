@@ -7,15 +7,13 @@ its reviews, review threads, and comments with `gh api graphql`, saving every
 response page to a file. This script turns those saved pages into
 one logical collection of the reviewed forge inputs -- the packet -- with
 stable numeric ids, edit timestamps, and per-connection completeness. It reads
-only the files it is given and, for `eligibility`, the local git clone: it
-never calls `gh`, never touches the network, and never decides a review
-judgment.
+only the files it is given: it never calls `gh`, never touches the network,
+and never decides a review judgment.
 
 Usage:
     python3 scripts/forge_packet.py normalize PAGE [PAGE ...] > packet.json
     python3 scripts/forge_packet.py later-state packet.json --review ID
         [--after ISO-8601]
-    python3 scripts/forge_packet.py eligibility forge-1.json --reviewer LOGIN
     python3 scripts/forge_packet.py --self-test
 
 `normalize` accepts the raw stdout of each `gh api graphql` call from the
@@ -46,31 +44,6 @@ Exit 0 means the packet is complete
 and nothing later exists, so the deduplication rule may consider the candidate;
 exit 1 means the lines on stdout stand between the run and that shortcut.
 
-`eligibility` decides from the saved root page, before any continuation, whether
-the pull-request reference's root invocation may run step 2's first-review
-context build at once. It prints `eligible <merge-base> <head>` only when all
-of these hold, and otherwise `deferred: <reason>`, exiting 0 either way:
-
-- the page is readable JSON without `errors` and carries
-  `data.repository.pullRequest`;
-- `--reviewer` is non-empty;
-- `title`, `baseRefName`, `state`, and `merged` are present with their types,
-  and `baseRefOid` and `headRefOid` are 40-hex;
-- the target is `OPEN` and not merged;
-- `reviews`, `reviewThreads`, `comments`, and every returned thread's
-  `comments` carry `pageInfo.hasNextPage: false` and a `totalCount` equal to
-  the nodes returned, so first-review status is proven rather than inferred
-  from top-level exhaustion;
-- no review, thread comment, or pull-request comment is authored by the
-  reviewer, logins compared case-insensitively with a trailing `[bot]` ignored;
-- both commits exist locally (`git cat-file -e`) and `git merge-base`
-  resolves.
-
-A missing commit or unresolved merge-base defers; the guard fetches nothing.
-A page it cannot interpret, such as a `data` that is a truthy non-object,
-raises and exits non-zero without a verdict, which the root invocation records
-as `deferred: eligibility guard failed with exit <status>`.
-
 Recognized page shapes (each response's `data` wrapper is optional):
 
 - root page: `repository.pullRequest` carrying `title`, exactly one per run;
@@ -92,8 +65,7 @@ page carried a GraphQL error or an HTTP failure. Anything else is a named gap. T
 hashes the same normalized records the review and the re-review read.
 
 Exit codes:
-    0  the packet, an empty later-state report, or an eligibility verdict was
-       written to stdout
+    0  the packet or an empty later-state report was written to stdout
     1  later-state lines were written to stdout, or a --self-test assertion
        failed
     2  a page file cannot be opened or matches no documented shape; the file
@@ -106,7 +78,6 @@ import argparse
 import copy
 import json
 import re
-import subprocess
 import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -1005,69 +976,6 @@ def self_test() -> int:
     return 0
 
 
-# --- first-review eligibility ----------------------------------------------
-
-
-class Deferred(Exception):
-    """The early build cannot run; the message is the reason."""
-
-
-def eligibility(root: str, reviewer: str) -> str:
-    sha = re.compile(r"^[0-9a-f]{40}$")
-
-    def author(value: Any) -> str:
-        value = value.get("login") if isinstance(value, dict) else value
-        return (value if isinstance(value, str) else "").lower().removesuffix("[bot]")
-
-    def complete(connection: Any) -> bool:
-        if not isinstance(connection, dict):
-            return False
-        info, nodes, total = connection.get("pageInfo"), connection.get("nodes"), connection.get("totalCount")
-        return (isinstance(info, dict) and info.get("hasNextPage") is False and isinstance(nodes, list)
-                and isinstance(total, int) and total == len(nodes))
-
-    def git(*args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8")
-
-    try:
-        with open(root, encoding="utf-8") as handle:
-            page = json.load(handle)
-    except Exception as error:
-        raise Deferred(f"root page unreadable ({error.__class__.__name__})")
-    if not isinstance(page, dict) or page.get("errors"):
-        raise Deferred("root page carries errors")
-    pr = ((page.get("data") or {}).get("repository") or {}).get("pullRequest")
-    if not isinstance(pr, dict):
-        raise Deferred("root page has no pullRequest")
-    if not author(reviewer):
-        raise Deferred("posting identity unknown")
-    base, head = pr.get("baseRefOid"), pr.get("headRefOid")
-    if not (isinstance(base, str) and sha.match(base) and isinstance(head, str) and sha.match(head)
-            and isinstance(pr.get("title"), str) and isinstance(pr.get("baseRefName"), str)
-            and isinstance(pr.get("state"), str) and isinstance(pr.get("merged"), bool)):
-        raise Deferred("required root fields missing or invalid")
-    if pr["state"] != "OPEN" or pr["merged"]:
-        raise Deferred(f"target state {pr['state']} merged={str(pr['merged']).lower()}")
-    reviews, threads, comments = pr.get("reviews"), pr.get("reviewThreads"), pr.get("comments")
-    if not (complete(reviews) and complete(threads) and complete(comments)):
-        raise Deferred("a review-state connection is not proven complete")
-    nodes = list(reviews["nodes"]) + list(comments["nodes"])
-    for thread in threads["nodes"]:
-        replies = thread.get("comments") if isinstance(thread, dict) else None
-        if not complete(replies):
-            raise Deferred("a thread's comments are not proven complete")
-        nodes.extend(replies["nodes"])
-    if any(isinstance(node, dict) and author(node.get("author")) == author(reviewer) for node in nodes):
-        raise Deferred("prior state from the posting identity")
-    for name, oid in (("base", base), ("head", head)):
-        if git("cat-file", "-e", f"{oid}^{{commit}}").returncode != 0:
-            raise Deferred(f"{name} commit {oid} not present locally")
-    merge_base = git("merge-base", base, head)
-    if merge_base.returncode != 0 or not sha.match(merge_base.stdout.strip()):
-        raise Deferred("merge-base unresolved")
-    return f"eligible {merge_base.stdout.strip()} {head}"
-
-
 # --- CLI --------------------------------------------------------------------
 
 
@@ -1081,9 +989,6 @@ def main() -> int:
     later_parser.add_argument("packet", help="packet written by `normalize`")
     later_parser.add_argument("--review", required=True, help="fullDatabaseId of the candidate review")
     later_parser.add_argument("--after", help="ISO-8601 cutoff overriding the review's submission time")
-    eligibility_parser = subparsers.add_parser("eligibility", help="decide whether the first-review build can run now")
-    eligibility_parser.add_argument("root", help="saved root page")
-    eligibility_parser.add_argument("--reviewer", required=True, help="posting identity login; empty when unknown")
     args = parser.parse_args()
 
     if args.self_test:
@@ -1091,12 +996,6 @@ def main() -> int:
     if args.command is None:
         parser.print_usage(sys.stderr)
         return 2
-    if args.command == "eligibility":
-        try:
-            print(eligibility(args.root, args.reviewer))
-        except Deferred as reason:
-            print(f"deferred: {reason}")
-        return 0
     try:
         if args.command == "normalize":
             pages = [(path, load_page(path)) for path in args.pages]
