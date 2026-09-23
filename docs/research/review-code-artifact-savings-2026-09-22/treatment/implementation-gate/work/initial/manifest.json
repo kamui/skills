@@ -1,0 +1,20 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "1d14229ab620f9a4f6539dc6bbabae6d82fc10e314f41b5bcbe7e30dc61793b5",
+  "candidate_ids": [
+    "ledger/statement/running-balance-posting-order"
+  ],
+  "format": "verifier-manifest/2",
+  "input_sha256": "e07f9eb91bd694cdba0cbae0d88156ae7b4fe020952097a01f536de20be9297e",
+  "premise_ids": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "id": "review-2ba4046",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/implementation-gate/repo"
+  }
+}

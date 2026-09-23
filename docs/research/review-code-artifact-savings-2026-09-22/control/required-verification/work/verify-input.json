@@ -1,0 +1,44 @@
+{
+ "run": {"id":"review-a13922e","repository":"/tmp/rcs-savings/control/required-verification/repo",
+  "base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab","head":"a13922e76f42d9757608530348200affbf3bde2f","merge_base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab"},
+ "batch":{"id":"initial","phase":"initial"},
+ "run_policy":"Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect; disposable directories only, never modify the repository.",
+ "sources":[
+  {"coordinate":"example/ledger#5/acceptance-criterion-2","text":"Only the account's owner can grant or revoke; anyone else gets `LedgerError` and nothing changes."},
+  {"coordinate":"example/ledger#5/acceptance-criterion-3","text":"A delegate can view only the accounts that granted them access."},
+  {"coordinate":"example/ledger#5/acceptance-criterion-4","text":"A delegate can never post entries."},
+  {"coordinate":"example/ledger#5/acceptance-criterion-5","text":"Owner, auditor, and teller access is unchanged."},
+  {"coordinate":"pr-title","text":"Let delegates read statements"},
+  {"coordinate":"pr-body","text":"Adds a `delegate` role. Owners grant and revoke delegates with `Ledger.grant` and `Ledger.revoke`; `can_view` admits a delegate only for accounts that list them.\n\nCloses #5.\n"},
+  {"coordinate":"AGENTS.md (base)","text":"Authorization decisions live in `ledger/auth.py`; callers never compare roles themselves. A refused operation leaves every account unchanged."}
+ ],
+ "candidates":[
+  {"id":"ledger/grant-owner-check-outside-auth","kind":"invariant","priority":"P3","action":"consider",
+   "title":"Move the owner check for grant and revoke into auth.py",
+   "claim":"Ledger.grant and Ledger.revoke decide authorization by comparing account.owner to user in ledger/accounts.py, though the base AGENTS.md says authorization decisions live in ledger/auth.py",
+   "trigger":"Any change to who may manage delegates must be made in two modules, accounts.py and auth.py, because the owner comparison is duplicated outside auth.py.",
+   "impact":"The authorization rule for managing delegates lives outside the module the repository designates, so it can drift from auth.py's owner semantics.",
+   "change":"Add a predicate such as can_manage(user, account) in ledger/auth.py and call it from grant and revoke.",
+   "anchor":{"type":"line","path":"ledger/accounts.py","start_line":54,"end_line":55,"side":"RIGHT"},
+   "evidence":[
+    {"coordinate":"ledger/accounts.py:54-55","text":"if account.owner != user:\n    raise LedgerError(f\"{user} does not own {number}\")"},
+    {"coordinate":"AGENTS.md:6","text":"Authorization decisions live in `ledger/auth.py`; callers never compare roles themselves."}],
+   "ranges":{"anchor":{"coordinate":"ledger/accounts.py:52-64","text":"ledger/accounts.py: +52,13"}},
+   "rule_source":"AGENTS.md (base)"}
+ ],
+ "premises":[
+  {"id":"premise-refused-grant-revoke-no-change","area":"security",
+   "premise":"For every call of Ledger.grant/revoke where user is not the account's owner, or the account does not exist, LedgerError is raised before account.delegates is mutated, so nothing changes.",
+   "evidence":[
+    {"coordinate":"ledger/accounts.py:52-64","text":"account = self.get(number)\nif account.owner != user:\n    raise LedgerError(...)\naccount.delegates.add(delegate)  # / .discard(delegate)"}]},
+  {"id":"premise-delegate-view-scoped","area":"security",
+   "premise":"can_view admits role 'delegate' only when the user is in that specific account's own delegates set (a per-instance set, never shared between accounts), and owner, auditor, teller and unknown-role results are unchanged from base.",
+   "evidence":[
+    {"coordinate":"ledger/auth.py:9-17","text":"if role not in ROLES: return False\nif role in (\"auditor\", \"teller\"): return True\nif role == \"delegate\": return user in account.delegates\nreturn account.owner == user"},
+    {"coordinate":"ledger/accounts.py:24","text":"delegates: set[str] = field(default_factory=set)"}]},
+  {"id":"premise-delegate-never-posts","area":"security",
+   "premise":"No path in the head tree lets a user with role 'delegate' post entries: can_post returns True only for role 'teller', and the delegate grant does not add any posting capability.",
+   "evidence":[
+    {"coordinate":"ledger/auth.py:20-22","text":"def can_post(user, role, account): return role == \"teller\""}]}
+ ]
+}

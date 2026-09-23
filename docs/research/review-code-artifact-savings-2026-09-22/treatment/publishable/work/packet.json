@@ -1,0 +1,88 @@
+{
+  "schema": "forge-packet/1",
+  "repository_url": "https://github.com/example/ledger",
+  "pr": {
+    "title": "Add CSV statement export",
+    "body": "Adds `--format csv` to `ledger statement`, backed by a new `ledger/export.py` that reuses `statement_rows`.\n\nCloses #3.\n",
+    "state": "OPEN",
+    "merged": false,
+    "is_draft": false,
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head_sha": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "updated_at": "2026-09-02T10:05:00Z",
+    "last_edited_at": null,
+    "repository_url": "https://github.com/example/ledger"
+  },
+  "issues": [
+    {
+      "coordinate": "example/ledger#3",
+      "number": 3,
+      "title": "Export statements as CSV",
+      "body": "Statements are text-only today; accountants want to open them in a spreadsheet.\n\nAcceptance:\n\n1. `ledger statement FILE ACCOUNT --format csv` prints the statement as CSV; text stays the default.\n2. The first row is the header `date,description,amount,balance`.\n3. Amounts and balances use the text statement's decimal format, for example `-4.50`.\n4. Descriptions containing commas, quotes, or newlines round-trip through Python's `csv.reader`.\n",
+      "updated_at": "2026-09-01T15:00:00Z",
+      "last_edited_at": null,
+      "url": "https://github.com/example/ledger/issues/3",
+      "closing": true,
+      "comments": [],
+      "comments_complete": true
+    }
+  ],
+  "explicit_issues": [],
+  "reviews": [],
+  "threads": [],
+  "pr_comments": [],
+  "coverage": {
+    "closingIssuesReferences": {
+      "pages": 1,
+      "total_count": 1,
+      "fetched": 1,
+      "complete": true,
+      "gaps": []
+    },
+    "reviews": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    },
+    "reviewThreads": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    },
+    "comments": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    },
+    "issue example/ledger#3 comments": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    }
+  },
+  "gaps": [],
+  "complete": true,
+  "fingerprint": {
+    "pr": {
+      "title": "Add CSV statement export",
+      "body": "Adds `--format csv` to `ledger statement`, backed by a new `ledger/export.py` that reuses `statement_rows`.\n\nCloses #3.\n"
+    },
+    "issues": [
+      {
+        "coordinate": "example/ledger#3",
+        "title": "Export statements as CSV",
+        "body": "Statements are text-only today; accountants want to open them in a spreadsheet.\n\nAcceptance:\n\n1. `ledger statement FILE ACCOUNT --format csv` prints the statement as CSV; text stays the default.\n2. The first row is the header `date,description,amount,balance`.\n3. Amounts and balances use the text statement's decimal format, for example `-4.50`.\n4. Descriptions containing commas, quotes, or newlines round-trip through Python's `csv.reader`.\n",
+        "comments": []
+      }
+    ]
+  }
+}

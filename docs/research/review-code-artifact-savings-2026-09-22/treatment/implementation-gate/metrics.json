@@ -1,0 +1,567 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/treatment/implementation-gate/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/1684cf4/skills/review-code",
+  "task_root": "/tmp/rcs-savings/treatment/implementation-gate",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 15,
+          "lines": 24,
+          "tool_calls": 14,
+          "text_only_turns": 1,
+          "input": 30,
+          "cache_write": 50475,
+          "cache_write_5m": 0,
+          "cache_write_1h": 50475,
+          "cache_write_unknown": 0,
+          "cache_read": 540066,
+          "output": 9598,
+          "thinking": 1423,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:01:46",
+          "wall_seconds": 106.025,
+          "path": "/tmp/rcs-savings/evidence/treatment/implementation-gate/transcript.jsonl",
+          "settings": {
+            "lines": 24,
+            "models": {
+              "claude-sonnet-5": 24
+            },
+            "efforts": {
+              "high": 24
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 15,
+        "lines": 24,
+        "tool_calls": 14,
+        "text_only_turns": 1,
+        "input": 30,
+        "cache_write": 50475,
+        "cache_write_5m": 0,
+        "cache_write_1h": 50475,
+        "cache_write_unknown": 0,
+        "cache_read": 540066,
+        "output": 9598,
+        "thinking": 1423,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:01:46",
+        "wall_seconds": 106.025
+      }
+    },
+    "workers": {
+      "transcripts": [
+        {
+          "label": "agent-a62b261dd6151203c.jsonl",
+          "turns": 4,
+          "lines": 6,
+          "tool_calls": 4,
+          "text_only_turns": 1,
+          "input": 8,
+          "cache_write": 19580,
+          "cache_write_5m": 19580,
+          "cache_write_1h": 0,
+          "cache_write_unknown": 0,
+          "cache_read": 46361,
+          "output": 1362,
+          "thinking": 67,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:00:13",
+          "wall_seconds": 13.203,
+          "path": "/tmp/rcs-savings/evidence/treatment/implementation-gate/subagents/agent-a62b261dd6151203c.jsonl",
+          "settings": {
+            "lines": 6,
+            "models": {
+              "claude-sonnet-5": 6
+            },
+            "efforts": {
+              "high": 6
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 4,
+        "lines": 6,
+        "tool_calls": 4,
+        "text_only_turns": 1,
+        "input": 8,
+        "cache_write": 19580,
+        "cache_write_5m": 19580,
+        "cache_write_1h": 0,
+        "cache_write_unknown": 0,
+        "cache_read": 46361,
+        "output": 1362,
+        "thinking": 67,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:00:13",
+        "wall_seconds": 13.203
+      }
+    },
+    "all": {
+      "label": "total",
+      "turns": 19,
+      "lines": 30,
+      "tool_calls": 18,
+      "text_only_turns": 2,
+      "input": 38,
+      "cache_write": 70055,
+      "cache_write_5m": 19580,
+      "cache_write_1h": 50475,
+      "cache_write_unknown": 0,
+      "cache_read": 586427,
+      "output": 10960,
+      "thinking": 1490,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:01:59",
+      "wall_seconds": 119.228
+    }
+  },
+  "harness": {
+    "num_turns": 15,
+    "duration_ms": 109631,
+    "total_cost_usd": 0.47936740000000005,
+    "subagents_spawned": 1,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 1,
+    "failed": 0,
+    "repair_loops": 0,
+    "runs": [
+      {
+        "command": "S=/tmp/rcs-savings/skills/1684cf4/skills/review-code; W=/tmp/rcs-savings/treatment/implementation-gate/work; R=/tmp/rcs-savings/treatment/implementation-gate/repo; I=/tmp/rcs-savings/treatment/implementation-gate/inputs; cd $R\nfor c in $(git rev-list --reverse 2301c83..2ba4046); do git log -1 --format=%B $c > $W/commit-${c:0:7}; done\npython3 - <<'E'\nimport json,subprocess\nW=\"/tmp/rcs-savings/treatment/implementation-gate/work\";R=\"/tmp/rcs-savings/treatment/implementation-gate/repo\";I=\"/tmp/rcs-savings/treatment/implementation-gate/inputs\"\nbody=subprocess.run([\"git\",\"log\",\"--reverse\",\"--format=%H%n%B\",\"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab..2ba40465ef91f15b2963a4b12e80f46ee0e9efae\"],cwd=R,capture_output=True,text=True).stdout\nspec=open(I+\"/spec.md\").read()\njson.dump({\"pr\":{\"title\":\"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...2ba40465ef91f15b2963a4b12e80f46ee0e9efae\",\"body\":body},\"issues\":[],\"specs\":[{\"identity\":\"ledger-spec/statement-date-filter\",\"text\":spec}]},open(W+\"/fingerprint.json\",\"w\"),indent=1)\nS=\"spec-ledger-spec/statement-date-filter/\"\ncomp={\"run\":{\"target_kind\":\"range\",\"base_ref\":\"main\",\"base_sha\":\"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab\",\"coverage\":\"complete\"},\n\"summary\":{\"status\":\"Changes Requested\",\n\"intent\":\"Let `ledger statement` take inclusive `--since`/`--until` bounds, with an opening balance, a running balance that continues from it, a bounded closing balance, exit 2 on bad dates, and README docs (spec ledger-spec/statement-date-filter; commits e16a48c, 2ba4046).\",\n\"issue_fit\":\"Partial. Criteria 1, 2, 4, 5 and 6 are met; criterion 3 is not met when an account's entries are not in date order, which `post()`, `transfer()` and `load()` permit.\",\n\"coverage\":\"Complete merge-base diff (4 files) reviewed. Supplied unittest run (17 tests, exit 0) and the criterion-5 CLI exercises were accepted: same head 2ba4046, clean tree. I reproduced the out-of-order case once with a disposable JSON file; a verifier confirmed the finding by trace. No test runs the out-of-order case, so the passing suite says nothing about it. Uncommitted changes: none. Python 3.11+ `date.fromisoformat` also accepts compact forms such as `20260901`, which criterion 5's `YYYY-MM-DD` wording does not address; not raised as a finding.\"},\n\"findings\":[{\"id\":\"ledger/statement/running-balance-posting-order\",\"title\":\"Start the running balance at the opening balance\",\"priority\":\"P2\",\"action\":\"must-fix\",\"kind\":\"requirement\",\n\"trigger\":\"An account whose posting order differs from date order (for example a 2026-09-05 entry posted before a 2026-08-01 entry) is rendered with `--since 2026-09-01`.\",\n\"impact\":\"The row prints running balance 100.00 beside opening balance 50.00 and amount 100.00 (it should be 150.00, the closing balance), so the statement contradicts criterion 3. Entries dated after `--until` but posted earlier inflate listed rows the same way.\",\n\"change\":\"In `statement_rows`, initialise `running` to `balance_before(account, since)` when `since` is given (else 0) and add only the amounts of rows that pass the filter.\",\n\"source\":S+\"criterion-3\",\n\"anchor\":{\"type\":\"line\",\"path\":\"ledger/statement.py\",\"start_line\":34,\"end_line\":36,\"side\":\"RIGHT\"}}],\n\"questions\":[],\"observations\":[],\n\"record\":{\"repository\":R,\"paths\":{\"evidence_packet\":I+\"/evidence.md\",\"spec\":I+\"/spec.md\"},\n\"requirements\":[\n{\"source\":S+\"criterion-1\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/cli.py:37-38 adds --since/--until parsed by iso_day; statement.py filters inclusively\"},\n{\"source\":S+\"criterion-2\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/statement.py render_statement emits `Opening balance:` from balance_before (entries < since) right after the heading\"},\n{\"source\":S+\"criterion-3\",\"class\":\"acceptance\",\"disposition\":\"partial\",\"evidence\":\"Listing is correct, but statement_rows:34-41 accumulates running over every entry in posting order, so it diverges from opening balance plus listed rows when entries are not date-ordered; reproduced and verifier-confirmed (ledger/statement/running-balance-posting-order)\"},\n{\"source\":S+\"criterion-4\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"render_statement closing uses balance_through(until) or account.balance() when until is absent\"},\n{\"source\":S+\"criterion-5\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"inputs/criterion-5.txt: invalid date and reversed range both exit 2 with stderr messages; cli.py main check and tests/test_filter.py\"},\n{\"source\":S+\"criterion-6\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"README.md:7 example and lines 11-12 describe both options\"}],\n\"files\":[{\"path\":\"README.md\",\"state\":\"reviewed\"},{\"path\":\"ledger/cli.py\",\"state\":\"reviewed\"},{\"path\":\"ledger/statement.py\",\"state\":\"reviewed\"},{\"path\":\"tests/test_filter.py\",\"state\":\"reviewed\"}],\n\"check_evidence\":[\n{\"check\":\"python3 -m unittest discover -s tests -v\",\"head\":\"2ba40465ef91f15b2963a4b12e80f46ee0e9efae\",\"outcome\":\"accepted\",\"reason\":\"exact head, clean tree, 17 tests pass, output read; covers only date-ordered data\"},\n{\"check\":\"criterion-5 CLI exercises (invalid --since, reversed range)\",\"head\":\"2ba40465ef91f15b2963a4b12e80f46ee0e9efae\",\"outcome\":\"accepted\",\"reason\":\"exact head, clean tree, both exit 2, output read in criterion-5.txt\"}],\n\"verification\":{\"tasks\":[{\"id\":\"ledger/statement/running-balance-posting-order\",\"type\":\"candidate\",\"trigger\":\"must-fix\",\"batch\":\"initial\",\"ruling\":\"confirmed\"}],\n\"batches\":[{\"bundle\":W+\"/initial\",\"accounting\":W+\"/initial/accounting.json\",\"operation\":\"Agent run_in_background=false\"}],\n\"allowance\":{\"initial_spent\":True,\"follow_up_spent\":False,\"carried_from\":None},\"outstanding\":[]},\n\"routed\":{\"unresolved\":[],\"disputed\":[],\"unrecoverable_inputs\":[]}}}\njson.dump(comp,open(W+\"/composition.json\",\"w\"),indent=1)\nE\ncd $R; python3 $S/scripts/finalize_review.py --profile implementation-gate --store $W/review-context.json --fingerprint-input $W/fingerprint.json $W; echo exit $?",
+        "failed": false,
+        "at": "2026-09-23T20:48:42.168000+00:00"
+      }
+    ],
+    "validation": {
+      "status": "captured",
+      "at": "2026-09-23T20:48:42.168000+00:00",
+      "turns_after": 2,
+      "tool_calls_after": 1,
+      "seconds_after": 9.019
+    }
+  },
+  "after_last_addendum": {
+    "status": "unavailable",
+    "reason": "no addendum write"
+  },
+  "loads": {
+    "items": [
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/SKILL.md"
+          }
+        ],
+        "bytes": 12060,
+        "words": 1736
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/local-targets.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/review-rubric.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/rendering.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/check-evidence.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/changed-tests.md"
+          }
+        ],
+        "bytes": 26990,
+        "words": 3846
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-handoff.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-return.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-concurrency.md"
+          }
+        ],
+        "bytes": 18362,
+        "words": 2453
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 3826,
+        "words": 328
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 5301,
+        "words": 506
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 12060,
+        "words": 1736
+      },
+      "reference": {
+        "count": 8,
+        "bytes": 45352,
+        "words": 6299
+      },
+      "helper-example": {
+        "count": 3,
+        "bytes": 9127,
+        "words": 834
+      }
+    },
+    "mixed": {
+      "calls": 0,
+      "bytes": 0,
+      "words": 0
+    }
+  },
+  "worker_loads": [
+    {
+      "transcript": "/tmp/rcs-savings/evidence/treatment/implementation-gate/subagents/agent-a62b261dd6151203c.jsonl",
+      "dispatch_prompt": {
+        "bytes": 455,
+        "words": 46
+      },
+      "items": [
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/treatment/implementation-gate/work/initial/brief.md"
+            }
+          ],
+          "bytes": 17121,
+          "words": 2397
+        },
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/treatment/implementation-gate/work/initial/manifest.json"
+            }
+          ],
+          "bytes": 716,
+          "words": 55
+        }
+      ],
+      "totals": {
+        "bundle": {
+          "count": 2,
+          "bytes": 17837,
+          "words": 2452
+        }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
+      }
+    }
+  ],
+  "authored": {
+    "writes": [
+      {
+        "path": "`,",
+        "tool": "Bash",
+        "chars": 3471,
+        "agent": "root",
+        "class": "other"
+      },
+      {
+        "path": "initial-return.json",
+        "tool": "Bash",
+        "chars": 2720,
+        "agent": "root",
+        "class": "other"
+      },
+      {
+        "path": "$W/commit-${c:0:7}",
+        "tool": "Bash",
+        "chars": 5928,
+        "agent": "root",
+        "class": "other"
+      }
+    ],
+    "by_class": {
+      "other": {
+        "writes": 3,
+        "chars": 12119
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/treatment/implementation-gate/work/initial-return.json",
+        "shape": "raw-return",
+        "bytes": 2317,
+        "mechanical": {
+          "fields": 1,
+          "words": 1
+        },
+        "judgment": {
+          "fields": 20,
+          "words": 231
+        },
+        "sections": {
+          "manifest_sha256": {
+            "fields": 1,
+            "words": 1
+          },
+          "candidates": {
+            "fields": 17,
+            "words": 231
+          },
+          "premises": {
+            "fields": 1,
+            "words": 0
+          },
+          "duplicate_groups": {
+            "fields": 1,
+            "words": 0
+          },
+          "observation": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/implementation-gate/work/composition.json",
+        "shape": "composition",
+        "bytes": 5804,
+        "mechanical": {
+          "fields": 20,
+          "words": 18
+        },
+        "judgment": {
+          "fields": 62,
+          "words": 408
+        },
+        "sections": {
+          "run": {
+            "fields": 4,
+            "words": 4
+          },
+          "summary": {
+            "fields": 4,
+            "words": 150
+          },
+          "findings": {
+            "fields": 14,
+            "words": 103
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "observations": {
+            "fields": 1,
+            "words": 0
+          },
+          "record": {
+            "fields": 58,
+            "words": 169
+          }
+        },
+        "written_by": "unobserved"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/implementation-gate/work/fingerprint.json",
+        "shape": "fingerprint-input",
+        "bytes": 1227,
+        "mechanical": {
+          "fields": 5,
+          "words": 145
+        },
+        "judgment": {
+          "fields": 0,
+          "words": 0
+        },
+        "sections": {
+          "pr": {
+            "fields": 2,
+            "words": 23
+          },
+          "issues": {
+            "fields": 1,
+            "words": 0
+          },
+          "specs": {
+            "fields": 2,
+            "words": 122
+          }
+        },
+        "written_by": "unobserved"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/implementation-gate/work/verifier-input-initial.json",
+        "shape": "verifier-input",
+        "bytes": 3427,
+        "mechanical": {
+          "fields": 8,
+          "words": 27
+        },
+        "judgment": {
+          "fields": 28,
+          "words": 274
+        },
+        "sections": {
+          "run": {
+            "fields": 5,
+            "words": 5
+          },
+          "batch": {
+            "fields": 2,
+            "words": 2
+          },
+          "run_policy": {
+            "fields": 1,
+            "words": 20
+          },
+          "sources": {
+            "fields": 4,
+            "words": 39
+          },
+          "candidates": {
+            "fields": 23,
+            "words": 235
+          },
+          "premises": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "unobserved"
+      }
+    ]
+  }
+}

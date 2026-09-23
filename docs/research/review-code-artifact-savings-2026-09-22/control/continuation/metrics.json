@@ -1,0 +1,614 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/control/continuation/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code",
+  "task_root": "/tmp/rcs-savings/control/continuation",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 13,
+          "lines": 26,
+          "tool_calls": 16,
+          "text_only_turns": 1,
+          "input": 26,
+          "cache_write": 43887,
+          "cache_write_5m": 0,
+          "cache_write_1h": 43887,
+          "cache_write_unknown": 0,
+          "cache_read": 469830,
+          "output": 9009,
+          "thinking": 813,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:01:44",
+          "wall_seconds": 103.759,
+          "path": "/tmp/rcs-savings/evidence/control/continuation/transcript.jsonl",
+          "settings": {
+            "lines": 26,
+            "models": {
+              "claude-sonnet-5": 26
+            },
+            "efforts": {
+              "high": 26
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 13,
+        "lines": 26,
+        "tool_calls": 16,
+        "text_only_turns": 1,
+        "input": 26,
+        "cache_write": 43887,
+        "cache_write_5m": 0,
+        "cache_write_1h": 43887,
+        "cache_write_unknown": 0,
+        "cache_read": 469830,
+        "output": 9009,
+        "thinking": 813,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:01:44",
+        "wall_seconds": 103.759
+      }
+    },
+    "workers": {
+      "transcripts": [
+        {
+          "label": "agent-aac1506728e6717fa.jsonl",
+          "turns": 4,
+          "lines": 8,
+          "tool_calls": 4,
+          "text_only_turns": 1,
+          "input": 8,
+          "cache_write": 12860,
+          "cache_write_5m": 12860,
+          "cache_write_1h": 0,
+          "cache_write_unknown": 0,
+          "cache_read": 52435,
+          "output": 1546,
+          "thinking": 252,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:00:15",
+          "wall_seconds": 15.09,
+          "path": "/tmp/rcs-savings/evidence/control/continuation/subagents/agent-aac1506728e6717fa.jsonl",
+          "settings": {
+            "lines": 8,
+            "models": {
+              "claude-sonnet-5": 8
+            },
+            "efforts": {
+              "high": 8
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 4,
+        "lines": 8,
+        "tool_calls": 4,
+        "text_only_turns": 1,
+        "input": 8,
+        "cache_write": 12860,
+        "cache_write_5m": 12860,
+        "cache_write_1h": 0,
+        "cache_write_unknown": 0,
+        "cache_read": 52435,
+        "output": 1546,
+        "thinking": 252,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:00:15",
+        "wall_seconds": 15.09
+      }
+    },
+    "all": {
+      "label": "total",
+      "turns": 17,
+      "lines": 34,
+      "tool_calls": 20,
+      "text_only_turns": 2,
+      "input": 34,
+      "cache_write": 56747,
+      "cache_write_5m": 12860,
+      "cache_write_1h": 43887,
+      "cache_write_unknown": 0,
+      "cache_read": 522265,
+      "output": 10555,
+      "thinking": 1065,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:01:59",
+      "wall_seconds": 118.849
+    }
+  },
+  "harness": {
+    "num_turns": 17,
+    "duration_ms": 106956,
+    "total_cost_usd": 0.419629,
+    "subagents_spawned": 1,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 0,
+    "failed": 0,
+    "repair_loops": 0,
+    "runs": [],
+    "validation": {
+      "status": "unavailable",
+      "reason": "no successful finalize_review.py, compose_review.py or continue_review.py compose call"
+    }
+  },
+  "after_last_addendum": {
+    "status": "captured",
+    "at": "2026-09-23T21:03:24.132000+00:00",
+    "turns_after": 2,
+    "tool_calls_after": 1,
+    "seconds_after": 21.078
+  },
+  "loads": {
+    "items": [
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md"
+          }
+        ],
+        "bytes": 11806,
+        "words": 1701
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/continuation-addendum.md"
+          }
+        ],
+        "bytes": 6047,
+        "words": 872
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md"
+          }
+        ],
+        "bytes": 7786,
+        "words": 1049
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md"
+          }
+        ],
+        "bytes": 5082,
+        "words": 825
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md"
+          }
+        ],
+        "bytes": 11052,
+        "words": 1458
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          },
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/review_context.py"
+          }
+        ],
+        "bytes": 8800,
+        "words": 822
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md"
+          }
+        ],
+        "bytes": 1356,
+        "words": 113
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
+        "bytes": 846,
+        "words": 71
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 11806,
+        "words": 1701
+      },
+      "reference": {
+        "count": 5,
+        "bytes": 31323,
+        "words": 4317
+      },
+      "helper-example": {
+        "count": 2,
+        "bytes": 846,
+        "words": 71
+      },
+      "helper-help": {
+        "count": 1,
+        "bytes": 0,
+        "words": 0
+      }
+    },
+    "mixed": {
+      "calls": 1,
+      "bytes": 8800,
+      "words": 822
+    }
+  },
+  "worker_loads": [
+    {
+      "transcript": "/tmp/rcs-savings/evidence/control/continuation/subagents/agent-aac1506728e6717fa.jsonl",
+      "dispatch_prompt": {
+        "bytes": 406,
+        "words": 48
+      },
+      "items": [
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/control/continuation/work/follow-up/brief.md"
+            }
+          ],
+          "bytes": 15876,
+          "words": 2223
+        },
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/control/continuation/work/follow-up/manifest.json"
+            }
+          ],
+          "bytes": 741,
+          "words": 57
+        }
+      ],
+      "totals": {
+        "bundle": {
+          "count": 2,
+          "bytes": 16617,
+          "words": 2280
+        }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
+      }
+    }
+  ],
+  "authored": {
+    "writes": [
+      {
+        "path": "$W/fu-input.json",
+        "tool": "Bash",
+        "chars": 2885,
+        "agent": "root",
+        "class": "verifier-input"
+      },
+      {
+        "path": "raw-return.json",
+        "tool": "Bash",
+        "chars": 2408,
+        "agent": "root",
+        "class": "raw-return"
+      },
+      {
+        "path": "review/addenda/addendum-$F.json",
+        "tool": "Bash",
+        "chars": 3963,
+        "agent": "root",
+        "class": "addendum"
+      },
+      {
+        "path": "work/report.md",
+        "tool": "Bash",
+        "chars": 3494,
+        "agent": "root",
+        "class": "report"
+      }
+    ],
+    "by_class": {
+      "verifier-input": {
+        "writes": 1,
+        "chars": 2885
+      },
+      "raw-return": {
+        "writes": 1,
+        "chars": 2408
+      },
+      "addendum": {
+        "writes": 1,
+        "chars": 3963
+      },
+      "report": {
+        "writes": 1,
+        "chars": 3494
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/control/continuation/review/addenda/addendum-b96a362e99ce4f5b6b1fe26ad02fda66e8343723.json",
+        "shape": "addendum",
+        "bytes": 3929,
+        "mechanical": {
+          "fields": 23,
+          "words": 23
+        },
+        "judgment": {
+          "fields": 38,
+          "words": 204
+        },
+        "sections": {
+          "format": {
+            "fields": 1,
+            "words": 1
+          },
+          "workflow": {
+            "fields": 1,
+            "words": 1
+          },
+          "record": {
+            "fields": 1,
+            "words": 1
+          },
+          "record_format": {
+            "fields": 1,
+            "words": 1
+          },
+          "reviewed_head": {
+            "fields": 1,
+            "words": 1
+          },
+          "final_head": {
+            "fields": 1,
+            "words": 1
+          },
+          "delta": {
+            "fields": 4,
+            "words": 4
+          },
+          "replaced_by_full_review": {
+            "fields": 1,
+            "words": 0
+          },
+          "fixed_findings": {
+            "fields": 6,
+            "words": 42
+          },
+          "findings": {
+            "fields": 1,
+            "words": 0
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "requirements": {
+            "fields": 4,
+            "words": 16
+          },
+          "check_evidence": {
+            "fields": 8,
+            "words": 81
+          },
+          "verification": {
+            "fields": 24,
+            "words": 76
+          },
+          "status": {
+            "fields": 1,
+            "words": 1
+          },
+          "coverage": {
+            "fields": 1,
+            "words": 1
+          },
+          "coverage_gaps": {
+            "fields": 1,
+            "words": 0
+          },
+          "routed": {
+            "fields": 3,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/control/continuation/work/follow-up/raw-return.json",
+        "shape": "raw-return",
+        "bytes": 1990,
+        "mechanical": {
+          "fields": 1,
+          "words": 1
+        },
+        "judgment": {
+          "fields": 25,
+          "words": 157
+        },
+        "sections": {
+          "manifest_sha256": {
+            "fields": 1,
+            "words": 1
+          },
+          "candidates": {
+            "fields": 1,
+            "words": 0
+          },
+          "premises": {
+            "fields": 22,
+            "words": 157
+          },
+          "duplicate_groups": {
+            "fields": 1,
+            "words": 0
+          },
+          "observation": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/control/continuation/work/fu-input.json",
+        "shape": "verifier-input",
+        "bytes": 2310,
+        "mechanical": {
+          "fields": 8,
+          "words": 24
+        },
+        "judgment": {
+          "fields": 17,
+          "words": 160
+        },
+        "sections": {
+          "run": {
+            "fields": 5,
+            "words": 5
+          },
+          "batch": {
+            "fields": 2,
+            "words": 2
+          },
+          "run_policy": {
+            "fields": 1,
+            "words": 17
+          },
+          "sources": {
+            "fields": 4,
+            "words": 30
+          },
+          "candidates": {
+            "fields": 1,
+            "words": 0
+          },
+          "premises": {
+            "fields": 12,
+            "words": 130
+          }
+        },
+        "written_by": "tool"
+      }
+    ]
+  }
+}

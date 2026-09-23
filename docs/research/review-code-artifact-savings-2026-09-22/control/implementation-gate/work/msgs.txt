@@ -1,0 +1,6 @@
+Filter statements by date range
+
+Add inclusive --since and --until options with opening and closing balances.
+
+Document statement date filters
+

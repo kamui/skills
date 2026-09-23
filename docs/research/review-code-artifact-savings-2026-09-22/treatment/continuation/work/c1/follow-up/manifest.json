@@ -1,0 +1,21 @@
+{
+  "batch": {
+    "id": "follow-up",
+    "phase": "follow-up"
+  },
+  "brief_sha256": "77576a32f7c6ea27c151a66aef77343bcc9355782bd9b683f71fe2019c17bbc1",
+  "candidate_ids": [],
+  "format": "verifier-manifest/2",
+  "input_sha256": "0add28764e510d8470de60eedbfbff277834f000aabe44bbce709840e5a124bf",
+  "premise_ids": [
+    "premise-entry-paths",
+    "premise-transfer-atomic"
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "id": "review-b96a362",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/continuation/repo"
+  }
+}

@@ -84,3 +84,20 @@ With #342–#345 in place, the references still repeated schema and behavior tha
 **Paths and budgets.** `test_instruction_budget.py` now measures the six paths #346 names: local and pull-request publishable reviews, the implementation gate, a pull-request review with one required batch, a re-review and a continuation. It replaces the two combined primary paths, each of which included a batch. Against `origin/main` at `4e31ec2`, the paths shrink by 1,167–2,549 bytes, the always-loaded set by 1,059 bytes to 24,894, and the runtime total by 3,987 bytes to 87,803. Every limit drops to the next thousand above its new size: runtime 88,000, always-loaded 25,000, and paths 44,000–62,000. The worker brief limits stay, because brief bytes are unchanged. Helper examples, and so the authored fields, are byte-identical, and the documented command mentions per path are unchanged. [The measurement](../../docs/research/review-code-instruction-trim-2026-09-23/README.md) has the per-path table.
 
 **Schemas and workflow.** This is prose-only apart from the builder's exact load-line strip. `v5b-24` and every private schema are retained, because admission, verification, rendering and state semantics are unchanged.
+
+## Combined interface measurement, issue #347, 2026-09-23
+
+The four archived tasks ran against `1684cf4`, with a same-session control rerunning the baseline `d8c2dd9`; the [measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) has the tables. The control, not the #341 cells, is the comparison that separates the interface from harness and model drift. Against it, the treatment keeps every public shape, status and allowance and records verification state in every cell. Its supported mechanical effects are:
+
+- no model-written report after validation;
+- fewer mechanical leaves in the gate composition;
+- a validated continuation input in place of a hand-written addendum.
+
+It shows no overall cost or latency saving. The open risks it records are:
+
+- more finalizer repairs under the stricter preconditions;
+- verifier returns still transcribed, because a Claude Code worker cannot be confined to one file, so the transport condition keeps returns inline;
+- primaries still opening worker-only references;
+- a return repair that renamed a helper-written accounting report instead of writing a new one.
+
+No runtime text, helper, schema or workflow changes here: `v5b-24` stands.
