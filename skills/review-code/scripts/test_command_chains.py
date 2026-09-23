@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/test_command_chains.py
 Inputs: SKILL.md step 5's `finalize_review.py` commands, the pull-request target's root
-fetch and guarded early-build block, the publisher's freshness and
+fetch block, the publisher's freshness and
 review-submission block, its dismissal command, the app-token acquisition
 blocks in `audit-code-publish` and `code-review-publish`, a disposable Git
 repository, and a stub `gh` on PATH; no forge access and no live writes.
@@ -18,10 +18,9 @@ acquisition must publish its write under a proved token and write nothing when
 the token is missing or refused; the dismissal, whose single write is its own
 proof, must write nothing when the token is missing. Neither the token nor the
 dismissal message may reach `argv` or the inner shell's expansions.
-The root block must build the first-review store once, byte-identical to the
-direct build, with the diff persisted rather than printed, and must omit the
-build whenever first-review status is unproven, while a failed root query or
-build stays visible and stops.
+The root block must save the page and build no context, and a failed root
+query or an unfetched continuation must stay visible and leave the packet
+incomplete.
 """
 from __future__ import annotations
 
@@ -289,167 +288,62 @@ class Chains(unittest.TestCase):
                 for artifact in ("record.json", "record.json.part"):
                     self.assertFalse((private / artifact).exists(), artifact)
 
-    # --- root fetch and guarded early build ---------------------------------
+    # --- root fetch ---------------------------------------------------------
 
-    def root_page(self, base, head, reviews=(), threads=(), comments=(), edit=None):
-        page = forge_packet.sample_root()
-        pr = page["data"]["repository"]["pullRequest"]
-        pr.update(baseRefOid=base, headRefOid=head)
-        pr["reviews"] = forge_packet.connection(list(reviews), len(reviews), False, None)
-        pr["reviewThreads"] = forge_packet.connection(list(threads), len(threads), False, None)
-        pr["comments"] = forge_packet.connection(list(comments), len(comments), False, None)
-        if edit:
-            edit(pr)
-        return page
-
-    @staticmethod
-    def thread(*comments, has_next=False, total=None):
-        nodes = [{"fullDatabaseId": str(5000 + i), "author": {"login": login}, "body": "prose", "createdAt": "2026-09-01T09:00:00Z",
-                  "updatedAt": "2026-09-01T09:00:00Z", "lastEditedAt": None, "replyTo": None, "pullRequestReview": None, "url": "u"}
-                 for i, login in enumerate(comments)]
-        return {"id": "PRRT_1", "isResolved": False, "isOutdated": False, "path": "src/queue.ts", "line": 5, "originalLine": 5,
-                "diffSide": "RIGHT", "comments": forge_packet.connection(nodes, len(nodes) if total is None else total, has_next)}
-
-    @staticmethod
-    def review(login):
-        return {"fullDatabaseId": "900", "author": {"login": login}, "state": "COMMENTED", "body": "b", "submittedAt": "2026-09-01T09:00:00Z",
-                "updatedAt": "2026-09-01T09:00:00Z", "lastEditedAt": None, "commit": {"oid": "a" * 40}, "url": "u"}
-
-    def root_block(self, shell, repo, page, reviewer="reviewer", root_rc=0, prepare=None):
+    def root_block(self, shell, page, root_rc=0):
         private = Path(tempfile.mkdtemp(dir=self.root))
         root = private / "page.json"
         root.write_text(json.dumps(page), encoding="utf-8")
-        if prepare:
-            prepare(private)
         env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(private / "gh.log"),
                    GH_ROOT_FILE=str(root), GH_ROOT_RC=str(root_rc))
-        text = (block(TARGET.read_text(encoding="utf-8"), "early-build.txt")
-                .replace("<private-dir>", shlex.quote(str(private))).replace("<reviewer-login>", shlex.quote(reviewer))
-                .replace("<run-events-script>", shlex.quote(str(SCRIPTS / "run_events.py")))
-                .replace("<forge-packet-script>", shlex.quote(str(SCRIPTS / "forge_packet.py")))
-                .replace("<review-context-script>", shlex.quote(str(SCRIPTS / "review_context.py"))).replace("<pr>", "7"))
+        text = (block(TARGET.read_text(encoding="utf-8"), "role=root")
+                .replace("<private-dir>", shlex.quote(str(private)))
+                .replace("<run-events-script>", shlex.quote(str(SCRIPTS / "run_events.py"))).replace("<pr>", "7"))
         self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
-        result = self.sh(shell, text, env=env, cwd=repo)
+        result = self.sh(shell, text, env=env, cwd=self.root)
         events = []
         if (private / "run-events.jsonl").exists():
             events = [json.loads(line) for line in (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
-        return result, private, events
+        packet = subprocess.run([sys.executable, str(SCRIPTS / "forge_packet.py"), "normalize", *map(str, sorted(private.glob("forge-*.json")))],
+                                capture_output=True, text=True, encoding="utf-8")
+        return result, private, events, packet
 
-    def assert_deferred(self, result, private, reason):
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(result.stdout, f"deferred: {reason}\n")
-        self.assertEqual((private / "early-build.txt").read_text(encoding="utf-8"), result.stdout)
-        self.assertTrue((private / "forge-1.json").exists(), "the root page is saved whatever the guard decides")
-        self.assertEqual(sorted(p.name for p in private.glob("review-context-*.json")), [], "no early build")
-        self.assertFalse((private / "context-build.out").exists())
+    @staticmethod
+    def packet(normalized):
+        assert normalized.returncode == 0, normalized.stderr
+        return json.loads(normalized.stdout)
 
-    def test_root_block_builds_a_proven_first_review_once_and_privately(self):
-        repo, base, head = self.repository()
-        store_name = f"review-context-{head}.json"
+    def test_root_block_saves_the_page_and_builds_no_context(self):
+        page = forge_packet.sample_root()
         for shell in SHELLS:
             with self.subTest(shell=shell):
-                direct = Path(tempfile.mkdtemp(dir=self.root))
-                build = subprocess.run([sys.executable, str(SCRIPTS / "review_context.py"), "--merge-base", base, "--head", head,
-                                        "--store", str(direct / store_name)], cwd=repo, capture_output=True, text=True, encoding="utf-8")
-                self.assertEqual(build.returncode, 0, build.stderr)
-                result, private, events = self.root_block(shell, repo, self.root_page(base, head))
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertEqual(result.stdout, f"eligible {base} {head}\n")
-                self.assertEqual((private / "forge-1.json").read_text(encoding="utf-8"), json.dumps(self.root_page(base, head)))
-                self.assertEqual((private / store_name).read_bytes(), (direct / store_name).read_bytes(),
-                                 "the early store is the store step 2 would build")
-                self.assertEqual((private / "context-build.out").read_text(encoding="utf-8"), build.stdout,
-                                 "the build's stdout is persisted, not printed")
-                self.assertIn("## diff", build.stdout)
-                self.assertNotIn("## diff", result.stdout)
-                self.assertEqual((private / "context-build.err").read_text(encoding="utf-8"), "")
-                self.assertEqual([(e["event"], e.get("data", {}).get("role")) for e in events],
-                                 [("forge-fetched", "root"), ("context-built", None)])
+                result, private, events, normalized = self.root_block(shell, page)
+                self.assertEqual((result.returncode, result.stdout, result.stderr), (0, "", ""))
+                packet = self.packet(normalized)
+                self.assertEqual((private / "forge-1.json").read_text(encoding="utf-8"), json.dumps(page))
+                self.assertEqual([(e["event"], e["data"]["role"], e["exit"]) for e in events], [("forge-fetched", "root", 0)])
+                self.assertEqual(sorted(p.name for p in private.glob("review-context-*")), [], "step 2 is the one build point")
+                self.assertTrue(packet["complete"], packet["gaps"])
 
-    def test_root_block_defers_when_first_review_status_is_unproven(self):
-        repo, base, head = self.repository()
-        me = "reviewer"
-
-        def no_page_info(pr):
-            del pr["comments"]["pageInfo"]
-
-        def top_level_continuation(pr):
-            pr["reviews"]["pageInfo"]["hasNextPage"] = True
-            pr["reviews"]["totalCount"] = 2
-
-        def merged(pr):
-            pr.update(state="MERGED", merged=True)
-
-        cases = [
-            ("prior review", dict(reviews=[self.review(me)]), "prior state from the posting identity"),
-            ("prior app review, suffix ignored", dict(reviews=[self.review("Reviewer[bot]")]), "prior state from the posting identity"),
-            ("prior thread reply", dict(threads=[self.thread("author", me)]), "prior state from the posting identity"),
-            ("prior pull-request comment", dict(comments=[{"fullDatabaseId": "77", "author": {"login": me}, "body": "<!-- x -->",
-                                                          "createdAt": "2026-09-01T09:00:00Z", "updatedAt": "2026-09-01T09:00:00Z",
-                                                          "lastEditedAt": None, "url": "u"}]), "prior state from the posting identity"),
-            ("top-level continuation", dict(edit=top_level_continuation), "a review-state connection is not proven complete"),
-            ("nested thread continuation hiding a later reply", dict(threads=[self.thread("author", has_next=True, total=2)]),
-             "a thread's comments are not proven complete"),
-            ("missing pagination metadata", dict(edit=no_page_info), "a review-state connection is not proven complete"),
-            ("merged target", dict(edit=merged), "target state MERGED merged=true"),
-        ]
-        for name, kwargs, reason in cases:
-            with self.subTest(case=name):
-                result, private, _ = self.root_block("sh", repo, self.root_page(base, head, **kwargs))
-                self.assert_deferred(result, private, reason)
-        for shell in SHELLS:
-            with self.subTest(case="prior review", shell=shell):
-                result, private, _ = self.root_block(shell, repo, self.root_page(base, head, reviews=[self.review(me)]))
-                self.assert_deferred(result, private, "prior state from the posting identity")
-        with self.subTest(case="posting identity unknown"):
-            result, private, _ = self.root_block("sh", repo, self.root_page(base, head), reviewer="")
-            self.assert_deferred(result, private, "posting identity unknown")
-        with self.subTest(case="invalid head field"):
-            result, private, _ = self.root_block("sh", repo, self.root_page(base, head[:7]))
-            self.assert_deferred(result, private, "required root fields missing or invalid")
-        with self.subTest(case="guard exits without a verdict"):
-            # `data` is a truthy non-object, so the guard raises before its own isinstance checks.
-            result, private, _ = self.root_block("sh", repo, {"data": "x"})
-            self.assert_deferred(result, private, "eligibility guard failed with exit 1")
-            self.assertIn("AttributeError", result.stderr, "the guard's own failure stays visible")
-
-    def test_root_block_defers_missing_commits_and_an_unresolved_merge_base(self):
-        repo, base, head = self.repository()
-        with self.subTest(case="missing head object"):
-            result, private, _ = self.root_block("sh", repo, self.root_page(base, "a" * 40))
-            self.assert_deferred(result, private, f"head commit {'a' * 40} not present locally")
-        with self.subTest(case="missing base object"):
-            result, private, _ = self.root_block("sh", repo, self.root_page("b" * 40, head))
-            self.assert_deferred(result, private, f"base commit {'b' * 40} not present locally")
-        orphan = subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit-tree",
-                                 "-m", "orphan", "4b825dc642cb6eb9a060e54bf8d69288fbee4904"], cwd=repo, capture_output=True,
-                                text=True, encoding="utf-8", check=True).stdout.strip()
-        with self.subTest(case="unresolved merge-base"):
-            result, private, _ = self.root_block("sh", repo, self.root_page(orphan, head))
-            self.assert_deferred(result, private, "merge-base unresolved")
-
-    def test_root_block_keeps_query_and_build_failures_visible(self):
-        repo, base, head = self.repository()
+    def test_root_block_keeps_failures_and_omitted_pages_visible(self):
         for shell in SHELLS:
             with self.subTest(case="root query failure", shell=shell):
-                result, private, events = self.root_block(shell, repo, self.root_page(base, head), root_rc=1)
+                result, private, events, normalized = self.root_block(shell, forge_packet.sample_root(), root_rc=1)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-                self.assertIn("root query failed with exit 1; no early build:", result.stdout)
                 self.assertIn("HTTP 502", result.stderr)
-                self.assertFalse((private / "early-build.txt").exists())
-                self.assertEqual(sorted(p.name for p in private.glob("review-context-*.json")), [])
+                self.assertTrue((private / "forge-1.json").exists(), "a failed call is saved too")
                 self.assertEqual([(e["event"], e["exit"]) for e in events], [("forge-fetched", 1)])
-
-        def occupy_store(private):
-            (private / f"review-context-{head}.json").mkdir()
-
-        for shell in SHELLS:
-            with self.subTest(case="build failure", shell=shell):
-                result, private, _ = self.root_block(shell, repo, self.root_page(base, head), prepare=occupy_store)
-                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-                self.assertIn("early context build failed with exit 2:", result.stdout)
-                self.assertIn("review_context", result.stdout)
-                self.assertEqual((private / "early-build.txt").read_text(encoding="utf-8"), f"eligible {base} {head}\n")
+                self.assertEqual(normalized.returncode, 2, "no root page stops the step rather than normalizing")
+                self.assertIn("no root page", normalized.stderr)
+        page = forge_packet.sample_root()
+        pr = page["data"]["repository"]["pullRequest"]
+        pr["reviews"] = forge_packet.connection(pr["reviews"]["nodes"], len(pr["reviews"]["nodes"]) + 1, True)
+        with self.subTest(case="unfetched continuation"):
+            result, _, _, normalized = self.root_block("sh", page)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            packet = self.packet(normalized)
+            self.assertFalse(packet["complete"])
+            self.assertTrue(any("reviews" in gap for gap in packet["gaps"]), packet["gaps"])
 
     # --- publisher freshness and submission ---------------------------------
 
