@@ -24,6 +24,7 @@ Decide whether one change is safe to merge, and say why, without changing its co
 | Merged-target publication authorization | None; only the retrospective Mode line uses it |
 | Inputs supplied up front | Use before routing missing inputs |
 | Duplicate-review shortcut | `on` |
+| `return_format`: `complete` or `artifacts` | `complete`; skill callers that read the files pass `artifacts`; session always presents the report |
 
 The caller invokes this skill; the orchestrator supplies missing inputs. A PR coordinate, URL, or current branch's open PR selects a pull request. A ref, range, "since X", or current branch selects a range. Otherwise session mode selects the working tree. Read [`pull-request-target.md`](references/pull-request-target.md) for a PR, [`local-targets.md`](references/local-targets.md) otherwise. Read the pinned base's `docs/agents/issue-tracker.md` when present. An unresolved target or base returns `target-unresolved` before fetch. Scripts below run from this installed skill root against the reviewed repository; retain absolute script paths.
 
@@ -89,7 +90,7 @@ The record contains:
 - verification tasks and the remaining allowance;
 - routed ambiguities and unrecoverable inputs, what each gates, and prior-item classifications and drafted thread replies when applicable.
 
-`publishable` adds `payload.json`, `batch.json`, and `fragments.md`. `implementation-gate` adds `record.json` (`implementation-gate-record/2`) and an `addenda` directory; [`references/continuation-addendum.md`](references/continuation-addendum.md) defines an addendum after fixes. Both retain `composition.json` and the private accounting. Return their paths and the complete would-be review with composer-rendered coordinates; neither profile fabricates the other's artifacts.
+`publishable` adds `payload.json`, `batch.json`, and `fragments.md`. `implementation-gate` adds `record.json` (`implementation-gate-record/2`) and an `addenda` directory; [`references/continuation-addendum.md`](references/continuation-addendum.md) defines an addendum after fixes. Both retain `composition.json` with the private accounting, and finalization writes `report.md`, the complete would-be review, last. Return that report under `complete`, or the finalizer's `--compact` status and paths under `artifacts`. Never re-author it; neither profile fabricates the other's artifacts.
 
 A named stop replaces the record: `target-unresolved`, `target-closed-unmerged`, `duplicate-review`, `snapshot-failed`, `nothing-to-review`, or `script-failure`.
 
@@ -101,4 +102,4 @@ Modes change only asking behavior. `one-shot` never asks; an absent explicit tar
 
 `session` asks only before falsification and after the record. Beforehand, ask once for an unresolved target/base, confirmation before snapshotting a bare dirty prompt including non-ignored untracked files, a missing required issue, scope directives, and otherwise unrecoverable inputs. Headless asks become report lines. A missing required issue becomes an `issue-required` material question, not an incomplete-coverage reason alone.
 
-Afterward, present the complete review and every routed item as a question, naming its supplier and what its answer settles. On `duplicate-review`, report the existing URL; rerun with the shortcut `off` only on request. An answer, supplied input, chosen reading, or changed code starts a new run in a new directory with its own allowance; retain the earlier record's path. Apply decisions, falsify claims about code, and report accepted residual risk without changing the finding. Fixing code is outside this skill. Publication goes to `review-code-publish`, which runs its own one-shot review without session answers.
+Afterward, present `report.md` and every routed item as a question, naming its supplier and what its answer settles. On `duplicate-review`, report the existing URL; rerun with the shortcut `off` only on request. An answer, supplied input, chosen reading, or changed code starts a new run in a new directory with its own allowance; retain the earlier record's path. Apply decisions, falsify claims about code, and report accepted residual risk without changing the finding. Fixing code is outside this skill. Publication goes to `review-code-publish`, which runs its own one-shot review without session answers.
