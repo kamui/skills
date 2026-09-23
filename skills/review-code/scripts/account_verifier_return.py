@@ -176,7 +176,10 @@ def read_assigned(path):
     except FileNotFoundError:
         return None, "absent"
     except OSError as error:
-        mode = os.lstat(path).st_mode
+        try:
+            mode = os.lstat(path).st_mode
+        except OSError:  # an untraversable parent hides the file's type as well
+            return None, f"unreadable ({error.strerror})"
         if stat.S_ISLNK(mode):
             return None, "a symbolic link"
         if not stat.S_ISREG(mode):
