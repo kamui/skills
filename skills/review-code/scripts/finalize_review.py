@@ -51,6 +51,12 @@ first, and a failed stage, write, or promotion removes what this run staged or
 promoted, so no stale or partial output reads as success. Store, packet,
 bundles and addenda are never touched.
 
+A private directory has one writer at a time. A retry, rerun, or
+continuation starts only after the earlier finalizer or reviewer has
+exited, including one a host timed out. Overlapping writers are
+unsupported, and neither the report marker nor the chain guard detects
+them.
+
 Default stdout is unchanged: `fragments.md` for publishable, `record
 PRIVATE_DIR/record.json` for the gate. `--compact` prints `status`,
 `coverage`, then one `<name> <absolute path>` line per output, report last.
