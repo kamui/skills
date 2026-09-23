@@ -94,10 +94,13 @@ them.
 
 Default stdout is unchanged: `fragments.md` for publishable, `record
 PRIVATE_DIR/record.json` for the gate. `--compact` prints `status`,
-`coverage`, then one `<name> <absolute path>` line per output, report last.
+`coverage`, then one `<name> <absolute path>` line per output, report last;
+the gate adds `continuation <absolute path>`, the continue_review.py that
+validates and extends the record's chain, just before the report.
 `--check` modifies nothing: it prints the same lines for complete
-new-protocol output, or `legacy <artifact path>` for valid pre-protocol
-output, and otherwise one line per reason at exit 1.
+new-protocol output, or `legacy <artifact path>` (and the gate's
+`continuation` line) for valid pre-protocol output, and otherwise one line
+per reason at exit 1.
 
 A failing stage prints `<stage> failed with exit <status>; later stages did
 not run:` followed by its output. Stages run as `python3 <script>`, the
@@ -130,6 +133,7 @@ import validate_review as vr
 
 SCRIPTS = Path(__file__).resolve().parent
 SKILL_ROOT = SCRIPTS.parent
+CONTINUATION = SCRIPTS / "continue_review.py"
 ARTIFACTS = {"publishable": ("payload.json", "batch.json", "fragments.md"), "implementation-gate": ("record.json",)}
 REPORT = "report.md"
 RECORD_SECTIONS = ("repository", "paths", "requirements", "files", "check_evidence", "verification", "routed")
@@ -480,6 +484,27 @@ def render_report(profile: str, composition: dict[str, Any], payload: dict[str, 
         parts.append("## Line comments\n\nThe full body of each line-anchored item the summary indexes.\n\n"
                      + "\n\n".join(f"### {code(item['id'])}\n\n{item['markdown']}\n\n{item['trailer']}" for item in inline))
 
+    parts.extend(ledger_sections(record))
+
+    if replies:
+        entries = []
+        for reply in replies:
+            where = (f"Thread {code(reply['thread_id'])}, first comment `{reply['comment_id']}`." if reply["thread_id"]
+                     else "No forge thread.")
+            body = f"Drafted reply:\n\n{fenced(reply['body'])}" if reply["body"] is not None else "No drafted reply."
+            entries.append(f"### {code(reply['id'])}: {reply['classification']}\n\n{where} {body}")
+        parts.append("## Prior-item replies\n\n" + "\n\n".join(entries))
+
+    paths = [f"- {name}: {code(path)}" for name, path in outputs]
+    paths += [f"- {key}: {code(value)}" for key, value in record["paths"].items() if value not in {str(p) for _n, p in outputs}]
+    parts.append("## Artifacts\n\n" + "\n".join(paths))
+    return "\n\n".join(parts) + "\n"
+
+
+def ledger_sections(record: dict[str, Any]) -> list[str]:
+    """The requirement, file, check-evidence, verification and routed ledgers; continue_review.py renders a chain's
+    current state through the same sections."""
+    parts = []
     rows = [f"- {code(r['source'])} ({r['class']}): {r['disposition']}. {r['evidence']}" for r in record["requirements"]]
     parts.append("## Requirements\n\n" + ("\n".join(rows) or "None recorded."))
     rows = [f"- {code(f['path'])}: {f['state']}" + (f", {f['reason']}" if f.get("reason") else "") for f in record["files"]]
@@ -514,20 +539,7 @@ def render_report(profile: str, composition: dict[str, Any], payload: dict[str, 
     parts.append("## Routed\n\n" + "\n".join([f"- Unresolved: {ids(routed['unresolved'])}.",
                                                 f"- Disputed: {ids(routed['disputed'])}."]
                                                + [f"- Unrecoverable input: {entry}" for entry in routed["unrecoverable_inputs"]]))
-
-    if replies:
-        entries = []
-        for reply in replies:
-            where = (f"Thread {code(reply['thread_id'])}, first comment `{reply['comment_id']}`." if reply["thread_id"]
-                     else "No forge thread.")
-            body = f"Drafted reply:\n\n{fenced(reply['body'])}" if reply["body"] is not None else "No drafted reply."
-            entries.append(f"### {code(reply['id'])}: {reply['classification']}\n\n{where} {body}")
-        parts.append("## Prior-item replies\n\n" + "\n\n".join(entries))
-
-    paths = [f"- {name}: {code(path)}" for name, path in outputs]
-    paths += [f"- {key}: {code(value)}" for key, value in record["paths"].items() if value not in {str(p) for _n, p in outputs}]
-    parts.append("## Artifacts\n\n" + "\n".join(paths))
-    return "\n\n".join(parts) + "\n"
+    return parts
 
 
 # --- outputs ------------------------------------------------------------------
@@ -563,7 +575,10 @@ def active_chain(private: Path) -> str:
 
 
 def compact(profile: str, status: str, coverage: str, outputs: list[tuple[str, Path]]) -> str:
-    return "".join([f"status {status}\n", f"coverage {coverage}\n"] + [f"{name} {path}\n" for name, path in outputs])
+    lines = [f"status {status}\n", f"coverage {coverage}\n"] + [f"{name} {path}\n" for name, path in outputs]
+    if profile == "implementation-gate":  # the helper a caller continues this record's chain with; the report stays last
+        lines.insert(-1, f"continuation {CONTINUATION}\n")
+    return "".join(lines)
 
 
 def output_paths(profile: str, private: Path) -> list[tuple[str, Path]]:
@@ -706,6 +721,8 @@ def check(args: argparse.Namespace, private: Path) -> int:
                 print(f"unconsumable: {source} has no finalization and {private} holds no valid legacy payload and batch")
                 return 1
         print(f"legacy {artifact}")
+        if args.profile == "implementation-gate":
+            print(f"continuation {CONTINUATION}")
         return 0
     problems = []
     why = cr.finalization_problem(doc)

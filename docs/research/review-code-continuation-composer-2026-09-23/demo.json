@@ -1,0 +1,58 @@
+{
+  "baseline_addendum_leaves": 57,
+  "mechanical_leaves_removed": 17,
+  "arms": {
+    "transcribed": {
+      "exit": 0,
+      "authored_leaves": 57,
+      "inventory_341": {
+        "mechanical": 22,
+        "judgment": 35
+      },
+      "state_read_bytes": {
+        "baseline_record_and_addenda": 9622,
+        "state_json": 7378
+      },
+      "addendum_matches_baseline": true,
+      "report_bytes": 5340,
+      "report_distinct_from_record_report": true,
+      "state_after": {
+        "exit": 0,
+        "lines": [
+          "status Approved",
+          "coverage complete",
+          "head b96a362e99ce4f5b6b1fe26ad02fda66e8343723"
+        ]
+      }
+    },
+    "derived": {
+      "exit": 0,
+      "authored_leaves": 40,
+      "inventory_341": {
+        "mechanical": 10,
+        "judgment": 30
+      },
+      "state_read_bytes": {
+        "baseline_record_and_addenda": 9622,
+        "state_json": 7378
+      },
+      "addendum_matches_baseline": true,
+      "report_bytes": 5340,
+      "report_distinct_from_record_report": true,
+      "state_after": {
+        "exit": 0,
+        "lines": [
+          "status Approved",
+          "coverage complete",
+          "head b96a362e99ce4f5b6b1fe26ad02fda66e8343723"
+        ]
+      }
+    }
+  },
+  "arms_identical": true,
+  "instruction_bytes": {
+    "continuation-addendum.md": 6485,
+    "implement-publish continuation.md": 3445,
+    "continue_review.py --example": 1596
+  }
+}
