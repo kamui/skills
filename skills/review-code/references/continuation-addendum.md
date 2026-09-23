@@ -2,7 +2,7 @@
 
 Read when a caller asks for a continuation of an `implementation-gate` record after fixes.
 
-A continuation after fixes reviews the delta from a reviewed head to a final head and writes `addenda/addendum-<final head>.json` in the record's named `addenda` directory, leaving the record and earlier addenda unchanged. `reviewed_head` is the head the record or the latest earlier addendum reviewed. No script validates an addendum; the continuation reviewer supplies these fields under the same rules as the record:
+A continuation after fixes reviews the delta from a reviewed head to a final head and writes `addenda/addendum-<final head>.json` in the record's named `addenda` directory, leaving the record and earlier addenda unchanged. The private directory has one writer at a time: start only after the review or continuation before it has exited. `reviewed_head` is the head the record or the latest earlier addendum reviewed. No script validates an addendum; the continuation reviewer supplies these fields under the same rules as the record:
 
 - `format`: `implementation-gate-addendum/2`; `workflow`: the continuing reviewer's identifier; `record`: the absolute `record.json` path; `record_format`: that record's `schema`; `reviewed_head` and `final_head`: full SHAs.
 - `delta`: every file in `git diff <reviewed head>...<final head>` with its state (`reviewed`, `ignored` with a reason, or `unreviewed`). `replaced_by_full_review` is `null`, or the new record's absolute path when the delta was too large to inspect.
