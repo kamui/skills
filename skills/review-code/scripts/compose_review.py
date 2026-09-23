@@ -753,7 +753,7 @@ def check_store(report: vr.Report, store: dict[str, Any], run: dict[str, Any], i
         if anchor.get("type") == "file" and "side" not in anchor:
             derived = file_sides[path]
             if len(derived) == 1 and None not in derived:
-                item["anchor"] = {**anchor, "side": derived.pop()}
+                item["anchor"] = {**anchor, "side": next(iter(derived))}
             else:
                 report.add(
                     f"{location}.anchor",

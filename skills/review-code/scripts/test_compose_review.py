@@ -751,6 +751,11 @@ def main() -> int:
             assert derived_raw == raw, (path, "an omitted side composes the explicit side's bytes")
             assert derived["items"][1]["anchor"] == {"type": "file", "path": path, "side": side}, derived["items"][1]
             assert f"anchor [`{path}`]({REPO}/blob/{revision}/{path}) (file)" in derived["summary"]["body"], path
+        repeated = base_composition()
+        repeated["findings"][0]["anchor"] = {"type": "file", "path": "src/payments.ts"}
+        repeated["findings"].append(consider(anchor={"type": "file", "path": "src/payments.ts"}, fix={"path": "src/payments.ts", "start_line": 5}))
+        payload, _, _ = composed(pinned(repeated), "two omitted sides on one path", "--store", str(store_path))
+        assert [item["anchor"] for item in payload["items"][:2]] == [{"type": "file", "path": "src/payments.ts", "side": "RIGHT"}] * 2
         pre_image = base_composition()
         pre_image["questions"][0]["anchor"] = {"type": "file", "path": "src/old-queue.ts"}
         refused(pinned(pre_image), "anchor-provenance", "omitted side on a rename pre-image", "--store", str(store_path),
