@@ -1,0 +1,69 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "candidates": [],
+  "premises": [
+    {
+      "area": "security",
+      "evidence": [
+        {
+          "coordinate": "ledger/auth.py:15-16",
+          "text": "if role == \"delegate\":\n        return user in account.delegates"
+        },
+        {
+          "coordinate": "ledger/accounts.py:24",
+          "text": "delegates: set[str] = field(default_factory=set)"
+        },
+        {
+          "coordinate": "ledger/accounts.py:52-64",
+          "text": "grant/revoke: account = self.get(number); if account.owner != user: raise LedgerError(...); account.delegates.add/discard(delegate)"
+        }
+      ],
+      "id": "premise-1",
+      "premise": "can_view(user, 'delegate', account) returns True only when user is in that same account's own delegates set, and the delegates set is per-Account (not shared across accounts) and only mutable through Ledger.grant/Ledger.revoke, which refuse non-owners before mutating."
+    },
+    {
+      "area": "security",
+      "evidence": [
+        {
+          "coordinate": "ledger/auth.py:6-22",
+          "text": "ROLES = (\"owner\", \"delegate\", \"auditor\", \"teller\"); can_view: role not in ROLES -> False; auditor/teller -> True; delegate -> user in account.delegates; else account.owner == user; can_post: return role == \"teller\""
+        }
+      ],
+      "id": "premise-2",
+      "premise": "Adding 'delegate' to ROLES and the new branch in can_view leaves owner, auditor, teller, and unknown-role results of can_view unchanged from base, and can_post still returns True only for role 'teller', so a delegate can never post."
+    }
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "a13922e76f42d9757608530348200affbf3bde2f",
+    "id": "review-a13922e",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/required-verification/repo"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, network, or destructive effect; use disposable directories only.",
+  "sources": [
+    {
+      "coordinate": "issue-5/acceptance-criterion-2",
+      "text": "Only the account's owner can grant or revoke; anyone else gets `LedgerError` and nothing changes."
+    },
+    {
+      "coordinate": "issue-5/acceptance-criterion-3",
+      "text": "A delegate can view only the accounts that granted them access."
+    },
+    {
+      "coordinate": "issue-5/acceptance-criterion-4",
+      "text": "A delegate can never post entries."
+    },
+    {
+      "coordinate": "issue-5/acceptance-criterion-5",
+      "text": "Owner, auditor, and teller access is unchanged."
+    },
+    {
+      "coordinate": "AGENTS.md (base)",
+      "text": "Authorization decisions live in `ledger/auth.py`; callers never compare roles themselves. A refused operation leaves every account unchanged."
+    }
+  ]
+}

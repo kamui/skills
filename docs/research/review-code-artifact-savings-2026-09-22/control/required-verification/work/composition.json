@@ -1,0 +1,23 @@
+{
+ "run": {"head":"a13922e76f42d9757608530348200affbf3bde2f","base_ref":"main","base_sha":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab","merge_base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab","context":"0a72f34a0de2b71f1b30b8c3a0632038c1055de08f6a976fce5b959763524489","issues":["example/ledger#5"],"coverage":"complete","merged":false,"repository_url":"https://github.com/example/ledger"},
+ "summary": {
+  "status":"Approved",
+  "intent":"Let an account owner grant and revoke read-only statement access for a `delegate` role (issue #5), leaving owner, auditor and teller access unchanged.",
+  "issue_fit":"Met — all five acceptance criteria of #5 and the PR-body promises are satisfied; the only finding is a non-blocking repository-rule `consider`.",
+  "coverage":"Complete merge-base diff (3 files) reviewed; callers (`cli.py`, `statement.py`) inspected; the full suite ran once at the head: 17 tests OK. One verification batch (initial) confirmed the finding and held all three safety premises; follow-up allowance unspent. Packet complete, no prior review state; reviewer `reviewer`; gating withheld."
+ },
+ "findings": [
+  {
+   "id":"ledger/grant-owner-check-outside-auth",
+   "title":"Move the owner check for grant and revoke into auth.py",
+   "priority":"P3","action":"consider","kind":"invariant",
+   "trigger":"`Ledger.grant` and `Ledger.revoke` each decide authorization inline with `account.owner != user`, while `auth.py` also holds the owner comparison in `can_view`.",
+   "impact":"AGENTS.md says authorization decisions live in `ledger/auth.py`; the owner rule for managing delegates now lives in two modules and can drift. Behavior is correct today.",
+   "change":"Add `can_manage(user, account)` to `ledger/auth.py` reusing the owner semantics, and call it from both `grant` and `revoke`, raising `LedgerError` on refusal. Mind that `auth.py` imports `Account` from `accounts.py`, so import lazily or under `TYPE_CHECKING`.",
+   "source":"AGENTS.md (base), line 6.",
+   "anchor":{"type":"line","path":"ledger/accounts.py","start_line":54,"end_line":63,"side":"RIGHT"}
+  }
+ ],
+ "questions": [],
+ "observations": []
+}

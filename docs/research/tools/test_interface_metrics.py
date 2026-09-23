@@ -87,6 +87,9 @@ class Metrics(unittest.TestCase):
             dict(assistant("r3c", t(5), [("t4d", "Bash", {"command": "python3 scripts/compose_review.py --help; cd /repo"})]),
                  cwd="/repo"),
             result("t4d", t(5), "help", cwd="/repo"),
+            # An assignment ending in ``;`` expands too, so this is helper help, not a references/ file.
+            assistant("r3d", t(5), [("t4e", "Bash", {"command": f"cd {SKILL}/references; S=../scripts; python3 $S/b.py --help | head"})]),
+            result("t4e", t(5), "usage"),
             assistant("r4", t(6), [("t5", "Write", {"file_path": str(composition), "content": "x" * 120})]),
             result("t5", t(7), "File created"),
             assistant("r5", t(8), [("t6", "Bash", {"command": f"python3 {SKILL}/scripts/finalize_review.py --store s p; echo \"exit=$?\""})]),
@@ -123,9 +126,9 @@ class Metrics(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stderr)
         report = json.loads(out.stdout)
         root_usage = report["usage"]["root"]["total"]
-        self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (10, 12, 10000))
-        self.assertEqual(report["usage"]["all"]["turns"], 13)
-        self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 10})
+        self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (11, 13, 11000))
+        self.assertEqual(report["usage"]["all"]["turns"], 14)
+        self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 11})
         self.assertEqual(report["harness"]["subagents_spawned"], 1)
         finalizer = report["finalizer"]
         self.assertEqual((finalizer["invocations"], finalizer["failed"], finalizer["repair_loops"]), (2, 1, 1))
@@ -135,7 +138,7 @@ class Metrics(unittest.TestCase):
         totals = report["loads"]["totals"]
         self.assertEqual(totals["entrypoint"]["count"], 1)
         self.assertEqual(totals["reference"], {"count": 1, "bytes": 32, "words": 6})
-        self.assertEqual(totals["helper-help"], {"count": 3, "bytes": 11, "words": 3})
+        self.assertEqual(totals["helper-help"], {"count": 4, "bytes": 16, "words": 4})
         self.assertEqual(totals["helper-example"], {"count": 2, "bytes": 11, "words": 2})
         self.assertEqual(totals["script-source"], {"count": 3, "bytes": 22, "words": 4})
         self.assertEqual(report["loads"]["mixed"], {"calls": 1, "bytes": 17, "words": 3})
@@ -181,6 +184,60 @@ class Metrics(unittest.TestCase):
         self.assertEqual((fields["mechanical"]["fields"], fields["judgment"]["fields"]), (4, 2))
         self.assertIsNone(report["usage"]["workers"])
 
+    def test_a_relative_heredoc_addendum_write_counts(self):
+        name = "addendum-" + "b" * 40 + ".json"
+        (self.task / "review/addenda" / name).write_text(json.dumps({
+            "format": "implementation-gate-addendum/2", "workflow": "v5b-24", "status": "Approved"}))
+        command = f"cd {self.task}; F={'b' * 40}\ncat > review/addenda/addendum-$F.json <<EOF\n{{}}\nEOF"
+        root = self.write("root.jsonl", [
+            assistant("r1", "2026-09-22T10:00:00Z", [("t1", "Bash", {"command": command})]),
+            result("t1", "2026-09-22T10:00:01Z", ""),
+            assistant("r2", "2026-09-22T10:00:07Z", [], text="Done."),
+        ])
+        out = run("cell", "--transcript", str(root), "--skill-root", SKILL, "--task-root", str(self.task))
+        self.assertEqual(out.returncode, 0, out.stderr)
+        report = json.loads(out.stdout)
+        self.assertEqual((report["after_last_addendum"]["turns_after"], report["after_last_addendum"]["seconds_after"]),
+                         (1, 6.0))
+        fields = report["authored"]["fields"]
+        self.assertEqual([(Path(item["path"]).name, item["shape"], item["written_by"]) for item in fields],
+                         [(name, "addendum", "tool")])
+
+    def test_continuation_compose_is_the_validation_and_its_input_is_inventoried(self):
+        (self.task / "work/continuation.json").write_text(json.dumps({
+            "delta": [{"path": "a.py", "state": "reviewed"}],
+            "fixed_findings": [{"id": "x/y", "classification": "fixed", "evidence": "a.py:3 refuses it"}],
+            "verification": {"tasks": [{"id": "premise-1", "batch": "follow-up", "ruling": "holds"}],
+                             "batches": [{"bundle": "/b", "accounting": "/b/a.json", "operation": "Agent"}]},
+            "status": "Approved", "coverage": "complete", "coverage_gaps": []}))
+        (self.task / "work/fingerprint.json").write_text(json.dumps({"specs": []}))
+        helper = f"{SKILL}/scripts/continue_review.py"
+        root = self.write("root.jsonl", [
+            assistant("r1", "2026-09-22T10:00:00Z", [("t1", "Bash", {"command": f"python3 {helper} state --record r"})]),
+            result("t1", "2026-09-22T10:00:01Z", "chain ok"),
+            assistant("r2", "2026-09-22T10:00:02Z", [("t2", "Bash", {"command": f"python3 {helper} compose --record r c.json"})]),
+            result("t2", "2026-09-22T10:00:03Z", "delta[0]: bad\nExit code 1", error=True),
+            assistant("r3", "2026-09-22T10:00:04Z", [("t3", "Bash", {"command": f"python3 {helper} compose --record r c.json"})]),
+            result("t3", "2026-09-22T10:00:05Z", "addendum written"),
+            assistant("r4", "2026-09-22T10:00:06Z", [
+                ("t4", "Bash", {"command": f"python3 {SKILL}/scripts/finalize_review.py --check --profile implementation-gate w"})]),
+            result("t4", "2026-09-22T10:00:07Z", "status Approved"),
+            assistant("r5", "2026-09-22T10:00:09Z", [], text="Done."),
+        ])
+        out = run("cell", "--transcript", str(root), "--skill-root", SKILL, "--task-root", str(self.task))
+        self.assertEqual(out.returncode, 0, out.stderr)
+        report = json.loads(out.stdout)
+        finalizer = report["finalizer"]
+        self.assertEqual((finalizer["invocations"], finalizer["repair_loops"]), (2, 1))
+        self.assertEqual((finalizer["validation"]["turns_after"], finalizer["validation"]["tool_calls_after"],
+                          finalizer["validation"]["seconds_after"]), (2, 1, 4.0))
+        shapes = {Path(item["path"]).name: item for item in report["authored"]["fields"]}
+        self.assertEqual(shapes["continuation.json"]["shape"], "continuation")
+        self.assertEqual((shapes["continuation.json"]["mechanical"]["fields"],
+                          shapes["continuation.json"]["judgment"]["fields"]), (6, 8))
+        self.assertEqual((shapes["fingerprint.json"]["shape"], shapes["fingerprint.json"]["mechanical"]["fields"]),
+                         ("fingerprint-input", 1))
+
     def test_fields_classifies_a_raw_return(self):
         path = self.tmp / "raw-return.json"
         path.write_text(json.dumps({"manifest_sha256": "f" * 64, "candidates": [
@@ -212,6 +269,10 @@ class Metrics(unittest.TestCase):
         self.assertEqual(report["references"], {"count": 2, "bytes": 14, "words": 3})
         self.assertEqual(report["helper_output"]["compose_review.py --example --profile implementation-gate"]["words"], 4)
         self.assertNotIn("scripts/test_skip.py", report["script_sources"])
+        self.assertNotIn("continue_review.py --help", report["helper_output"])
+        (skill / "scripts/continue_review.py").write_text(helper, encoding="utf-8")
+        shipped = json.loads(run("static", "--skill-root", str(skill)).stdout)
+        self.assertEqual(shipped["helper_output"]["continue_review.py --example"]["words"], 2)
         (skill / "scripts/run_events.py").write_text("raise SystemExit(3)\n", encoding="utf-8")
         failed = run("static", "--skill-root", str(skill))
         self.assertEqual(failed.returncode, 2)

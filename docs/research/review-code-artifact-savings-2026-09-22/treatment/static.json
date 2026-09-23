@@ -1,0 +1,175 @@
+{
+  "format": "interface-static/1",
+  "skill_root": "<treatment skill root>",
+  "entrypoint": {
+    "bytes": 11744,
+    "words": 1630
+  },
+  "references": {
+    "count": 14,
+    "bytes": 76059,
+    "words": 10659
+  },
+  "files": {
+    "SKILL.md": {
+      "bytes": 11744,
+      "words": 1630
+    },
+    "references/changed-tests.md": {
+      "bytes": 5025,
+      "words": 803
+    },
+    "references/check-evidence.md": {
+      "bytes": 2648,
+      "words": 366
+    },
+    "references/conformance.md": {
+      "bytes": 3284,
+      "words": 503
+    },
+    "references/continuation-addendum.md": {
+      "bytes": 6333,
+      "words": 872
+    },
+    "references/local-targets.md": {
+      "bytes": 6168,
+      "words": 930
+    },
+    "references/pull-request-target.md": {
+      "bytes": 8391,
+      "words": 1128
+    },
+    "references/re-review.md": {
+      "bytes": 6529,
+      "words": 962
+    },
+    "references/released-compatibility.md": {
+      "bytes": 2562,
+      "words": 344
+    },
+    "references/rendering.md": {
+      "bytes": 5538,
+      "words": 759
+    },
+    "references/review-rubric.md": {
+      "bytes": 7612,
+      "words": 988
+    },
+    "references/verifier-concurrency.md": {
+      "bytes": 2381,
+      "words": 360
+    },
+    "references/verifier-handoff.md": {
+      "bytes": 10205,
+      "words": 1374
+    },
+    "references/verifier-return.md": {
+      "bytes": 4573,
+      "words": 596
+    },
+    "references/verifier.md": {
+      "bytes": 4810,
+      "words": 674
+    }
+  },
+  "helper_output": {
+    "review_context.py --help": {
+      "bytes": 2774,
+      "words": 324
+    },
+    "context_fingerprint.py --help": {
+      "bytes": 940,
+      "words": 92
+    },
+    "context_fingerprint.py --example": {
+      "bytes": 809,
+      "words": 80
+    },
+    "compose_review.py --help": {
+      "bytes": 1068,
+      "words": 96
+    },
+    "compose_review.py --example": {
+      "bytes": 4501,
+      "words": 437
+    },
+    "compose_review.py --example --profile implementation-gate": {
+      "bytes": 4408,
+      "words": 416
+    },
+    "build_verifier_prompt.py --help": {
+      "bytes": 1589,
+      "words": 195
+    },
+    "build_verifier_prompt.py --example": {
+      "bytes": 2342,
+      "words": 211
+    },
+    "account_verifier_return.py --help": {
+      "bytes": 2389,
+      "words": 318
+    },
+    "finalize_review.py --help": {
+      "bytes": 1177,
+      "words": 98
+    },
+    "forge_packet.py --help": {
+      "bytes": 439,
+      "words": 49
+    },
+    "run_events.py --help": {
+      "bytes": 392,
+      "words": 46
+    },
+    "continue_review.py --help": {
+      "bytes": 452,
+      "words": 54
+    },
+    "continue_review.py --example": {
+      "bytes": 1596,
+      "words": 140
+    }
+  },
+  "script_sources": {
+    "scripts/account_verifier_return.py": {
+      "bytes": 15616,
+      "words": 1465
+    },
+    "scripts/build_verifier_prompt.py": {
+      "bytes": 19049,
+      "words": 1813
+    },
+    "scripts/compose_review.py": {
+      "bytes": 87455,
+      "words": 9293
+    },
+    "scripts/context_fingerprint.py": {
+      "bytes": 14315,
+      "words": 1365
+    },
+    "scripts/continue_review.py": {
+      "bytes": 57980,
+      "words": 5799
+    },
+    "scripts/finalize_review.py": {
+      "bytes": 41846,
+      "words": 4239
+    },
+    "scripts/forge_packet.py": {
+      "bytes": 46952,
+      "words": 4076
+    },
+    "scripts/review_context.py": {
+      "bytes": 99619,
+      "words": 10271
+    },
+    "scripts/run_events.py": {
+      "bytes": 47489,
+      "words": 4893
+    },
+    "scripts/validate_review.py": {
+      "bytes": 94094,
+      "words": 8810
+    }
+  }
+}

@@ -1,0 +1,633 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/treatment/publishable/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/1684cf4/skills/review-code",
+  "task_root": "/tmp/rcs-savings/treatment/publishable",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 20,
+          "lines": 34,
+          "tool_calls": 20,
+          "text_only_turns": 1,
+          "input": 40,
+          "cache_write": 61567,
+          "cache_write_5m": 0,
+          "cache_write_1h": 61567,
+          "cache_write_unknown": 0,
+          "cache_read": 994091,
+          "output": 13022,
+          "thinking": 4171,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:02:47",
+          "wall_seconds": 167.055,
+          "path": "/tmp/rcs-savings/evidence/treatment/publishable/transcript.jsonl",
+          "settings": {
+            "lines": 34,
+            "models": {
+              "claude-sonnet-5": 34
+            },
+            "efforts": {
+              "high": 34
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 20,
+        "lines": 34,
+        "tool_calls": 20,
+        "text_only_turns": 1,
+        "input": 40,
+        "cache_write": 61567,
+        "cache_write_5m": 0,
+        "cache_write_1h": 61567,
+        "cache_write_unknown": 0,
+        "cache_read": 994091,
+        "output": 13022,
+        "thinking": 4171,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:02:47",
+        "wall_seconds": 167.055
+      }
+    },
+    "workers": {
+      "transcripts": [
+        {
+          "label": "agent-acc849512ec95a3c7.jsonl",
+          "turns": 5,
+          "lines": 8,
+          "tool_calls": 5,
+          "text_only_turns": 1,
+          "input": 10,
+          "cache_write": 26850,
+          "cache_write_5m": 26850,
+          "cache_write_1h": 0,
+          "cache_write_unknown": 0,
+          "cache_read": 90223,
+          "output": 3203,
+          "thinking": 1082,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:00:31",
+          "wall_seconds": 31.193,
+          "path": "/tmp/rcs-savings/evidence/treatment/publishable/subagents/agent-acc849512ec95a3c7.jsonl",
+          "settings": {
+            "lines": 8,
+            "models": {
+              "claude-sonnet-5": 8
+            },
+            "efforts": {
+              "high": 8
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 5,
+        "lines": 8,
+        "tool_calls": 5,
+        "text_only_turns": 1,
+        "input": 10,
+        "cache_write": 26850,
+        "cache_write_5m": 26850,
+        "cache_write_1h": 0,
+        "cache_write_unknown": 0,
+        "cache_read": 90223,
+        "output": 3203,
+        "thinking": 1082,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:00:31",
+        "wall_seconds": 31.193
+      }
+    },
+    "all": {
+      "label": "total",
+      "turns": 25,
+      "lines": 42,
+      "tool_calls": 25,
+      "text_only_turns": 2,
+      "input": 50,
+      "cache_write": 88417,
+      "cache_write_5m": 26850,
+      "cache_write_1h": 61567,
+      "cache_write_unknown": 0,
+      "cache_read": 1084314,
+      "output": 16225,
+      "thinking": 5253,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:03:18",
+      "wall_seconds": 198.248
+    }
+  },
+  "harness": {
+    "num_turns": 21,
+    "duration_ms": 171718,
+    "total_cost_usd": 0.6941388000000001,
+    "subagents_spawned": 1,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 4,
+    "failed": 3,
+    "repair_loops": 3,
+    "runs": [
+      {
+        "command": "cd /tmp/rcs-savings/treatment/publishable/work; cat > fingerprint.json <<'EOF'\n{\"specs\": []}\nEOF\ncat > composition.json <<'EOF'\n{\n \"run\": {\"coverage\": \"complete\"},\n \"summary\": {\n  \"status\": \"Approved\",\n  \"intent\": \"Add `ledger statement FILE ACCOUNT --format csv` backed by a new `ledger/export.py` reusing `statement_rows`, with text as default (PR body; closes #3).\",\n  \"issue_fit\": \"Met \u2014 all four acceptance criteria of example/ledger#3 are implemented; criteria 2-4 are exercised by tests/test_export.py and criterion 1 is confirmed by inspection of ledger/cli.py.\",\n  \"coverage\": \"Complete merge-base diff (3 files) reviewed with surrounding statement, accounts, auth and CLI code. Focused `python3 -m unittest tests.test_export tests.test_cli tests.test_statement` run once at the head: 7 tests OK. A disposable round-trip probe by the verifier confirmed premise-2. The safety-premise batch (security, data-integrity) is spent as the initial batch; the follow-up allowance is unused. No CI or caller check evidence was supplied. No prior review state in the packet.\"\n },\n \"findings\": [],\n \"questions\": [],\n \"observations\": [\n  {\"fact\": \"No test drives `--format csv` (or the unchanged text default) through `ledger.cli.main`, so the option wiring in `FORMATS` is covered only by inspection.\", \"evidence\": \"`tests/test_export.py:1-28`, `tests/test_cli.py:29-38`, `ledger/cli.py:13`.\"}\n ],\n \"prior_items\": [],\n \"record\": {\n  \"repository\": \"example/ledger\",\n  \"requirements\": [\n   {\"source\": \"issue-3/acceptance-criterion-1\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"ledger/cli.py:13,35,44 select the formatter; default=\\\"text\\\"\"},\n   {\"source\": \"issue-3/acceptance-criterion-2\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"ledger/export.py:8,17 writes HEADER first; tests/test_export.py:19\"},\n   {\"source\": \"issue-3/acceptance-criterion-3\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"statement_rows uses format_cents (ledger/statement.py:19); tests/test_export.py:20,24\"},\n   {\"source\": \"issue-3/acceptance-criterion-4\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"csv.writer quoting; tests/test_export.py:22-24 and verifier probe with comma, quote, CR, LF\"},\n   {\"source\": \"pr-body/\\\"reuses `statement_rows`\\\"\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"ledger/export.py:18\"}\n  ],\n  \"files\": [\n   {\"path\": \"ledger/cli.py\", \"state\": \"reviewed\"},\n   {\"path\": \"ledger/export.py\", \"state\": \"reviewed\"},\n   {\"path\": \"tests/test_export.py\", \"state\": \"reviewed\"}\n  ],\n  \"check_evidence\": [\n   {\"check\": \"python3 -m unittest tests.test_export tests.test_cli tests.test_statement\", \"head\": \"0eb283dfe715341548387bf65af857affedf5dfa\", \"outcome\": \"reviewer-executed\", \"reason\": \"no supplied checks; focused run at clean head, 7 tests OK (private-dir run events not wrapped; local rerun)\"}\n  ],\n  \"verification\": {\n   \"tasks\": [\n    {\"id\": \"premise-1\", \"type\": \"safety-premise\", \"area\": \"security\", \"premise\": \"The csv path exposes no account data beyond the base statement command and adds no authorization decision or bypass.\", \"evidence\": \"ledger/cli.py:44, ledger/auth.py:9, ledger/export.py:18\", \"batch\": \"initial\", \"ruling\": \"fails\", \"reopened_as\": \"export/full-description-unbounded\"},\n    {\"id\": \"premise-2\", \"type\": \"safety-premise\", \"area\": \"data-integrity\", \"premise\": \"statement_csv rows round-trip through csv.reader equal to statement_rows, with the required header.\", \"evidence\": \"ledger/export.py:16-18, ledger/statement.py:19\", \"batch\": \"initial\", \"ruling\": \"holds\"}\n   ],\n   \"batches\": [\n    {\"bundle\": \"/tmp/rcs-savings/treatment/publishable/work/initial\", \"accounting\": \"/tmp/rcs-savings/treatment/publishable/work/initial/accounting.json\", \"operation\": \"Agent subagent_type=general-purpose model=sonnet run_in_background=false\"}\n   ],\n   \"allowance\": {\"initial_spent\": true, \"follow_up_spent\": false, \"carried_from\": null},\n   \"outstanding\": []\n  },\n  \"routed\": {\"unresolved\": [], \"disputed\": [], \"unrecoverable_inputs\": []}\n }\n}\nEOF\ncd /tmp/rcs-savings/treatment/publishable/repo; S=/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts; W=/tmp/rcs-savings/treatment/publishable/work\npython3 $S/finalize_review.py --store $W/store --fingerprint-input $W/fingerprint.json --packet $W/packet.json --compact $W 2>&1 | tail -30",
+        "failed": true,
+        "at": "2026-09-23T20:46:02.623000+00:00"
+      },
+      {
+        "command": "cd /tmp/rcs-savings/treatment/publishable/work; python3 - <<'EOF'\nimport json\nc=json.load(open('composition.json'))\nc['run']['coverage']='incomplete'\nc['summary']['status']='Incomplete'\nc['summary']['coverage']=(\"Complete merge-base diff (3 files) reviewed with surrounding statement, accounts, auth and CLI code; no defect survived primary falsification. Focused `python3 -m unittest tests.test_export tests.test_cli tests.test_statement` run once at the head: 7 tests OK; verifier probe confirmed CSV round trip (premise-2 holds). \"\n \"Marked Incomplete only because safety premise-1 (security) returned `fails`: the verifier noted the CSV path prints full descriptions where the text statement truncates to 30 characters (ledger/statement.py:32). I judge the reopened candidate `export/full-description-unbounded` not admissible (issue #3 criterion 4 requires descriptions to round-trip, so full text is intended; the caller already reads the ledger file; no authorization check existed at base), but the composer records a failed premise's reopened candidate as rendered or outstanding, so it is carried as outstanding rather than silently dropped. Ambiguity: instructions permit dropping an inadmissible reopened candidate; the script does not. Follow-up allowance (unused) could have the verifier rule on it. No CI or caller check evidence supplied; no prior review state.\")\nc['record']['verification']['outstanding']=[\"export/full-description-unbounded: reopened from failed premise-1; primary judged inadmissible (intentional per issue #3 criterion 4, no consequence) but no verifier ruling on the reopened candidate; follow-up batch unused\"]\njson.dump(c,open('composition.json','w'),indent=1)\nEOF\ncd ../repo; S=/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts; W=/tmp/rcs-savings/treatment/publishable/work\npython3 $S/finalize_review.py --store $W/store --fingerprint-input $W/fingerprint.json --packet $W/packet.json --compact $W 2>&1 | tail -30",
+        "failed": true,
+        "at": "2026-09-23T20:46:47.983000+00:00"
+      },
+      {
+        "command": "cd /tmp/rcs-savings/treatment/publishable/work; grep -n \"coverage_gaps\" /tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py | head -5; python3 - <<'EOF'\nimport json\nc=json.load(open('composition.json'))\nc['summary']['coverage_gaps']=\"Verification `export/full-description-unbounded` (reopened from failed security premise-1) has no verifier ruling; primary judged it inadmissible, and the follow-up batch is unused. Recovery: a follow-up verifier ruling on that candidate.\"\njson.dump(c,open('composition.json','w'),indent=1)\nEOF\ncd ../repo; S=/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts; W=/tmp/rcs-savings/treatment/publishable/work\npython3 $S/finalize_review.py --store $W/store --fingerprint-input $W/fingerprint.json --packet $W/packet.json --compact $W 2>&1 | tail -30",
+        "failed": true,
+        "at": "2026-09-23T20:46:51.911000+00:00"
+      },
+      {
+        "command": "cd /tmp/rcs-savings/treatment/publishable/work; python3 - <<'EOF'\nimport json\nc=json.load(open('composition.json'))\nc['summary']['coverage_gaps']=[c['summary']['coverage_gaps']]\njson.dump(c,open('composition.json','w'),indent=1)\nEOF\ncd ../repo; S=/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts; W=/tmp/rcs-savings/treatment/publishable/work\npython3 $S/finalize_review.py --store $W/store --fingerprint-input $W/fingerprint.json --packet $W/packet.json --compact $W 2>&1 | tail -30; ls $W",
+        "failed": false,
+        "at": "2026-09-23T20:46:54.774000+00:00"
+      }
+    ],
+    "validation": {
+      "status": "captured",
+      "at": "2026-09-23T20:46:54.774000+00:00",
+      "turns_after": 1,
+      "tool_calls_after": 0,
+      "seconds_after": 7.817
+    }
+  },
+  "after_last_addendum": {
+    "status": "unavailable",
+    "reason": "no addendum write"
+  },
+  "loads": {
+    "items": [
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/SKILL.md"
+          }
+        ],
+        "bytes": 12060,
+        "words": 1736
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/pull-request-target.md"
+          }
+        ],
+        "bytes": 9830,
+        "words": 1210
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/review-rubric.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/rendering.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/changed-tests.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/check-evidence.md"
+          }
+        ],
+        "bytes": 20822,
+        "words": 2916
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-handoff.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-concurrency.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-return.md"
+          },
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 18747,
+        "words": 2525
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/build_verifier_prompt.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 7701,
+        "words": 729
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          }
+        ],
+        "bytes": 753,
+        "words": 85
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          }
+        ],
+        "bytes": 3756,
+        "words": 472
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          }
+        ],
+        "bytes": 724,
+        "words": 79
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 12060,
+        "words": 1736
+      },
+      "reference": {
+        "count": 8,
+        "bytes": 30652,
+        "words": 4126
+      },
+      "helper-help": {
+        "count": 1,
+        "bytes": 0,
+        "words": 0
+      },
+      "helper-example": {
+        "count": 3,
+        "bytes": 7701,
+        "words": 729
+      },
+      "script-source": {
+        "count": 4,
+        "bytes": 5233,
+        "words": 636
+      }
+    },
+    "mixed": {
+      "calls": 1,
+      "bytes": 18747,
+      "words": 2525
+    }
+  },
+  "worker_loads": [
+    {
+      "transcript": "/tmp/rcs-savings/evidence/treatment/publishable/subagents/agent-acc849512ec95a3c7.jsonl",
+      "dispatch_prompt": {
+        "bytes": 466,
+        "words": 53
+      },
+      "items": [
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/treatment/publishable/work/initial/brief.md"
+            }
+          ],
+          "bytes": 16550,
+          "words": 2326
+        },
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/treatment/publishable/work/initial/manifest.json"
+            }
+          ],
+          "bytes": 691,
+          "words": 57
+        }
+      ],
+      "totals": {
+        "bundle": {
+          "count": 2,
+          "bytes": 17241,
+          "words": 2383
+        }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
+      }
+    }
+  ],
+  "authored": {
+    "writes": [
+      {
+        "path": "vin.json",
+        "tool": "Bash",
+        "chars": 2895,
+        "agent": "root",
+        "class": "other"
+      },
+      {
+        "path": "initial-raw.json",
+        "tool": "Bash",
+        "chars": 2911,
+        "agent": "root",
+        "class": "other"
+      },
+      {
+        "path": "fingerprint.json",
+        "tool": "Bash",
+        "chars": 4320,
+        "agent": "root",
+        "class": "other"
+      }
+    ],
+    "by_class": {
+      "other": {
+        "writes": 3,
+        "chars": 10126
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/treatment/publishable/work/fingerprint.json",
+        "shape": "fingerprint-input",
+        "bytes": 14,
+        "mechanical": {
+          "fields": 1,
+          "words": 0
+        },
+        "judgment": {
+          "fields": 0,
+          "words": 0
+        },
+        "sections": {
+          "specs": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/publishable/work/initial-raw.json",
+        "shape": "raw-return",
+        "bytes": 2613,
+        "mechanical": {
+          "fields": 1,
+          "words": 1
+        },
+        "judgment": {
+          "fields": 30,
+          "words": 206
+        },
+        "sections": {
+          "manifest_sha256": {
+            "fields": 1,
+            "words": 1
+          },
+          "candidates": {
+            "fields": 1,
+            "words": 0
+          },
+          "premises": {
+            "fields": 25,
+            "words": 155
+          },
+          "duplicate_groups": {
+            "fields": 1,
+            "words": 0
+          },
+          "observation": {
+            "fields": 3,
+            "words": 51
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/publishable/work/vin.json",
+        "shape": "verifier-input",
+        "bytes": 2611,
+        "mechanical": {
+          "fields": 8,
+          "words": 29
+        },
+        "judgment": {
+          "fields": 23,
+          "words": 205
+        },
+        "sections": {
+          "run": {
+            "fields": 5,
+            "words": 5
+          },
+          "batch": {
+            "fields": 2,
+            "words": 2
+          },
+          "run_policy": {
+            "fields": 1,
+            "words": 22
+          },
+          "sources": {
+            "fields": 4,
+            "words": 85
+          },
+          "candidates": {
+            "fields": 1,
+            "words": 0
+          },
+          "premises": {
+            "fields": 18,
+            "words": 120
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/publishable/work/composition.json",
+        "shape": "composition",
+        "bytes": 7149,
+        "mechanical": {
+          "fields": 31,
+          "words": 30
+        },
+        "judgment": {
+          "fields": 59,
+          "words": 410
+        },
+        "sections": {
+          "run": {
+            "fields": 10,
+            "words": 9
+          },
+          "summary": {
+            "fields": 5,
+            "words": 236
+          },
+          "findings": {
+            "fields": 1,
+            "words": 0
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "observations": {
+            "fields": 2,
+            "words": 26
+          },
+          "prior_items": {
+            "fields": 1,
+            "words": 0
+          },
+          "record": {
+            "fields": 63,
+            "words": 163
+          },
+          "finalization": {
+            "fields": 7,
+            "words": 6
+          }
+        },
+        "written_by": "unobserved"
+      }
+    ]
+  }
+}
