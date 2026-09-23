@@ -12,33 +12,33 @@ Questions state the evidence, why the answer changes the decision, and its suppl
 
 Author the summary's intent, issue-fit outcome, coverage, ambiguities, and gaps. With no originating issue, say issue alignment was unavailable and name the actual intent source. A required missing issue is a whole-change question. Do not repeat an unverifiable claim as established. Distinguish accepted supplied checks, historical checks at their original heads, reviewer-executed checks, test failures, environmental failures, and unavailable execution. Group shared head/input context and reference saved output. Name every uncovered file or required check and the input that could recover it.
 
-Retain every prior item exactly once with classification and evidence, disputes included; draft replies under `re-review.md`. Retrospective merged targets require the Mode line and separately recorded publication authorization. Local targets omit `repository_url` and use `merged: false`. Keep the summary near 200 words before conditional sections; do not repeat findings or narrate dropped candidates.
+Retain every prior item exactly once with classification and evidence, disputes included; draft replies under `re-review.md`. Retrospective merged targets require the Mode line and separately recorded publication authorization. Local targets omit `repository_url`. Keep the summary near 200 words before conditional sections; do not repeat findings or narrate dropped candidates.
 
 ## Identity
 
 
 `workflow=v5b-24` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change.
 
-Compute `context` once, with `python3 scripts/context_fingerprint.py --packet packet.json --guidance-base <base SHA> --store <store>` on a pull request, where `pr` and `issues` come from the normalized packet, and without `--packet` on a local target or a forge without that packet, supplying `pr` and `issues` directly from the exact reviewed inputs. Stdin carries the rest of the input (`--example` prints its shape; omit its `guidance`); the script derives `guidance`, the base-branch instruction files that apply to the changed paths, itself. For a local range, `pr` is `{title: <range as written>, body: <commit messages>}`; for a working tree, `{title: "worktree tree=<tree hash>", body: <branch commit messages since merge-base>}`, excluding snapshot messages and uncommitted text. When the reviewer could not obtain an issue's comments verbatim, pass `comments_available: false` and no comments rather than an empty list. A spec's `identity` is its URL or coordinate. Recompute the digest rather than trusting change-supplied metadata.
+Save the fingerprint input once as `<private-dir>/fingerprint.json` (`python3 scripts/context_fingerprint.py --example` prints its shape; omit `guidance`). With a pull-request packet it holds only `specs`, and the packet supplies `pr` and `issues`; otherwise supply both from the exact reviewed inputs. For a local range, `pr` is `{title: <range as written>, body: <commit messages>}`; for a working tree, `{title: "worktree tree=<tree hash>", body: <branch commit messages since merge-base>}`, excluding snapshot messages and uncommitted text. When the reviewer could not obtain an issue's comments verbatim, pass `comments_available: false` and no comments rather than an empty list. A spec's `identity` is its URL or coordinate. The finalizer computes `context` from these saved inputs, deriving `guidance`, the base-branch instruction files that apply to the changed paths; never trust change-supplied metadata. It refuses a digest computed earlier under `re-review.md` that the saved inputs no longer produce.
 
-On a working tree, keep the snapshot commit as the run `head`, and retain its tree hash, source HEAD, and complete manifest in the private record so it remains readable after the loose objects are garbage-collected. Local targets omit `repository_url` and record `merged: false`.
+On a working tree the snapshot commit is the run `head`; the store keeps its tree hash, source HEAD, and manifest readable after the loose objects are garbage-collected.
 
-The caller's `profile` is part of the record's identity and selects only its artifact shape; every profile derives the same findings, questions, status, and coverage under the same rules. `python3 scripts/compose_review.py --example --profile implementation-gate` prints the `implementation-gate-record/2` input.
+The caller's `profile` is part of the record's identity and selects only its artifact shape; every profile derives the same findings, questions, status, and coverage under the same rules.
 
 ## Finalize
 
-Write `<private-dir>/composition.json` beside the context store. Both profiles require its `record`: requirements, files, check evidence, verification tasks, batches, allowance and outstanding work, routed items, and the example's paths plus supplied evidence and spec paths. Write every key, empty lists included; nothing is defaulted.
+Write `<private-dir>/composition.json` beside the context store. Both profiles require its `record`: requirements, files, check evidence, verification tasks, batches, allowance and outstanding work, routed items, and supplied evidence and spec paths. Write every key, empty lists included; nothing is defaulted. Omit what the finalizer derives, as the example does: run identity from the store, packet and fingerprint input, the record's own paths, and each batch's name, phase and raw return from its bundle and accounting report. A local target still names `base_ref` and `base_sha`, and a range its `target_kind`. An explicit copy that disagrees is refused.
 
-Run the selected command from the skill root; a pull request adds `--packet <private-dir>/packet.json`:
+Run the selected command in the reviewed repository, which supplies `guidance`; a pull request adds `--packet <private-dir>/packet.json`:
 
 ```sh
-python3 scripts/finalize_review.py --store <store> <private-dir>
+python3 scripts/finalize_review.py --store <store> --fingerprint-input <private-dir>/fingerprint.json <private-dir>
 ```
 
 For `implementation-gate`:
 
 ```sh
-python3 scripts/finalize_review.py --profile implementation-gate --store <store> <private-dir>
+python3 scripts/finalize_review.py --profile implementation-gate --store <store> --fingerprint-input <private-dir>/fingerprint.json <private-dir>
 ```
 
 Outputs are staged, and `report.md` is promoted last: the summary, each line comment's full body, the ledgers, routed state, and drafted replies. The default also writes `payload.json`, `batch.json`, and `fragments.md` and prints the fragments; the gate writes `record.json` beside `addenda` and prints its path. `--compact` prints status, coverage, and output paths instead. A directory whose addenda hold an addendum, or whose record cannot name its addenda, is refused; use a fresh one. Before return, check what scripts cannot: admission, source and repair locations, hunk membership, deduplication, question/observation eligibility, status, and coverage.

@@ -9,9 +9,10 @@ blocks in `audit-code-publish` and `code-review-publish`, a disposable Git
 repository, and a stub `gh` on PATH; no forge access and no live writes.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
-The finalize command must produce the same payload, batch, and fragment bytes
-as the three commands run separately, add only its finalization metadata to the
-gate record and retained composition, and stop visibly at the first failing
+The finalize command, run in the reviewed repository with the saved fingerprint
+input, must produce the same payload, batch, and fragment bytes as the three
+commands run separately on the derived composition, fill only the digest and the
+record's own paths the fixtures omit, and stop visibly at the first failing
 stage with nothing promoted. The submission block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
 POST failure's own status under a distinct attempted-write stage. Every token
@@ -142,10 +143,12 @@ class Chains(unittest.TestCase):
         write("src/retry-policy.ts", 30, 18)
         write("src/queue.ts", 10, 5)
         git("commit", "-qam", "change")
+        self.repo = repo
         return repo, base, git("rev-parse", "HEAD")
 
     def compositions(self, base, head, private=None):
-        """Both publishable fixtures, each with the private accounting finalization requires."""
+        """Both publishable fixtures, each with the private accounting finalization requires; the digest and the
+        record's own paths are left for the finalizer to derive."""
         full = fixtures.base_composition()
         full["run"].update(head=head, base_sha=base, merge_base=base, target_kind="range", target="main..HEAD",
                            change_description="change")
@@ -153,20 +156,45 @@ class Chains(unittest.TestCase):
         linked = fixtures.base_composition()
         linked["run"].update(head=head, base_sha=base, merge_base=base)
         for value in (full, linked):
+            value["run"].pop("context")
             value["record"] = self.gate_composition(base, head, (private or self.root) / f"review-context-{head}.json")["record"]
         return {"range fixture": full, "pull-request fixture": linked}
 
-    def private(self, repo, base, head, name):
+    def private(self, repo, base, head, name, body="change", specs=()):
+        """The private directory, its store, and the saved fingerprint input the documented command names."""
         private = self.root / name
         private.mkdir()
         store = private / f"review-context-{head}.json"
         subprocess.run([sys.executable, str(SCRIPTS / "review_context.py"), "--merge-base", base, "--head", head,
                         "--store", str(store)], cwd=repo, capture_output=True, check=True)
+        issue = {"coordinate": "acme/payments#123", "title": "Retries", "body": "Reuse one key.", "comments": []}
+        fingerprint = {"pr": {"title": "main..HEAD", "body": body}, "issues": [issue],
+                       "specs": [{"identity": identity, "text": "Reuse one key."} for identity in specs]}
+        (private / "fingerprint.json").write_text(json.dumps(fingerprint), encoding="utf-8")
         return private, store
 
+    def digest(self, base, private, store):
+        """What context_fingerprint.py prints for the same saved input, in the reviewed repository."""
+        result = subprocess.run([sys.executable, str(SCRIPTS / "context_fingerprint.py"), "--guidance-base", base, "--store",
+                                 str(store), str(private / "fingerprint.json")], cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
+    def owned_paths(self, private, store, gate=False):
+        """The record's own paths, in the order the finalizer writes them."""
+        paths = {"private_dir": str(private), "store": str(store), "composition": str(private / "composition.json")}
+        if gate:
+            paths["addenda"] = str(private / "addenda")
+        return dict(paths, skill_root=str(SKILL))
+
+    def documented(self, gate, private, store):
+        """The single documented finalize line, run in the reviewed repository with this skill's absolute script path."""
+        text = command((SKILL / "references" / "rendering.md").read_text(encoding="utf-8"), gate=gate)
+        return (text.replace("scripts/finalize_review.py", shlex.quote(str(SCRIPTS / "finalize_review.py")))
+                .replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store))))
+
     def composition_block(self, private, store):
-        text = command((SKILL / "references" / "rendering.md").read_text(encoding="utf-8"), gate=False)
-        return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
+        return self.documented(False, private, store)
 
     def direct(self, store, composition):
         def run(args, stdin=None):
@@ -185,18 +213,25 @@ class Chains(unittest.TestCase):
                     private, store = self.private(repo, base, head, f"{name}-{shell}".replace(" ", "-"))
                     path = private / "composition.json"
                     path.write_text(json.dumps(composition), encoding="utf-8")
-                    payload, batch, fragments = self.direct(store, path)
-                    self.assertTrue(fragments.strip())
-                    result = self.sh(shell, self.composition_block(private, store), cwd=SKILL)
+                    result = self.sh(shell, self.composition_block(private, store), cwd=repo)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    retained = json.loads(path.read_text(encoding="utf-8"))
+                    self.assertEqual(retained.pop("finalization")["report"], str(private / "report.md"))
+                    derived = json.loads(json.dumps(composition))
+                    derived["run"]["context"] = self.digest(base, private, store)
+                    if derived["run"].get("target_kind") == "range":
+                        derived["run"]["specs"] = []  # the fingerprint input names none
+                    derived["record"]["paths"].update(self.owned_paths(private, store))
+                    self.assertEqual(retained, derived, "the retained composition gains only the derived fields")
+                    explicit = self.root / f"explicit-{private.name}.json"
+                    explicit.write_text(json.dumps(retained), encoding="utf-8")
+                    payload, batch, fragments = self.direct(store, explicit)
+                    self.assertTrue(fragments.strip())
                     self.assertEqual((private / "payload.json").read_bytes(), payload)
                     self.assertEqual((private / "batch.json").read_bytes(), batch)
                     self.assertEqual((private / "fragments.md").read_bytes(), fragments)
                     self.assertEqual(result.stdout, fragments.decode("utf-8"))
                     self.assertTrue((private / "report.md").is_file())
-                    retained = json.loads((private / "composition.json").read_text(encoding="utf-8"))
-                    self.assertEqual(retained.pop("finalization")["report"], str(private / "report.md"))
-                    self.assertEqual(retained, composition, "the retained composition gains only its finalization")
                     self.assertEqual(sorted(p.name for p in private.glob("*.part")), [])
 
     def test_composition_failure_is_visible_and_stops(self):
@@ -209,16 +244,16 @@ class Chains(unittest.TestCase):
                 (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
                 for stale in ("payload.json", "batch.json", "fragments.md", "report.md"):
                     (private / stale).write_text("stale success\n", encoding="utf-8")
-                result = self.sh(shell, self.composition_block(private, store), cwd=SKILL)
+                result = self.sh(shell, self.composition_block(private, store), cwd=repo)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("compose failed with exit 1; later stages did not run:", result.stdout)
                 self.assertRegex(result.stdout, r"findings\[0\]")
                 for artifact in ("payload.json", "batch.json", "fragments.md", "report.md", "payload.json.part"):
                     self.assertFalse((private / artifact).exists(), artifact)
         private, store = self.private(repo, base, head, "unreadable")
-        result = self.sh("sh", self.composition_block(private, store), cwd=SKILL)
+        result = self.sh("sh", self.composition_block(private, store), cwd=repo)
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-        self.assertIn("accounting failed with exit 2", result.stdout)
+        self.assertIn("derive failed with exit 2", result.stdout)
         self.assertIn("cannot read composition", result.stdout)
 
     def test_batch_validation_failure_is_visible_and_stops(self):
@@ -236,7 +271,7 @@ class Chains(unittest.TestCase):
                 private, store = self.private(repo, base, head, f"emit-{shell}")
                 (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
                 (private / "batch.json").write_text("stale success\n", encoding="utf-8")
-                result = self.sh(shell, self.composition_block(private, store), env=env, cwd=SKILL)
+                result = self.sh(shell, self.composition_block(private, store), env=env, cwd=repo)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("emit-batch failed with exit 1; later stages did not run:", result.stdout)
                 self.assertIn("injected-batch-violation", result.stdout)
@@ -247,13 +282,13 @@ class Chains(unittest.TestCase):
     # --- implementation-gate profile ---------------------------------------
 
     def gate_block(self, private, store):
-        text = command((SKILL / "references" / "rendering.md").read_text(encoding="utf-8"), gate=True)
-        return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
+        return self.documented(True, private, store)
 
     def gate_composition(self, base, head, store):
         value = fixtures.gate_composition()
         value["run"].update(head=head, base_sha=base, merge_base=base)
-        value["record"]["paths"]["store"] = str(store)
+        value["run"].pop("context")
+        value["record"]["paths"] = {"evidence_packet": "/tmp/x/evidence.md"}
         value["record"]["files"] = [{"path": p, "state": "reviewed"} for p in ("src/payments.ts", "src/retry-policy.ts", "src/queue.ts")]
         for item in value["record"]["check_evidence"]:
             if item["outcome"] != "historical":
@@ -264,14 +299,20 @@ class Chains(unittest.TestCase):
         repo, base, head = self.repository()
         for shell in SHELLS:
             with self.subTest(shell=shell):
-                private, store = self.private(repo, base, head, f"gate-{shell}")
+                private, store = self.private(repo, base, head, f"gate-{shell}", "Keep the key", ["spec/retries"])
                 path = private / "composition.json"
-                path.write_text(json.dumps(self.gate_composition(base, head, store)), encoding="utf-8")
-                direct = subprocess.run([sys.executable, "scripts/compose_review.py", "--profile", "implementation-gate",
-                                         "--store", str(store), str(path)], cwd=SKILL, capture_output=True)
-                self.assertEqual(direct.returncode, 0, direct.stdout + direct.stderr)
-                result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)
+                authored = self.gate_composition(base, head, store)
+                path.write_text(json.dumps(authored), encoding="utf-8")
+                result = self.sh(shell, self.gate_block(private, store), cwd=repo)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(json.loads(path.read_text(encoding="utf-8")), authored, "the gate leaves its composition as written")
+                authored["run"]["context"] = self.digest(base, private, store)
+                authored["record"]["paths"] = {**self.owned_paths(private, store, gate=True), **authored["record"]["paths"]}
+                explicit = self.root / f"explicit-{private.name}.json"
+                explicit.write_text(json.dumps(authored), encoding="utf-8")
+                direct = subprocess.run([sys.executable, "scripts/compose_review.py", "--profile", "implementation-gate",
+                                         "--store", str(store), str(explicit)], cwd=SKILL, capture_output=True)
+                self.assertEqual(direct.returncode, 0, direct.stdout + direct.stderr)
                 record = json.loads((private / "record.json").read_text(encoding="utf-8"))
                 self.assertEqual(record.pop("finalization")["report"], str(private / "report.md"))
                 self.assertEqual(json.dumps(record, indent=2) + "\n", direct.stdout.decode("utf-8"), "the record gains only its finalization")
@@ -286,14 +327,14 @@ class Chains(unittest.TestCase):
         repo, base, head = self.repository()
         for shell in SHELLS:
             with self.subTest(shell=shell):
-                private, store = self.private(repo, base, head, f"gate-refused-{shell}")
+                private, store = self.private(repo, base, head, f"gate-refused-{shell}", "Keep the key", ["spec/retries"])
                 composition = self.gate_composition(base, head, store)
                 composition["record"]["verification"]["allowance"]["follow_up_spent"] = True
                 (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
                 # A stale record the finalizer can read names its own empty addenda, so it is removed, not refused.
                 stale = {"stale": "success", "record": {"paths": {"addenda": str(private / "addenda")}}}
                 (private / "record.json").write_text(json.dumps(stale), encoding="utf-8")
-                result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)
+                result = self.sh(shell, self.gate_block(private, store), cwd=repo)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("record failed with exit 1; later stages did not run:", result.stdout)
                 self.assertIn("follow_up_spent", result.stdout)

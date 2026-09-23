@@ -34,7 +34,7 @@ Usage::
     python3 scripts/compose_review.py --store <dir>/review-context-<head>.json composition.json > payload.json
     python3 scripts/compose_review.py --profile implementation-gate --store <store> composition.json > record.json
     python3 scripts/compose_review.py - < composition.json
-    python3 scripts/compose_review.py --example [--profile implementation-gate]   # print a minimal input
+    python3 scripts/compose_review.py --example [--profile implementation-gate]   # what the reviewer writes
 
 Exit codes: ``0`` the composed payload validated and was printed as JSON;
 ``1`` one or more violations, one line each as ``<location>: <rule>:
@@ -71,7 +71,11 @@ the gating ``--event`` grammar are specific to a forge payload: the first
 is vacuous without ``repository_url`` and the other two never run in the
 implementation-gate profile.
 
-Input schema (JSON object)::
+Input schema (JSON object). ``finalize_review.py`` fills the run identity,
+the record's own paths, and each batch's ``name``, ``phase`` and
+``raw_return`` from the saved inputs that own them, and refuses an explicit
+copy that disagrees, so ``--example`` omits those; this composer, run alone,
+still requires every field below that is not marked optional::
 
     {
       "run": {
@@ -1389,8 +1393,13 @@ def load_json(path: str, what: str) -> Any:
 
 
 def example_composition(profile: str) -> dict[str, Any]:
-    """The docstring's example as a composition input; ``--example`` prints it, and it composes at exit 0 once the accounting report it names exists."""
-    head, base, merge_base = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678", "b2c3d4e5f60718293a4b5c6d7e8f90123456789a", "d4e5f60718293a4b5c6d7e8f90123456789abcde"
+    """What the reviewer writes for ``finalize_review.py``, which fills the rest; ``--example`` prints it.
+
+    The finalizer fills run identity from the store, packet and fingerprint input, the record's own paths, and each
+    batch's name, phase and raw return from its bundle and accounting report, so the example omits them. Every
+    judgment field is shown, with the pull-request branch's prior item and the local range's base.
+    """
+    head = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
     finding = {
         "id": "payments/retry-idempotency", "title": "Preserve the idempotency key across retries",
         "priority": "P1", "action": "must-fix", "kind": "requirement",
@@ -1402,9 +1411,7 @@ def example_composition(profile: str) -> dict[str, Any]:
         "fix": {"path": "src/retry-policy.ts", "start_line": 18},
     }
     composition: dict[str, Any] = {
-        "run": {"head": head, "base_ref": "main", "base_sha": base, "merge_base": merge_base,
-                "context": "91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e",
-                "issues": ["acme/payments#123"], "coverage": "complete", "merged": False},
+        "run": {"coverage": "complete"},
         "summary": {"status": "Changes Requested",
                     "intent": "Add retries for charge submission without changing payment semantics.",
                     "issue_fit": "Partial — retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open.",
@@ -1419,23 +1426,22 @@ def example_composition(profile: str) -> dict[str, Any]:
                           "evidence": "`redis.conf:1903`, `src/replication.c:2701`."}],
     }
     private = "/tmp/review-code-XXXXXX"
-    paths = {"private_dir": private, "store": f"{private}/review-context-{head}.json",
-             "composition": f"{private}/composition.json", "skill_root": "/abs/path/to/skills/review-code"}
     if profile == "publishable":
-        composition["run"]["repository_url"] = "https://github.com/acme/payments"
-        repository = "acme/payments"
+        composition["prior_items"] = [{"id": "queue/drop-on-full", "classification": "fixed", "action": "must-fix",
+                                       "note": "The queue now blocks when full.", "reply": "Fixed: a full queue now blocks instead of dropping the charge.",
+                                       "thread_id": "PRRT_kwDOABCD12", "comment_id": 1001}]
+        repository, paths = "acme/payments", {}
     else:
-        composition["run"].update({"target_kind": "range", "target": "main...HEAD", "change_description": "Add retries for charge submission",
-                                   "specs": ["/abs/path/to/spec.md"]})
-        repository = "/abs/path/to/checkout"
-        paths.update(addenda=f"{private}/addenda", evidence_packet="/abs/path/to/results.md", spec="/abs/path/to/spec.md")
+        composition["run"] = {"target_kind": "range", "base_ref": "main", "base_sha": "b2c3d4e5f60718293a4b5c6d7e8f90123456789a",
+                              "coverage": "complete"}
+        repository, paths = "/abs/path/to/checkout", {"evidence_packet": "/abs/path/to/results.md", "spec": "/abs/path/to/spec.md"}
     composition["record"] = {
         "repository": repository,
-        "paths": paths,
+        **({"paths": paths} if paths else {}),
         "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
                           "evidence": "src/payments.ts:42 creates a key per attempt"}],
-        "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/queue.ts", "state": "reviewed"},
-                  {"path": "docs/notes.md", "state": "ignored", "reason": "generated changelog"}],
+        "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/retry-policy.ts", "state": "reviewed"},
+                  {"path": "src/queue.ts", "state": "reviewed"}, {"path": "docs/notes.md", "state": "ignored", "reason": "generated changelog"}],
         "check_evidence": [{"check": "pnpm test payments", "head": head, "outcome": "accepted",
                             "reason": "same command, clean tree at the reviewed head, full output read"}],
         "verification": {
@@ -1443,8 +1449,8 @@ def example_composition(profile: str) -> dict[str, Any]:
                       {"id": "premise-1", "type": "safety-premise", "area": "data-integrity",
                        "premise": "The charge lookup always succeeds before `submitCharge()` records the charge.",
                        "evidence": "src/charges.ts:31", "batch": "initial", "ruling": "holds"}],
-            "batches": [{"name": "initial", "phase": "initial", "bundle": f"{private}/initial", "raw_return": f"{private}/initial/raw-return.json",
-                         "accounting": f"{private}/initial/accounting.json", "operation": "Agent run_in_background=false"}],
+            "batches": [{"bundle": f"{private}/initial", "accounting": f"{private}/initial/accounting.json",
+                         "operation": "Agent run_in_background=false"}],
             "allowance": {"initial_spent": True, "follow_up_spent": False, "carried_from": None},
             "outstanding": []},
         "routed": {"unresolved": ["queue/retry-order"], "disputed": [], "unrecoverable_inputs": []},
@@ -1467,7 +1473,7 @@ def main() -> int:
         choices=PROFILES,
         help="publishable prints the validator payload (default); implementation-gate prints one validated local record for a committed range and requires the `record` section",
     )
-    parser.add_argument("--example", action="store_true", help="print a minimal composition input for the profile, then exit")
+    parser.add_argument("--example", action="store_true", help="print what the reviewer writes for finalize_review.py under the profile, then exit")
     args = parser.parse_args()
     if args.example:
         print(json.dumps(example_composition(args.profile), indent=2))

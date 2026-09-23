@@ -1135,14 +1135,11 @@ def main() -> int:
         shown = run(COMPOSER, "", "--example", "--profile", profile)
         assert shown.returncode == 0 and shown.stderr == "", ("example", profile, shown.stderr)
         value = json.loads(shown.stdout)
-        # Either profile's example accounting report has to exist to establish its rulings.
-        batch = value["record"]["verification"]["batches"][0]
-        batch["accounting"] = f"{ARTIFACTS}/example/accounting.json"
-        write_accounting(batch["accounting"], value["record"]["verification"]["tasks"])
-        assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "the example names an accounting report that does not exist"
-        example = run(COMPOSER, json.dumps(value), "--profile", profile)
-        assert example.returncode == 0, ("example composes", profile, example.stdout)
-    print("ok example: --example prints a composition that composes under both profiles once its accounting exists")
+        # The example is what the reviewer writes; the finalizer fills the rest, and test_finalize_review.py finalizes it.
+        assert "head" not in value["run"] and "context" not in value["run"], ("derived run fields are omitted", profile)
+        assert all(set(b) == {"bundle", "accounting", "operation"} for b in value["record"]["verification"]["batches"]), profile
+        assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "run alone, the composer requires every field"
+    print("ok example: --example prints the authored composition, which the composer alone refuses")
     return 0
 
 
