@@ -7,8 +7,8 @@ Schema: references/verifier-return.md; bundle from build_verifier_prompt.py.
 Transport: for a bundle whose manifest binds ``return_file``, <return> is the path the
 worker returned. It must equal that assignment exactly, and the file is read without
 following a symbolic link, from a parent that still resolves to itself. A wrong path,
-an absent, linked, or non-regular file, or a moved parent withholds every task in an
-exit-1 report. ``--inline-fallback`` accounts the primary's verbatim save of an inline
+an absent, linked, non-regular, or unreadable file, or a moved parent withholds every
+task in an exit-1 report. ``--inline-fallback`` accounts the primary's verbatim save of an inline
 response for such a bundle instead, recording the assigned file's state (absent, or
 the size and hash of what the worker left). ``--repair-of`` accounts a separate
 repaired return, recording the original's path and hash. Neither may name the
@@ -175,10 +175,13 @@ def read_assigned(path):
         descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
     except FileNotFoundError:
         return None, "absent"
-    except OSError:
-        if os.path.islink(path):
+    except OSError as error:
+        mode = os.lstat(path).st_mode
+        if stat.S_ISLNK(mode):
             return None, "a symbolic link"
-        raise
+        if not stat.S_ISREG(mode):
+            return None, "not a regular file"
+        return None, f"unreadable ({error.strerror})"
     if not stat.S_ISREG(os.fstat(descriptor).st_mode):
         os.close(descriptor)
         return None, "not a regular file"
