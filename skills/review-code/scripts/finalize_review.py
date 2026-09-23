@@ -608,8 +608,9 @@ def finalize(args: argparse.Namespace, private: Path) -> int:
     compose = [str(SCRIPTS / "compose_review.py"), "--store", args.store, "-"]
     if args.profile == "implementation-gate":
         compose[1:1] = ["--profile", "implementation-gate"]
+    # ASCII-escaped JSON reads the same under any stdin encoding the composer's locale selects.
     composed = run("record" if args.profile == "implementation-gate" else "compose", compose,
-                   json.dumps(composition, ensure_ascii=False).encode("utf-8"))
+                   json.dumps(composition).encode("ascii"))
     staged: dict[str, bytes] = {}
     if args.profile == "publishable":
         validate = str(SCRIPTS / "validate_review.py")

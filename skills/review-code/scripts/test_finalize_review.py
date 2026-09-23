@@ -70,8 +70,9 @@ sys.exit(finalize_review.main())
 """
 
 
-def run(args, cwd=SKILL, stdin=None):
-    return subprocess.run([sys.executable, *map(str, args)], cwd=cwd, input=stdin, capture_output=True, text=True, encoding="utf-8")
+def run(args, cwd=SKILL, stdin=None, env=None):
+    return subprocess.run([sys.executable, *map(str, args)], cwd=cwd, input=stdin, capture_output=True, text=True, encoding="utf-8",
+                          env=env)
 
 
 def packet(threads):
@@ -454,6 +455,22 @@ class Finalize(unittest.TestCase):
         result = self.finalize(private, store, "--packet", private / "absent.json")
         self.assertEqual(result.returncode, 2, result.stdout)
         self.assertIn("cannot read packet", result.stdout)
+
+    def test_non_utf8_stdio_keeps_the_bytes(self):
+        """The derived composition reaches the composer intact whatever encoding its stdin uses."""
+        outputs = []
+        for encoding in ("utf-8", "latin-1"):
+            private = self.directory("stdio")
+            store = self.store(private)
+            composition = self.composition(private, store)
+            self.assertIn("—", composition["summary"]["issue_fit"], "the fixture carries non-ASCII prose")
+            self.write(private, composition)
+            result = run([FINALIZER, "--store", store, private], env=dict(os.environ, PYTHONIOENCODING=encoding))
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            outputs.append({name: (private / name).read_bytes().replace(str(private).encode("utf-8"), b"<private>")
+                            for name in (*PUBLIC, "report.md")})
+            self.assertIn("Partial — retry", json.loads(outputs[-1]["payload.json"])["summary"]["body"])
+        self.assertEqual(outputs[0], outputs[1])
 
     def test_malformed_inputs(self):
         private = self.directory("malformed")
