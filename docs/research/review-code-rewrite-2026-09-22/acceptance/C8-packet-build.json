@@ -1,0 +1,40 @@
+{
+  "command": [
+    "python3",
+    "docs/research/tools/build_packet.py",
+    "--repo",
+    "kamui/skills",
+    "--pr",
+    "325",
+    "--head",
+    "0ea287f0c07fda09b9d063612353dcef37f38063",
+    "--merge-base",
+    "160d1201bed57d96de6fc8b1ae657bd098aa2de6",
+    "--base-sha",
+    "160d1201bed57d96de6fc8b1ae657bd098aa2de6",
+    "--staging",
+    "/home/jack/.t3/worktrees/skills/t3code-c4544fc5",
+    "--target",
+    "C8",
+    "--out",
+    "/tmp/issue-333/packet-325.md",
+    "--cutoff",
+    "2026-09-22T20:21:16Z",
+    "--execution-note",
+    "Focused tests under changed-tests.md default bounds; offline; no publication.",
+    "--experiment-label",
+    "Pinned review input",
+    "--subagent-model",
+    "claude-sonnet-5",
+    "--replay",
+    "/tmp/issue-333/replay-325"
+  ],
+  "exit_code": 0,
+  "stdout": "cutoff 2026-09-22T20:21:16Z; omitted after cutoff: {'reviews': 1, 'thread_comments': 0, 'conversation': 0, 'issue_comments': 0}\nwrote /tmp/issue-333/packet-325.md: 6 files, 2 commits, 0 reviews, 0 thread comments, 0 conversation comments, 0 issues, ref_pr=None\n",
+  "stderr": "",
+  "source_metadata": {
+    "headRefOid": "0ea287f0c07fda09b9d063612353dcef37f38063",
+    "lastEditedAt": null,
+    "first_review_on_pinned_head": "2026-09-22T20:21:17Z"
+  }
+}
