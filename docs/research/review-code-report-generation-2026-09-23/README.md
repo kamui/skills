@@ -14,8 +14,8 @@ python3 docs/research/review-code-report-generation-2026-09-23/demo.py --output 
 
 | Cell | Finalizer | Public bytes against baseline | Model-authored report, baseline | Generated `report.md` | Return under `artifacts` |
 | --- | --- | --- | ---: | ---: | ---: |
-| publishable | exit 0 | `payload.json`, `batch.json`, `fragments.md` identical | 10,054 chars | 7,052 chars | 295 chars |
-| implementation-gate | exit 0 | `record.json` identical apart from `finalization` | 9,351 chars | 6,734 chars | 263 chars |
+| publishable | exit 0 | `payload.json`, `batch.json`, `fragments.md` identical | 10,054 chars | 7,257 chars | 295 chars |
+| implementation-gate | exit 0 | `record.json` identical apart from `finalization` | 9,351 chars | 7,071 chars | 263 chars |
 | required-verification | refused at `accounting` | none produced | 12,692 chars | none | none |
 
 In both cells that finalize, each item body and the summary body appear exactly once in the generated report. The cells' `composition.json` already carried every accounting section, so they author no extra field. Their hand-written report goes away: the model now returns the finalizer's status and paths, or relays the generated file under `complete`.
@@ -24,4 +24,4 @@ The required-verification composition had no `record`, which the earlier compose
 
 ## Limits
 
-These are character counts over three saved compositions, not usage measurements. They show that report authorship and repeated output leave the post-validation tail. They do not show turn, token, cost or latency effects, and they make no recall claim; #347 runs the paired measurement. The generated report is shorter than the hand-written ones because it drops narration those reports added, such as run-identity prose and a restatement of the summary. It keeps every body, ledger row, routed item and drafted reply.
+These are character counts over three saved compositions, not usage measurements. They show that report authorship and repeated output leave the post-validation tail. They do not show turn, token, cost or latency effects, and they make no recall claim; #347 runs the paired measurement. The generated report is shorter than the hand-written ones because it drops narration those reports added, such as a restated summary and prose about how the run went. It keeps the run identity, every body, ledger row, routed item and drafted reply. It does not carry the pull request's open state or the reviewer identity, because the composition does not hold them.
