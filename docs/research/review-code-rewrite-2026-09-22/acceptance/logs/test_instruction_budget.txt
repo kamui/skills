@@ -1,0 +1,8 @@
+runtime total: 88,349 / 92,000 bytes; 12,367 words
+always loaded: 25,285 / 26,000 bytes; 3,435 words
+local primary: 64,918 / 67,000 bytes; 8,547 words
+PR primary: 64,052 / 67,000 bytes; 8,501 words
+verifier instructions: 19,288 / 20,000 bytes; 2,752 words
+verifier example brief: 22,786 / 24,000 bytes; 3,049 words
+ordinary verifier instructions: 14,056 bytes; 2,003 words
+ordinary verifier example brief: 16,460 bytes; 2,221 words

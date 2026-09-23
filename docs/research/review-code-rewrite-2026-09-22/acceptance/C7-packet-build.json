@@ -1,0 +1,40 @@
+{
+  "command": [
+    "python3",
+    "docs/research/tools/build_packet.py",
+    "--repo",
+    "kamui/skills",
+    "--pr",
+    "320",
+    "--head",
+    "1956058ea055937ed812b1ea893a783521a2cda0",
+    "--merge-base",
+    "c7a7afca3cb1164c256eb44ae814ecf581352c40",
+    "--base-sha",
+    "c7a7afca3cb1164c256eb44ae814ecf581352c40",
+    "--staging",
+    "/home/jack/.t3/worktrees/skills/t3code-c4544fc5",
+    "--target",
+    "C7",
+    "--out",
+    "/tmp/issue-333/packet-320.md",
+    "--cutoff",
+    "2026-09-20T17:24:26Z",
+    "--execution-note",
+    "Focused tests under changed-tests.md default bounds; offline; no publication.",
+    "--experiment-label",
+    "Pinned review input",
+    "--subagent-model",
+    "claude-sonnet-5",
+    "--replay",
+    "/tmp/issue-333/replay-320"
+  ],
+  "exit_code": 2,
+  "stdout": "",
+  "stderr": "build_packet: head mismatch: the pull request head is 573f1bf07ddf58bc0eed2b6a6b9094dd9fd9c77e, --head is 1956058ea055937ed812b1ea893a783521a2cda0\n",
+  "source_metadata": {
+    "headRefOid": "573f1bf07ddf58bc0eed2b6a6b9094dd9fd9c77e",
+    "lastEditedAt": "2026-09-20T17:52:36Z",
+    "first_review_on_pinned_head": "2026-09-20T17:24:27Z"
+  }
+}

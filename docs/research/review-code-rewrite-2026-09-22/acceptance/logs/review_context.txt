@@ -1,0 +1,11 @@
+self-test passed: path selection (literal paths, full manifest, filtered diff)
+self-test passed: prefix config pinned (diff.srcPrefix / diff.dstPrefix)
+self-test passed: chunks split on newline only (form feed, U+2028)
+self-test passed: store round trip (persisted diff, bounded reads, byte-exact recovery)
+self-test passed: store opened privately (symlink refused, pre-created file re-privatised)
+self-test passed: build call charges its other sections against the bound
+self-test passed: delta ancestor case (third commit on top of the second)
+self-test passed: delta amend case (branch rewritten with git commit --amend)
+self-test passed: delta merge-base case (base ref moved by a commit on another branch)
+self-test passed: --help documents selection and recovery
+self-test passed: --chunk-bytes is only used with --store

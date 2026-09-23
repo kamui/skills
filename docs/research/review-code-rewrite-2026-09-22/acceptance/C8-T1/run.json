@@ -1,0 +1,12 @@
+{
+  "id": "C8-T1",
+  "skill": "44b9331ae45650450fbd56fbf1f0ad1d29257b15",
+  "session_id": "f6c1174a-ccaf-4e15-b12c-eefd8ddca442",
+  "started_at": "2026-09-23T02:21:55.710138+00:00",
+  "cap_usd": 15,
+  "model": "claude-sonnet-5",
+  "effort": "high",
+  "exit_code": 0,
+  "elapsed_seconds": 487.891,
+  "finished_at": "2026-09-23T02:30:03.600842+00:00"
+}
