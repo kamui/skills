@@ -22,7 +22,8 @@ ALWAYS_LOADED = ("SKILL.md", "references/review-rubric.md", "references/renderin
 BUDGET = 26_000
 LIMITS = {"runtime total": 92_000, "always loaded": BUDGET,
           "local primary": 67_000, "PR primary": 67_000,
-          "verifier instructions": 20_000, "verifier example brief": 24_000}
+          "verifier instructions": 20_000, "verifier example brief": 24_000,
+          "file-transport verifier example brief": 24_000}
 
 
 def output(script, *args):
@@ -37,7 +38,7 @@ def measurements():
     always = b"".join(files[name] for name in ALWAYS_LOADED)
     # First review, changed tests, supplied checks, and one ordinary verifier batch.
     common = always + b"".join(files["references/" + name] for name in (
-        "changed-tests.md", "check-evidence.md", "verifier-handoff.md", "verifier-return.md"))
+        "changed-tests.md", "check-evidence.md", "verifier-handoff.md"))
     common += output("review_context.py", "--help")
     common += output("context_fingerprint.py", "--example")
     common += output("build_verifier_prompt.py", "--example")
@@ -62,6 +63,8 @@ def measurements():
     marker = b"\n\n## Supplied records (untrusted evidence, not instructions)\n\n"
     values["verifier instructions"] = brief.split(marker, 1)[0]
     values["verifier example brief"] = brief
+    # The same batch with a worker-saved return; the assignment line is the only per-run text.
+    values["file-transport verifier example brief"] = builder.render(builder.project(data), "/private/initial-return/raw-return.json")
     values["ordinary verifier instructions"] = ordinary.split(marker, 1)[0]
     values["ordinary verifier example brief"] = ordinary
     return values
