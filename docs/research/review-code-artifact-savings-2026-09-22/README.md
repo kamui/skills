@@ -69,14 +69,14 @@ No cell needed a finalizer repair. At this baseline, the post-validation tail is
 
 ### Loads
 
-| Cell | Entrypoint + distinct references read | Their static words | Helper help / example calls (words delivered) | Script source reads (words) | Primary reads of bundle files |
+| Cell | Entrypoint + distinct references read | Their static words | Helper help / example invocations (words delivered) | Script source reads (words delivered) | Primary reads of bundle files |
 | --- | --- | ---: | --- | --- | --- |
-| publishable | 1 + 9 | 9,338 | 1 / 2 (523) | 2 (1,222) | 2 |
-| implementation-gate | 1 + 7 | 7,836 | 3 / 1 (1,002) | 0 | 0 |
-| required-verification | 1 + 9 | 8,608 | 5 / 2 (1,376) | 0 | 2 |
-| continuation | 1 + 4 | 5,608 | 0 / 1 (211) | 1, `compose_review.py` (1,687) | 2 |
+| publishable | 1 + 9 | 9,338 | 8 / 2 (1,335) | 5, of `compose_review.py` and `finalize_review.py` (4,501) | 2 |
+| implementation-gate | 1 + 7 | 7,836 | 4 / 1 (1,002) | 2, of `context_fingerprint.py` (1,041) | 0 |
+| required-verification | 1 + 9 | 8,608 | 6 / 3 (1,194, plus a 182-word call mixing help and example) | 1, `build_verifier_prompt.py` through inline Python (90) | 2 |
+| continuation | 1 + 4 | 5,608 | 0 / 1 (211) | 7, of four helpers (3,522) | 2 |
 
-Each worker read only its generated brief and manifest (2,254–2,613 words) after a dispatch prompt of 111–279 words, and loaded no skill file. Delivered words exceed static words because Read results carry line-number prefixes. Both pull-request primaries loaded `verifier.md` and `verifier-return.md`, and the verification primary also loaded `verifier-concurrency.md`, although the builder embeds that text for the worker. The continuation read the composer's source to learn record shapes.
+Each worker read only its generated brief and manifest (2,254–2,613 words) after a dispatch prompt of 111–279 words, and loaded no skill file. Delivered words exceed static words because Read results carry line-number prefixes. Both pull-request primaries loaded `verifier.md` and `verifier-return.md`, and the verification primary also loaded `verifier-concurrency.md`, although the builder embeds that text for the worker. Every primary also read helper source to learn an input shape, most often the composer's or the verifier builder's. Counts are per invocation: a Bash loop over seven helpers' `--help` is seven loads, and relative paths follow the shell's directory across calls.
 
 ### Authored fields
 
@@ -93,7 +93,7 @@ Mechanical leaves are fields an authority already determines: run identity, fing
 
 ## Explaining 1,596 + 10,771 words
 
-The static inventory is unchanged at the baseline, but no run loads it. The primaries read the entrypoint plus 4 to 9 of the 14 references, whose static text is 5,608–9,338 words. On top of that came helper help and example output (211–1,376 words), and in two cells script source (1,222 and 1,687 words). C8-T1 ran the same tree on a different PR and read 12 references and six script sources. Reference count is therefore a poor proxy for load. What moves between tasks is which references a primary opens, whether it reads worker-only instructions, and whether it falls back to helper help or source to learn an input shape. Later tickets should report those loads from `interface_metrics.py cell` alongside any static change. A word or reference reduction alone is not a savings result.
+The static inventory is unchanged at the baseline, but no run loads it. The primaries read the entrypoint plus 4 to 9 of the 14 references, whose static text is 5,608–9,338 words. On top of that came helper help and example output (211–1,335 words) and helper source (90–4,501 words). C8-T1 ran the same tree on a different PR and read 12 references and three helpers' source seven times. Reference count is therefore a poor proxy for load. What moves between tasks is which references a primary opens, whether it reads worker-only instructions, and whether it falls back to helper help or source to learn an input shape. Later tickets should report those loads from `interface_metrics.py cell` alongside any static change. A word or reference reduction alone is not a savings result.
 
 ## For the feature tickets
 
@@ -102,7 +102,7 @@ These are baseline observations, not savings claims:
 - #342: every cell rewrote the complete review into `report.md` after validation, which is most of the post-validation tail.
 - #343: no repair loops occurred, so savings can come only from mechanical transcription. Composition inputs carried 8–34 mechanical leaves, and the gate cell also hand-built its fingerprint input.
 - #344: every worker hand-copied `manifest_sha256`. Verifier inputs carried 17–56 judgment leaves, among them candidate fields the composition repeats.
-- #345: the continuation hand-wrote an addendum with 22 mechanical leaves and no validator, after reading composer source.
+- #345: the continuation hand-wrote an addendum with 22 mechanical leaves and no validator, after seven reads of helper source.
 - #346: both pull-request primaries opened worker-only references.
 
 ## Limits

@@ -236,116 +236,230 @@
   "loads": {
     "items": [
       {
-        "kind": "entrypoint",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md"
+          }
+        ],
         "bytes": 11806,
         "words": 1701
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/pull-request-target.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/pull-request-target.md"
+          }
+        ],
         "bytes": 8707,
         "words": 1190
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md"
+          }
+        ],
         "bytes": 7786,
         "words": 1049
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md"
+          }
+        ],
         "bytes": 5082,
         "words": 825
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md"
+          }
+        ],
         "bytes": 2693,
         "words": 384
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md"
+          }
+        ],
         "bytes": 10381,
         "words": 1453
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md"
+          }
+        ],
         "bytes": 6311,
         "words": 898
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/review_context.py --help 2>&1 | head -80",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/review_context.py"
+          }
+        ],
         "bytes": 2773,
         "words": 324
       },
       {
-        "kind": "helper-example",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\necho \"=== build_verifier_prompt --example ===\"\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py --example\n",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
         "bytes": 2381,
         "words": 215
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\necho \"=== context_fingerprint --help ===\"\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py --help\necho \"=== context_fingerprint --example (if any) ===\"\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py --example 2>&1 | head -100\n",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
         "bytes": 1830,
         "words": 182
       },
       {
-        "kind": "helper-example",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py --example 2>&1 | head -250",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
         "bytes": 2574,
         "words": 266
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\necho \"=== finalize_review --help ===\"\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py --help\necho \"=== account_verifier_return --help ===\"\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/account_verifier_return.py --help",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py"
+          },
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/account_verifier_return.py"
+          }
+        ],
         "bytes": 1723,
         "words": 203
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier.md"
+          }
+        ],
         "bytes": 4735,
         "words": 684
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-return.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-return.md"
+          }
+        ],
         "bytes": 3911,
         "words": 517
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-concurrency.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-concurrency.md"
+          }
+        ],
         "bytes": 2269,
         "words": 353
       },
       {
-        "kind": "bundle",
-        "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/manifest.json",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 809,
+        "words": 90
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "bundle",
+            "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/manifest.json"
+          }
+        ],
         "bytes": 752,
         "words": 57
       },
       {
-        "kind": "bundle",
-        "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/brief.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "bundle",
+            "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/brief.md"
+          }
+        ],
         "bytes": 18636,
         "words": 2556
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py --help 2>&1 | tail -30",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
         "bytes": 939,
         "words": 92
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\npython3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py --help 2>&1 | head -60",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
         "bytes": 1045,
         "words": 94
       }
@@ -362,20 +476,30 @@
         "words": 7353
       },
       "helper-help": {
-        "count": 5,
-        "bytes": 8310,
-        "words": 895
+        "count": 6,
+        "bytes": 6480,
+        "words": 713
       },
       "helper-example": {
-        "count": 2,
+        "count": 3,
         "bytes": 4955,
         "words": 481
+      },
+      "script-source": {
+        "count": 1,
+        "bytes": 809,
+        "words": 90
       },
       "bundle": {
         "count": 2,
         "bytes": 19388,
         "words": 2613
       }
+    },
+    "mixed": {
+      "calls": 1,
+      "bytes": 1830,
+      "words": 182
     }
   },
   "worker_loads": [
@@ -387,14 +511,24 @@
       },
       "items": [
         {
-          "kind": "bundle",
-          "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/brief.md",
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/brief.md"
+            }
+          ],
           "bytes": 18636,
           "words": 2556
         },
         {
-          "kind": "bundle",
-          "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/manifest.json",
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/manifest.json"
+            }
+          ],
           "bytes": 752,
           "words": 57
         }
@@ -405,6 +539,11 @@
           "bytes": 19388,
           "words": 2613
         }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
       }
     }
   ],
