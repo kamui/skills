@@ -20,13 +20,14 @@ If `review-code` is not among the installed skills, stop with `missing-dependenc
 
 ## Inspect
 
-Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
+Invoke `review-code` with `mode: one-shot`, `return_format: artifacts`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, any merged-target publication authorization, and the duplicate-review shortcut on.
 Pass through supplied phase-1 packets, reviewer identity, focused-test policy, and up-front inputs under its Caller contract when provided.
 A supplied review-token command stays here rather than travelling with them: `references/publication.md` spends it on the writes below, and `review-code` never publishes.
 With no supplied reviewer identity, resolve it before the review runs as `references/publication.md` specifies. The tracker doc declares the reviewing app and client id, or a literal review-token command used as-is. For an app without a literal command, invoke `review-bot` when installed and take its returned login and command. Any `unavailable` result falls back to the authenticated user, records the reason in the report, and withholds gating. Resolution never stops the run; a token refused at publication still stops the write.
 `review-code`'s one-shot mode, under its Modes section, asks nothing and reports every routed item in the record.
-A named stop ends this run with its report; a completed record supplies everything needed below.
-For a merged target without separate publication authorization, report the complete would-be review and finish.
+A named stop ends this run with its report.
+Otherwise run `python3 <skill root>/scripts/finalize_review.py --check <private-dir>` under the skill root the record names; exit 0 means the returned artifacts supply everything below, and any other exit is an incomplete review: report its output and stop without publishing.
+For a merged target without separate publication authorization, report the returned `report.md` as the complete would-be review and finish.
 
 ## Publish
 
@@ -50,4 +51,4 @@ Read the published review back.
 Report the posted status, reviewed head, coverage, review URL, finding URLs, open questions, disputed findings, and anything that failed to publish.
 Use the posted form from `batch.json` after gating emission, not the advisory `payload.json` body.
 Every file coordinate is the same script-rendered commit-pinned link the summary carries.
-On a non-publishing retrospective run, report the complete would-be review in place of the review URL.
+On a non-publishing retrospective run, report `report.md`'s complete would-be review in place of the review URL.

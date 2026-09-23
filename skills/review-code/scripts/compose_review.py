@@ -125,14 +125,17 @@ Input schema (JSON object)::
       "observations": [{"fact": "One sentence.", "evidence": "`redis.conf:1903`."}],
       "prior_items": [
         {"id": "payments/retry-idempotency", "classification": "still-open",
-         "action": "must-fix", "note": "..."}
+         "action": "must-fix", "note": "...",
+         "reply": "...", "thread_id": "PRRT_...", "comment_id": 101}  # read by finalize_review.py only
       ],
-      "record": {                                # required by --profile implementation-gate; optional otherwise
+      "record": {                                # required by --profile implementation-gate; optional otherwise,
+                                                 # but finalize_review.py requires it for either profile
         "repository": "/abs/path/to/repo",       # the pinned repository: its path or owner/repo coordinate
-        "paths": {                               # every value an absolute path; these four keys are required
+        "paths": {                               # every value an absolute path; four keys are required per profile
           "private_dir": "/tmp/x", "store": "/tmp/x/review-context-<head>.json",
           "composition": "/tmp/x/composition.json",
-          "addenda": "/tmp/x/addenda",           # continuations append addendum-<n>.json here; the record itself never changes
+          "addenda": "/tmp/x/addenda",           # implementation-gate: continuations append addendum-<n>.json here
+          "skill_root": "/abs/skills/review-code", # publishable: where the publisher finds this skill's scripts
           "evidence_packet": "/tmp/x/evidence.md" # optional; any further named path is kept as given
         },
         "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance",
@@ -173,8 +176,12 @@ Input schema (JSON object)::
 
 The ``record`` section carries the private record's accounting so the
 printed local record is complete without the composition conversation.
-Its checks are contradictions between fields the reviewer already decided,
-never judgments. A requirement row has a source, a class (``acceptance``,
+A publishable composition may omit it here, as earlier callers did, but
+that composition alone cannot complete ``finalize_review.py``, which
+requires every section for both profiles. Its checks are contradictions
+between fields the reviewer already decided, never judgments. A record,
+or a chain file a carried task names, whose ``finalization`` names an
+unknown protocol or a report that does not exist establishes nothing. A requirement row has a source, a class (``acceptance``,
 ``supporting``, ``artifact``) and a disposition (``met``, ``partial``,
 ``not-verifiable``). Every file is ``reviewed``, ``ignored`` with a reason,
 or ``unreviewed``, once, and with ``--store`` the files are exactly the
@@ -239,6 +246,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from typing import Any
@@ -261,7 +269,12 @@ UNANCHORED_NOTE = (
 ITEM_INDEX_RE = re.compile(r"items\[(?P<index>[0-9]+)\]")
 PROFILES = ("publishable", "implementation-gate")
 RECORD_SCHEMA = "implementation-gate-record/2"
-RECORD_PATHS = ("private_dir", "store", "composition", "addenda")
+# The record paths each profile requires: a gate record names the addenda directory continuations append to, and a
+# publishable record names the skill root its publisher runs the gating and timing scripts from.
+RECORD_PATHS = {"publishable": ("private_dir", "store", "composition", "skill_root"),
+                "implementation-gate": ("private_dir", "store", "composition", "addenda")}
+# finalize_review.py writes this discriminator into a new gate record and a retained publishable composition.
+FINALIZATION_PROTOCOL = "review-code-finalization/1"
 REQUIREMENT_CLASSES = ("acceptance", "supporting", "artifact")
 REQUIREMENT_DISPOSITIONS = ("met", "partial", "not-verifiable")
 MANDATORY_KINDS = ("security", "compatibility")
@@ -961,9 +974,38 @@ def load_object(path: str) -> tuple[dict[str, Any] | None, str]:
     return (value, "") if isinstance(value, dict) else (None, "is not a JSON object")
 
 
+def finalization_problem(doc: dict[str, Any]) -> str:
+    """Why a chain file's finalization cannot be consumed, or ``""``.
+
+    A file without ``finalization`` predates it and keeps its existing validation. A file naming this protocol is
+    consumable only when the report it names exists: finalization promotes that report last, so an interrupted run
+    never falls back to the older route. Any other protocol is unknown and establishes nothing.
+    """
+    if "finalization" not in doc:
+        return ""
+    finalization = doc["finalization"]
+    protocol = finalization.get("protocol") if isinstance(finalization, dict) else None
+    if protocol != FINALIZATION_PROTOCOL:
+        return f"names unknown finalization protocol {json.dumps(protocol)}"
+    report = finalization.get("report")
+    if not isinstance(report, str) or not report.startswith("/"):
+        return "names no absolute finalization report"
+    if not os.path.isfile(report):
+        return f"names finalization report `{report}`, which does not exist, so its finalization did not complete"
+    return ""
+
+
+def load_chain(path: str) -> tuple[dict[str, Any] | None, str]:
+    """A chain file (record or addendum) whose finalization, if any, completed; or ``None`` and why."""
+    doc, why = load_object(path)
+    if doc is not None:
+        why = finalization_problem(doc)
+    return (None, why) if why else (doc, "")
+
+
 def chain_accounting(chain_file: str, name: str) -> tuple[str | None, str]:
     """The accounting path a chain file (record or addendum, version 1 or 2) records for batch ``name``."""
-    doc, why = load_object(chain_file)
+    doc, why = load_chain(chain_file)
     if doc is None:
         return None, f"chain file `{chain_file}` {why}"
     holder = doc["record"] if isinstance(doc.get("record"), dict) and "verification" in doc["record"] else doc
@@ -1039,8 +1081,8 @@ def read_verification(
     if carried_from is not None and (not isinstance(carried_from, str) or not carried_from.startswith("/")):
         report.add(f"{where}.allowance.carried_from", "record-paths", "must be null or the absolute path of the record or addendum a replacement carried its allowance from")
         carried_from = None
-    elif carried_from is not None and load_object(carried_from)[0] is None:
-        report.add(f"{where}.allowance.carried_from", "verification", f"`{carried_from}` {load_object(carried_from)[1]}; carried allowance needs the chain file it came from")
+    elif carried_from is not None and load_chain(carried_from)[0] is None:
+        report.add(f"{where}.allowance.carried_from", "verification", f"`{carried_from}` {load_chain(carried_from)[1]}; carried allowance needs the chain file it came from")
 
     tasks = read_rows(report, f"{where}.tasks", verification.get("tasks", []), ("id", "type", "ruling"))
     by_id: dict[str, dict[str, Any]] = {}
@@ -1146,6 +1188,7 @@ def read_record(
     questions: list[dict[str, Any]],
     priors: list[dict[str, Any]],
     store: dict[str, Any] | None,
+    profile: str,
 ) -> dict[str, Any]:
     """Check the private record's accounting for contradictions with the rendered items and run; see the docstring."""
     if not isinstance(record, dict):
@@ -1158,9 +1201,9 @@ def read_record(
     if not isinstance(paths, dict):
         report.add("record.paths", "schema", "`paths` must be an object of absolute paths")
         paths = {}
-    for key in RECORD_PATHS:
+    for key in RECORD_PATHS[profile]:
         if key not in paths:
-            report.add("record.paths", "record-paths", f"`{key}` is required so a fresh continuation can find the retained state")
+            report.add("record.paths", "record-paths", f"`{key}` is required under `{profile}` so a later reader can find the retained state")
     for key, value in paths.items():
         if not isinstance(value, str) or not value.startswith("/"):
             report.add(f"record.paths.{key}", "record-paths", "must be an absolute path")
@@ -1295,7 +1338,7 @@ def compose(
         check_status(report, summary["status"], run["coverage"], [f for _l, f, _t in findings], [q for _l, q, _t in questions], [p for _l, p in priors])
     record = None
     if run is not None and "record" in composition:
-        record = read_record(report, composition["record"], run, [f for _l, f, _t in findings], [q for _l, q, _t in questions], [p for _l, p in priors], store)
+        record = read_record(report, composition["record"], run, [f for _l, f, _t in findings], [q for _l, q, _t in questions], [p for _l, p in priors], store, profile)
     if report.lines or run is None or summary is None:
         return None, report.lines
 
@@ -1375,18 +1418,20 @@ def example_composition(profile: str) -> dict[str, Any]:
         "observations": [{"fact": "The first configuration sentence covers same-shard re-points more broadly than the implementation does.",
                           "evidence": "`redis.conf:1903`, `src/replication.c:2701`."}],
     }
+    private = "/tmp/review-code-XXXXXX"
+    paths = {"private_dir": private, "store": f"{private}/review-context-{head}.json",
+             "composition": f"{private}/composition.json", "skill_root": "/abs/path/to/skills/review-code"}
     if profile == "publishable":
         composition["run"]["repository_url"] = "https://github.com/acme/payments"
-        return composition
-    composition["run"].update({"target_kind": "range", "target": "main...HEAD", "change_description": "Add retries for charge submission",
-                               "specs": ["/abs/path/to/spec.md"]})
-    private = "/tmp/review-code-XXXXXX"
+        repository = "acme/payments"
+    else:
+        composition["run"].update({"target_kind": "range", "target": "main...HEAD", "change_description": "Add retries for charge submission",
+                                   "specs": ["/abs/path/to/spec.md"]})
+        repository = "/abs/path/to/checkout"
+        paths.update(addenda=f"{private}/addenda", evidence_packet="/abs/path/to/results.md", spec="/abs/path/to/spec.md")
     composition["record"] = {
-        "repository": "/abs/path/to/checkout",
-        "paths": {"private_dir": private, "store": f"{private}/review-context-{head}.json",
-                  "composition": f"{private}/composition.json", "addenda": f"{private}/addenda",
-                  "skill_root": "/abs/path/to/skills/review-code", "evidence_packet": "/abs/path/to/results.md",
-                  "spec": "/abs/path/to/spec.md"},
+        "repository": repository,
+        "paths": paths,
         "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
                           "evidence": "src/payments.ts:42 creates a key per attempt"}],
         "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/queue.ts", "state": "reviewed"},
