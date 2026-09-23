@@ -408,6 +408,11 @@ def implementation_gate() -> None:
             "withheld candidate without outstanding work", "--profile", "implementation-gate", needle="withheld")
     gate(outcome("Approved", [candidate_task("payments/retry-naming", "optional", ruling="withheld")], [batch_paths("initial")]),
          "withheld optional scrutiny stays optional")
+    for ruling in ("withheld", "unresolved"):
+        gate(outcome("Approved", [premise_task(ruling=ruling, trigger="optional")], [batch_paths("initial")]),
+             f"{ruling} optional premise stays optional")
+    refused(outcome("Approved", [premise_task(trigger="must-fix")], [batch_paths("initial")]), "verification",
+            "a premise trigger other than optional", "--profile", "implementation-gate", needle="only as `optional`")
     # No awaited route: required work is pending with no batch, and nothing is spent.
     gate(outcome("Incomplete", [premise_task(ruling="pending", batch=None)], [], outstanding=["premise-1: review-wait-unavailable"]),
          "pending premise with no route")

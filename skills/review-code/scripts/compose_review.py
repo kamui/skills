@@ -155,7 +155,8 @@ Input schema (JSON object)::
              "premise": "One sentence the no-blocker conclusion depends on.",
              "evidence": "src/charges.ts:31", "batch": "initial",
              "ruling": "holds",                  # holds | fails | unresolved | withheld | pending
-             "reopened_as": "..."}               # optional; required when fails
+             "reopened_as": "...",               # optional; required when fails
+             "trigger": "optional"}              # only on a premise added as optional scrutiny
           ],
           "batches": [{"name": "initial", "phase": "initial", "bundle": "/tmp/x/initial",
                        "raw_return": "/tmp/x/initial/raw-return.json",
@@ -187,9 +188,10 @@ candidate task with its id, a trigger other than ``optional``, and ruling
 ``confirmed``. A task names a recorded batch, is null only while
 ``pending``, or names ``carried:<absolute chain file>#<batch>`` when a
 replacement record carried it, which requires ``allowance.carried_from``.
-A ``withheld`` or ``pending`` task other than ``optional``, and an
-``unresolved`` premise that names no rendered question in ``reopened_as``,
-appear in ``outstanding`` as ``<task id>`` or ``<task id>: <reason>``. A
+A ``withheld`` or ``pending`` task, and an ``unresolved`` premise that names
+no rendered question in ``reopened_as``, appear in ``outstanding`` as
+``<task id>`` or ``<task id>: <reason>``, unless the task's ``trigger`` is
+``optional``: optional scrutiny never makes the review incomplete. A
 ``fails`` premise names in ``reopened_as`` a rendered item or an id that
 ``outstanding`` names. At most two batches are recorded, one per phase; a
 recorded or carried batch sets its spent flag, and without
@@ -995,13 +997,16 @@ def read_verification(
                 read_line(report, location, task, key)
             if task["ruling"] not in PREMISE_RULINGS:
                 report.add(location, "verification", f"a safety-premise task's `ruling` must be one of {list(PREMISE_RULINGS)}")
+            if task.get("trigger", "optional") != "optional":
+                report.add(location, "verification", "a safety-premise task carries `trigger` only as `optional`, for a premise added as optional scrutiny")
             reopened = task.get("reopened_as")
             if reopened is not None and not (isinstance(reopened, str) and reopened.strip() and "\n" not in reopened):
                 report.add(location, "schema", "`reopened_as` must be a one-line item id when present")
                 reopened = None
             if task["ruling"] == "fails" and not (reopened in rendered or (reopened and names_task(outstanding, reopened))):
                 report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as a rendered item or an `outstanding` entry")
-            if task["ruling"] == "unresolved" and reopened not in {q["id"] for q in questions} and not names_task(outstanding, identity):
+            if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
+                    and reopened not in {q["id"] for q in questions} and not names_task(outstanding, identity)):
                 report.add(location, "verification", f"premise `{identity}` is unresolved, so it names a rendered question in `reopened_as` or stays in `outstanding`")
         else:
             report.add(location, "verification", "`type` must be `candidate` or `safety-premise`")
