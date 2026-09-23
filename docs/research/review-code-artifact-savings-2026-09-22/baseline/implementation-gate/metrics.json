@@ -155,74 +155,160 @@
   "loads": {
     "items": [
       {
-        "kind": "entrypoint",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md"
+          }
+        ],
         "bytes": 11806,
         "words": 1701
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/local-targets.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/local-targets.md"
+          }
+        ],
         "bytes": 6956,
         "words": 1053
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md"
+          }
+        ],
         "bytes": 7786,
         "words": 1049
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md"
+          }
+        ],
         "bytes": 2693,
         "words": 384
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md"
+          }
+        ],
         "bytes": 5082,
         "words": 825
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md"
+          }
+        ],
         "bytes": 10381,
         "words": 1453
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md"
+          }
+        ],
         "bytes": 6311,
         "words": 898
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/continuation-addendum.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/continuation-addendum.md"
+          }
+        ],
         "bytes": 6047,
         "words": 872
       },
       {
-        "kind": "helper-help",
-        "what": "python3 scripts/review_context.py --help 2>&1 | head -60",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/review_context.py"
+          }
+        ],
         "bytes": 2773,
         "words": 324
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py --help 2>&1 | head -40",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
         "bytes": 939,
         "words": 92
       },
       {
-        "kind": "helper-example",
-        "what": "python3 scripts/compose_review.py --example --profile implementation-gate 2>&1 | head -200",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
         "bytes": 5194,
         "words": 450
       },
       {
-        "kind": "helper-help",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py --help 2>&1 | head -30; echo ---; python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py --help 2>&1 | head -40",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 3034,
+        "words": 410
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 8049,
+        "words": 631
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py"
+          }
+        ],
         "bytes": 1528,
         "words": 136
       }
@@ -239,7 +325,7 @@
         "words": 6534
       },
       "helper-help": {
-        "count": 3,
+        "count": 4,
         "bytes": 5240,
         "words": 552
       },
@@ -247,7 +333,17 @@
         "count": 1,
         "bytes": 5194,
         "words": 450
+      },
+      "script-source": {
+        "count": 2,
+        "bytes": 11083,
+        "words": 1041
       }
+    },
+    "mixed": {
+      "calls": 0,
+      "bytes": 0,
+      "words": 0
     }
   },
   "worker_loads": [],

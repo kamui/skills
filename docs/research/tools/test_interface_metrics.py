@@ -71,6 +71,14 @@ class Metrics(unittest.TestCase):
                                    ("t4", "Bash", {"command": f"cat {SKILL}/references/rendering.md"})]),
             result("t3", t(5), "def main(): pass"),
             result("t4", t(5), "# Render and validate\nalpha beta"),
+            # The shell stays in the skill root after t3's cd, so these relative paths resolve there.
+            assistant("r3b", t(5), [
+                ("t4a", "Bash", {"command": "for s in scripts/a.py scripts/b.py; do echo $s; python3 $s --help | head; done"}),
+                ("t4b", "Bash", {"command": "grep -n x scripts/compose_review.py && python3 scripts/review_context.py --example"}),
+                ("t4c", "Bash", {"command": "python3 - <<'EOF'\nprint(open('scripts/validate_review.py').read())\nEOF"})]),
+            result("t4a", t(5), "one two"),
+            result("t4b", t(5), "mixed output here"),
+            result("t4c", t(5), "source"),
             assistant("r4", t(6), [("t5", "Write", {"file_path": str(composition), "content": "x" * 120})]),
             result("t5", t(7), "File created"),
             assistant("r5", t(8), [("t6", "Bash", {"command": f"python3 {SKILL}/scripts/finalize_review.py --store s p; echo \"exit=$?\""})]),
@@ -104,9 +112,9 @@ class Metrics(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stderr)
         report = json.loads(out.stdout)
         root_usage = report["usage"]["root"]["total"]
-        self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (8, 8, 8000))
-        self.assertEqual(report["usage"]["all"]["turns"], 10)
-        self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 8})
+        self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (9, 11, 9000))
+        self.assertEqual(report["usage"]["all"]["turns"], 11)
+        self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 9})
         self.assertEqual(report["harness"]["subagents_spawned"], 1)
         finalizer = report["finalizer"]
         self.assertEqual((finalizer["invocations"], finalizer["failed"], finalizer["repair_loops"]), (2, 1, 1))
@@ -115,10 +123,14 @@ class Metrics(unittest.TestCase):
         self.assertEqual(finalizer["validation"]["seconds_after"], 18.0)
         totals = report["loads"]["totals"]
         self.assertEqual(totals["entrypoint"]["count"], 1)
-        self.assertEqual(totals["helper-example"]["count"], 1)
-        self.assertEqual(totals["script-source"]["count"], 1)
         self.assertEqual(totals["reference"], {"count": 1, "bytes": 32, "words": 6})
-        self.assertNotIn("helper-help", totals)
+        self.assertEqual(totals["helper-help"], {"count": 2, "bytes": 7, "words": 2})
+        self.assertEqual(totals["helper-example"], {"count": 2, "bytes": 11, "words": 2})
+        self.assertEqual(totals["script-source"], {"count": 3, "bytes": 22, "words": 4})
+        self.assertEqual(report["loads"]["mixed"], {"calls": 1, "bytes": 17, "words": 3})
+        loops = [item["loads"] for item in report["loads"]["items"] if item["tool"] == "Bash"][3]
+        self.assertEqual(loops, [{"kind": "helper-help", "what": f"{SKILL}/scripts/a.py"},
+                                 {"kind": "helper-help", "what": f"{SKILL}/scripts/b.py"}])
         worker_loads = report["worker_loads"][0]
         self.assertEqual(worker_loads["totals"]["bundle"]["count"], 1)
         self.assertEqual(worker_loads["dispatch_prompt"]["words"], 6)

@@ -26,15 +26,20 @@ Usage::
   successful call's result time, then the root turns, tool calls and seconds after it to the last
   assistant line. With no finalizer call, ``validation`` is ``unavailable``; ``after_last_addendum``
   does the same from the last write to an ``addenda/`` JSON file, when one exists.
-- ``loads``: every root read of a file under the skill root (Read, or a Bash ``cat``/``sed``/
-  ``head``/``tail``/``less``/``bat``/``grep``/``rg``/``awk``/``nl`` naming a path it does not run
-  with Python, after expanding one-line ``NAME=value`` assignments and skill-relative paths
-  following a ``cd`` into the skill) classified ``entrypoint``, ``reference`` or
-  ``script-source``, and every Bash ``--help`` or ``--example`` call of a skill script as
-  ``helper-help`` or ``helper-example`` by the first such flag in the call, with result bytes and
-  words as delivered to the model (Read results include the harness's line-number prefixes).
-  ``worker_loads`` applies the same rule to each worker, adds reads of verifier bundle files as
-  ``bundle``, and counts the dispatch prompt each worker received.
+- ``loads``: each root load of a skill file, classified ``entrypoint``, ``reference`` or
+  ``script-source``, and each helper run with ``--help`` or ``--example`` as ``helper-help`` or
+  ``helper-example``. A load is a Read of a skill file; a Bash reader (``cat``/``sed``/``head``/
+  ``tail``/``less``/``bat``/``grep``/``rg``/``awk``/``nl``) naming a skill file it does not run, one
+  load per file named; an ``open("...")`` of a skill file in inline Python; or one helper
+  invocation. A Bash call is read after substituting one-line ``NAME=value`` assignments and
+  unrolling simple ``for`` loops, and relative paths resolve against the shell's directory, which
+  starts at the task root and follows every top-level ``cd`` across calls, as the harness keeps it.
+  Each item lists its call's loads with the call's result bytes and words as delivered (Read
+  results include the harness's line-number prefixes). Each total counts invocations of its kind
+  and the output of calls making only that kind of load; a call mixing kinds puts its output in
+  ``mixed``, because one result cannot be split by kind. ``worker_loads`` applies the same rule to
+  each worker, adds reads of verifier bundle files as ``bundle``, and counts the dispatch prompt
+  each worker received.
 - ``authored``: every Write/Edit/MultiEdit and heredoc Bash write, root and workers, with
   characters by artifact class, and the ``fields`` inventory of each JSON artifact the model wrote
   that still exists under the task root (``written_by: tool``). A known-shape JSON file under
@@ -75,6 +80,7 @@ import agent_effort  # noqa: E402
 import transcript_usage  # noqa: E402
 
 READERS = re.compile(r"(?:^|[\s;&|(])(?:cat|sed|head|tail|less|bat|batcat|grep|rg|awk|nl)\b")
+LOOP = re.compile(r"for\s+(\w+)\s+in\s+([^;\n]+?)\s*(?:;|\n)\s*do\b(.*?)(?:;|\n)\s*done\b", re.S)
 RUN_SCRIPT = re.compile(r"python3?\s+(?:-\S+\s+)*[\"']?(?P<path>[^\s\"']*?(?P<name>[\w]+\.py))[\"']?(?P<args>[^\n|;&]*)")
 FINALIZERS = ("finalize_review.py", "compose_review.py")
 FAILED_TEXT = re.compile(r"(?m)^(?:Exit code [1-9]|\s*exit(?: code)?\s*[=:]\s*[1-9])|failed with exit [1-9]")
@@ -179,69 +185,108 @@ def classify_path(path: str, skill_root: str) -> Optional[str]:
     return "other-skill-file"
 
 
-def expand(command: str, skill_root: str) -> str:
-    """Substitute simple NAME=value assignments and resolve skill-relative paths after a cd into the skill.
+def expand(command: str) -> str:
+    """Substitute one-line ``NAME=value`` assignments and unroll simple ``for`` loops.
 
-    Only what a reader needs to attribute a load: literal assignments on their own line, and
-    ``scripts/``, ``references/`` or ``SKILL.md`` paths once a ``cd`` names the skill root.
+    A loop ``for V in A B C; do BODY; done`` becomes BODY once per item with ``$V`` replaced, so each
+    helper call inside it counts. Nothing else is interpreted.
     """
     values = {}
     for name, value in re.findall(r"(?m)^\s*(?:export\s+)?([A-Za-z_]\w*)=(\S+)\s*$", command):
         values[name] = value.strip("\"'")
     for name in sorted(values, key=len, reverse=True):
         command = re.sub(r"\$\{%s\}|\$%s\b" % (name, name), lambda _: values[name], command)
-    root = skill_root.rstrip("/")
-    if re.search(r"(?m)(?:^|&&|;)\s*cd\s+[\"']?%s[\"']?\s*(?:$|&&|;)" % re.escape(root), command):
-        command = re.sub(r"(?<![\w/.-])((?:scripts|references)/[\w./-]+|SKILL\.md)", root + r"/\1", command)
-    return command
+
+    def unroll(match):
+        variable, items, body = match.group(1), match.group(2).split(), match.group(3)
+        return "\n".join(re.sub(r"\$\{%s\}|\$%s\b" % (variable, variable), lambda _: item, body) for item in items)
+    return LOOP.sub(unroll, command)
 
 
-def load_kind(call: dict, skill_root: str) -> tuple[Optional[str], Optional[str]]:
-    """The load class and the path or command it names, or (None, None)."""
-    data = call["input"]
-    if call["name"] == "Read":
-        path = str(data.get("file_path", ""))
-        kind = classify_path(path, skill_root)
-        if kind is None and re.search(r"/(brief\.md|manifest\.json)$", path):
-            return "bundle", path
-        return kind, path
-    if call["name"] != "Bash":
-        return None, None
-    command = expand(str(data.get("command", "")), skill_root)
-    for match in RUN_SCRIPT.finditer(command):
-        if match.group("path").startswith(skill_root.rstrip("/") + "/scripts/") or match.group("path").startswith("scripts/"):
-            if re.search(r"(?:^|\s)(?:--help|-h)(?:\s|$)", match.group("args")):
-                return "helper-help", command
-            if re.search(r"(?:^|\s)--example(?:\s|$)", match.group("args")):
-                return "helper-example", command
-    if READERS.search(command):
-        executed = {match.group("path") for match in RUN_SCRIPT.finditer(command)}
-        for path in re.findall(re.escape(skill_root.rstrip("/")) + r"/[\w./-]+", command):
-            if path in executed:
+def resolve(path: str, cwd: str) -> str:
+    return os.path.normpath(path if path.startswith("/") else os.path.join(cwd, path))
+
+
+def bash_loads(command: str, skill_root: str, cwd: str) -> tuple[list[tuple[str, str]], str]:
+    """Every load one Bash call makes, in order, and the working directory it leaves.
+
+    The harness keeps the shell's directory between calls, so a top-level ``cd`` persists and
+    relative ``scripts/`` or ``references/`` paths resolve against it. Each helper run with
+    ``--help`` or ``--example`` is one load; each reader command naming a skill file or a
+    verifier bundle file it does not run is one load; each ``open("...")`` of a skill file inside
+    inline Python is one load. A ``cd`` inside a subshell is not tracked.
+    """
+    found: list[tuple[str, str]] = []
+    command = expand(command)
+    for segment in re.split(r"\n|&&|\|\||;", command):
+        move = re.match(r"\s*cd\s+[\"']?([^\s\"']+)[\"']?\s*$", segment)
+        if move:
+            cwd = resolve(move.group(1), cwd)
+            continue
+        executed = set()
+        for match in RUN_SCRIPT.finditer(segment):
+            path = resolve(match.group("path"), cwd)
+            executed.add(path)
+            if classify_path(path, skill_root) != "script-source":
                 continue
-            kind = classify_path(path, skill_root)
-            if kind in ("entrypoint", "reference", "script-source"):
-                return kind, path
-        if re.search(r"/(brief\.md|manifest\.json)\b", command):
-            return "bundle", command
-    return None, None
+            if re.search(r"(?:^|\s)(?:--help|-h)(?:\s|$)", match.group("args")):
+                found.append(("helper-help", path))
+            elif re.search(r"(?:^|\s)--example(?:\s|$)", match.group("args")):
+                found.append(("helper-example", path))
+        if READERS.search(segment):
+            for token in re.findall(r"[\"']?([\w./-]*(?:SKILL\.md|\.md|\.py|\.json))[\"']?", segment):
+                path = resolve(token, cwd)
+                kind = classify_path(path, skill_root)
+                if path in executed:
+                    continue
+                if kind in ("entrypoint", "reference", "script-source"):
+                    found.append((kind, path))
+                elif kind is None and re.search(r"/(brief\.md|manifest\.json)$", path):
+                    found.append(("bundle", path))
+    if re.search(r"python3?\s+(?:-c\b|-\s)", command):
+        for token in re.findall(r"open\(\s*[\"']([^\"']+)[\"']", command):
+            path = resolve(token, cwd)
+            if classify_path(path, skill_root) in ("entrypoint", "reference", "script-source"):
+                found.append((classify_path(path, skill_root), path))
+    return found, cwd
 
 
-def loads(calls: list[dict], results: dict, skill_root: str) -> dict:
+def loads(calls: list[dict], results: dict, skill_root: str, cwd: str) -> dict:
+    """Loads per call, with totals: each kind's invocations and the output of calls of that kind alone.
+
+    A call that makes loads of more than one kind delivers one result the tool cannot split, so its
+    bytes and words go to ``mixed`` rather than to any kind; its invocations still count.
+    """
     items = []
     for call in calls:
-        kind, what = load_kind(call, skill_root)
-        if kind is None:
+        data = call["input"]
+        if call["name"] == "Read":
+            path = str(data.get("file_path", ""))
+            kind = classify_path(path, skill_root)
+            if kind is None and re.search(r"/(brief\.md|manifest\.json)$", path):
+                kind = "bundle"
+            found = [(kind, path)] if kind in ("entrypoint", "reference", "script-source", "bundle") else []
+        elif call["name"] == "Bash":
+            found, cwd = bash_loads(str(data.get("command", "")), skill_root, cwd)
+        else:
+            found = []
+        if not found:
             continue
         text = results.get(call["id"], {}).get("text", "")
-        items.append({"kind": kind, "what": what, "bytes": len(text.encode("utf-8")), "words": words(text)})
+        items.append({"tool": call["name"], "loads": [{"kind": kind, "what": what} for kind, what in found],
+                      "bytes": len(text.encode("utf-8")), "words": words(text)})
     totals: dict = {}
+    mixed = {"calls": 0, "bytes": 0, "words": 0}
     for item in items:
-        total = totals.setdefault(item["kind"], {"count": 0, "bytes": 0, "words": 0})
-        total["count"] += 1
-        total["bytes"] += item["bytes"]
-        total["words"] += item["words"]
-    return {"items": items, "totals": totals}
+        kinds = {load["kind"] for load in item["loads"]}
+        for load in item["loads"]:
+            totals.setdefault(load["kind"], {"count": 0, "bytes": 0, "words": 0})["count"] += 1
+        target = totals[kinds.pop()] if len(kinds) == 1 else mixed
+        if target is mixed:
+            mixed["calls"] += 1
+        target["bytes"] += item["bytes"]
+        target["words"] += item["words"]
+    return {"items": items, "totals": totals, "mixed": mixed}
 
 
 def finalizer(calls: list[dict], results: dict, lines: list[dict]) -> dict:
@@ -409,7 +454,7 @@ def cell(args: argparse.Namespace) -> dict:
                        and results.get(call["id"], {}).get("at")]
     report["after_last_addendum"] = (tail(root_lines, results[addendum_writes[-1]["id"]]["at"]) if addendum_writes
                                      else {"status": "unavailable", "reason": "no addendum write"})
-    report["loads"] = loads(calls, results, skill_root)
+    report["loads"] = loads(calls, results, skill_root, task_root)
     worker_loads, authored_calls = [], [dict(entry, agent="root") for entry in written(calls)]
     for path in args.worker:
         lines = load_lines(path)
@@ -418,7 +463,7 @@ def cell(args: argparse.Namespace) -> dict:
         prompt = text_of((first or {}).get("message", {}).get("content")) if first else ""
         worker_loads.append({"transcript": path, "dispatch_prompt": {"bytes": len(prompt.encode("utf-8")),
                                                                      "words": words(prompt)},
-                             **loads(worker_calls, worker_results, skill_root)})
+                             **loads(worker_calls, worker_results, skill_root, task_root)})
         authored_calls.extend(dict(entry, agent=os.path.basename(path)) for entry in written(worker_calls))
     report["worker_loads"] = worker_loads
     by_class: dict = {}

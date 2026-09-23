@@ -230,56 +230,153 @@
   "loads": {
     "items": [
       {
-        "kind": "entrypoint",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md"
+          }
+        ],
         "bytes": 11806,
         "words": 1701
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/continuation-addendum.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/continuation-addendum.md"
+          }
+        ],
         "bytes": 6047,
         "words": 872
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md"
+          }
+        ],
         "bytes": 7786,
         "words": 1049
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md"
+          }
+        ],
         "bytes": 10381,
         "words": 1453
       },
       {
-        "kind": "reference",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md"
+          }
+        ],
         "bytes": 5082,
         "words": 825
       },
       {
-        "kind": "helper-example",
-        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py --example 2>&1 | head -150",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
         "bytes": 2341,
         "words": 211
       },
       {
-        "kind": "bundle",
-        "what": "ls /tmp/rcs-savings/baseline/continuation/work/followup && echo --- && cat /tmp/rcs-savings/baseline/continuation/work/followup/manifest.json",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 2554,
+        "words": 257
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 5116,
+        "words": 490
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 1936,
+        "words": 209
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "bundle",
+            "what": "/tmp/rcs-savings/baseline/continuation/work/followup/manifest.json"
+          }
+        ],
         "bytes": 760,
         "words": 39
       },
       {
-        "kind": "bundle",
-        "what": "/tmp/rcs-savings/baseline/continuation/work/followup/brief.md",
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "bundle",
+            "what": "/tmp/rcs-savings/baseline/continuation/work/followup/brief.md"
+          }
+        ],
         "bytes": 15722,
         "words": 2197
       },
       {
-        "kind": "script-source",
-        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py",
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/validate_review.py"
+          },
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py"
+          }
+        ],
+        "bytes": 10510,
+        "words": 879
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
         "bytes": 13656,
         "words": 1687
       }
@@ -300,16 +397,21 @@
         "bytes": 2341,
         "words": 211
       },
+      "script-source": {
+        "count": 7,
+        "bytes": 33772,
+        "words": 3522
+      },
       "bundle": {
         "count": 2,
         "bytes": 16482,
         "words": 2236
-      },
-      "script-source": {
-        "count": 1,
-        "bytes": 13656,
-        "words": 1687
       }
+    },
+    "mixed": {
+      "calls": 0,
+      "bytes": 0,
+      "words": 0
     }
   },
   "worker_loads": [
@@ -321,14 +423,24 @@
       },
       "items": [
         {
-          "kind": "bundle",
-          "what": "/tmp/rcs-savings/baseline/continuation/work/followup/brief.md",
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/baseline/continuation/work/followup/brief.md"
+            }
+          ],
           "bytes": 15722,
           "words": 2197
         },
         {
-          "kind": "bundle",
-          "what": "/tmp/rcs-savings/baseline/continuation/work/followup/manifest.json",
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/baseline/continuation/work/followup/manifest.json"
+            }
+          ],
           "bytes": 780,
           "words": 57
         }
@@ -339,6 +451,11 @@
           "bytes": 16502,
           "words": 2254
         }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
       }
     }
   ],
