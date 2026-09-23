@@ -32,12 +32,14 @@ Usage::
   ``tail``/``less``/``bat``/``grep``/``rg``/``awk``/``nl``) naming a skill file it does not run, one
   load per file named; an ``open("...")`` of a skill file in inline Python; or one helper
   invocation. A Bash call is read after substituting one-line ``NAME=value`` assignments and
-  unrolling simple ``for`` loops. Relative paths resolve against the shell's directory: the ``cwd``
-  the harness records on the call's transcript line, or, where a line records none, the directory
-  tracked from the task root through every top-level ``cd``, which the harness keeps across calls.
-  Heuristic limits: a ``cd`` inside a subshell, ``cd ~`` or ``cd -`` is not interpreted, a reader
-  given a directory rather than a file counts nothing, and an inline-Python ``open()`` resolves
-  against the directory at the end of its call.
+  unrolling simple ``for`` loops. Relative paths resolve against the directory the call starts in:
+  the ``cwd`` the harness records on the previous call's result line, or for a transcript's first
+  call its own line's ``cwd``. The call's own line is not used later, because in a message with
+  several tool calls it can record where the call ended. Where no line records a directory, the
+  directory is tracked from the task root through every top-level ``cd``. Within a call, top-level
+  ``cd`` commands move it. Heuristic limits: a ``cd`` inside a subshell is not tracked, ``cd ~`` and
+  ``cd -`` resolve literally as path names, a reader given a directory rather than a file counts
+  nothing, and an inline-Python ``open()`` resolves against the directory at the end of its call.
   Each item lists its call's loads with the call's result bytes and words as delivered (Read
   results include the harness's line-number prefixes). Each total counts invocations of its kind
   and the output of calls making only that kind of load; a call mixing kinds puts its output in
@@ -168,7 +170,8 @@ def calls_and_results(lines: list[dict]) -> tuple[list[dict], dict]:
                                   "cwd": line.get("cwd") if isinstance(line.get("cwd"), str) else None})
             elif line.get("type") == "user" and item.get("type") == "tool_result":
                 results[item.get("tool_use_id")] = {"text": text_of(item.get("content")),
-                                                   "error": bool(item.get("is_error")), "at": stamp(line)}
+                                                   "error": bool(item.get("is_error")), "at": stamp(line),
+                                                   "cwd": line.get("cwd") if isinstance(line.get("cwd"), str) else None}
     return calls, results
 
 
@@ -263,8 +266,13 @@ def loads(calls: list[dict], results: dict, skill_root: str, cwd: str) -> dict:
     bytes and words go to ``mixed`` rather than to any kind; its invocations still count.
     """
     items = []
+    previous = None
     for call in calls:
         data = call["input"]
+        # A call starts where the previous call's result left the shell. A tool_use line can record
+        # where its own call ended (seen in multi-tool messages), so it serves only for the first call.
+        recorded = results.get(previous["id"], {}).get("cwd") if previous else call["cwd"]
+        previous = call
         if call["name"] == "Read":
             path = str(data.get("file_path", ""))
             kind = classify_path(path, skill_root)
@@ -272,7 +280,7 @@ def loads(calls: list[dict], results: dict, skill_root: str, cwd: str) -> dict:
                 kind = "bundle"
             found = [(kind, path)] if kind in ("entrypoint", "reference", "script-source", "bundle") else []
         elif call["name"] == "Bash":
-            found, cwd = bash_loads(str(data.get("command", "")), skill_root, call["cwd"] or cwd)
+            found, cwd = bash_loads(str(data.get("command", "")), skill_root, recorded or cwd)
         else:
             found = []
         if not found:

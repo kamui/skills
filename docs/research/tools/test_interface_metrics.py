@@ -28,9 +28,12 @@ def assistant(request: str, at: str, tools: list = (), text: str = None) -> dict
                                   "cache_creation": {"ephemeral_5m_input_tokens": 0, "ephemeral_1h_input_tokens": 100}}}}
 
 
-def result(tool_id: str, at: str, text: str, error: bool = False) -> dict:
-    return {"type": "user", "timestamp": at, "message": {"content": [
+def result(tool_id: str, at: str, text: str, error: bool = False, cwd: str = None) -> dict:
+    line = {"type": "user", "timestamp": at, "message": {"content": [
         {"type": "tool_result", "tool_use_id": tool_id, "content": text, "is_error": error}]}}
+    if cwd:
+        line["cwd"] = cwd
+    return line
 
 
 def run(*args: str) -> subprocess.CompletedProcess:
@@ -78,7 +81,12 @@ class Metrics(unittest.TestCase):
                 ("t4c", "Bash", {"command": "python3 - <<'EOF'\nprint(open('scripts/validate_review.py').read())\nEOF"})]),
             result("t4a", t(5), "one two"),
             result("t4b", t(5), "mixed output here"),
-            result("t4c", t(5), "source"),
+            result("t4c", t(5), "source", cwd=SKILL),
+            # A tool_use line in a multi-tool message can record where its call ended; the previous
+            # result's cwd, the skill root, is where this call starts.
+            dict(assistant("r3c", t(5), [("t4d", "Bash", {"command": "python3 scripts/compose_review.py --help; cd /repo"})]),
+                 cwd="/repo"),
+            result("t4d", t(5), "help", cwd="/repo"),
             assistant("r4", t(6), [("t5", "Write", {"file_path": str(composition), "content": "x" * 120})]),
             result("t5", t(7), "File created"),
             assistant("r5", t(8), [("t6", "Bash", {"command": f"python3 {SKILL}/scripts/finalize_review.py --store s p; echo \"exit=$?\""})]),
@@ -102,10 +110,9 @@ class Metrics(unittest.TestCase):
         worker = self.write("agent-1.jsonl", [
             {"type": "user", "timestamp": "2026-09-22T10:00:13Z", "message": {"content": "Read the brief at /b/brief.md now."}},
             assistant("w1", "2026-09-22T10:00:14Z", [("u1", "Read", {"file_path": "/b/brief.md"})]),
-            result("u1", "2026-09-22T10:00:15Z", "brief text here"),
-            # The harness records the worker's directory as the skill root; no cd precedes this read.
-            dict(assistant("w1b", "2026-09-22T10:00:15Z", [("u1b", "Bash", {"command": "cat references/verifier.md"})]),
-                 cwd=SKILL),
+            result("u1", "2026-09-22T10:00:15Z", "brief text here", cwd=SKILL),
+            # The worker's shell starts in the skill root, as its previous result records; no cd precedes this read.
+            assistant("w1b", "2026-09-22T10:00:15Z", [("u1b", "Bash", {"command": "cat references/verifier.md"})]),
             result("u1b", "2026-09-22T10:00:15Z", "verifier text"),
             assistant("w2", "2026-09-22T10:00:16Z", [("u2", "Write", {"file_path": "/b/raw-return.json", "content": "{}"})]),
         ])
@@ -116,9 +123,9 @@ class Metrics(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stderr)
         report = json.loads(out.stdout)
         root_usage = report["usage"]["root"]["total"]
-        self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (9, 11, 9000))
-        self.assertEqual(report["usage"]["all"]["turns"], 12)
-        self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 9})
+        self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (10, 12, 10000))
+        self.assertEqual(report["usage"]["all"]["turns"], 13)
+        self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 10})
         self.assertEqual(report["harness"]["subagents_spawned"], 1)
         finalizer = report["finalizer"]
         self.assertEqual((finalizer["invocations"], finalizer["failed"], finalizer["repair_loops"]), (2, 1, 1))
@@ -128,7 +135,7 @@ class Metrics(unittest.TestCase):
         totals = report["loads"]["totals"]
         self.assertEqual(totals["entrypoint"]["count"], 1)
         self.assertEqual(totals["reference"], {"count": 1, "bytes": 32, "words": 6})
-        self.assertEqual(totals["helper-help"], {"count": 2, "bytes": 7, "words": 2})
+        self.assertEqual(totals["helper-help"], {"count": 3, "bytes": 11, "words": 3})
         self.assertEqual(totals["helper-example"], {"count": 2, "bytes": 11, "words": 2})
         self.assertEqual(totals["script-source"], {"count": 3, "bytes": 22, "words": 4})
         self.assertEqual(report["loads"]["mixed"], {"calls": 1, "bytes": 17, "words": 3})
