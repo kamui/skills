@@ -80,10 +80,11 @@ FINALIZERS = ("finalize_review.py", "compose_review.py")
 FAILED_TEXT = re.compile(r"(?m)^(?:Exit code [1-9]|\s*exit(?: code)?\s*[=:]\s*[1-9])|failed with exit [1-9]")
 
 # (artifact, JSON-pointer pattern) -> class. The first matching pattern wins; "*" is one segment.
+# An empty list is one leaf at its own pointer, so a list field names both the list and its items.
 MECHANICAL = {
-    "composition": ["/run/target_kind", "/run/target", "/run/tree", "/run/change_description", "/run/specs/*",
-                    "/run/head", "/run/base_ref", "/run/base_sha", "/run/merge_base", "/run/context",
-                    "/run/issues/*", "/run/repository_url", "/run/merged", "/run/publication_authorized",
+    "composition": ["/run/target_kind", "/run/target", "/run/tree", "/run/change_description", "/run/specs",
+                    "/run/specs/*", "/run/head", "/run/base_ref", "/run/base_sha", "/run/merge_base", "/run/context",
+                    "/run/issues", "/run/issues/*", "/run/repository_url", "/run/merged", "/run/publication_authorized",
                     "/run/prior_head", "/record/repository", "/record/paths/*", "/record/files/*/path",
                     "/record/check_evidence/*/head", "/record/verification/batches/*/name",
                     "/record/verification/batches/*/phase", "/record/verification/batches/*/bundle",
