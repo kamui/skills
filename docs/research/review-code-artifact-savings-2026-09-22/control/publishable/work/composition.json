@@ -1,0 +1,27 @@
+{
+  "run": {
+    "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "context": "45a2fe742898267c6a52acfad4ff52cb5b988f8eb671321fe4749f479997822f",
+    "issues": ["example/ledger#3"],
+    "coverage": "complete",
+    "merged": false,
+    "repository_url": "https://github.com/example/ledger"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Add `--format csv` to `ledger statement` via a new `ledger/export.py` reusing `statement_rows` (PR body; closes #3).",
+    "issue_fit": "Met — all four acceptance criteria of #3 (csv option with text default, header row, text decimal format, csv.reader round-trip) are implemented.",
+    "coverage": "All 3 changed files reviewed against the complete merge-base diff. Reviewer-executed full suite at the head in a disposable export: 16 tests, OK. Newline/CR descriptions checked to round-trip through csv.reader. No verification workers were needed: no must-fix, security, data-integrity, or compatibility candidate survived and no safety-premise check applied."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The round-trip test covers a comma and quotes but not the newline case named in acceptance criterion 4; a manual check shows `csv.writer` quoting handles it.",
+      "evidence": "`tests/test_export.py:21-23`, `ledger/export.py:16-18`."
+    }
+  ]
+}

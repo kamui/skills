@@ -1,0 +1,2 @@
+transcript.jsonl lines=26 models=claude-sonnet-5×26 efforts=high×26
+agent-aac1506728e6717fa.jsonl lines=8 models=claude-sonnet-5×8 efforts=high×8

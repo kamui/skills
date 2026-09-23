@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "body": "**Approved (advisory)** \u2014 no findings.\n\n**Intent:** Add a read-only `delegate` role that owners grant and revoke per account (issue #5; PR title/body).\n\n**Issue fit:** All five acceptance criteria of #5 and the PR-body promises are met.\n\n**Coverage:** Complete merge-base diff (3 files) reviewed; full unittest suite run once at the head, 17 tests pass; two authorization safety premises checked by one fresh verifier batch, both hold.\n\n**Reviewed:** `a13922e` against merge-base `2301c83`.\n\n## Observations\n\n- `Ledger.grant` and `Ledger.revoke` also raise LedgerError for an unknown account via `get`, which their docstrings do not name. Evidence: `ledger/accounts.py:52-64`, `AGENTS.md`.\n\n<!-- review-run head=a13922e76f42d9757608530348200affbf3bde2f base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-24 context=0a72f34a0de2b71f1b30b8c3a0632038c1055de08f6a976fce5b959763524489 issues=example/ledger#5 coverage=complete -->\n",
+    "trailer": "<!-- review-run head=a13922e76f42d9757608530348200affbf3bde2f base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-24 context=0a72f34a0de2b71f1b30b8c3a0632038c1055de08f6a976fce5b959763524489 issues=example/ledger#5 coverage=complete -->",
+    "repository_url": "https://github.com/example/ledger"
+  },
+  "items": [
+    {
+      "type": "observation",
+      "markdown": "`Ledger.grant` and `Ledger.revoke` also raise LedgerError for an unknown account via `get`, which their docstrings do not name. Evidence: `ledger/accounts.py:52-64`, `AGENTS.md`."
+    }
+  ]
+}
