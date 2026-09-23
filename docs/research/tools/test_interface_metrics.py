@@ -53,7 +53,7 @@ class Metrics(unittest.TestCase):
     def composition(self) -> Path:
         path = self.task / "work/composition.json"
         path.write_text(json.dumps({
-            "run": {"head": "a" * 40, "context": "c" * 64, "issues": ["x/y#1"]},
+            "run": {"head": "a" * 40, "context": "c" * 64, "issues": ["x/y#1"], "coverage": "complete"},
             "summary": {"status": "Approved", "intent": "Add one two three."},
             "findings": [], "record": {"paths": {"store": "/s"}, "files": [{"path": "a.py", "state": "reviewed"}]}}),
             encoding="utf-8")
@@ -84,6 +84,12 @@ class Metrics(unittest.TestCase):
     def test_cell_measures_usage_validation_repairs_loads_and_fields(self):
         composition = self.composition()
         root = self.root_transcript(composition)
+        (self.task / "work/fingerprint-input.json").write_text(json.dumps(
+            {"pr": {"title": "main...x", "body": "msg"}, "specs": [{"identity": "s", "text": "t"}]}))
+        bundle = self.task / "work/initial"
+        bundle.mkdir()
+        (bundle / "input.json").write_text(json.dumps({"run": {}, "batch": {}, "candidates": []}))
+        (bundle / "manifest.json").write_text("{}")
         worker = self.write("agent-1.jsonl", [
             {"type": "user", "timestamp": "2026-09-22T10:00:13Z", "message": {"content": "Read the brief at /b/brief.md now."}},
             assistant("w1", "2026-09-22T10:00:14Z", [("u1", "Read", {"file_path": "/b/brief.md"})]),
@@ -122,7 +128,12 @@ class Metrics(unittest.TestCase):
         fields = report["authored"]["fields"][0]
         self.assertEqual(fields["shape"], "composition")
         self.assertEqual(fields["mechanical"]["fields"], 5)
-        self.assertEqual(fields["judgment"]["fields"], 4)
+        self.assertEqual(fields["judgment"]["fields"], 5)
+        self.assertEqual(fields["written_by"], "tool")
+        unobserved = report["authored"]["fields"][1]
+        self.assertEqual((unobserved["shape"], unobserved["written_by"]), ("fingerprint-input", "unobserved"))
+        self.assertEqual((unobserved["mechanical"]["fields"], unobserved["judgment"]["fields"]), (4, 0))
+        self.assertEqual(len(report["authored"]["fields"]), 2)
         self.assertEqual(report["after_last_addendum"]["status"], "unavailable")
 
     def test_continuation_without_finalizer_reports_the_addendum_tail(self):

@@ -80,16 +80,16 @@ Each worker read only its generated brief and manifest (2,254–2,613 words) aft
 
 ### Authored fields
 
-Every JSON artifact the model wrote, split under the consumer map's inventory:
+Every JSON artifact the model wrote, split under the consumer map's inventory. That includes one the gate cell wrote from a program inside a heredoc, which no tool-call write names:
 
 | Cell | Composition or addendum: mechanical / judgment leaves | Verifier input | Raw return | `report.md` characters |
 | --- | --- | --- | --- | ---: |
-| publishable | 31 / 54 | 8 / 33 | 1 / 26 | 10,054 |
-| implementation-gate | 34 / 63 | — | — | 9,351 |
-| required-verification | 9 / 37 | 8 / 56 | 1 / 31 | 12,692 |
+| publishable | 30 / 55 | 8 / 33 | 1 / 26 | 10,054 |
+| implementation-gate | 32 / 65, plus fingerprint input 5 / 0 (147 words) | — | — | 9,351 |
+| required-verification | 8 / 38 | 8 / 56 | 1 / 31 | 12,692 |
 | continuation | Addendum 22 / 35 | 8 / 17 | 1 / 21 | 5,516 |
 
-Mechanical leaves are fields an authority already determines: run identity, paths, manifest file paths, rulings, allowance, the worker's `manifest_sha256`, and the addendum's identity and delta paths. Judgment leaves include verifier-input candidate fields that repeat the composition's findings. The counts measure transcription, not review effort.
+Mechanical leaves are fields an authority already determines: run identity, fingerprint input, paths, manifest file paths, rulings, allowance, the worker's `manifest_sha256`, and the addendum's identity and delta paths. Judgment leaves include verifier-input candidate fields that repeat the composition's findings. `run.coverage` and summary fields count as judgment. The counts measure transcription, not review effort.
 
 ## Explaining 1,596 + 10,771 words
 
@@ -100,14 +100,14 @@ The static inventory is unchanged at the baseline, but no run loads it. The prim
 These are baseline observations, not savings claims:
 
 - #342: every cell rewrote the complete review into `report.md` after validation, which is most of the post-validation tail.
-- #343: no repair loops occurred, so savings can come only from mechanical transcription. Composition inputs carried 9–34 mechanical leaves.
+- #343: no repair loops occurred, so savings can come only from mechanical transcription. Composition inputs carried 8–32 mechanical leaves, and the gate cell also hand-built its fingerprint input.
 - #344: every worker hand-copied `manifest_sha256`. Verifier inputs carried 17–56 judgment leaves, among them candidate fields the composition repeats.
 - #345: the continuation hand-wrote an addendum with 22 mechanical leaves and no validator, after reading composer source.
 - #346: both pull-request primaries opened worker-only references.
 
 ## Limits
 
-These are single runs of small synthetic tasks, so run-to-run variance is unmeasured and no recall, general cost or latency claim follows. Process elapsed time is the launcher's wall clock around the session. Cost is harness-reported list price, not billing. Evidence paths name `/tmp/rcs-savings`, the realization root. #347 may reuse these cells only under the protocol's unchanged-harness condition. Otherwise it reruns them beside the treatment.
+These are single runs of small synthetic tasks, so run-to-run variance is unmeasured and no recall, general cost or latency claim follows. Process elapsed time is the launcher's wall clock around the session. Cost is harness-reported list price, not billing. Evidence paths name `/tmp/rcs-savings`, the realization root. The fixture's `AGENTS.md` and `.gitignore` are committed under their real names in `archive/fixture/files/M0/`, so an agent working inside that folder may read them as live instructions. Renaming them would change the sealed manifest these cells ran against. #347 may reuse these cells only under the protocol's unchanged-harness condition. Otherwise it reruns them beside the treatment.
 
 ## Reproduce
 

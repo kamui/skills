@@ -24,8 +24,8 @@ Usage::
   an error or prints ``Exit code N``, ``exit=N`` or ``failed with exit N`` for a nonzero N, the
   forms a wrapped call reports; ``repair_loops`` counts failed calls. ``validation`` is the first
   successful call's result time, then the root turns, tool calls and seconds after it to the last
-  assistant line. With no finalizer call, ``validation`` is ``unavailable`` and ``after_last_addendum`` does
-  the same from the last write to an ``addenda/`` JSON file, when one exists.
+  assistant line. With no finalizer call, ``validation`` is ``unavailable``; ``after_last_addendum``
+  does the same from the last write to an ``addenda/`` JSON file, when one exists.
 - ``loads``: every root read of a file under the skill root (Read, or a Bash ``cat``/``sed``/
   ``head``/``tail``/``less``/``bat``/``grep``/``rg``/``awk``/``nl`` naming a path it does not run
   with Python, after expanding one-line ``NAME=value`` assignments and skill-relative paths
@@ -37,13 +37,17 @@ Usage::
   ``bundle``, and counts the dispatch prompt each worker received.
 - ``authored``: every Write/Edit/MultiEdit and heredoc Bash write, root and workers, with
   characters by artifact class, and the ``fields`` inventory of each JSON artifact the model wrote
-  that still exists under the task root.
+  that still exists under the task root (``written_by: tool``). A known-shape JSON file under
+  ``work/`` that no observed write names, such as one a program inside a heredoc wrote, is
+  inventoried too with ``written_by: unobserved``; a helper's bundle ``input.json`` is excluded.
 
-``fields`` prints the inventory alone. For a composition input, addendum, verifier input or raw
-verifier return, it counts leaf values and words and splits them into ``mechanical`` fields, which
-an authoritative packet, store, input, record or helper already determines, and ``judgment``
-fields the model decides. The table below is the small authored-field inventory the consumer map
-in ``docs/research/review-code-artifact-savings-2026-09-22/consumers.md`` explains; unknown shapes
+``fields`` prints the inventory alone. For a composition input, addendum, verifier input, raw
+verifier return or fingerprint input, it counts leaf values and words and splits them into
+``mechanical`` fields, which an authoritative packet, store, input, record or helper already
+determines, and ``judgment`` fields the model decides; every fingerprint-input leaf is mechanical,
+and a composition's ``run.coverage`` is a judgment the composer only checks. The table below is
+the small authored-field inventory the consumer map in
+``docs/research/review-code-artifact-savings-2026-09-22/consumers.md`` explains; unknown shapes
 count as ``other``.
 
 ``static`` measures what a load could cost at one skill revision, independent of any run: UTF-8
@@ -77,7 +81,10 @@ FAILED_TEXT = re.compile(r"(?m)^(?:Exit code [1-9]|\s*exit(?: code)?\s*[=:]\s*[1
 
 # (artifact, JSON-pointer pattern) -> class. The first matching pattern wins; "*" is one segment.
 MECHANICAL = {
-    "composition": ["/run/*", "/run/*/*", "/record/repository", "/record/paths/*", "/record/files/*/path",
+    "composition": ["/run/target_kind", "/run/target", "/run/tree", "/run/change_description", "/run/specs/*",
+                    "/run/head", "/run/base_ref", "/run/base_sha", "/run/merge_base", "/run/context",
+                    "/run/issues/*", "/run/repository_url", "/run/merged", "/run/publication_authorized",
+                    "/run/prior_head", "/record/repository", "/record/paths/*", "/record/files/*/path",
                     "/record/check_evidence/*/head", "/record/verification/batches/*/name",
                     "/record/verification/batches/*/phase", "/record/verification/batches/*/bundle",
                     "/record/verification/batches/*/raw_return", "/record/verification/batches/*/accounting",
@@ -92,6 +99,8 @@ MECHANICAL = {
     "verifier-input": ["/run/*", "/batch/*", "/run_policy"],
     "raw-return": ["/manifest_sha256"],
 }
+# Every leaf of these shapes transcribes an authority: the packet, git, or the caller's specs.
+ALL_MECHANICAL = ("fingerprint-input",)
 
 
 def fail(message: str) -> None:
@@ -333,6 +342,8 @@ def shape(document: Any) -> str:
         return "verifier-input"
     if {"run", "summary"} <= document.keys() and "schema" not in document:
         return "composition"
+    if "pr" in document and document.keys() <= {"pr", "issues", "specs", "guidance"}:
+        return "fingerprint-input"
     return "other"
 
 
@@ -346,7 +357,7 @@ def inventory(path: str) -> dict:
     sections: dict = {}
     for pointer, value in leaves(document):
         group = "judgment"
-        if kind in MECHANICAL and any(matches(p, pointer) for p in MECHANICAL[kind]):
+        if kind in ALL_MECHANICAL or (kind in MECHANICAL and any(matches(p, pointer) for p in MECHANICAL[kind])):
             group = "mechanical"
         size = words(value) if isinstance(value, str) else 0
         counts[group]["fields"] += 1
@@ -413,11 +424,20 @@ def cell(args: argparse.Namespace) -> dict:
         total = by_class.setdefault(entry["class"], {"writes": 0, "chars": 0})
         total["writes"] += 1
         total["chars"] += entry["chars"]
-    artifacts = sorted({entry["path"] for entry in authored_calls
-                        if entry["path"].endswith(".json") and entry["path"].startswith(task_root)
-                        and os.path.isfile(entry["path"])})
-    report["authored"] = {"writes": authored_calls, "by_class": by_class,
-                          "fields": [inventory(path) for path in artifacts]}
+    tool_written = {entry["path"] for entry in authored_calls
+                    if entry["path"].endswith(".json") and entry["path"].startswith(task_root)
+                    and os.path.isfile(entry["path"])}
+    fields = [dict(inventory(path), written_by="tool") for path in sorted(tool_written)]
+    for path in sorted(Path(task_root, "work").rglob("*.json")):
+        if str(path) in tool_written or (path.name == "input.json" and (path.parent / "manifest.json").exists()):
+            continue
+        try:
+            found = shape(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            continue
+        if found != "other":
+            fields.append(dict(inventory(str(path)), written_by="unobserved"))
+    report["authored"] = {"writes": authored_calls, "by_class": by_class, "fields": fields}
     return report
 
 

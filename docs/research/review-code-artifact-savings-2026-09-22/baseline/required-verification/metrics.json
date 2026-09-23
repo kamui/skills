@@ -491,19 +491,20 @@
             "fields": 1,
             "words": 0
           }
-        }
+        },
+        "written_by": "tool"
       },
       {
         "path": "/tmp/rcs-savings/baseline/required-verification/work/private/composition.json",
         "shape": "composition",
         "bytes": 3787,
         "mechanical": {
-          "fields": 9,
-          "words": 8
+          "fields": 8,
+          "words": 7
         },
         "judgment": {
-          "fields": 37,
-          "words": 321
+          "fields": 38,
+          "words": 322
         },
         "sections": {
           "run": {
@@ -526,7 +527,8 @@
             "fields": 2,
             "words": 39
           }
-        }
+        },
+        "written_by": "tool"
       },
       {
         "path": "/tmp/rcs-savings/baseline/required-verification/work/private/verifier-input-initial.json",
@@ -565,7 +567,8 @@
             "fields": 1,
             "words": 0
           }
-        }
+        },
+        "written_by": "tool"
       }
     ]
   }

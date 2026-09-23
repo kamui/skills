@@ -456,12 +456,12 @@
         "shape": "composition",
         "bytes": 7949,
         "mechanical": {
-          "fields": 31,
-          "words": 31
+          "fields": 30,
+          "words": 30
         },
         "judgment": {
-          "fields": 54,
-          "words": 567
+          "fields": 55,
+          "words": 568
         },
         "sections": {
           "run": {
@@ -492,7 +492,8 @@
             "fields": 50,
             "words": 200
           }
-        }
+        },
+        "written_by": "tool"
       },
       {
         "path": "/tmp/rcs-savings/baseline/publishable/work/private/verifier-input-initial.json",
@@ -531,7 +532,8 @@
             "fields": 1,
             "words": 0
           }
-        }
+        },
+        "written_by": "tool"
       },
       {
         "path": "/tmp/rcs-savings/baseline/publishable/work/private/verify-initial/raw-return.json",
@@ -566,7 +568,8 @@
             "fields": 1,
             "words": 0
           }
-        }
+        },
+        "written_by": "tool"
       }
     ]
   }
