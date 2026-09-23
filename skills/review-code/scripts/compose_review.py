@@ -184,14 +184,15 @@ or ``unavailable``, and ``historical`` evidence is attributed to a
 different head with the reason the delta leaves it unaffected -- a result
 is never relabelled at the reviewed head.
 
-Verification tasks have unique ids. Every task with a ruling other than
-``pending`` is checked against the ``accounting.json`` of the batch it
-names -- a recorded batch, or for a carried task the batch the named chain
+Verification tasks have unique ids. Every task whose ruling claims a
+verifier result (not ``pending`` or ``withheld``) is checked against the
+``accounting.json`` of the batch it names -- a recorded batch, or for a carried task the batch the named chain
 file (a record or addendum, version 1 or 2) records under
 ``verification.batches`` -- and that report must account for the task's id
 in its role with the same ruling (``refuted`` with basis ``unresolved`` is
-``unresolved``), or list it as withheld when the task is ``withheld``. A
-missing or unreadable report or chain file establishes nothing. A rendered
+``unresolved``). A missing, unreadable, or malformed report or chain file
+establishes nothing; a ``withheld`` task claims no result, so a batch that
+produced no report still records it. A rendered
 finding that is
 ``must-fix``, or whose ``kind`` is ``security`` or ``compatibility``, has a
 candidate task with its id, a trigger other than ``optional``, and ruling
@@ -973,16 +974,23 @@ def chain_accounting(chain_file: str, name: str) -> tuple[str | None, str]:
     return None, f"chain file `{chain_file}` records no batch `{name}` with an accounting report"
 
 
+def role_list(doc: dict[str, Any], section: str, role: str) -> list[Any]:
+    """``doc[section][role]`` when it is a list; anything malformed reads as empty and so establishes nothing."""
+    value = doc.get(section)
+    value = value.get(role) if isinstance(value, dict) else None
+    return value if isinstance(value, list) else []
+
+
 def accounted_ruling(accounting: str, role: str, identity: str) -> tuple[str | None, str]:
     """The ruling a verifier accounting report establishes for one task id: its ruling, ``withheld``, or ``None`` and why."""
     doc, why = load_object(accounting)
     if doc is None:
         return None, f"accounting report `{accounting}` {why}"
-    if identity in ((doc.get("withheld") or {}).get(role) or []):
+    if identity in role_list(doc, "withheld", role):
         return "withheld", ""
-    if identity not in ((doc.get("accounted") or {}).get(role) or []):
+    if identity not in role_list(doc, "accounted", role):
         return None, f"accounting report `{accounting}` does not account for `{identity}` among its {role}"
-    for record in ((doc.get("return") or {}).get(role) or []):
+    for record in role_list(doc, "return", role):
         if isinstance(record, dict) and record.get("id") == identity:
             if role == "premises":
                 return record.get("ruling"), ""
@@ -1088,7 +1096,9 @@ def read_verification(
             report.add(location, "verification", f"task `{identity}` names batch {json.dumps(batch)}, which is not recorded; only a `pending` task has none")
         else:
             accounting = names[batch]
-        if accounting is not None and task["ruling"] != "pending":
+        if task["ruling"] in ("pending", "withheld"):
+            why = ""  # claims no verifier result, so a batch that produced no report still records it
+        elif accounting is not None:
             established, why = accounted_ruling(accounting, "candidates" if task["type"] == "candidate" else "premises", identity)
             if established is not None and established != task["ruling"]:
                 why = f"accounting report `{accounting}` establishes `{established}`, not `{task['ruling']}`"
