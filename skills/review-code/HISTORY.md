@@ -1212,3 +1212,21 @@ This supersedes the clean-verdict records above: [issue #185](#hygiene-survivors
 **Recall risk kept open.** A low-risk review with no blocker now gets no independent scrutiny unless the primary chooses it. #297's ordinary-parser false-clean case and the hygiene-survivor case from #185 are the cases most exposed, and #333's comparison keeps both.
 
 **Bytes** (`wc -c`, `origin/main` at `544e0f8` against this change): `SKILL.md` 25,596 → 24,564; `review-rubric.md` 25,655 → 25,095; `review-record.md` 9,696 → 9,603; `rendering.md` 9,557 → 9,610; the always-loaded set goes from 70,504 to 68,872. Branch-loaded: `verifier-handoff.md` 16,253 → 14,529, `verifier-return.md` 4,179 → 3,803, `verifier.md` 14,691 → 11,881, `continuation-addendum.md` 1,558 → 5,936, and `implement-publish`'s `continuation.md` 2,680 → 2,832. The workflow bump makes the duplicate-review shortcut miss once, so each open pull request gets one fresh review.
+
+## Superseded reference copies removed (issue #346)
+
+**Workflow retained: `v5b-24`.** No admission, verification, rendering, or state rule changes; generated verifier briefs and helper examples are byte-identical. [DESIGN.md](DESIGN.md#superseded-reference-instructions-issue-346-2026-09-23) records the current owners and budgets.
+
+| Removed copy | From | Owner now |
+| --- | --- | --- |
+| Local `pr` shapes, excluded messages, `comments_available` | `rendering.md` Identity | `local-targets.md` Description and record inputs |
+| Working-tree `head` and store retention | `rendering.md` Identity | `local-targets.md` Snapshot and context; the finalizer derives it |
+| Record key list; local `base_ref`, `base_sha`, `target_kind`; `repository_url` omission | `rendering.md` Finalize | Composer `--example`; `local-targets.md` |
+| Report contents, per-profile artifacts, fresh-directory refusal | `rendering.md` Finalize | `SKILL.md` Return; the finalizer's output |
+| Snapshot output fields, docstring pointer, derived local identity, profile artifacts | `local-targets.md` | `review_context.py` output; the finalizer; `SKILL.md` Return |
+| `summary.repository_url` from `baseRepository.url`, stated twice | `pull-request-target.md` | The packet; the finalizer derives it |
+| Packet timestamp fields, `later-state` exclusions and thread-state detail, prior-item trailer block | `re-review.md` | `forge_packet.py later-state`; the finalizer appends the trailer |
+| Builder input keys, refusal list, projection detail, bundle contents, manifest bindings, accounting and withholding rules, a stale "step-3" pointer | `verifier-handoff.md` | `build_verifier_prompt.py --example` and refusals; `account_verifier_return.py` |
+| `state` output field list | `continuation-addendum.md` | `continue_review.py state` |
+
+**Bytes** (`wc -c`, `origin/main` at `4e31ec2` against this change): `rendering.md` 6,597 → 5,538; `local-targets.md` 6,664 → 6,168; `pull-request-target.md` 8,499 → 8,391; `re-review.md` 7,754 → 6,529; `verifier-handoff.md` 11,587 → 10,205; `continuation-addendum.md` 6,485 → 6,333. Each worker-only reference grows by its 145-byte load condition. The always-loaded set goes from 25,953 to 24,894 and the runtime total from 91,790 to 87,803.

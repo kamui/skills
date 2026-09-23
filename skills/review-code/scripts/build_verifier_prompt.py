@@ -3,8 +3,8 @@
 
 Usage: python3 scripts/build_verifier_prompt.py input.json --output <new-directory>
        [--return-file <absolute path>]
-Input: the JSON schema in references/verifier-handoff.md; ``--example`` prints one (run, batch, sources,
-run_policy, candidates, premises). A batch carries candidate tasks, safety-premise
+Input: ``--example`` prints one (run, batch, sources, run_policy, candidates, premises);
+references/verifier-handoff.md says what each field carries. A batch carries candidate tasks, safety-premise
 tasks, or both; fields are projected through explicit allowlists.
 Transport: without --return-file the brief asks for the JSON return inline. With it,
 the path must not exist, its parent must be an existing directory outside the bundle,
@@ -261,9 +261,24 @@ def assign_return_file(value, output):
     return path
 
 
+# The primary-facing load condition each worker-only reference carries; never embedded.
+WORKER_ONLY = ("Worker instructions: `build_verifier_prompt.py` embeds what applies of this file in a "
+               "verifier brief, so the primary reviewer does not read it.\n\n")
+WORKER_FILES = {"verifier.md", "verifier-return.md", "verifier-concurrency.md"}
+
+
+def instruction(refs, name):
+    """Read one reference, dropping a worker-only file's load condition."""
+    source = (refs / name).read_text(encoding="utf-8")
+    if name in WORKER_FILES:
+        require(source.count(WORKER_ONLY) == 1, name, "instruction boundary changed")
+        source = source.replace(WORKER_ONLY, "", 1)
+    return source
+
+
 def section(refs, name, start, end=None):
     """Extract one declared instruction section, refusing drift in either boundary."""
-    source = (refs / name).read_text(encoding="utf-8")
+    source = instruction(refs, name)
     require(source.count(start) == 1, name, "instruction boundary changed")
     tail = source.split(start, 1)[1]
     if end is not None:
@@ -274,7 +289,7 @@ def section(refs, name, start, end=None):
 
 def render(data, return_file=None):
     refs = Path(__file__).resolve().parent.parent / "references"
-    instructions = [(refs / "verifier.md").read_text(encoding="utf-8"),
+    instructions = [instruction(refs, "verifier.md"),
                     "## Focused-test safety and execution\n" + section(
                         refs, "changed-tests.md", "## Inspect and run\n", "## Primary focused-test recording\n")]
     records = data["candidates"] + data["premises"]
@@ -288,7 +303,7 @@ def render(data, return_file=None):
         instructions.append("## Conformance verifier procedure\n" + section(
             refs, "conformance.md", "## Verifier brief\n"))
     if any(item["kind"] in {"concurrency", "invariant"} for item in data["candidates"]):
-        instructions.append((refs / "verifier-concurrency.md").read_text(encoding="utf-8"))
+        instructions.append(instruction(refs, "verifier-concurrency.md"))
     returned = "verifier-return.md"
     instructions.append("# Verifier return encoding\n" + section(
         refs, returned, "# Verifier return encoding\n", "## Inline transport\n").rstrip("\n"))
