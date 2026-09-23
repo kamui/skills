@@ -121,7 +121,7 @@ import sys
 import urllib.parse
 from typing import Any
 
-WORKFLOW = "v5b-22"
+WORKFLOW = "v5b-23"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (

@@ -11,9 +11,11 @@ Refusal fixtures assert the rule name and that no payload is printed.
 """
 from __future__ import annotations
 
+import atexit
 import copy
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -218,9 +220,67 @@ def local_targets() -> None:
     print("ok local targets: identity, source kinds, code spans, and unchanged pull-request fixture")
 
 
-def batch_paths(name: str) -> dict:
-    return {"name": name, "bundle": f"/tmp/x/{name}", "raw_return": f"/tmp/x/{name}/raw-return.json",
-            "accounting": f"/tmp/x/{name}/accounting.json", "operation": "Agent run_in_background=false"}
+# Verifier artifacts the record's tasks name; the composer reads each batch's accounting report.
+ARTIFACTS = tempfile.mkdtemp(prefix="compose-review-test-")
+atexit.register(shutil.rmtree, ARTIFACTS, True)
+
+
+def batch_paths(name: str, phase: str | None = None) -> dict:
+    return {"name": name, "phase": phase or name, "bundle": f"{ARTIFACTS}/{name}", "raw_return": f"{ARTIFACTS}/{name}/raw-return.json",
+            "accounting": f"{ARTIFACTS}/{name}/accounting.json", "operation": "Agent run_in_background=false"}
+
+
+def write_accounting(path: str, tasks: list) -> None:
+    """An accounting report, in the shape account_verifier_return.py writes, that establishes each task's ruling."""
+    report = {"format": "verifier-accounting/2", "accounted": {"candidates": [], "premises": []},
+              "withheld": {"candidates": [], "premises": []}, "return": {"candidates": [], "premises": []}}
+    for task in tasks:
+        role = "candidates" if task["type"] == "candidate" else "premises"
+        if task["ruling"] == "withheld":
+            report["withheld"][role].append(task["id"])
+            continue
+        report["accounted"][role].append(task["id"])
+        if role == "premises":
+            record = {"id": task["id"], "ruling": task["ruling"]}
+        elif task["ruling"] == "confirmed":
+            record = {"id": task["id"], "verdict": "confirmed", "basis": "decisive"}
+        else:
+            record = {"id": task["id"], "verdict": "refuted", "basis": "unresolved" if task["ruling"] == "unresolved" else "contradicted"}
+        report["return"][role].append(record)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(report), encoding="utf-8")
+
+
+def chain_file(name: str, confirmed: list) -> str:
+    """A version-2 addendum whose initial batch's accounting confirms each id, as a replacement record's chain file."""
+    path = f"{ARTIFACTS}/chain/{name}.json"
+    batch = dict(batch_paths("initial"), accounting=f"{ARTIFACTS}/chain/{name}-accounting.json")
+    write_accounting(batch["accounting"], [{"id": i, "type": "candidate", "ruling": "confirmed"} for i in confirmed])
+    Path(path).write_text(json.dumps({"format": "implementation-gate-addendum/2", "verification": {"batches": [batch]}}), encoding="utf-8")
+    return path
+
+
+def candidate_task(identity: str = "payments/retry-idempotency", trigger: str = "must-fix", batch: str | None = "initial",
+                   ruling: str = "confirmed") -> dict:
+    return {"id": identity, "type": "candidate", "trigger": trigger, "batch": batch, "ruling": ruling}
+
+
+def premise_task(identity: str = "premise-1", ruling: str = "holds", batch: str | None = "initial", **extra) -> dict:
+    return {"id": identity, "type": "safety-premise", "area": "data-integrity",
+            "premise": "The charge lookup always succeeds before `submitCharge()` records the charge.",
+            "evidence": "src/charges.ts:31", "batch": batch, "ruling": ruling, **extra}
+
+
+def verification(tasks: list, batches: list, initial: bool | None = None, follow_up: bool | None = None,
+                 outstanding: list | None = None, carried_from: str | None = None) -> dict:
+    phases = {b["phase"] for b in batches}
+    for batch in batches:
+        write_accounting(batch["accounting"], [t for t in tasks if t.get("batch") == batch["name"]])
+    return {"tasks": tasks, "batches": batches,
+            "allowance": {"initial_spent": bool(phases) if initial is None else initial,
+                          "follow_up_spent": "follow-up" in phases if follow_up is None else follow_up,
+                          "carried_from": carried_from},
+            "outstanding": outstanding or []}
 
 
 def gate_composition() -> dict:
@@ -232,16 +292,8 @@ def gate_composition() -> dict:
         "repository": "/repo",
         "paths": {"private_dir": "/tmp/x", "store": f"/tmp/x/review-context-{HEAD}.json", "composition": "/tmp/x/composition.json",
                   "addenda": "/tmp/x/addenda", "evidence_packet": "/tmp/x/evidence.md"},
-        "ledger": {
-            "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
-                              "evidence": "src/payments.ts:42 creates a key per attempt"}],
-            "candidates": [
-                {"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "survivor",
-                 "verification": "independent-confirmed", "evidence": "src/payments.ts:42"},
-                {"id": "queue/retry-order", "kind": "bug", "disposition": "question", "evidence": "src/queue.ts:5"},
-                {"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped", "evidence": "src/retry-policy.ts:20"},
-            ],
-        },
+        "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
+                          "evidence": "src/payments.ts:42 creates a key per attempt"}],
         "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/retry-policy.ts", "state": "reviewed"},
                   {"path": "src/queue.ts", "state": "reviewed"}, {"path": "docs/notes.md", "state": "ignored", "reason": "generated"}],
         "check_evidence": [
@@ -249,7 +301,7 @@ def gate_composition() -> dict:
             {"check": "python3 scripts/test_queue.py", "head": PRIOR, "outcome": "historical", "reason": "the delta reaches none of its inputs"},
             {"check": "python3 scripts/test_payments.py", "head": HEAD, "outcome": "reviewer-executed", "reason": "the fixture changed since the supplied run"},
         ],
-        "verification": {"batches": [batch_paths("initial")], "follow_up_spent": False, "clean_verdict": "not-required", "outstanding": []},
+        "verification": verification([candidate_task()], [batch_paths("initial")]),
         "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []},
     }
     return value
@@ -259,7 +311,8 @@ def gate(composition: dict, name: str, *args: str) -> tuple[dict, str]:
     result = run(COMPOSER, json.dumps(composition), "--profile", "implementation-gate", *args)
     assert result.returncode == 0, (name, result.returncode, result.stdout, result.stderr)
     record = json.loads(result.stdout)
-    assert record["schema"] == "implementation-gate-record/1" and record["profile"] == "implementation-gate", name
+    assert record["schema"] == "implementation-gate-record/2" and record["profile"] == "implementation-gate", name
+    assert "ledger" not in record["record"] and "clean_verdict" not in record["record"]["verification"], name
     assert record["workflow"] == vr.WORKFLOW and record["run"]["head"] == composition["run"]["head"], name
     assert record["run"]["target"] == composition["run"]["target"] and record["run"]["repository"] == composition["record"]["repository"], name
     assert run(VALIDATOR, result.stdout).returncode == 0, name  # the record is a superset of the validator payload
@@ -304,25 +357,26 @@ def implementation_gate() -> None:
         ("check-evidence", mutate(**{"record.check_evidence.1.head": HEAD})),
         ("check-evidence", mutate(**{"record.check_evidence.0.head": PRIOR})),
         ("schema", mutate(**{"record.check_evidence.2.reason": None})),
-        ("verification", mutate(**{"record.verification.follow_up_spent": True})),
-        ("verification", mutate(**{"record.verification.batches": [batch_paths("a"), batch_paths("b"), batch_paths("c")]})),
-        ("verification", mutate(**{"record.verification.batches": [], "record.verification.clean_verdict": "stands"})),
-        ("verification", mutate(**{"record.verification.batches": []})),
-        ("coverage-gaps", mutate(**{"record.verification.outstanding": ["clean-verdict attack over the complete ledger"]})),
+        ("verification", mutate(**{"record.verification.allowance.follow_up_spent": True})),
+        ("verification", mutate(**{"record.verification.allowance.initial_spent": False})),
+        ("verification", mutate(**{"record.verification.batches": [batch_paths("a", "initial"), batch_paths("b", "follow-up"), batch_paths("c", "follow-up")]})),
+        ("verification", mutate(**{"record.verification.batches": [], "record.verification.allowance.initial_spent": False})),
+        ("verification", mutate(**{"record.verification.tasks.0.ruling": "refuted"})),
+        ("verification", mutate(**{"record.verification.tasks.0.trigger": "optional"})),
+        ("verification", mutate(**{"record.verification.tasks": []})),
+        ("verification", mutate(**{"record.verification.tasks.0.batch": "follow-up"})),
+        ("stable-id", mutate(**{"record.verification.tasks": [candidate_task(), candidate_task()]})),
+        ("coverage-gaps", mutate(**{"record.verification.outstanding": ["premise-2: follow-up spent"]})),
         ("coverage-gaps", mutate(**{"record.files.0.state": "unreviewed"})),
         ("file-accounting", mutate(**{"record.files.1.path": "src/payments.ts"})),
         ("schema", mutate(**{"record.files.3.reason": None})),
-        ("ledger", mutate(**{"record.ledger.candidates.0.id": "payments/other"})),
-        ("ledger", mutate(**{"record.ledger.candidates.2.disposition": "survivor"})),
-        ("ledger", mutate(**{"record.ledger.candidates.1.disposition": "survivor"})),
-        ("ledger", mutate(**{"record.ledger.candidates.0.kind": "maintainability"})),
-        ("ledger", mutate(**{"record.ledger.requirements.0.class": "wish"})),
-        ("verification", mutate(**{"record.ledger.candidates.0.verification": "primary-confirmed"})),
+        ("requirements", mutate(**{"record.requirements.0.class": "wish"})),
         ("stable-id", mutate(**{"record.routed.unresolved": ["payments/unknown"]})),
         ("coverage-gaps", mutate(**{"record.routed.unrecoverable_inputs": ["the spec's benchmark artifact"]})),
         ("record-paths", mutate(**{"record.paths.addenda": None})),
         ("record-paths", mutate(**{"record.paths.store": "relative/store.json"})),
         ("schema", mutate(**{"record.verification": None})),
+        ("schema", mutate(**{"record.verification.allowance": None})),
     ]
     for rule, bad in contradictions:
         publishable = refused(bad, rule, f"publishable rejects {rule}")
@@ -335,78 +389,155 @@ def implementation_gate() -> None:
         refused(bad, "profile", f"implementation-gate refuses {name}", "--profile", "implementation-gate")
     print("ok implementation-gate: both profiles refuse the same contradictions; profile-only refusals named")
 
-    # Outcomes: clean, material question, and incomplete with an exhausted follow-up allowance; blocking is the fixture above.
-    clean = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
-                      "record.verification.clean_verdict": "stands"})
-    clean["record"]["ledger"]["candidates"] = [{"id": "payments/retry-budget", "kind": "maintainability", "disposition": "dropped", "evidence": "src/retry-policy.ts:20"}]
-    record, _ = gate(clean, "clean outcome")
+    # Outcomes. Blocking with a confirmed candidate is the fixture above.
+    def outcome(status: str, tasks: list, batches: list, findings: list | None = None, questions: list | None = None, **extra) -> dict:
+        value = mutate(**{"findings": findings or [], "questions": questions or [], "observations": [], "summary.status": status})
+        value["record"]["verification"] = verification(tasks, batches, **extra)
+        if value["record"]["verification"]["outstanding"]:
+            value["run"]["coverage"] = "incomplete"
+            value["summary"]["coverage_gaps"] = ["required verification did not finish: " + "; ".join(value["record"]["verification"]["outstanding"])]
+        return value
+
+    # No blocker and no high-risk area: no task, no batch, nothing spent.
+    record, _ = gate(outcome("Approved", [], []), "clean outcome with no verification")
     assert record["status"] == "Approved" and record["summary"]["body"].startswith("**Approved (advisory)** — no findings.")
-    # No attackable row: hygiene and requirement acquittals, or an empty ledger, need no clean-verdict batch.
-    unattackable = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
-                             "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
-                                 {"id": "payments/retry-doc", "kind": "requirement", "disposition": "dropped", "evidence": "docs/api.md:3"}]})
-    gate(unattackable, "maintainability and requirement acquittals only; not-required composes")
-    gate(mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved", "record.ledger.candidates": []}),
-         "empty ledger; not-required composes")
-    marked_row = copy.deepcopy(unattackable)
-    marked_row["record"]["ledger"]["candidates"][0]["attackable"] = True
-    refused(marked_row, "verification", "a row marked attackable restores the clean-verdict obligation", "--profile", "implementation-gate",
-            needle="clean_verdict")
-    marked_row["record"]["ledger"]["candidates"][0]["attackable"] = "yes"
-    refused(marked_row, "schema", "attackable must be boolean", "--profile", "implementation-gate", needle="attackable")
-    attackable = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
-                           "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
-                               {"id": "queue/empty-pop", "kind": "bug", "disposition": "dropped", "evidence": "src/queue.ts:19"}]})
-    refused(attackable, "verification", "clean review with an attackable acquittal and no clean-verdict attack", "--profile", "implementation-gate",
-            needle="clean_verdict")
-    # A verifier-refuted must-fix requirement finding is attackable whatever its kind: the follow-up attack stays owed.
-    refuted = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Approved",
-                        "record.ledger.candidates": clean["record"]["ledger"]["candidates"] + [
-                            {"id": "payments/retry-idempotency", "kind": "requirement", "disposition": "refuted",
-                             "evidence": "src/retry-policy.ts:18 already reuses the key"}]})
-    refused(refuted, "verification", "refuted requirement blocker without a follow-up clean-verdict attack", "--profile", "implementation-gate",
-            needle="clean_verdict")
-    refuted["record"]["verification"] = {"batches": [batch_paths("initial"), batch_paths("follow-up")], "follow_up_spent": True,
-                                         "clean_verdict": "stands", "outstanding": []}
-    gate(refuted, "refuted requirement blocker with the follow-up attack recorded")
-    hygiene = mutate(**{"findings": [consider()], "questions": [], "observations": [], "summary.status": "Approved"})
-    hygiene["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "maintainability", "disposition": "survivor",
-                                                  "verification": "primary-confirmed", "evidence": "src/payments.ts:50"},
-                                                 {"id": "queue/empty-pop", "kind": "bug", "disposition": "dropped", "evidence": "src/queue.ts:19"}]
-    refused(hygiene, "verification", "surviving hygiene switches nothing off", "--profile", "implementation-gate", needle="clean_verdict")
-    hygiene["record"]["verification"]["clean_verdict"] = "stands"
-    record, _ = gate(hygiene, "hygiene survivor with clean verdict")
-    assert "1 consider finding" in record["summary"]["body"]
-    # A surviving compatibility consider is material, and so is a survivor the reviewer marks material under another kind.
-    compatibility = mutate(**{"findings": [consider(kind="compatibility")], "questions": [], "observations": [], "summary.status": "Approved"})
-    compatibility["record"]["ledger"]["candidates"] = [{"id": "payments/retry-naming", "kind": "compatibility", "disposition": "survivor",
-                                                        "verification": "independent-confirmed", "evidence": "src/payments.ts:50"}]
-    gate(compatibility, "compatibility consider is material; not-required composes")
-    marked = copy.deepcopy(hygiene)
-    marked["record"]["verification"]["clean_verdict"] = "not-required"
-    marked["record"]["ledger"]["candidates"][0]["material"] = True
-    gate(marked, "reviewer-marked material survivor; not-required composes")
-    marked["record"]["ledger"]["candidates"][0]["material"] = "yes"
-    refused(marked, "schema", "material must be boolean", "--profile", "implementation-gate", needle="material")
-    # A malformed row is reported and skipped, and a later row's violation still names its own input index.
-    shifted = mutate(**{"record.ledger.requirements": [{"source": "issue-123/criterion-1"},
-                                                       {"source": "issue-123/criterion-2", "class": "wish", "disposition": "met", "evidence": "x:1"}]})
-    refused(shifted, "ledger", "violation at the input index", "--profile", "implementation-gate", needle="record.ledger.requirements[1]: ledger")
-    question = mutate(**{"findings": [], "observations": [], "summary.status": "Needs Information", "record.verification.clean_verdict": "stands"})
-    question["record"]["ledger"]["candidates"] = composition["record"]["ledger"]["candidates"][1:]
-    record, _ = gate(question, "material question outcome")
-    assert record["status"] == "Needs Information" and record["items"][0]["type"] == "question"
-    incomplete = mutate(**{"findings": [], "questions": [], "observations": [], "summary.status": "Incomplete", "run.coverage": "incomplete",
-                           "summary.coverage_gaps": ["clean-verdict attack over the complete ledger: follow-up batch spent"],
-                           "record.verification.batches": [batch_paths("initial"), batch_paths("follow-up")],
-                           "record.verification.follow_up_spent": True, "record.verification.clean_verdict": "outstanding",
-                           "record.verification.outstanding": ["clean-verdict attack over the complete updated ledger"]})
-    incomplete["record"]["ledger"]["candidates"] = clean["record"]["ledger"]["candidates"]
-    record, _ = gate(incomplete, "incomplete after exhausted follow-up")
-    assert record["status"] == "Incomplete" and record["record"]["verification"]["follow_up_spent"] is True
-    refused(mutate(**{"record.verification.batches": [batch_paths("initial"), batch_paths("follow-up")]}),
-            "verification", "two batches with follow-up unspent", "--profile", "implementation-gate", needle="follow_up_spent")
-    print("ok implementation-gate: clean, blocking, material-question, and incomplete outcomes; exhausted follow-up")
+    assert record["record"]["verification"]["allowance"] == {"initial_spent": False, "follow_up_spent": False, "carried_from": None}
+    # A refuted candidate is dropped; an unresolved one is dropped only when optional.
+    gate(outcome("Approved", [candidate_task(ruling="refuted"), candidate_task("queue/empty-pop", "optional", ruling="unresolved")],
+                 [batch_paths("initial")]), "refuted and optional unresolved candidates publish nothing")
+    # A required unresolved candidate becomes a question with its id or stays outstanding, never an Approved drop.
+    refused(outcome("Approved", [candidate_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
+            "unresolved must-fix candidate dropped from an Approved record", "--profile", "implementation-gate", needle="required candidate")
+    gate(outcome("Needs Information", [candidate_task("queue/retry-order", "data-integrity", ruling="unresolved")], [batch_paths("initial")],
+                 questions=copy.deepcopy(composition["questions"])), "unresolved required candidate routed to its question")
+    gate(outcome("Incomplete", [candidate_task(ruling="unresolved")], [batch_paths("initial")],
+                 outstanding=["payments/retry-idempotency: settling fact unavailable"]), "unresolved required candidate left outstanding")
+    # A ruling stands only on the accounting report of the batch it names.
+    mismatched = copy.deepcopy(composition)
+    write_accounting(mismatched["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="refuted")])
+    refused(mismatched, "verification", "confirmed task over an accounting that refuted it", "--profile", "implementation-gate",
+            needle="establishes `refuted`, not `confirmed`")
+    missing = copy.deepcopy(composition)
+    missing["record"]["verification"]["batches"][0]["accounting"] = f"{ARTIFACTS}/absent/accounting.json"
+    refused(missing, "verification", "confirmed task over a missing accounting report", "--profile", "implementation-gate", needle="cannot be read")
+    unaccounted = copy.deepcopy(composition)
+    write_accounting(unaccounted["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="withheld")])
+    refused(unaccounted, "verification", "confirmed task the accounting withheld", "--profile", "implementation-gate",
+            needle="establishes `withheld`, not `confirmed`")
+    write_accounting(composition["record"]["verification"]["batches"][0]["accounting"], composition["record"]["verification"]["tasks"])
+    gate(composition, "fixture composes again once its accounting is rewritten")
+    # A premise ruling is checked the same way, and a malformed report is refused rather than crashing.
+    premise_mismatch = outcome("Approved", [premise_task()], [batch_paths("initial")])
+    write_accounting(premise_mismatch["record"]["verification"]["batches"][0]["accounting"], [premise_task(ruling="fails")])
+    refused(premise_mismatch, "verification", "premise ruling its accounting does not establish", "--profile", "implementation-gate",
+            needle="establishes `fails`, not `holds`")
+    Path(premise_mismatch["record"]["verification"]["batches"][0]["accounting"]).write_text(
+        json.dumps({"withheld": ["premise-1"], "accounted": "x", "return": None}), encoding="utf-8")
+    refused(premise_mismatch, "verification", "malformed accounting report", "--profile", "implementation-gate", needle="does not account")
+    # A batch whose accounting produced no report still records its withheld tasks as outstanding work.
+    no_report = outcome("Incomplete", [candidate_task(ruling="withheld"), candidate_task("payments/retry-naming", "optional", ruling="withheld")],
+                        [batch_paths("initial")], outstanding=["payments/retry-idempotency: accounting produced no report"])
+    Path(no_report["record"]["verification"]["batches"][0]["accounting"]).unlink()
+    gate(no_report, "withheld tasks over a batch with no accounting report")
+    # High-risk no-blocker conclusion: a premise that holds approves, and a question can carry an unresolved one.
+    record, _ = gate(outcome("Approved", [premise_task()], [batch_paths("initial")]), "safety premise holds")
+    assert record["record"]["verification"]["tasks"][0]["type"] == "safety-premise"
+    gate(outcome("Needs Information", [premise_task(ruling="unresolved", reopened_as="queue/retry-order")], [batch_paths("initial")],
+                 questions=copy.deepcopy(composition["questions"])), "unresolved premise routed to a material question")
+    refused(outcome("Approved", [premise_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
+            "unresolved premise with neither a question nor outstanding work", "--profile", "implementation-gate", needle="premise-1")
+    gate(outcome("Incomplete", [premise_task(ruling="unresolved")], [batch_paths("initial")], outstanding=["premise-1: settling fact unavailable"]),
+         "unresolved premise left outstanding")
+    # A premise that fails reopens as a candidate; the follow-up confirms the new blocker it became.
+    reopened = [premise_task(ruling="fails", reopened_as="payments/retry-idempotency"),
+                candidate_task(batch="follow-up")]
+    record, _ = gate(outcome("Changes Requested", reopened, [batch_paths("initial"), batch_paths("follow-up")],
+                             findings=copy.deepcopy(composition["findings"])), "failed premise reopened and confirmed in the follow-up")
+    assert record["record"]["verification"]["allowance"]["follow_up_spent"] is True
+    refused(outcome("Approved", [premise_task(ruling="fails")], [batch_paths("initial")]), "verification",
+            "failed premise with nothing reopened", "--profile", "implementation-gate", needle="reopened_as")
+    # A new blocker found after feedback needs a follow-up confirmation; with the follow-up spent it stays unpublished and outstanding.
+    new_blocker = [candidate_task(), candidate_task("queue/lost-ack", batch="follow-up")]
+    two_findings = copy.deepcopy(composition["findings"]) + [finding(id="queue/lost-ack", title="Acknowledge only after the write",
+                                                                     anchor={"type": "line", "path": "src/queue.ts", "start_line": 9, "end_line": 9, "side": "RIGHT"})]
+    gate(outcome("Changes Requested", new_blocker, [batch_paths("initial"), batch_paths("follow-up")], findings=two_findings),
+         "new blocker after feedback confirmed in the follow-up")
+    refused(outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
+                    [batch_paths("initial"), batch_paths("follow-up")], findings=two_findings), "verification",
+            "unconfirmed new blocker rendered after the allowance is spent", "--profile", "implementation-gate", needle="queue/lost-ack")
+    exhausted = outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
+                        [batch_paths("initial"), batch_paths("follow-up")], findings=copy.deepcopy(composition["findings"]),
+                        outstanding=["queue/lost-ack: must-fix candidate arrived after the follow-up was spent"])
+    record, _ = gate(exhausted, "exhausted allowance leaves the new blocker outstanding")
+    assert record["run"]["coverage"] == "incomplete" and record["status"] == "Changes Requested"
+    refused(outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
+                    [batch_paths("initial"), batch_paths("follow-up")], findings=copy.deepcopy(composition["findings"])), "verification",
+            "pending required work missing from outstanding", "--profile", "implementation-gate", needle="queue/lost-ack")
+    # Missing evidence: a withheld required result is outstanding work, never completed verification.
+    withheld = outcome("Incomplete", [candidate_task(ruling="withheld")], [batch_paths("initial")],
+                       outstanding=["payments/retry-idempotency: return cited no raw location"])
+    gate(withheld, "withheld candidate outstanding")
+    refused(outcome("Approved", [candidate_task(ruling="withheld")], [batch_paths("initial")]), "verification",
+            "withheld candidate without outstanding work", "--profile", "implementation-gate", needle="withheld")
+    gate(outcome("Approved", [candidate_task("payments/retry-naming", "optional", ruling="withheld")], [batch_paths("initial")]),
+         "withheld optional scrutiny stays optional")
+    for ruling in ("withheld", "unresolved"):
+        gate(outcome("Approved", [premise_task(ruling=ruling, trigger="optional")], [batch_paths("initial")]),
+             f"{ruling} optional premise stays optional")
+    refused(outcome("Approved", [premise_task(trigger="must-fix")], [batch_paths("initial")]), "verification",
+            "a premise trigger other than optional", "--profile", "implementation-gate", needle="only as `optional`")
+    # No awaited route: required work is pending with no batch, and nothing is spent.
+    gate(outcome("Incomplete", [premise_task(ruling="pending", batch=None)], [], outstanding=["premise-1: review-wait-unavailable"]),
+         "pending premise with no route")
+    print("ok implementation-gate: confirmed, refuted, unresolved, premise, new-blocker, missing-evidence, and exhausted outcomes")
+
+    # A replacement record carries the chain's confirmations and spent allowance; its own batches spend only what is left.
+    chain = chain_file("addendum-" + "c" * 40, ["payments/retry-idempotency"])
+    carried = outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                      initial=True, follow_up=False, carried_from=chain)
+    record, _ = gate(carried, "replacement record carries a confirmation and the spent initial batch")
+    assert record["record"]["verification"]["allowance"]["carried_from"] == chain
+    gate(outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial"), candidate_task("queue/lost-ack", batch="follow-up")],
+                 [batch_paths("follow-up")], findings=two_findings, initial=True, carried_from=chain),
+         "replacement record spends the carried chain's remaining follow-up")
+    gate(outcome("Incomplete", [candidate_task("queue/lost-ack", batch=None, ruling="pending")], [], findings=[],
+                 initial=True, follow_up=True, carried_from=chain, outstanding=["v1-clean-verdict: superseded-by-v2-policy", "queue/lost-ack: allowance spent by the chain"]),
+         "replacement record with an exhausted carried allowance")
+    # The reviewer's reproduction: a carried confirmation whose chain file and carried_from do not exist.
+    absent = f"{ARTIFACTS}/chain/missing.json"
+    line = refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{absent}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                           initial=True, carried_from=absent), "verification", "carried confirmation from a missing chain file",
+                   "--profile", "implementation-gate", needle="cannot be read")
+    assert "allowance.carried_from" in line and "record.verification.tasks[0]" in line, line
+    # Version-1 and version-2 record chain files hold their batches under `record.verification`.
+    for schema, report_format in (("implementation-gate-record/1", "verifier-accounting/1"), ("implementation-gate-record/2", "verifier-accounting/2")):
+        record_chain = f"{ARTIFACTS}/chain/{schema.replace('/', '-')}.json"
+        batch = dict(batch_paths("initial"), accounting=f"{ARTIFACTS}/chain/{schema.replace('/', '-')}-accounting.json")
+        write_accounting(batch["accounting"], [candidate_task()])
+        report = json.loads(Path(batch["accounting"]).read_text(encoding="utf-8"))
+        Path(batch["accounting"]).write_text(json.dumps(dict(report, format=report_format)), encoding="utf-8")
+        Path(record_chain).write_text(json.dumps({"schema": schema, "record": {"verification": {"batches": [batch]}}}), encoding="utf-8")
+        gate(outcome("Changes Requested", [candidate_task(batch=f"carried:{record_chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                     initial=True, carried_from=record_chain), f"confirmation carried from a {schema} chain file")
+    other = chain_file("addendum-other", ["queue/unrelated"])
+    refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{other}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                    initial=True, carried_from=other), "verification", "carried batch that never confirmed this id",
+            "--profile", "implementation-gate", needle="does not account for `payments/retry-idempotency`")
+    refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#follow-up")], [], findings=copy.deepcopy(composition["findings"]),
+                    initial=True, carried_from=chain), "verification", "carried batch name the chain file does not record",
+            "--profile", "implementation-gate", needle="records no batch `follow-up`")
+    for name, bad in (
+        ("carried task without carried_from", outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [],
+                                                     findings=copy.deepcopy(composition["findings"]), initial=True)),
+        ("bare carried batch name", outcome("Changes Requested", [candidate_task(batch="carried:initial")], [],
+                                            findings=copy.deepcopy(composition["findings"]), initial=True, carried_from=chain)),
+        ("carried confirmation with the initial allowance reset", outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [],
+                                                                         findings=copy.deepcopy(composition["findings"]), initial=False, carried_from=chain)),
+        ("spent flag with nothing recorded or carried", outcome("Approved", [], [], initial=True)),
+        ("relative carried_from", outcome("Approved", [], [], initial=True, carried_from="addendum.json")),
+    ):
+        refused(bad, "verification" if "relative" not in name else "record-paths", name, "--profile", "implementation-gate")
+    print("ok implementation-gate: replacement records carry confirmations and spent allowance without a reset")
 
     # Deleted and renamed evidence against a real store: file accounting is exactly the pinned manifest.
     with tempfile.TemporaryDirectory() as directory:
@@ -813,7 +944,7 @@ def main() -> int:
     assert body.startswith("**Needs Information** — 1 open question.")
     assert "**[Question] Which originating issue applies?**" in body
     assert required_issue["summary"]["issue_fit"] in body
-    assert "issues=none coverage=complete" in body and "workflow=v5b-22" in body
+    assert "issues=none coverage=complete" in body and "workflow=v5b-23" in body
     assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
     assert payload["items"][0]["id"] == "workflow/required-issue"
     wrong = copy.deepcopy(required_issue)
@@ -977,9 +1108,15 @@ def main() -> int:
     for profile in ("publishable", "implementation-gate"):
         shown = run(COMPOSER, "", "--example", "--profile", profile)
         assert shown.returncode == 0 and shown.stderr == "", ("example", profile, shown.stderr)
-        example = run(COMPOSER, shown.stdout, "--profile", profile)
+        value = json.loads(shown.stdout)
+        if profile == "implementation-gate":  # the example's accounting report has to exist to establish its rulings
+            batch = value["record"]["verification"]["batches"][0]
+            batch["accounting"] = f"{ARTIFACTS}/example/accounting.json"
+            write_accounting(batch["accounting"], value["record"]["verification"]["tasks"])
+            assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "the example names an accounting report that does not exist"
+        example = run(COMPOSER, json.dumps(value), "--profile", profile)
         assert example.returncode == 0, ("example composes", profile, example.stdout)
-    print("ok example: --example prints a composition that composes under both profiles")
+    print("ok example: --example prints a composition that composes under both profiles, the gate once its accounting exists")
     return 0
 
 

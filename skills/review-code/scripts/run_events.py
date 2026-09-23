@@ -62,7 +62,7 @@ Event schema (one JSON object per line, ``format: review-run-event/1``)::
                 "implementation": "clock_gettime(CLOCK_MONOTONIC)"},
       "started_ns": 1, "ended_ns": 2,             # monotonic ns: script main entry and exit
       "ended_at": "2026-09-14T12:00:00.250000Z",  # wall clock (UTC) read with ended_ns
-      "policy": {"workflow": "v5b-22", "commit": "<sha>", "commit_source": "git:skill-root"},
+      "policy": {"workflow": "v5b-23", "commit": "<sha>", "commit_source": "git:skill-root"},
       "data": {...}
     }
 
@@ -73,14 +73,17 @@ the installed skill root is a clean git checkout. ``data`` per event:
 
 - ``context-built``: ``target`` (``worktree`` or ``commit-range``; a pull request
   and a range build identically), ``head``, ``merge_base``, ``prior_head``, ``store``.
-- ``verifier-brief-built``: ``run_id``, ``batch_id``, ``phase``, ``mode``,
-  ``candidates``, ``ledger_rows``, ``full_ledger_rows`` (null when the build
-  refused its input before projection), ``bundle``.
-- ``verifier-return-accounted``: ``run_id``, ``batch_id``, ``phase``, ``mode``,
-  ``supplied`` {``candidates``, ``ledger_rows``}, ``returned`` {``confirmed``,
-  ``refuted``, ``holds``, ``re_open``} counted over accounted records only,
-  ``withheld`` {``candidates``, ``ledger_rows``}, ``structurally_complete``,
-  ``conclusion_accounted``, ``bundle`` (null counts when no report was made).
+- ``verifier-brief-built``: ``run_id``, ``batch_id``, ``phase``, ``candidates``,
+  ``premises`` (null when the build refused its input before projection),
+  ``bundle``.
+- ``verifier-return-accounted``: ``run_id``, ``batch_id``, ``phase``,
+  ``supplied`` {``candidates``, ``premises``}, ``returned`` {``confirmed``,
+  ``refuted``, ``holds``, ``fails``, ``unresolved``} counted over accounted
+  records only, ``withheld`` {``candidates``, ``premises``},
+  ``structurally_complete``, ``bundle`` (null counts when no report was made).
+- Events written before workflow ``v5b-23`` carry ``mode``, ``ledger_rows``,
+  ``full_ledger_rows`` and ``conclusion_accounted`` instead of premise counts;
+  the summary still reads them.
 - ``payload-composed``: ``target_kind`` (``pull-request`` when the composition
   omits it, the composer's default), ``head``, ``merge_base``, ``status``,
   ``coverage``, ``findings``, ``questions``.
@@ -116,8 +119,10 @@ writes separately: each group's event count, every attempt with its status
 spans are never summed, and a group with no event is unknown, not zero. A verifier batch's
 brief-to-accounting bracket contains dispatch, worker lifetime, the raw save
 and the join; it is not the primary's waiting time, and overlapping brackets
-report their union once beside their sum. A complete-ledger batch with zero
-rows is an explicit zero; a batch whose row count was not recorded is unknown.
+report their union once beside their sum. A batch with zero premises is an
+explicit zero; a batch whose premise count was not recorded is unknown. An
+older event's ledger mode and row count are reported as recorded, and never
+read as a premise count.
 Usage and cost are always unavailable here: no script observes an
 authoritative usage record, and absent values are null, never zero.
 
@@ -253,40 +258,36 @@ def _data(name: str, stash: dict) -> tuple:
         batch = projected.get("batch") if isinstance(projected.get("batch"), dict) else {}
         run = projected.get("run") if isinstance(projected.get("run"), dict) else {}
         return (os.path.dirname(bundle) if bundle else None), {
-            "run_id": _text(run.get("id")), "batch_id": _text(batch.get("id")),
-            "phase": _text(batch.get("phase")), "mode": _text(batch.get("mode")),
-            "candidates": _count(projected.get("candidates")), "ledger_rows": _count(projected.get("ledger")),
-            "full_ledger_rows": _count(stash.get("ledger")), "bundle": bundle}
+            "run_id": _text(run.get("id")), "batch_id": _text(batch.get("id")), "phase": _text(batch.get("phase")),
+            "candidates": _count(projected.get("candidates")), "premises": _count(projected.get("premises")),
+            "bundle": bundle}
     if name == "verifier-return-accounted":
         bundle = _absolute(stash.get("bundle"))
         manifest = stash.get("manifest") if isinstance(stash.get("manifest"), dict) else {}
         report = stash.get("report") if isinstance(stash.get("report"), dict) else None
         batch = manifest.get("batch") if isinstance(manifest.get("batch"), dict) else {}
         run = manifest.get("run") if isinstance(manifest.get("run"), dict) else {}
-        data = {"run_id": _text(run.get("id")), "batch_id": _text(batch.get("id")),
-                "phase": _text(batch.get("phase")), "mode": _text(batch.get("mode")),
+        data = {"run_id": _text(run.get("id")), "batch_id": _text(batch.get("id")), "phase": _text(batch.get("phase")),
                 "supplied": {"candidates": _count(manifest.get("candidate_ids")),
-                             "ledger_rows": _count(manifest.get("ledger_ids"))},
-                "returned": {"confirmed": None, "refuted": None, "holds": None, "re_open": None},
-                "withheld": {"candidates": None, "ledger_rows": None},
-                "structurally_complete": None, "conclusion_accounted": None, "bundle": bundle}
+                             "premises": _count(manifest.get("premise_ids"))},
+                "returned": {"confirmed": None, "refuted": None, "holds": None, "fails": None, "unresolved": None},
+                "withheld": {"candidates": None, "premises": None},
+                "structurally_complete": None, "bundle": bundle}
         if report is not None:
             returned = report.get("return") if isinstance(report.get("return"), dict) else {}
             accounted = report.get("accounted") or {}
             tallies = {}
-            for role, field in (("candidates", "verdict"), ("ledger", "ruling")):
+            for role, field in (("candidates", "verdict"), ("premises", "ruling")):
                 ids = set(accounted.get(role) or [])
                 records = returned.get(role) if isinstance(returned.get(role), list) else []
                 for record in records:
                     if isinstance(record, dict) and record.get("id") in ids:
                         tallies[record.get(field)] = tallies.get(record.get(field), 0) + 1
-            data["returned"] = {"confirmed": tallies.get("confirmed", 0), "refuted": tallies.get("refuted", 0),
-                                "holds": tallies.get("holds", 0), "re_open": tallies.get("re-open", 0)}
+            data["returned"] = {name: tallies.get(name, 0) for name in ("confirmed", "refuted", "holds", "fails", "unresolved")}
             withheld = report.get("withheld") or {}
             data["withheld"] = {"candidates": _count(withheld.get("candidates")),
-                                "ledger_rows": _count(withheld.get("ledger"))}
+                                "premises": _count(withheld.get("premises"))}
             data["structurally_complete"] = report.get("structurally_complete")
-            data["conclusion_accounted"] = report.get("conclusion_accounted")
         return (os.path.dirname(bundle) if bundle else None), data
     if name == "payload-composed":
         store = _absolute(stash.get("store"))
@@ -352,7 +353,7 @@ TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](
 DATA_STRINGS = ("head", "merge_base", "prior_head", "target", "target_kind", "run_id", "batch_id", "phase",
                 "mode", "status", "coverage", "store", "bundle", "role", "connection", "argv0", "command",
                 "signal", "cancelled")
-DATA_COUNTS = ("candidates", "ledger_rows", "full_ledger_rows", "findings", "questions")
+DATA_COUNTS = ("candidates", "premises", "ledger_rows", "full_ledger_rows", "findings", "questions")
 DATA_TALLIES = ("supplied", "returned", "withheld")
 
 
@@ -572,11 +573,14 @@ def summarize(lines, events_path: str, mode) -> tuple:
         source = brief or accountings[0]
         data = source["data"]
         latest = accountings[-1]["data"] if accountings else None
-        ledger_rows = data.get("ledger_rows") if brief else (data.get("supplied") or {}).get("ledger_rows")
-        candidates = data.get("candidates") if brief else (data.get("supplied") or {}).get("candidates")
+        counts = data if brief else (data.get("supplied") or {})
+        # An event before v5b-23 names a ledger mode and row count; it never has a premise count.
+        legacy = data.get("mode") is not None
         row = {"batch_id": key, "phase": data.get("phase"), "mode": data.get("mode"),
-               "candidates": candidates if type(candidates) is int else None,
-               "ledger_rows": ledger_rows if type(ledger_rows) is int else None,
+               "candidates": counts.get("candidates") if type(counts.get("candidates")) is int else None,
+               "premises": counts.get("premises") if type(counts.get("premises")) is int else None,
+               "ledger_rows": counts.get("ledger_rows") if type(counts.get("ledger_rows")) is int else None,
+               "legacy": legacy,
                "brief_built_at": brief["ended_at"] if brief else None,
                "accounted_at": [a["ended_at"] for a in accountings],
                "returned": latest.get("returned") if latest else None,
@@ -598,14 +602,20 @@ def summarize(lines, events_path: str, mode) -> tuple:
 
     by_mode = {}
     for row in rows:
-        by_mode[row["mode"] or "unknown"] = by_mode.get(row["mode"] or "unknown", 0) + 1
+        if row["legacy"]:
+            by_mode[row["mode"]] = by_mode.get(row["mode"], 0) + 1
+    current = [r for r in rows if not r["legacy"]]
     verification = {
         "batches_recorded": len(rows),
         "note": "zero recorded batches is not proof that none ran unless the record is otherwise complete",
-        "batches": rows, "by_mode": by_mode,
-        "complete_ledger_zero_rows": sum(1 for r in rows if r["mode"] == "complete-ledger" and r["ledger_rows"] == 0),
-        "complete_ledger_nonzero_rows": sum(1 for r in rows if r["mode"] == "complete-ledger" and (r["ledger_rows"] or 0) > 0),
-        "ledger_rows_unknown": sum(1 for r in rows if r["ledger_rows"] is None),
+        "batches": rows,
+        "premise_batches": sum(1 for r in current if (r["premises"] or 0) > 0),
+        "premises_zero": sum(1 for r in current if r["premises"] == 0),
+        "premises_unknown": sum(1 for r in current if r["premises"] is None),
+        "legacy": {"note": "ledger-mode batches recorded before v5b-23", "by_mode": by_mode,
+                   "complete_ledger_zero_rows": sum(1 for r in rows if r["mode"] == "complete-ledger" and r["ledger_rows"] == 0),
+                   "complete_ledger_nonzero_rows": sum(1 for r in rows if r["mode"] == "complete-ledger" and (r["ledger_rows"] or 0) > 0),
+                   "ledger_rows_unknown": sum(1 for r in rows if r["legacy"] and r["ledger_rows"] is None)},
         "bracket_sum_seconds": {"seconds": round(sum(e - s for s, e in spans) / 1e9, 6) if timed and spans else None,
                                 "status": "proxy", "basis": "sum of batch brackets; overlapping brackets count twice; not elapsed"},
         "bracket_union_seconds": {"seconds": _union_seconds(spans) if timed and spans else None,
