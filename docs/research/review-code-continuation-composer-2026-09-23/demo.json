@@ -11,7 +11,7 @@
       },
       "state_read_bytes": {
         "baseline_record_and_addenda": 9622,
-        "state_json": 7252
+        "state_json": 7378
       },
       "addendum_matches_baseline": true,
       "report_bytes": 5340,
@@ -34,7 +34,7 @@
       },
       "state_read_bytes": {
         "baseline_record_and_addenda": 9622,
-        "state_json": 7252
+        "state_json": 7378
       },
       "addendum_matches_baseline": true,
       "report_bytes": 5340,

@@ -57,9 +57,11 @@ file states, requirement rows and check evidence keep the record's rules at
 the addendum's final head; each task's ruling must be the one its batch's
 accounting report establishes; a mandatory finding needs its confirmed
 candidate task within the remaining allowance; spent allowance, outstanding
-work, routed items and untouched per-file coverage survive every addendum;
+work, routed items and untouched per-file coverage survive every addendum
+(the base contract's allowance without `carried_from` reads as null);
 `status` and `coverage` must agree with the cumulative open items, files,
-outstanding work and unrecoverable inputs. A replacement record must head the
+outstanding work and unrecoverable inputs, except that a replacement's own
+file accounting governs the files it settled. A replacement record must head the
 addendum's final head, carry every open item, routed item and outstanding
 task, keep the spent flags with `carried_from` naming the chain file it
 replaced, and carry each open finding's confirmation as
@@ -302,6 +304,7 @@ class State:
         self.head = ""
         self.tip: Path = Path("/")
         self.tip_report: str | None = None
+        self.addendum: Path | None = None  # the latest addendum, which a replacement it names does not displace
         self.chain: list[dict[str, Any]] = []
         self.open: dict[str, dict[str, Any]] = {}
         self.ids: set[str] = set()
@@ -391,7 +394,9 @@ def open_record(report: vr.Report, state: State, path: Path, doc: dict[str, Any]
     state.addenda = Path(record["paths"]["addenda"])
     state.head, state.tip = run["head"], path
     final = doc.get("finalization")
-    state.tip_report = final.get("report") if isinstance(final, dict) else None
+    own_report = final.get("report") if isinstance(final, dict) else None
+    if state.addendum is None:  # a replacement keeps the marker and fixes of the addendum that named it
+        state.tip_report, state.fixed = own_report, []
     state.open = {}
     for item in doc.get("items", []):
         if item.get("type") in ("finding", "question"):
@@ -416,9 +421,15 @@ def open_record(report: vr.Report, state: State, path: Path, doc: dict[str, Any]
     state.routed = {key: list(routed[key]) for key in ROUTED}
     state.status, state.coverage = doc.get("status"), run.get("coverage")
     state.coverage_gaps = summary_gaps(doc["summary"]["body"])
-    state.fixed = []
     state.chain.append({"kind": "record", "path": str(path), "schema": doc["schema"], "head": run["head"],
-                        "report": state.tip_report})
+                        "report": own_report})
+
+
+def same_allowance(explicit: Any, derived: dict[str, Any]) -> bool:
+    """The spent flags agree; an addendum carries nothing, so `carried_from` is null or, as the base contract wrote it, absent."""
+    return (isinstance(explicit, dict) and set(explicit) <= {"initial_spent", "follow_up_spent", "carried_from"}
+            and all(explicit.get(k) is derived[k] for k in ("initial_spent", "follow_up_spent"))
+            and explicit.get("carried_from") is None)
 
 
 def check_rows(report: vr.Report, doc: dict[str, Any], final: str) -> tuple[list, list, list, list]:
@@ -577,7 +588,8 @@ def apply_addendum(report: vr.Report, state: State, path: Path, doc: dict[str, A
         report.add("verification.batches", "verification", "a follow-up batch needs the initial batch spent first")
     allowance = {"initial_spent": prior["initial_spent"] or "initial" in phases,
                  "follow_up_spent": prior["follow_up_spent"] or "follow-up" in phases, "carried_from": None}
-    fr.settle(report, verification, "allowance", allowance, "verification", "the chain's spent flags and this addendum's batches")
+    fr.settle(report, verification, "allowance", allowance, "verification", "the chain's spent flags and this addendum's batches",
+              same_allowance)
 
     settled = {t.get("id") for t in verification.get("tasks", []) if isinstance(t, dict) and t.get("ruling") not in ("pending", "withheld")} \
         if isinstance(verification.get("tasks"), list) else set()
@@ -624,7 +636,8 @@ def apply_addendum(report: vr.Report, state: State, path: Path, doc: dict[str, A
     files = dict(state.files)
     files.update({row["path"]: dict(row) for _w, row in delta})
     unreviewed = sorted(p for p, row in files.items() if row.get("state") == "unreviewed")
-    if unreviewed and coverage == "complete":
+    replacement = doc.get("replaced_by_full_review")
+    if unreviewed and coverage == "complete" and replacement is None:  # a replacement's own file accounting governs it
         report.add("coverage", "coverage-gaps", f"{', '.join(f'`{p}`' for p in unreviewed)} stays `unreviewed`, which contradicts "
                    "`coverage=complete`; per-file coverage the delta did not reach stays as the chain left it")
     if routed.get("unrecoverable_inputs") and coverage == "complete":
@@ -640,7 +653,6 @@ def apply_addendum(report: vr.Report, state: State, path: Path, doc: dict[str, A
                     [i for i in after.values() if i["type"] == "question"], [])
     for line in status_report.lines:
         report.add("status", *line.split(": ", 2)[1:])
-    replacement = doc.get("replaced_by_full_review")
     if replacement is not None and not (isinstance(replacement, str) and replacement.startswith("/")):
         report.add("replaced_by_full_review", "record-paths", "is null or the replacement record's absolute path")
     if report.lines:
@@ -667,7 +679,7 @@ def apply_addendum(report: vr.Report, state: State, path: Path, doc: dict[str, A
     state.routed = {key: list(routed[key]) for key in ROUTED}
     state.status, state.coverage, state.coverage_gaps = status, coverage, list(gaps)
     state.fixed = [dict(row, source=where) for _l, row in fixed]
-    state.head, state.tip = final, path
+    state.head, state.tip, state.addendum = final, path, path
     meta = doc.get("finalization")
     state.tip_report = meta.get("report") if isinstance(meta, dict) else None
     state.chain.append({"kind": "addendum", "path": where, "format": ADDENDUM_V2, "reviewed_head": doc["reviewed_head"],
@@ -747,9 +759,9 @@ def load(record_path: str, interrupted_final: str | None = None) -> tuple[State,
 
 def summary_lines(state: State) -> str:
     lines = [f"status {state.status}", f"coverage {state.coverage}", f"head {state.head}", f"record {state.record}"]
-    if state.tip != state.record:
-        lines.append(f"addendum {state.tip}")
-    lines.append(f"report {state.tip_report}" if state.tip_report else f"legacy {state.tip}")
+    if state.addendum is not None:
+        lines.append(f"addendum {state.addendum}")
+    lines.append(f"report {state.tip_report}" if state.tip_report else f"legacy {state.addendum or state.record}")
     lines.append(f"continuation {SCRIPT}")
     return "".join(line + "\n" for line in lines)
 
@@ -757,7 +769,8 @@ def summary_lines(state: State) -> str:
 def state_json(state: State) -> dict[str, Any]:
     return {"status": state.status, "coverage": state.coverage, "coverage_gaps": state.coverage_gaps, "head": state.head,
             "repository": state.repository, "record": str(state.record), "record_schema": state.schema,
-            "addenda": str(state.addenda), "tip": str(state.tip), "report": state.tip_report, "chain": state.chain,
+            "addenda": str(state.addenda), "tip": str(state.tip), "addendum": str(state.addendum) if state.addendum else None,
+            "report": state.tip_report, "chain": state.chain,
             "open": list(state.open.values()), "fixed": state.fixed, "files": list(state.files.values()),
             "requirements": list(state.requirements.values()), "check_evidence": state.check_evidence,
             "verification": {"tasks": state.tasks, "batches": state.batches, "allowance": state.allowance,
@@ -797,7 +810,7 @@ def render(state: State, reviewed: str, doc: dict[str, Any], inputs: dict[str, s
     parts.append("## Delta coverage\n\n" + ("\n".join(rows) or "The delta changes no file."))
     parts.append("## Coverage gaps\n\n" + ("\n".join(f"- {gap}" for gap in state.coverage_gaps) or "None."))
     parts.extend(fr.ledger_sections(state.ledgers()))
-    paths = [("addendum", str(state.tip)), ("record", str(state.record)), *inputs.items(), ("continuation", str(SCRIPT))]
+    paths = [("addendum", str(state.addendum)), ("record", str(state.record)), *inputs.items(), ("continuation", str(SCRIPT))]
     parts.append("## Artifacts\n\n" + "\n".join(f"- {name}: {code(path)}" for name, path in paths))
     return "\n\n".join(parts) + "\n"
 

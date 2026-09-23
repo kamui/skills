@@ -414,7 +414,8 @@ class Chain(unittest.TestCase):
         before = self.snapshot(replacement)
         result = self.compose(record, self.store(HEAD, F1), value)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn(f"record {replacement}\n", result.stdout)
+        named = record.parent / "addenda" / f"addendum-{F1}.json"
+        self.assertIn(f"record {replacement}\naddendum {named}\nreport {named.with_name(f'addendum-{F1}.report.md')}\n", result.stdout)
         self.assertEqual(self.snapshot(replacement), before)
         current = json.loads(self.state(record, "--json").stdout)
         self.assertEqual((current["record"], current["head"]), (str(replacement), F1))
@@ -425,6 +426,23 @@ class Chain(unittest.TestCase):
         self.assertTrue((replacement.parent / "addenda" / f"addendum-{F2}.json").exists())
         from_replacement = self.state(replacement)
         self.assertEqual(from_replacement.returncode, 0, from_replacement.stdout)
+
+    def test_replacement_settles_coverage_the_chain_left_open(self):
+        def unreviewed(composition, _private):
+            composition["record"]["files"][3] = {"path": "docs/notes.md", "state": "unreviewed"}
+            composition["run"]["coverage"] = "incomplete"
+            composition["summary"]["coverage_gaps"] = ["docs/notes.md: generated file not read"]
+        record = self.record(mutate=unreviewed)
+        replacement = self.replacement(record)  # a full review that accounts for every file, coverage complete
+        value = self.continuation(fixed_findings=[], status="Changes Requested", replaced_by_full_review=str(replacement))
+        self.composed(record, self.store(HEAD, F1), value)
+        current = json.loads(self.state(record, "--json").stdout)
+        self.assertEqual((current["coverage"], {row["path"]: row["state"] for row in current["files"]}["docs/notes.md"]),
+                         ("complete", "ignored"), "the replacement's own accounting settles the file")
+        # Without a replacement, the untouched unreviewed file still keeps coverage incomplete.
+        again = self.record(mutate=unreviewed)
+        self.refused(self.compose(again, self.store(HEAD, F1), self.continuation(fixed_findings=[], status="Changes Requested")),
+                     "coverage-gaps", "stays `unreviewed`")
 
     def test_replacement_that_drops_state_is_invalid(self):
         record = self.record()
@@ -467,7 +485,9 @@ class Chain(unittest.TestCase):
 
     def test_old_chain_without_markers_stays_readable(self):
         record = self.record(legacy=True)
-        tip = self.addendum(record, HEAD, F1)
+        # The base contract listed only the two spent flags, so an addendum written then may omit `carried_from`.
+        tip = self.addendum(record, HEAD, F1, verification={"tasks": [], "batches": [], "outstanding": [],
+                                                            "allowance": {"initial_spent": True, "follow_up_spent": False}})
         state = self.state(record)
         self.assertEqual(state.returncode, 0, state.stdout)
         self.assertIn(f"legacy {tip}\n", state.stdout)
@@ -487,6 +507,8 @@ class Chain(unittest.TestCase):
             "is not an open item": lambda r: self.addendum(r, HEAD, F1, fixed_findings=[{"id": "x/unknown", "classification": "fixed", "evidence": "e"}]),
             "resets": lambda r: self.addendum(r, HEAD, F1, verification={"tasks": [], "batches": [], "allowance": {
                 "initial_spent": False, "follow_up_spent": False, "carried_from": None}, "outstanding": []}),
+            "carries": lambda r: self.addendum(r, HEAD, F1, verification={"tasks": [], "batches": [], "allowance": {
+                "initial_spent": True, "follow_up_spent": False, "carried_from": str(r)}, "outstanding": []}),
             "contradicts the unsettled must-fix": lambda r: self.addendum(r, HEAD, F1, status="Approved"),
             "does not account": lambda r: Path(json.loads(r.read_text(encoding="utf-8"))["record"]["verification"]["batches"][0]["accounting"])
             .write_text(json.dumps({"format": "verifier-accounting/2"}), encoding="utf-8"),
@@ -495,7 +517,7 @@ class Chain(unittest.TestCase):
             with self.subTest(needle):
                 record = self.record()
                 damage(record)
-                self.invalid(self.state(record), "`allowance=" if needle == "resets" else needle)
+                self.invalid(self.state(record), "`allowance=" if needle in ("resets", "carries") else needle)
                 result = self.compose(record, self.store(HEAD, F1), self.continuation())
                 self.assertEqual(result.returncode, 1, result.stdout)
                 self.assertTrue(result.stdout.startswith("chain-invalid\n"), result.stdout)
