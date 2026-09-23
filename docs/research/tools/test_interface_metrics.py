@@ -53,7 +53,7 @@ class Metrics(unittest.TestCase):
     def composition(self) -> Path:
         path = self.task / "work/composition.json"
         path.write_text(json.dumps({
-            "run": {"head": "a" * 40, "context": "c" * 64, "issues": ["x/y#1"], "coverage": "complete"},
+            "run": {"head": "a" * 40, "context": "c" * 64, "issues": ["x/y#1"], "specs": [], "coverage": "complete"},
             "summary": {"status": "Approved", "intent": "Add one two three."},
             "findings": [], "record": {"paths": {"store": "/s"}, "files": [{"path": "a.py", "state": "reviewed"}]}}),
             encoding="utf-8")
@@ -127,7 +127,7 @@ class Metrics(unittest.TestCase):
         self.assertEqual(by_class["raw-return"]["writes"], 1)
         fields = report["authored"]["fields"][0]
         self.assertEqual(fields["shape"], "composition")
-        self.assertEqual(fields["mechanical"]["fields"], 5)
+        self.assertEqual(fields["mechanical"]["fields"], 6)
         self.assertEqual(fields["judgment"]["fields"], 5)
         self.assertEqual(fields["written_by"], "tool")
         unobserved = report["authored"]["fields"][1]
