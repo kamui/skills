@@ -1,5 +1,7 @@
 # Verifier return encoding
 
+Worker instructions: `build_verifier_prompt.py` embeds what applies of this file in a verifier brief, so the primary reviewer does not read it.
+
 Encode your return as one JSON object and deliver it by the transport section below. This is an encoding of `verifier.md`'s verdicts and rulings, not an additional decision policy. Read the supplied `manifest.json` and echo its exact file SHA-256 as `manifest_sha256` (compute with Python's `hashlib.sha256(Path(...).read_bytes()).hexdigest()`). Every candidate and premise ID is owed exactly one record **in its own array**.
 
 ```json
