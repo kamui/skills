@@ -103,6 +103,10 @@ class Metrics(unittest.TestCase):
             {"type": "user", "timestamp": "2026-09-22T10:00:13Z", "message": {"content": "Read the brief at /b/brief.md now."}},
             assistant("w1", "2026-09-22T10:00:14Z", [("u1", "Read", {"file_path": "/b/brief.md"})]),
             result("u1", "2026-09-22T10:00:15Z", "brief text here"),
+            # The harness records the worker's directory as the skill root; no cd precedes this read.
+            dict(assistant("w1b", "2026-09-22T10:00:15Z", [("u1b", "Bash", {"command": "cat references/verifier.md"})]),
+                 cwd=SKILL),
+            result("u1b", "2026-09-22T10:00:15Z", "verifier text"),
             assistant("w2", "2026-09-22T10:00:16Z", [("u2", "Write", {"file_path": "/b/raw-return.json", "content": "{}"})]),
         ])
         (self.tmp / "stdout.json").write_text(json.dumps({"num_turns": 9, "duration_ms": 31000, "total_cost_usd": 0.5,
@@ -113,7 +117,7 @@ class Metrics(unittest.TestCase):
         report = json.loads(out.stdout)
         root_usage = report["usage"]["root"]["total"]
         self.assertEqual((root_usage["turns"], root_usage["tool_calls"], root_usage["cache_read"]), (9, 11, 9000))
-        self.assertEqual(report["usage"]["all"]["turns"], 11)
+        self.assertEqual(report["usage"]["all"]["turns"], 12)
         self.assertEqual(report["usage"]["root"]["transcripts"][0]["settings"]["efforts"], {"high": 9})
         self.assertEqual(report["harness"]["subagents_spawned"], 1)
         finalizer = report["finalizer"]
@@ -133,6 +137,7 @@ class Metrics(unittest.TestCase):
                                  {"kind": "helper-help", "what": f"{SKILL}/scripts/b.py"}])
         worker_loads = report["worker_loads"][0]
         self.assertEqual(worker_loads["totals"]["bundle"]["count"], 1)
+        self.assertEqual(worker_loads["totals"]["reference"], {"count": 1, "bytes": 13, "words": 2})
         self.assertEqual(worker_loads["dispatch_prompt"]["words"], 6)
         by_class = report["authored"]["by_class"]
         self.assertEqual(by_class["composition"], {"writes": 1, "chars": 120})
