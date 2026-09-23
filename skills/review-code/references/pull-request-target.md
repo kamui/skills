@@ -6,13 +6,10 @@ Resolve the repository, pull request, reviewer identity, base ref and SHA, head 
 
 Before the fetch, create the pull-request private directory outside the working tree with `mktemp -d`, never a predictable shared path; step 2 reuses it. `<run-events-script>` is the absolute path of this skill's `scripts/run_events.py`, so each fetch still runs in the reviewed repository. Run every forge fetch in this file as `python3 <run-events-script> wrap --private-dir <private-dir> --event forge-fetched --data role=<role> --data connection=<connection> -- <fetch command>`, with any stdout redirect outside the wrapper. The wrapper exits with the fetch's own status and appends one timing event; exit 2 with a `run_events:` line on stderr means the wrapper could not run the fetch, which is a failed call.
 
-Fetch the pull request, its closing issues with their comments, and its reviews, review threads, and comments as **one persisted logical collection**: run the root invocation below once (`role=root`, `connection=root`), then one continuation query per bounded connection whose `pageInfo.hasNextPage` is `true`, repeating each with the returned `endCursor` until it is `false`, and save every response as returned to its own file (`> <private-dir>/forge-1.json`, `> <private-dir>/forge-2.json`, …), a failed call included. Fetch each explicitly referenced non-closing issue from the resolution order above once with the issue query below and save it the same way. Then run `python3 scripts/forge_packet.py normalize <private-dir>/forge-*.json > <private-dir>/packet.json` exactly once and keep the packet as the private record's forge section; do not fetch these again later. The helper only normalizes the saved JSON and names a gap for every connection that did not finish; on a non-zero exit, report its output and stop the step.
-
-The root invocation also decides whether step 2's first-review context build can run now, in the same invocation as the fetch. `<forge-packet-script>` is the absolute path of this skill's `scripts/forge_packet.py`, whose `eligibility` subcommand reads the saved root page and the local clone and prints `eligible <merge-base> <head>` only for a proven first review of an open target whose commits are both local; its docstring lists the conditions. Anything else prints `deferred: <reason>`, and step 2 keeps its current build. On `eligible` the invocation runs the first-review build with the step-2 store path and persists its stdout to `<private-dir>/context-build.out`, so the compliance diff is not read before the intent sources and requirement ledger exist. A root-query or build failure prints what failed and stops with its exit status; report it and stop the step. A supplied phase-1 packet replaces this fetch and runs neither the guard nor the early build. On GitHub, `<review-context-script>` is the absolute path of this skill's `scripts/review_context.py`:
+Fetch the pull request, its closing issues with their comments, and its reviews, review threads, and comments as **one persisted logical collection**: run the root query below once (`role=root`, `connection=root`), then one continuation query per bounded connection whose `pageInfo.hasNextPage` is `true`, repeating each with the returned `endCursor` until it is `false`, and save every response as returned to its own file (`> <private-dir>/forge-1.json`, `> <private-dir>/forge-2.json`, …), a failed call included. Fetch each explicitly referenced non-closing issue from the resolution order above once with the issue query below and save it the same way. Then run `python3 scripts/forge_packet.py normalize <private-dir>/forge-*.json > <private-dir>/packet.json` exactly once and keep the packet as the private record's forge section; do not fetch these again later. The helper only normalizes the saved JSON and names a gap for every connection that did not finish; on a non-zero exit, report its output and stop the step. On GitHub:
 
 ```sh
-d=<private-dir> reviewer=<reviewer-login> events=<run-events-script> packet=<forge-packet-script> context=<review-context-script>
-python3 "$events" wrap --private-dir "$d" --event forge-fetched --data role=root --data connection=root -- \
+python3 <run-events-script> wrap --private-dir <private-dir> --event forge-fetched --data role=root --data connection=root -- \
 gh api graphql -F owner='{owner}' -F name='{repo}' -F number=<pr> -f query='
 query($owner:String!,$name:String!,$number:Int!){
   repository(owner:$owner,name:$name){ url
@@ -24,20 +21,7 @@ query($owner:String!,$name:String!,$number:Int!){
       reviews(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} state body submittedAt updatedAt lastEditedAt commit{oid} url } }
       reviewThreads(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ id isResolved isOutdated path line originalLine diffSide
         comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt replyTo{ fullDatabaseId } pullRequestReview{ fullDatabaseId } url } } } }
-      comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url } } } } }' > "$d/forge-1.json"
-rc=$?
-if [ "$rc" -ne 0 ]; then echo "root query failed with exit $rc; no early build:"; cat "$d/forge-1.json"; exit "$rc"; fi
-python3 "$packet" eligibility "$d/forge-1.json" --reviewer "$reviewer" > "$d/early-build.txt"
-rc=$?
-if [ "$rc" -ne 0 ]; then echo "deferred: eligibility guard failed with exit $rc" > "$d/early-build.txt"; fi
-read -r verdict merge_base head < "$d/early-build.txt"
-if [ "$verdict" = eligible ]; then
-  python3 "$context" --merge-base "$merge_base" --head "$head" --store "$d/review-context-$head.json" \
-    > "$d/context-build.out" 2> "$d/context-build.err"
-  rc=$?
-  if [ "$rc" -ne 0 ]; then echo "early context build failed with exit $rc:"; cat "$d/context-build.out" "$d/context-build.err"; exit "$rc"; fi
-fi
-cat "$d/early-build.txt"
+      comments(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url } } } } }' > <private-dir>/forge-1.json
 ```
 
 Continuations run with `role=continuation`, bind `after` to the connection's `endCursor` (`-F after=<cursor>`, declared as `$after:String`), and return the same node fields and `totalCount pageInfo{ hasNextPage endCursor }` as above:
