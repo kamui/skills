@@ -278,7 +278,7 @@ class Chains(unittest.TestCase):
             with self.subTest(shell=shell):
                 private, store = self.private(repo, base, head, f"gate-refused-{shell}")
                 composition = self.gate_composition(base, head, store)
-                composition["record"]["verification"]["follow_up_spent"] = True
+                composition["record"]["verification"]["allowance"]["follow_up_spent"] = True
                 (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
                 (private / "record.json").write_text("stale success\n", encoding="utf-8")
                 result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)

@@ -37,20 +37,19 @@ def candidate(key="a/bug", kind="bug"):
             "conclusion": "PRIVATE_CONCLUSION", "argument": "PRIVATE_ARGUMENT"}
 
 
-def row(key="a/row", kind="bug"):
-    return {"id": key, "kind": kind, "claim": "The empty queue is guarded", "disposition": "refuted",
-            "falsification": "prevented only when queue is empty before dispatch",
-            "evidence": ev(), "support": "PRIVATE_ROW"}
+def premise(key="premise-1", area="concurrency"):
+    return {"id": key, "area": area, "premise": "The lookup always succeeds before `updateShardId()` runs",
+            "evidence": [ev("src/c.py:40", "sender = lookup(id)")], "support": "PRIVATE_PREMISE"}
 
 
-def input_data(mode="candidate-only", candidates=None, ids=None):
+def input_data(candidates=None, premises=None):
     return {"run": {"id": "run-1", "repository": "/tmp/checkout", "base": BASE, "head": HEAD,
                     "merge_base": BASE, "support": "PRIVATE_RUN"},
-            "batch": {"id": "batch-1", "phase": "initial", "mode": mode},
+            "batch": {"id": "batch-1", "phase": "initial"},
             "run_policy": "No execution; bounded semantics traces only.",
             "sources": [ev("issue-219/criterion-1", "Keep the key")],
             "candidates": [candidate()] if candidates is None else candidates,
-            "ledger_ids": [] if ids is None else ids, "support": "PRIVATE_ROOT"}
+            "premises": [] if premises is None else premises, "support": "PRIVATE_ROOT"}
 
 
 class HandoffTests(unittest.TestCase):
@@ -78,10 +77,9 @@ class HandoffTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
         return result
 
-    def build(self, data=None, ledger=None, code=0, scripts=SCRIPTS):
+    def build(self, data=None, code=0, scripts=SCRIPTS):
         output = self.path("bundle")
         result = self.run_cli("build_verifier_prompt.py", self.write(input_data() if data is None else data),
-                              "--ledger", self.write([] if ledger is None else ledger),
                               "--output", output, code=code, scripts=scripts)
         if code:
             self.assertFalse(output.exists(), result.stdout)
@@ -89,14 +87,12 @@ class HandoffTests(unittest.TestCase):
 
     def returned(self, bundle):
         manifest = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
-        result = {"manifest_sha256": hashlib.sha256((bundle / "manifest.json").read_bytes()).hexdigest(),
-                  "candidates": [{"id": key, "verdict": "confirmed", "basis": "Changed line replaces the key",
-                                  "evidence": [ev()]} for key in manifest["candidate_ids"]],
-                  "ledger": [{"id": key, "ruling": "holds", "evidence": [ev("src/a.py:19")]} for key in manifest["ledger_ids"]],
-                  "duplicate_groups": [], "observation": None}
-        if manifest["batch"]["mode"] == "complete-ledger":
-            result["conclusion"] = "clean verdict stands"
-        return result
+        return {"manifest_sha256": hashlib.sha256((bundle / "manifest.json").read_bytes()).hexdigest(),
+                "candidates": [{"id": key, "verdict": "confirmed", "basis": "Changed line replaces the key",
+                                "evidence": [ev()]} for key in manifest["candidate_ids"]],
+                "premises": [{"id": key, "ruling": "holds", "evidence": [ev("src/c.py:38", "if id in table:")]}
+                             for key in manifest["premise_ids"]],
+                "duplicate_groups": [], "observation": None}
 
     def account(self, bundle, returned, code=0, scripts=SCRIPTS):
         raw = self.write(returned, "raw.json")
@@ -110,56 +106,72 @@ class HandoffTests(unittest.TestCase):
             return result
         return None
 
-    def test_batch_modes_initial_and_followup(self):
+    def test_task_mixes_initial_and_followup(self):
         for phase in ("initial", "follow-up"):
-            for mode, candidates, rows in (
-                ("candidate-only", [candidate()], []),
-                ("complete-ledger", [], [row()]),
-                ("complete-ledger", [], []),
-                ("complete-ledger", [candidate()], [row("a/bug")]),
-                ("related-acquittal", [candidate()], [row()]),
-                ("related-acquittal", [], [row()]),
-            ):
-                with self.subTest(phase=phase, mode=mode, candidates=len(candidates), rows=len(rows)):
-                    data = input_data(mode, candidates, [r["id"] for r in rows])
+            for candidates, premises in (([candidate()], []), ([], [premise()]), ([candidate()], [premise()])):
+                with self.subTest(phase=phase, candidates=len(candidates), premises=len(premises)):
+                    data = input_data(candidates, premises)
                     data["batch"]["phase"] = phase
-                    bundle = self.build(data, rows)
+                    bundle = self.build(data)
+                    manifest = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
+                    self.assertEqual(manifest["format"], "verifier-manifest/2")
+                    self.assertEqual(manifest["premise_ids"], [p["id"] for p in premises])
                     report = self.account(bundle, self.returned(bundle))
                     self.assertTrue(report["structurally_complete"])
-                    self.assertEqual(report["withheld"], {"candidates": [], "ledger": []})
+                    self.assertEqual(report["withheld"], {"candidates": [], "premises": []})
+                    self.assertEqual(report["accounted"]["premises"], [p["id"] for p in premises])
+
+    def test_retired_ledger_modes_are_not_projected(self):
+        data = input_data()
+        data["batch"]["mode"] = "complete-ledger"
+        data["ledger_ids"] = ["a/row"]
+        bundle = self.build(data)
+        projected = json.loads((bundle / "input.json").read_text(encoding="utf-8"))
+        self.assertEqual(projected["batch"], {"id": "batch-1", "phase": "initial"})
+        self.assertNotIn("ledger", projected)
+        brief = (bundle / "brief.md").read_text(encoding="utf-8").lower()
+        for retired in ("clean verdict", "complete-ledger", "related-acquittal", "ledger row", "attackable"):
+            self.assertNotIn(retired, brief)
+        self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--ledger", self.write([]),
+                     "--output", self.path("bundle"), code=2)
+
+    def test_brief_carries_the_safety_premise_task(self):
+        brief = (self.build(input_data([], [premise()])) / "brief.md").read_text(encoding="utf-8")
+        self.assertIn("## Safety-premise task", brief)
+        self.assertIn("Trace the *opposite* branch", brief)
+        self.assertIn("updateShardId()", brief)
+        self.assertNotIn("PRIVATE_", brief)
 
     def test_commit_requirement_sources(self):
-        for role in ("candidate", "ledger"):
-            item = candidate() if role == "candidate" else row()
+        for role in ("candidate", "premise"):
+            item = candidate() if role == "candidate" else premise(area="compatibility")
             item["requirement_source"] = 'commit-abcdef0/"Keep the key"'
-            rows = [] if role == "candidate" else [item]
-            data = input_data("candidate-only" if role == "candidate" else "complete-ledger",
-                              [item] if role == "candidate" else [], [r["id"] for r in rows])
+            data = input_data([item], []) if role == "candidate" else input_data([], [item])
             data["sources"] = [ev("commit-abcdef0", "Keep the key\n\nAcross retries.")]
-            bundle = self.build(data, rows)
+            bundle = self.build(data)
             self.assertIn('Keep the key', (bundle / 'brief.md').read_text(encoding='utf-8'))
             self.account(bundle, self.returned(bundle))
             data["sources"] = [ev("commit-1234567", "A different commit")]
-            self.build(data, rows, code=1)
+            self.build(data, code=1)
             item["requirement_source"] = 'commit-notasha/"Keep the key"'
-            self.build(data, rows, code=1)
+            self.build(data, code=1)
 
     def test_projection_preserves_raw_evidence_and_excludes_private_fields(self):
-        data = input_data("complete-ledger", [candidate()], ["a/bug"])
+        data = input_data([candidate()], [premise()])
         data["candidates"][0]["test_evidence"] = [{"command": "python3 test_retry.py", "head": HEAD,
                                                   "exit_status": 1, "output": "support: bad key",
                                                   "support": "PRIVATE_TEST"}]
-        bundle = self.build(data, [row("a/bug")])
+        bundle = self.build(data)
         projected = json.loads((bundle / "input.json").read_text(encoding="utf-8"))
         brief = (bundle / "brief.md").read_text(encoding="utf-8")
         self.assertNotIn("PRIVATE_", brief)
         self.assertEqual(projected["candidates"][0]["evidence"][0]["text"], ev()["text"])
         self.assertEqual(projected["candidates"][0]["test_evidence"][0]["output"], "support: bad key")
-        self.assertEqual(projected["ledger"][0]["falsification"], row()["falsification"])
+        self.assertEqual(projected["premises"][0]["premise"], premise()["premise"])
         self.assertEqual(projected["candidates"][0]["ranges"]["fix"]["text"], "src/b.py: +20,2")
 
     def test_conditional_bundles_and_unavailable_evidence(self):
-        data = input_data("complete-ledger", [candidate(kind="concurrency")], ["a/row"])
+        data = input_data([candidate(kind="concurrency")], [premise(area="compatibility")])
         c = data["candidates"][0]
         c["requirement_source"] = "artifact-sdk@2/api:send"
         c["rule_source"] = "base:AGENTS.md:5"
@@ -168,10 +180,9 @@ class HandoffTests(unittest.TestCase):
                              "consumer_sites": [{"unavailable": "consumer artifact inaccessible", "coordinate": "consumer/aliases.py"}],
                              "support": "PRIVATE_ARTIFACT"}
         c["test_evidence"] = [{"unavailable": "offline dependencies"}]
-        rows = [row()]
-        rows[0]["released_compatibility"] = {"coordinate": "pr-body/change", "promise": "Change capacity", "scope": "released 1.6",
+        data["premises"][0]["released_compatibility"] = {"coordinate": "pr-body/change", "promise": "Change capacity", "scope": "released 1.6",
             **{key: [{"unavailable": "No " + key}] for key in ("documentation", "tests", "callers", "release_decision")}}
-        bundle = self.build(data, rows)
+        bundle = self.build(data)
         brief = (bundle / "brief.md").read_text(encoding="utf-8")
         self.assertIn("# Verifier bug-class check", brief)
         self.assertIn("## Conformance verifier procedure", brief)
@@ -208,62 +219,60 @@ class HandoffTests(unittest.TestCase):
     def test_example_input_builds(self):
         result = self.run_cli("build_verifier_prompt.py", "--example")
         example = json.loads(result.stdout)
-        example["input"]["run"]["repository"] = str(self.root)
-        bundle = self.build(example["input"], example["ledger"])
+        example["run"]["repository"] = str(self.root)
+        bundle = self.build(example)
         self.assertTrue((bundle / "brief.md").exists())
+        self.account(bundle, self.returned(bundle))
 
     def test_build_refusals(self):
         variants = []
         for repository in (".", "relative/checkout"):
             data = input_data()
             data["run"]["repository"] = repository
-            variants.append((data, []))
-        data = input_data("complete-ledger", [], [])
-        variants.append((data, [row()]))
-        variants.append((input_data("related-acquittal", [], ["missing"]), [row()]))
-        variants.append((input_data("related-acquittal", [], ["a/row", "a/row"]), [row()]))
-        variants.append((input_data(), [row(), row()]))
-        variants.append((input_data(candidates=[candidate(), candidate()]), []))
-        variants.append((input_data(candidates=[]), []))
+            variants.append(data)
+        variants.append(input_data([], []))
+        variants.append(input_data([candidate(), candidate()]))
+        variants.append(input_data([candidate("same")], [premise("same")]))
+        variants.append(input_data([], [premise(), premise()]))
+        for field in ("area", "premise", "evidence"):
+            data = input_data([], [premise()])
+            del data["premises"][0][field]
+            variants.append(data)
+        variants.append(input_data([], [premise(area="performance")]))
+        data = input_data([], [premise()])
+        data["premises"][0]["premise"] = "First line\nsecond line"
+        variants.append(data)
         for field in ("trigger", "ranges", "anchor", "evidence"):
             data = input_data()
             del data["candidates"][0][field]
-            variants.append((data, []))
+            variants.append(data)
         data = input_data()
         data["candidates"][0]["requirement_source"] = "artifact-a@1/file:name"
-        variants.append((data, []))
+        variants.append(data)
         data = input_data()
         data["candidates"][0]["requirement_source"] = "pr-body/promise"
-        variants.append((data, []))
+        variants.append(data)
         data = input_data()
         data["candidates"][0]["test_evidence"] = [{"command": "test", "head": BASE, "exit_status": 0, "output": "pass"}]
-        variants.append((data, []))
-        for i, (data, rows) in enumerate(variants):
+        variants.append(data)
+        for i, data in enumerate(variants):
             with self.subTest(case=i):
-                self.build(data, rows, code=1)
+                self.build(data, code=1)
         data["candidates"][0].pop("test_evidence")
         data["candidates"][0]["requirement_source"] = "pr-body/promise"
         data["sources"] = [ev("pr-title", "Change retries"), {"coordinate": "pr-body", "unavailable": "body fetch failed"}]
         self.build(data)
 
-    def test_complete_ledger_uses_authoritative_rows_related_selection_is_model_owned(self):
-        unrelated = row("other/lock", "maintainability")
-        data = input_data("related-acquittal", [candidate()], [unrelated["id"]])
-        bundle = self.build(data, [row(), unrelated])
-        projected = json.loads((bundle / "input.json").read_text(encoding="utf-8"))
-        self.assertEqual([r["id"] for r in projected["ledger"]], ["other/lock"])
-        data["batch"]["mode"] = "complete-ledger"
-        self.build(data, [row(), unrelated], code=1)
-
     def test_wrong_run_batch_and_tampered_bundle(self):
-        first = self.build()
+        first = self.build(input_data([candidate()], [premise()]))
         for field, value in (("id", "run-2"), ("head", "c" * 40)):
-            data = input_data()
+            data = input_data([candidate()], [premise()])
             data["run"][field] = value
             second = self.build(data)
             report = self.account(second, self.returned(first), code=1)
-            self.assertEqual(report["accounted"]["candidates"], [])
-        data = input_data()
+            self.assertEqual(report["accounted"], {"candidates": [], "premises": []})
+            self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+        data = input_data([candidate()], [premise()])
         data["batch"].update(id="batch-2", phase="follow-up")
         self.account(self.build(data), self.returned(first), code=1)
         returned = self.returned(first)
@@ -271,7 +280,7 @@ class HandoffTests(unittest.TestCase):
         self.assertIsNone(self.account(first, returned, code=1))
 
     def test_missing_duplicate_unknown_wrong_role_and_invalid_verdicts(self):
-        bundle = self.build(input_data("complete-ledger", [candidate(), candidate("b/bug")], ["a/bug"]), [row("a/bug")])
+        bundle = self.build(input_data([candidate(), candidate("b/bug")], [premise()]))
         for mutation in (
             lambda r: r["candidates"].pop(0),
             lambda r: r["candidates"].append(copy.deepcopy(r["candidates"][0])),
@@ -281,27 +290,47 @@ class HandoffTests(unittest.TestCase):
             lambda r: r["candidates"][0].update(verdict="refuted", basis="unresolved"),
             lambda r: r["candidates"][0].update(basis=""),
             lambda r: r["candidates"][0].update(evidence=[]),
-            lambda r: r["candidates"].__setitem__(0, copy.deepcopy(r["ledger"][0])),
+            lambda r: r["candidates"][0].update(evidence=[{"unavailable": "could not read the anchor"}]),
+            lambda r: r["candidates"][0].update(verdict="refuted", basis="prevented", evidence=[{"unavailable": "guard not found"}]),
+            lambda r: r["candidates"].__setitem__(0, copy.deepcopy(r["premises"][0])),
         ):
             returned = self.returned(bundle)
             mutation(returned)
             report = self.account(bundle, returned, code=1)
             self.assertIn("b/bug", report["accounted"]["candidates"])
             self.assertIn("a/bug", report["withheld"]["candidates"])
-            self.assertIn("a/bug", report["accounted"]["ledger"])
+            self.assertIn("premise-1", report["accounted"]["premises"])
         for mutation in (
-            lambda r: r["ledger"].clear(),
-            lambda r: r["ledger"].append(copy.deepcopy(r["ledger"][0])),
-            lambda r: r["ledger"][0].update(id="b/bug"),
-            lambda r: r["ledger"][0].update(ruling="confirmed"),
-            lambda r: r["ledger"].append(123),
-            lambda r: r["ledger"].__setitem__(0, copy.deepcopy(r["candidates"][0])),
+            lambda r: r["premises"].clear(),
+            lambda r: r["premises"].append(copy.deepcopy(r["premises"][0])),
+            lambda r: r["premises"][0].update(id="a/bug"),
+            lambda r: r["premises"][0].update(ruling="re-open"),
+            lambda r: r["premises"][0].update(ruling="fails"),
+            lambda r: r["premises"][0].update(ruling="unresolved"),
+            lambda r: r["premises"][0].update(evidence=[{"unavailable": "table not inspected"}]),
+            lambda r: r["premises"].__setitem__(0, copy.deepcopy(r["candidates"][0])),
         ):
             returned = self.returned(bundle)
             mutation(returned)
             report = self.account(bundle, returned, code=1)
-            self.assertFalse(report["conclusion_accounted"])
+            self.assertEqual(report["withheld"]["premises"], ["premise-1"])
             self.assertEqual(report["accounted"]["candidates"], ["a/bug", "b/bug"])
+        for retired in (lambda r: r.update(ledger=[]), lambda r: r.update(conclusion="clean verdict stands"),
+                        lambda r: r.pop("premises"), lambda r: r["premises"].append(123)):
+            returned = self.returned(bundle)
+            retired(returned)
+            self.assertFalse(self.account(bundle, returned, code=1)["structurally_complete"])
+
+    def test_premise_rulings(self):
+        bundle = self.build(input_data([], [premise()]))
+        for ruling, extra in (("holds", {}), ("fails", {"failed_step": "A missed lookup leaves `sender` NULL at src/c.py:41"}),
+                              ("unresolved", {"settling_fact": "The operator can say whether failover runs concurrently",
+                                              "evidence": [{"unavailable": "failover scheduling is configured outside the repository"}]})):
+            with self.subTest(ruling=ruling):
+                returned = self.returned(bundle)
+                returned["premises"][0].update(ruling=ruling, **extra)
+                report = self.account(bundle, returned)
+                self.assertEqual(report["accounted"]["premises"], ["premise-1"])
 
     def test_refutation_bases(self):
         bundle = self.build()
@@ -312,30 +341,13 @@ class HandoffTests(unittest.TestCase):
                 returned["candidates"][0]["settling_fact"] = "Maintainer can supply the intended delivery guarantee."
                 returned["candidates"][0]["evidence"] = [{"unavailable": "Product decision not recorded"}]
             self.account(bundle, returned)
-        bundle = self.build(input_data(candidates=[candidate(kind="requirement")]))
+        bundle = self.build(input_data([candidate(kind="requirement")]))
         returned = self.returned(bundle)
         returned["candidates"][0].update(verdict="refuted", basis="pre-existing")
         self.account(bundle, returned, code=1)
 
-    def test_conclusion_does_not_substitute_for_rows_or_candidates(self):
-        bundle = self.build(input_data("complete-ledger", [candidate()], ["a/row"]), [row()])
-        returned = self.returned(bundle)
-        returned["ledger"][0].update(ruling="re-open", failed_step="Missing empty guard")
-        self.account(bundle, returned, code=1)
-        returned["conclusion"] = {"re_open": ["a/row"]}
-        self.account(bundle, returned)
-        returned["candidates"] = []
-        report = self.account(bundle, returned, code=1)
-        self.assertTrue(report["conclusion_accounted"])
-        self.assertEqual(report["withheld"]["candidates"], ["a/bug"])
-        for mode, rows in (("candidate-only", []), ("related-acquittal", [row()])):
-            bundle = self.build(input_data(mode, [candidate()], [r["id"] for r in rows]), rows)
-            returned = self.returned(bundle)
-            returned["conclusion"] = "clean verdict stands"
-            self.account(bundle, returned, code=1)
-
     def test_corrections_safety_duplicates_and_observation_preserved(self):
-        bundle = self.build(input_data(candidates=[candidate(), candidate("b/bug")]))
+        bundle = self.build(input_data([candidate(), candidate("b/bug")]))
         returned = self.returned(bundle)
         returned["candidates"][0]["corrections"] = {"priority": "P3", "action": "consider", "trigger": "Only on timeout",
             "impact": "One duplicate", "anchor": candidate()["anchor"], "fix": "src/b.py:22", "change": "Keep the key"}
@@ -355,24 +367,24 @@ class HandoffTests(unittest.TestCase):
             self.account(bundle, invalid, code=1)
 
     def test_raw_parse_failures_and_no_overwrites(self):
-        bundle = self.build()
+        bundle = self.build(input_data([candidate()], [premise()]))
         for raw_text in ('not JSON', '{"candidates": [], "candidates": []}', 'NaN'):
             raw = self.path("raw.json")
             raw.write_text(raw_text, encoding="utf-8")
             report = self.path("report.json")
             self.run_cli("account_verifier_return.py", "--bundle", bundle, "--output", report, raw, code=1)
             result = json.loads(report.read_text(encoding="utf-8"))
-            self.assertEqual(result["withheld"]["candidates"], ["a/bug"])
+            self.assertEqual(result["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
             self.assertEqual(raw.read_text(encoding="utf-8"), raw_text)
         raw = self.write(self.returned(bundle))
         self.run_cli("account_verifier_return.py", "--bundle", bundle, "--output", raw, raw, code=2)
-        self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--ledger", self.write([]), "--output", bundle, code=2)
-        self.run_cli("build_verifier_prompt.py", self.root / "missing", "--ledger", self.write([]), "--output", self.path("bundle"), code=2)
+        self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--output", bundle, code=2)
+        self.run_cli("build_verifier_prompt.py", self.root / "missing", "--output", self.path("bundle"), code=2)
 
     def test_standalone_install(self):
         skill = self.root / "installed" / "review-code"
         shutil.copytree(SCRIPTS.parent, skill, ignore=shutil.ignore_patterns("__pycache__"))
-        bundle = self.build(scripts=skill / "scripts")
+        bundle = self.build(input_data([candidate()], [premise()]), scripts=skill / "scripts")
         self.account(bundle, self.returned(bundle), scripts=skill / "scripts")
 
 
