@@ -444,6 +444,55 @@ class Chain(unittest.TestCase):
         self.refused(self.compose(again, self.store(HEAD, F1), self.continuation(fixed_findings=[], status="Changes Requested")),
                      "coverage-gaps", "stays `unreviewed`")
 
+    def full_review(self, predecessor: Path, findings: list, questions: list) -> Path:
+        """A replacement whose own follow-up batch confirms each finding it raises."""
+        def own(composition, private):
+            composition["findings"], composition["questions"] = findings, questions
+            if not findings:
+                composition["summary"]["status"] = "Needs Information"
+            tasks = [fixtures.candidate_task(identity=f["id"], batch="follow-up") for f in findings]
+            composition["record"]["verification"] = {
+                "tasks": tasks, "batches": [self.batch(private, "follow-up", "follow-up", tasks)] if tasks else [],
+                "allowance": {"initial_spent": True, "follow_up_spent": bool(tasks), "carried_from": str(predecessor)},
+                "outstanding": []}
+        return self.record(mutate=own, head=F1, name="replacement")
+
+    def test_replacement_records_its_own_confirmed_blocker(self):
+        record = self.record()
+        question = fixtures.base_composition()["questions"][0]
+        blocker = fixtures.finding(id="queue/drop-on-full", title="Block when the queue is full",
+                                   anchor={"type": "line", "path": "src/queue.ts", "start_line": 3, "end_line": 3, "side": "RIGHT"}, fix=None)
+        # The addendum fixes the chain's blocker; the full review raises and confirms a new one, so its status governs.
+        replacement = self.full_review(record, [blocker], [question])
+        self.composed(record, self.store(HEAD, F1), self.continuation(status="Changes Requested", replaced_by_full_review=str(replacement)))
+        current = json.loads(self.state(record, "--json").stdout)
+        self.assertEqual((current["status"], sorted(item["id"] for item in current["open"])), ("Changes Requested", [blocker["id"], QUESTION]))
+        self.assertEqual(current["confirmations"][blocker["id"]]["batch"], f"carried:{replacement}#follow-up")
+        # The replacement's own items, not the chain's, must support the status the addendum carries.
+        other = self.record()
+        settled = self.full_review(other, [], [question])
+        result = self.compose(other, self.store(HEAD, F1), self.continuation(status="Changes Requested", replaced_by_full_review=str(settled)))
+        self.refused(result, "status-consistency", "needs an unsettled must-fix")
+
+    def test_replacement_confirms_a_blocker_the_addendum_raised(self):
+        def approved(composition, _private):
+            composition["findings"], composition["questions"] = [], []
+            composition["summary"]["status"] = "Approved"
+            composition["record"]["verification"] = {"tasks": [], "batches": [], "outstanding": [],
+                                                     "allowance": {"initial_spent": False, "follow_up_spent": False, "carried_from": None}}
+        record = self.record(mutate=approved)
+        blocker = fixtures.finding(id="queue/drop-on-full", title="Block when the queue is full",
+                                   anchor={"type": "line", "path": "src/queue.ts", "start_line": 3, "end_line": 3, "side": "RIGHT"}, fix=None)
+        task = fixtures.candidate_task(identity=blocker["id"], batch="initial")
+        batch = self.batch(self.fresh("continuation"), "initial", "initial", [task])
+        # The addendum's own confirmation has no chain file yet, so the replacement confirms the blocker in its own batch.
+        replacement = self.full_review(record, [blocker], [])
+        value = self.continuation(fixed_findings=[], findings=[blocker], status="Changes Requested", replaced_by_full_review=str(replacement),
+                                  verification={"tasks": [task], "batches": [{k: batch[k] for k in ("bundle", "accounting", "operation")}]})
+        self.composed(record, self.store(HEAD, F1), value)
+        current = json.loads(self.state(record, "--json").stdout)
+        self.assertEqual(current["confirmations"][blocker["id"]]["batch"], f"carried:{replacement}#follow-up")
+
     def test_replacement_that_drops_state_is_invalid(self):
         record = self.record()
         base = dict(fixed_findings=[], status="Changes Requested")

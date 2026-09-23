@@ -61,11 +61,12 @@ work, routed items and untouched per-file coverage survive every addendum
 (the base contract's allowance without `carried_from` reads as null);
 `status` and `coverage` must agree with the cumulative open items, files,
 outstanding work and unrecoverable inputs, except that a replacement's own
-file accounting governs the files it settled. A replacement record must head the
-addendum's final head, carry every open item, routed item and outstanding
-task, keep the spent flags with `carried_from` naming the chain file it
-replaced, and carry each open finding's confirmation as
-`carried:<original chain file>#<batch>` with its trigger.
+items govern the status and its own file accounting the files it settled. A
+replacement record must head the addendum's final head, carry every open item,
+routed item and outstanding task, keep the spent flags with `carried_from`
+naming the chain file it replaced, and carry the confirmation of each finding
+open before the addendum as `carried:<original chain file>#<batch>` with its
+trigger.
 
 A new addendum is written as `addendum-<final head>.json` in the current
 record's addenda directory with `finalization` (review-code-finalization/1,
@@ -645,14 +646,11 @@ def apply_addendum(report: vr.Report, state: State, path: Path, doc: dict[str, A
     if not report.lines:
         check = dict(verification, allowance=dict(verification["allowance"], carried_from=str(state.tip)))
         cr.read_verification(report, check, coverage, findings, questions)
-    after = {i: item for i, item in state.open.items() if i not in closing}
-    for item in findings + questions:
-        after[item["id"]] = item
-    status_report = vr.Report()
-    cr.check_status(status_report, status, coverage, [i for i in after.values() if i["type"] == "finding"],
-                    [i for i in after.values() if i["type"] == "question"], [])
-    for line in status_report.lines:
-        report.add("status", *line.split(": ", 2)[1:])
+    if replacement is None:  # a replacement's own items govern its status, checked in replace()
+        after = {i: item for i, item in state.open.items() if i not in closing}
+        for item in findings + questions:
+            after[item["id"]] = item
+        check_status(report, status, coverage, list(after.values()))
     if replacement is not None and not (isinstance(replacement, str) and replacement.startswith("/")):
         report.add("replaced_by_full_review", "record-paths", "is null or the replacement record's absolute path")
     if report.lines:
@@ -685,11 +683,24 @@ def apply_addendum(report: vr.Report, state: State, path: Path, doc: dict[str, A
     state.chain.append({"kind": "addendum", "path": where, "format": ADDENDUM_V2, "reviewed_head": doc["reviewed_head"],
                         "head": final, "report": state.tip_report})
     if replacement is not None:
-        replace(report, state, previous, path, doc, Path(os.path.abspath(replacement)))
+        replace(report, state, previous, path, doc, Path(os.path.abspath(replacement)), before)
 
 
-def replace(report: vr.Report, state: State, previous: Path, addendum: Path, doc: dict[str, Any], path: Path) -> None:
-    """Check that a replacement record carries the chain's state, then continue from it."""
+def check_status(report: vr.Report, status: Any, coverage: Any, items: list[dict[str, Any]]) -> None:
+    """`status` against the open items it summarizes, under the composer's status rules."""
+    found = vr.Report()
+    cr.check_status(found, status, coverage, [{"id": i.get("id"), "action": i.get("action")} for i in items if i.get("type") == "finding"],
+                    [i for i in items if i.get("type") == "question"], [])
+    for line in found.lines:
+        report.add("status", *line.split(": ", 2)[1:])
+
+
+def replace(report: vr.Report, state: State, previous: Path, addendum: Path, doc: dict[str, Any], path: Path,
+            carried: set[str]) -> None:
+    """Check that a replacement record carries the chain's state, then continue from it.
+
+    ``carried`` names the items open before the addendum; only their confirmations have a chain file to carry from.
+    """
     record = read_file(report, str(path), "replaced_by_full_review")
     if record is None:
         return
@@ -711,7 +722,9 @@ def replace(report: vr.Report, state: State, previous: Path, addendum: Path, doc
     for flag in ("initial_spent", "follow_up_spent"):
         if state.allowance[flag] and allowance.get(flag) is not True:
             report.add(where, "carried-state", f"resets `{flag}`; spent allowance survives a replacement")
-    items = {item.get("id") for item in record.get("items", []) if isinstance(item, dict)}
+    own = [item for item in record.get("items", []) if isinstance(item, dict)]
+    check_status(report, doc["status"], doc["coverage"], own)
+    items = {item.get("id") for item in own}
     for identity in state.open:
         if identity not in items:
             report.add(where, "carried-state", f"drops open item `{identity}`")
@@ -726,7 +739,7 @@ def replace(report: vr.Report, state: State, previous: Path, addendum: Path, doc
             report.add(where, "carried-state", f"drops outstanding `{entry}`")
     tasks = {t.get("id"): t for t in verification.get("tasks") or [] if isinstance(t, dict)}
     for identity, confirmation in state.confirmations.items():
-        if identity not in state.open or state.open[identity]["type"] != "finding":
+        if identity not in carried or identity not in state.open or state.open[identity]["type"] != "finding":
             continue
         task = tasks.get(identity, {})
         if (task.get("type"), task.get("ruling"), task.get("batch"), task.get("trigger")) != \
