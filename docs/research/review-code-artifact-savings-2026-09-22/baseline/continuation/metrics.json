@@ -477,7 +477,8 @@
             "fields": 3,
             "words": 0
           }
-        }
+        },
+        "written_by": "tool"
       },
       {
         "path": "/tmp/rcs-savings/baseline/continuation/work/followup-input.json",
@@ -516,7 +517,8 @@
             "fields": 12,
             "words": 110
           }
-        }
+        },
+        "written_by": "tool"
       },
       {
         "path": "/tmp/rcs-savings/baseline/continuation/work/followup/raw-return.json",
@@ -551,7 +553,8 @@
             "fields": 1,
             "words": 0
           }
-        }
+        },
+        "written_by": "tool"
       }
     ]
   }

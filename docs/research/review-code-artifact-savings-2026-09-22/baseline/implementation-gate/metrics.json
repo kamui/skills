@@ -284,12 +284,12 @@
         "shape": "composition",
         "bytes": 8677,
         "mechanical": {
-          "fields": 34,
-          "words": 52
+          "fields": 32,
+          "words": 51
         },
         "judgment": {
-          "fields": 63,
-          "words": 558
+          "fields": 65,
+          "words": 559
         },
         "sections": {
           "run": {
@@ -316,7 +316,36 @@
             "fields": 77,
             "words": 384
           }
-        }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/fingerprint-input.json",
+        "shape": "fingerprint-input",
+        "bytes": 1262,
+        "mechanical": {
+          "fields": 5,
+          "words": 147
+        },
+        "judgment": {
+          "fields": 0,
+          "words": 0
+        },
+        "sections": {
+          "pr": {
+            "fields": 2,
+            "words": 25
+          },
+          "issues": {
+            "fields": 1,
+            "words": 0
+          },
+          "specs": {
+            "fields": 2,
+            "words": 122
+          }
+        },
+        "written_by": "unobserved"
       }
     ]
   }
