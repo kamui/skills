@@ -1,6 +1,6 @@
 # Changed tests
 
-Read at `SKILL.md` step 3 when the change adds or substantively changes a test function, and before running any focused test. The verifier brief embeds the Inspect and run section.
+Read when the change adds or substantively changes a test function, and before running any focused test. The verifier brief embeds the Inspect and run section.
 
 ## Inspect and run
 
@@ -12,10 +12,10 @@ Each outcome is distinct and carries its own evidence:
 
 - A reproducible assertion failure the diff introduces is a `bug` candidate under the ordinary gates. The test's expectation is authoritative unless the issue, the change description, or a repository rule establishes that the expectation itself is wrong; `Change` names whichever of the test or the product the evidence shows is wrong, or the failing expectation when the evidence does not settle which. Priority follows actual impact. A test the repository's CI runs is an authoritative execution path for the action rule, so the failure is ordinarily `must-fix`, and its verification follows the verifier's red-test rule.
 - A setup, network, or toolchain failure is not a test failure. Record it as unavailable evidence and decide the case by trace.
-- A failure also present at the merge-base — run the same focused command there once, or read the base CI, only when the head result needs the comparison — is pre-existing under gate 2 unless the change materially worsens it or an explicit requirement makes it this change's responsibility.
+- A failure also present at the merge-base — run the same focused command there once, or read the base CI, only when the head result needs the comparison — is pre-existing under introduction/responsibility rules unless the change materially worsens it or an explicit requirement makes it this change's responsibility.
 - A test that passes without exercising the behavior it claims — no assertion on the call, an assertion that cannot fail, or a regression test that also passes at the merge-base — supports at most an optional test-quality candidate, `maintainability` and `consider`, when the ordinary benefit and evidence bar holds; otherwise route it under the observation rule or drop it.
 - A pass is evidence about the test, not proof that the product change is sufficient. Ledger dispositions and candidate falsification still rest on inspection of the product code.
 
 ## Primary focused-test recording
 
-The primary runs each focused command the section above permits, including a merge-base comparison, as `python3 <absolute path of scripts/run_events.py> wrap --private-dir <private-dir> --event focused-test-ran --data head=<full SHA it runs at> -- <command>`, where `<private-dir>` holds the step-2 store; the wrapper exits with the command's status. The verifier brief embeds only the section above, so this form stays outside it: tests the verifier runs stay unwrapped, and the isolated worker never receives the wrapper command or the primary's private directory.
+The primary runs each focused command the section above permits, including a merge-base comparison, as `python3 <absolute path of scripts/run_events.py> wrap --private-dir <private-dir> --event focused-test-ran --data head=<full SHA it runs at> -- <command>`, where `<private-dir>` holds the context store; the wrapper exits with the command's status. The verifier brief embeds only the section above, so this form stays outside it: tests the verifier runs stay unwrapped, and the isolated worker never receives the wrapper command or the primary's private directory.

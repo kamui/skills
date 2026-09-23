@@ -14,7 +14,7 @@ For either route, brief an implementation-gate addendum applying `review-code`'s
 
 Read the record and addenda to establish current findings, unresolved or disputed items, questions, coverage and verification allowance. Validate their repository and head chain, reading version-1 files as that reference maps them. Missing or mismatched required state leaves coverage incomplete. Open supporting artifacts only as needed for review; assess unavailable evidence under `review-code`'s `references/check-evidence.md`.
 
-Recheck each fixed finding at the final head with bounded reads and focused tests. Inspect the complete fix delta (`git diff <reviewed head>...<final head>`) under the rubric's Complete inspection rules. Independently check retention and invalidation decisions against that delta using step 3's verification rules.
+Recheck each fixed finding at the final head with bounded reads and focused tests. Inspect the complete fix delta (`git diff <reviewed head>...<final head>`) under review-code's Strategy and admission rules. Independently check retention and invalidation decisions against that delta using step 3's verification rules.
 
 Falsify new candidates under the rubric. For new candidates meeting `review-code`'s mandatory-verification trigger, and safety premises its safety-premise check requires, await one verifier batch within the remaining allowance. Preserve stable ids, verification accounting, test restrictions and batch limits across workers. Unresolved blockers and incomplete required verification prevent publication.
 

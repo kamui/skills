@@ -90,7 +90,7 @@ def expect_error(case: str, payload: Any, fragment: str, *, dumps: Any = None) -
 
 
 # The reviewed inputs of one representative run. `guidance` here is a fixture of
-# the F1.1 membership rule in `references/review-record.md`: root AGENTS.md and
+# the F1.1 membership rule in `references/rendering.md`: root AGENTS.md and
 # root CLAUDE.md, a path-scoped AGENTS.md in an ancestor directory of a changed
 # path, and root CONTEXT.md. Membership is decided by the reviewer, not by this
 # script — the script hashes exactly the entries it is given, which is why the
