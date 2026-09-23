@@ -85,7 +85,7 @@ Every JSON artifact the model wrote, split under the consumer map's inventory. T
 | Cell | Composition or addendum: mechanical / judgment leaves | Verifier input | Raw return | `report.md` characters |
 | --- | --- | --- | --- | ---: |
 | publishable | 30 / 55 | 8 / 33 | 1 / 26 | 10,054 |
-| implementation-gate | 33 / 64, plus fingerprint input 5 / 0 (147 words) | — | — | 9,351 |
+| implementation-gate | 34 / 63, plus fingerprint input 5 / 0 (147 words) | — | — | 9,351 |
 | required-verification | 8 / 38 | 8 / 56 | 1 / 31 | 12,692 |
 | continuation | Addendum 22 / 35 | 8 / 17 | 1 / 21 | 5,516 |
 
@@ -100,7 +100,7 @@ The static inventory is unchanged at the baseline, but no run loads it. The prim
 These are baseline observations, not savings claims:
 
 - #342: every cell rewrote the complete review into `report.md` after validation, which is most of the post-validation tail.
-- #343: no repair loops occurred, so savings can come only from mechanical transcription. Composition inputs carried 8–33 mechanical leaves, and the gate cell also hand-built its fingerprint input.
+- #343: no repair loops occurred, so savings can come only from mechanical transcription. Composition inputs carried 8–34 mechanical leaves, and the gate cell also hand-built its fingerprint input.
 - #344: every worker hand-copied `manifest_sha256`. Verifier inputs carried 17–56 judgment leaves, among them candidate fields the composition repeats.
 - #345: the continuation hand-wrote an addendum with 22 mechanical leaves and no validator, after reading composer source.
 - #346: both pull-request primaries opened worker-only references.
