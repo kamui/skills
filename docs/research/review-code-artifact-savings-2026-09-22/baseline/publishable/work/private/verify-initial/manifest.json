@@ -1,0 +1,20 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "c84f512db7c00af9992d9c597a5febe7def76660b8138e9cedd59ffed8695409",
+  "candidate_ids": [
+    "export/csv-formula-injection"
+  ],
+  "format": "verifier-manifest/2",
+  "input_sha256": "360e3976b2c200ffdee15500f25f664d5f0d51ec05066babc4c1d776645d2107",
+  "premise_ids": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "id": "review-0eb283d",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/baseline/publishable/repo"
+  }
+}

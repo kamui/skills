@@ -1,0 +1,36 @@
+{
+  "manifest_sha256": "e873b9101bd734e00c7c5bc3c6462f03aa6411190817b6f5bef9516be5fbe1fe",
+  "candidates": [
+    {
+      "id": "ledger/grant-revoke-auth-placement",
+      "verdict": "confirmed",
+      "basis": "Ledger.grant and Ledger.revoke, both introduced by this change (absent at merge-base 2301c83, where ledger/accounts.py has no grant/revoke/delegate code at all), each inline an identical ownership comparison (`if account.owner != user: raise LedgerError(...)`) rather than calling into ledger/auth.py, which AGENTS.md:7 designates as the sole home for authorization decisions and which already encapsulates the equivalent owner-equality check inside can_view's fallback branch (`return account.owner == user`). The check is duplicated verbatim across the two new methods, so a future change to who may administer delegates requires editing accounts.py in two places instead of auth.py once.",
+      "evidence": [
+        {"coordinate": "ledger/accounts.py:55", "text": "if account.owner != user:"},
+        {"coordinate": "ledger/accounts.py:62", "text": "if account.owner != user:"},
+        {"coordinate": "ledger/auth.py:17", "text": "return account.owner == user"},
+        {"coordinate": "AGENTS.md:7", "text": "Authorization decisions live in `ledger/auth.py`; callers never compare roles themselves."},
+        {"coordinate": "commit-2301c83/ledger/accounts.py", "text": "(grep for grant|revoke|delegate returns no matches at merge-base, confirming this code is new)"}
+      ],
+      "corrections": {},
+      "safety_rulings": []
+    },
+    {
+      "id": "ledger/grant-revoke-docstring-errors",
+      "verdict": "confirmed",
+      "basis": "Ledger.grant and Ledger.revoke each call self.get(number) before the ownership check (accounts.py:54 and :61), and Ledger.get's own docstring states it 'Raises LedgerError when it does not exist' (accounts.py:46), so an unknown account number raises before the owner comparison is ever reached. Yet grant's and revoke's docstrings state only 'Raises LedgerError unless user owns the account,' omitting the unknown-account case, while sibling methods post and transfer (which also call self.get/get twice) enumerate 'an unknown account' explicitly in their docstrings, matching the explicit repository convention at AGENTS.md:6 that every public function's docstring names the errors it raises. This is new text written for these new methods, not a pre-existing omission.",
+      "evidence": [
+        {"coordinate": "ledger/accounts.py:53", "text": "\"\"\"Let delegate read the account's statement. Raises LedgerError unless user owns the account.\"\"\""},
+        {"coordinate": "ledger/accounts.py:60", "text": "\"\"\"Withdraw a delegate's access. Raises LedgerError unless user owns the account.\"\"\""},
+        {"coordinate": "ledger/accounts.py:67", "text": "\"\"\"Post one entry. Raises LedgerError for a zero amount, an overdraft, or an unknown account.\"\"\""},
+        {"coordinate": "ledger/accounts.py:46", "text": "\"\"\"Return an account. Raises LedgerError when it does not exist.\"\"\""},
+        {"coordinate": "AGENTS.md:6", "text": "Every public function's docstring names the errors it raises."}
+      ],
+      "corrections": {},
+      "safety_rulings": []
+    }
+  ],
+  "premises": [],
+  "duplicate_groups": [],
+  "observation": null
+}

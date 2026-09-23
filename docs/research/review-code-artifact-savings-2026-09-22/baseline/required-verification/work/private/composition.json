@@ -1,0 +1,68 @@
+{
+  "run": {
+    "head": "a13922e76f42d9757608530348200affbf3bde2f",
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "context": "0a72f34a0de2b71f1b30b8c3a0632038c1055de08f6a976fce5b959763524489",
+    "issues": ["example/ledger#5"],
+    "coverage": "complete",
+    "merged": false,
+    "repository_url": "https://github.com/example/ledger"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Add a `delegate` role so an account owner can grant and revoke another user's read-only statement access, per issue #5.",
+    "issue_fit": "Met — all five acceptance criteria in issue #5 hold: owner-only grant/revoke that leaves state unchanged on refusal, delegate view scoped to only the granting account, delegates never post, and owner/auditor/teller access is untouched.",
+    "coverage": "Complete merge-base diff reviewed (ledger/accounts.py, ledger/auth.py, tests/test_delegates.py); no file ignored or unreviewed. Focused test tests/test_delegates.py run once at head a13922e: 3/3 pass. Full suite (`python3 -m unittest discover -s tests -v`) also run once at head: 17/17 pass, no regression."
+  },
+  "findings": [
+    {
+      "id": "ledger/grant-revoke-auth-placement",
+      "title": "Move the owner check for grant/revoke into ledger/auth.py",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "Any call to Ledger.grant or Ledger.revoke.",
+      "impact": "Authorization decisions end up split across two modules: a future change to who may administer delegate access (e.g. letting a co-owner grant) requires editing accounts.py in two places instead of the single ledger/auth.py surface every other permission check uses, and the ownership comparison is duplicated verbatim in both methods.",
+      "change": "Add an ledger/auth.py function (for example can_manage_delegates(user, account)) that encapsulates the ownership check, and have Ledger.grant/Ledger.revoke call it instead of comparing account.owner to user themselves.",
+      "source": "AGENTS.md:7",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 52,
+        "end_line": 64,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "ledger/auth.py",
+        "start_line": 18
+      }
+    },
+    {
+      "id": "ledger/grant-revoke-docstring-errors",
+      "title": "Document the unknown-account error in grant/revoke docstrings",
+      "priority": "P3",
+      "action": "must-fix",
+      "kind": "requirement",
+      "trigger": "Calling Ledger.grant or Ledger.revoke with a number that is not in self.accounts.",
+      "impact": "A reader relying on the docstring, per AGENTS.md's convention that every public function's docstring names the errors it raises, cannot tell from grant/revoke's docstring that an unknown account also raises LedgerError, unlike post's and transfer's docstrings, which enumerate that cause explicitly.",
+      "change": "Reword each docstring to name both causes, e.g. \"Raises LedgerError for an unknown account or when user does not own it.\"",
+      "source": "AGENTS.md:6",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 53,
+        "end_line": 53,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "ledger/cli.py has no notion of a caller's identity or role, so the new delegate role and Ledger.grant/revoke are reachable only through the library API, not through the shipped `statement` command.",
+      "evidence": "ledger/cli.py:35-44 (main() calls render_statement(ledger.get(args.account)) unconditionally, with no user/role argument)."
+    }
+  ]
+}

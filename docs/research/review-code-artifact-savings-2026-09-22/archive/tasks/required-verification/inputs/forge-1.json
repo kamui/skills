@@ -1,0 +1,71 @@
+{
+  "data": {
+    "repository": {
+      "url": "https://github.com/example/ledger",
+      "pullRequest": {
+        "title": "Let delegates read statements",
+        "body": "Adds a `delegate` role. Owners grant and revoke delegates with `Ledger.grant` and `Ledger.revoke`; `can_view` admits a delegate only for accounts that list them.\n\nCloses #5.\n",
+        "state": "OPEN",
+        "merged": false,
+        "isDraft": false,
+        "baseRefName": "main",
+        "baseRefOid": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+        "headRefOid": "a13922e76f42d9757608530348200affbf3bde2f",
+        "updatedAt": "2026-09-04T10:05:00Z",
+        "lastEditedAt": null,
+        "baseRepository": {
+          "url": "https://github.com/example/ledger"
+        },
+        "closingIssuesReferences": {
+          "totalCount": 1,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": [
+            {
+              "number": 5,
+              "title": "Let owners delegate statement access",
+              "body": "Owners want an accountant to read their statements without sharing credentials.\n\nAcceptance:\n\n1. An account owner can grant another user read-only access to that account's statement, and revoke it.\n2. Only the account's owner can grant or revoke; anyone else gets `LedgerError` and nothing changes.\n3. A delegate can view only the accounts that granted them access.\n4. A delegate can never post entries.\n5. Owner, auditor, and teller access is unchanged.\n",
+              "url": "https://github.com/example/ledger/issues/5",
+              "updatedAt": "2026-09-01T16:00:00Z",
+              "lastEditedAt": null,
+              "comments": {
+                "totalCount": 0,
+                "pageInfo": {
+                  "hasNextPage": false,
+                  "endCursor": null
+                },
+                "nodes": []
+              }
+            }
+          ]
+        },
+        "reviews": {
+          "totalCount": 0,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": []
+        },
+        "reviewThreads": {
+          "totalCount": 0,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": []
+        },
+        "comments": {
+          "totalCount": 0,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": []
+        }
+      }
+    }
+  }
+}

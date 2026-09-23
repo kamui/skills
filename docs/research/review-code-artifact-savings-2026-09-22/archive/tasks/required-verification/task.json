@@ -1,0 +1,35 @@
+{
+  "format": "savings-task/1",
+  "name": "required-verification",
+  "interface": "a one-shot publishable pull-request review whose change edits authorization in ledger/auth.py, so review-code's rules require a verifier batch whatever the reviewer finds: a security or must-fix candidate needs confirmation, and a no-blocker conclusion needs the safety-premise check",
+  "profile": "publishable",
+  "target": {
+    "kind": "pull-request",
+    "url": "https://github.com/example/ledger/pull/6",
+    "base_ref": "main",
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "a13922e76f42d9757608530348200affbf3bde2f"
+  },
+  "repository": {
+    "refs": {
+      "main": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+      "delegates": "a13922e76f42d9757608530348200affbf3bde2f"
+    },
+    "checkout": "delegates"
+  },
+  "directories": [
+    "work"
+  ],
+  "files": {
+    "prompt.md": {
+      "kind": "text"
+    },
+    "inputs/forge-1.json": {
+      "kind": "copy"
+    },
+    "inputs/packet.json": {
+      "kind": "copy"
+    }
+  }
+}

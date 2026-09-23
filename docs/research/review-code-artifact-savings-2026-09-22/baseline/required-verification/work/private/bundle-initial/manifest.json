@@ -1,0 +1,21 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "d8f1205ff383daf7da980f9e7048b118dcb0612432cd77e5e51f26b76dba3342",
+  "candidate_ids": [
+    "ledger/grant-revoke-auth-placement",
+    "ledger/grant-revoke-docstring-errors"
+  ],
+  "format": "verifier-manifest/2",
+  "input_sha256": "b22d15fce3f0c74a49a51a438853ba3aacf144d2804db565ce32100f8b9f2416",
+  "premise_ids": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "a13922e76f42d9757608530348200affbf3bde2f",
+    "id": "review-a13922e",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/baseline/required-verification/repo"
+  }
+}

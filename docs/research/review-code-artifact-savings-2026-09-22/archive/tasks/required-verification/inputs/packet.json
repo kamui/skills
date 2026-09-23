@@ -1,0 +1,88 @@
+{
+  "schema": "forge-packet/1",
+  "repository_url": "https://github.com/example/ledger",
+  "pr": {
+    "title": "Let delegates read statements",
+    "body": "Adds a `delegate` role. Owners grant and revoke delegates with `Ledger.grant` and `Ledger.revoke`; `can_view` admits a delegate only for accounts that list them.\n\nCloses #5.\n",
+    "state": "OPEN",
+    "merged": false,
+    "is_draft": false,
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head_sha": "a13922e76f42d9757608530348200affbf3bde2f",
+    "updated_at": "2026-09-04T10:05:00Z",
+    "last_edited_at": null,
+    "repository_url": "https://github.com/example/ledger"
+  },
+  "issues": [
+    {
+      "coordinate": "example/ledger#5",
+      "number": 5,
+      "title": "Let owners delegate statement access",
+      "body": "Owners want an accountant to read their statements without sharing credentials.\n\nAcceptance:\n\n1. An account owner can grant another user read-only access to that account's statement, and revoke it.\n2. Only the account's owner can grant or revoke; anyone else gets `LedgerError` and nothing changes.\n3. A delegate can view only the accounts that granted them access.\n4. A delegate can never post entries.\n5. Owner, auditor, and teller access is unchanged.\n",
+      "updated_at": "2026-09-01T16:00:00Z",
+      "last_edited_at": null,
+      "url": "https://github.com/example/ledger/issues/5",
+      "closing": true,
+      "comments": [],
+      "comments_complete": true
+    }
+  ],
+  "explicit_issues": [],
+  "reviews": [],
+  "threads": [],
+  "pr_comments": [],
+  "coverage": {
+    "closingIssuesReferences": {
+      "pages": 1,
+      "total_count": 1,
+      "fetched": 1,
+      "complete": true,
+      "gaps": []
+    },
+    "reviews": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    },
+    "reviewThreads": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    },
+    "comments": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    },
+    "issue example/ledger#5 comments": {
+      "pages": 1,
+      "total_count": 0,
+      "fetched": 0,
+      "complete": true,
+      "gaps": []
+    }
+  },
+  "gaps": [],
+  "complete": true,
+  "fingerprint": {
+    "pr": {
+      "title": "Let delegates read statements",
+      "body": "Adds a `delegate` role. Owners grant and revoke delegates with `Ledger.grant` and `Ledger.revoke`; `can_view` admits a delegate only for accounts that list them.\n\nCloses #5.\n"
+    },
+    "issues": [
+      {
+        "coordinate": "example/ledger#5",
+        "title": "Let owners delegate statement access",
+        "body": "Owners want an accountant to read their statements without sharing credentials.\n\nAcceptance:\n\n1. An account owner can grant another user read-only access to that account's statement, and revoke it.\n2. Only the account's owner can grant or revoke; anyone else gets `LedgerError` and nothing changes.\n3. A delegate can view only the accounts that granted them access.\n4. A delegate can never post entries.\n5. Owner, auditor, and teller access is unchanged.\n",
+        "comments": []
+      }
+    ]
+  }
+}
