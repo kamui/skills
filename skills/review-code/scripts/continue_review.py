@@ -62,11 +62,11 @@ work, routed items and untouched per-file coverage survive every addendum
 `status` and `coverage` must agree with the cumulative open items, files,
 outstanding work and unrecoverable inputs, except that a replacement's own
 items govern the status and its own file accounting the files it settled. A
-replacement record must head the addendum's final head, carry every open item,
-routed item and outstanding task, keep the spent flags with `carried_from`
-naming the chain file it replaced, and carry the confirmation of each finding
-open before the addendum as `carried:<original chain file>#<batch>` with its
-trigger.
+replacement record must head the addendum's final head, carry every open item
+(an open must-fix still `must-fix`), routed item and outstanding task, keep
+the spent flags with `carried_from` naming the chain file it replaced, and
+carry the confirmation of each finding open before the addendum as
+`carried:<original chain file>#<batch>` with its trigger.
 
 A new addendum is written as `addendum-<final head>.json` in the current
 record's addenda directory with `finalization` (review-code-finalization/1,
@@ -724,10 +724,13 @@ def replace(report: vr.Report, state: State, previous: Path, addendum: Path, doc
             report.add(where, "carried-state", f"resets `{flag}`; spent allowance survives a replacement")
     own = [item for item in record.get("items", []) if isinstance(item, dict)]
     check_status(report, doc["status"], doc["coverage"], own)
-    items = {item.get("id") for item in own}
-    for identity in state.open:
+    items = {item.get("id"): item for item in own}
+    for identity, item in state.open.items():
         if identity not in items:
             report.add(where, "carried-state", f"drops open item `{identity}`")
+        elif item["action"] == "must-fix" and items[identity].get("action") != "must-fix":
+            report.add(where, "carried-state", f"carries open must-fix `{identity}` as {json.dumps(items[identity].get('action'))}; "
+                       "an unsettled blocker survives a replacement until `fixed_findings` settles it")
     routed = accounting.get("routed") if isinstance(accounting.get("routed"), dict) else {}
     for key in ROUTED:
         for entry in state.routed[key]:
