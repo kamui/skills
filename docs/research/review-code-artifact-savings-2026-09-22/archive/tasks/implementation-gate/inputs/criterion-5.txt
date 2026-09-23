@@ -1,0 +1,13 @@
+$ python3 -m ledger.cli statement /dev/null 1001 --since 2026-13-01
+exit 2
+stdout:
+stderr:
+usage: ledger statement [-h] [--since SINCE] [--until UNTIL] file account
+ledger statement: error: argument --since: not a YYYY-MM-DD date: '2026-13-01'
+
+$ python3 -m ledger.cli statement /dev/null 1001 --since 2026-09-03 --until 2026-09-01
+exit 2
+stdout:
+stderr:
+ledger: --since is after --until
+

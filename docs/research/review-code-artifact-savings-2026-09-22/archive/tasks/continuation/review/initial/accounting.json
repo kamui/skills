@@ -1,0 +1,42 @@
+{
+  "accounted": {
+    "candidates": [
+      "accounts/frozen-transfer-bypass"
+    ],
+    "premises": []
+  },
+  "format": "verifier-accounting/2",
+  "manifest_sha256": "@SHA256:review/initial/manifest.json@",
+  "raw_return": "@TASK_ROOT@/review/initial/raw-return.json",
+  "raw_return_sha256": "@SHA256:review/initial/raw-return.json@",
+  "return": {
+    "candidates": [
+      {
+        "basis": "`Ledger.transfer` reads neither account's `frozen` flag before appending both entries, so a transfer into or out of a frozen account succeeds where criterion 2 requires `LedgerError`.",
+        "evidence": [
+          {
+            "coordinate": "ledger/accounts.py:83-88",
+            "text": "debit = self.get(source)\n        credit = self.get(target)\n        if debit.balance() < amount:\n            raise LedgerError(f\"transfer would overdraw {source}\")\n        debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\n        credit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+          },
+          {
+            "coordinate": "ledger-spec/account-freeze/criterion-2",
+            "text": "transfers out of it, and transfers into it each raise `LedgerError`"
+          }
+        ],
+        "id": "accounts/frozen-transfer-bypass",
+        "safety_rulings": [],
+        "verdict": "confirmed"
+      }
+    ],
+    "duplicate_groups": [],
+    "manifest_sha256": "@SHA256:review/initial/manifest.json@",
+    "observation": null,
+    "premises": []
+  },
+  "structurally_complete": true,
+  "violations": [],
+  "withheld": {
+    "candidates": [],
+    "premises": []
+  }
+}

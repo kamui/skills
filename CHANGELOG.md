@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- `review-code` has a measured artifact baseline for the savings work in #340. [The report](docs/research/review-code-artifact-savings-2026-09-22/README.md) archives four offline-reconstructable interface tasks: a publishable review, an implementation gate, a required-verification review, and a continuation over a seeded version-2 record, addendum and accounting chain. Hash-verified relocation and helper replay ship in `docs/research/tools/savings_archive.py`. It also records Sonnet 5 High baseline cells measured by `docs/research/tools/interface_metrics.py`, a consumer map from each repeated field to its authority, and the frozen paired protocol. No runtime skill text, workflow or private schema changes. Issue #341.
 - `review-code` now uses a concise strategy with conditional procedures and isolated verifier instructions. Removed reading recipes and repeated rendering guidance; preserved caller and public-output contracts. Workflow advances to `v5b-24`. Runtime text and expanded helper loads are measured in [the rewrite report](docs/research/review-code-rewrite-2026-09-22/runtime-layout.md); smaller instructions alone establish no speed or quality improvement. Issue #332.
 
 ### Added

