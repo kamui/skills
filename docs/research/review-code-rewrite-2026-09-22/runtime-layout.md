@@ -12,14 +12,14 @@ Baseline is `7387c169c9b5b23c5c679efb7110c9c07fc3f7f3`, the pin in [comparison.m
 
 | Load | Baseline bytes / words | Rewrite bytes / words |
 | --- | ---: | ---: |
-| Entrypoint and all runtime references | 150,821 / 22,046 | 88,363 / 12,367 |
+| Entrypoint and all runtime references | 150,821 / 22,046 | 88,349 / 12,367 |
 | Always-loaded instructions | 70,938 / 10,423 | 25,285 / 3,435 |
 | Local primary, expanded helper output included | 120,731 / 17,068 | 64,918 / 8,547 |
 | PR primary, expanded helper output included | 121,507 / 17,259 | 64,052 / 8,501 |
 | Ordinary verifier instructions, supplied-check branch | 28,685 / 4,287 | 14,056 / 2,003 |
 | Ordinary generated example brief, records included | 30,802 / 4,476 | 16,460 / 2,221 |
-| Verifier instructions, all specialized branches | 34,014 / 5,052 | 19,302 / 2,752 |
-| Specialized example brief, records included | 37,225 / 5,320 | 22,800 / 3,049 |
+| Verifier instructions, all specialized branches | 34,014 / 5,052 | 19,288 / 2,752 |
+| Specialized example brief, records included | 37,225 / 5,320 | 22,786 / 3,049 |
 
 Reproduce current figures with `python3 skills/review-code/scripts/test_instruction_budget.py`. For the baseline, read the same files and execute the same helper commands from an archive of the pinned skill. The baseline always-loaded set includes the removed `review-record.md`. Its builder example uses `project(EXAMPLE['input'], EXAMPLE['ledger'])`; the rewrite uses `project(EXAMPLE)`. Render those inputs for ordinary briefs. Add concurrency kind, conformance, and released-compatibility evidence to the example candidate for the specialized case, as the budget check does. Instruction-only sizes stop before `## Supplied records`.
 
