@@ -232,26 +232,32 @@ def make_manifest(data, brief):
             "brief_sha256": digest(brief)}
 
 
+def section(refs, name, start, end=None):
+    """Extract one declared instruction section, refusing drift in either boundary."""
+    source = (refs / name).read_text(encoding="utf-8")
+    require(source.count(start) == 1, name, "instruction boundary changed")
+    tail = source.split(start, 1)[1]
+    if end is not None:
+        require(source.count(end) == 1 and end in tail, name, "instruction boundary changed")
+        tail = tail.split(end, 1)[0]
+    return tail
+
+
 def render(data):
     refs = Path(__file__).resolve().parent.parent / "references"
-    verifier = (refs / "verifier.md").read_text(encoding="utf-8")
-    tests = (refs / "changed-tests.md").read_text(encoding="utf-8")
-    # Heading boundaries are deliberate, checked rather than guessed.
-    start, end = "## Inspect and run\n", "## Primary focused-test recording\n"
-    require(tests.count(start) == 1 and tests.count(end) == 1, "changed-tests", "instruction boundary changed")
-    instructions = [verifier, "## Focused-test safety and execution\n" + tests.split(start, 1)[1].split(end, 1)[0]]
+    instructions = [(refs / "verifier.md").read_text(encoding="utf-8"),
+                    "## Focused-test safety and execution\n" + section(
+                        refs, "changed-tests.md", "## Inspect and run\n", "## Primary focused-test recording\n")]
     records = data["candidates"] + data["premises"]
     if any("released_compatibility" in item for item in records):
-        released = (refs / "released-compatibility.md").read_text(encoding="utf-8")
-        require(released.count("**Released compatibility.**") == 1, "released-compatibility", "instruction boundary changed")
-        instructions.append("**Released compatibility.**" + released.split("**Released compatibility.**", 1)[1])
+        instructions.append("**Released compatibility.**" + section(
+            refs, "released-compatibility.md", "**Released compatibility.**"))
     if any(item.get("test_evidence") for item in records):
-        evidence = (refs / "check-evidence.md").read_text(encoding="utf-8")
-        marker = "The caller may supply a compact verification summary."
-        require(evidence.count(marker) == 1, "check-evidence", "instruction boundary changed")
-        instructions.append("## Supplied check evidence\n\n" + marker + evidence.split(marker, 1)[1])
+        instructions.append("## Supplied check evidence\n" + section(
+            refs, "check-evidence.md", "## Reuse rules\n", "## Primary accounting\n"))
     if any("conformance" in item for item in records):
-        instructions.append("## Conformance verifier procedure\n" + (refs / "conformance.md").read_text(encoding="utf-8").split("## Verifier brief\n", 1)[1])
+        instructions.append("## Conformance verifier procedure\n" + section(
+            refs, "conformance.md", "## Verifier brief\n"))
     if any(item["kind"] in {"concurrency", "invariant"} for item in data["candidates"]):
         instructions.append((refs / "verifier-concurrency.md").read_text(encoding="utf-8"))
     instructions.append((refs / "verifier-return.md").read_text(encoding="utf-8"))
