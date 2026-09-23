@@ -1,0 +1,13 @@
+ok PR #118 deleted file: render/validate/emit-batch
+ok legacy file anchor: render/validate/emit-batch
+ok ordinary RIGHT file: render/validate/emit-batch
+ok unavailable pre-image: render/validate/emit-batch
+ok ambiguous pre-image: render/validate/emit-batch
+ok malformed side: refused in all modes
+ok null side: refused in all modes
+ok arbitrary revision: refused in all modes
+ok ambiguous path array: refused in all modes
+ok deleted linked at head: body rejected
+ok unknown linked at head: body rejected
+ok arbitrary linked revision: body rejected
+ok missing pinned merge-base: render refused

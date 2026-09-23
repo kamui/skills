@@ -1,0 +1,4 @@
+Command: python3 /tmp/issue-333/snapshots/7387c169/skills/review-code/scripts/validate_review.py docs/research/review-code-rewrite-2026-09-22/acceptance/C8-B1/payload.json
+Exit: 0
+Stdout: empty
+Stderr: empty

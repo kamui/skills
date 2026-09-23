@@ -1,0 +1,41 @@
+{
+  "historical_recorded_paths": {
+    "/tmp/run-v2r": false,
+    "/tmp/run-v3r": false,
+    "/tmp/run-v4r": false,
+    "/tmp/run-v5r": false,
+    "/tmp/bd148": false,
+    "/tmp/qual137": false,
+    "/tmp/effort124": false
+  },
+  "owner_response": "No archive; report unavailable cases as inconclusive",
+  "C9": {
+    "source_commits_available": true,
+    "specs": [
+      {
+        "number": 279,
+        "url": "https://github.com/kamui/skills/issues/279",
+        "createdAt": "2026-09-16T00:30:42Z",
+        "lastEditedAt": null
+      },
+      {
+        "number": 294,
+        "url": "https://github.com/kamui/skills/issues/294",
+        "createdAt": "2026-09-16T08:23:47Z",
+        "lastEditedAt": null
+      },
+      {
+        "number": 295,
+        "url": "https://github.com/kamui/skills/issues/295",
+        "createdAt": "2026-09-16T08:24:33Z",
+        "lastEditedAt": null
+      }
+    ],
+    "evidence_gap": "Pinned DESIGN.md at both 6cac10d and 884f322 says real-delivery initial brief, continuation packet, and returned accounting are still owed. No such acceptance artifacts were supplied; an exact-head check does not substitute for them.",
+    "source": "skills/review-code/DESIGN.md, Evidence packet for the implement-publish reviewer (issue #295), Runtime capture still owed, at 884f322ba607628fa6b36e3ff96e761befc554c9"
+  },
+  "C10": {
+    "constructed": false,
+    "reason": "No admitted C9 phase-1 records or complete acceptance packet to seed the frozen continuation case."
+  }
+}

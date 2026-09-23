@@ -2,6 +2,8 @@
 
 This records the design stage of [#328](https://github.com/kamui/skills/issues/328), drafted for [#329](https://github.com/kamui/skills/issues/329). The draft below is historical. Issues #330 and #331 activated the mechanics and verification contracts; #332 activates the runtime rewrite. See [runtime-layout.md](runtime-layout.md) for the installed layout and measurements. The original baseline remains `7387c169c9b5b23c5c679efb7110c9c07fc3f7f3`.
 
+The [acceptance report for #333](acceptance/README.md) separates completed implementation and mechanical checks from the bounded review comparison and its unavailable cases.
+
 | File | Contents |
 | --- | --- |
 | [SKILL.draft.md](SKILL.draft.md) | The new entrypoint: 1183 words of body |

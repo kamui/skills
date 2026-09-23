@@ -1,0 +1,38 @@
+{
+  "head": "7387c169c9b5b23c5c679efb7110c9c07fc3f7f3",
+  "method": "runtime-layout.md Measurements; archive of pinned review-code; same helper output and fixture as treatment test_instruction_budget.py, with version-1 project(input, ledger)",
+  "sizes": {
+    "runtime total": {
+      "bytes": 150821,
+      "words": 22046
+    },
+    "always loaded": {
+      "bytes": 70938,
+      "words": 10423
+    },
+    "local primary": {
+      "bytes": 120731,
+      "words": 17068
+    },
+    "PR primary": {
+      "bytes": 121507,
+      "words": 17259
+    },
+    "verifier instructions": {
+      "bytes": 34014,
+      "words": 5052
+    },
+    "verifier example brief": {
+      "bytes": 37225,
+      "words": 5320
+    },
+    "ordinary verifier instructions": {
+      "bytes": 28685,
+      "words": 4287
+    },
+    "ordinary verifier example brief": {
+      "bytes": 30802,
+      "words": 4476
+    }
+  }
+}

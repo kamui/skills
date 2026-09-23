@@ -1,0 +1,28 @@
+ok contract example: compose/validate/emit-batch agree, deterministic
+ok consider finding: permission sentence, derived blocking, conflicting metadata refused
+ok clean review: always advisory, composition gating input refused
+ok questions: line anchor is a comment, whole-change question is body-carried, malformed forms refused
+ok observations: cap refused with the disposition named, validator locations translated
+ok code blocks: suggestion and code-span labels preserved, bare label refused
+ok prose: all question and observation fields mask code labels and preserve authored bytes
+ok gating: composed advisory payloads project to both authorized events
+ok summary labels: all authored summary fields accept code literals and refuse duplicate labels
+ok fix sites: omitted, ranged, encoded, unnamed refused
+ok anchors: LEFT line, deleted file, UNKNOWN, missing or malformed provenance refused
+ok manifest derivation: deleted, present, renamed, and added file sides; unestablished revisions need an explicit side
+ok manifest: real producer store, path/side agreement, stale and malformed stores refused
+ok stable ids: duplicates and malformed ids refused
+ok required issue: body question, current workflow, no-issue identity, status precedence
+ok statuses: all four composed, contradictions with blockers, coverage, and questions refused
+ok re-review: prior accounting in the summary only, disputed blocker holds status, duplicates refused
+ok retrospective: Mode line follows merged and authorization, missing merged refused
+ok file fallback: body-carried finding with prose, trailer, and fragment once
+ok summary: ambiguities, sorted issues, none, code-span fallback without repository_url
+ok input: unreadable input exits 2, non-object exits 1
+ok local targets: identity, source kinds, code spans, and unchanged pull-request fixture
+ok implementation-gate: same review as publishable, validator-readable record, accounting carried
+ok implementation-gate: both profiles refuse the same contradictions; profile-only refusals named
+ok implementation-gate: confirmed, refuted, unresolved, premise, new-blocker, missing-evidence, and exhausted outcomes
+ok implementation-gate: replacement records carry confirmations and spent allowance without a reset
+ok implementation-gate: deleted and renamed evidence, file accounting against the pinned manifest
+ok example: --example prints a composition that composes under both profiles, the gate once its accounting exists
