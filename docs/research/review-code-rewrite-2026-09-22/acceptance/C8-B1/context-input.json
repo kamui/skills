@@ -1,0 +1,8 @@
+{
+  "pr": {
+    "title": "Move review-code's first-review eligibility guard into forge_packet.py",
+    "body": "Rank 7 of the 2026-09-20 prose-eviction table.\n\nThe pull-request root invocation in `references/pull-request-target.md` carried a 42-line Python heredoc that decides whether step 2's first-review context build can run at once. It is now `scripts/forge_packet.py eligibility`, which already reads the saved forge pages. The block calls it through an absolute `<forge-packet-script>` path, the same way it calls `run_events.py` and `review_context.py`, so it still runs in the reviewed repository.\n\n- Conditions, deferral reasons, verdict lines, and the block's exit handling are unchanged. The conditions now live in the script's docstring, and the reference keeps only what the verdict means for step 2.\n- `test_command_chains.py` runs the block with the same cases and assertions, including the guard that raises on a truthy non-object `data`. `test_run_events.py` binds the new placeholder in its documented-command replay.\n- Workflow `v5b-22` is retained. No rule changes.\n\n| File | Before | After |\n| --- | --- | --- |\n| `references/pull-request-target.md` | 12,566 | 8,775 |\n\nThe reference loads only for pull-request targets, so the always-loaded set stays at 92,272 bytes.\n\n## Checks\n\nAt the final head, from `skills/review-code`: all 10 `scripts/test_*.py` suites, `validate_review.py --self-test`, `review_context.py --self-test`, and `forge_packet.py --self-test` exit 0."
+  },
+  "issues": [],
+  "specs": []
+}

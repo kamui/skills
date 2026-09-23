@@ -1,0 +1,193 @@
+{
+  "boundaries": {
+    "context_built_at": "2026-09-23T02:23:27.087278Z",
+    "final_result": {
+      "at": "2026-09-23T02:33:45.905193Z",
+      "completion_mode": "result",
+      "reason": "result completion ends at the validated record",
+      "status": "captured"
+    },
+    "validated_payload_at": "2026-09-23T02:33:45.905193Z"
+  },
+  "clock": {
+    "domain": [
+      "onigiri",
+      "91988c4b-8fae-4c58-a489-5f85544a026c",
+      "clock_gettime(CLOCK_MONOTONIC)"
+    ],
+    "status": "single-domain"
+  },
+  "commands": {
+    "focused_tests": {
+      "attempts": [
+        {
+          "argv0": "python3",
+          "cancelled": null,
+          "command": "python3 scripts/test_forge_packet.py",
+          "ended_at": "2026-09-23T02:26:30.982157Z",
+          "exit": 0,
+          "head": "0ea287f0c07fda09b9d063612353dcef37f38063",
+          "line": 2,
+          "seconds": 2.807256,
+          "signal": null
+        },
+        {
+          "argv0": "python3",
+          "cancelled": null,
+          "command": "python3 scripts/test_command_chains.py",
+          "ended_at": "2026-09-23T02:26:50.440611Z",
+          "exit": 0,
+          "head": "0ea287f0c07fda09b9d063612353dcef37f38063",
+          "line": 3,
+          "seconds": 19.418665,
+          "signal": null
+        },
+        {
+          "argv0": "python3",
+          "cancelled": null,
+          "command": "python3 scripts/test_run_events.py",
+          "ended_at": "2026-09-23T02:27:01.923821Z",
+          "exit": 0,
+          "head": "0ea287f0c07fda09b9d063612353dcef37f38063",
+          "line": 4,
+          "seconds": 7.101725,
+          "signal": null
+        }
+      ],
+      "by_role": {},
+      "event_count": 3,
+      "failed_attempts": 0,
+      "union_seconds": {
+        "basis": "wall time covered by any wrapped focused test, counted once",
+        "seconds": 29.327647,
+        "status": "captured"
+      }
+    },
+    "forge_fetches": {
+      "attempts": [],
+      "by_role": {},
+      "event_count": 0,
+      "failed_attempts": 0,
+      "union_seconds": {
+        "basis": "wall time covered by any wrapped forge fetch, counted once",
+        "reason": "no wrapped command of this kind was recorded; unknown, not zero",
+        "seconds": null,
+        "status": "unavailable"
+      }
+    },
+    "note": "only commands run through run_events.py wrap are recorded; overlapping intervals count once and are never summed as elapsed time",
+    "publication_writes": {
+      "attempts": [],
+      "by_role": {},
+      "event_count": 0,
+      "failed_attempts": 0,
+      "union_seconds": {
+        "basis": "wall time covered by any wrapped forge write, counted once; a wrapped loop is one interval whose result file records each write; not complete publication",
+        "reason": "no wrapped command of this kind was recorded; unknown, not zero",
+        "seconds": null,
+        "status": "unavailable"
+      }
+    }
+  },
+  "complete": true,
+  "durations": {
+    "context_build": {
+      "basis": "context build script span",
+      "seconds": 0.078806,
+      "status": "captured"
+    },
+    "context_to_validated_payload": {
+      "basis": "context build exit to validated payload exit: inspection, tests, verification, reconciliation and composition together; not separable",
+      "seconds": 618.817917,
+      "status": "captured"
+    },
+    "last_accounting_to_validated_payload": {
+      "basis": "last verifier accounting to validated payload: reconciliation, remaining falsification and composition",
+      "reason": "no accounting precedes a validated payload",
+      "seconds": null,
+      "status": "unavailable"
+    },
+    "observed_span": {
+      "basis": "first recorded script or wrapped command start to last exit; excludes root dispatch, so not root elapsed",
+      "seconds": 618.896723,
+      "status": "proxy"
+    }
+  },
+  "event_count": 5,
+  "events": "/home/jack/.t3/worktrees/skills/t3code-c4544fc5/docs/research/review-code-rewrite-2026-09-22/acceptance/C8-B1/run-events.jsonl",
+  "format": "review-run-summary/1",
+  "gaps": [],
+  "identity": {
+    "caller_mode": {
+      "reason": "one-shot or session mode is not passed to any script",
+      "source": null,
+      "value": null
+    },
+    "harness": {
+      "source": "env:CLAUDECODE",
+      "value": "claude-code"
+    },
+    "harness_session": {
+      "source": "env:CLAUDECODE",
+      "value": "54326827-7994-4f18-a41c-52f758c23080"
+    },
+    "policy_commit": {
+      "source": null,
+      "value": null
+    },
+    "reviewed_head": {
+      "source": "context build and composition",
+      "value": "0ea287f0c07fda09b9d063612353dcef37f38063"
+    },
+    "target_kind": {
+      "source": "composition run.target_kind",
+      "value": "pull-request"
+    },
+    "workflow": {
+      "source": "validate_review.WORKFLOW",
+      "value": "v5b-22"
+    }
+  },
+  "invalid_lines": [],
+  "not_observed": {
+    "caller_mode": "one-shot or session mode is not passed to any script",
+    "collection": "only forge fetches run through run_events.py wrap are timed; packet normalization and any unwrapped fetch record no event",
+    "focused_tests": "only focused tests run through run_events.py wrap are timed; verifier tests are never wrapped",
+    "primary_idle_wait": "the primary may keep working while a batch runs, so no bracket measures waiting",
+    "primary_inspection": "inspection and falsification run in the model between script calls",
+    "publication": "wrapped forge writes are timed one command or loop at a time, but no event proves every required write and readback finished; complete-publication timing needs caller or runtime evidence",
+    "root_dispatch": "the caller dispatches the review before any script runs",
+    "usage": "no script observes an authoritative per-request usage record",
+    "verifier_dispatch_and_join": "the worker is dispatched after the brief is built and joined before accounting; only those two script boundaries are recorded"
+  },
+  "script_failures": [],
+  "usage": {
+    "cache_read_tokens": null,
+    "cache_write_tokens": null,
+    "cost": null,
+    "input_tokens": null,
+    "output_tokens": null,
+    "reason": "no script observes an authoritative per-request usage record",
+    "status": "unavailable"
+  },
+  "verification": {
+    "batches": [],
+    "batches_recorded": 0,
+    "bracket_sum_seconds": {
+      "basis": "sum of batch brackets; overlapping brackets count twice; not elapsed",
+      "seconds": null,
+      "status": "proxy"
+    },
+    "bracket_union_seconds": {
+      "basis": "wall time covered by any batch bracket, counted once",
+      "seconds": null,
+      "status": "proxy"
+    },
+    "by_mode": {},
+    "complete_ledger_nonzero_rows": 0,
+    "complete_ledger_zero_rows": 0,
+    "ledger_rows_unknown": 0,
+    "note": "zero recorded batches is not proof that none ran unless the record is otherwise complete"
+  },
+  "violations": []
+}

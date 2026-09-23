@@ -1,0 +1,113 @@
+{
+  "schema": "implementation-gate-record/1",
+  "profile": "implementation-gate",
+  "workflow": "v5b-22",
+  "run": {
+    "repository": "/repo",
+    "target": "main..HEAD",
+    "head": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    "base_ref": "main",
+    "base_sha": "b2c3d4e5f60718293a4b5c6d7e8f90123456789a",
+    "merge_base": "d4e5f60718293a4b5c6d7e8f90123456789abcde",
+    "context": "91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e",
+    "issues": [
+      "acme/payments#123"
+    ],
+    "specs": [
+      "spec/retries"
+    ],
+    "coverage": "complete"
+  },
+  "status": "Approved",
+  "summary": {
+    "body": "**Approved (advisory)** \u2014 no findings.\n\n**Intent:** Add retries for charge submission without changing payment semantics.\n\n**Issue fit:** Partial \u2014 retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open. Source: originating issues; user-supplied spec; commit messages in the range.\n\n**Coverage:** Complete merge-base diff reviewed; payment callers inspected; focused `retry-policy` test run once at the head: pass.\n\n**Reviewed:** Range `main..HEAD`: `a1b2c3d` against merge-base `d4e5f60`.\n\n<!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5b-22 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->\n",
+    "trailer": "<!-- review-run head=a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 base-ref=main base-sha=b2c3d4e5f60718293a4b5c6d7e8f90123456789a merge-base=d4e5f60718293a4b5c6d7e8f90123456789abcde workflow=v5b-22 context=91d34a2f4c869867167f0b31da7c207f4528e12e3d1ef4f107a5eabb4c18718e issues=acme/payments#123 coverage=complete -->"
+  },
+  "items": [],
+  "record": {
+    "repository": "/repo",
+    "paths": {
+      "private_dir": "/tmp/x",
+      "store": "/tmp/x/review-context-a1b2c3d4e5f60718293a4b5c6d7e8f9012345678.json",
+      "composition": "/tmp/x/composition.json",
+      "addenda": "/tmp/x/addenda",
+      "evidence_packet": "/tmp/x/evidence.md"
+    },
+    "ledger": {
+      "requirements": [
+        {
+          "source": "issue-123/acceptance-criterion-2",
+          "class": "acceptance",
+          "disposition": "partial",
+          "evidence": "src/payments.ts:42 creates a key per attempt"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "payments/retry-idempotency",
+          "kind": "requirement",
+          "disposition": "refuted",
+          "evidence": "src/retry-policy.ts:18 already reuses the key"
+        }
+      ]
+    },
+    "files": [
+      {
+        "path": "src/payments.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/retry-policy.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/queue.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "docs/notes.md",
+        "state": "ignored",
+        "reason": "generated"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 scripts/test_retry.py",
+        "head": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "outcome": "accepted",
+        "reason": "same command, clean tree, output read"
+      },
+      {
+        "check": "python3 scripts/test_queue.py",
+        "head": "0123456789abcdef0123456789abcdef01234567",
+        "outcome": "historical",
+        "reason": "the delta reaches none of its inputs"
+      },
+      {
+        "check": "python3 scripts/test_payments.py",
+        "head": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "outcome": "reviewer-executed",
+        "reason": "the fixture changed since the supplied run"
+      }
+    ],
+    "verification": {
+      "batches": [
+        {
+          "name": "initial",
+          "bundle": "/tmp/x/initial",
+          "raw_return": "/tmp/x/initial/raw-return.json",
+          "accounting": "/tmp/x/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "follow_up_spent": false,
+      "clean_verdict": "not-required",
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

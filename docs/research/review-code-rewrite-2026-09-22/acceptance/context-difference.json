@@ -1,0 +1,67 @@
+{
+  "input_difference": "Treatment PR body has one trailing newline; all other fields are equal.",
+  "fingerprint_script_sha256": "ff63fcb99b25d0701263421f236e3d7d16d7c1e92edfbb97d07f13efe54db635",
+  "identical_script_bytes": true,
+  "runs": [
+    {
+      "script": "7387c169",
+      "input": "/tmp/issue-333/cells/7387c169/work/context-input.json",
+      "exit_code": 0,
+      "stdout": "79d8ef0bc00d75c5fab2fcdebaab204c6005158979f1f465929a5869031e0d8a\n",
+      "stderr": ""
+    },
+    {
+      "script": "7387c169",
+      "input": "/tmp/issue-333/cells/44b9331a/work/private/fingerprint_input.json",
+      "exit_code": 0,
+      "stdout": "606795a32e4d6e08d7667bfc3f80087883ff568ae71dd65db57cde42ce3a57b3\n",
+      "stderr": ""
+    },
+    {
+      "script": "44b9331a",
+      "input": "/tmp/issue-333/cells/7387c169/work/context-input.json",
+      "exit_code": 0,
+      "stdout": "79d8ef0bc00d75c5fab2fcdebaab204c6005158979f1f465929a5869031e0d8a\n",
+      "stderr": ""
+    },
+    {
+      "script": "44b9331a",
+      "input": "/tmp/issue-333/cells/44b9331a/work/private/fingerprint_input.json",
+      "exit_code": 0,
+      "stdout": "606795a32e4d6e08d7667bfc3f80087883ff568ae71dd65db57cde42ce3a57b3\n",
+      "stderr": ""
+    }
+  ],
+  "guidance_runs": [
+    {
+      "command": [
+        "python3",
+        "/tmp/issue-333/snapshots/7387c169/skills/review-code/scripts/context_fingerprint.py",
+        "/tmp/issue-333/cells/7387c169/work/context-input.json",
+        "--guidance-base",
+        "160d1201bed57d96de6fc8b1ae657bd098aa2de6",
+        "--store",
+        "/tmp/issue-333/cells/7387c169/work/review-context-0ea287f0c07fda09b9d063612353dcef37f38063.json"
+      ],
+      "cwd": "/tmp/issue-333/cells/7387c169/repo",
+      "exit_code": 0,
+      "stdout": "832509935f5049b6f9bb6992042e77615f5bf013f5d44d191b27578d56b9df4d\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/tmp/issue-333/snapshots/44b9331a/skills/review-code/scripts/context_fingerprint.py",
+        "/tmp/issue-333/cells/44b9331a/work/private/fingerprint_input.json",
+        "--guidance-base",
+        "160d1201bed57d96de6fc8b1ae657bd098aa2de6",
+        "--store",
+        "/tmp/issue-333/cells/44b9331a/work/private/store.json"
+      ],
+      "cwd": "/tmp/issue-333/cells/44b9331a/repo",
+      "exit_code": 0,
+      "stdout": "a2534d17a7398c34bcaed6aa63b21f2b2c97bc002ec708981e689feac366ef53\n",
+      "stderr": ""
+    }
+  ]
+}
