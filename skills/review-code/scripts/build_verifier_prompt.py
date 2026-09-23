@@ -3,8 +3,8 @@
 
 Usage: python3 scripts/build_verifier_prompt.py input.json --output <new-directory>
        [--return-file <absolute path>]
-Input: the JSON schema in references/verifier-handoff.md; ``--example`` prints one (run, batch, sources,
-run_policy, candidates, premises). A batch carries candidate tasks, safety-premise
+Input: ``--example`` prints one (run, batch, sources, run_policy, candidates, premises);
+references/verifier-handoff.md says what each field carries. A batch carries candidate tasks, safety-premise
 tasks, or both; fields are projected through explicit allowlists.
 Transport: without --return-file the brief asks for the JSON return inline. With it,
 the path must not exist, its parent must be an existing directory outside the bundle,

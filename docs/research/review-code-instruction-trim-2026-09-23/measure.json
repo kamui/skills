@@ -8,11 +8,11 @@
         "commands": 21
       },
       "after": {
-        "bytes": 87777,
-        "words": 12285,
+        "bytes": 87803,
+        "words": 12289,
         "commands": 21
       },
-      "delta_bytes": -4013
+      "delta_bytes": -3987
     },
     {
       "path": "always loaded",
@@ -78,11 +78,11 @@
         "commands": 13
       },
       "after": {
-        "bytes": 61563,
-        "words": 8096,
+        "bytes": 61589,
+        "words": 8100,
         "commands": 13
       },
-      "delta_bytes": -2575
+      "delta_bytes": -2549
     },
     {
       "path": "re-review",
