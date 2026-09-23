@@ -554,6 +554,24 @@ class HandoffTests(unittest.TestCase):
         assigned.mkdir()
         report = self.account_path(bundle, assigned, code=1)
         self.assertEqual(report["violations"], [f"return file: `{assigned}` is not a regular file"])
+        # A FIFO or an unreadable file at the assignment is reported, never a crash or a hang.
+        for kind in ("fifo", "fifo-000", "file-000"):
+            bundle, assigned = self.build_file()
+            if kind.startswith("fifo"):
+                os.mkfifo(assigned)
+            else:
+                assigned.write_text(json.dumps(self.returned(bundle)), encoding="utf-8")
+            if kind.endswith("000"):
+                assigned.chmod(0)
+            try:
+                if kind == "file-000" and os.access(assigned, os.R_OK):
+                    continue  # running as a user who reads mode-000 files
+                report = self.account_path(bundle, assigned, code=1)
+                expected = "unreadable (Permission denied)" if kind == "file-000" else "not a regular file"
+                self.assertEqual(report["violations"], [f"return file: `{assigned}` is {expected}"], kind)
+                self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+            finally:
+                assigned.chmod(0o600)
         # A partial write parses as nothing.
         bundle, assigned = self.build_file()
         assigned.write_text(json.dumps(self.returned(bundle))[:40], encoding="utf-8")
