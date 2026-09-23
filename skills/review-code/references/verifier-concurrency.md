@@ -10,4 +10,4 @@ For every confirmed `kind=concurrency` or `kind=invariant` candidate:
 4. **Then enumerate sibling code paths** governed by the rule and state for each whether the proposed `change` protects it.
 5. **Widen `change` to the rule level when needed.** When the proposed fix covers only one interleaving or one path, correct `change` to the outcome that restores the rule for every failing interleaving found in steps 2–3. If the rule can only be restored by re-serializing two operations, say which two and under which lock.
 
-A `change` that closes the shutdown projection while a steady-state projection of the same rule remains open is narrower than the bug class; say so in the correction. The steady-state `holds`/`fails` rulings from context construction stay inside the candidate's verdict as scoped safety rulings under `verifier.md`.
+A `change` that closes the shutdown projection while a steady-state projection of the same rule remains open is narrower than the bug class; say so in the correction. The steady-state `holds`/`fails` rulings from step 2 stay inside the candidate's verdict as scoped safety rulings under `verifier.md`.
