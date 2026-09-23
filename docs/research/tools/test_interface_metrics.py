@@ -55,7 +55,8 @@ class Metrics(unittest.TestCase):
         path.write_text(json.dumps({
             "run": {"head": "a" * 40, "context": "c" * 64, "issues": ["x/y#1"], "specs": [], "coverage": "complete"},
             "summary": {"status": "Approved", "intent": "Add one two three."},
-            "findings": [], "record": {"paths": {"store": "/s"}, "files": [{"path": "a.py", "state": "reviewed"}]}}),
+            "findings": [], "record": {"paths": {"store": "/s"}, "files": [{"path": "a.py", "state": "reviewed"}],
+                                         "verification": {"batches": [], "tasks": []}}}),
             encoding="utf-8")
         return path
 
@@ -127,8 +128,8 @@ class Metrics(unittest.TestCase):
         self.assertEqual(by_class["raw-return"]["writes"], 1)
         fields = report["authored"]["fields"][0]
         self.assertEqual(fields["shape"], "composition")
-        self.assertEqual(fields["mechanical"]["fields"], 6)
-        self.assertEqual(fields["judgment"]["fields"], 5)
+        self.assertEqual(fields["mechanical"]["fields"], 7)
+        self.assertEqual(fields["judgment"]["fields"], 6)
         self.assertEqual(fields["written_by"], "tool")
         unobserved = report["authored"]["fields"][1]
         self.assertEqual((unobserved["shape"], unobserved["written_by"]), ("fingerprint-input", "unobserved"))

@@ -80,19 +80,21 @@ FINALIZERS = ("finalize_review.py", "compose_review.py")
 FAILED_TEXT = re.compile(r"(?m)^(?:Exit code [1-9]|\s*exit(?: code)?\s*[=:]\s*[1-9])|failed with exit [1-9]")
 
 # (artifact, JSON-pointer pattern) -> class. The first matching pattern wins; "*" is one segment.
-# An empty list is one leaf at its own pointer, so a list field names both the list and its items.
+# An empty list is one leaf at its own pointer, so a list whose items are wholly mechanical names
+# both the list and its items; a list of mixed items (files, tasks, delta) stays a judgment when empty.
 MECHANICAL = {
     "composition": ["/run/target_kind", "/run/target", "/run/tree", "/run/change_description", "/run/specs",
                     "/run/specs/*", "/run/head", "/run/base_ref", "/run/base_sha", "/run/merge_base", "/run/context",
                     "/run/issues", "/run/issues/*", "/run/repository_url", "/run/merged", "/run/publication_authorized",
                     "/run/prior_head", "/record/repository", "/record/paths/*", "/record/files/*/path",
-                    "/record/check_evidence/*/head", "/record/verification/batches/*/name",
+                    "/record/check_evidence/*/head", "/record/verification/batches",
+                    "/record/verification/batches/*/name",
                     "/record/verification/batches/*/phase", "/record/verification/batches/*/bundle",
                     "/record/verification/batches/*/raw_return", "/record/verification/batches/*/accounting",
                     "/record/verification/batches/*/operation", "/record/verification/allowance/*",
                     "/record/verification/tasks/*/batch", "/record/verification/tasks/*/ruling"],
     "addendum": ["/format", "/workflow", "/record", "/record_format", "/reviewed_head", "/final_head",
-                 "/delta/*/path", "/check_evidence/*/head", "/verification/batches/*/name",
+                 "/delta/*/path", "/check_evidence/*/head", "/verification/batches", "/verification/batches/*/name",
                  "/verification/batches/*/phase", "/verification/batches/*/bundle",
                  "/verification/batches/*/raw_return", "/verification/batches/*/accounting",
                  "/verification/batches/*/operation", "/verification/allowance/*",

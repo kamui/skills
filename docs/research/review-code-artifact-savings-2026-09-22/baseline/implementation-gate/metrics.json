@@ -284,11 +284,11 @@
         "shape": "composition",
         "bytes": 8677,
         "mechanical": {
-          "fields": 33,
+          "fields": 34,
           "words": 51
         },
         "judgment": {
-          "fields": 64,
+          "fields": 63,
           "words": 559
         },
         "sections": {
