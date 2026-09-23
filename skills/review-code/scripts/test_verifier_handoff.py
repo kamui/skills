@@ -572,6 +572,19 @@ class HandoffTests(unittest.TestCase):
                 self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
             finally:
                 assigned.chmod(0o600)
+        # A return directory the primary cannot traverse is reported too, for the file and the fallback.
+        bundle, assigned = self.build_file()
+        self.worker_writes(assigned, self.returned(bundle))
+        assigned.parent.chmod(0o600)
+        try:
+            if not os.access(assigned, os.R_OK):  # a user who traverses mode-600 directories cannot test this
+                report = self.account_path(bundle, assigned, code=1)
+                self.assertEqual(report["violations"], [f"return file: `{assigned}` is unreadable (Permission denied)"])
+                self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+                report = self.account_path(bundle, self.write(self.returned(bundle), "inline.json"), "--inline-fallback")
+                self.assertEqual(report["transport"]["assigned_file"], "unreadable (Permission denied)")
+        finally:
+            assigned.parent.chmod(0o700)
         # A partial write parses as nothing.
         bundle, assigned = self.build_file()
         assigned.write_text(json.dumps(self.returned(bundle))[:40], encoding="utf-8")
