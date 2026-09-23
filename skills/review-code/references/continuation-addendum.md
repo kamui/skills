@@ -25,7 +25,7 @@ When the delta is too large to inspect, run a full base-to-final-head review int
 
 - **Open state.** Every open finding and question, `routed`, and every `outstanding` entry.
 - **Allowance.** The spent flags as the chain left them, with `verification.allowance.carried_from` naming the latest chain file by absolute path. Its own batches spend only what those flags leave.
-- **Confirmations.** Each `confirmed` candidate task whose finding is still open, with `batch` rewritten to `carried:<chain file>#<batch name>`, where the chain file is the absolute path of the record or addendum whose `verification.batches` holds that batch. Never copy a bare batch name: it would resolve against the replacement's own batches. A carried task keeps its `trigger`.
+- **Confirmations.** Each `confirmed` candidate task whose finding is still open, with `batch` rewritten to `carried:<chain file>#<batch name>`, where the chain file is the absolute path of the record or addendum whose `verification.batches` holds that batch. Never copy a bare batch name: it would resolve against the replacement's own batches. The composer reads that chain file and batch's accounting report, and refuses a carried confirmation they do not establish. A carried task keeps its `trigger`.
 
 ## Version 1 chains
 

@@ -24,7 +24,9 @@ each other or omit a judgment is refused with the field named; nothing is
 resolved on the reviewer's behalf. It performs no forge call and reads no
 repository: ``--store`` reads the run's persisted review context only to check
 anchors against the pinned merge-base manifest and the run identity, and to
-derive an omitted file-anchor side the manifest establishes.
+derive an omitted file-anchor side the manifest establishes. A ``record``
+section's verification tasks are checked against the accounting reports and
+chain files they name.
 
 Usage::
 
@@ -182,18 +184,29 @@ or ``unavailable``, and ``historical`` evidence is attributed to a
 different head with the reason the delta leaves it unaffected -- a result
 is never relabelled at the reviewed head.
 
-Verification tasks have unique ids. A rendered finding that is
+Verification tasks have unique ids. Every task with a ruling other than
+``pending`` is checked against the ``accounting.json`` of the batch it
+names -- a recorded batch, or for a carried task the batch the named chain
+file (a record or addendum, version 1 or 2) records under
+``verification.batches`` -- and that report must account for the task's id
+in its role with the same ruling (``refuted`` with basis ``unresolved`` is
+``unresolved``), or list it as withheld when the task is ``withheld``. A
+missing or unreadable report or chain file establishes nothing. A rendered
+finding that is
 ``must-fix``, or whose ``kind`` is ``security`` or ``compatibility``, has a
 candidate task with its id, a trigger other than ``optional``, and ruling
 ``confirmed``. A task names a recorded batch, is null only while
 ``pending``, or names ``carried:<absolute chain file>#<batch>`` when a
-replacement record carried it, which requires ``allowance.carried_from``.
+replacement record carried it, which requires ``allowance.carried_from``
+to name a readable chain file.
 A ``withheld`` or ``pending`` task, and an ``unresolved`` premise that names
 no rendered question in ``reopened_as``, appear in ``outstanding`` as
 ``<task id>`` or ``<task id>: <reason>``, unless the task's ``trigger`` is
 ``optional``: optional scrutiny never makes the review incomplete. A
 ``fails`` premise names in ``reopened_as`` a rendered item or an id that
-``outstanding`` names. At most two batches are recorded, one per phase; a
+``outstanding`` names. An ``unresolved`` candidate task whose trigger is not
+``optional`` is a rendered question with its id or appears in
+``outstanding``. At most two batches are recorded, one per phase; a
 recorded or carried batch sets its spent flag, and without
 ``carried_from`` each flag is true only with its batch recorded. Whether a
 safety-premise check was needed is the reviewer's judgment and is not
@@ -937,6 +950,48 @@ def names_task(entries: list[str], identity: str) -> bool:
     return any(entry == identity or entry.startswith(identity + ":") for entry in entries)
 
 
+def load_object(path: str) -> tuple[dict[str, Any] | None, str]:
+    """A JSON object read from an absolute path, or ``None`` and why it cannot establish anything."""
+    try:
+        with open(path, encoding="utf-8") as handle:
+            value = json.load(handle)
+    except (OSError, ValueError) as error:
+        return None, f"cannot be read ({error.__class__.__name__})"
+    return (value, "") if isinstance(value, dict) else (None, "is not a JSON object")
+
+
+def chain_accounting(chain_file: str, name: str) -> tuple[str | None, str]:
+    """The accounting path a chain file (record or addendum, version 1 or 2) records for batch ``name``."""
+    doc, why = load_object(chain_file)
+    if doc is None:
+        return None, f"chain file `{chain_file}` {why}"
+    holder = doc["record"] if isinstance(doc.get("record"), dict) and "verification" in doc["record"] else doc
+    batches = holder.get("verification", {}).get("batches") if isinstance(holder.get("verification"), dict) else None
+    for batch in batches if isinstance(batches, list) else []:
+        if isinstance(batch, dict) and batch.get("name") == name and isinstance(batch.get("accounting"), str):
+            return batch["accounting"], ""
+    return None, f"chain file `{chain_file}` records no batch `{name}` with an accounting report"
+
+
+def accounted_ruling(accounting: str, role: str, identity: str) -> tuple[str | None, str]:
+    """The ruling a verifier accounting report establishes for one task id: its ruling, ``withheld``, or ``None`` and why."""
+    doc, why = load_object(accounting)
+    if doc is None:
+        return None, f"accounting report `{accounting}` {why}"
+    if identity in ((doc.get("withheld") or {}).get(role) or []):
+        return "withheld", ""
+    if identity not in ((doc.get("accounted") or {}).get(role) or []):
+        return None, f"accounting report `{accounting}` does not account for `{identity}` among its {role}"
+    for record in ((doc.get("return") or {}).get(role) or []):
+        if isinstance(record, dict) and record.get("id") == identity:
+            if role == "premises":
+                return record.get("ruling"), ""
+            if record.get("verdict") == "refuted" and record.get("basis") == "unresolved":
+                return "unresolved", ""
+            return record.get("verdict"), ""
+    return None, f"accounting report `{accounting}` holds no returned record for `{identity}`"
+
+
 def read_verification(
     report: vr.Report, verification: Any, coverage: Any, findings: list[dict[str, Any]], questions: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -951,7 +1006,7 @@ def read_verification(
         report.add(f"{where}.outstanding", "coverage-gaps", "outstanding verification contradicts `run.coverage=complete`; required work that did not finish never establishes safety")
 
     batches = read_rows(report, f"{where}.batches", verification.get("batches", []), ("name", "phase", "bundle", "raw_return", "accounting", "operation"))
-    names: set[str] = set()
+    names: dict[str, str] = {}
     phases: set[str] = set()
     for location, batch in batches:
         for key in ("bundle", "raw_return", "accounting"):
@@ -963,7 +1018,7 @@ def read_verification(
             report.add(location, "verification", f"a second `{batch['phase']}` batch; the allowance is one initial plus one follow-up batch")
         if batch["name"] in names:
             report.add(location, "verification", f"batch `{batch['name']}` is recorded twice")
-        names.add(batch["name"])
+        names[batch["name"]] = batch["accounting"]
         phases.add(batch["phase"])
     if len(batches) > BATCH_CAP:
         report.add(f"{where}.batches", "verification", "the cap is one initial plus one follow-up batch; a worker change grants no further batch")
@@ -976,6 +1031,8 @@ def read_verification(
     if carried_from is not None and (not isinstance(carried_from, str) or not carried_from.startswith("/")):
         report.add(f"{where}.allowance.carried_from", "record-paths", "must be null or the absolute path of the record or addendum a replacement carried its allowance from")
         carried_from = None
+    elif carried_from is not None and load_object(carried_from)[0] is None:
+        report.add(f"{where}.allowance.carried_from", "verification", f"`{carried_from}` {load_object(carried_from)[1]}; carried allowance needs the chain file it came from")
 
     tasks = read_rows(report, f"{where}.tasks", verification.get("tasks", []), ("id", "type", "ruling"))
     by_id: dict[str, dict[str, Any]] = {}
@@ -990,6 +1047,9 @@ def read_verification(
                 report.add(location, "verification", f"a candidate task's `trigger` must be one of {list(TRIGGERS)}")
             if task["ruling"] not in CANDIDATE_RULINGS:
                 report.add(location, "verification", f"a candidate task's `ruling` must be one of {list(CANDIDATE_RULINGS)}")
+            if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
+                    and identity not in {q["id"] for q in questions} and not names_task(outstanding, identity)):
+                report.add(location, "verification", f"required candidate `{identity}` is unresolved, so it renders as a question with its id or stays in `outstanding`")
         elif task["type"] == "safety-premise":
             if task.get("area") not in PREMISE_AREAS:
                 report.add(location, "verification", f"a safety-premise task's `area` must be one of {list(PREMISE_AREAS)}")
@@ -1012,6 +1072,7 @@ def read_verification(
             report.add(location, "verification", "`type` must be `candidate` or `safety-premise`")
             continue
         batch = task.get("batch")
+        accounting, why = None, ""
         if task["ruling"] == "pending" and batch is None:
             pass
         elif isinstance(batch, str) and batch.startswith("carried:"):
@@ -1019,10 +1080,20 @@ def read_verification(
             chain_file, _, chain_batch = batch[len("carried:"):].partition("#")
             if not chain_file.startswith("/") or not chain_batch:
                 report.add(location, "verification", "a carried task's `batch` is `carried:<absolute chain file>#<batch name>`")
+            else:
+                accounting, why = chain_accounting(chain_file, chain_batch)
             if carried_from is None:
                 report.add(location, "verification", "a carried task needs `allowance.carried_from` naming the chain it was carried from")
         elif batch not in names:
             report.add(location, "verification", f"task `{identity}` names batch {json.dumps(batch)}, which is not recorded; only a `pending` task has none")
+        else:
+            accounting = names[batch]
+        if accounting is not None and task["ruling"] != "pending":
+            established, why = accounted_ruling(accounting, "candidates" if task["type"] == "candidate" else "premises", identity)
+            if established is not None and established != task["ruling"]:
+                why = f"accounting report `{accounting}` establishes `{established}`, not `{task['ruling']}`"
+        if why:
+            report.add(location, "verification", f"task `{identity}`: {why}; a ruling stands only on the verifier result that accounted for it")
         if task["ruling"] in ("withheld", "pending") and task.get("trigger") != "optional" and not names_task(outstanding, identity):
             report.add(location, "verification", f"`{identity}` is {task['ruling']} required work, so `outstanding` names it")
 
@@ -1265,7 +1336,7 @@ def load_json(path: str, what: str) -> Any:
 
 
 def example_composition(profile: str) -> dict[str, Any]:
-    """The docstring's example as a composition input; ``--example`` prints it and it composes at exit 0."""
+    """The docstring's example as a composition input; ``--example`` prints it, and it composes at exit 0 once the accounting report it names exists."""
     head, base, merge_base = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678", "b2c3d4e5f60718293a4b5c6d7e8f90123456789a", "d4e5f60718293a4b5c6d7e8f90123456789abcde"
     finding = {
         "id": "payments/retry-idempotency", "title": "Preserve the idempotency key across retries",
