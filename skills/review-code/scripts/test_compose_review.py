@@ -426,6 +426,19 @@ def implementation_gate() -> None:
             needle="establishes `withheld`, not `confirmed`")
     write_accounting(composition["record"]["verification"]["batches"][0]["accounting"], composition["record"]["verification"]["tasks"])
     gate(composition, "fixture composes again once its accounting is rewritten")
+    # A premise ruling is checked the same way, and a malformed report is refused rather than crashing.
+    premise_mismatch = outcome("Approved", [premise_task()], [batch_paths("initial")])
+    write_accounting(premise_mismatch["record"]["verification"]["batches"][0]["accounting"], [premise_task(ruling="fails")])
+    refused(premise_mismatch, "verification", "premise ruling its accounting does not establish", "--profile", "implementation-gate",
+            needle="establishes `fails`, not `holds`")
+    Path(premise_mismatch["record"]["verification"]["batches"][0]["accounting"]).write_text(
+        json.dumps({"withheld": ["premise-1"], "accounted": "x", "return": None}), encoding="utf-8")
+    refused(premise_mismatch, "verification", "malformed accounting report", "--profile", "implementation-gate", needle="does not account")
+    # A batch whose accounting produced no report still records its withheld tasks as outstanding work.
+    no_report = outcome("Incomplete", [candidate_task(ruling="withheld"), candidate_task("payments/retry-naming", "optional", ruling="withheld")],
+                        [batch_paths("initial")], outstanding=["payments/retry-idempotency: accounting produced no report"])
+    Path(no_report["record"]["verification"]["batches"][0]["accounting"]).unlink()
+    gate(no_report, "withheld tasks over a batch with no accounting report")
     # High-risk no-blocker conclusion: a premise that holds approves, and a question can carry an unresolved one.
     record, _ = gate(outcome("Approved", [premise_task()], [batch_paths("initial")]), "safety premise holds")
     assert record["record"]["verification"]["tasks"][0]["type"] == "safety-premise"
@@ -496,6 +509,16 @@ def implementation_gate() -> None:
                            initial=True, carried_from=absent), "verification", "carried confirmation from a missing chain file",
                    "--profile", "implementation-gate", needle="cannot be read")
     assert "allowance.carried_from" in line and "record.verification.tasks[0]" in line, line
+    # Version-1 and version-2 record chain files hold their batches under `record.verification`.
+    for schema, report_format in (("implementation-gate-record/1", "verifier-accounting/1"), ("implementation-gate-record/2", "verifier-accounting/2")):
+        record_chain = f"{ARTIFACTS}/chain/{schema.replace('/', '-')}.json"
+        batch = dict(batch_paths("initial"), accounting=f"{ARTIFACTS}/chain/{schema.replace('/', '-')}-accounting.json")
+        write_accounting(batch["accounting"], [candidate_task()])
+        report = json.loads(Path(batch["accounting"]).read_text(encoding="utf-8"))
+        Path(batch["accounting"]).write_text(json.dumps(dict(report, format=report_format)), encoding="utf-8")
+        Path(record_chain).write_text(json.dumps({"schema": schema, "record": {"verification": {"batches": [batch]}}}), encoding="utf-8")
+        gate(outcome("Changes Requested", [candidate_task(batch=f"carried:{record_chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
+                     initial=True, carried_from=record_chain), f"confirmation carried from a {schema} chain file")
     other = chain_file("addendum-other", ["queue/unrelated"])
     refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{other}#initial")], [], findings=copy.deepcopy(composition["findings"]),
                     initial=True, carried_from=other), "verification", "carried batch that never confirmed this id",
@@ -1093,7 +1116,7 @@ def main() -> int:
             assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "the example names an accounting report that does not exist"
         example = run(COMPOSER, json.dumps(value), "--profile", profile)
         assert example.returncode == 0, ("example composes", profile, example.stdout)
-    print("ok example: --example prints a composition that composes under both profiles")
+    print("ok example: --example prints a composition that composes under both profiles, the gate once its accounting exists")
     return 0
 
 
