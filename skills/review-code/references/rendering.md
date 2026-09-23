@@ -1,6 +1,6 @@
 # Render and validate
 
-Read after inspection and verification. The reviewer owns judgments, authoritative fields, and visible prose; the composer owns formatting, trailers, counts, coordinates, and artifact shapes. Use `python3 scripts/compose_review.py --example` for the exact input, or `--example --profile implementation-gate` for its private record fields. Load only the selected example. Gating is not an input; every record is advisory.
+Read after inspection and verification. The reviewer owns judgments, authoritative fields, and visible prose; the composer owns formatting, trailers, counts, coordinates, and artifact shapes. Use `python3 scripts/compose_review.py --example`, adding `--profile implementation-gate` for the gate, for the exact input. Load only the selected example. Gating is not an input; every record is advisory.
 
 ## Authoring contract
 
@@ -27,9 +27,9 @@ The caller's `profile` is part of the record's identity and selects only its art
 
 ## Finalize
 
-Write `<private-dir>/composition.json` beside the context store. For `implementation-gate`, its `record` section includes requirements, files, check evidence, verification tasks/allowance, routed items, and paths. Use the example's four required path keys plus `skill_root` and supplied evidence/spec paths. Persist private accounting for `publishable` too, since its payload does not carry that state.
+Write `<private-dir>/composition.json` beside the context store. Both profiles require its `record`: requirements, files, check evidence, verification tasks, batches, allowance and outstanding work, routed items, and the example's paths plus supplied evidence and spec paths. Write every key, empty lists included; nothing is defaulted.
 
-Run the selected command from the skill root:
+Run the selected command from the skill root; a pull request adds `--packet <private-dir>/packet.json`:
 
 ```sh
 python3 scripts/finalize_review.py --store <store> <private-dir>
@@ -41,6 +41,6 @@ For `implementation-gate`:
 python3 scripts/finalize_review.py --profile implementation-gate --store <store> <private-dir>
 ```
 
-The default writes `payload.json`, `batch.json`, and `fragments.md`; the gate writes `record.json` beside `addenda` and prints its path. Before return, check what scripts cannot: admission, source and repair locations, hunk membership, deduplication, question/observation eligibility, status, and coverage. Return the complete review and paths under the entrypoint's Return contract.
+Outputs are staged, and `report.md` is promoted last: the summary, each line comment's full body, the ledgers, routed state, and drafted replies. The default also writes `payload.json`, `batch.json`, and `fragments.md` and prints the fragments; the gate writes `record.json` beside `addenda` and prints its path. `--compact` prints status, coverage, and output paths instead. A directory whose addenda hold an addendum, or whose record cannot name its addenda, is refused; use a fresh one. Before return, check what scripts cannot: admission, source and repair locations, hunk membership, deduplication, question/observation eligibility, status, and coverage.
 
 On failure, report the named stage and output, repair the composition input, and rerun. Never hand-edit generated output or drop a verified finding to pass validation. If a caller reports a conclusive malformed-comment rejection, repair the anchor or use a file anchor for the complete body-carried item, then re-finalize for the caller's freshness checks. A disputed script constraint becomes an ambiguity; instructions govern and the helper needs correction.

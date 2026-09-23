@@ -1,0 +1,42 @@
+[
+  {
+    "cell": "publishable",
+    "profile": "publishable",
+    "exit": 0,
+    "stdout": "status Changes Requested\ncoverage complete\npayload <private>/payload.json\nbatch <private>/batch.json\nfragments <private>/fragments.md\ncomposition <private>/composition.json\nreport <private>/report.md\n",
+    "baseline_authored_report_chars": 10054,
+    "composition_has_record": true,
+    "public_bytes_unchanged": {
+      "payload.json": true,
+      "batch.json": true,
+      "fragments.md": true
+    },
+    "generated_report_chars": 7257,
+    "model_output_chars_under_artifacts": 295,
+    "every_item_body_once": true,
+    "summary_body_once": true
+  },
+  {
+    "cell": "required-verification",
+    "profile": "publishable",
+    "exit": 1,
+    "stdout": "accounting failed with exit 1; later stages did not run:\nrecord: accounting: finalization requires the private `record` accounting for either profile; nothing is defaulted\n",
+    "baseline_authored_report_chars": 12692,
+    "composition_has_record": false
+  },
+  {
+    "cell": "implementation-gate",
+    "profile": "implementation-gate",
+    "exit": 0,
+    "stdout": "status Approved\ncoverage complete\nrecord <private>/record.json\naddenda <private>/addenda\ncomposition <private>/composition.json\nreport <private>/report.md\n",
+    "baseline_authored_report_chars": 9351,
+    "composition_has_record": true,
+    "public_bytes_unchanged": {
+      "record.json": true
+    },
+    "generated_report_chars": 7071,
+    "model_output_chars_under_artifacts": 263,
+    "every_item_body_once": true,
+    "summary_body_once": true
+  }
+]

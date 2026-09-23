@@ -145,11 +145,11 @@ Every drafted reply and thread resolution goes through the thread write loop bel
 
 For every prior item `review-code` classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: `review-code`'s evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item.
 
-Write `<private-dir>/writes.jsonl` once from the completed record, one JSON object per prior item per line, with the host's file-writing tool rather than a shell `echo`:
+Write `<private-dir>/writes.jsonl` once, one JSON object per prior item per line, with the host's file-writing tool rather than a shell `echo`. Take each item from the retained `composition.json`'s `finalization.replies`, in order, which `review-code` checked against the packet; a composition without `finalization` comes from an earlier `review-code`, whose record supplies the same fields:
 
 - `id`: the item's stable id.
 - `comment_id`: the numeric id of the thread's first comment; `thread_id`: the thread's GraphQL node id. Both are null for an item without a forge thread.
-- `body`: the drafted reply exactly as drafted, or null when the item has no drafted reply.
+- `body`: the drafted reply exactly as saved, prior-item trailer included, or null when the item has no drafted reply.
 - `action`: `resolve` for `fixed`, `accepted`, and `obsolete`; `none` for `still-open`, `not-verifiable`, disputed items, and items without a forge thread.
 - `is_resolved` (optional): the thread's recorded state. `true` records the already-resolved skip instead of resolving again.
 
