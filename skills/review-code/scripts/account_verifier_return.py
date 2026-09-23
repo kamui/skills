@@ -2,8 +2,17 @@
 """Account a raw verifier JSON return against its pinned brief bundle.
 
 Usage: python3 scripts/account_verifier_return.py --bundle <directory>
-       --output accounting.json raw-return.json
+       --output accounting.json [--inline-fallback | --repair-of <original>] <return>
 Schema: references/verifier-return.md; bundle from build_verifier_prompt.py.
+Transport: for a bundle whose manifest binds ``return_file``, <return> is the path the
+worker returned. It must equal that assignment exactly, and the file is read without
+following a symbolic link, from a parent that still resolves to itself. A wrong path,
+an absent, linked, non-regular, or unreadable file, or a moved parent withholds every
+task in an exit-1 report. ``--inline-fallback`` accounts the primary's verbatim save of an inline
+response for such a bundle instead, recording the assigned file's state (absent, or
+the size and hash of what the worker left). ``--repair-of`` accounts a separate
+repaired return, recording the original's path and hash. Neither may name the
+assigned file as <return>; the report's ``transport`` and ``repair_of`` keys record them.
 Exit 0: structurally complete, not confirmed; 1: content violations, one per
 stdout line, with an accounting report partitioning each role; 2: unreadable
 input or unwritable output, named on stderr. The raw return stays untouched;
@@ -17,13 +26,15 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import os
 from pathlib import Path
+import stat
 import sys
 
 from build_verifier_prompt import (
-    BASES, ContentError, anchor, choice, digest, evidence_list, fields,
-    json_text, make_manifest, obj, parse_json, read_json, require, seq, string,
-    unique_ids,
+    BASES, ContentError, anchor, assignment_line, choice, digest, evidence_list,
+    fields, json_text, make_manifest, obj, parse_json, read_json, require, seq,
+    string, unique_ids,
 )
 
 
@@ -156,11 +167,53 @@ def account(data, manifest, manifest_hash, returned):
     return report
 
 
+def read_assigned(path):
+    """The assigned file's bytes, or None and why, never following a link to reach it."""
+    if os.path.realpath(os.path.dirname(path)) != os.path.dirname(path):
+        return None, "reached through a moved or linked parent directory"
+    try:
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
+    except FileNotFoundError:
+        return None, "absent"
+    except OSError as error:
+        try:
+            mode = os.lstat(path).st_mode
+        except OSError:  # an untraversable parent hides the file's type as well
+            return None, f"unreadable ({error.strerror})"
+        if stat.S_ISLNK(mode):
+            return None, "a symbolic link"
+        if not stat.S_ISREG(mode):
+            return None, "not a regular file"
+        return None, f"unreadable ({error.strerror})"
+    if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+        os.close(descriptor)
+        return None, "not a regular file"
+    with os.fdopen(descriptor, "rb") as handle:
+        return handle.read(), None
+
+
+def assigned_state(path):
+    """What the worker left at its assignment, recorded beside a fallback or repair."""
+    raw, why = read_assigned(path)
+    return why if raw is None else {"bytes": len(raw), "sha256": digest(raw)}
+
+
+def withheld_report(manifest, manifest_hash, violations):
+    return {"format": "verifier-accounting/2", "manifest_sha256": manifest_hash,
+            "structurally_complete": False, "violations": violations,
+            "accounted": {"candidates": [], "premises": []},
+            "withheld": {"candidates": manifest["candidate_ids"], "premises": manifest["premise_ids"]}}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("raw_return")
+    parser.add_argument("raw_return", help="the return file; for a file-transport bundle, the path the worker returned")
     parser.add_argument("--bundle", required=True)
     parser.add_argument("--output", required=True, help="new accounting report, never the raw return")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--inline-fallback", action="store_true",
+                        help="the primary's verbatim save of an inline response to a file-transport bundle")
+    source.add_argument("--repair-of", metavar="ORIGINAL", help="the unmodified return this repaired file was made from")
     args = parser.parse_args()
     EVENT.update(event="verifier-return-accounted", bundle=args.bundle)
     try:
@@ -176,20 +229,54 @@ def main():
         for role in ("candidates", "premises"):
             seq(data[role], "bundle " + role)
             unique_ids([string(obj(item, role).get("id"), role + ".id") for item in data[role]], role)
-        require(manifest == make_manifest(data, brief), "bundle", "manifest does not match input/brief identity")
+        return_file = manifest.get("return_file")
+        if return_file is not None:
+            string(return_file, "manifest.return_file")
+            require(assignment_line(return_file) in brief.decode("utf-8"), "bundle", "brief does not name the manifest's return file")
+        require(manifest == make_manifest(data, brief, return_file), "bundle", "manifest does not match input/brief identity")
         manifest_hash = digest(manifest_raw)
-        raw = Path(args.raw_return).read_bytes()
-        try:
-            returned = parse_json(raw.decode("utf-8"))
-            report = account(data, manifest, manifest_hash, returned)
-        except (ValueError, UnicodeError) as error:
-            report = {"format": "verifier-accounting/2", "manifest_sha256": manifest_hash,
-                      "structurally_complete": False, "violations": [f"return: {error}"],
-                      "accounted": {"candidates": [], "premises": []},
-                      "withheld": {"candidates": manifest["candidate_ids"], "premises": manifest["premise_ids"]}}
+        raw_path, transport, problem = str(Path(args.raw_return).resolve()), None, None
+        if return_file is None and args.inline_fallback:
+            raise OSError("--inline-fallback needs a bundle built with --return-file")
+        if return_file is not None:
+            transport = {"assigned": return_file}
+            if args.inline_fallback or args.repair_of:
+                if raw_path == return_file or os.path.abspath(args.raw_return) == return_file:
+                    raise OSError("the assigned return file is accounted without --inline-fallback or --repair-of")
+                transport.update(accounted_as="inline-fallback" if args.inline_fallback else "repair",
+                                 assigned_file=assigned_state(return_file))
+            else:
+                transport["accounted_as"] = "file"
+                raw_path, raw = return_file, None
+                if args.raw_return != return_file:
+                    transport["returned"] = args.raw_return
+                    problem = f"return file: `{args.raw_return}` is not the assigned `{return_file}`"
+                else:
+                    raw, why = read_assigned(return_file)
+                    if raw is None:
+                        problem = f"return file: `{return_file}` is {why}"
+        if problem is None and (transport is None or transport["accounted_as"] != "file"):
+            raw = Path(args.raw_return).read_bytes()
+        repair = None
+        if args.repair_of:
+            if os.path.realpath(args.repair_of) == os.path.realpath(args.raw_return):
+                raise OSError("--repair-of names the repaired file itself")
+            repair = {"path": str(Path(args.repair_of).resolve()), "sha256": digest(Path(args.repair_of).read_bytes())}
+        if problem is not None:
+            report = withheld_report(manifest, manifest_hash, [problem])
+        else:
+            try:
+                returned = parse_json(raw.decode("utf-8"))
+                report = account(data, manifest, manifest_hash, returned)
+            except (ValueError, UnicodeError) as error:
+                report = withheld_report(manifest, manifest_hash, [f"return: {error}"])
         EVENT.update(manifest=manifest, report=report)
-        report["raw_return"] = str(Path(args.raw_return).resolve())
-        report["raw_return_sha256"] = digest(raw)
+        report["raw_return"] = raw_path
+        report["raw_return_sha256"] = None if problem is not None else digest(raw)
+        if transport is not None:
+            report["transport"] = transport
+        if repair is not None:
+            report["repair_of"] = repair
         with open(args.output, "x", encoding="utf-8") as output:
             output.write(json_text(report))
         for error in report["violations"]:

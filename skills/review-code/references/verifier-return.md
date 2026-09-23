@@ -1,6 +1,6 @@
 # Verifier return encoding
 
-Return one JSON object, without a Markdown fence or surrounding prose. This is an encoding of `verifier.md`'s verdicts and rulings, not an additional decision policy. Read the supplied `manifest.json` and echo its exact file SHA-256 as `manifest_sha256` (compute with Python's `hashlib.sha256(Path(...).read_bytes()).hexdigest()`). Every candidate and premise ID is owed exactly one record **in its own array**.
+Encode your return as one JSON object and deliver it by the transport section below. This is an encoding of `verifier.md`'s verdicts and rulings, not an additional decision policy. Read the supplied `manifest.json` and echo its exact file SHA-256 as `manifest_sha256` (compute with Python's `hashlib.sha256(Path(...).read_bytes()).hexdigest()`). Every candidate and premise ID is owed exactly one record **in its own array**.
 
 ```json
 {
@@ -36,3 +36,11 @@ Premise records require `id`, `ruling` (`holds`, `fails`, or `unresolved`), and 
 `duplicate_groups` is an array of arrays, each suggesting at least two supplied candidate IDs for merging; the primary decides. `observation` is `null` or one object with `fact` and nonempty `evidence`, subject to the reference's non-actionable aside rule. Safety assertions and premise contradictions stay in their records, never the aside.
 
 Evidence entries are `{"coordinate": "<source location>", "text": "<decisive raw evidence>"}` or `{"unavailable": "<named evidence gap>"}` (optionally retaining `coordinate`). Source coordinates include `commit-<sha7>/"<quoted phrase>"` for a local change-description requirement, alongside the pull-request `pr-title` and `pr-body` forms. Preserve quoted evidence, including strings such as `support: enabled`. Named unavailable evidence never becomes confirmation or safety merely because it fits this encoding: every record cites at least one raw location unless it is `unresolved` — a refutation with basis `unresolved`, or an `unresolved` premise — and the accounting withholds one that does not. The accounting helper checks membership, vocabulary, structure, and identity; the verifier and primary still decide citation truth, sufficient evidence, scoped safety, observation eligibility, and the current coverage/status rules.
+
+## Inline transport
+
+Return the JSON object as your whole response, without a Markdown fence or surrounding prose.
+
+## File transport
+
+Save the complete JSON object, unfenced, to the assigned return file below by exclusive create, such as Python's `open(path, "x", encoding="utf-8")`. That is your only write: no other file, source change, or forge write. Then respond with only `{"return_file": "<the assigned absolute path>", "status": "complete"}`. If the file exists or the write fails, leave what was written, write nowhere else, and return the complete JSON object inline as your whole response instead.

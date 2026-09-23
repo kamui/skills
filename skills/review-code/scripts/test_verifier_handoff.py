@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -394,11 +395,268 @@ class HandoffTests(unittest.TestCase):
         self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--output", bundle, code=2)
         self.run_cli("build_verifier_prompt.py", self.root / "missing", "--output", self.path("bundle"), code=2)
 
+    # --- file transport -----------------------------------------------------------------
+
+    def build_file(self, data=None, name="raw-return.json", code=0, scripts=SCRIPTS):
+        """A file-transport bundle and its assigned path, in a fresh per-batch return directory."""
+        returns = self.path("returns")
+        returns.mkdir()
+        assigned = returns / name
+        output = self.path("bundle")
+        self.run_cli("build_verifier_prompt.py", self.write(input_data([candidate()], [premise()]) if data is None else data),
+                     "--output", output, "--return-file", assigned, code=code, scripts=scripts)
+        return output, assigned
+
+    def worker_writes(self, assigned, returned):
+        """What a worker does: create the assigned file exclusively and reply with its path."""
+        with open(assigned, "x", encoding="utf-8") as handle:
+            handle.write(json.dumps(returned, indent=2))
+        return {"return_file": str(assigned), "status": "complete"}
+
+    def account_path(self, bundle, given, *extra, code=0):
+        report = self.path("accounting.json")
+        self.run_cli("account_verifier_return.py", "--bundle", bundle, "--output", report, *extra, given, code=code)
+        return json.loads(report.read_text(encoding="utf-8")) if report.exists() else None
+
+    def test_file_brief_and_manifest_bind_the_assignment(self):
+        bundle, assigned = self.build_file()
+        manifest = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["format"], "verifier-manifest/2")
+        self.assertEqual(manifest["return_file"], str(assigned))
+        brief = (bundle / "brief.md").read_text(encoding="utf-8")
+        self.assertIn("## File transport", brief)
+        self.assertIn(f"Assigned return file: `{assigned}`", brief)
+        self.assertIn('open(path, "x"', brief)
+        self.assertNotIn("## Inline transport", brief)
+        self.assertFalse(assigned.exists())
+        inline = self.build()
+        brief = (inline / "brief.md").read_text(encoding="utf-8")
+        self.assertIn("## Inline transport", brief)
+        self.assertNotIn("## File transport", brief)
+        self.assertNotIn("return_file", json.loads((inline / "manifest.json").read_text(encoding="utf-8")))
+        # Both transports carry the same encoding schema.
+        for text in ((bundle / "brief.md").read_text(encoding="utf-8"), brief):
+            self.assertIn("# Verifier return encoding", text)
+            self.assertIn("Every candidate and premise ID is owed exactly one record", text)
+            self.assertNotIn("What the primary does with the return", text)
+
+    def test_return_file_refusals(self):
+        existing = self.path("existing.json")
+        existing.write_text("{}", encoding="utf-8")
+        linked = self.path("linked")
+        linked.symlink_to(self.root)
+        for value in ("relative/raw.json", str(self.root / "a" / ".." / "raw.json"), str(existing),
+                      str(self.root / "missing-dir" / "raw.json"), str(self.root / "back`tick.json")):
+            with self.subTest(value=value):
+                output = self.path("bundle")
+                self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--output", output,
+                             "--return-file", value, code=2)
+                self.assertFalse(output.exists())
+        output = self.path("bundle")
+        self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--output", output,
+                     "--return-file", output / "raw.json", code=2)
+        # A linked parent is bound through its real path, so the worker and accounting agree on one file.
+        bundle = self.path("bundle")
+        self.run_cli("build_verifier_prompt.py", self.write(input_data()), "--output", bundle,
+                     "--return-file", linked / "raw.json")
+        manifest = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["return_file"], str(self.root.resolve() / "raw.json"))
+
+    def variants(self):
+        """Returns that exercise judgments, corrections, scoped safety disputes, and malformed records."""
+        def correction(r):
+            r["candidates"][0]["corrections"] = {"priority": "P3", "action": "consider", "change": "Keep the key"}
+            r["candidates"][0]["safety_rulings"] = [{"path": "src/queue.py", "conditions": "retry after timeout",
+                "premise": "the key is reused", "ruling": "fails", "evidence": [ev("src/queue.py:22")]}]
+            r["duplicate_groups"] = []
+            r["observation"] = {"fact": "The timeout defaults to one second.", "evidence": [ev("config.py:2")]}
+        def unresolved(r):
+            r["candidates"][0].update(verdict="refuted", basis="unresolved", settling_fact="The operator knows",
+                                      evidence=[{"unavailable": "deployment config"}])
+            r["premises"][0].update(ruling="fails", failed_step="A missed lookup leaves `sender` NULL")
+        return {
+            "valid": lambda r: None,
+            "corrections-and-scoped-safety": correction,
+            "unresolved-and-fails": unresolved,
+            "duplicate-id": lambda r: r["candidates"].append(copy.deepcopy(r["candidates"][0])),
+            "foreign-id": lambda r: r["candidates"][0].update(id="unknown"),
+            "wrong-role": lambda r: r["premises"].__setitem__(0, copy.deepcopy(r["candidates"][0])),
+            "malformed": lambda r: r["candidates"][0].update(verdict="plausible"),
+            "wrong-manifest": lambda r: r.update(manifest_sha256="0" * 64),
+        }
+
+    def test_file_and_inline_transports_account_identically(self):
+        data = input_data([candidate()], [premise()])
+        for name, mutate in self.variants().items():
+            with self.subTest(variant=name):
+                inline_bundle = self.build(data)
+                file_bundle, assigned = self.build_file(data)
+                reports = []
+                for bundle, sender in ((inline_bundle, None), (file_bundle, assigned)):
+                    returned = self.returned(bundle)
+                    mutate(returned)
+                    if sender is None:
+                        raw = self.write(returned, "raw.json")
+                        given = raw
+                    else:
+                        reply = self.worker_writes(sender, returned)
+                        given = reply["return_file"]
+                    before = Path(given).read_bytes()
+                    code = 0 if name in ("valid", "corrections-and-scoped-safety", "unresolved-and-fails") else 1
+                    report = self.account_path(bundle, given, code=code)
+                    self.assertEqual(Path(given).read_bytes(), before)
+                    self.assertEqual(report["raw_return"], str(Path(given).resolve()))
+                    self.assertEqual(report["raw_return_sha256"], hashlib.sha256(before).hexdigest())
+                    self.assertEqual(report["return"], returned)
+                    reports.append(report)
+                inline_report, file_report = reports
+                self.assertNotIn("transport", inline_report)
+                self.assertEqual(file_report["transport"], {"assigned": str(assigned), "accounted_as": "file"})
+                for key in ("accounted", "withheld", "structurally_complete", "violations"):
+                    self.assertEqual(inline_report[key], file_report[key], key)
+                strip = lambda r: {k: v for k, v in r["return"].items() if k != "manifest_sha256"}
+                self.assertEqual(strip(inline_report), strip(file_report))
+
+    def test_unusable_return_files_withhold_every_task(self):
+        # A worker that wrote into a sandbox the primary cannot read claims a file that is absent here.
+        bundle, assigned = self.build_file()
+        report = self.account_path(bundle, assigned, code=1)
+        self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+        self.assertEqual(report["accounted"], {"candidates": [], "premises": []})
+        self.assertFalse(report["structurally_complete"])
+        self.assertEqual(report["violations"], [f"return file: `{assigned}` is absent"])
+        self.assertIsNone(report["raw_return_sha256"])
+        self.assertNotIn("return", report)
+        # A returned path other than the assignment is never read.
+        bundle, assigned = self.build_file()
+        elsewhere = self.write(self.returned(bundle), "elsewhere.json")
+        for given in (elsewhere, Path(os.path.relpath(assigned))):
+            if given != elsewhere:
+                self.worker_writes(assigned, self.returned(bundle))
+            report = self.account_path(bundle, given, code=1)
+            self.assertIn("is not the assigned", report["violations"][0])
+            self.assertEqual(report["transport"]["returned"], str(given))
+            self.assertEqual(report["raw_return"], str(assigned))
+            self.assertEqual(report["withheld"]["candidates"], ["a/bug"])
+        # A link at the assignment, or a parent moved behind a link, escapes it.
+        bundle, assigned = self.build_file()
+        assigned.symlink_to(self.write(self.returned(bundle), "target.json"))
+        report = self.account_path(bundle, assigned, code=1)
+        self.assertEqual(report["violations"], [f"return file: `{assigned}` is a symbolic link"])
+        bundle, assigned = self.build_file()
+        moved = assigned.parent.with_name(assigned.parent.name + "-moved")
+        assigned.parent.rename(moved)
+        moved.joinpath(assigned.name).write_text(json.dumps(self.returned(bundle)), encoding="utf-8")
+        assigned.parent.symlink_to(moved)
+        report = self.account_path(bundle, assigned, code=1)
+        self.assertIn("moved or linked parent", report["violations"][0])
+        bundle, assigned = self.build_file()
+        assigned.mkdir()
+        report = self.account_path(bundle, assigned, code=1)
+        self.assertEqual(report["violations"], [f"return file: `{assigned}` is not a regular file"])
+        # A FIFO or an unreadable file at the assignment is reported, never a crash or a hang.
+        for kind in ("fifo", "fifo-000", "file-000"):
+            bundle, assigned = self.build_file()
+            if kind.startswith("fifo"):
+                os.mkfifo(assigned)
+            else:
+                assigned.write_text(json.dumps(self.returned(bundle)), encoding="utf-8")
+            if kind.endswith("000"):
+                assigned.chmod(0)
+            try:
+                if kind == "file-000" and os.access(assigned, os.R_OK):
+                    continue  # running as a user who reads mode-000 files
+                report = self.account_path(bundle, assigned, code=1)
+                expected = "unreadable (Permission denied)" if kind == "file-000" else "not a regular file"
+                self.assertEqual(report["violations"], [f"return file: `{assigned}` is {expected}"], kind)
+                self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+            finally:
+                assigned.chmod(0o600)
+        # A return directory the primary cannot traverse is reported too, for the file and the fallback.
+        bundle, assigned = self.build_file()
+        self.worker_writes(assigned, self.returned(bundle))
+        assigned.parent.chmod(0o600)
+        try:
+            if not os.access(assigned, os.R_OK):  # a user who traverses mode-600 directories cannot test this
+                report = self.account_path(bundle, assigned, code=1)
+                self.assertEqual(report["violations"], [f"return file: `{assigned}` is unreadable (Permission denied)"])
+                self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+                report = self.account_path(bundle, self.write(self.returned(bundle), "inline.json"), "--inline-fallback")
+                self.assertEqual(report["transport"]["assigned_file"], "unreadable (Permission denied)")
+        finally:
+            assigned.parent.chmod(0o700)
+        # A partial write parses as nothing.
+        bundle, assigned = self.build_file()
+        assigned.write_text(json.dumps(self.returned(bundle))[:40], encoding="utf-8")
+        report = self.account_path(bundle, assigned, code=1)
+        self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
+        self.assertTrue(report["violations"][0].startswith("return: "))
+
+    def test_inline_fallback_preserves_the_partial_file(self):
+        bundle, assigned = self.build_file()
+        returned = self.returned(bundle)
+        partial = json.dumps(returned)[:40]
+        assigned.write_text(partial, encoding="utf-8")
+        saved = self.write(returned, "inline-return.json")
+        report = self.account_path(bundle, saved, "--inline-fallback")
+        self.assertTrue(report["structurally_complete"])
+        self.assertEqual(report["transport"], {"assigned": str(assigned), "accounted_as": "inline-fallback",
+                                               "assigned_file": {"bytes": len(partial.encode("utf-8")),
+                                                                 "sha256": hashlib.sha256(partial.encode("utf-8")).hexdigest()}})
+        self.assertEqual(assigned.read_text(encoding="utf-8"), partial)
+        self.assertEqual(report["raw_return"], str(saved.resolve()))
+        bundle, assigned = self.build_file()
+        report = self.account_path(bundle, self.write(self.returned(bundle), "inline.json"), "--inline-fallback")
+        self.assertEqual(report["transport"]["assigned_file"], "absent")
+        # The assigned file is never a fallback, and an inline bundle has none.
+        self.account_path(bundle, assigned, "--inline-fallback", code=2)
+        inline = self.build()
+        self.account_path(inline, self.write(self.returned(inline)), "--inline-fallback", code=2)
+
+    def test_repair_keeps_the_original_and_its_provenance(self):
+        bundle, assigned = self.build_file()
+        returned = self.returned(bundle)
+        returned["candidates"][0]["verdict"] = "Confirmed"
+        self.worker_writes(assigned, returned)
+        original = assigned.read_bytes()
+        first = self.account_path(bundle, assigned, code=1)
+        self.assertEqual(first["withheld"]["candidates"], ["a/bug"])
+        repaired = copy.deepcopy(returned)
+        repaired["candidates"][0]["verdict"] = "confirmed"
+        repaired_path = self.write(repaired, "repaired.json")
+        report = self.account_path(bundle, repaired_path, "--repair-of", assigned)
+        self.assertTrue(report["structurally_complete"])
+        self.assertEqual(report["repair_of"], {"path": str(assigned), "sha256": hashlib.sha256(original).hexdigest()})
+        self.assertEqual(report["transport"]["accounted_as"], "repair")
+        self.assertEqual(report["raw_return"], str(repaired_path.resolve()))
+        self.assertEqual(assigned.read_bytes(), original)
+        self.account_path(bundle, assigned, "--repair-of", repaired_path, code=2)
+        self.account_path(bundle, repaired_path, "--repair-of", repaired_path, code=2)
+        self.account_path(bundle, repaired_path, "--repair-of", assigned, "--inline-fallback", code=2)
+        inline = self.build()
+        raw = self.write(self.returned(inline))
+        report = self.account_path(inline, self.write(self.returned(inline)), "--repair-of", raw)
+        self.assertEqual(report["repair_of"]["path"], str(raw.resolve()))
+        self.assertNotIn("transport", report)
+
+    def test_tampered_assignment_is_refused(self):
+        bundle, assigned = self.build_file()
+        manifest_path = bundle / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        other = assigned.with_name("other.json")
+        manifest["return_file"] = str(other)
+        manifest_path.write_text(builder.json_text(manifest), encoding="utf-8")
+        self.worker_writes(other, self.returned(bundle))
+        self.assertIsNone(self.account_path(bundle, other, code=1))
+
     def test_standalone_install(self):
         skill = self.root / "installed" / "review-code"
         shutil.copytree(SCRIPTS.parent, skill, ignore=shutil.ignore_patterns("__pycache__"))
         bundle = self.build(input_data([candidate()], [premise()]), scripts=skill / "scripts")
         self.account(bundle, self.returned(bundle), scripts=skill / "scripts")
+        bundle, assigned = self.build_file(scripts=skill / "scripts")
+        self.worker_writes(assigned, self.returned(bundle))
+        self.assertIn("## File transport", (bundle / "brief.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
