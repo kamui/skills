@@ -1,0 +1,41 @@
+{
+  "delta": [
+    {"path": "ledger/accounts.py", "state": "reviewed"},
+    {"path": "tests/test_freeze.py", "state": "reviewed"}
+  ],
+  "fixed_findings": [
+    {"id": "accounts/frozen-transfer-bypass", "classification": "fixed",
+     "evidence": "ledger/accounts.py:89-91 at b96a362 refuses a frozen source or target before the appends at :94-95; tests/test_freeze.py:20-31 covers both directions, and the suite passes"},
+    {"id": "accounts/post-docstring-frozen", "classification": "fixed",
+     "evidence": "ledger/accounts.py:61-64 at b96a362 names the frozen-account LedgerError in Ledger.post's docstring; transfer's docstring at :79-81 also names it"}
+  ],
+  "findings": [],
+  "questions": [],
+  "requirements": [
+    {"source": "ledger-spec/account-freeze/criterion-2", "class": "acceptance", "disposition": "met",
+     "evidence": "ledger/accounts.py:68-69 (post) and :89-91 (transfer, both sides); tests/test_freeze.py:16-31"}
+  ],
+  "check_evidence": [
+    {"check": "python3 -m unittest discover -s tests -v", "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+     "outcome": "reviewer-executed",
+     "reason": "the fix changes ledger/accounts.py and tests/test_freeze.py, which the suite covers; 18 tests, pass, matching the caller's evidence.md run; earlier-head results are not reused"}
+  ],
+  "verification": {
+    "tasks": [
+      {"id": "premise-entry-paths", "type": "safety-premise", "area": "data-integrity",
+       "premise": "Only Ledger.post and Ledger.transfer append to an account's entries, and each refuses a frozen account before any append.",
+       "evidence": "ledger/accounts.py:68-73, :89-95; ledger/cli.py:20-21", "batch": "follow-up", "ruling": "holds"},
+      {"id": "premise-transfer-atomic", "type": "safety-premise", "area": "data-integrity",
+       "premise": "A refused Ledger.transfer mutates neither account: every raise precedes both appends.",
+       "evidence": "ledger/accounts.py:83-95", "batch": "follow-up", "ruling": "holds"}
+    ],
+    "batches": [
+      {"bundle": "/tmp/rcs-savings/treatment/continuation/work/c1/follow-up",
+       "accounting": "/tmp/rcs-savings/treatment/continuation/work/c1/follow-up/accounting.json",
+       "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"}
+    ]
+  },
+  "status": "Approved",
+  "coverage": "complete",
+  "coverage_gaps": []
+}

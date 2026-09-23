@@ -1,0 +1,1 @@
+transcript.jsonl lines=20 models=claude-sonnet-5×20 efforts=high×20

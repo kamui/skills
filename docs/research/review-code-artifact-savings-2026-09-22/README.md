@@ -7,6 +7,8 @@ This directory freezes the inputs and the baseline for the artifact-savings work
 - a [consumer map](consumers.md) from each repeated field to its authority;
 - the [paired protocol](protocol.md) that #347 runs the treatment under.
 
+[#347](https://github.com/kamui/skills/issues/347) has since run the treatment under that protocol, beside a same-session control rerun of this baseline. The results are in [combined.md](combined.md). The control shows that most of the change from the cells below is harness and model drift.
+
 No runtime skill text, workflow, private schema, helper, forge fetching or review policy changes here. The #333 bundle stayed inconclusive because nine historical inputs were never archived. These tasks avoid that by committing every input they need.
 
 ## Baseline revision

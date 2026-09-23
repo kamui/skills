@@ -1,0 +1,557 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/treatment/required-verification/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/1684cf4/skills/review-code",
+  "task_root": "/tmp/rcs-savings/treatment/required-verification",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 12,
+          "lines": 19,
+          "tool_calls": 13,
+          "text_only_turns": 1,
+          "input": 24,
+          "cache_write": 44980,
+          "cache_write_5m": 0,
+          "cache_write_1h": 44980,
+          "cache_write_unknown": 0,
+          "cache_read": 429266,
+          "output": 7764,
+          "thinking": 1091,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:01:31",
+          "wall_seconds": 91.079,
+          "path": "/tmp/rcs-savings/evidence/treatment/required-verification/transcript.jsonl",
+          "settings": {
+            "lines": 19,
+            "models": {
+              "claude-sonnet-5": 19
+            },
+            "efforts": {
+              "high": 19
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 12,
+        "lines": 19,
+        "tool_calls": 13,
+        "text_only_turns": 1,
+        "input": 24,
+        "cache_write": 44980,
+        "cache_write_5m": 0,
+        "cache_write_1h": 44980,
+        "cache_write_unknown": 0,
+        "cache_read": 429266,
+        "output": 7764,
+        "thinking": 1091,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:01:31",
+        "wall_seconds": 91.079
+      }
+    },
+    "workers": {
+      "transcripts": [
+        {
+          "label": "agent-a5ec753b81396f844.jsonl",
+          "turns": 4,
+          "lines": 7,
+          "tool_calls": 4,
+          "text_only_turns": 1,
+          "input": 8,
+          "cache_write": 13267,
+          "cache_write_5m": 13267,
+          "cache_write_1h": 0,
+          "cache_write_unknown": 0,
+          "cache_read": 53333,
+          "output": 1459,
+          "thinking": 110,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:00:14",
+          "wall_seconds": 13.809,
+          "path": "/tmp/rcs-savings/evidence/treatment/required-verification/subagents/agent-a5ec753b81396f844.jsonl",
+          "settings": {
+            "lines": 7,
+            "models": {
+              "claude-sonnet-5": 7
+            },
+            "efforts": {
+              "high": 7
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 4,
+        "lines": 7,
+        "tool_calls": 4,
+        "text_only_turns": 1,
+        "input": 8,
+        "cache_write": 13267,
+        "cache_write_5m": 13267,
+        "cache_write_1h": 0,
+        "cache_write_unknown": 0,
+        "cache_read": 53333,
+        "output": 1459,
+        "thinking": 110,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:00:14",
+        "wall_seconds": 13.809
+      }
+    },
+    "all": {
+      "label": "total",
+      "turns": 16,
+      "lines": 26,
+      "tool_calls": 17,
+      "text_only_turns": 2,
+      "input": 32,
+      "cache_write": 58247,
+      "cache_write_5m": 13267,
+      "cache_write_1h": 44980,
+      "cache_write_unknown": 0,
+      "cache_read": 482599,
+      "output": 9223,
+      "thinking": 1201,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:01:45",
+      "wall_seconds": 104.888
+    }
+  },
+  "harness": {
+    "num_turns": 14,
+    "duration_ms": 94105,
+    "total_cost_usd": 0.4034463,
+    "subagents_spawned": 1,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 2,
+    "failed": 1,
+    "repair_loops": 1,
+    "runs": [
+      {
+        "command": "cd /tmp/rcs-savings/treatment/required-verification/work; S=/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts\npython3 - <<'EOF'\nimport json\nc={\n\"summary\":{\"status\":\"Approved\",\n\"intent\":\"Add a read-only `delegate` role that owners grant and revoke per account (issue #5; PR title/body).\",\n\"issue_fit\":\"All five acceptance criteria of #5 and the PR-body promises are met.\",\n\"coverage\":\"Complete merge-base diff (3 files) reviewed; full unittest suite run once at the head, 17 tests pass; two authorization safety premises checked by one fresh verifier batch, both hold.\"},\n\"findings\":[],\"questions\":[],\n\"observations\":[{\"fact\":\"`Ledger.grant` and `Ledger.revoke` also raise LedgerError for an unknown account via `get`, which their docstrings do not name.\",\"evidence\":\"`ledger/accounts.py:52-64`, `AGENTS.md`.\"}],\n\"prior_items\":[],\n\"record\":{\n\"repository\":\"example/ledger\",\n\"requirements\":[\n{\"source\":\"issue-5/acceptance-criterion-1\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/accounts.py:52-64 grant/revoke; tests/test_delegates.py:test_only_owner_grants_and_revokes\"},\n{\"source\":\"issue-5/acceptance-criterion-2\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/accounts.py:54-56,61-63 owner check precedes mutation; test asserts LedgerError for non-owner\"},\n{\"source\":\"issue-5/acceptance-criterion-3\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/auth.py:15-16 membership in the account's own delegates set; test_grant_lets_delegate_view_that_account_only\"},\n{\"source\":\"issue-5/acceptance-criterion-4\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/auth.py:22 can_post is teller-only, unchanged; test_delegate_never_posts\"},\n{\"source\":\"issue-5/acceptance-criterion-5\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/auth.py:11-17 non-delegate branches unchanged; existing test_auth tests pass\"},\n{\"source\":\"pr-body/\\\"can_view admits a delegate only for accounts that list them\\\"\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"ledger/auth.py:15-16\"}],\n\"files\":[\n{\"path\":\"ledger/accounts.py\",\"state\":\"reviewed\"},\n{\"path\":\"ledger/auth.py\",\"state\":\"reviewed\"},\n{\"path\":\"tests/test_delegates.py\",\"state\":\"reviewed\"}],\n\"check_evidence\":[{\"check\":\"python3 -B -m unittest discover -s tests -v\",\"head\":\"a13922e76f42d9757608530348200affbf3bde2f\",\"outcome\":\"reviewer-executed\",\"reason\":\"Ran 17 tests, OK; output at work/run-events.jsonl timing event; no caller or CI evidence supplied\"}],\n\"verification\":{\"tasks\":[\n{\"id\":\"premise-1\",\"type\":\"safety-premise\",\"area\":\"security\",\"premise\":\"can_view admits a delegate only through the account's own delegates set, mutable only via owner-gated grant/revoke.\",\"evidence\":\"ledger/auth.py:15-16; ledger/accounts.py:24,52-64\",\"batch\":\"initial\",\"ruling\":\"holds\"},\n{\"id\":\"premise-2\",\"type\":\"safety-premise\",\"area\":\"security\",\"premise\":\"Owner, auditor, teller, and unknown-role can_view results are unchanged and can_post stays teller-only.\",\"evidence\":\"ledger/auth.py:6-22\",\"batch\":\"initial\",\"ruling\":\"holds\"}],\n\"batches\":[{\"bundle\":\"/tmp/rcs-savings/treatment/required-verification/work/initial\",\"accounting\":\"/tmp/rcs-savings/treatment/required-verification/work/initial/accounting.json\",\"operation\":\"Agent subagent_type=general-purpose model=sonnet run_in_background=false\"}],\n\"allowance\":{\"initial_spent\":True,\"follow_up_spent\":False,\"carried_from\":None},\n\"outstanding\":[]},\n\"routed\":{\"unresolved\":[],\"disputed\":[],\"unrecoverable_inputs\":[]}}}\njson.dump(c,open(\"composition.json\",\"w\"),indent=2)\nEOF\ncd ../repo; python3 $S/finalize_review.py --store /tmp/rcs-savings/treatment/required-verification/work/store --fingerprint-input /tmp/rcs-savings/treatment/required-verification/work/fingerprint.json --packet /tmp/rcs-savings/treatment/required-verification/work/packet.json --compact /tmp/rcs-savings/treatment/required-verification/work; echo rc=$?",
+        "failed": true,
+        "at": "2026-09-23T20:50:12.771000+00:00"
+      },
+      {
+        "command": "cd /tmp/rcs-savings/treatment/required-verification/work; S=/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts\npython3 - <<'EOF'\nimport json\nc=json.load(open(\"composition.json\")); c[\"run\"]={\"coverage\":\"complete\"}; json.dump(c,open(\"composition.json\",\"w\"),indent=2)\nEOF\ncd ../repo; python3 $S/finalize_review.py --store /tmp/rcs-savings/treatment/required-verification/work/store --fingerprint-input /tmp/rcs-savings/treatment/required-verification/work/fingerprint.json --packet /tmp/rcs-savings/treatment/required-verification/work/packet.json --compact /tmp/rcs-savings/treatment/required-verification/work; echo rc=$?; git status --short",
+        "failed": false,
+        "at": "2026-09-23T20:50:16.440000+00:00"
+      }
+    ],
+    "validation": {
+      "status": "captured",
+      "at": "2026-09-23T20:50:16.440000+00:00",
+      "turns_after": 2,
+      "tool_calls_after": 1,
+      "seconds_after": 8.453
+    }
+  },
+  "after_last_addendum": {
+    "status": "unavailable",
+    "reason": "no addendum write"
+  },
+  "loads": {
+    "items": [
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/SKILL.md"
+          }
+        ],
+        "bytes": 12060,
+        "words": 1736
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/pull-request-target.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/review-rubric.md"
+          }
+        ],
+        "bytes": 20052,
+        "words": 2513
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/rendering.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/verifier-handoff.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/references/changed-tests.md"
+          }
+        ],
+        "bytes": 20767,
+        "words": 2936
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 8601,
+        "words": 724
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/1684cf4/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 1520,
+        "words": 122
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 12060,
+        "words": 1736
+      },
+      "reference": {
+        "count": 5,
+        "bytes": 40819,
+        "words": 5449
+      },
+      "helper-example": {
+        "count": 3,
+        "bytes": 10121,
+        "words": 846
+      }
+    },
+    "mixed": {
+      "calls": 0,
+      "bytes": 0,
+      "words": 0
+    }
+  },
+  "worker_loads": [
+    {
+      "transcript": "/tmp/rcs-savings/evidence/treatment/required-verification/subagents/agent-a5ec753b81396f844.jsonl",
+      "dispatch_prompt": {
+        "bytes": 495,
+        "words": 51
+      },
+      "items": [
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/treatment/required-verification/work/initial/brief.md"
+            }
+          ],
+          "bytes": 16455,
+          "words": 2323
+        },
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/treatment/required-verification/work/initial/manifest.json"
+            }
+          ],
+          "bytes": 701,
+          "words": 57
+        }
+      ],
+      "totals": {
+        "bundle": {
+          "count": 2,
+          "bytes": 17156,
+          "words": 2380
+        }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
+      }
+    }
+  ],
+  "authored": {
+    "writes": [
+      {
+        "path": "input.json",
+        "tool": "Bash",
+        "chars": 2875,
+        "agent": "root",
+        "class": "verifier-input"
+      },
+      {
+        "path": "initial-return.json",
+        "tool": "Bash",
+        "chars": 2376,
+        "agent": "root",
+        "class": "other"
+      }
+    ],
+    "by_class": {
+      "verifier-input": {
+        "writes": 1,
+        "chars": 2875
+      },
+      "other": {
+        "writes": 1,
+        "chars": 2376
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/treatment/required-verification/work/initial-return.json",
+        "shape": "raw-return",
+        "bytes": 1945,
+        "mechanical": {
+          "fields": 1,
+          "words": 1
+        },
+        "judgment": {
+          "fields": 29,
+          "words": 173
+        },
+        "sections": {
+          "manifest_sha256": {
+            "fields": 1,
+            "words": 1
+          },
+          "candidates": {
+            "fields": 1,
+            "words": 0
+          },
+          "premises": {
+            "fields": 26,
+            "words": 173
+          },
+          "duplicate_groups": {
+            "fields": 1,
+            "words": 0
+          },
+          "observation": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/required-verification/work/input.json",
+        "shape": "verifier-input",
+        "bytes": 2569,
+        "mechanical": {
+          "fields": 8,
+          "words": 27
+        },
+        "judgment": {
+          "fields": 25,
+          "words": 196
+        },
+        "sections": {
+          "run": {
+            "fields": 5,
+            "words": 5
+          },
+          "batch": {
+            "fields": 2,
+            "words": 2
+          },
+          "run_policy": {
+            "fields": 1,
+            "words": 20
+          },
+          "sources": {
+            "fields": 10,
+            "words": 62
+          },
+          "candidates": {
+            "fields": 1,
+            "words": 0
+          },
+          "premises": {
+            "fields": 14,
+            "words": 134
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/required-verification/work/composition.json",
+        "shape": "composition",
+        "bytes": 5752,
+        "mechanical": {
+          "fields": 31,
+          "words": 30
+        },
+        "judgment": {
+          "fields": 61,
+          "words": 214
+        },
+        "sections": {
+          "summary": {
+            "fields": 4,
+            "words": 58
+          },
+          "findings": {
+            "fields": 1,
+            "words": 0
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "observations": {
+            "fields": 2,
+            "words": 20
+          },
+          "prior_items": {
+            "fields": 1,
+            "words": 0
+          },
+          "record": {
+            "fields": 66,
+            "words": 151
+          },
+          "run": {
+            "fields": 10,
+            "words": 9
+          },
+          "finalization": {
+            "fields": 7,
+            "words": 6
+          }
+        },
+        "written_by": "unobserved"
+      },
+      {
+        "path": "/tmp/rcs-savings/treatment/required-verification/work/fingerprint.json",
+        "shape": "fingerprint-input",
+        "bytes": 14,
+        "mechanical": {
+          "fields": 1,
+          "words": 0
+        },
+        "judgment": {
+          "fields": 0,
+          "words": 0
+        },
+        "sections": {
+          "specs": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "unobserved"
+      }
+    ]
+  }
+}

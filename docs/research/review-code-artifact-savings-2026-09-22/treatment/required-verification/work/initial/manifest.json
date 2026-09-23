@@ -1,0 +1,21 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "276ddd8db3cb5d44a2d9c90442933717445ba5493da30469aaba821dd476c378",
+  "candidate_ids": [],
+  "format": "verifier-manifest/2",
+  "input_sha256": "ba414f1033e50a7a3619751f8e0f97bed5f870887a941f40cc20ce1131c9df84",
+  "premise_ids": [
+    "premise-1",
+    "premise-2"
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "a13922e76f42d9757608530348200affbf3bde2f",
+    "id": "review-a13922e",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/required-verification/repo"
+  }
+}

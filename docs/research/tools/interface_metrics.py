@@ -20,18 +20,20 @@ Usage::
 - ``harness``: from ``--result``, the harness's own turn count, duration, cost, spawned-agent count
   and permission denials; ``null`` fields when not supplied.
 - ``finalizer``: every root Bash call that runs ``finalize_review.py`` or ``compose_review.py`` with
-  Python and without ``--help`` or ``--example``, with its exit: ``failed`` when the tool result is
+  Python and without ``--help``, ``--example`` or the read-only ``--check``, or runs
+  ``continue_review.py compose``, with its exit: ``failed`` when the tool result is
   an error or prints ``Exit code N``, ``exit=N`` or ``failed with exit N`` for a nonzero N, the
   forms a wrapped call reports; ``repair_loops`` counts failed calls. ``validation`` is the first
   successful call's result time, then the root turns, tool calls and seconds after it to the last
-  assistant line. With no finalizer call, ``validation`` is ``unavailable``; ``after_last_addendum``
+  assistant line; for a continuation that composes its addendum, that is the first successful
+  compose. With no finalizer call, ``validation`` is ``unavailable``; ``after_last_addendum``
   does the same from the last write to an ``addenda/`` JSON file, when one exists.
 - ``loads``: each root load of a skill file, classified ``entrypoint``, ``reference`` or
   ``script-source``, and each helper run with ``--help`` or ``--example`` as ``helper-help`` or
   ``helper-example``. A load is a Read of a skill file; a Bash reader (``cat``/``sed``/``head``/
   ``tail``/``less``/``bat``/``grep``/``rg``/``awk``/``nl``) naming a skill file it does not run, one
   load per file named; an ``open("...")`` of a skill file in inline Python; or one helper
-  invocation. A Bash call is read after substituting one-line ``NAME=value`` assignments and
+  invocation. A Bash call is read after substituting standalone ``NAME=value`` assignments and
   unrolling simple ``for`` loops. Relative paths resolve against the directory the call starts in:
   the ``cwd`` the harness records on the previous call's result line, or for a transcript's first
   call its own line's ``cwd``. The call's own line is not used later, because in a message with
@@ -48,12 +50,14 @@ Usage::
   each worker received.
 - ``authored``: every Write/Edit/MultiEdit and heredoc Bash write, root and workers, with
   characters by artifact class, and the ``fields`` inventory of each JSON artifact the model wrote
-  that still exists under the task root (``written_by: tool``). A known-shape JSON file under
+  that still exists under the task root (``written_by: tool``). A heredoc's target resolves
+  against the directory its call starts in and any top-level ``cd`` before the redirect, so a
+  relative path counts; the addendum tail uses the same targets. A known-shape JSON file under
   ``work/`` that no observed write names, such as one a program inside a heredoc wrote, is
   inventoried too with ``written_by: unobserved``; a helper's bundle ``input.json`` is excluded.
 
-``fields`` prints the inventory alone. For a composition input, addendum, verifier input, raw
-verifier return or fingerprint input, it counts leaf values and words and splits them into
+``fields`` prints the inventory alone. For a composition input, addendum, continuation input,
+verifier input, raw verifier return or fingerprint input, it counts leaf values and words and splits them into
 ``mechanical`` fields, which an authoritative packet, store, input, record or helper already
 determines, and ``judgment`` fields the model decides; every fingerprint-input leaf is mechanical,
 and a composition's ``run.coverage`` is a judgment the composer only checks. The table below is
@@ -64,7 +68,7 @@ count as ``other``.
 ``static`` measures what a load could cost at one skill revision, independent of any run: UTF-8
 bytes and whitespace-separated words of ``SKILL.md``, each ``references/*.md`` file and each
 ``scripts/*.py`` source, and the stdout of every helper's ``--help`` and ``--example`` variant the
-runtime text names. A reference count is not a load; ``cell`` measures what a run read.
+runtime text names that the revision ships. A reference count is not a load; ``cell`` measures what a run read.
 
 Exit codes: 0 printed; 2 an unreadable transcript, result or artifact, or a helper that fails,
 named on stderr.
@@ -88,7 +92,7 @@ import transcript_usage  # noqa: E402
 READERS = re.compile(r"(?:^|[\s;&|(])(?:cat|sed|head|tail|less|bat|batcat|grep|rg|awk|nl)\b")
 LOOP = re.compile(r"for\s+(\w+)\s+in\s+([^;\n]+?)\s*(?:;|\n)\s*do\b(.*?)(?:;|\n)\s*done\b", re.S)
 RUN_SCRIPT = re.compile(r"python3?\s+(?:-\S+\s+)*[\"']?(?P<path>[^\s\"']*?(?P<name>[\w]+\.py))[\"']?(?P<args>[^\n|;&]*)")
-FINALIZERS = ("finalize_review.py", "compose_review.py")
+FINALIZERS = ("finalize_review.py", "compose_review.py", "continue_review.py")
 FAILED_TEXT = re.compile(r"(?m)^(?:Exit code [1-9]|\s*exit(?: code)?\s*[=:]\s*[1-9])|failed with exit [1-9]")
 
 # (artifact, JSON-pointer pattern) -> class. The first matching pattern wins; "*" is one segment.
@@ -111,6 +115,10 @@ MECHANICAL = {
                  "/verification/batches/*/raw_return", "/verification/batches/*/accounting",
                  "/verification/batches/*/operation", "/verification/allowance/*",
                  "/verification/tasks/*/batch", "/verification/tasks/*/ruling"],
+    # continue_review.py derives identity, heads, allowance and each batch's name, phase and raw return.
+    "continuation": ["/delta/*/path", "/check_evidence/*/head", "/verification/batches/*/bundle",
+                     "/verification/batches/*/accounting", "/verification/batches/*/operation",
+                     "/verification/tasks/*/batch", "/verification/tasks/*/ruling"],
     "verifier-input": ["/run/*", "/batch/*", "/run_policy"],
     "raw-return": ["/manifest_sha256"],
 }
@@ -194,13 +202,15 @@ def classify_path(path: str, skill_root: str) -> Optional[str]:
 
 
 def expand(command: str) -> str:
-    """Substitute one-line ``NAME=value`` assignments and unroll simple ``for`` loops.
+    """Substitute ``NAME=value`` assignments and unroll simple ``for`` loops.
+
+    An assignment counts when it stands alone between line starts or ends, ``;`` and ``&&``.
 
     A loop ``for V in A B C; do BODY; done`` becomes BODY once per item with ``$V`` replaced, so each
     helper call inside it counts. Nothing else is interpreted.
     """
     values = {}
-    for name, value in re.findall(r"(?m)^\s*(?:export\s+)?([A-Za-z_]\w*)=(\S+)\s*$", command):
+    for name, value in re.findall(r"(?m)(?:^|;|&&)\s*(?:export\s+)?([A-Za-z_]\w*)=([^\s;&]+)\s*(?=$|;|&&)", command):
         values[name] = value.strip("\"'")
     for name in sorted(values, key=len, reverse=True):
         command = re.sub(r"\$\{%s\}|\$%s\b" % (name, name), lambda _: values[name], command)
@@ -302,13 +312,19 @@ def loads(calls: list[dict], results: dict, skill_root: str, cwd: str) -> dict:
     return {"items": items, "totals": totals, "mixed": mixed}
 
 
+def finalizes(match: re.Match) -> bool:
+    """Whether one helper run writes or validates the cell's final artifacts."""
+    name, args = match.group("name"), match.group("args")
+    if name not in FINALIZERS or re.search(r"(?:^|\s)(?:--help|-h|--example|--check)(?:\s|$)", args):
+        return False
+    return name != "continue_review.py" or bool(re.search(r"(?:^|\s)compose(?:\s|$)", args))
+
+
 def finalizer(calls: list[dict], results: dict, lines: list[dict]) -> dict:
     runs = []
     for call in calls:
         command = str(call["input"].get("command", "")) if call["name"] == "Bash" else ""
-        if not any(match.group("name") in FINALIZERS
-                   and not re.search(r"(?:^|\s)(?:--help|-h|--example)(?:\s|$)", match.group("args"))
-                   for match in RUN_SCRIPT.finditer(command)):
+        if not any(finalizes(match) for match in RUN_SCRIPT.finditer(command)):
             continue
         result = results.get(call["id"], {})
         failed = result.get("error", False) or bool(FAILED_TEXT.search(result.get("text", "")))
@@ -319,7 +335,7 @@ def finalizer(calls: list[dict], results: dict, lines: list[dict]) -> dict:
               "runs": [{"command": run["command"], "failed": run["failed"],
                         "at": run["at"].isoformat() if run["at"] else None} for run in runs]}
     report["validation"] = tail(lines, ok[0]["at"]) if ok else {
-        "status": "unavailable", "reason": "no successful finalize_review.py or compose_review.py call"}
+        "status": "unavailable", "reason": "no successful finalize_review.py, compose_review.py or continue_review.py compose call"}
     return report
 
 
@@ -356,6 +372,33 @@ def written(calls: list[dict]) -> list[dict]:
             path, chars = (match.group(1) if match else None), len(str(data["command"]))
         if path:
             out.append({"path": path, "tool": call["name"], "chars": chars})
+    return out
+
+
+def write_targets(calls: list[dict], results: dict, task_root: str) -> list[tuple[dict, str]]:
+    """Each write call with the absolute path it wrote, for artifact lookup.
+
+    A heredoc Bash write's path is read after ``expand`` and resolved against the directory the call
+    starts in, moved by any top-level ``cd`` before the redirect. Unresolvable targets are skipped.
+    """
+    out, previous = [], None
+    for call in calls:
+        start = (results.get(previous["id"], {}).get("cwd") if previous else call["cwd"]) or task_root
+        previous = call
+        data = call["input"]
+        if call["name"] in ("Write", "Edit", "MultiEdit") and data.get("file_path"):
+            out.append((call, str(data["file_path"])))
+        elif call["name"] == "Bash" and "<<" in str(data.get("command", "")):
+            command = expand(str(data["command"]))
+            match = transcript_usage.WRITE_PATH_RE.search(command)
+            if not match or "$" in match.group(1):
+                continue
+            cwd = start
+            for segment in re.split(r"\n|&&|\|\||;", command[:match.start()]):
+                move = re.match(r"\s*cd\s+[\"']?([^\s\"']+)[\"']?\s*$", segment)
+                if move:
+                    cwd = resolve(move.group(1), cwd)
+            out.append((call, resolve(match.group(1), cwd)))
     return out
 
 
@@ -403,7 +446,10 @@ def shape(document: Any) -> str:
         return "verifier-input"
     if {"run", "summary"} <= document.keys() and "schema" not in document:
         return "composition"
-    if "pr" in document and document.keys() <= {"pr", "issues", "specs", "guidance"}:
+    if {"delta", "status"} <= document.keys() and "format" not in document:
+        return "continuation"
+    # With a pull-request packet the saved input holds only ``specs``; the packet supplies the rest.
+    if document.keys() & {"pr", "specs"} and document.keys() <= {"pr", "issues", "specs", "guidance"}:
         return "fingerprint-input"
     return "other"
 
@@ -462,8 +508,8 @@ def cell(args: argparse.Namespace) -> dict:
                    "permission_denials": len(result.get("permission_denials") or [])}
     report["harness"] = harness
     report["finalizer"] = finalizer(calls, results, root_lines)
-    addendum_writes = [call for call in calls if call["name"] in ("Write", "Edit")
-                       and "/addenda/" in str(call["input"].get("file_path", ""))
+    targets = write_targets(calls, results, task_root)
+    addendum_writes = [call for call, path in targets if "/addenda/" in path and path.endswith(".json")
                        and results.get(call["id"], {}).get("at")]
     report["after_last_addendum"] = (tail(root_lines, results[addendum_writes[-1]["id"]]["at"]) if addendum_writes
                                      else {"status": "unavailable", "reason": "no addendum write"})
@@ -478,6 +524,7 @@ def cell(args: argparse.Namespace) -> dict:
                                                                      "words": words(prompt)},
                              **loads(worker_calls, worker_results, skill_root, task_root)})
         authored_calls.extend(dict(entry, agent=os.path.basename(path)) for entry in written(worker_calls))
+        targets.extend(write_targets(worker_calls, worker_results, task_root))
     report["worker_loads"] = worker_loads
     by_class: dict = {}
     for entry in authored_calls:
@@ -485,9 +532,8 @@ def cell(args: argparse.Namespace) -> dict:
         total = by_class.setdefault(entry["class"], {"writes": 0, "chars": 0})
         total["writes"] += 1
         total["chars"] += entry["chars"]
-    tool_written = {entry["path"] for entry in authored_calls
-                    if entry["path"].endswith(".json") and entry["path"].startswith(task_root)
-                    and os.path.isfile(entry["path"])}
+    tool_written = {path for _, path in targets
+                    if path.endswith(".json") and path.startswith(task_root + "/") and os.path.isfile(path)}
     fields = [dict(inventory(path), written_by="tool") for path in sorted(tool_written)]
     for path in sorted(Path(task_root, "work").rglob("*.json")):
         if str(path) in tool_written or (path.name == "input.json" and (path.parent / "manifest.json").exists()):
@@ -507,7 +553,8 @@ HELPERS = (("review_context.py", "--help"), ("context_fingerprint.py", "--help")
            ("compose_review.py", "--example", "--profile", "implementation-gate"),
            ("build_verifier_prompt.py", "--help"), ("build_verifier_prompt.py", "--example"),
            ("account_verifier_return.py", "--help"), ("finalize_review.py", "--help"),
-           ("forge_packet.py", "--help"), ("run_events.py", "--help"))
+           ("forge_packet.py", "--help"), ("run_events.py", "--help"),
+           ("continue_review.py", "--help"), ("continue_review.py", "--example"))
 
 
 def size(raw: bytes) -> dict:
@@ -525,6 +572,8 @@ def static(skill_root: str) -> dict:
         fail(f"cannot read {root}: {error}")
     helpers = {}
     for script, *flags in HELPERS:
+        if not (root / "scripts" / script).is_file():
+            continue  # a helper this revision does not ship, such as continue_review.py before #345
         command = [sys.executable, str(root / "scripts" / script), *flags]
         result = subprocess.run(command, capture_output=True)
         if result.returncode != 0:

@@ -1,0 +1,87 @@
+{
+  "format": "implementation-gate-addendum/2",
+  "workflow": "v5b-24",
+  "record": "/tmp/rcs-savings/control/continuation/review/record.json",
+  "record_format": "implementation-gate-record/2",
+  "reviewed_head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+  "final_head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+  "delta": [
+    {"path": "ledger/accounts.py", "state": "reviewed"},
+    {"path": "tests/test_freeze.py", "state": "reviewed"}
+  ],
+  "replaced_by_full_review": null,
+  "fixed_findings": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "fixed",
+      "evidence": "ledger/accounts.py:89-91 at b96a362 refuses a frozen source or target before the balance check and both appends (ledger/accounts.py:94-95); tests/test_freeze.py:23-34 covers both directions and passes"
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "fixed",
+      "evidence": "ledger/accounts.py:61-64 at b96a362: the Ledger.post docstring now names a frozen account among the LedgerError cases"
+    }
+  ],
+  "findings": [],
+  "questions": [],
+  "requirements": [
+    {
+      "source": "ledger-spec/account-freeze/criterion-2",
+      "class": "acceptance",
+      "disposition": "met",
+      "evidence": "ledger/accounts.py:65-66 refuses postings; ledger/accounts.py:89-91 refuses transfers from or into a frozen account; tests/test_freeze.py:23-34"
+    }
+  ],
+  "check_evidence": [
+    {
+      "check": "python3 -m unittest discover -s tests -v",
+      "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+      "outcome": "caller-supplied",
+      "reason": "inputs/evidence.md and inputs/unittest-D3.txt: exit 0, 18 tests, none skipped, committed tree; the earlier-head results are invalidated because the fix changes ledger/accounts.py and tests/test_freeze.py. Not re-run as a suite by this continuation"
+    },
+    {
+      "check": "python3 -m unittest tests.test_freeze -v",
+      "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+      "outcome": "reviewer-executed",
+      "reason": "focused run of the changed test module in the repository with bytecode writing disabled: 4 tests, OK; the changed test asserts LedgerError in both directions, then successful transfer after unfreeze and unchanged balances 9500/500"
+    }
+  ],
+  "verification": {
+    "tasks": [
+      {
+        "id": "premise-transfer-check-before-mutation",
+        "type": "safety-premise",
+        "area": "data-integrity",
+        "premise": "At the head, Ledger.transfer raises LedgerError for a frozen source or target before either entry is appended, so a refused transfer changes no account.",
+        "evidence": "ledger/accounts.py:86-95",
+        "batch": "follow-up",
+        "ruling": "holds"
+      },
+      {
+        "id": "premise-no-other-entry-path",
+        "type": "safety-premise",
+        "area": "data-integrity",
+        "premise": "At the head, no code in the ledger package other than Ledger.post and Ledger.transfer creates or appends an Entry on an account, so both frozen checks cover every entry-creating path.",
+        "evidence": "ledger/accounts.py:61-75; ledger/cli.py:20-21",
+        "batch": "follow-up",
+        "ruling": "holds"
+      }
+    ],
+    "batches": [
+      {
+        "name": "follow-up",
+        "phase": "follow-up",
+        "bundle": "/tmp/rcs-savings/control/continuation/work/follow-up",
+        "raw_return": "/tmp/rcs-savings/control/continuation/work/follow-up/raw-return.json",
+        "accounting": "/tmp/rcs-savings/control/continuation/work/follow-up/accounting.json",
+        "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+      }
+    ],
+    "allowance": {"initial_spent": true, "follow_up_spent": true, "carried_from": null},
+    "outstanding": []
+  },
+  "status": "Approved",
+  "coverage": "complete",
+  "coverage_gaps": [],
+  "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}
+}
