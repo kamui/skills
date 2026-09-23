@@ -291,7 +291,7 @@ def gate_composition() -> dict:
     value["record"] = {
         "repository": "/repo",
         "paths": {"private_dir": "/tmp/x", "store": f"/tmp/x/review-context-{HEAD}.json", "composition": "/tmp/x/composition.json",
-                  "addenda": "/tmp/x/addenda", "evidence_packet": "/tmp/x/evidence.md"},
+                  "addenda": "/tmp/x/addenda", "skill_root": "/skills/review-code", "evidence_packet": "/tmp/x/evidence.md"},
         "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
                           "evidence": "src/payments.ts:42 creates a key per attempt"}],
         "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/retry-policy.ts", "state": "reviewed"},
@@ -373,7 +373,6 @@ def implementation_gate() -> None:
         ("requirements", mutate(**{"record.requirements.0.class": "wish"})),
         ("stable-id", mutate(**{"record.routed.unresolved": ["payments/unknown"]})),
         ("coverage-gaps", mutate(**{"record.routed.unrecoverable_inputs": ["the spec's benchmark artifact"]})),
-        ("record-paths", mutate(**{"record.paths.addenda": None})),
         ("record-paths", mutate(**{"record.paths.store": "relative/store.json"})),
         ("schema", mutate(**{"record.verification": None})),
         ("schema", mutate(**{"record.verification.allowance": None})),
@@ -387,6 +386,12 @@ def implementation_gate() -> None:
                       ("prior head", mutate(**{"run.prior_head": PRIOR})),
                       ("missing record", plain)):
         refused(bad, "profile", f"implementation-gate refuses {name}", "--profile", "implementation-gate")
+    # Each profile requires its own paths: the gate its addenda directory, publishable its skill root.
+    no_addenda, no_root = mutate(**{"record.paths.addenda": None}), mutate(**{"record.paths.skill_root": None})
+    refused(no_addenda, "record-paths", "implementation-gate requires addenda", "--profile", "implementation-gate", needle="`addenda`")
+    refused(no_root, "record-paths", "publishable requires skill_root", needle="`skill_root`")
+    assert run(COMPOSER, json.dumps(no_addenda)).returncode == 0, "publishable record without addenda"
+    gate(no_root, "implementation-gate record without skill_root")
     print("ok implementation-gate: both profiles refuse the same contradictions; profile-only refusals named")
 
     # Outcomes. Blocking with a confirmed candidate is the fixture above.
@@ -519,6 +524,27 @@ def implementation_gate() -> None:
         Path(record_chain).write_text(json.dumps({"schema": schema, "record": {"verification": {"batches": [batch]}}}), encoding="utf-8")
         gate(outcome("Changes Requested", [candidate_task(batch=f"carried:{record_chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
                      initial=True, carried_from=record_chain), f"confirmation carried from a {schema} chain file")
+    # A finalized record chain file counts only with a known protocol and its report present; a record without
+    # `finalization` predates it and reads as above.
+    record = json.loads(Path(record_chain).read_text(encoding="utf-8"))
+    report_file = Path(f"{ARTIFACTS}/chain/report.md")
+    report_file.write_text("# Review report\n", encoding="utf-8")
+    for name, finalization, needle in (
+        ("finalized record with its report", {"protocol": "review-code-finalization/1", "report": str(report_file)}, None),
+        ("finalized record whose report is missing", {"protocol": "review-code-finalization/1", "report": f"{ARTIFACTS}/chain/absent.md"},
+         "does not exist"),
+        ("record naming an unknown finalization protocol", {"protocol": "review-code-finalization/9", "report": str(report_file)},
+         "unknown finalization protocol"),
+    ):
+        finalized = f"{ARTIFACTS}/chain/{name.replace(' ', '-')}.json"
+        Path(finalized).write_text(json.dumps(dict(record, finalization=finalization)), encoding="utf-8")
+        carried = outcome("Changes Requested", [candidate_task(batch=f"carried:{finalized}#initial")], [],
+                          findings=copy.deepcopy(composition["findings"]), initial=True, carried_from=finalized)
+        if needle is None:
+            gate(carried, name)
+        else:
+            line = refused(carried, "verification", name, "--profile", "implementation-gate", needle=needle)
+            assert "allowance.carried_from" in line and "record.verification.tasks[0]" in line, line
     other = chain_file("addendum-other", ["queue/unrelated"])
     refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{other}#initial")], [], findings=copy.deepcopy(composition["findings"]),
                     initial=True, carried_from=other), "verification", "carried batch that never confirmed this id",
@@ -1109,14 +1135,14 @@ def main() -> int:
         shown = run(COMPOSER, "", "--example", "--profile", profile)
         assert shown.returncode == 0 and shown.stderr == "", ("example", profile, shown.stderr)
         value = json.loads(shown.stdout)
-        if profile == "implementation-gate":  # the example's accounting report has to exist to establish its rulings
-            batch = value["record"]["verification"]["batches"][0]
-            batch["accounting"] = f"{ARTIFACTS}/example/accounting.json"
-            write_accounting(batch["accounting"], value["record"]["verification"]["tasks"])
-            assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "the example names an accounting report that does not exist"
+        # Either profile's example accounting report has to exist to establish its rulings.
+        batch = value["record"]["verification"]["batches"][0]
+        batch["accounting"] = f"{ARTIFACTS}/example/accounting.json"
+        write_accounting(batch["accounting"], value["record"]["verification"]["tasks"])
+        assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "the example names an accounting report that does not exist"
         example = run(COMPOSER, json.dumps(value), "--profile", profile)
         assert example.returncode == 0, ("example composes", profile, example.stdout)
-    print("ok example: --example prints a composition that composes under both profiles, the gate once its accounting exists")
+    print("ok example: --example prints a composition that composes under both profiles once its accounting exists")
     return 0
 
 

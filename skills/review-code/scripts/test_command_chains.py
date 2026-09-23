@@ -10,8 +10,9 @@ repository, and a stub `gh` on PATH; no forge access and no live writes.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
 The finalize command must produce the same payload, batch, and fragment bytes
-as the three commands run separately, and stop visibly at the first failing
-stage. The submission block must never POST after a failed, empty, malformed,
+as the three commands run separately, add only its finalization metadata to the
+gate record and retained composition, and stop visibly at the first failing
+stage with nothing promoted. The submission block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
 POST failure's own status under a distinct attempted-write stage. Every token
 acquisition must publish its write under a proved token and write nothing when
@@ -143,13 +144,16 @@ class Chains(unittest.TestCase):
         git("commit", "-qam", "change")
         return repo, base, git("rev-parse", "HEAD")
 
-    def compositions(self, base, head):
+    def compositions(self, base, head, private=None):
+        """Both publishable fixtures, each with the private accounting finalization requires."""
         full = fixtures.base_composition()
         full["run"].update(head=head, base_sha=base, merge_base=base, target_kind="range", target="main..HEAD",
                            change_description="change")
         full["run"].pop("repository_url")
         linked = fixtures.base_composition()
         linked["run"].update(head=head, base_sha=base, merge_base=base)
+        for value in (full, linked):
+            value["record"] = self.gate_composition(base, head, (private or self.root) / f"review-context-{head}.json")["record"]
         return {"range fixture": full, "pull-request fixture": linked}
 
     def private(self, repo, base, head, name):
@@ -189,6 +193,10 @@ class Chains(unittest.TestCase):
                     self.assertEqual((private / "batch.json").read_bytes(), batch)
                     self.assertEqual((private / "fragments.md").read_bytes(), fragments)
                     self.assertEqual(result.stdout, fragments.decode("utf-8"))
+                    self.assertTrue((private / "report.md").is_file())
+                    retained = json.loads((private / "composition.json").read_text(encoding="utf-8"))
+                    self.assertEqual(retained.pop("finalization")["report"], str(private / "report.md"))
+                    self.assertEqual(retained, composition, "the retained composition gains only its finalization")
                     self.assertEqual(sorted(p.name for p in private.glob("*.part")), [])
 
     def test_composition_failure_is_visible_and_stops(self):
@@ -199,19 +207,19 @@ class Chains(unittest.TestCase):
             with self.subTest(shell=shell):
                 private, store = self.private(repo, base, head, f"refused-{shell}")
                 (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
-                for stale in ("payload.json", "batch.json", "fragments.md"):
+                for stale in ("payload.json", "batch.json", "fragments.md", "report.md"):
                     (private / stale).write_text("stale success\n", encoding="utf-8")
                 result = self.sh(shell, self.composition_block(private, store), cwd=SKILL)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("compose failed with exit 1; later stages did not run:", result.stdout)
                 self.assertRegex(result.stdout, r"findings\[0\]")
-                for artifact in ("payload.json", "batch.json", "fragments.md", "payload.json.part"):
+                for artifact in ("payload.json", "batch.json", "fragments.md", "report.md", "payload.json.part"):
                     self.assertFalse((private / artifact).exists(), artifact)
         private, store = self.private(repo, base, head, "unreadable")
         result = self.sh("sh", self.composition_block(private, store), cwd=SKILL)
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-        self.assertIn("compose failed with exit 2", result.stdout)
-        self.assertIn("compose_review", result.stdout)
+        self.assertIn("accounting failed with exit 2", result.stdout)
+        self.assertIn("cannot read composition", result.stdout)
 
     def test_batch_validation_failure_is_visible_and_stops(self):
         repo, base, head = self.repository()
@@ -232,9 +240,8 @@ class Chains(unittest.TestCase):
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("emit-batch failed with exit 1; later stages did not run:", result.stdout)
                 self.assertIn("injected-batch-violation", result.stdout)
-                self.assertTrue((private / "payload.json").exists())
-                self.assertFalse((private / "batch.json").exists())
-                self.assertFalse((private / "fragments.md").exists())
+                for artifact in ("payload.json", "batch.json", "fragments.md", "report.md"):
+                    self.assertFalse((private / artifact).exists(), f"{artifact}: nothing is promoted before every stage passed")
                 self.assertFalse(log.exists(), "render ran after a failed emission")
 
     # --- implementation-gate profile ---------------------------------------
@@ -265,7 +272,10 @@ class Chains(unittest.TestCase):
                 self.assertEqual(direct.returncode, 0, direct.stdout + direct.stderr)
                 result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertEqual((private / "record.json").read_bytes(), direct.stdout)
+                record = json.loads((private / "record.json").read_text(encoding="utf-8"))
+                self.assertEqual(record.pop("finalization")["report"], str(private / "report.md"))
+                self.assertEqual(json.dumps(record, indent=2) + "\n", direct.stdout.decode("utf-8"), "the record gains only its finalization")
+                self.assertTrue((private / "report.md").is_file())
                 self.assertEqual(result.stdout, f"record {private}/record.json\n")
                 self.assertTrue((private / "addenda").is_dir(), "the block creates the addenda directory a continuation appends to")
                 for absent in ("payload.json", "batch.json", "fragments.md"):
@@ -285,7 +295,7 @@ class Chains(unittest.TestCase):
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("record failed with exit 1; later stages did not run:", result.stdout)
                 self.assertIn("follow_up_spent", result.stdout)
-                for artifact in ("record.json", "record.json.part"):
+                for artifact in ("record.json", "record.json.part", "report.md"):
                     self.assertFalse((private / artifact).exists(), artifact)
 
     # --- root fetch ---------------------------------------------------------

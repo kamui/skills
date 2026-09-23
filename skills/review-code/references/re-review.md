@@ -26,10 +26,10 @@ Read replies as prose first. An addresser reply may state a disposition — `imp
 
 On re-review, classify each prior item as `fixed`, `accepted`, `obsolete`, `still-open`, or `not-verifiable`. For packet prior state, retain each item's thread node id with its classification for the caller's thread actions; `review-code` does not mutate forge thread state. `Accepted` means the rereviewer verified that technical evidence makes the finding fail the rubric, or an authorized human explicitly accepted the residual risk; the author's `declined` disposition alone is not acceptance. Keep the other states open; for packet prior state, draft a reply for the existing thread rather than creating a duplicate, and the caller posts it. A declined item that remains after one verified re-review becomes `disputed`; list it for a person and stop re-posting it.
 
-For each drafted packet prior-item reply classified `fixed`, `accepted`, `obsolete`, or `still-open`, append this HTML-comment trailer after the visible explanation:
+Save each drafted packet prior-item reply as that prior item's `reply`, with the packet thread's node id as `thread_id` and its first comment's numeric id as `comment_id`; both are null for an item without a forge thread, and a disputed item drafts no reply. The finalizer checks the ids against `--packet`, keeps all three out of the payload, and ends each `fixed`, `accepted`, `obsolete`, or `still-open` reply with this trailer carrying the full reviewed head; never write it yourself:
 
 ```markdown
 <!-- prior-item id=<stable id> classification=<fixed|accepted|obsolete|still-open> head=<full reviewed head> -->
 ```
 
-Use the item's stable id and the full 40-character lowercase reviewed commit SHA. The trailer must end the body, apart from whitespace. A `not-verifiable` reply carries no prior-item trailer and remains later state. This marker identifies the reviewer's classification reply; the addresser's `reply to=... disposition=...` trailer above remains distinct. Read both kinds as prose when reviewing prior state, including when their authors differ.
+A `not-verifiable` reply carries no prior-item trailer and remains later state. This marker identifies the reviewer's classification reply; the addresser's `reply to=... disposition=...` trailer above remains distinct. Read both kinds as prose when reviewing prior state, including when their authors differ.

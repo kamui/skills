@@ -17,7 +17,7 @@ A continuation after fixes reviews the delta from a reviewed head to a final hea
 
 The state at the final head is the record, then each addendum in `reviewed_head` → `final_head` order. An item is open from the record's `items` or any addendum's `findings` or `questions` until a later `fixed_findings` entry classifies it `fixed`. `status`, `coverage`, `outstanding`, `routed`, and `allowance` are the latest addendum's values; read them, never recompute them from scratch. Per-file coverage the delta did not reach stays as the record or an earlier addendum left it. Open findings and questions, `routed.unresolved` and `routed.disputed`, `outstanding`, and the spent allowance survive every fix and every worker change.
 
-Before continuing, validate the chain: the record `schema` and each addendum `format` are known, the `repository` matches, and each `reviewed_head` equals the previous head. A missing file, an unknown format, or a broken chain is rejected as incomplete: report the missing or mismatched state as a coverage gap and return `Incomplete`. Never start over, and never reset the allowance.
+Before continuing, validate the chain: the record `schema` and each addendum `format` are known, the `repository` matches, and each `reviewed_head` equals the previous head. A record with `finalization` must also pass `python3 scripts/finalize_review.py --check --profile implementation-gate <record directory>`: a known protocol whose report exists. A record without it predates the report and keeps these checks. A missing file, an unknown format, or a broken chain is rejected as incomplete: report the missing or mismatched state as a coverage gap and return `Incomplete`. Never start over, and never reset the allowance.
 
 ## Replacement record
 
