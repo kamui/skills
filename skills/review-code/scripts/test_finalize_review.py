@@ -677,7 +677,7 @@ class Finalize(unittest.TestCase):
         self.write(private, gate)
         (private / "record.json").write_bytes(self.direct(private, store, "implementation-gate")["record.json"])
         result = self.check(private, "implementation-gate")
-        self.assertEqual((result.returncode, result.stdout), (0, f"legacy {private / 'record.json'}\n"))
+        self.assertEqual((result.returncode, result.stdout), (0, f"legacy {private / 'record.json'}\ncontinuation {SCRIPTS / 'continue_review.py'}\n"))
 
         record = json.loads((private / "record.json").read_text(encoding="utf-8"))
         for name, doc, needle in (
