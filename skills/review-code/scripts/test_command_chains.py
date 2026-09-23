@@ -2,7 +2,7 @@
 """Run the documented one-invocation command chains against local fixtures.
 
 Usage: python3 scripts/test_command_chains.py
-Inputs: SKILL.md step 5's `finalize_review.py` commands, the pull-request target's root
+Inputs: rendering.md's `finalize_review.py` commands, the pull-request target's root
 fetch block, the publisher's freshness and
 review-submission block, its dismissal command, the app-token acquisition
 blocks in `audit-code-publish` and `code-review-publish`, a disposable Git
@@ -93,7 +93,7 @@ exec "$REAL_PYTHON" "$@"
 
 
 def command(text: str, gate: bool) -> str:
-    found = [c for c in re.findall(r"`(python3 scripts/finalize_review\.py [^`]*)`", text)
+    found = [c for c in re.findall(r"^(python3 scripts/finalize_review\.py .+)$", text, re.MULTILINE)
              if ("--profile implementation-gate" in c) == gate]
     assert len(found) == 1, (gate, found)
     return found[0]
@@ -161,7 +161,7 @@ class Chains(unittest.TestCase):
         return private, store
 
     def composition_block(self, private, store):
-        text = command((SKILL / "SKILL.md").read_text(encoding="utf-8"), gate=False)
+        text = command((SKILL / "references" / "rendering.md").read_text(encoding="utf-8"), gate=False)
         return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
 
     def direct(self, store, composition):
@@ -240,7 +240,7 @@ class Chains(unittest.TestCase):
     # --- implementation-gate profile ---------------------------------------
 
     def gate_block(self, private, store):
-        text = command((SKILL / "SKILL.md").read_text(encoding="utf-8"), gate=True)
+        text = command((SKILL / "references" / "rendering.md").read_text(encoding="utf-8"), gate=True)
         return text.replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store)))
 
     def gate_composition(self, base, head, store):
