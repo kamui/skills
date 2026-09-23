@@ -1,5 +1,7 @@
 # Verifier bug-class check for concurrency and invariant candidates
 
+Worker instructions: `build_verifier_prompt.py` embeds what applies of this file in a verifier brief, so the primary reviewer does not read it.
+
 Include this reference in the verifier brief only when a supplied candidate's `kind` is `concurrency` or `invariant`. It extends [`verifier.md`](verifier.md)'s verification task for every such candidate the verifier confirms; it adds no verdict, no batch, and no candidate.
 
 For every confirmed `kind=concurrency` or `kind=invariant` candidate:

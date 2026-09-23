@@ -2,8 +2,11 @@
 """Measure runtime instructions, primary paths, and generated verifier briefs.
 
 Usage: python3 scripts/test_instruction_budget.py
-Counts UTF-8 bytes, including expanded help/examples on representative paths.
-Evidence and code are excluded; example briefs also report their supplied records.
+Counts UTF-8 bytes, including expanded help/examples on representative paths:
+local and pull-request publishable reviews, the implementation gate, a pull-request
+review with one required verifier batch, a pull-request re-review, and a gate
+continuation. Evidence and code are excluded; example briefs also report their
+supplied records.
 Raise a limit only with a dated DESIGN.md justification. Exit 0 within all limits,
 1 over budget, 2 when an instruction or helper output cannot be read.
 """
@@ -18,10 +21,11 @@ import build_verifier_prompt as builder
 
 SKILL = Path(__file__).resolve().parent.parent
 ALWAYS_LOADED = ("SKILL.md", "references/review-rubric.md", "references/rendering.md")
-# Rounded ceilings above the accepted #332 layout, including actual helper output.
-BUDGET = 26_000
-LIMITS = {"runtime total": 92_000, "always loaded": BUDGET,
-          "local primary": 67_000, "PR primary": 67_000,
+# Rounded ceilings above the #346 layout, including actual helper output.
+BUDGET = 25_000
+LIMITS = {"runtime total": 88_000, "always loaded": BUDGET,
+          "local publishable": 47_000, "PR publishable": 50_000, "implementation-gate": 47_000,
+          "required verifier": 62_000, "re-review": 56_000, "continuation": 44_000,
           "verifier instructions": 20_000, "verifier example brief": 24_000,
           "file-transport verifier example brief": 24_000}
 
@@ -36,17 +40,23 @@ def measurements():
     files.update({str(p.relative_to(SKILL)): p.read_bytes()
                   for p in sorted((SKILL / "references").glob("*.md"))})
     always = b"".join(files[name] for name in ALWAYS_LOADED)
-    # First review, changed tests, supplied checks, and one ordinary verifier batch.
-    common = always + b"".join(files["references/" + name] for name in (
-        "changed-tests.md", "check-evidence.md", "verifier-handoff.md"))
-    common += output("review_context.py", "--help")
-    common += output("context_fingerprint.py", "--example")
-    common += output("build_verifier_prompt.py", "--example")
-    values = {"runtime total": b"".join(files.values()), "always loaded": always}
-    for name, target, profile in (("local primary", "local-targets.md", "implementation-gate"),
-                                  ("PR primary", "pull-request-target.md", "publishable")):
-        values[name] = common + files["references/" + target] + output(
-            "compose_review.py", "--example", "--profile", profile)
+
+    def refs(*names):
+        return b"".join(files["references/" + name] for name in names)
+    # Every path reviews changed tests and supplied checks and builds context once.
+    common = always + refs("changed-tests.md", "check-evidence.md") + output("review_context.py", "--help")
+    first = common + output("context_fingerprint.py", "--example")
+    publishable = output("compose_review.py", "--example", "--profile", "publishable")
+    pr = first + refs("pull-request-target.md") + publishable
+    values = {"runtime total": b"".join(files.values()), "always loaded": always,
+              "local publishable": first + refs("local-targets.md") + publishable,
+              "PR publishable": pr,
+              "implementation-gate": first + refs("local-targets.md") + output(
+                  "compose_review.py", "--example", "--profile", "implementation-gate"),
+              # One ordinary batch; the worker-only references stay out of the primary.
+              "required verifier": pr + refs("verifier-handoff.md") + output("build_verifier_prompt.py", "--example"),
+              "re-review": pr + refs("re-review.md"),
+              "continuation": common + refs("continuation-addendum.md") + output("continue_review.py", "--example")}
     # All specialized branches, without primary-only routing. Ordinary size is
     # also printed below so a conditional addition cannot hide in the maximum.
     data = copy.deepcopy(builder.EXAMPLE)

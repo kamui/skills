@@ -230,6 +230,21 @@ class HandoffTests(unittest.TestCase):
         source.write_text("preface\nstart\nworker\nend\nprimary\n", encoding="utf-8")
         self.assertEqual(builder.section(self.root, source.name, "start\n", "end\n"), "worker\n")
 
+    def test_worker_references_keep_their_load_condition_out_of_the_brief(self):
+        refs = SCRIPTS.parent / "references"
+        for name in sorted(builder.WORKER_FILES):
+            self.assertEqual((refs / name).read_text(encoding="utf-8").count(builder.WORKER_ONLY), 1, name)
+        data = input_data([candidate(kind="concurrency")])
+        for bundle in (self.build(data), self.build(input_data())):
+            brief = (bundle / "brief.md").read_text(encoding="utf-8")
+            self.assertIn("# Independent verifier\n\nFact-check only", brief)
+            self.assertIn("# Verifier return encoding\n\nEncode your return", brief)
+            self.assertNotIn(builder.WORKER_ONLY.strip(), brief)
+        self.assertIn("candidates\n\nInclude this reference", (self.build(data) / "brief.md").read_text(encoding="utf-8"))
+        (self.root / "verifier.md").write_text("# Independent verifier\n\nFact-check only.\n", encoding="utf-8")
+        with self.assertRaises(builder.ContentError):
+            builder.instruction(self.root, "verifier.md")
+
     def test_example_input_builds(self):
         result = self.run_cli("build_verifier_prompt.py", "--example")
         example = json.loads(result.stdout)
