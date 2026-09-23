@@ -1,0 +1,323 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/baseline/implementation-gate/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code",
+  "task_root": "/tmp/rcs-savings/baseline/implementation-gate",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 34,
+          "lines": 83,
+          "tool_calls": 52,
+          "text_only_turns": 1,
+          "input": 68,
+          "cache_write": 97344,
+          "cache_write_5m": 0,
+          "cache_write_1h": 97344,
+          "cache_write_unknown": 0,
+          "cache_read": 2396868,
+          "output": 36884,
+          "thinking": 20652,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:05:56",
+          "wall_seconds": 355.709,
+          "path": "/tmp/rcs-savings/evidence/baseline/implementation-gate/transcript.jsonl",
+          "settings": {
+            "lines": 83,
+            "models": {
+              "claude-sonnet-5": 83
+            },
+            "efforts": {
+              "high": 83
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 34,
+        "lines": 83,
+        "tool_calls": 52,
+        "text_only_turns": 1,
+        "input": 68,
+        "cache_write": 97344,
+        "cache_write_5m": 0,
+        "cache_write_1h": 97344,
+        "cache_write_unknown": 0,
+        "cache_read": 2396868,
+        "output": 36884,
+        "thinking": 20652,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:05:56",
+        "wall_seconds": 355.709
+      }
+    },
+    "workers": null,
+    "all": {
+      "label": "total",
+      "turns": 34,
+      "lines": 83,
+      "tool_calls": 52,
+      "text_only_turns": 1,
+      "input": 68,
+      "cache_write": 97344,
+      "cache_write_5m": 0,
+      "cache_write_1h": 97344,
+      "cache_write_unknown": 0,
+      "cache_read": 2396868,
+      "output": 36884,
+      "thinking": 20652,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:05:56",
+      "wall_seconds": 355.709
+    }
+  },
+  "harness": {
+    "num_turns": 53,
+    "duration_ms": 362323,
+    "total_cost_usd": 1.2392836,
+    "subagents_spawned": 0,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 1,
+    "failed": 0,
+    "repair_loops": 0,
+    "runs": [
+      {
+        "command": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 scripts/finalize_review.py --profile implementation-gate --store /tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/review-context.json /tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs 2>&1 | head -150",
+        "failed": false,
+        "at": "2026-09-23T03:58:20.676000+00:00"
+      }
+    ],
+    "validation": {
+      "status": "captured",
+      "at": "2026-09-23T03:58:20.676000+00:00",
+      "turns_after": 5,
+      "tool_calls_after": 4,
+      "seconds_after": 53.085
+    }
+  },
+  "after_last_addendum": {
+    "status": "unavailable",
+    "reason": "no addendum write"
+  },
+  "loads": {
+    "items": [
+      {
+        "kind": "entrypoint",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md",
+        "bytes": 11806,
+        "words": 1701
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/local-targets.md",
+        "bytes": 6956,
+        "words": 1053
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md",
+        "bytes": 7786,
+        "words": 1049
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md",
+        "bytes": 2693,
+        "words": 384
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md",
+        "bytes": 5082,
+        "words": 825
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md",
+        "bytes": 10381,
+        "words": 1453
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md",
+        "bytes": 6311,
+        "words": 898
+      },
+      {
+        "kind": "reference",
+        "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/continuation-addendum.md",
+        "bytes": 6047,
+        "words": 872
+      },
+      {
+        "kind": "helper-help",
+        "what": "python3 scripts/review_context.py --help 2>&1 | head -60",
+        "bytes": 2773,
+        "words": 324
+      },
+      {
+        "kind": "helper-help",
+        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py --help 2>&1 | head -40",
+        "bytes": 939,
+        "words": 92
+      },
+      {
+        "kind": "helper-example",
+        "what": "python3 scripts/compose_review.py --example --profile implementation-gate 2>&1 | head -200",
+        "bytes": 5194,
+        "words": 450
+      },
+      {
+        "kind": "helper-help",
+        "what": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code && python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py --help 2>&1 | head -30; echo ---; python3 /tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py --help 2>&1 | head -40",
+        "bytes": 1528,
+        "words": 136
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 11806,
+        "words": 1701
+      },
+      "reference": {
+        "count": 7,
+        "bytes": 45256,
+        "words": 6534
+      },
+      "helper-help": {
+        "count": 3,
+        "bytes": 5240,
+        "words": 552
+      },
+      "helper-example": {
+        "count": 1,
+        "bytes": 5194,
+        "words": 450
+      }
+    }
+  },
+  "worker_loads": [],
+  "authored": {
+    "writes": [
+      {
+        "path": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/composition.json",
+        "tool": "Write",
+        "chars": 8669,
+        "agent": "root",
+        "class": "composition"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/implementation-gate/work/report.md",
+        "tool": "Write",
+        "chars": 9351,
+        "agent": "root",
+        "class": "report"
+      }
+    ],
+    "by_class": {
+      "composition": {
+        "writes": 1,
+        "chars": 8669
+      },
+      "report": {
+        "writes": 1,
+        "chars": 9351
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/composition.json",
+        "shape": "composition",
+        "bytes": 8677,
+        "mechanical": {
+          "fields": 34,
+          "words": 52
+        },
+        "judgment": {
+          "fields": 63,
+          "words": 558
+        },
+        "sections": {
+          "run": {
+            "fields": 12,
+            "words": 33
+          },
+          "summary": {
+            "fields": 4,
+            "words": 130
+          },
+          "findings": {
+            "fields": 1,
+            "words": 0
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "observations": {
+            "fields": 2,
+            "words": 63
+          },
+          "record": {
+            "fields": 77,
+            "words": 384
+          }
+        }
+      }
+    ]
+  }
+}

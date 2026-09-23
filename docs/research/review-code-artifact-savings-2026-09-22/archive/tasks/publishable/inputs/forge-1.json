@@ -1,0 +1,71 @@
+{
+  "data": {
+    "repository": {
+      "url": "https://github.com/example/ledger",
+      "pullRequest": {
+        "title": "Add CSV statement export",
+        "body": "Adds `--format csv` to `ledger statement`, backed by a new `ledger/export.py` that reuses `statement_rows`.\n\nCloses #3.\n",
+        "state": "OPEN",
+        "merged": false,
+        "isDraft": false,
+        "baseRefName": "main",
+        "baseRefOid": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+        "headRefOid": "0eb283dfe715341548387bf65af857affedf5dfa",
+        "updatedAt": "2026-09-02T10:05:00Z",
+        "lastEditedAt": null,
+        "baseRepository": {
+          "url": "https://github.com/example/ledger"
+        },
+        "closingIssuesReferences": {
+          "totalCount": 1,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": [
+            {
+              "number": 3,
+              "title": "Export statements as CSV",
+              "body": "Statements are text-only today; accountants want to open them in a spreadsheet.\n\nAcceptance:\n\n1. `ledger statement FILE ACCOUNT --format csv` prints the statement as CSV; text stays the default.\n2. The first row is the header `date,description,amount,balance`.\n3. Amounts and balances use the text statement's decimal format, for example `-4.50`.\n4. Descriptions containing commas, quotes, or newlines round-trip through Python's `csv.reader`.\n",
+              "url": "https://github.com/example/ledger/issues/3",
+              "updatedAt": "2026-09-01T15:00:00Z",
+              "lastEditedAt": null,
+              "comments": {
+                "totalCount": 0,
+                "pageInfo": {
+                  "hasNextPage": false,
+                  "endCursor": null
+                },
+                "nodes": []
+              }
+            }
+          ]
+        },
+        "reviews": {
+          "totalCount": 0,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": []
+        },
+        "reviewThreads": {
+          "totalCount": 0,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": []
+        },
+        "comments": {
+          "totalCount": 0,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+          },
+          "nodes": []
+        }
+      }
+    }
+  }
+}

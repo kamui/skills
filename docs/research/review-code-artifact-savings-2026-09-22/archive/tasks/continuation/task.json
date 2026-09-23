@@ -1,0 +1,153 @@
+{
+  "format": "savings-task/1",
+  "name": "continuation",
+  "interface": "implement-publish's continuation after fixes: an implementation-gate addendum over a seeded version-2 record, addendum and verifier-accounting chain",
+  "profile": "implementation-gate",
+  "target": {
+    "kind": "range-continuation",
+    "base_ref": "main",
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "record_head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+    "reviewed_head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+    "final_head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723"
+  },
+  "repository": {
+    "refs": {
+      "main": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+      "freeze": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723"
+    },
+    "checkout": "freeze"
+  },
+  "directories": [
+    "work"
+  ],
+  "files": {
+    "prompt.md": {
+      "kind": "text"
+    },
+    "inputs/spec.md": {
+      "kind": "copy"
+    },
+    "inputs/evidence.md": {
+      "kind": "text"
+    },
+    "inputs/unittest-D3.txt": {
+      "kind": "copy"
+    },
+    "review/fingerprint-input.json": {
+      "kind": "copy"
+    },
+    "review/review-context-864eea86ab86bf5a3375898bc606933ea20696cc.json": {
+      "kind": "copy"
+    },
+    "review/initial-input.json": {
+      "kind": "json",
+      "paths": [
+        "/run/repository"
+      ]
+    },
+    "review/initial/input.json": {
+      "kind": "json",
+      "paths": [
+        "/run/repository"
+      ]
+    },
+    "review/initial/brief.md": {
+      "kind": "brief",
+      "input": "review/initial/input.json"
+    },
+    "review/initial/manifest.json": {
+      "kind": "json",
+      "paths": [
+        "/run/repository"
+      ],
+      "hashes": [
+        "/input_sha256",
+        "/brief_sha256"
+      ]
+    },
+    "review/initial/raw-return.json": {
+      "kind": "json",
+      "hashes": [
+        "/manifest_sha256"
+      ]
+    },
+    "review/initial/accounting.json": {
+      "kind": "json",
+      "paths": [
+        "/raw_return"
+      ],
+      "hashes": [
+        "/manifest_sha256",
+        "/raw_return_sha256",
+        "/return/manifest_sha256"
+      ]
+    },
+    "review/composition.json": {
+      "kind": "json",
+      "paths": [
+        "/record/repository",
+        "/record/paths/*",
+        "/record/verification/batches/*/bundle",
+        "/record/verification/batches/*/raw_return",
+        "/record/verification/batches/*/accounting"
+      ]
+    },
+    "review/record.json": {
+      "kind": "json",
+      "paths": [
+        "/run/repository",
+        "/record/repository",
+        "/record/paths/private_dir",
+        "/record/paths/store",
+        "/record/paths/composition",
+        "/record/paths/addenda",
+        "/record/paths/skill_root",
+        "/record/paths/spec",
+        "/record/verification/batches/0/bundle",
+        "/record/verification/batches/0/raw_return",
+        "/record/verification/batches/0/accounting"
+      ]
+    },
+    "review/addenda/addendum-03ce7cd85d34afda4ae47f06d7958ea906b3fcc1.json": {
+      "kind": "json",
+      "paths": [
+        "/record"
+      ]
+    }
+  },
+  "replay": [
+    {
+      "run": "review_context",
+      "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+      "head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+      "store": "review/review-context-864eea86ab86bf5a3375898bc606933ea20696cc.json"
+    },
+    {
+      "run": "context_fingerprint",
+      "input": "review/fingerprint-input.json",
+      "guidance_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+      "store": "review/review-context-864eea86ab86bf5a3375898bc606933ea20696cc.json",
+      "context": "4ba9d8b08fe4d03b05726d087557151ea0de5f9c10af147b490e970e3461eb9b"
+    },
+    {
+      "run": "build_verifier_prompt",
+      "input": "review/initial-input.json",
+      "bundle": "review/initial"
+    },
+    {
+      "run": "account_verifier_return",
+      "bundle": "review/initial",
+      "raw_return": "review/initial/raw-return.json",
+      "accounting": "review/initial/accounting.json"
+    },
+    {
+      "run": "compose_review",
+      "profile": "implementation-gate",
+      "store": "review/review-context-864eea86ab86bf5a3375898bc606933ea20696cc.json",
+      "composition": "review/composition.json",
+      "record": "review/record.json"
+    }
+  ]
+}

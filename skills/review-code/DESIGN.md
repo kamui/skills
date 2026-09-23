@@ -26,3 +26,7 @@ Keep dated evidence and superseded decisions in [HISTORY.md](HISTORY.md). Update
 ## Concise runtime strategy, issue #332, 2026-09-22
 
 Workflow `v5b-24` removes mandatory reading/search recipes and replaces the runtime manual with the strategy draft, selective procedures, and composer examples. It supersedes the historical inspection recipes and 73 KB budget; #331's verification policy and version-2 state remain. The always-loaded ceiling is now 26 KB, with separate limits for runtime total, expanded primary paths, and generated verifier briefs. [The runtime report](../../docs/research/review-code-rewrite-2026-09-22/runtime-layout.md) records the layout, justified entrypoint exception, baseline comparison, and limits. Word counts make no quality, latency, or cost claim; #333 owns the bounded comparison.
+
+## Artifact-savings baseline, issue #341, 2026-09-22
+
+The artifact-savings work (#340) optimizes mechanical authoring and helper discovery, not reference counts. Its [baseline](../../docs/research/review-code-artifact-savings-2026-09-22/README.md) maps each repeated field to the packet, store, input, chain file or judgment that owns it. It also archives four reconstructable interface tasks with a seeded version-2 continuation chain and freezes the paired Sonnet 5 High protocol. Feature changes must keep a mechanical field's authority and its existing check, and must leave judgments with the model. Workflow `v5b-24` and every private schema are unchanged.
