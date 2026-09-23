@@ -4,16 +4,17 @@ Only archive/ and docs/research/tools/savings_archive.py were copied into a new 
 
 ```sh
 set -u
-echo "## network"; cat /proc/net/dev | tail -n +3 | awk '{print $1, "rx", $2, "tx", $10}'; ip -brief link 2>/dev/null || true
+echo "## network namespace"; ip -brief link 2>/dev/null
 echo "## python / git"; python3 --version; git --version
 echo "## verify"; python3 savings_archive.py verify archive; echo "exit $?"
-echo "## fixture"; python3 savings_archive.py fixture archive --out rebuilt; echo "exit $?"
+echo "## fixture rebuild"; python3 savings_archive.py fixture archive --out rebuilt; echo "exit $?"
 echo "## materialize"; python3 savings_archive.py materialize archive --root "$PWD/root" --skill-root "$PWD/skill"; echo "exit $?"
 echo "## check"; python3 savings_archive.py check archive --root "$PWD/root"; echo "exit $?"
-echo "## tamper: one byte of the seeded record"; sed -i 's/"P1"/"P2"/' archive/tasks/continuation/review/record.json
+echo "## altered: one byte of the seeded record"; sed -i 's/"P1"/"P2"/' archive/tasks/continuation/review/record.json
 python3 savings_archive.py verify archive; echo "exit $?"
-echo "## tamper: missing spec"; git -C root/continuation/repo status --short | head -1; rm archive/tasks/continuation/inputs/spec.md
-python3 savings_archive.py verify archive | tail -n 2; echo "exit $?"
+echo "## missing: the continuation spec"; rm archive/tasks/continuation/inputs/spec.md
+python3 savings_archive.py verify archive; echo "exit $?"
+echo "## materialize refuses the altered archive"; python3 savings_archive.py materialize archive --root "$PWD/root2" --skill-root "$PWD/skill" > /dev/null; echo "exit $?"
 ```
 
 ```text
