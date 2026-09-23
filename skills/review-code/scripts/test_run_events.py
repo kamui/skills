@@ -63,16 +63,22 @@ def context(end=2, **kw):
     return event("context-built", end - 1, end, head=HEAD, target="commit-range", **kw)
 
 
-def brief(batch, end, mode="candidate-only", candidates=1, ledger_rows=0):
+def brief(batch, end, candidates=1, premises=0):
+    return event("verifier-brief-built", end, end, batch_id=batch, phase="initial",
+                 candidates=candidates, premises=premises)
+
+
+def legacy_brief(batch, end, mode, candidates, ledger_rows):
+    """A brief recorded before v5b-23, when batches carried a ledger mode and row count."""
     return event("verifier-brief-built", end, end, batch_id=batch, phase="initial", mode=mode,
                  candidates=candidates, ledger_rows=ledger_rows)
 
 
 def accounted(batch, end, exit=0, **counts):
-    returned = {"confirmed": 1, "refuted": 0, "holds": 0, "re_open": 0}
+    returned = {"confirmed": 1, "refuted": 0, "holds": 0, "fails": 0, "unresolved": 0}
     returned.update(counts)
     return event("verifier-return-accounted", end, end, exit=exit, batch_id=batch, returned=returned,
-                 withheld={"candidates": 0, "ledger_rows": 0}, structurally_complete=exit == 0)
+                 withheld={"candidates": 0, "premises": 0}, structurally_complete=exit == 0)
 
 
 def payload(end, exit=0):
@@ -154,11 +160,11 @@ class RunEventTests(unittest.TestCase):
         private.mkdir()
         store = private / f"review-context-{head}.json"
         self.cli("review_context.py", "--merge-base", base, "--head", head, "--store", store, cwd=repo)
-        cases = handoff.HandoffTests("test_batch_modes_initial_and_followup")
+        cases = handoff.HandoffTests("test_task_mixes_initial_and_followup")
         cases.root, cases.count = self.root, 100
         cases.run_cli = lambda script, *args, code=0, scripts=SCRIPTS: self.cli(script, *args, code=code)
         cases.path = lambda suffix: private / f"{suffix}" if suffix == "bundle" else self.root / f"{id(object())}-{suffix}"
-        bundle = cases.build()
+        bundle = cases.build(handoff.input_data([handoff.candidate()], [handoff.premise()]))
         cases.account(bundle, cases.returned(bundle))
         composition = self.root / "composition.json"
         composition.write_text(json.dumps(self.composition(base, head, "Changes Requested")), encoding="utf-8")
@@ -177,8 +183,11 @@ class RunEventTests(unittest.TestCase):
                                                          "payload-composed"])
         self.assertEqual([e["exit"] for e in events], [0, 0, 0, 1, 0])
         self.assertEqual(events[0]["data"]["head"], head)
-        self.assertEqual(events[0]["policy"]["workflow"], "v5b-22")
-        self.assertEqual(events[2]["data"]["returned"], {"confirmed": 1, "refuted": 0, "holds": 0, "re_open": 0})
+        self.assertEqual(events[0]["policy"]["workflow"], "v5b-23")
+        self.assertEqual(events[1]["data"]["premises"], 1)
+        self.assertNotIn("mode", events[1]["data"])
+        self.assertEqual(events[2]["data"]["supplied"], {"candidates": 1, "premises": 1})
+        self.assertEqual(events[2]["data"]["returned"], {"confirmed": 1, "refuted": 0, "holds": 1, "fails": 0, "unresolved": 0})
         self.assertEqual(events[4]["data"]["target_kind"], "range")
 
         summary_path, sidecar = self.root / "summary.json", self.root / "timing.json"
@@ -406,17 +415,34 @@ class RunEventTests(unittest.TestCase):
         self.assertTrue(all(usage[key] is None for key in ("input_tokens", "cache_write_tokens",
                                                             "cache_read_tokens", "output_tokens", "cost")))
 
-    def test_empty_ledger_is_an_explicit_zero(self):
-        unknown = brief("three", 30, mode="related-acquittal")
-        unknown["data"]["ledger_rows"] = None
-        summary, _ = self.summarize([context(), brief("one", 10, "complete-ledger", 0, 0), accounted("one", 11),
-                                     brief("two", 20, "complete-ledger", 0, 4), accounted("two", 21),
+    def test_zero_premises_is_explicit_and_missing_is_unknown(self):
+        unknown = brief("three", 30)
+        del unknown["data"]["premises"]
+        summary, _ = self.summarize([context(), brief("one", 10, 1, 0), accounted("one", 11),
+                                     brief("two", 20, 0, 2), accounted("two", 21),
                                      unknown, accounted("three", 31), payload(40)], "--completion-mode", "result")
         verification = summary["verification"]
-        self.assertEqual(verification["complete_ledger_zero_rows"], 1)
-        self.assertEqual(verification["complete_ledger_nonzero_rows"], 1)
-        self.assertEqual(verification["ledger_rows_unknown"], 1)
+        self.assertEqual(verification["premise_batches"], 1)
+        self.assertEqual(verification["premises_zero"], 1)
+        self.assertEqual(verification["premises_unknown"], 1)
+        self.assertEqual([b["premises"] for b in verification["batches"]], [0, 2, None])
+        self.assertEqual(verification["legacy"]["by_mode"], {})
+
+    def test_legacy_ledger_events_still_summarize(self):
+        unknown = legacy_brief("three", 30, "related-acquittal", 1, None)
+        summary, _ = self.summarize([context(), legacy_brief("one", 10, "complete-ledger", 0, 0), accounted("one", 11),
+                                     legacy_brief("two", 20, "complete-ledger", 0, 4), accounted("two", 21),
+                                     unknown, accounted("three", 31), payload(40)], "--completion-mode", "result")
+        verification = summary["verification"]
+        legacy = verification["legacy"]
+        self.assertEqual(legacy["by_mode"], {"complete-ledger": 2, "related-acquittal": 1})
+        self.assertEqual(legacy["complete_ledger_zero_rows"], 1)
+        self.assertEqual(legacy["complete_ledger_nonzero_rows"], 1)
+        self.assertEqual(legacy["ledger_rows_unknown"], 1)
         self.assertEqual(verification["batches"][0]["ledger_rows"], 0)
+        # A ledger row count is never read as a premise count.
+        self.assertEqual([b["premises"] for b in verification["batches"]], [None, None, None])
+        self.assertEqual(verification["premises_unknown"], 0)
 
     # --- wrap ---------------------------------------------------------------
 

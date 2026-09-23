@@ -9,6 +9,9 @@ stdout line, with an accounting report partitioning each role; 2: unreadable
 input or unwritable output, named on stderr. The raw return stays untouched;
 judgments, corrections, safety rulings and asides are retained verbatim as JSON
 values in the report, including on exit 1. No evidence or verdict is invented.
+A task is accounted only by exactly one record in its own role that cites at
+least one raw location, or, for an unresolved result, names its settling fact;
+a missing, duplicated, foreign, or unusable record leaves the task withheld.
 """
 from __future__ import annotations
 
@@ -39,6 +42,12 @@ def safety(value, where):
         evidence_list(ruling["evidence"], loc + ".evidence")
 
 
+def cited(record, where):
+    """A usable result cites at least one raw location; named unavailable evidence alone settles nothing."""
+    require(any("text" in item for item in record["evidence"] if isinstance(item, dict)), where + ".evidence",
+            "cite at least one raw location, or return unresolved with its settling fact")
+
+
 def verdict(record, kind, where):
     exact_keys(record, ("id", "verdict", "basis", "evidence"),
                ("settling_fact", "corrections", "safety_rulings"), where)
@@ -50,6 +59,8 @@ def verdict(record, kind, where):
         if record["basis"] == "unresolved":
             string(record.get("settling_fact"), where + ".settling_fact")
     evidence_list(record["evidence"], where + ".evidence")
+    if not (record["verdict"] == "refuted" and record["basis"] == "unresolved"):
+        cited(record, where)
     if "settling_fact" in record:
         string(record["settling_fact"], where + ".settling_fact")
     if "safety_rulings" in record:
@@ -70,27 +81,29 @@ def verdict(record, kind, where):
 
 
 def ruling(record, where):
-    exact_keys(record, ("id", "ruling", "evidence"), ("failed_step", "safety_rulings"), where)
-    choice(record["ruling"], {"holds", "re-open"}, where + ".ruling")
+    exact_keys(record, ("id", "ruling", "evidence"), ("failed_step", "settling_fact"), where)
+    choice(record["ruling"], {"holds", "fails", "unresolved"}, where + ".ruling")
     evidence_list(record["evidence"], where + ".evidence")
-    if record["ruling"] == "re-open":
+    for name in ("failed_step", "settling_fact"):
+        if name in record:
+            string(record[name], where + "." + name)
+    if record["ruling"] == "fails":
         string(record.get("failed_step"), where + ".failed_step")
-    elif "failed_step" in record:
-        string(record["failed_step"], where + ".failed_step")
-    if "safety_rulings" in record:
-        safety(record["safety_rulings"], where + ".safety_rulings")
+    if record["ruling"] == "unresolved":
+        string(record.get("settling_fact"), where + ".settling_fact")
+    else:
+        cited(record, where)
 
 
 def account(data, manifest, manifest_hash, returned):
     expected = {"candidates": {item["id"]: item for item in data["candidates"]},
-                "ledger": {item["id"]: item for item in data["ledger"]}}
+                "premises": {item["id"]: item for item in data["premises"]}}
     errors = []
-    accounted = {"candidates": [], "ledger": []}
+    accounted = {"candidates": [], "premises": []}
     withheld = {role: list(items) for role, items in expected.items()}
-    report = {"format": "verifier-accounting/1", "manifest_sha256": manifest_hash,
+    report = {"format": "verifier-accounting/2", "manifest_sha256": manifest_hash,
               "structurally_complete": False, "violations": errors,
-              "accounted": accounted, "withheld": withheld,
-              "return": returned, "conclusion_accounted": False}
+              "accounted": accounted, "withheld": withheld, "return": returned}
     try:
         obj(returned, "return")
         require(returned.get("manifest_sha256") == manifest_hash, "return.manifest_sha256", "wrong run/batch/brief pairing")
@@ -98,18 +111,14 @@ def account(data, manifest, manifest_hash, returned):
         errors.append(str(error))
         return report
     try:
-        exact_keys(returned, ("manifest_sha256", "candidates", "ledger", "duplicate_groups", "observation"),
-                   ("conclusion",), "return")
+        exact_keys(returned, ("manifest_sha256", "candidates", "premises", "duplicate_groups", "observation"),
+                   (), "return")
     except ContentError as error:
         errors.append(str(error))
-    ledger_valid = True
     for role, items in expected.items():
-        errors_before = len(errors)
         records = returned.get(role)
         if not isinstance(records, list):
             errors.append(f"{role}: expected array")
-            if role == "ledger":
-                ledger_valid = False
             continue
         counts = Counter(record.get("id") for record in records
                          if isinstance(record, dict) and isinstance(record.get("id"), str))
@@ -130,25 +139,6 @@ def account(data, manifest, manifest_hash, returned):
             except ContentError as error:
                 errors.append(str(error))
         withheld[role] = [key for key in items if key not in accounted[role]]
-        if role == "ledger":
-            ledger_valid = len(errors) == errors_before
-    try:
-        conclusion = returned.get("conclusion")
-        if manifest["batch"]["mode"] == "complete-ledger":
-            require(ledger_valid, "conclusion", "cannot cover missing or unusable ledger rulings")
-            reopened = [row["id"] for row in returned["ledger"]
-                        if row.get("id") in expected["ledger"] and row.get("ruling") == "re-open"]
-            if reopened:
-                exact_keys(conclusion, ("re_open",), (), "conclusion")
-                ids = unique_ids(conclusion["re_open"], "conclusion.re_open")
-                require(set(ids) == set(reopened), "conclusion", "re_open IDs must equal re-open rulings")
-            else:
-                require(conclusion == "clean verdict stands", "conclusion", "expected clean verdict stands")
-            report["conclusion_accounted"] = True
-        else:
-            require("conclusion" not in returned, "conclusion", "only complete-ledger owns a batch conclusion")
-    except ContentError as error:
-        errors.append(str(error))
     try:
         groups = seq(returned.get("duplicate_groups"), "duplicate_groups")
         for i, group in enumerate(groups):
@@ -181,25 +171,22 @@ def main():
         brief = (bundle / "brief.md").read_bytes()
         obj(manifest, "manifest")
         obj(data, "bundle input")
-        for name in ("run", "batch", "candidates", "ledger"):
+        for name in ("run", "batch", "candidates", "premises"):
             require(name in data, "bundle input", f"missing {name}")
-        seq(data["candidates"], "bundle candidates")
-        seq(data["ledger"], "bundle ledger")
-        for role in ("candidates", "ledger"):
+        for role in ("candidates", "premises"):
+            seq(data[role], "bundle " + role)
             unique_ids([string(obj(item, role).get("id"), role + ".id") for item in data[role]], role)
-        require(manifest == make_manifest(data, brief, manifest.get("full_ledger_sha256")),
-                "bundle", "manifest does not match input/brief identity")
+        require(manifest == make_manifest(data, brief), "bundle", "manifest does not match input/brief identity")
         manifest_hash = digest(manifest_raw)
         raw = Path(args.raw_return).read_bytes()
         try:
             returned = parse_json(raw.decode("utf-8"))
             report = account(data, manifest, manifest_hash, returned)
         except (ValueError, UnicodeError) as error:
-            report = {"format": "verifier-accounting/1", "manifest_sha256": manifest_hash,
+            report = {"format": "verifier-accounting/2", "manifest_sha256": manifest_hash,
                       "structurally_complete": False, "violations": [f"return: {error}"],
-                      "accounted": {"candidates": [], "ledger": []},
-                      "withheld": {"candidates": manifest["candidate_ids"], "ledger": manifest["ledger_ids"]},
-                      "conclusion_accounted": False}
+                      "accounted": {"candidates": [], "premises": []},
+                      "withheld": {"candidates": manifest["candidate_ids"], "premises": manifest["premise_ids"]}}
         EVENT.update(manifest=manifest, report=report)
         report["raw_return"] = str(Path(args.raw_return).resolve())
         report["raw_return_sha256"] = digest(raw)
