@@ -42,8 +42,9 @@ predates it. The gate creates PRIVATE_DIR/addenda, where continuations
 append.
 
 Before modifying anything, a run is refused when an addenda directory (this
-directory's, or the one an existing record names) holds any entry: replacing
-that chain's record or composition would orphan it, so use a fresh private
+directory's, or the one an existing record names) holds any entry, or when an
+existing record cannot be read to name its addenda directory: replacing that
+chain's record or composition would orphan it, so use a fresh private
 directory. An empty addenda directory is not an active chain. Otherwise the
 report and every earlier consumable output of either profile are removed
 first, and a failed stage, write, or promotion removes what this run staged or
@@ -236,6 +237,19 @@ def render_report(profile: str, composition: dict[str, Any], payload: dict[str, 
              "The summary body below is the one the payload carries.",
              payload["summary"]["body"].rstrip("\n")]
 
+    target = run_fields.get("target_kind", "pull-request")
+    lines = [f"- Repository: {code(record['repository'])}", f"- Target: {target}"
+             + (f" {code(run_fields['target'])}" if run_fields.get("target") else "")
+             + (f", tree `{run_fields['tree']}`" if run_fields.get("tree") else ""),
+             f"- Merged: {'yes' if run_fields.get('merged') else 'no'}"
+             + (", publication separately authorized" if run_fields.get("publication_authorized") else "")]
+    if run_fields.get("prior_head"):
+        lines.append(f"- Prior head: `{run_fields['prior_head']}`")
+    if run_fields.get("specs"):
+        lines.append(f"- Specs: {ids(run_fields['specs'])}")
+    parts.append("## Run\n\nHead, base, merge-base, workflow, context digest, issues and coverage are in the run trailer above.\n\n"
+                 + "\n".join(lines))
+
     inline = [item for item in payload["items"] if item["type"] != "observation" and item["anchor"].get("type") == "line"]
     if inline:
         parts.append("## Line comments\n\nThe full body of each line-anchored item the summary indexes.\n\n"
@@ -297,14 +311,19 @@ def render_report(profile: str, composition: dict[str, Any], payload: dict[str, 
 def active_chain(private: Path) -> str:
     """Why finalizing here would orphan an active record/addendum chain, or ``""``."""
     directories = [private / "addenda"]
+    record = private / "record.json"
     try:
-        with open(private / "record.json", encoding="utf-8") as handle:
-            existing = json.load(handle)
-        named = existing["record"]["paths"]["addenda"]
-        if isinstance(named, str) and os.path.abspath(named) != str(directories[0]):
+        with open(record, encoding="utf-8") as handle:
+            named = json.load(handle)["record"]["paths"]["addenda"]
+        if not isinstance(named, str):
+            raise TypeError("`record.paths.addenda` is not a path")
+        if os.path.abspath(named) != str(directories[0]):
             directories.append(Path(named))
-    except (OSError, ValueError, KeyError, TypeError):
+    except FileNotFoundError:
         pass
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        return (f"cannot establish which addenda directory `{record}` heads ({error.__class__.__name__}: {error}), "
+                "so replacing it could orphan its chain; finalize in a fresh private directory")
     for directory in directories:
         try:
             entries = sorted(os.listdir(directory))
@@ -375,7 +394,8 @@ def finalize(args: argparse.Namespace, private: Path) -> int:
     finalization = {"protocol": cr.FINALIZATION_PROTOCOL, "profile": args.profile,
                     "report": str(private / REPORT), "replies": replies}
     try:
-        report = render_report(args.profile, composition, payload, replies, outputs[:-1])
+        inputs = [("packet", Path(os.path.abspath(args.packet)))] if args.packet else []
+        report = render_report(args.profile, composition, payload, replies, outputs[:-1] + inputs)
     except (KeyError, TypeError, AttributeError) as error:  # the composer validated these shapes
         raise fail("report", 1, f"finalize_review: cannot render the report from the validated input: {error!r}\n")
     if args.profile == "implementation-gate":

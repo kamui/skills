@@ -290,7 +290,9 @@ class Chains(unittest.TestCase):
                 composition = self.gate_composition(base, head, store)
                 composition["record"]["verification"]["allowance"]["follow_up_spent"] = True
                 (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
-                (private / "record.json").write_text("stale success\n", encoding="utf-8")
+                # A stale record the finalizer can read names its own empty addenda, so it is removed, not refused.
+                stale = {"stale": "success", "record": {"paths": {"addenda": str(private / "addenda")}}}
+                (private / "record.json").write_text(json.dumps(stale), encoding="utf-8")
                 result = self.sh(shell, self.gate_block(private, store), cwd=SKILL)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn("record failed with exit 1; later stages did not run:", result.stdout)

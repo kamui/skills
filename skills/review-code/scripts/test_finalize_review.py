@@ -189,6 +189,7 @@ class Finalize(unittest.TestCase):
                 if item["anchor"]["type"] == "line":
                     self.assertIn(f"### `{item['id']}`\n\n{item['markdown']}\n\n{item['trailer']}", report)
         record = composition["record"]
+        self.assertIn(f"- Repository: `{record['repository']}`", report.split("## Run", 1)[1])
         for row in record["requirements"]:
             self.assertIn(f"- `{row['source']}` ({row['class']}): {row['disposition']}. {row['evidence']}", report)
         for row in record["files"]:
@@ -541,8 +542,9 @@ class Finalize(unittest.TestCase):
         store = self.store(private)
         composition = self.composition(private, store)
         self.write(private, composition)
-        for name in (*PUBLIC, "record.json", "report.md", "payload.json.part", "composition.json.part"):
+        for name in (*PUBLIC, "report.md", "payload.json.part", "composition.json.part"):
             (private / name).write_text("stale success\n", encoding="utf-8")
+        (private / "record.json").write_text(json.dumps({"record": {"paths": {"addenda": str(private / "addenda")}}}), encoding="utf-8")
         self.succeeded(private, store, composition=composition)
         self.assertFalse((private / "record.json").exists(), "a publishable run never keeps or fabricates a gate record")
         blocked = self.directory("blocked")
@@ -553,6 +555,16 @@ class Finalize(unittest.TestCase):
         self.assertIn("cannot remove stale output", result.stderr)
 
     # --- reruns, profile reuse, active chains -------------------------------------
+
+    def snapshot_unreadable(self, private):
+        """Paths and, where readable, bytes: a mode-000 file is compared by presence and mode."""
+        out = {}
+        for path in sorted(private.rglob("*")):
+            try:
+                out[str(path.relative_to(private))] = path.read_bytes() if path.is_file() else None
+            except PermissionError:
+                out[str(path.relative_to(private))] = oct(path.stat().st_mode)
+        return out
 
     def snapshot(self, private):
         return {str(p.relative_to(private)): (p.read_bytes() if p.is_file() else None) for p in sorted(private.rglob("*"))}
@@ -599,6 +611,24 @@ class Finalize(unittest.TestCase):
         result = self.finalize(elsewhere, store, profile="implementation-gate")
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn(str(named), result.stdout)
+
+        # A record that cannot name its addenda directory is refused too: it may head a chain kept elsewhere.
+        intact = (elsewhere / "record.json").read_bytes()
+        for name, damage in (("truncated", lambda path: path.write_bytes(intact[:200])),
+                             ("no addenda path", lambda path: path.write_text(json.dumps({"record": {"paths": {}}}), encoding="utf-8")),
+                             ("unreadable", lambda path: path.chmod(0))):
+            if name == "unreadable" and hasattr(os, "geteuid") and os.geteuid() == 0:
+                continue  # root reads a mode-000 file
+            with self.subTest(record=name):
+                (elsewhere / "record.json").write_bytes(intact)
+                damage(elsewhere / "record.json")
+                before = self.snapshot_unreadable(elsewhere)
+                for profile in ("implementation-gate", "publishable"):
+                    result = self.finalize(elsewhere, store, profile=profile)
+                    self.assertEqual(result.returncode, 1, result.stdout)
+                    self.assertIn("cannot establish which addenda directory", result.stdout)
+                    self.assertEqual(self.snapshot_unreadable(elsewhere), before, "a refused rerun modifies nothing")
+                (elsewhere / "record.json").chmod(0o644)
 
     # --- consumers ----------------------------------------------------------------
 

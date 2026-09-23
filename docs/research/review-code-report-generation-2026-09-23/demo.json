@@ -11,7 +11,7 @@
       "batch.json": true,
       "fragments.md": true
     },
-    "generated_report_chars": 7052,
+    "generated_report_chars": 7257,
     "model_output_chars_under_artifacts": 295,
     "every_item_body_once": true,
     "summary_body_once": true
@@ -34,7 +34,7 @@
     "public_bytes_unchanged": {
       "record.json": true
     },
-    "generated_report_chars": 6734,
+    "generated_report_chars": 7071,
     "model_output_chars_under_artifacts": 263,
     "every_item_body_once": true,
     "summary_body_once": true
