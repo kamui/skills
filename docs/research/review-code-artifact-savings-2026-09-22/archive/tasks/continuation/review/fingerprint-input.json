@@ -1,0 +1,13 @@
+{
+  "pr": {
+    "title": "main...864eea86ab86bf5a3375898bc606933ea20696cc",
+    "body": "864eea86ab86bf5a3375898bc606933ea20696cc\nAdd account freezing\n\nA frozen account refuses new entries until it is unfrozen.\n\n"
+  },
+  "issues": [],
+  "specs": [
+    {
+      "identity": "ledger-spec/account-freeze",
+      "text": "# Account freezing\n\nOperations staff need to stop all activity on an account while a dispute is investigated.\n\n1. `Ledger.freeze(number)` and `Ledger.unfreeze(number)` switch an account's frozen state; an unknown account raises `LedgerError`.\n2. A frozen account accepts no new entries of any kind: postings, transfers out of it, and transfers into it each raise `LedgerError`.\n3. A refused operation changes no account.\n4. Unfreezing restores normal behavior.\n5. A frozen account's balance and statement stay readable.\n"
+    }
+  ]
+}

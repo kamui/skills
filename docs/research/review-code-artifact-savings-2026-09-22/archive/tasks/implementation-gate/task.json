@@ -1,0 +1,40 @@
+{
+  "format": "savings-task/1",
+  "name": "implementation-gate",
+  "interface": "implement-publish step 4: a one-shot implementation-gate review of a committed local range with a user-supplied spec and caller-supplied check evidence",
+  "profile": "implementation-gate",
+  "target": {
+    "kind": "range",
+    "base_ref": "main",
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae"
+  },
+  "repository": {
+    "refs": {
+      "main": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+      "date-filter": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae"
+    },
+    "checkout": "date-filter"
+  },
+  "directories": [
+    "work"
+  ],
+  "files": {
+    "prompt.md": {
+      "kind": "text"
+    },
+    "inputs/spec.md": {
+      "kind": "copy"
+    },
+    "inputs/evidence.md": {
+      "kind": "text"
+    },
+    "inputs/unittest-head.txt": {
+      "kind": "copy"
+    },
+    "inputs/criterion-5.txt": {
+      "kind": "copy"
+    }
+  }
+}

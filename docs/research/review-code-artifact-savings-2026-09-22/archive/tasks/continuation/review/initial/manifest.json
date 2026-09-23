@@ -1,0 +1,20 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "@SHA256:review/initial/brief.md@",
+  "candidate_ids": [
+    "accounts/frozen-transfer-bypass"
+  ],
+  "format": "verifier-manifest/2",
+  "input_sha256": "@SHA256:review/initial/input.json@",
+  "premise_ids": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+    "id": "review-864eea8",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "@TASK_ROOT@/repo"
+  }
+}
