@@ -7,7 +7,8 @@ Usage::
         --arm bench/arms/<arm>.json --run-id <run> --attempt-id att-NNN --replicate N \\
         --out bench/runs/<run>/attempts/att-NNN [--predecessor att-MMM --retry-reason TEXT] \\
         [--replacement-index K] [--replay [--audit-allowed-prefix P ...]] [--note TEXT ...] \\
-        [--archive-root DIR] [--harness-dir DIR] [--rates FILE]
+        [--archive-root DIR] [--harness-dir DIR] [--rates FILE] \\
+        [--expect-cli-version TEXT] [--expect-skill-tree SHA]
     python3 bench/tools/file_attempt.py --self-test
 
 Input is an attempt directory written by ``dispatch.sh``: ``dispatch.txt`` (CLI version on the
@@ -28,8 +29,10 @@ rubric hash as the SHA-256 of the child thread's ``base_instructions``, each loo
 
 Disposition, first rule that applies: ``stopped: <reason>`` on a ``stop.json`` or a non-zero exit;
 ``harness-invalid: <reason>`` on a tree-identity change, an audit violation or network command, a
-model or effort other than the arm's, a prompt hash outside the arm's expected variants, or an
-executed range other than the pinned one; otherwise ``valid completed``. An ``unresolved`` parse
+model or effort other than the arm's, a prompt hash outside the arm's expected variants, an
+executed range other than the pinned one, or a CLI version or ``review-code`` skill tree other than
+the run pinned (``--expect-cli-version``, ``--expect-skill-tree``, which ``run_cell.py`` passes from
+the run manifest); otherwise ``valid completed``. An ``unresolved`` parse
 is kept as the parse status of a valid attempt and never turned into an empty review.
 
 Timing follows design §7's four events. ``dispatched_at`` and ``payload_validated_at`` come from
@@ -442,6 +445,11 @@ def file_attempt(args) -> tuple:
     checked, range_failures = ranges_ok(clone, diff_commands, target["merge_base"], target["head"])
 
     # Disposition.
+    skill_tree = None
+    if kind == "review-code" and os.path.exists(os.path.join(attempt_dir, "skill-tree.txt")):
+        skill_tree = Path(attempt_dir, "skill-tree.txt").read_text(encoding="utf-8").strip()
+    elif kind == "review-code":
+        skill_tree = next((m.group(1) for line in dispatch_lines for m in [re.search(r"skill_tree=([0-9a-f]{40})", line)] if m), None)
     arm_model, arm_effort = arm.get("model"), arm.get("effort")
     expected = arm.get("adapter", {}).get("expected_prompt_variants") or []
     problems = []
@@ -459,6 +467,10 @@ def file_attempt(args) -> tuple:
         problems.append(f"prompt {prompt_hash[:12] if prompt_hash else 'hash missing'} is not among the arm's expected variants"
                         + (f" (registry: {match})" if match else " (unregistered)"))
     problems.extend(f"executed diff: {f}" for f in range_failures)
+    if args.expect_cli_version and cli_version != args.expect_cli_version:
+        problems.append(f"CLI version {cli_version!r}, the run pinned {args.expect_cli_version!r}")
+    if args.expect_skill_tree and skill_tree != args.expect_skill_tree:
+        problems.append(f"skill tree {skill_tree or 'missing'}, the run pinned {args.expect_skill_tree}")
     if stop or (exit_code not in (None, 0)):
         disposition = f"stopped: {(stop or {}).get('reason') or f'exit {exit_code}'}"
         phase = "primary"
@@ -495,11 +507,6 @@ def file_attempt(args) -> tuple:
     archive = archive_transcripts(transcript_paths, attempt_dir,
                                   os.path.join(os.path.expanduser(args.archive_root), args.run_id, args.attempt_id + ".tar.gz"))
 
-    skill_tree = None
-    if kind == "review-code" and os.path.exists(os.path.join(attempt_dir, "skill-tree.txt")):
-        skill_tree = Path(attempt_dir, "skill-tree.txt").read_text(encoding="utf-8").strip()
-    elif kind == "review-code":
-        skill_tree = next((m.group(1) for line in dispatch_lines for m in [re.search(r"skill_tree=([0-9a-f]{40})", line)] if m), None)
     arm_complete = None
     if kind == "review-code":
         composition = read_json(native_path)
@@ -619,6 +626,12 @@ def self_test() -> int:
         assert (temp / "o1" / "usage-requests.jsonl").read_text(encoding="utf-8").count("\n") == 1
         for name in ("dispatch.txt", "timing.json", "audit.json", "normalized.json", "payload.json"):
             assert (temp / "o1" / name).is_file(), name
+        # The run's pinned CLI version: the matching pin keeps the attempt valid, another one does not.
+        done = run("o6", "--expect-cli-version", "9.9.9")
+        assert json.loads((temp / "o6" / "attempt.json").read_text(encoding="utf-8"))["disposition"] == "valid completed", done
+        done = run("o7", "--expect-cli-version", "9.9.8")
+        disp = json.loads((temp / "o7" / "attempt.json").read_text(encoding="utf-8"))["disposition"]
+        assert disp == "harness-invalid: CLI version '9.9.9', the run pinned '9.9.8'", disp
         # Wrong prompt variant, wrong effort, mutated tree, and a range that is not the pinned one.
         arm["adapter"]["expected_prompt_variants"] = ["0" * 64]
         arm["effort"] = "low"
@@ -673,6 +686,8 @@ def main() -> int:
     parser.add_argument("--archive-root", default=os.path.join("~", ".t3", "bench-cache", "transcripts"))
     parser.add_argument("--harness-dir", default=str(BENCH / "harness"))
     parser.add_argument("--rates", default=str(BENCH / "rates.json"))
+    parser.add_argument("--expect-cli-version", help="the CLI version string the run manifest pinned for this arm")
+    parser.add_argument("--expect-skill-tree", help="the review-code tree the run manifest resolved")
     args = parser.parse_args()
     if args.self_test:
         return self_test()

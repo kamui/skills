@@ -5,7 +5,7 @@ Method: [`docs/research/code-review-one-shot-method.md`](../docs/research/code-r
 Scripts follow [`docs/agents/scripts.md`](../docs/agents/scripts.md): standard-library Python 3.9+,
 `--self-test` or a `test_<name>.py` sibling, exit codes 0/1/2.
 
-**Status (2026-09-24): design §8 steps 1–5 done.** The schemas, rubric v1, rates, harness
+**Status (2026-09-24): design §8 steps 1–5 done; step 6 under way.** The schemas, rubric v1, rates, harness
 registries, the manifest checker, and the migrated tools exist (steps 1 and 2, with the three
 defect fixes applied: relative-path read audit, four-event timing in the wrapper, and an
 `unresolved` parse status). Forwarding stubs remain at `docs/research/tools/` for the four moved
@@ -13,8 +13,9 @@ Python tools so historical commands keep working. The six targets of the #137 qu
 are converted under `targets/` (step 3); their truncated mirrors are rebuilt and verified, their
 dependency caches are built and archived with hashes, and every `smoke.json` is measured on this
 machine (step 4). The four arms are data under `arms/`, and the shakedown is filed as the run
-`runs/2026-09-24-toy/` with attempt records and a mapping (step 5). Still to come: the four fresh
-targets and the first frozen run (step 6); `run_cell.py`, `score.py`, `compare.py`.
+`runs/2026-09-24-toy/` with attempt records, a mapping and computed results (step 5). For step 6,
+`run_cell.py`, `score.py` and `compare.py` exist; the four fresh targets and the first frozen run
+are still to come.
 
 ## Layout
 
@@ -26,7 +27,7 @@ targets and the first frozen run (step 6); `run_cell.py`, `score.py`, `compare.p
 | `harness/*.json` | observed built-in prompt variants and presets per CLI version, by hash |
 | `targets/<id>/` | `target.json`, frozen `packet.md`, `register.v<N>.json`, `smoke.json`; a migrated target also keeps `packet.legacy.md` |
 | `arms/<id>.json` | reviewer configurations as data |
-| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`, `file_attempt.py`; `run_cell.py`, `score.py`, `compare.py` to come |
+| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`, `file_attempt.py`, `run_cell.py`, `score.py`, `compare.py` |
 | `runs/<date>-<label>/` | frozen manifest, attempt records, mappings, results; a fixture run also holds its fixture target |
 
 Mirrors, dependency caches and transcripts live outside the repository under `~/.t3/bench-cache/`
@@ -125,6 +126,37 @@ the tools changed.
 
 [`runs/2026-09-24-toy/`](runs/2026-09-24-toy/README.md) is the first run: the four-arm shakedown
 on a two-commit fixture, seven attempts, filed after the fact with its deviations stated.
+
+## Running, scoring and comparing
+
+`run_cell.py` runs one cell of a frozen run: `--next` takes the first cell of the sealed order with
+no attempt, `--cell` names one, and `--replace att-NNN --reason ...` re-runs the cell of a
+harness-invalid attempt. It refuses a manifest without `frozen_at`, an arm file that no longer
+matches its frozen hash, a packet or diff identity that disagrees with the cohort, and any dispatch
+whose attempt, replacement, in-flight or spend cap does not fit. The spend check counts filed
+attempts at their metered cost, the run's `charges.jsonl` (setup, adjudication and grading, which
+the cap also covers), and the reserved bound of every attempt in flight. It keeps no state of its
+own: a claimed attempt is a directory under the work root (`~/.t3/bench-runs/<run>/`) holding
+`cell.json`, the method's dispatch record. It prepares the clone with `provision.py prepare`,
+gives the reviewer the packet followed by the run policy (the manifest's branch layout and
+allowance with the target's allowance and unavailability, identical for every arm), runs
+`dispatch.sh`, and files the attempt with `file_attempt.py`, which also marks an attempt
+harness-invalid when its CLI version or `review-code` skill tree is not the one the manifest
+pinned. `--status` prints the accounting.
+
+`score.py` computes `results.v<M>.json` from the attempt records, one mapping per target and the
+register version each mapping names, checked by hash (a sealed register is read from the plaintext
+`seal.py` opened, checked against the hash `target.json` records). It reports every planned cell
+as valid completed, incomplete, harness-invalid or unattempted, and per target and arm, per arm,
+per shape and per cohort group: attempt-level and completed-only recall (macro over buggy targets,
+null when a target is missing), raw and unique false findings, the three review-level columns, fix
+sufficiency, noise, cost as metered and repriced at one date's rates, and median elapsed times.
+
+`compare.py` puts two runs side by side under the comparison contract: per target, whether the
+packet, diff identity, register version, rubric, metric code, execution policy and provisioning
+identity match, differ or were not recorded; per arm, the declared dimensions that changed, a
+CLI or prompt change labelled as a product-version delta; and the metrics for every target of
+either cohort, with the missing ones and the non-comparable ones named rather than dropped.
 
 ## Three rules
 

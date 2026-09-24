@@ -280,22 +280,21 @@ Observations carried into §2–§4:
 1. Re-check the Opus 5.5 and Sonnet 5 rates against the live pricing page (the recorded entries
    come from the `claude-api` skill's table cached 2026-06-24, which gives Opus 5.5 cache reads at
    `$0.20`); record the ChatGPT plan's quota.
-2. A CLI test sibling for `normalize_review.py` beyond its self-test.
-3. Demonstrate focused-test execution under D's final adapter and under B on a suite target whose
+2. Demonstrate focused-test execution under D's final adapter and under B on a suite target whose
    review needs a test run.
-4. Hunt, adjudicate and seal (o)–(r); encrypt their registers; the adjudicator sees no reviewer
+3. Hunt, adjudicate and seal (o)–(r); encrypt their registers; the adjudicator sees no reviewer
    output.
-5. `run_cell.py` (dispatch, then `file_attempt.py`, with the cell's accounting), `score.py` and
-   `compare.py`.
-6. Write the run manifest: arms resolved, the pre-dispatch probe's CLI versions and prompt hashes,
+4. Write the run manifest: arms resolved, the pre-dispatch probe's CLI versions and prompt hashes,
    the cohort with register versions and packet and diff hashes, the sealed order, the caps above,
    the rates, and the execution policy.
-7. Open the ledger's attempt table before any further chargeable step.
+5. Open the ledger's attempt table before any further chargeable step.
 
 Done since the first draft: targets (i)–(n) migrated with factual packets, rebuilt mirrors and
 verified diff identities; dependency caches archived with hashes and smoke checks measured on the
-suite machine; the shakedown filed as a run with attempt records; a CLI test sibling for
-`attempt_audit.py`.
+suite machine; the shakedown filed as a run with attempt records and computed results; CLI test
+siblings for `attempt_audit.py` and `normalize_review.py`; `run_cell.py` (the caps and the
+method's dispatch record checked before every dispatch, then `dispatch.sh` and `file_attempt.py`),
+`score.py` and `compare.py`.
 
 ## 11. Independent review of the first draft (2026-09-24)
 
