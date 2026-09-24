@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise deleted-file payload rendering, validation and batch transport.
+"""Exercise deleted-file payload rendering, validation and batch transport through render_review.py.
 
 Usage: python3 scripts/test_deleted_file_links.py
 Inputs: local fixture payloads; no repository or forge access.
@@ -13,9 +13,10 @@ from pathlib import Path
 import subprocess
 import sys
 
-from validate_review import WORKFLOW
+import render_review as rr
+from render_review import WORKFLOW
 
-SCRIPT = Path(__file__).with_name("validate_review.py")
+SCRIPT = Path(__file__).with_name("render_review.py")
 HEAD = "c0b089b5c39b2df6a0e26b319f026ede50938d7b"
 MERGE_BASE = "2f06662c0f546404c2c72f449ea6e3cf4dd74d75"
 PATH = ".claude/agents/v5b-primary-effort-medium.md"
@@ -29,11 +30,17 @@ def invoke(payload: dict, *args: str) -> subprocess.CompletedProcess:
     )
 
 
+def rendered(value: dict) -> str | None:
+    """The fragment the composer renders for the payload's one question, from its run trailer's identity."""
+    identity = rr.run_identity(value["summary"], rr.run_trailer_fields(value["summary"]))
+    return rr.render_reference(value["items"][0], identity)
+
+
 def payload(anchor: dict, fragment: str) -> dict:
     trailer = (
         f"<!-- review-run head={HEAD} base-ref=main base-sha={MERGE_BASE} "
-        f"merge-base={MERGE_BASE} workflow={WORKFLOW} context={'a' * 64} "
-        "issues=kamui/skills#84 coverage=complete -->"
+        f"merge-base={MERGE_BASE} workflow={WORKFLOW} packet_context={'a' * 64} "
+        "supplied_inputs=no issues=kamui/skills#84 coverage=complete -->"
     )
     question = {
         "type": "question", "id": "effort-profile/deletion",
@@ -80,10 +87,8 @@ def main() -> int:
     ]
     for name, coordinate, fragment in cases:
         value = payload(coordinate, fragment)
-        result = invoke(value, "--render")
-        assert result.returncode == 0 and result.stdout == fragment + "\n", (name, result)
-        result = invoke(value)
-        assert result.returncode == 0, (name, result.stdout)
+        assert rendered(value) == fragment, (name, rendered(value))
+        assert rr.validate(value) == [], (name, rr.validate(value))
         result = invoke(value, "--emit-batch")
         assert result.returncode == 0, (name, result.stdout)
         batch = json.loads(result.stdout)
@@ -97,29 +102,29 @@ def main() -> int:
         ("arbitrary revision", dict(anchor, revision="b" * 40)),
         ("ambiguous path array", dict(anchor, path=[PATH, "other.md"])),
     ]:
-        for mode in ((), ("--render",), ("--emit-batch",)):
-            result = invoke(payload(coordinate, deleted), *mode)
-            assert result.returncode == 1 and "anchor-shape" in result.stdout, (name, mode, result)
-            assert f"{REPO}/blob/" not in result.stdout, (name, mode, result.stdout)
-        print(f"ok {name}: refused in all modes")
+        assert rendered(payload(coordinate, deleted)) is None, name
+        assert any(": anchor-shape: " in line for line in rr.validate(payload(coordinate, deleted))), name
+        result = invoke(payload(coordinate, deleted), "--emit-batch")
+        assert result.returncode == 1 and "anchor-shape" in result.stdout, (name, result)
+        assert f"{REPO}/blob/" not in result.stdout, (name, result.stdout)
+        print(f"ok {name}: no fragment, and validation and emission refuse it")
 
     for name, value in [
         ("deleted linked at head", payload(anchor, ordinary)),
         ("unknown linked at head", payload(dict(anchor, side="UNKNOWN"), ordinary)),
         ("arbitrary linked revision", payload(anchor, deleted.replace(MERGE_BASE, "b" * 40))),
     ]:
-        for mode in ((), ("--emit-batch",)):
-            result = invoke(value, *mode)
-            assert result.returncode == 1 and "summary-reference" in result.stdout, (name, result)
+        assert any(": summary-reference: " in line for line in rr.validate(value)), name
+        result = invoke(value, "--emit-batch")
+        assert result.returncode == 1 and "summary-reference" in result.stdout, (name, result)
         print(f"ok {name}: body rejected")
 
     missing = copy.deepcopy(payload(anchor, deleted))
     for field in ("body", "trailer"):
         missing["summary"][field] = missing["summary"][field].replace(f"merge-base={MERGE_BASE} ", "")
-    result = invoke(missing, "--render")
-    assert result.returncode == 1 and "trailer-sha" in result.stdout, result
+    assert rendered(missing) is None and any("`merge-base`" in line for line in rr.validate(missing)), rr.validate(missing)
     # A run still needs its pinned identity; a missing per-file path uses UNKNOWN instead.
-    print("ok missing pinned merge-base: render refused")
+    print("ok missing pinned merge-base: no fragment, validation refused")
     return 0
 
 

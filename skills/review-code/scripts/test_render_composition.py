@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Exercise compose_review.py through its CLI: composition, refusal, and batch agreement.
+"""Exercise render_review.py's composition rules: composition, refusal, and batch agreement.
 
-Usage: python3 scripts/test_compose_review.py
+Usage: python3 scripts/test_render_composition.py
 Inputs: local fixture compositions and a disposable Git repository; no forge access.
 Exit 0: all checks pass; exit 1: a check fails; exit 2: the CLI cannot run.
 
-Every fixture composes a payload, validates it with validate_review.py, and
-projects it with --emit-batch, so the three scripts are checked in agreement.
-Refusal fixtures assert the rule name and that no payload is printed.
+Every fixture composes a payload with render_review.compose, validates it, and
+projects it through the real `render_review.py --emit-batch` CLI, so composition,
+validation and the batch are checked in agreement. Refusal fixtures assert the rule
+name and that no payload is returned. Finalization, the record and prior-record runs
+are exercised through the CLI by test_render_review.py.
 """
 from __future__ import annotations
 
@@ -20,10 +22,10 @@ import subprocess
 import sys
 import tempfile
 
-import validate_review as vr
+import render_review as vr
 
-COMPOSER = Path(__file__).with_name("compose_review.py")
-VALIDATOR = Path(__file__).with_name("validate_review.py")
+SCRIPT = Path(__file__).with_name("render_review.py")
+COMPOSER, VALIDATOR = "compose", "validate"  # the composition and validation seams run() drives
 CONTEXT_SCRIPT = Path(__file__).with_name("review_context.py")
 HEAD = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
 BASE = "b2c3d4e5f60718293a4b5c6d7e8f90123456789a"
@@ -39,18 +41,39 @@ FINDING_FRAGMENT = (
 QUESTION_FRAGMENT = f"anchor [`src/queue.ts`]({BLOB}/src/queue.ts) (file)"
 
 
-def run(script: Path, stdin: str, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [sys.executable, str(script), *args], input=stdin, capture_output=True, encoding="utf-8", check=False
-    )
+def run(script: str, stdin: str, *args: str) -> subprocess.CompletedProcess:
+    """Compose or validate in process with the old CLI's result shape; `--emit-batch` runs the real CLI."""
+    if script == VALIDATOR and "--emit-batch" in args:
+        return subprocess.run([sys.executable, str(SCRIPT), *args], input=stdin, capture_output=True, encoding="utf-8", check=False)
+
+    def result(code: int, stdout: str = "", stderr: str = "") -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess([script, *args], code, stdout, stderr)
+
+    try:
+        value = json.loads(stdin)
+    except ValueError as error:
+        return result(2, stderr=f"render_review: cannot read composition input: {error}")
+    if script == VALIDATOR:
+        lines = vr.validate(value)
+        return result(1 if lines else 0, "".join(f"{line}\n" for line in lines))
+    store = None
+    if "--store" in args:
+        try:
+            store = json.loads(Path(args[args.index("--store") + 1]).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            return result(2, stderr=f"render_review: cannot read store: {error}")
+    payload, violations = vr.compose(value, store)
+    if violations:
+        return result(1, "".join(f"{line}\n" for line in violations))
+    return result(0, json.dumps(payload, indent=2) + "\n")
 
 
 def base_composition() -> dict:
     """The output contract's example review as a composition input."""
     return {
         "run": {
-            "head": HEAD, "base_ref": "main", "base_sha": BASE, "merge_base": MERGE_BASE, "context": CONTEXT,
-            "issues": ["acme/payments#123"], "coverage": "complete", "repository_url": REPO, "merged": False,
+            "head": HEAD, "base_ref": "main", "base_sha": BASE, "merge_base": MERGE_BASE, "packet_context": CONTEXT,
+            "supplied_inputs": "no", "issues": ["acme/payments#123"], "coverage": "complete", "repository_url": REPO, "merged": False,
         },
         "summary": {
             "status": "Changes Requested",
@@ -148,8 +171,9 @@ def local_targets() -> None:
     for kind in ("range", "worktree"):
         value = base_composition()
         value["run"].pop("repository_url")
+        value["run"].pop("packet_context")
         value["run"].update(target_kind=kind, target="main..HEAD", tree="e" * 40,
-                            change_description="Keep the key", specs=["spec/retries"])
+                            change_description="Keep the key", specs=["spec/retries"], supplied_inputs="yes")
         value["findings"][0]["source"] = 'commit-abcdef0/"Keep the key"'
         value["findings"][0]["anchor"]["side"] = "LEFT"
         result = run(COMPOSER, json.dumps(value))
@@ -171,7 +195,10 @@ def local_targets() -> None:
             assert "**Reviewed:** Range `main..HEAD`: `a1b2c3d` against merge-base" in body, body
         assert run(VALIDATOR, result.stdout).returncode == 0
         assert run(VALIDATOR, result.stdout, "--emit-batch").returncode == 0
-        value["run"].update(issues=[], specs=[], change_description="")
+        assert "packet_context=none supplied_inputs=yes " in payload["summary"]["trailer"], payload["summary"]["trailer"]
+        refused(dict(value, run=dict(value["run"], packet_context=CONTEXT)), "trailer-grammar", "a local target has no packet digest")
+        refused(dict(value, run=dict(value["run"], supplied_inputs="no")), "trailer-grammar", "supplied_inputs contradicts specs")
+        value["run"].update(issues=[], specs=[], change_description="", supplied_inputs="no")
         result = run(COMPOSER, json.dumps(value))
         assert result.returncode == 0, result.stdout
         assert "Source: no source (no issue, spec, or commit messages)." in json.loads(result.stdout)["summary"]["body"]
@@ -208,7 +235,7 @@ def local_targets() -> None:
         snapshot = json.loads(store.read_text(encoding="utf-8"))["context"]["snapshot"]
         value = {"run": {"head": snapshot["head"], "base_sha": base, "merge_base": base,
                          "base_ref": "HEAD", "target_kind": "worktree", "tree": snapshot["tree"],
-                         "context": CONTEXT, "issues": [], "coverage": "complete", "merged": False,
+                         "supplied_inputs": "no", "issues": [], "coverage": "complete", "merged": False,
                          "change_description": ""},
                  "summary": {"status": "Approved", "intent": "Edit file.",
                              "issue_fit": "Issue alignment unavailable; no stated promises.",
@@ -251,15 +278,6 @@ def write_accounting(path: str, tasks: list) -> None:
     Path(path).write_text(json.dumps(report), encoding="utf-8")
 
 
-def chain_file(name: str, confirmed: list) -> str:
-    """A version-2 addendum whose initial batch's accounting confirms each id, as a replacement record's chain file."""
-    path = f"{ARTIFACTS}/chain/{name}.json"
-    batch = dict(batch_paths("initial"), accounting=f"{ARTIFACTS}/chain/{name}-accounting.json")
-    write_accounting(batch["accounting"], [{"id": i, "type": "candidate", "ruling": "confirmed"} for i in confirmed])
-    Path(path).write_text(json.dumps({"format": "implementation-gate-addendum/2", "verification": {"batches": [batch]}}), encoding="utf-8")
-    return path
-
-
 def candidate_task(identity: str = "payments/retry-idempotency", trigger: str = "must-fix", batch: str | None = "initial",
                    ruling: str = "confirmed") -> dict:
     return {"id": identity, "type": "candidate", "trigger": trigger, "batch": batch, "ruling": ruling}
@@ -272,14 +290,13 @@ def premise_task(identity: str = "premise-1", ruling: str = "holds", batch: str 
 
 
 def verification(tasks: list, batches: list, initial: bool | None = None, follow_up: bool | None = None,
-                 outstanding: list | None = None, carried_from: str | None = None) -> dict:
+                 outstanding: list | None = None) -> dict:
     phases = {b["phase"] for b in batches}
     for batch in batches:
         write_accounting(batch["accounting"], [t for t in tasks if t.get("batch") == batch["name"]])
     return {"tasks": tasks, "batches": batches,
             "allowance": {"initial_spent": bool(phases) if initial is None else initial,
-                          "follow_up_spent": "follow-up" in phases if follow_up is None else follow_up,
-                          "carried_from": carried_from},
+                          "follow_up_spent": "follow-up" in phases if follow_up is None else follow_up},
             "outstanding": outstanding or []}
 
 
@@ -287,11 +304,13 @@ def gate_composition() -> dict:
     """The contract example as a committed local range with the private record's accounting."""
     value = base_composition()
     value["run"].pop("repository_url")
-    value["run"].update(target_kind="range", target="main..HEAD", change_description="Keep the key", specs=["spec/retries"])
+    value["run"].pop("packet_context")
+    value["run"].update(target_kind="range", target="main..HEAD", change_description="Keep the key", specs=["spec/retries"],
+                        supplied_inputs="yes")
     value["record"] = {
         "repository": "/repo",
         "paths": {"private_dir": "/tmp/x", "store": f"/tmp/x/review-context-{HEAD}.json", "composition": "/tmp/x/composition.json",
-                  "addenda": "/tmp/x/addenda", "skill_root": "/skills/review-code", "evidence_packet": "/tmp/x/evidence.md"},
+                  "skill_root": "/skills/review-code", "evidence_packet": "/tmp/x/evidence.md"},
         "requirements": [{"source": "issue-123/acceptance-criterion-2", "class": "acceptance", "disposition": "partial",
                           "evidence": "src/payments.ts:42 creates a key per attempt"}],
         "files": [{"path": "src/payments.ts", "state": "reviewed"}, {"path": "src/retry-policy.ts", "state": "reviewed"},
@@ -308,35 +327,37 @@ def gate_composition() -> dict:
 
 
 def gate(composition: dict, name: str, *args: str) -> tuple[dict, str]:
-    result = run(COMPOSER, json.dumps(composition), "--profile", "implementation-gate", *args)
-    assert result.returncode == 0, (name, result.returncode, result.stdout, result.stderr)
-    record = json.loads(result.stdout)
-    assert record["schema"] == "implementation-gate-record/2" and record["profile"] == "implementation-gate", name
+    """Compose the record fields render_review.py writes into record.json; the payload they carry must validate."""
+    store = json.loads(Path(args[args.index("--store") + 1]).read_text(encoding="utf-8")) if "--store" in args else None
+    payload, fields, violations = vr.compose_record(composition, store)
+    assert not violations, (name, violations)
+    record = {"workflow": vr.WORKFLOW, "run": dict(fields["run"], issues=sorted(composition["run"]["issues"])),
+              "status": fields["status"], "summary": payload["summary"], "items": payload["items"], "record": fields["record"]}
     assert "ledger" not in record["record"] and "clean_verdict" not in record["record"]["verification"], name
-    assert record["workflow"] == vr.WORKFLOW and record["run"]["head"] == composition["run"]["head"], name
-    assert record["run"]["target"] == composition["run"]["target"] and record["run"]["repository"] == composition["record"]["repository"], name
-    assert run(VALIDATOR, result.stdout).returncode == 0, name  # the record is a superset of the validator payload
-    return record, result.stdout
+    assert record["run"]["head"] == composition["run"]["head"], name
+    assert record["run"]["target"] == composition["run"].get("target") and record["record"]["repository"] == composition["record"]["repository"], name
+    assert run(VALIDATOR, json.dumps(payload)).returncode == 0, name
+    return record, json.dumps(record, indent=2)
 
 
-def implementation_gate() -> None:
-    # The same authoritative fixture through both profiles: identical findings, questions, status, coverage, ids, and accounting.
+def record_accounting() -> None:
+    # The record section adds accounting without changing the review it carries.
     composition = gate_composition()
     plain = copy.deepcopy(composition)
     plain.pop("record")
     payload = json.loads(run(COMPOSER, json.dumps(plain)).stdout)
-    assert run(COMPOSER, json.dumps(composition)).stdout == run(COMPOSER, json.dumps(plain)).stdout, "publishable output is unchanged by a record section"
-    record, stdout = gate(composition, "gate fixture")
-    assert record["summary"] == payload["summary"] and record["items"] == payload["items"], "profiles render the same review"
+    assert run(COMPOSER, json.dumps(composition)).stdout == run(COMPOSER, json.dumps(plain)).stdout, "the payload is unchanged by a record section"
+    record, stdout = gate(composition, "record fixture")
+    assert record["summary"] == payload["summary"] and record["items"] == payload["items"], "the record carries the payload's review"
     assert record["status"] == "Changes Requested" and record["run"]["coverage"] == "complete"
     assert [item["id"] for item in record["items"] if item["type"] != "observation"] == ["payments/retry-idempotency", "queue/retry-order"]
     assert record["record"]["verification"] == composition["record"]["verification"], "verification accounting is carried as given"
     assert [e["outcome"] for e in record["record"]["check_evidence"]] == ["accepted", "historical", "reviewer-executed"], "reused evidence keeps its outcomes"
-    assert record["record"]["paths"]["addenda"] == "/tmp/x/addenda" and record["run"]["issues"] == ["acme/payments#123"]
-    assert run(COMPOSER, json.dumps(composition), "--profile", "implementation-gate").stdout == stdout, "record composition is deterministic"
-    print("ok implementation-gate: same review as publishable, validator-readable record, accounting carried")
+    assert record["run"]["issues"] == ["acme/payments#123"]
+    assert gate(composition, "again")[1] == stdout, "record composition is deterministic"
+    print("ok record: the payload's review, validator-readable, accounting carried")
 
-    # Both profiles reject equivalent semantic contradictions with the same lines.
+    # Semantic contradictions in the record's accounting are refused by rule.
     def mutate(**changes):
         value = copy.deepcopy(composition)
         for path, new in changes.items():
@@ -378,21 +399,16 @@ def implementation_gate() -> None:
         ("schema", mutate(**{"record.verification.allowance": None})),
     ]
     for rule, bad in contradictions:
-        publishable = refused(bad, rule, f"publishable rejects {rule}")
-        gated = refused(bad, rule, f"implementation-gate rejects {rule}", "--profile", "implementation-gate")
-        assert publishable == gated, (rule, publishable, gated)
-    for name, bad in (("worktree", mutate(**{"run.target_kind": "worktree", "run.tree": "e" * 40})),
-                      ("pull-request", mutate(**{"run.target_kind": "pull-request", "run.merged": False})),
-                      ("prior head", mutate(**{"run.prior_head": PRIOR})),
-                      ("missing record", plain)):
-        refused(bad, "profile", f"implementation-gate refuses {name}", "--profile", "implementation-gate")
-    # Each profile requires its own paths: the gate its addenda directory, publishable its skill root.
-    no_addenda, no_root = mutate(**{"record.paths.addenda": None}), mutate(**{"record.paths.skill_root": None})
-    refused(no_addenda, "record-paths", "implementation-gate requires addenda", "--profile", "implementation-gate", needle="`addenda`")
-    refused(no_root, "record-paths", "publishable requires skill_root", needle="`skill_root`")
-    assert run(COMPOSER, json.dumps(no_addenda)).returncode == 0, "publishable record without addenda"
-    gate(no_root, "implementation-gate record without skill_root")
-    print("ok implementation-gate: both profiles refuse the same contradictions; profile-only refusals named")
+        refused(bad, rule, f"record rejects {rule}")
+    # Every target kind shares the record shape; the record names the skill root its readers run scripts from.
+    gate(mutate(**{"run.target_kind": "worktree", "run.tree": "e" * 40, "run.target": None}), "worktree record")
+    gate(mutate(**{"run.prior_head": PRIOR}), "delta review record")
+    refused(mutate(**{"record.paths.skill_root": None}), "record-paths", "record requires skill_root", needle="`skill_root`")
+    refused(mutate(**{"record.verification.allowance.carried_from": "/tmp/x/record.json"}), "verification", "retired carried_from",
+            needle="retired")
+    refused(mutate(**{"record.verification.tasks.0.batch": "carried:/tmp/x/record.json#initial"}),
+            "verification", "retired carried batch reference", needle="retired")
+    print("ok record: contradictions refused by rule; retired carried references named")
 
     # Outcomes. Blocking with a confirmed candidate is the fixture above.
     def outcome(status: str, tasks: list, batches: list, findings: list | None = None, questions: list | None = None, **extra) -> dict:
@@ -406,13 +422,13 @@ def implementation_gate() -> None:
     # No blocker and no high-risk area: no task, no batch, nothing spent.
     record, _ = gate(outcome("Approved", [], []), "clean outcome with no verification")
     assert record["status"] == "Approved" and record["summary"]["body"].startswith("**Approved (advisory)** — no findings.")
-    assert record["record"]["verification"]["allowance"] == {"initial_spent": False, "follow_up_spent": False, "carried_from": None}
+    assert record["record"]["verification"]["allowance"] == {"initial_spent": False, "follow_up_spent": False}
     # A refuted candidate is dropped; an unresolved one is dropped only when optional.
     gate(outcome("Approved", [candidate_task(ruling="refuted"), candidate_task("queue/empty-pop", "optional", ruling="unresolved")],
                  [batch_paths("initial")]), "refuted and optional unresolved candidates publish nothing")
     # A required unresolved candidate becomes a question with its id or stays outstanding, never an Approved drop.
     refused(outcome("Approved", [candidate_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
-            "unresolved must-fix candidate dropped from an Approved record", "--profile", "implementation-gate", needle="required candidate")
+            "unresolved must-fix candidate dropped from an Approved record", needle="required candidate")
     gate(outcome("Needs Information", [candidate_task("queue/retry-order", "data-integrity", ruling="unresolved")], [batch_paths("initial")],
                  questions=copy.deepcopy(composition["questions"])), "unresolved required candidate routed to its question")
     gate(outcome("Incomplete", [candidate_task(ruling="unresolved")], [batch_paths("initial")],
@@ -420,25 +436,25 @@ def implementation_gate() -> None:
     # A ruling stands only on the accounting report of the batch it names.
     mismatched = copy.deepcopy(composition)
     write_accounting(mismatched["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="refuted")])
-    refused(mismatched, "verification", "confirmed task over an accounting that refuted it", "--profile", "implementation-gate",
+    refused(mismatched, "verification", "confirmed task over an accounting that refuted it",
             needle="establishes `refuted`, not `confirmed`")
     missing = copy.deepcopy(composition)
     missing["record"]["verification"]["batches"][0]["accounting"] = f"{ARTIFACTS}/absent/accounting.json"
-    refused(missing, "verification", "confirmed task over a missing accounting report", "--profile", "implementation-gate", needle="cannot be read")
+    refused(missing, "verification", "confirmed task over a missing accounting report", needle="cannot be read")
     unaccounted = copy.deepcopy(composition)
     write_accounting(unaccounted["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="withheld")])
-    refused(unaccounted, "verification", "confirmed task the accounting withheld", "--profile", "implementation-gate",
+    refused(unaccounted, "verification", "confirmed task the accounting withheld",
             needle="establishes `withheld`, not `confirmed`")
     write_accounting(composition["record"]["verification"]["batches"][0]["accounting"], composition["record"]["verification"]["tasks"])
     gate(composition, "fixture composes again once its accounting is rewritten")
     # A premise ruling is checked the same way, and a malformed report is refused rather than crashing.
     premise_mismatch = outcome("Approved", [premise_task()], [batch_paths("initial")])
     write_accounting(premise_mismatch["record"]["verification"]["batches"][0]["accounting"], [premise_task(ruling="fails")])
-    refused(premise_mismatch, "verification", "premise ruling its accounting does not establish", "--profile", "implementation-gate",
+    refused(premise_mismatch, "verification", "premise ruling its accounting does not establish",
             needle="establishes `fails`, not `holds`")
     Path(premise_mismatch["record"]["verification"]["batches"][0]["accounting"]).write_text(
         json.dumps({"withheld": ["premise-1"], "accounted": "x", "return": None}), encoding="utf-8")
-    refused(premise_mismatch, "verification", "malformed accounting report", "--profile", "implementation-gate", needle="does not account")
+    refused(premise_mismatch, "verification", "malformed accounting report", needle="does not account")
     # A batch whose accounting produced no report still records its withheld tasks as outstanding work.
     no_report = outcome("Incomplete", [candidate_task(ruling="withheld"), candidate_task("payments/retry-naming", "optional", ruling="withheld")],
                         [batch_paths("initial")], outstanding=["payments/retry-idempotency: accounting produced no report"])
@@ -450,7 +466,7 @@ def implementation_gate() -> None:
     gate(outcome("Needs Information", [premise_task(ruling="unresolved", reopened_as="queue/retry-order")], [batch_paths("initial")],
                  questions=copy.deepcopy(composition["questions"])), "unresolved premise routed to a material question")
     refused(outcome("Approved", [premise_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
-            "unresolved premise with neither a question nor outstanding work", "--profile", "implementation-gate", needle="premise-1")
+            "unresolved premise with neither a question nor outstanding work", needle="premise-1")
     gate(outcome("Incomplete", [premise_task(ruling="unresolved")], [batch_paths("initial")], outstanding=["premise-1: settling fact unavailable"]),
          "unresolved premise left outstanding")
     # A premise that fails reopens as a candidate; the follow-up confirms the new blocker it became.
@@ -460,7 +476,7 @@ def implementation_gate() -> None:
                              findings=copy.deepcopy(composition["findings"])), "failed premise reopened and confirmed in the follow-up")
     assert record["record"]["verification"]["allowance"]["follow_up_spent"] is True
     refused(outcome("Approved", [premise_task(ruling="fails")], [batch_paths("initial")]), "verification",
-            "failed premise with nothing reopened", "--profile", "implementation-gate", needle="reopened_as")
+            "failed premise with nothing reopened", needle="reopened_as")
     # A new blocker found after feedback needs a follow-up confirmation; with the follow-up spent it stays unpublished and outstanding.
     new_blocker = [candidate_task(), candidate_task("queue/lost-ack", batch="follow-up")]
     two_findings = copy.deepcopy(composition["findings"]) + [finding(id="queue/lost-ack", title="Acknowledge only after the write",
@@ -469,7 +485,7 @@ def implementation_gate() -> None:
          "new blocker after feedback confirmed in the follow-up")
     refused(outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
                     [batch_paths("initial"), batch_paths("follow-up")], findings=two_findings), "verification",
-            "unconfirmed new blocker rendered after the allowance is spent", "--profile", "implementation-gate", needle="queue/lost-ack")
+            "unconfirmed new blocker rendered after the allowance is spent", needle="queue/lost-ack")
     exhausted = outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
                         [batch_paths("initial"), batch_paths("follow-up")], findings=copy.deepcopy(composition["findings"]),
                         outstanding=["queue/lost-ack: must-fix candidate arrived after the follow-up was spent"])
@@ -477,93 +493,32 @@ def implementation_gate() -> None:
     assert record["run"]["coverage"] == "incomplete" and record["status"] == "Changes Requested"
     refused(outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
                     [batch_paths("initial"), batch_paths("follow-up")], findings=copy.deepcopy(composition["findings"])), "verification",
-            "pending required work missing from outstanding", "--profile", "implementation-gate", needle="queue/lost-ack")
+            "pending required work missing from outstanding", needle="queue/lost-ack")
     # Missing evidence: a withheld required result is outstanding work, never completed verification.
     withheld = outcome("Incomplete", [candidate_task(ruling="withheld")], [batch_paths("initial")],
                        outstanding=["payments/retry-idempotency: return cited no raw location"])
     gate(withheld, "withheld candidate outstanding")
     refused(outcome("Approved", [candidate_task(ruling="withheld")], [batch_paths("initial")]), "verification",
-            "withheld candidate without outstanding work", "--profile", "implementation-gate", needle="withheld")
+            "withheld candidate without outstanding work", needle="withheld")
     gate(outcome("Approved", [candidate_task("payments/retry-naming", "optional", ruling="withheld")], [batch_paths("initial")]),
          "withheld optional scrutiny stays optional")
     for ruling in ("withheld", "unresolved"):
         gate(outcome("Approved", [premise_task(ruling=ruling, trigger="optional")], [batch_paths("initial")]),
              f"{ruling} optional premise stays optional")
     refused(outcome("Approved", [premise_task(trigger="must-fix")], [batch_paths("initial")]), "verification",
-            "a premise trigger other than optional", "--profile", "implementation-gate", needle="only as `optional`")
+            "a premise trigger other than optional", needle="only as `optional`")
     # No awaited route: required work is pending with no batch, and nothing is spent.
     gate(outcome("Incomplete", [premise_task(ruling="pending", batch=None)], [], outstanding=["premise-1: review-wait-unavailable"]),
          "pending premise with no route")
-    print("ok implementation-gate: confirmed, refuted, unresolved, premise, new-blocker, missing-evidence, and exhausted outcomes")
+    print("ok record: confirmed, refuted, unresolved, premise, new-blocker, missing-evidence, and exhausted outcomes")
 
-    # A replacement record carries the chain's confirmations and spent allowance; its own batches spend only what is left.
-    chain = chain_file("addendum-" + "c" * 40, ["payments/retry-idempotency"])
-    carried = outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
-                      initial=True, follow_up=False, carried_from=chain)
-    record, _ = gate(carried, "replacement record carries a confirmation and the spent initial batch")
-    assert record["record"]["verification"]["allowance"]["carried_from"] == chain
-    gate(outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial"), candidate_task("queue/lost-ack", batch="follow-up")],
-                 [batch_paths("follow-up")], findings=two_findings, initial=True, carried_from=chain),
-         "replacement record spends the carried chain's remaining follow-up")
-    gate(outcome("Incomplete", [candidate_task("queue/lost-ack", batch=None, ruling="pending")], [], findings=[],
-                 initial=True, follow_up=True, carried_from=chain, outstanding=["v1-clean-verdict: superseded-by-v2-policy", "queue/lost-ack: allowance spent by the chain"]),
-         "replacement record with an exhausted carried allowance")
-    # The reviewer's reproduction: a carried confirmation whose chain file and carried_from do not exist.
-    absent = f"{ARTIFACTS}/chain/missing.json"
-    line = refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{absent}#initial")], [], findings=copy.deepcopy(composition["findings"]),
-                           initial=True, carried_from=absent), "verification", "carried confirmation from a missing chain file",
-                   "--profile", "implementation-gate", needle="cannot be read")
-    assert "allowance.carried_from" in line and "record.verification.tasks[0]" in line, line
-    # Version-1 and version-2 record chain files hold their batches under `record.verification`.
-    for schema, report_format in (("implementation-gate-record/1", "verifier-accounting/1"), ("implementation-gate-record/2", "verifier-accounting/2")):
-        record_chain = f"{ARTIFACTS}/chain/{schema.replace('/', '-')}.json"
-        batch = dict(batch_paths("initial"), accounting=f"{ARTIFACTS}/chain/{schema.replace('/', '-')}-accounting.json")
-        write_accounting(batch["accounting"], [candidate_task()])
-        report = json.loads(Path(batch["accounting"]).read_text(encoding="utf-8"))
-        Path(batch["accounting"]).write_text(json.dumps(dict(report, format=report_format)), encoding="utf-8")
-        Path(record_chain).write_text(json.dumps({"schema": schema, "record": {"verification": {"batches": [batch]}}}), encoding="utf-8")
-        gate(outcome("Changes Requested", [candidate_task(batch=f"carried:{record_chain}#initial")], [], findings=copy.deepcopy(composition["findings"]),
-                     initial=True, carried_from=record_chain), f"confirmation carried from a {schema} chain file")
-    # A finalized record chain file counts only with a known protocol and its report present; a record without
-    # `finalization` predates it and reads as above.
-    record = json.loads(Path(record_chain).read_text(encoding="utf-8"))
-    report_file = Path(f"{ARTIFACTS}/chain/report.md")
-    report_file.write_text("# Review report\n", encoding="utf-8")
-    for name, finalization, needle in (
-        ("finalized record with its report", {"protocol": "review-code-finalization/1", "report": str(report_file)}, None),
-        ("finalized record whose report is missing", {"protocol": "review-code-finalization/1", "report": f"{ARTIFACTS}/chain/absent.md"},
-         "does not exist"),
-        ("record naming an unknown finalization protocol", {"protocol": "review-code-finalization/9", "report": str(report_file)},
-         "unknown finalization protocol"),
-    ):
-        finalized = f"{ARTIFACTS}/chain/{name.replace(' ', '-')}.json"
-        Path(finalized).write_text(json.dumps(dict(record, finalization=finalization)), encoding="utf-8")
-        carried = outcome("Changes Requested", [candidate_task(batch=f"carried:{finalized}#initial")], [],
-                          findings=copy.deepcopy(composition["findings"]), initial=True, carried_from=finalized)
-        if needle is None:
-            gate(carried, name)
-        else:
-            line = refused(carried, "verification", name, "--profile", "implementation-gate", needle=needle)
-            assert "allowance.carried_from" in line and "record.verification.tasks[0]" in line, line
-    other = chain_file("addendum-other", ["queue/unrelated"])
-    refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{other}#initial")], [], findings=copy.deepcopy(composition["findings"]),
-                    initial=True, carried_from=other), "verification", "carried batch that never confirmed this id",
-            "--profile", "implementation-gate", needle="does not account for `payments/retry-idempotency`")
-    refused(outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#follow-up")], [], findings=copy.deepcopy(composition["findings"]),
-                    initial=True, carried_from=chain), "verification", "carried batch name the chain file does not record",
-            "--profile", "implementation-gate", needle="records no batch `follow-up`")
-    for name, bad in (
-        ("carried task without carried_from", outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [],
-                                                     findings=copy.deepcopy(composition["findings"]), initial=True)),
-        ("bare carried batch name", outcome("Changes Requested", [candidate_task(batch="carried:initial")], [],
-                                            findings=copy.deepcopy(composition["findings"]), initial=True, carried_from=chain)),
-        ("carried confirmation with the initial allowance reset", outcome("Changes Requested", [candidate_task(batch=f"carried:{chain}#initial")], [],
-                                                                         findings=copy.deepcopy(composition["findings"]), initial=False, carried_from=chain)),
-        ("spent flag with nothing recorded or carried", outcome("Approved", [], [], initial=True)),
-        ("relative carried_from", outcome("Approved", [], [], initial=True, carried_from="addendum.json")),
-    ):
-        refused(bad, "verification" if "relative" not in name else "record-paths", name, "--profile", "implementation-gate")
-    print("ok implementation-gate: replacement records carry confirmations and spent allowance without a reset")
+    # Carried confirmations and a prior record's allowance are checked against real records in test_render_review.py.
+    refused(outcome("Changes Requested", [dict(candidate_task(), confirmed_in="/tmp/x/record.json")], [],
+                    findings=copy.deepcopy(composition["findings"])), "verification", "carried confirmation without a prior record",
+            needle="only a prior_record run")
+    refused(outcome("Approved", [], [], initial=True), "verification", "spent flag with nothing recorded or carried",
+            needle="no `initial` batch recorded here")
+    print("ok record: a carried confirmation or spent flag needs a prior record")
 
     # Deleted and renamed evidence against a real store: file accounting is exactly the pinned manifest.
     with tempfile.TemporaryDirectory() as directory:
@@ -604,15 +559,15 @@ def implementation_gate() -> None:
         assert "anchor `gone.txt (file)`; fix `kept.txt:1`" in record["summary"]["body"], record["summary"]["body"]
         assert run(COMPOSER, json.dumps(value), "--store", str(store)).returncode == 0
         value["record"]["files"].pop()
-        line = refused(value, "file-accounting", "manifest path without accounting", "--profile", "implementation-gate", "--store", str(store), needle="kept.txt")
+        line = refused(value, "file-accounting", "manifest path without accounting", "--store", str(store), needle="kept.txt")
         assert line == refused(value, "file-accounting", "publishable manifest accounting", "--store", str(store))
         value["record"]["files"].append({"path": "kept.txt", "state": "reviewed"})
         value["record"]["files"].append({"path": "old.txt", "state": "reviewed"})
-        refused(value, "file-accounting", "pre-image path is not a manifest path", "--profile", "implementation-gate", "--store", str(store), needle="old.txt")
+        refused(value, "file-accounting", "pre-image path is not a manifest path", "--store", str(store), needle="old.txt")
         value["record"]["files"].pop()
         value["findings"][0]["anchor"]["side"] = "RIGHT"
-        refused(value, "anchor-provenance", "deleted file on the RIGHT", "--profile", "implementation-gate", "--store", str(store))
-    print("ok implementation-gate: deleted and renamed evidence, file accounting against the pinned manifest")
+        refused(value, "anchor-provenance", "deleted file on the RIGHT", "--store", str(store))
+    print("ok record: deleted and renamed evidence, file accounting against the pinned manifest")
 
 
 def main() -> int:
@@ -629,8 +584,8 @@ def main() -> int:
     assert payload["items"][0]["trailer"] == vr.valid_payload()["items"][0]["trailer"]
     assert payload["summary"]["trailer"] == vr.RUN_TRAILER
     assert batch["comments"][0]["path"] == "src/payments.ts" and batch["comments"][0]["line"] == 42
-    rendered = run(VALIDATOR, stdout, "--render")
-    assert rendered.stdout == f"{FINDING_FRAGMENT}\n{QUESTION_FRAGMENT}\n", rendered.stdout
+    identity = {"head": HEAD, "merge_base": MERGE_BASE, "repository_url": REPO}
+    assert [vr.render_reference(item, identity) for item in payload["items"][:2]] == [FINDING_FRAGMENT, QUESTION_FRAGMENT]
     assert run(COMPOSER, json.dumps(contract)).stdout == stdout, "composition is deterministic"
     for section in ("## Unanchored findings", "## Disputed", "## Prior findings", "## Coverage gaps", "## Ambiguities", "**Mode:**"):
         assert section not in body, section
@@ -970,7 +925,7 @@ def main() -> int:
     assert body.startswith("**Needs Information** — 1 open question.")
     assert "**[Question] Which originating issue applies?**" in body
     assert required_issue["summary"]["issue_fit"] in body
-    assert "issues=none coverage=complete" in body and "workflow=v5b-24" in body
+    assert "issues=none coverage=complete" in body and f"workflow={vr.WORKFLOW} " in body
     assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
     assert payload["items"][0]["id"] == "workflow/required-issue"
     wrong = copy.deepcopy(required_issue)
@@ -1082,14 +1037,26 @@ def main() -> int:
     merged = base_composition()
     merged["run"]["merged"] = True
     payload, batch, _ = composed(merged, "retrospective default")
-    assert vr_mode(payload) == "**Mode:** Retrospective review of merged pull request; publication disabled." and len(batch["comments"]) == 1
+    assert vr_mode(payload) == "**Mode:** Retrospective review of merged pull request." and len(batch["comments"]) == 1
     merged["run"]["publication_authorized"] = True
-    payload, _, _ = composed(merged, "retrospective authorized")
-    assert vr_mode(payload) == "**Mode:** Retrospective review of merged pull request; publication separately authorized."
+    refused(merged, "schema", "publication authorization is review-code-publish's", needle="run.publication_authorized")
     absent = base_composition()
     del absent["run"]["merged"]
     refused(absent, "schema", "packet without merged", needle="run.merged")
-    print("ok retrospective: Mode line follows merged and authorization, missing merged refused")
+    retired = base_composition()
+    retired["run"]["context"] = CONTEXT
+    refused(retired, "schema", "model-authored context digest", needle="run.context")
+    for bad in ("abc", None):
+        wrong = base_composition()
+        wrong["run"]["packet_context"] = bad
+        refused(wrong, "trailer-grammar", "pull request without a packet digest", needle="run.packet_context")
+    supplied = base_composition()
+    supplied["run"]["specs"] = ["https://example.com/spec"]
+    refused(supplied, "trailer-grammar", "supplied spec with supplied_inputs=no", needle="run.supplied_inputs")
+    supplied["run"]["supplied_inputs"] = "yes"
+    payload, _, _ = composed(supplied, "supplied spec on a pull request")
+    assert f"packet_context={CONTEXT} supplied_inputs=yes " in payload["summary"]["trailer"]
+    print("ok retrospective and identity: plain Mode line, retired inputs refused, packet identity in the trailer")
 
     # File fallback: re-anchoring a rejected line comment on its file moves the complete prose into the body.
     fallback = base_composition()
@@ -1125,20 +1092,20 @@ def main() -> int:
     print("ok summary: ambiguities, sorted issues, none, code-span fallback without repository_url")
 
     unreadable = run(COMPOSER, "{not json")
-    assert unreadable.returncode == 2 and "compose_review" in unreadable.stderr, unreadable
+    assert unreadable.returncode == 2 and "render_review" in unreadable.stderr, unreadable
     not_object = run(COMPOSER, "[]")
     assert not_object.returncode == 1 and "schema" in not_object.stdout, not_object
     print("ok input: unreadable input exits 2, non-object exits 1")
     local_targets()
-    implementation_gate()
-    for profile in ("publishable", "implementation-gate"):
-        shown = run(COMPOSER, "", "--example", "--profile", profile)
-        assert shown.returncode == 0 and shown.stderr == "", ("example", profile, shown.stderr)
-        value = json.loads(shown.stdout)
-        # The example is what the reviewer writes; the finalizer fills the rest, and test_finalize_review.py finalizes it.
-        assert "head" not in value["run"] and "context" not in value["run"], ("derived run fields are omitted", profile)
-        assert all(set(b) == {"bundle", "accounting", "operation"} for b in value["record"]["verification"]["batches"]), profile
-        assert run(COMPOSER, shown.stdout, "--profile", profile).returncode == 1, "run alone, the composer requires every field"
+    record_accounting()
+    shown = subprocess.run([sys.executable, str(SCRIPT), "--example"], capture_output=True, encoding="utf-8", check=False)
+    assert shown.returncode == 0 and shown.stderr == "", ("example", shown.stderr)
+    value = json.loads(shown.stdout)
+    # The example is what the reviewer writes; the finalizer fills the rest, and test_render_review.py finalizes it.
+    assert not {"head", "context", "packet_context", "supplied_inputs"} & set(value["run"]), "derived run fields are omitted"
+    assert all(set(b) == {"bundle", "accounting", "operation"} for b in value["record"]["verification"]["batches"])
+    assert "allowance" not in value["record"]["verification"], "the finalizer derives the spent allowance"
+    assert run(COMPOSER, shown.stdout).returncode == 1, "run alone, the composer requires every field"
     print("ok example: --example prints the authored composition, which the composer alone refuses")
     return 0
 
@@ -1158,8 +1125,8 @@ if __name__ == "__main__":
         print(f"FAIL {error}")
         raise SystemExit(1)
     except subprocess.CalledProcessError as error:
-        print(f"test_compose_review: {error.cmd} failed: {error.stderr}", file=sys.stderr)
+        print(f"test_render_composition: {error.cmd} failed: {error.stderr}", file=sys.stderr)
         raise SystemExit(2)
     except OSError as error:
-        print(f"test_compose_review: cannot run {COMPOSER}: {error}", file=sys.stderr)
+        print(f"test_render_composition: cannot run {SCRIPT}: {error}", file=sys.stderr)
         raise SystemExit(2)

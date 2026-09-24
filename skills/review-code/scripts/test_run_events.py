@@ -21,6 +21,7 @@ import tempfile
 import time
 import unittest
 
+import render_review
 import test_verifier_handoff as handoff
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -148,11 +149,18 @@ class RunEventTests(unittest.TestCase):
         return repo, base, git("rev-parse", "HEAD")
 
     def composition(self, base, head, status="Approved"):
-        return {"run": {"head": head, "base_sha": base, "merge_base": base, "base_ref": "main",
-                        "target_kind": "range", "target": "main..HEAD", "context": "9" * 64, "issues": [],
-                        "coverage": "complete", "merged": False, "change_description": "change"},
+        return {"run": {"base_sha": base, "base_ref": "main", "target_kind": "range", "target": "main..HEAD", "issues": [],
+                        "specs": [], "coverage": "complete", "change_description": "change"},
                 "summary": {"status": status, "intent": "Change x.", "issue_fit": "No issue; commit message only.",
-                            "coverage": "Complete range diff inspected."}}
+                            "coverage": "Complete range diff inspected."},
+                "record": {"repository": "/repo", "requirements": [], "files": [{"path": "a.py", "state": "reviewed"}],
+                           "check_evidence": [], "verification": {"tasks": [], "batches": [], "outstanding": []},
+                           "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}}}
+
+    def finalize(self, private, store, composition, code=0):
+        """Write the composition beside the store and finalize it there, as a review run does."""
+        (private / "composition.json").write_text(json.dumps(composition), encoding="utf-8")
+        return self.cli("render_review.py", "--store", store, private, code=code)
 
     def test_ordinary_run_records_each_seam(self):
         repo, base, head = self.repository()
@@ -166,14 +174,11 @@ class RunEventTests(unittest.TestCase):
         cases.path = lambda suffix: private / f"{suffix}" if suffix == "bundle" else self.root / f"{id(object())}-{suffix}"
         bundle = cases.build(handoff.input_data([handoff.candidate()], [handoff.premise()]))
         cases.account(bundle, cases.returned(bundle))
-        composition = self.root / "composition.json"
-        composition.write_text(json.dumps(self.composition(base, head, "Changes Requested")), encoding="utf-8")
-        refused = self.cli("compose_review.py", "--store", store, composition, code=1)
-        self.assertNotIn('"summary"', refused.stdout)
-        composition.write_text(json.dumps(self.composition(base, head)), encoding="utf-8")
-        composed = self.cli("compose_review.py", "--store", store, composition)
+        refused = self.finalize(private, store, self.composition(base, head, "Changes Requested"), code=1)
+        self.assertIn("compose failed with exit 1", refused.stdout)
+        composed = self.finalize(private, store, self.composition(base, head))
         self.assertEqual(composed.stderr, "")
-        json.loads(composed.stdout)  # stdout is still exactly the payload
+        self.assertTrue(composed.stdout.startswith("status Approved\n"), composed.stdout)  # stdout is still exactly the status lines
 
         events_path = private / "run-events.jsonl"
         self.assertEqual(stat.S_IMODE(events_path.stat().st_mode), 0o600)
@@ -183,7 +188,7 @@ class RunEventTests(unittest.TestCase):
                                                          "payload-composed"])
         self.assertEqual([e["exit"] for e in events], [0, 0, 0, 1, 0])
         self.assertEqual(events[0]["data"]["head"], head)
-        self.assertEqual(events[0]["policy"]["workflow"], "v5b-24")
+        self.assertEqual(events[0]["policy"]["workflow"], render_review.WORKFLOW)
         self.assertEqual(events[1]["data"]["premises"], 1)
         self.assertNotIn("mode", events[1]["data"])
         self.assertEqual(events[2]["data"]["supplied"], {"candidates": 1, "premises": 1})
@@ -213,24 +218,24 @@ class RunEventTests(unittest.TestCase):
                 (private / "run-events.jsonl").mkdir()  # the append cannot open a file
             store = private / "context.json"
             built = self.cli("review_context.py", "--merge-base", base, "--head", head, "--store", store, cwd=repo)
-            composition = self.root / f"composition-{broken}.json"
-            composition.write_text(json.dumps(self.composition(base, head)), encoding="utf-8")
-            composed = self.cli("compose_review.py", "--store", store, composition)
-            outputs.append((built.stdout.replace(str(store), "STORE"), composed.stdout, composed.stderr))
+            composed = self.finalize(private, store, self.composition(base, head))
+            outputs.append((built.stdout.replace(str(store), "STORE"), composed.stdout.replace(str(private), "PRIVATE"),
+                            composed.stderr))
         self.assertEqual(outputs[0], outputs[1])
-        # A composer that exits from inside main still records its failure.
+        # A finalization that stops on unreadable input still records its failure.
         private = self.root / "private-True"
         (private / "run-events.jsonl").rmdir()
         corrupt = private / "corrupt.json"
         corrupt.write_text("{", encoding="utf-8")
-        self.cli("compose_review.py", "--store", corrupt, self.root / "composition-True.json", code=2)
-        self.cli("compose_review.py", "--store", store, self.root / "missing.json", code=2)
+        self.cli("render_review.py", "--store", corrupt, private, code=2)
+        empty = self.root / "no-composition"
+        empty.mkdir()
+        self.cli("render_review.py", "--store", store, empty, code=2)
         failures = [json.loads(line) for line in (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
         self.assertEqual([(e["event"], e["exit"]) for e in failures], [("payload-composed", 2)] * 2)
         # Without --store there is no private directory and nothing is written.
-        composition = self.root / "composition-False.json"
-        self.cli("compose_review.py", composition)
-        self.assertFalse((self.root / "run-events.jsonl").exists())
+        self.cli("render_review.py", empty, code=2)
+        self.assertFalse((empty / "run-events.jsonl").exists() or (self.root / "run-events.jsonl").exists())
 
     def test_special_event_path_never_blocks(self):
         repo, base, head = self.repository()
@@ -245,13 +250,12 @@ class RunEventTests(unittest.TestCase):
             built = subprocess.run([sys.executable, str(SCRIPTS / "review_context.py"), "--merge-base", base,
                                     "--head", head, "--store", str(store)], cwd=repo, capture_output=True,
                                    text=True, encoding="utf-8", timeout=20)
-            composition = self.root / f"special-{fifo}.json"
-            composition.write_text(json.dumps(self.composition(base, head)), encoding="utf-8")
-            composed = subprocess.run([sys.executable, str(SCRIPTS / "compose_review.py"), "--store", str(store),
-                                       str(composition)], capture_output=True, text=True, encoding="utf-8", timeout=20)
+            (private / "composition.json").write_text(json.dumps(self.composition(base, head)), encoding="utf-8")
+            composed = subprocess.run([sys.executable, str(SCRIPTS / "render_review.py"), "--store", str(store),
+                                       str(private)], capture_output=True, text=True, encoding="utf-8", timeout=20)
             self.assertLess(time.monotonic() - started, 20)
             outputs.append((built.returncode, built.stdout.replace(str(store), "STORE"), built.stderr,
-                            composed.returncode, composed.stdout, composed.stderr))
+                            composed.returncode, composed.stdout.replace(str(private), "PRIVATE"), composed.stderr))
         self.assertEqual(outputs[0], outputs[1])
         self.assertEqual((outputs[1][0], outputs[1][3]), (0, 0))
         self.assertTrue(stat.S_ISFIFO((self.root / "special-True" / "run-events.jsonl").stat().st_mode))
