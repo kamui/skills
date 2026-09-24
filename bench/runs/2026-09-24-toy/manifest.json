@@ -6,7 +6,7 @@
   "freeze_commit": null,
   "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
   "rubric_version": 1,
-  "metric_code_revision": "9efa2c6a5c4d6ddc37004de051c9d29875c6a31c",
+  "metric_code_revision": "390167b0fb37380a83718228dd825cef9e8ccedb",
   "arms": [
     {
       "id": "review-code-sonnet-high",
