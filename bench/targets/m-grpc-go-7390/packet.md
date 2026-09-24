@@ -10,7 +10,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | --- | --- |
 | Pull request | [`grpc/grpc-go#7390`](https://github.com/grpc/grpc-go/pull/7390) — "grpc: hold ac.mu while calling resetTransport to prevent concurrent connection attempts" |
 | Author | `arjan-bal` (association at fetch time: `CONTRIBUTOR`) |
-| Repository URL (`summary.repository_url`) | `https://github.com/grpc/grpc-go` |
+| Repository URL | `https://github.com/grpc/grpc-go` |
 | Head SHA | `76ef33f44a600c3ed1a385979fd1dfbcade3fbb6` |
 | Base ref | `master` |
 | Base SHA (as recorded on the pull request) | `daab56344e612097fd50c46c433de5d9b6013837` |

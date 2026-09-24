@@ -10,7 +10,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | --- | --- |
 | Pull request | [`bokeh/bokeh#9232`](https://github.com/bokeh/bokeh/pull/9232) — "Fixed issue of Datepicker displaying the wrong date for users in UTC+…" |
 | Author | `madkopp` (association at fetch time: `CONTRIBUTOR`) |
-| Repository URL (`summary.repository_url`) | `https://github.com/bokeh/bokeh` |
+| Repository URL | `https://github.com/bokeh/bokeh` |
 | Head SHA | `36549bca3a63d581f7b68d08054a7813c1e6a499` |
 | Base ref | `master` |
 | Base SHA (as recorded on the pull request) | `ccb4bcb4c2b841d89b0e88303a97bf4604a5795f` |

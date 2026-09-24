@@ -10,7 +10,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | --- | --- |
 | Pull request | [`psf/requests#6667`](https://github.com/psf/requests/pull/6667) — "Avoid reloading root certificates to improve concurrent performance" |
 | Author | `agubelu` (association at fetch time: `CONTRIBUTOR`) |
-| Repository URL (`summary.repository_url`) | `https://github.com/psf/requests` |
+| Repository URL | `https://github.com/psf/requests` |
 | Head SHA | `4089f3dc65f783beaa53cc032958ab625440d0ac` |
 | Base ref | `main` |
 | Base SHA (as recorded on the pull request) | `8dd3b26bf59808de24fd654699f592abf6de581e` |
@@ -19,7 +19,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | `state` | `MERGED` |
 | `merged` | **`true`** (merged 2024-05-15T20:07:26Z) |
 | `isDraft` | `false` |
-| Originating issue(s) | none — the PR body carries no closing reference; `issues=none` unless the dispatch supplies a spec |
+| Originating issue(s) | none — the PR body carries no closing reference |
 
 ## 2. Changed-file manifest (verified against the pinned SHAs from the mirror)
 
@@ -110,7 +110,7 @@ I'd like to mention that there have been a few changes in Requests since I start
 
 ## 4. Originating issue
 
-None. The pull-request body is the only statement of intent. Record `issues=none` (or the coordinate of a spec the dispatch supplies).
+None. The pull-request body is the only statement of intent.
 
 ## 5. Commits on the head, oldest first — messages verbatim
 

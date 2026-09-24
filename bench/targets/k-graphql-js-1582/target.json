@@ -16,7 +16,7 @@
   "cutoff": "2018-11-21T14:33:19Z",
   "cutoff_note": "the merge instant; nothing omitted",
   "diff_manifest_sha256": "ffb09c3239a9b09fbe3b0544994d3fecbe5fe3779848ce1ab6557e0733a98e44",
-  "packet_sha256": "47b3732374d4019967d67f7b75154e64399128e7a318faaddd0191573910f88c",
+  "packet_sha256": "0473e248e7a759a30cab6c84abace66ecf2a04349764f18b9deaa6234c5d5258",
   "legacy_packet_sha256": "6b5e1d3797ed3af4b34d01aa440dcf7540ea94c13b26cd3dca2bd4f0dd4d731b",
   "shape": "changed-test correctness",
   "domain": "JavaScript library, Flow-typed tests",

@@ -17,7 +17,7 @@
   "cutoff": "2023-11-10T10:08:08Z",
   "cutoff_note": "the merge instant; nothing omitted",
   "diff_manifest_sha256": "3745aceb1adbcb424674be1b91175ea4ffc1da82179979d25b75ed873299a41b",
-  "packet_sha256": "bf2eb506f47fc292dd65056c9de0c1095b1871d5e291539d0eae90d0a279b03e",
+  "packet_sha256": "b2702c19c9050b06ac0ab2959e2f941fa0497fde7959456ec3a1be1b23ca695c",
   "legacy_packet_sha256": "e7734dc35aeea6588f58ac65a0f1d1bcfbd2b2aaac0f5806cc2618d6f0347382",
   "shape": "cross-file type obligation outside the diff",
   "domain": "TypeScript API framework",

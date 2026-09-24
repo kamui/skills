@@ -54,9 +54,12 @@ Six targets are migrated from the [#137 qualification grid](../docs/research/one
 - `packet.md`: the factual packet, derived once by `derive_packet.py` from the legacy file (its
   hash is `packet_sha256`). The derivation removes the experiment label, the preamble, the local
   branch layout, the posting identity, the diff instruction, the "mandatory note", the guidance
-  instruction and the whole run-conditions section, and keeps every other byte; it refuses an input
-  whose markers are missing or repeated. Fresh targets will get a factual packet from
-  `build_packet.py` directly once it grows that mode.
+  instruction, the review-code report vocabulary (the `summary.repository_url` row label and, on
+  the three targets with no originating issue, the two instructions to record `issues=none`) and
+  the whole run-conditions section, and keeps every other byte; it refuses an input whose markers
+  are missing or repeated, or that carries that report vocabulary anywhere else. Fresh targets will
+  get a factual packet from `build_packet.py` directly once it grows that mode, which must omit
+  the same elements.
 - `register.v1.json`: the sealed truth converted from the prose register, with the pre-cutoff
   hints and the adjudicator's limits disclosed; `n-ripgrep-2957` also has `register.v2.json`, the
   blinded post-grid revision that added GT-n1. Defect ids never renumber.

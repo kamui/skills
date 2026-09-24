@@ -17,7 +17,7 @@
   "cutoff": "2024-05-15T20:07:26Z",
   "cutoff_note": "the merge instant; one review and eleven conversation comments after it are omitted",
   "diff_manifest_sha256": "453df0a9556fa8768460058cffeaeff2fe0e856369cbf4118af1572ca1573133",
-  "packet_sha256": "a8ac4d2cf9314f85a3fb16fcdfae594e8903ce189f34dcf98805294a21f280c6",
+  "packet_sha256": "061c9288a59f02b8dfe575f8a4febf47abfc4daca8894cd477f4b531ee5c321c",
   "legacy_packet_sha256": "f217cd71acce435aa1062c52ba3997aa4b0777293c824da131353028a4cb96b4",
   "shape": "concurrency, shared mutable state",
   "domain": "Python HTTP client",

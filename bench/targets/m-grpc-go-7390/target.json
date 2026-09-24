@@ -14,7 +14,7 @@
   "cutoff": "2024-07-09T20:27:27Z",
   "cutoff_note": "the merge instant; nothing omitted",
   "diff_manifest_sha256": "adb972f66328b4ce030c4e4b0ebed60f482611eb86f26e681dd6fbe02f701c4f",
-  "packet_sha256": "22f225ba217d22b0ed97546e2d462fc2a53d395ada8180e465a2e66b06c5d185",
+  "packet_sha256": "e1c06473d9983ce6644841501ecbeb0f0976164c1703ef3f9282460458e43299",
   "legacy_packet_sha256": "a003ca717a66aea689fe350a479454b02c92f32e9edd268504ba8a1d2a46a2f6",
   "shape": "clean, high risk (concurrency)",
   "domain": "Go RPC client connection management",

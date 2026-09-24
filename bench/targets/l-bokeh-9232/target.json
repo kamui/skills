@@ -16,7 +16,7 @@
   "cutoff": "2019-10-03T15:51:00Z",
   "cutoff_note": "62 s before the merge instant (2019-10-03T15:52:02Z): a maintainer comment created 25 s before the merge was edited 73 s after it, so build_packet.py refuses the merge-time cutoff; the earlier cutoff omits 4 conversation and 2 issue comments and is strictly more conservative",
   "diff_manifest_sha256": "b3476ac5a902a0b5178472bbd8915714ea52e11d00067f0515ee6ffe7e569bd6",
-  "packet_sha256": "5ca797a5be78b1d41ff87697266d088dc57ac117eba39eb8defe10e42da3d526",
+  "packet_sha256": "f39a26a189faf259a9cda8f51db376c16a215e2c7ca1662752037d9f902ee36b",
   "legacy_packet_sha256": "5964e4ba6fb323734e75c868d22b3e5bbd35cb202f413637e0673399ad09b46d",
   "shape": "ordinary behavioural change",
   "domain": "TypeScript frontend widget",

@@ -10,7 +10,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | --- | --- |
 | Pull request | [`graphql/graphql-js#1582`](https://github.com/graphql/graphql-js/pull/1582) — "Enable Flow typings on errors tests + Fix typing for Error constructor" |
 | Author | `IvanGoncharov` (association at fetch time: `MEMBER`) |
-| Repository URL (`summary.repository_url`) | `https://github.com/graphql/graphql-js` |
+| Repository URL | `https://github.com/graphql/graphql-js` |
 | Head SHA | `7e39a122eea9292eeffa6905ffdf8a60c5161cfd` |
 | Base ref | `master` |
 | Base SHA (as recorded on the pull request) | `5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11` |
@@ -19,7 +19,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | `state` | `MERGED` |
 | `merged` | **`true`** (merged 2018-11-21T14:33:19Z) |
 | `isDraft` | `false` |
-| Originating issue(s) | none — the PR body carries no closing reference; `issues=none` unless the dispatch supplies a spec |
+| Originating issue(s) | none — the PR body carries no closing reference |
 
 ## 2. Changed-file manifest (verified against the pinned SHAs from the mirror)
 
@@ -37,7 +37,7 @@ M  src/jsutils/__tests__/inspect-test.js                                  (+2   
 
 ## 4. Originating issue
 
-None. The pull-request body is the only statement of intent. Record `issues=none` (or the coordinate of a spec the dispatch supplies).
+None. The pull-request body is the only statement of intent.
 
 ## 5. Commits on the head, oldest first — messages verbatim
 
