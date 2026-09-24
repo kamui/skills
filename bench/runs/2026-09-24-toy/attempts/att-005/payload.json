@@ -1,0 +1,4 @@
+{
+  "final_text": "Tiny diff; I did the review inline. Line 17 divides by `len(prices)` with no guard.\n\n```json\n[\n  {\n    \"file\": \"pricing.py\",\n    \"line\": 17,\n    \"summary\": \"average() divides by len(prices) with no empty-list guard, so it raises ZeroDivisionError for an empty cart.\",\n    \"failure_scenario\": \"The PR description and the docstring both say carts are empty right after creation. average([]) evaluates total([]) / 0, which raises ZeroDivisionError. The new summary panel would crash for any freshly created cart. Return 0.0 (or None) for an empty list, or raise a clear domain error that the caller handles.\"\n  }\n]\n```",
+  "report_findings": []
+}

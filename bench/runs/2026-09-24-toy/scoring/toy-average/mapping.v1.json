@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-24-toy",
+  "target": "toy-average",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "6354eb9c9ad8031dc5ad4d21e2d48ff231609ded670e834609abe170888173f4"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "the orchestrator session that filed the run (Claude Opus 5.5), reading each attempt's normalized items against the register",
+    "blind": false,
+    "evidence_access": "normalized.json of every attempt with arm and attempt labels visible; the fixture's source"
+  },
+  "scored_at": "2026-09-24T15:31:43Z",
+  "attempts": [
+    {
+      "attempt_id": "att-001",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "names the unguarded division but proposes no corrective change"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-002",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "names the unguarded division but proposes no corrective change"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-003",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "the title is the fix: handle empty carts before dividing"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "patch is incorrect",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-004",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": "g1",
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "names the unguarded division but proposes no corrective change"
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": "g1",
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "the same claim restated from the docstring's side"
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "no test added: register non-defect, a coverage gap with no consequence beyond GT-toy1"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-005",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "names the unguarded division but proposes no corrective change"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-006",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "return 0.0 or raise a documented error the caller handles; P2 must-fix is consistent with a crash on a stated common case"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-007",
+      "blind_token": "unblinded",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-toy1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "handle empty input with an agreed value before dividing, plus a regression test"
+        }
+      ],
+      "review_level": {
+        "native_verdict": "patch is incorrect",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    }
+  ]
+}

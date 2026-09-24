@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "target": "toy-average",
+  "version": 1,
+  "sealed_at": "2026-09-24T06:21:22Z",
+  "sealed_by": {
+    "adjudicator": "the maintainer's orchestrator session, which wrote the fixture with the defect planted",
+    "evidence_access": "the fixture's source",
+    "saw_reviewer_output": false
+  },
+  "supersedes": null,
+  "defects": [
+    {
+      "id": "GT-toy1",
+      "title": "average() divides by len(prices) and raises ZeroDivisionError on an empty list, the case its docstring and the packet call common",
+      "trigger": "average([]), for example a new cart with no items",
+      "consequence": "ZeroDivisionError: division by zero, instead of a mean for the summary panel",
+      "required_outcome": "average() returns a defined value (or raises a documented, handled error the caller expects) for an empty list; the shape of the guard is not prescribed",
+      "evidence": [
+        "pricing.py at 609ed60: `return total(prices) / len(prices)` under the docstring 'Mean price; empty lists are common for new carts.'",
+        "packet body: 'Carts can be empty right after creation.'"
+      ],
+      "demonstration": "python3 -c 'from pricing import average; average([])' at the head raises ZeroDivisionError",
+      "added_in_version": 1
+    }
+  ],
+  "non_defects": [
+    {
+      "claim": "total() should validate its input types.",
+      "ruling": "Unchanged by the diff and not a defect of this change.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "The new function has no test.",
+      "ruling": "A coverage gap with no consequence beyond GT-toy1.",
+      "added_in_version": 1
+    }
+  ],
+  "clean_basis": null,
+  "leakage": [],
+  "preexisting_hints": [
+    "the docstring and the packet both state the empty-cart case"
+  ],
+  "limits": [
+    "planted defect; the register was written by the fixture's author, not an independent adjudicator"
+  ],
+  "source": "planted when the fixture was built (2026-09-24)"
+}
