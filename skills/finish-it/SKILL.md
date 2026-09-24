@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Finish it
 
-Run one **delivery**: take a spec source to a pull request whose latest published review reflects its current head after at least one round. Every step runs in its own fresh-context subagent; the forge is the only shared memory, so nothing is persisted on disk and re-invoking this skill on the pull request resumes the delivery from wherever the forge says it is.
+Run one **delivery**: take a spec source to a pull request whose latest published review reflects its current head after at least one round, or after the delivery's own first review when that review approves with nothing to address. Every step runs in its own fresh-context subagent; the forge is the only shared memory, so nothing is persisted on disk and re-invoking this skill on the pull request resumes the delivery from wherever the forge says it is.
 
 Three terms carry the skill:
 
@@ -83,13 +83,13 @@ Artifact: a review by the reviewer identity whose reviewed head is the pull requ
 
 ### 6. Rounds
 
-Repeat for each remaining round, in order:
+When this delivery ran step 5 and its review is `Approved` at the current head with the empty ledger check below holding, run no rounds and report: a re-review of an unchanged head with nothing to address can only repeat it. Otherwise, repeat for each remaining round, in order:
 
 1. **Empty ledger check.** At the current head, the latest review is `Approved`, lists no open question and no disputed finding, and no review thread is unresolved or holds feedback without a reply from the pull-request author. When all hold, skip the resolve and go to the review; the round still counts.
 2. **Prepare the checkout.** Fetch, confirm the working tree is clean, and check out the pull request's head branch at its live head. A dirty tree is a stop, not something to clean up.
 3. **Resolve.** Brief the subagent to invoke `resolve-review` on the pull request. Artifact: an addressing summary this pass posted, or the existing same-head summary it updated, its last edit later than the review this round addressed, carrying an `addressed head=` equal to the pushed head, which equals the local head. Record whether the round added commits.
 4. **Review** as in step 5, on the new head.
-5. **Count the round**, then, from the second round of this delivery on, stop early when the review reached `Approved`, or when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. The first round of a delivery always runs, an already-`Approved` pull request included.
+5. **Count the round**, then, from the second round of this delivery on, stop early when the review reached `Approved`, or when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. Once rounds start, the first round of a delivery always runs, a pull request that entered already `Approved` included.
 
 ### 7. Report
 
