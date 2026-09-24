@@ -25,8 +25,8 @@ of section 4; the "Mandatory note" blockquote in section 5; the "Read any presen
 section 7; section 8 and everything after it. Every marker must be present exactly once, otherwise
 the packet is refused: a silently partial derivation would be a policy leak. The two `issues=none`
 markers belong to the no-issue shape only: an Originating issue(s) row reading "none" requires
-both, and a row naming an issue requires neither. Any other line carrying that report vocabulary
-is refused.
+both, and a row naming an issue requires neither. Any other line before section 8 carrying that
+report vocabulary is refused.
 
 Exit codes: 0 written, with the output SHA-256 on stdout; 1 the input does not have the legacy
 structure, one line per missing or repeated marker or stray report vocabulary on stdout and nothing
