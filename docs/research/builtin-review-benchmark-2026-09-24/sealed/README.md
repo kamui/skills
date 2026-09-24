@@ -32,5 +32,5 @@ done
 ```
 
 `seal.py open` writes a plaintext only when its hash matches, and a failed `open` leaves any file
-already at that path untouched. A mismatch means the ciphertext is not the sealed one: do not score
-against it.
+already at that path untouched. A mismatch means decryption did not produce the sealed plaintext, so
+nothing is written: check the key and `SHA256SUMS` before scoring.
