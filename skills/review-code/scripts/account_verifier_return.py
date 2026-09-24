@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/account_verifier_return.py --bundle <directory>
        --output accounting.json [--inline-fallback | --repair-of <original>] <return>
-Schema: references/verifier-return.md; bundle from build_verifier_prompt.py.
+Schema: references/verifier.md's return encoding; bundle from build_verifier_prompt.py.
 Transport: for a bundle whose manifest binds ``return_file``, <return> is the path the
 worker returned. It must equal that assignment exactly, and the file is read without
 following a symbolic link, from a parent that still resolves to itself. A wrong path,

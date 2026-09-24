@@ -76,7 +76,7 @@ The re-emission is not forced by the prose form. The reference is a file on disk
 skill root, the same path the round had just read, and its blocks can be cut out of it
 mechanically: `review-code/scripts/test_thread_writes.py` does exactly that, with a one-line regular
 expression (`loop_block`, matching the `sh` fence that contains `write-loop.sh`), and
-[`HISTORY.md`](../../skills/review-code/HISTORY.md) records that as the test's design. What the
+[`HISTORY.md`](../review-code/HISTORY.md) records that as the test's design. What the
 protocol lacks is an instruction to run the block from the file rather than from memory.
 
 The first draft of this record said the prose form contradicts [`docs/agents/scripts.md`](../agents/scripts.md).

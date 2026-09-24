@@ -21,7 +21,7 @@ Follow the repository's branch and commit conventions. If the current branch is 
 
 Use the implementation skill the user names, otherwise the best-matching model-invoked implementation skill. Implement directly if none applies.
 
-Read `review-code`'s `references/check-evidence.md` for the verification format and reuse criteria. Save a compact summary:
+Read the Supplied checks section of `review-code`'s `references/rubric.md` for the verification format and reuse criteria. Save a compact summary:
 
 - Shared full commit SHA, clean/dirty input state and relevant environment.
 - One line per check: command or check-run identity, result and readable output reference. Include relevant exceptions and coverage limits; link to logs instead of copying them.

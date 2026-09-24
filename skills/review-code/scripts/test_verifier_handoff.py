@@ -218,8 +218,10 @@ class HandoffTests(unittest.TestCase):
         self.assertIn("## Supplied check evidence", with_evidence)
         self.assertIn("A new head is an invalidation boundary", with_evidence)
         self.assertNotIn("SKILL.md", with_evidence)
-        self.assertNotIn("## Primary accounting", with_evidence)
-        self.assertNotIn("Account for supplied checks", with_evidence)
+        # The rubric's Supplied checks stays primary-only; the worker gets verifier.md's reuse rules.
+        self.assertNotIn("## Supplied checks", with_evidence)
+        self.assertNotIn("Account for each supplied check", with_evidence)
+        self.assertNotIn("Check evidence is shared context", with_evidence)
 
     def test_instruction_sections_reject_missing_duplicate_or_reversed_boundaries(self):
         source = self.root / "instruction.md"
@@ -229,6 +231,26 @@ class HandoffTests(unittest.TestCase):
                 builder.section(self.root, source.name, "start\n", "end\n")
         source.write_text("preface\nstart\nworker\nend\nprimary\n", encoding="utf-8")
         self.assertEqual(builder.section(self.root, source.name, "start\n", "end\n"), "worker\n")
+
+    def test_rubric_sections_embed_by_heading(self):
+        source = self.root / "rubric.md"
+        source.write_text("# Rubric\n\n## Changed tests\n\nworker\n\n## Supplied checks\n\nprimary\n", encoding="utf-8")
+        self.assertEqual(builder.heading_section(self.root, source.name, "Changed tests", "Supplied checks"), "\nworker\n")
+        # A missing, duplicated, or displaced heading on either side refuses rather than spilling into the next section.
+        for content in ("# Rubric\n\nChanged tests\n\n## Supplied checks\n",
+                        "\n## Changed tests\na\n\n## Changed tests\nb\n\n## Supplied checks\n",
+                        "# Rubric\n\n## Changed tests\n\nworker\n\nSupplied checks\n\nprimary\n",
+                        "# Rubric\n\n## Changed tests\n\nworker\n\n## Other\n\n## Supplied checks\n\nprimary\n",
+                        "# Rubric\n\n## Supplied checks\n\nprimary\n\n## Changed tests\n\nworker\n"):
+            source.write_text(content, encoding="utf-8")
+            with self.assertRaises(builder.ContentError):
+                builder.heading_section(self.root, source.name, "Changed tests", "Supplied checks")
+        rubric = (SCRIPTS.parent / "references" / "rubric.md").read_text(encoding="utf-8")
+        brief = (self.build() / "brief.md").read_text(encoding="utf-8")
+        changed = rubric.split("\n## Changed tests\n", 1)[1].split("\n## ", 1)[0].strip()
+        self.assertIn(changed, brief)
+        self.assertNotIn("## Released compatibility", brief)
+        self.assertNotIn("Intent sources never lower", brief)
 
     def test_worker_references_keep_their_load_condition_out_of_the_brief(self):
         refs = SCRIPTS.parent / "references"
