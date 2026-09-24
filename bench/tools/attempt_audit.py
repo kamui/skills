@@ -16,8 +16,10 @@ for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 files. Every shell command and every file-tool path is listed; a path outside the
 clone, the attempt directory and the fresh home, or a command that names a
 network tool (``curl``, ``wget``, ``gh``, ``git fetch``/``pull``/``push``/``clone``,
-``pip``, ``npm install``, ``ssh``), is a violation. Every operand with a ``..`` segment, and every
-relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the clone, is resolved
+``pip``, ``npm install``, ``ssh``), is a violation. Every relative path with a ``..`` segment (a
+whole word, or a run inside one after whitespace, a redirection, ``=``, ``:``, a quote or a
+bracket), and every relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the
+clone, is resolved
 against the command's working directory (the clone or that ``workdir``, following ``cd`` across
 ``;``, ``&&``, ``||`` and ``|``) and judged like an absolute path; a ``workdir`` outside the
 allowed roots is itself a violation. Codex walks up the directory tree
@@ -72,8 +74,9 @@ HOME_DIR = None
 
 
 SPLIT = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
-# A path-like run starting a word or following a redirection, `=`, `:`, a quote or a bracket.
-RUN = re.compile(r"(?:^|(?<=[<>=:'\"(\[,]))([\w.@+-]*(?:/[\w.@+-]*)*)")
+# A path-like run starting a word or following whitespace (inside a quoted word), a redirection,
+# `=`, `:`, a quote or a bracket.
+RUN = re.compile(r"(?:^|(?<=[\s<>=:'\"(\[,]))([\w.@+-]*(?:/[\w.@+-]*)*)")
 
 
 def tokens(segment: str) -> list:
@@ -84,11 +87,12 @@ def tokens(segment: str) -> list:
 
 
 def paths_in(text: str, cwd: str, base: str = None):
-    """Absolute paths, ``~`` paths expanded against the fresh home, every relative path run with a
-    ``..`` segment in any word (the command word, ``key=value`` and redirection operands, and paths
-    inside a quoted script included), and every relative operand while the working directory is
-    not ``base`` (the clone), each resolved against the command's working directory. The walk
-    starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||`` and ``|``."""
+    """Absolute paths, ``~`` paths expanded against the fresh home, every relative word or path
+    run with a ``..`` segment (the command word, ``key=value`` and redirection operands, and paths
+    inside a quoted script or a quoted path with spaces included), and every relative operand
+    while the working directory is not ``base`` (the clone), each resolved against the command's
+    working directory. The walk starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||``
+    and ``|``."""
     found = [os.path.normpath(p) for p in re.findall(r"(?<![\w.~}\)\"'])(/[\w.@+-][\w./@+-]*)", text or "")]
     tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
     relative = []
@@ -100,7 +104,8 @@ def paths_in(text: str, cwd: str, base: str = None):
                 if run and not run.startswith("/") and ".." in run.split("/"):
                     relative.append(os.path.normpath(os.path.join(here, run)))
             operand = word.split("=", 1)[1] if word.startswith("-") and "=" in word else word
-            if index and here != base and operand and not operand.startswith(("/", "~", "-")):
+            if operand and not operand.startswith(("/", "~", "-")) and (
+                    ".." in operand.split("/") or (index and here != base)):
                 relative.append(os.path.normpath(os.path.join(here, operand)))
         if words and words[0] == "cd":
             target = words[1] if len(words) > 1 else "~"
