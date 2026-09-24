@@ -239,7 +239,7 @@ it. A supplied side is checked against the manifest, never replaced. Paths are g
 them; the composer percent-encodes a fix coordinate for the trailer and the
 payload, and ``validate_review.py`` decodes it once when linking. A prior
 item is accounted for in the summary only: its thread reply is drafted and
-targeted under ``references/re-review.md`` and the publication procedure,
+targeted under ``references/prior-state.md`` and the publication procedure,
 never inserted into the batch of new comments, so an id may not be both a
 prior item and a new item of the same type. Prose is copied byte for byte;
 labelled fields must not themselves contain a field label outside code, and
@@ -733,7 +733,7 @@ def check_identities(
             report.add(
                 location,
                 "stable-id",
-                f"prior {prior_type} `{prior['id']}` is replied to on its existing thread under references/re-review.md; "
+                f"prior {prior_type} `{prior['id']}` is replied to on its existing thread under references/prior-state.md; "
                 f"a new {prior_type} with the same id would post a duplicate comment",
             )
 

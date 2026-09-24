@@ -1,4 +1,4 @@
-# Verifier handoff
+# Verification
 
 Read when the complete primary pass has selected required or optional verification tasks. Candidate tasks take `confirmed` or `refuted`; safety-premise tasks take `holds`, `fails`, or `unresolved`. The primary owns admission and rendering.
 
@@ -8,7 +8,7 @@ Record each task's id, trigger or area, premise and evidence when applicable, ba
 
 After the complete diff, file accounting, and primary falsification, combine selected tasks in one initial batch. Choose an awaited host route before dispatch and record its operation. An agent id or acknowledgment is not completion. With no awaited route or no fresh-context isolation, dispatch nothing and report required verification incomplete, naming `review-wait-unavailable` when appropriate. Never hand back while a batch is pending.
 
-Use a fresh worker without the primary conversation, such as `fork_turns=none`. The builder embeds the worker instructions, return encoding, and applicable specialized procedures, so the primary does not read `verifier.md`, `verifier-return.md`, or `verifier-concurrency.md`. A failed batch still spends its allowance; repairs and worker changes grant no replacement batch.
+Use a fresh worker without the primary conversation, such as `fork_turns=none`. The builder embeds the worker instructions, return encoding, and applicable specialized procedures, so the primary does not read `verifier.md` or `verifier-concurrency.md`. A failed batch still spends its allowance; repairs and worker changes grant no replacement batch.
 
 ## Reconcile
 
@@ -30,7 +30,7 @@ A candidate carries the survivor record's fields. Its evidence entries, and the 
 
 Optional `test_evidence` entries are focused checks the claim relies on, at the pinned head with decisive raw output lines, or `{unavailable: "<reason>"}`. Preserve the command's test identity. Empty or omitted test evidence makes no assertion that execution ran.
 
-Project caller check evidence only after accepting it under [`check-evidence.md`](check-evidence.md). These fields must express the exact pinned-head input and readable raw output; otherwise use `{unavailable: "<check and reason>"}`, including historical results and dirty inputs the fields cannot express. Settle coverage, environment, and completeness before projection. Never pass caller conclusions or implementation reasoning.
+Project caller check evidence only after accepting it under the rubric's Supplied checks. These fields must express the exact pinned-head input and readable raw output; otherwise use `{unavailable: "<check and reason>"}`, including historical results and dirty inputs the fields cannot express. Settle coverage, environment, and completeness before projection. Never pass caller conclusions or implementation reasoning.
 
 Candidates and premises may additionally carry:
 

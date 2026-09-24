@@ -2,7 +2,7 @@
 
 ## OpenAI Codex review rubric
 
-`references/review-rubric.md` is derived from the OpenAI Codex review rubric:
+`references/rubric.md` is derived from the OpenAI Codex review rubric:
 
 <https://github.com/openai/codex/blob/81de4f251cfdaf32ecb85e2160ebfc11a562d44b/codex-rs/prompts/templates/review/rubric.md>
 
