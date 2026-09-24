@@ -184,8 +184,10 @@ version 1 (clean) and version 2 (GT-n1) both migrate, with the adjudication ruli
 **Timing.** Four events, in order: `dispatched_at`, `payload_validated_at` (the arm's own validator
 for `review-code`; successful normalization for the built-ins, which therefore runs inside the
 wrapper before completion is declared), `completed_at` (written only on a valid completed
-attempt), and `stopped_at` in the attempt record for every other outcome. The current wrapper
-writes completion on any exit and stamps validation afterwards (review M8); migration fixes both.
+attempt), and `stopped_at` in the attempt record for every other outcome. The first wrapper
+wrote completion on any exit and stamped validation afterwards (review M8); the migrated
+`dispatch.sh` stamps validation during normalization, writes `completed_at` only after it, and
+writes `stop.json` for any other outcome.
 
 **Parsing.** An output that lacks the arm's expected markers is `unresolved`, not an empty review;
 the authoritative final response is selected by session and role, not "last text seen"; fixtures
