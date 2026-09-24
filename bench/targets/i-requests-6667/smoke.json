@@ -37,7 +37,8 @@
   ],
   "notes": [
     "Measured by provision.py smoke on this machine; cache kind python-venv. Each clone restored its own copy of the cache archive after checking its recorded hash.",
-    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 0.18s; tracked tree clean afterwards: true."
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 0.18s; tracked tree clean afterwards: true.",
+    "The earlier recorded figures were transcribed from docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and i-requests-6667/register.md (reproduction)."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:31:05Z",
