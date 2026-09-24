@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "id": "r-base-ui-5460",
+  "repo": "mui/base-ui",
+  "pr": 5460,
+  "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+  "merge_base": "30b8ea2004fa999bed151204208676c6c0a9d261",
+  "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {
+      "sha": "5c12af1accbad774f05ea51894966fa006f0d4d8",
+      "reason": "merge of the pull request on master"
+    },
+    {
+      "sha": "1e208a97f0339b617e70dadbc4abda32b48ea063",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "3ab5747dd108ab9027f09689d7f46b2dfb6f9160",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "eabe0a9d9063e7d1b6e15c59cac497f33aa01b5b",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "18c8802667e88b81ada41ce6da2c3a6149ab457d",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "24a959817a78b931a97e7566b854e2478c9d8b91",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "5b495488d182c81a8a14a440d7a376517118f8ec",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "feadc929d05d117ba45d7230a11734a8cd692701",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "3cb844bb0a772fb6621b4279308ca39a324a5a9c",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "e29ae4c3178716071eccc02688f65fab76836d6d",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "d40b71710cf66ced70bf5fe8bc2c8bc14d48a4e4",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "4bcacb41be4d3e257bdef5216bba41cc7e89768f",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "2999b2cf499d6fe0edb0a9c217039394988251c9",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "38a5239c01c53af10723a29174e2e04d4479474f",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "1ab0996877a0bbf3caa67ff3b25ed7c055d634c1",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "a37e2badbfaad524ef2b447174a58c7910d34e38",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "3422dd07772aee03b6e15c1194c71661153b2771",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    },
+    {
+      "sha": "51bc501f10c21d7bfb5b6d069dc13b5e686f9c37",
+      "reason": "commit of a later pull-request branch; reachable upstream only through refs/pull"
+    }
+  ],
+  "cutoff": "2026-08-13T11:23:20Z",
+  "cutoff_note": "the merge instant (build_packet.py default); nothing omitted",
+  "diff_manifest_sha256": "e3f30cd11e3c9fbd1a3bba2828cf72c03cdae720e6ed68d4b5c7f8a0a45b6e3f",
+  "packet_sha256": "930dc4fa176d00386009597298b20c64c877676dac24e8b5a033d722be0f8f3f",
+  "shape": "frontend component logic, React",
+  "domain": "React component library, form field state and validation",
+  "language": "TypeScript (React)",
+  "merged_at": "2026-08-13T11:23:20Z",
+  "fix_published_at": "2026-08-25T08:47:41Z",
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "pnpm@11.17.0 from the packageManager field, cached under COREPACK_HOME=<cache>/corepack; in every attempt clone, offline: corepack enable --install-directory <cache>/bin, then pnpm install --frozen-lockfile --offline --store-dir <cache>/pnpm-store; the tracked tree must be clean afterwards (the build drops pnpm's projects/ index, whose links point at the build clone)",
+    "allowance": "Focused test execution is permitted on this target, offline: dependencies are already installed in the clone (untracked and ignored; leave them alone). Run the existing jsdom unit tests with the clone's own binary from the clone root, for example `TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx` (a few seconds). A scratch test can run from the work directory without touching the clone: in the work directory, link `<clone>/packages/react/node_modules` as `node_modules`, write a `vitest.config.mts` that exports a plain object with `test: { environment: 'jsdom', include: ['*.test.tsx'] }` and `resolve.alias` entries mapping `@base-ui/react/<name>` to `<clone>/packages/react/src/<name>/index.ts` and `@base-ui/utils/<name>` to `<clone>/packages/utils/src/<name>`, put the test beside it, and run `TZ=UTC <clone>/node_modules/.bin/vitest run --root <work directory>`; `@testing-library/react` resolves through the link. Five minutes per command, a selection at most once per flag set; nothing may be added to or changed in the clone, and no network call of any kind is available (pnpm and npx cannot reach a registry).",
+    "unavailable": "network; the registry (pnpm, npx); browsers, so the chromium test mode and anything settled by looking at rendered output",
+    "dependency_identity": [
+      {
+        "name": "pnpm-lock.yaml",
+        "sha256": "a4037bf936b7452055ff9452893f08e3eb181058582b69e337fc50e94422d066",
+        "location": "head:pnpm-lock.yaml"
+      },
+      {
+        "name": "package.json",
+        "sha256": "d99ca4eb324b97b2c8647ef7dc5f130a0ece39d30d0a60562b1cf10be2f8cd11",
+        "location": "head:package.json"
+      },
+      {
+        "name": "cache archive (pnpm-store)",
+        "sha256": "3c3e3d5e5d22443c1267f1f8f456725eb60c888e0921f1f2565c859f3a24be6c",
+        "location": "~/.t3/bench-cache/archives/r-base-ui-5460.tar.gz"
+      }
+    ],
+    "platform": "measured on the suite machine at 2026-09-24T19:14:18Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "cache": {
+      "kind": "pnpm-store",
+      "build": [
+        "mkdir -p {work}/bin && corepack enable --install-directory {work}/bin",
+        "PATH={work}/bin:$PATH pnpm install --frozen-lockfile --store-dir {cache}/pnpm-store",
+        "rm -rf {cache}/pnpm-store/v11/projects"
+      ],
+      "post_clone": [
+        "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1"
+      ],
+      "env": {
+        "COREPACK_HOME": "{cache}/corepack",
+        "PNPM_HOME": "{cache}/pnpm-home",
+        "COREPACK_ENABLE_STRICT": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+      },
+      "smoke": [
+        {
+          "name": "Field.Control jsdom tests",
+          "command": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+          "revision": "both"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-24 (built-in reviewer benchmark, fresh slot (r))",
+    "used_by": [],
+    "register_published": null,
+    "notes": "Hunted and adjudicated 2026-09-24 by headless sessions that saw no reviewer output; the register and both reports are sealed. The lockfile resolves @base-ui packages only from the workspace, so the dependency cache carries no published copy of the package under review."
+  },
+  "current_register": 1,
+  "sealed": {
+    "key": "~/.config/bench/seal.key on the preparation machine (mode 0600, directory 0700), outside the repository and every attempt directory",
+    "files": [
+      {
+        "file": "register.v1.json.enc",
+        "plaintext_sha256": "1bb5b63fb98bd15bfa37812aff65255254ee03e79fcb3fea2909b2f931e25d27",
+        "sealed_at": "2026-09-24T19:16:44Z"
+      }
+    ]
+  }
+}

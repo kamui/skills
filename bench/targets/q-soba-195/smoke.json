@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "target": "q-soba-195",
+  "source": "measured",
+  "measured_at": "2026-09-24T19:11:05Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+  "provisioning": {
+    "recipe": "restore cache archive sha256:70f114db9d74f7cfe8dbe0d292e437bac7b25ce7cd92681e9423aeb9ed007327",
+    "duration_seconds": 0.84,
+    "tree_clean_after": true
+  },
+  "checks": [
+    {
+      "name": "go test",
+      "command": "go test ./... -count=1",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 6.96,
+      "summary": "ok  \tgithub.com/jonhadfield/soba/internal\t5.191s"
+    },
+    {
+      "name": "go test",
+      "command": "go test ./... -count=1",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 7.24,
+      "summary": "ok  \tgithub.com/jonhadfield/soba/internal\t5.220s"
+    },
+    {
+      "name": "go vet",
+      "command": "go vet ./... && echo clean",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 0.43,
+      "summary": "clean"
+    }
+  ],
+  "notes": [
+    "Measured by provision.py smoke on this machine; cache kind go-modcache. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 0.85s; tracked tree clean afterwards: true."
+  ],
+  "mirror": {
+    "built_at": "2026-09-24T19:10:48Z",
+    "cache_root": "~/.t3/bench-cache",
+    "staging_source": "full upstream bare clone at ~/.t3/bench-cache/staging/soba.git with refs/pull/195/head fetched (2026-09-24)",
+    "negative_shas_absent": true,
+    "newest_reachable_equals_head": true,
+    "diff_identity_verified": true
+  }
+}

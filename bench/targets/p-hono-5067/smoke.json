@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "target": "p-hono-5067",
+  "source": "measured",
+  "measured_at": "2026-09-24T19:09:21Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+  "provisioning": {
+    "recipe": "restore cache archive sha256:b0baf546ea1c051c310592841e07e478aded81f1217fe8c01cc1d37c4e1cdb9c; cp -a {cache}/node_modules {clone}/node_modules",
+    "duration_seconds": 7.03,
+    "tree_clean_after": true
+  },
+  "checks": [
+    {
+      "name": "body, request and validator tests",
+      "command": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/request.test.ts src/validator/validator.test.ts",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 0.7,
+      "summary": "   Duration  319ms (transform 319ms, setup 0ms, import 388ms, tests 101ms, environment 0ms)"
+    },
+    {
+      "name": "body, request and validator tests",
+      "command": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/request.test.ts src/validator/validator.test.ts",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 0.67,
+      "summary": "   Duration  347ms (transform 335ms, setup 0ms, import 429ms, tests 99ms, environment 0ms)"
+    }
+  ],
+  "notes": [
+    "Measured by provision.py smoke on this machine; cache kind node_modules. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 7.19s; tracked tree clean afterwards: true."
+  ],
+  "mirror": {
+    "built_at": "2026-09-24T19:07:43Z",
+    "cache_root": "~/.t3/bench-cache",
+    "staging_source": "full upstream bare clone at ~/.t3/bench-cache/staging/hono.git with refs/pull/5067/head fetched (2026-09-24)",
+    "negative_shas_absent": true,
+    "newest_reachable_equals_head": true,
+    "diff_identity_verified": true
+  }
+}

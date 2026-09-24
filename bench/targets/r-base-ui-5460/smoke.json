@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "target": "r-base-ui-5460",
+  "source": "measured",
+  "measured_at": "2026-09-24T19:14:18Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+  "provisioning": {
+    "recipe": "restore cache archive sha256:3c3e3d5e5d22443c1267f1f8f456725eb60c888e0921f1f2565c859f3a24be6c; mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+    "duration_seconds": 10.86,
+    "tree_clean_after": true
+  },
+  "checks": [
+    {
+      "name": "Field.Control jsdom tests",
+      "command": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 1.53,
+      "summary": "   Duration  1.15s (transform 361ms, setup 141ms, import 410ms, tests 196ms, environment 314ms)"
+    },
+    {
+      "name": "Field.Control jsdom tests",
+      "command": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 1.36,
+      "summary": "   Duration  1.02s (transform 315ms, setup 138ms, import 358ms, tests 159ms, environment 283ms)"
+    }
+  ],
+  "notes": [
+    "Measured by provision.py smoke on this machine; cache kind pnpm-store. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 11.09s; tracked tree clean afterwards: true.",
+    "The allowance's scratch-test route was checked by hand on a clone prepared the same way (2026-09-24T19:16Z): a Testing Library render of Field.Root and Field.Control from a test file in the work directory passed with `vitest run --root <work>`, and the clone's tracked and untracked tree stayed unchanged."
+  ],
+  "mirror": {
+    "built_at": "2026-09-24T19:12:17Z",
+    "cache_root": "~/.t3/bench-cache",
+    "staging_source": "full upstream bare clone at ~/.t3/bench-cache/staging/base-ui.git with refs/pull/5460/head fetched (2026-09-24)",
+    "negative_shas_absent": true,
+    "newest_reachable_equals_head": true,
+    "diff_identity_verified": true
+  }
+}
