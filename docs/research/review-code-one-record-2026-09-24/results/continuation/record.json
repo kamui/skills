@@ -1,0 +1,189 @@
+{
+  "schema": "review-code-record/1",
+  "workflow": "v5b-25",
+  "run": {
+    "target_kind": "range",
+    "target": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "tree": null,
+    "specs": [
+      "ledger-spec/account-freeze"
+    ],
+    "supplied_inputs": "yes",
+    "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "base_ref": "main",
+    "packet_context": "none",
+    "issues": [],
+    "coverage": "complete",
+    "merged": false,
+    "prior_head": null,
+    "repository_url": null
+  },
+  "status": "Approved",
+  "summary": {
+    "body": "**Approved (advisory)** — no findings.\n\n**Intent:** Add account freezing so disputed accounts reject new entries while balances and statements remain readable.\n\n**Issue fit:** Met — freeze and unfreeze handle unknown accounts; frozen accounts refuse postings and transfers in either direction without changing entries; unfreeze restores activity and reads still work. Source: user-supplied spec; commit messages in the range.\n\n**Coverage:** Complete fix delta `03ce7cd..b96a362` and affected code reviewed across 2 files. The supplied clean-head suite passed 18 tests; reviewer-focused freeze tests passed 4. Earlier suite results are historical because this fix changed covered code and tests. The data-integrity refusal premise held in the awaited verifier follow-up.\n\n**Reviewed:** Range `2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...b96a362e99ce4f5b6b1fe26ad02fda66e8343723`: `b96a362` against merge-base `2301c83`.\n\n## Prior findings\n\n- `accounts/frozen-transfer-bypass` — fixed: ledger/accounts.py:87-95 now obtains both accounts and checks both frozen flags before either append; tests/test_freeze.py:23-34 passes for both transfer directions at b96a362.\n- `accounts/post-docstring-frozen` — fixed: ledger/accounts.py:61-64 now names LedgerError for a frozen account in the post docstring, matching its guard at lines 68-69.\n\n<!-- review-run head=b96a362e99ce4f5b6b1fe26ad02fda66e8343723 base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-25 packet_context=none supplied_inputs=yes issues=none coverage=complete -->\n",
+    "trailer": "<!-- review-run head=b96a362e99ce4f5b6b1fe26ad02fda66e8343723 base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-25 packet_context=none supplied_inputs=yes issues=none coverage=complete -->"
+  },
+  "items": [],
+  "prior_items": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "fixed",
+      "action": "must-fix",
+      "note": "ledger/accounts.py:87-95 now obtains both accounts and checks both frozen flags before either append; tests/test_freeze.py:23-34 passes for both transfer directions at b96a362."
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "fixed",
+      "action": "consider",
+      "note": "ledger/accounts.py:61-64 now names LedgerError for a frozen account in the post docstring, matching its guard at lines 68-69."
+    }
+  ],
+  "record": {
+    "repository": "/home/jack/.cache/rc357x/root/continuation/repo",
+    "paths": {
+      "private_dir": "/home/jack/.cache/rc357x/root/continuation/work/review",
+      "store": "/home/jack/.cache/rc357x/root/continuation/work/review/review-context.json",
+      "composition": "/home/jack/.cache/rc357x/root/continuation/work/review/composition.json",
+      "skill_root": "/home/jack/.cache/rc357x/skill"
+    },
+    "requirements": [
+      {
+        "source": "ledger-spec/account-freeze/criterion-1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:52-58 sets or clears frozen through get; get raises LedgerError for unknown numbers at lines 45-50"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-2",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:68-69 rejects frozen posts and lines 87-95 reject either frozen transfer endpoint before either append; focused freeze tests pass"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:68-73 and 87-95 place frozen checks before writes; tests/test_freeze.py:21,33-34 observe unchanged balances after refusal; verifier premise holds"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-4",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:56-58 clears frozen; tests/test_freeze.py:28-29,36-40 exercises transfers and postings after unfreeze"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-5",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:26-28 and ledger/statement.py:14-30 read entries without a frozen guard; tests/test_freeze.py:42-44 exercises balance"
+      },
+      {
+        "source": "commit-864eea8/\"A frozen account refuses new entries until it is unfrozen.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:52-95 implements the freeze guard and restores normal behavior after unfreeze"
+      }
+    ],
+    "files": [
+      {
+        "path": "ledger/accounts.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_freeze.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 -m unittest discover -s tests -v (supplied, inputs/unittest-D3.txt)",
+        "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+        "outcome": "accepted",
+        "reason": "evidence.md reports a clean committed head, Python 3.14.7, no changed generated inputs or dependencies; readable output lists 18 passing tests and no skips"
+      },
+      {
+        "check": "python3 -m unittest discover -s tests -p test_freeze.py -v",
+        "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+        "outcome": "reviewer-executed",
+        "reason": "focused changed-test group at the pinned head, PYTHONDONTWRITEBYTECODE=1; 4 tests passed"
+      },
+      {
+        "check": "python3 -m unittest discover -s tests -v (prior reviewer result)",
+        "head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+        "outcome": "historical",
+        "reason": "17 passing tests at the prior head per accepted prior record; changed ledger/accounts.py and tests/test_freeze.py invalidate reuse at b96a362"
+      },
+      {
+        "check": "python3 -m unittest discover -s tests -v (earlier reviewer result)",
+        "head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+        "outcome": "historical",
+        "reason": "evidence.md reports this earlier result invalidated by later changes to ledger/accounts.py and tests/test_freeze.py; it is not relabeled as final-head evidence"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "accounts/frozen-refusal-atomicity",
+          "type": "safety-premise",
+          "area": "data-integrity",
+          "premise": "For Ledger.post and Ledger.transfer at the pinned head, when an involved account is frozen, the call raises LedgerError before appending any Entry to any involved account.",
+          "evidence": "ledger/accounts.py:65-95; verifier also checked get at lines 45-50",
+          "batch": "follow-up",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "name": "follow-up",
+          "phase": "follow-up",
+          "bundle": "/home/jack/.cache/rc357x/root/continuation/work/review/follow-up-v2",
+          "raw_return": "/home/jack/.cache/rc357x/root/continuation/work/review/follow-up-return/raw-return.json",
+          "accounting": "/home/jack/.cache/rc357x/root/continuation/work/review/follow-up-v2/accounting.json",
+          "operation": "Awaited foreground codex exec -m gpt-6-sol -c model_reasoning_effort=high; 1900-second command timeout"
+        }
+      ],
+      "allowance": {
+        "initial_spent": true,
+        "follow_up_spent": true
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  },
+  "lineage": [
+    "/home/jack/.cache/rc357x/root/continuation/seed/r1/record.json",
+    "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json"
+  ],
+  "prior_record": "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json",
+  "finalization": {
+    "protocol": "review-code-finalization/2",
+    "report": "/home/jack/.cache/rc357x/root/continuation/work/review/report.md",
+    "inputs": {
+      "store": "/home/jack/.cache/rc357x/root/continuation/work/review/review-context.json",
+      "packet": null,
+      "prior_record": "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json"
+    },
+    "replies": [
+      {
+        "id": "accounts/frozen-transfer-bypass",
+        "classification": "fixed",
+        "thread_id": null,
+        "comment_id": null,
+        "body": null
+      },
+      {
+        "id": "accounts/post-docstring-frozen",
+        "classification": "fixed",
+        "thread_id": null,
+        "comment_id": null,
+        "body": null
+      }
+    ]
+  }
+}
