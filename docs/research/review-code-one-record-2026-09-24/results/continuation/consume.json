@@ -51,6 +51,7 @@
   },
   "open_blockers": [],
   "seed_unchanged": true,
+  "implement_publish_gate_met": true,
   "report_bytes": 6561,
   "unmet": []
 }
