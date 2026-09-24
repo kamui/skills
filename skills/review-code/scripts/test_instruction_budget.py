@@ -21,12 +21,12 @@ import build_verifier_prompt as builder
 
 SKILL = Path(__file__).resolve().parent.parent
 ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
-# Rounded ceilings above the #358 layout, including actual helper output: the activated SKILL.md,
-# one record shape, the scripted packet identity and inline-only verifier returns; DESIGN.md dates
-# each change.
+# Rounded ceilings above the #359 layout, including actual helper output: the activated SKILL.md,
+# one record shape, the scripted packet identity, inline-only verifier returns and the scripted
+# pull-request fetch without timing wrappers; DESIGN.md dates each change.
 BUDGET = 30_000
-LIMITS = {"runtime total": 77_000, "always loaded": BUDGET, "review": 52_000,
-          "required verifier": 64_000, "re-review": 61_000,
+LIMITS = {"runtime total": 73_000, "always loaded": BUDGET, "review": 49_000,
+          "required verifier": 61_000, "re-review": 58_000,
           "verifier instructions": 18_000, "verifier example brief": 21_000}
 
 

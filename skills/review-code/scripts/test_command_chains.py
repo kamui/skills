@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/test_command_chains.py
 Inputs: output.md's `render_review.py` command, implement-publish's prior-record
-continuation and lineage check, the pull-request target's root fetch block, the
+continuation and lineage check, the pull-request target's fetch command, the
 publisher's freshness and review-submission block, its dismissal command, the
 app-token acquisition blocks in `audit-code-publish` and `code-review-publish`, a
 disposable Git repository, and a stub `gh` on PATH; no forge access and no live writes.
@@ -22,9 +22,9 @@ acquisition must publish its write under a proved token and write nothing when
 the token is missing or refused; the dismissal, whose single write is its own
 proof, must write nothing when the token is missing. Neither the token nor the
 dismissal message may reach `argv` or the inner shell's expansions.
-The root block must save the page and build no context, and a failed root
-query or an unfetched continuation must stay visible and leave the packet
-incomplete.
+The fetch command must save the response and the packet and build no context;
+a failed root query must stop it, and a failed continuation must stay visible
+as a gap in an incomplete packet.
 """
 from __future__ import annotations
 
@@ -59,6 +59,9 @@ with open(os.environ["GH_LOG"], "a", encoding="utf-8") as log:
 if os.environ.get("GH_TOKEN_LOG"):
     with open(os.environ["GH_TOKEN_LOG"], "a", encoding="utf-8") as tokens:
         tokens.write(json.dumps({"args": args, "token": os.environ.get("GH_TOKEN")}) + "\n")
+if "graphql" in args and any(arg.startswith("after=") for arg in args):  # a continuation query
+    sys.stderr.write("gh: HTTP 502: Bad Gateway\n")
+    sys.exit(1)
 if "graphql" in args and os.environ.get("GH_ROOT_FILE"):  # the root query
     rc = int(os.environ.get("GH_ROOT_RC", "0"))
     if rc:
@@ -279,62 +282,62 @@ class Chains(unittest.TestCase):
         self.assertEqual(forked.returncode, 1, forked.stdout)
         self.assertIn(f"does not descend from `{records['r2']}`", forked.stdout)
 
-    # --- root fetch ---------------------------------------------------------
+    # --- pull-request fetch -------------------------------------------------
 
-    def root_block(self, shell, page, root_rc=0):
+    def fetch(self, shell, page, root_rc=0):
         private = Path(tempfile.mkdtemp(dir=self.root))
-        root = private / "page.json"
+        root = private.parent / f"{private.name}-page.json"
         root.write_text(json.dumps(page), encoding="utf-8")
-        env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(private / "gh.log"),
+        env = dict(os.environ, PATH=f"{self.gh_binary()}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(private.parent / f"{private.name}-gh.log"),
                    GH_ROOT_FILE=str(root), GH_ROOT_RC=str(root_rc))
-        text = (block(TARGET.read_text(encoding="utf-8"), "role=root")
-                .replace("<private-dir>", shlex.quote(str(private)))
-                .replace("<run-events-script>", shlex.quote(str(SCRIPTS / "run_events.py"))).replace("<pr>", "7"))
-        self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
+        found = re.findall(r"^python3 scripts/forge_packet\.py fetch .+$", block(TARGET.read_text(encoding="utf-8"), "forge_packet.py fetch"),
+                           re.MULTILINE)
+        self.assertEqual(len(found), 1, found)
+        text = (found[0].replace(" [--issue <reference> ...]", "")
+                .replace("scripts/forge_packet.py", shlex.quote(str(SCRIPTS / "forge_packet.py")))
+                .replace("<owner>/<repo>", "acme/payments").replace("<pr>", "7")
+                .replace("<private-dir>", shlex.quote(str(private))))
+        self.assertNotRegex(text, r"<[a-z][^>]*>")
         result = self.sh(shell, text, env=env, cwd=self.root)
-        events = []
-        if (private / "run-events.jsonl").exists():
-            events = [json.loads(line) for line in (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
-        packet = subprocess.run([sys.executable, str(SCRIPTS / "forge_packet.py"), "normalize", *map(str, sorted(private.glob("forge-*.json")))],
-                                capture_output=True, text=True, encoding="utf-8")
-        return result, private, events, packet
+        return result, private
 
     @staticmethod
-    def packet(normalized):
-        assert normalized.returncode == 0, normalized.stderr
-        return json.loads(normalized.stdout)
+    def packet(private):
+        return json.loads((private / "packet.json").read_text(encoding="utf-8"))
 
-    def test_root_block_saves_the_page_and_builds_no_context(self):
+    def test_fetch_saves_the_response_and_packet_and_builds_no_context(self):
         page = forge_packet.sample_root()
         for shell in SHELLS:
             with self.subTest(shell=shell):
-                result, private, events, normalized = self.root_block(shell, page)
-                self.assertEqual((result.returncode, result.stdout, result.stderr), (0, "", ""))
-                packet = self.packet(normalized)
+                result, private = self.fetch(shell, page)
+                self.assertEqual((result.returncode, result.stdout, result.stderr),
+                                 (0, f"packet {private}/packet.json: complete, 1 responses\n", ""))
                 self.assertEqual((private / "forge-1.json").read_text(encoding="utf-8"), json.dumps(page))
-                self.assertEqual([(e["event"], e["data"]["role"], e["exit"]) for e in events], [("forge-fetched", "root", 0)])
-                self.assertEqual(sorted(p.name for p in private.glob("review-context-*")), [], "step 2 is the one build point")
-                self.assertTrue(packet["complete"], packet["gaps"])
+                self.assertEqual(sorted(p.name for p in private.iterdir()), ["fetch.json", "forge-1.json", "packet.json"],
+                                 "step 2 is the one build point")
+                self.assertTrue(self.packet(private)["complete"])
 
-    def test_root_block_keeps_failures_and_omitted_pages_visible(self):
+    def test_fetch_keeps_failures_and_gaps_visible(self):
         for shell in SHELLS:
             with self.subTest(case="root query failure", shell=shell):
-                result, private, events, normalized = self.root_block(shell, forge_packet.sample_root(), root_rc=1)
-                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                result, private = self.fetch(shell, forge_packet.sample_root(), root_rc=1)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                 self.assertIn("HTTP 502", result.stderr)
+                self.assertIn("no root page", result.stderr)
                 self.assertTrue((private / "forge-1.json").exists(), "a failed call is saved too")
-                self.assertEqual([(e["event"], e["exit"]) for e in events], [("forge-fetched", 1)])
-                self.assertEqual(normalized.returncode, 2, "no root page stops the step rather than normalizing")
-                self.assertIn("no root page", normalized.stderr)
+                self.assertFalse((private / "packet.json").exists())
         page = forge_packet.sample_root()
         pr = page["data"]["repository"]["pullRequest"]
         pr["reviews"] = forge_packet.connection(pr["reviews"]["nodes"], len(pr["reviews"]["nodes"]) + 1, True)
-        with self.subTest(case="unfetched continuation"):
-            result, _, _, normalized = self.root_block("sh", page)
+        with self.subTest(case="failed continuation"):
+            result, private = self.fetch("sh", page)
             self.assertEqual(result.returncode, 0, result.stderr)
-            packet = self.packet(normalized)
+            self.assertIn(": incomplete, 2 responses\n", result.stdout)
+            self.assertIn("continuation reviews", result.stderr)
+            packet = self.packet(private)
             self.assertFalse(packet["complete"])
-            self.assertTrue(any("reviews" in gap for gap in packet["gaps"]), packet["gaps"])
+            self.assertTrue(any(gap.startswith("reviews: ") for gap in packet["gaps"]), packet["gaps"])
+            self.assertTrue(all(f"gap {gap}" in result.stdout.splitlines() for gap in packet["gaps"]))
 
     # --- publisher freshness and submission ---------------------------------
 
@@ -346,8 +349,7 @@ class Chains(unittest.TestCase):
             (binary / "gh").chmod(0o755)
         return binary
 
-    def submission(self, shell, head_mode="match", post_rc=0, wrapped=True, batch_head=fixtures.HEAD, tok="",
-                   silent_rc=0):
+    def submission(self, shell, head_mode="match", post_rc=0, batch_head=fixtures.HEAD, tok="", silent_rc=0):
         private = Path(tempfile.mkdtemp(dir=self.root))
         (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
                                                         "comments": []}), encoding="utf-8")
@@ -357,10 +359,8 @@ class Chains(unittest.TestCase):
                    GH_HEAD=fixtures.HEAD, GH_HEAD_MODE=head_mode, GH_POST_RC=str(post_rc),
                    GH_TOKEN_LOG=str(private / "token.log"), GH_SILENT_RC=str(silent_rc))
         env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
-        script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
         text = (block(PUBLICATION.read_text(encoding="utf-8"), "preflight failed")
                 .replace("<private-dir>", shlex.quote(str(private)))
-                .replace("<skill-root>/scripts/run_events.py", script)
                 .replace("<pr>", "7").replace("<reviewed head>", fixtures.HEAD))
         if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
             marker = "tok=  #"
@@ -369,10 +369,7 @@ class Chains(unittest.TestCase):
         self.assertNotRegex(text.split("\n", 1)[0], r"<[a-z][^>]*>")
         result = self.sh(shell, text, env=env, cwd=self.root)
         calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
-        events = []
-        if (private / "run-events.jsonl").exists():
-            events = [json.loads(line) for line in (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
-        return result, calls, events, private
+        return result, calls, private
 
     @staticmethod
     def posts(calls):
@@ -388,7 +385,7 @@ class Chains(unittest.TestCase):
         # command name under zsh, which is the failure this block runs through `sh -c` to avoid.
         for shell in SHELLS:
             with self.subTest(shell=shell):
-                result, calls, events, private = self.submission(shell, tok="printf %s app-token-xyz")
+                result, calls, private = self.submission(shell, tok="printf %s app-token-xyz")
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertIn("preflight passed", result.stdout)
                 self.assertEqual(len(self.posts(calls)), 1, calls)
@@ -409,7 +406,7 @@ class Chains(unittest.TestCase):
         for shell in SHELLS:
             for tok, silent_rc, reason in cases:
                 with self.subTest(shell=shell, tok=reason):
-                    result, calls, events, private = self.submission(shell, tok=tok, silent_rc=silent_rc)
+                    result, calls, private = self.submission(shell, tok=tok, silent_rc=silent_rc)
                     self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
                     self.assertIn("preflight failed: the review-token command", result.stdout)
                     self.assertIn("nothing was written", result.stdout)
@@ -475,10 +472,7 @@ class Chains(unittest.TestCase):
         text = (block(PUBLICATION.read_text(encoding="utf-8"), "dismissals")
                 .replace("<review-token command>", tok)
                 .replace("<pr>", "7").replace("<review id>", "2").replace("<why>", why))
-        wrapped = "%s %s wrap --private-dir %s --event forge-written --data role=review -- %s" % (
-            shlex.quote(sys.executable), shlex.quote(str(SCRIPTS / "run_events.py")),
-            shlex.quote(str(private)), text.strip())
-        result = self.sh(shell, wrapped, env=env, cwd=self.root)
+        result = self.sh(shell, text.strip(), env=env, cwd=self.root)
         calls = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
         return result, calls, private
 
@@ -497,7 +491,7 @@ class Chains(unittest.TestCase):
                     self.assertIn(expected, result.stdout)
                     self.assertIn("nothing was dismissed", result.stdout)
 
-    def test_the_dismissal_runs_wrapped_and_keeps_its_message_literal(self):
+    def test_the_dismissal_keeps_its_message_literal(self):
         why = 'superseded by the `id -un` review at $HOME, a \\ and a "quote" \u2014 done'
         for shell in SHELLS:
             with self.subTest(shell=shell):
@@ -508,11 +502,6 @@ class Chains(unittest.TestCase):
                 self.assertNotIn("dismissal-token", json.dumps(calls), "a token never reaches argv")
                 seen = [json.loads(line) for line in (private / "token.log").read_text(encoding="utf-8").splitlines()]
                 self.assertEqual([r["token"] for r in seen], ["dismissal-token"])
-                events = [json.loads(line) for line in
-                          (private / "run-events.jsonl").read_text(encoding="utf-8").splitlines()]
-                self.assertEqual([(e["event"], e["data"]["role"], e["data"]["argv0"], e["exit"]) for e in events],
-                                 [("forge-written", "review", "sh", 0)])
-                self.assertNotIn("dismissal-token", json.dumps(events))
 
     def test_preflight_failures_never_post(self):
         cases = [("fail", fixtures.HEAD, "head fetch exited 1"),
@@ -523,70 +512,58 @@ class Chains(unittest.TestCase):
                  ("mismatch", fixtures.HEAD, "is not the reviewed head " + fixtures.HEAD),
                  ("match", "d" * 40, "batch.json commit_id is not the reviewed head")]
         for shell in SHELLS:
-            for wrapped in (True, False):
-                for mode, batch_head, reason in cases:
-                    with self.subTest(shell=shell, wrapped=wrapped, mode=mode, batch=batch_head[:1]):
-                        result, calls, events, private = self.submission(shell, mode, wrapped=wrapped,
-                                                                         batch_head=batch_head)
-                        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
-                        self.assertTrue(result.stdout.startswith("preflight failed: "), result.stdout)
-                        self.assertIn(reason, result.stdout)
-                        self.assertIn("nothing was written", result.stdout)
-                        self.assertNotIn("write attempted", result.stdout)
-                        self.assertEqual(self.posts(calls), [])
-                        self.assertEqual(len(calls), 1)
-                        self.assertFalse((private / "head.txt").exists())
-                        self.assertFalse((private / "review-response.json").exists())
-                        if mode == "fail":
-                            self.assertIn("HTTP 404", result.stdout)
-                        self.assertEqual([e["event"] for e in events], ["forge-fetched"] if wrapped else [])
+            for mode, batch_head, reason in cases:
+                with self.subTest(shell=shell, mode=mode, batch=batch_head[:1]):
+                    result, calls, private = self.submission(shell, mode, batch_head=batch_head)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertTrue(result.stdout.startswith("preflight failed: "), result.stdout)
+                    self.assertIn(reason, result.stdout)
+                    self.assertIn("nothing was written", result.stdout)
+                    self.assertNotIn("write attempted", result.stdout)
+                    self.assertEqual(self.posts(calls), [])
+                    self.assertEqual(len(calls), 1)
+                    self.assertFalse((private / "head.txt").exists())
+                    self.assertFalse((private / "review-response.json").exists())
+                    if mode == "fail":
+                        self.assertIn("HTTP 404", result.stdout)
 
     def test_matching_head_posts_once(self):
         for shell in SHELLS:
-            for wrapped in (True, False):
-                with self.subTest(shell=shell, wrapped=wrapped):
-                    result, calls, events, private = self.submission(shell, wrapped=wrapped)
-                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertIn(f"preflight passed: live head {fixtures.HEAD}", result.stdout)
-                    self.assertIn('"id": 991', result.stdout)
-                    self.assertEqual(calls[0], ["api", "repos/{owner}/{repo}/pulls/7", "--jq", ".head.sha"])
-                    self.assertEqual(self.posts(calls), [["api", "--method", "POST", "repos/{owner}/{repo}/pulls/7/reviews",
-                                                          "--input", str(private / "batch.json")]])
-                    self.assertEqual((private / "head.txt").read_text(encoding="utf-8").strip(), fixtures.HEAD)
-                    self.assertEqual(json.loads((private / "batch.json").read_text(encoding="utf-8"))["commit_id"],
-                                     fixtures.HEAD)
-                    if wrapped:
-                        self.assertEqual([(e["event"], e["data"]["role"], e["exit"]) for e in events],
-                                         [("forge-fetched", "root", 0), ("forge-written", "review", 0)])
-                        self.assertEqual(events[0]["data"]["connection"], "root")
-                    else:
-                        self.assertEqual(events, [])
+            with self.subTest(shell=shell):
+                result, calls, private = self.submission(shell)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn(f"preflight passed: live head {fixtures.HEAD}", result.stdout)
+                self.assertIn('"id": 991', result.stdout)
+                self.assertEqual(calls[0], ["api", "repos/{owner}/{repo}/pulls/7", "--jq", ".head.sha"])
+                self.assertEqual(self.posts(calls), [["api", "--method", "POST", "repos/{owner}/{repo}/pulls/7/reviews",
+                                                      "--input", str(private / "batch.json")]])
+                self.assertEqual((private / "head.txt").read_text(encoding="utf-8").strip(), fixtures.HEAD)
+                self.assertEqual(json.loads((private / "batch.json").read_text(encoding="utf-8"))["commit_id"],
+                                 fixtures.HEAD)
 
     def test_post_failures_keep_their_status_and_stage(self):
         for shell in SHELLS:
             for post_rc in (1, 3, 4):
                 with self.subTest(shell=shell, post_rc=post_rc):
-                    result, calls, events, private = self.submission(shell, post_rc=post_rc)
+                    result, calls, private = self.submission(shell, post_rc=post_rc)
                     self.assertEqual(result.returncode, post_rc, result.stdout + result.stderr)
                     self.assertIn("preflight passed", result.stdout)
                     self.assertNotIn("preflight failed", result.stdout)
                     self.assertIn(f"write attempted: review POST exited {post_rc}", result.stdout)
                     self.assertIn("outcome unknown", result.stdout)
                     self.assertEqual(len(self.posts(calls)), 1, "an ambiguous write must not retry inside the block")
-                    self.assertEqual([(e["event"], e["exit"]) for e in events],
-                                     [("forge-fetched", 0), ("forge-written", post_rc)])
 
     def test_ambiguous_post_reconciliation_rereads_before_one_retry(self):
         # The block stops after an ambiguous POST; reconciliation reads before a single retry, and the retry
         # goes through the same block, so its fresh preflight runs before the second and final POST.
-        result, calls, _, private = self.submission("sh", post_rc=1)
+        result, calls, private = self.submission("sh", post_rc=1)
         self.assertEqual((result.returncode, len(self.posts(calls))), (1, 1))
         self.assertIn("re-read the pull request's reviews before one retry", result.stdout)
         self.assertTrue((private / "review-response.stderr").read_text(encoding="utf-8"))
-        retry, calls, _, _ = self.submission("sh", post_rc=0)
+        retry, calls, _ = self.submission("sh", post_rc=0)
         self.assertEqual(retry.returncode, 0, retry.stdout)
         self.assertEqual([("POST" in call) for call in calls], [False, True])
-        stale, calls, _, _ = self.submission("sh", head_mode="mismatch")
+        stale, calls, _ = self.submission("sh", head_mode="mismatch")
         self.assertEqual((stale.returncode, self.posts(calls)), (3, []))
 
 
