@@ -40,8 +40,10 @@ holding `claude → ~/.local/share/claude/versions/2.1.282` and `codex → ~/.lo
 directory first on `PATH`; `file_attempt.py` marks an attempt whose CLI version differs from the
 pin harness-invalid, and a pin that has to change mid-grid is a deviation. Claude Code's
 auto-update is off in the maintainer's settings (`autoUpdates: false`, copied into every fresh
-home). Node itself is not pinned: the Codex npm package runs its own native binary, and the
-targets' allowances name the node they were smoke-checked with.
+home). Node itself is not pinned: the Codex npm package runs its own native binary, and the node
+each target was smoke-checked with is recorded in its `provisioning.platform` and in its
+`smoke.json` `platform`, not in its allowance — i–n were measured on `v24.19.0` and o–r, after the
+machine's upgrade, on `v24.21.0`.
 
 ## Pre-dispatch probes (2026-09-24, ledger S22–S24)
 
@@ -87,10 +89,17 @@ q, p, r, i, l, k, n, o, m, j.
 | In flight | 2 |
 | Per-attempt bound | the arm file's `budget_usd_per_attempt` (A $5, B $2.50, C $5, D $3), reserved while an attempt is in flight; `dispatch.sh` also passes `--max-budget-usd 15` to Claude |
 
-`run_cell.py` refuses a dispatch whose bound does not fit in cap − spent − reserve. Replicate 1
-runs first across all forty cells; replicate-2 blocks then run in the sealed target order until
-the next block's conservative bound no longer fits, and the unrun blocks are reported as
-unattempted (README §6).
+`run_cell.py` refuses a dispatch whose bound does not fit in cap − spent − reserve, one attempt at
+a time; the word "block" appears nowhere in `bench/tools`. Replicate 1 runs first across all forty
+cells; replicate-2 blocks then run in the sealed target order until the next block's conservative
+bound no longer fits, and the unrun blocks are reported as unattempted (README §6).
+
+**The block gate of README §6 is the operator's, not `--next`'s.** Before starting each
+replicate-2 block, compare `--status`'s `room_usd` against that block's conservative bound — $15.50
+for the four arms — and stop the run there if it does not fit. Left to `--next` alone, a room
+figure between one arm's bound and $15.50 would let the block's cheaper arms dispatch and refuse
+the rest, and a half-run block cannot be repaired inside the cap. Twenty blocks need $310 against
+the $196.69 this manifest freezes, so the boundary will be reached.
 
 ## Dispatching
 
@@ -100,6 +109,14 @@ python3 bench/tools/run_cell.py --run bench/runs/2026-09-24-builtin-baseline --s
 python3 bench/tools/run_cell.py --run bench/runs/2026-09-24-builtin-baseline --next \
     --quota "<the plan quota as the last Codex rollout reported it>"
 ```
+
+Before each dispatch `run_cell.py` re-validates the manifest, re-hashes the four arm files, and
+compares the target's `packet.md` and diff identity against the cohort entry. The cohort's
+`provisioning_sha256` is not one of those gates: it is a comparison-contract dimension `compare.py`
+checks between runs, while `render_policy` writes the target's live `provisioning.allowance`
+straight into the reviewer's `input.md`. So an edit to a target's `provisioning` block after the
+freeze reaches the reviewer unrefused — treat that block as frozen with the manifest, and record
+any change to it as a deviation.
 
 Every filed attempt gets a ledger row. The first four cells are the pilot; they double as the
 demonstration that focused-test execution works under D and B on suite targets whose review needs
