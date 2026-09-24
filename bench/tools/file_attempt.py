@@ -32,6 +32,14 @@ model or effort other than the arm's, a prompt hash outside the arm's expected v
 executed range other than the pinned one; otherwise ``valid completed``. An ``unresolved`` parse
 is kept as the parse status of a valid attempt and never turned into an empty review.
 
+Timing follows design §7's four events. ``dispatched_at`` and ``payload_validated_at`` come from
+``timing.json``. ``completed_at`` is set only on a ``valid completed`` attempt, from the wrapper's
+recorded end instant (``timing.json``'s ``completed_at``, which the wrapper writes on any exit).
+Every other disposition leaves ``completed_at`` null and sets ``stopped_at``: the ``stop.json``
+instant when there is one, otherwise that same wrapper end instant, so a harness-invalid attempt
+that ran to its end stops when the wrapper recorded its end. The copied ``timing.json`` keeps the
+wrapper's raw fields; the record's ``timing`` is the filed reading.
+
 Usage is priced from ``bench/rates.json`` by the observed model, with ``transcript_usage.py``
 (Claude; the built-in's root transcript bills nothing, so only subagent transcripts are metered)
 or ``codex_usage.py`` (Codex). Per-request records go to ``usage-requests.jsonl``: one line per
@@ -462,10 +470,13 @@ def file_attempt(args) -> tuple:
         notes.append("no range-bearing diff command observed; the executed range could not be checked")
 
     dispatched = timing_src.get("root_dispatched_at") or timing_src.get("dispatched_at")
-    validated, completed = timing_src.get("payload_validated_at"), timing_src.get("completed_at")
-    if validated and completed and validated > completed:
-        notes.append("timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after completed_at")
-    completed_value = completed if disposition == "valid completed" or disposition.startswith("harness-invalid") else None
+    validated, ended = timing_src.get("payload_validated_at"), timing_src.get("completed_at")
+    if validated and ended and validated > ended:
+        notes.append("timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after the wrapper's recorded end")
+    if disposition == "valid completed":
+        completed_value, stopped_value = ended, None
+    else:
+        completed_value, stopped_value = None, (stop or {}).get("stopped_at") or ended
 
     # Output directory.
     out = os.path.abspath(args.out)
@@ -521,7 +532,7 @@ def file_attempt(args) -> tuple:
                   "billing": "list-price-equivalent" if rate and rate["billing"].startswith("list-price") else "api-dollars",
                   "quota_consumed": None, "metering_status": status},
         "timing": {"dispatched_at": dispatched, "payload_validated_at": validated, "completed_at": completed_value,
-                   "stopped_at": (stop or {}).get("stopped_at")},
+                   "stopped_at": stopped_value},
         "native_payload": {"path": native_name, "sha256": sha256_file(native_path)},
         "normalized": {"path": "normalized.json", "parse_status": normalized.get("parse_status", "unresolved"),
                        "reason": None if normalized.get("parse_status") == "parsed" else "; ".join(normalized.get("parse_notes", [])) or None},
@@ -595,6 +606,7 @@ def self_test() -> int:
         assert done.returncode == 0, done
         rec = json.loads((temp / "o1" / "attempt.json").read_text(encoding="utf-8"))
         assert rec["disposition"] == "valid completed", rec["disposition"]
+        assert rec["timing"]["completed_at"] == "2026-01-01T00:00:05Z" and rec["timing"]["stopped_at"] is None, rec["timing"]
         assert rec["observed"]["prompt_hash"] == digest and rec["observed"]["prompt_registry_match"] == "claude-code 9.9.9 / test variant"
         assert rec["observed"]["prompt_header"] == "`variant header`" and rec["observed"]["models"] == ["m-1"]
         assert rec["observed"]["effort"] == "high" and rec["observed"]["subagent_count"] == 1
@@ -613,14 +625,17 @@ def self_test() -> int:
         (att / "audit.json").write_text(json.dumps({"violations": [], "diff_commands": ["git diff HEAD~0...HEAD"]}), encoding="utf-8")
         done = run("o2")
         assert done.returncode == 0, done
-        disp = json.loads((temp / "o2" / "attempt.json").read_text(encoding="utf-8"))["disposition"]
+        rec = json.loads((temp / "o2" / "attempt.json").read_text(encoding="utf-8"))
+        disp = rec["disposition"]
         for needle in ("harness-invalid:", "tree identity changed", "effort high, arm requires low", "expected variants", "executed diff: range"):
             assert needle in disp, (needle, disp)
+        assert rec["timing"]["completed_at"] is None and rec["timing"]["stopped_at"] == "2026-01-01T00:00:05Z", rec["timing"]
         # A stop record wins over everything else.
         (att / "stop.json").write_text(json.dumps({"stopped_at": "2026-01-01T00:01:00Z", "reason": "timeout"}), encoding="utf-8")
         done = run("o3")
         rec = json.loads((temp / "o3" / "attempt.json").read_text(encoding="utf-8"))
-        assert rec["disposition"] == "stopped: timeout" and rec["timing"]["completed_at"] is None and rec["timing"]["stopped_at"], rec
+        assert rec["disposition"] == "stopped: timeout" and rec["timing"]["completed_at"] is None, rec
+        assert rec["timing"]["stopped_at"] == "2026-01-01T00:01:00Z", rec["timing"]
         # Missing input is exit 2.
         (att / "dispatch.txt").unlink()
         done = run("o4")

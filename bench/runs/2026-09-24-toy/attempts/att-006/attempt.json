@@ -70,11 +70,11 @@
   },
   "transcript_archive": {
     "path": "~/.t3/bench-cache/transcripts/2026-09-24-toy/att-006.tar.gz",
-    "sha256": "41e6bd58bd6611c26571315463d18c22b0de93ae5caf8f7dea5e9bdb200df051",
+    "sha256": "6ba489d333c865bed3b037c0f54e35fe91d06091fdbfd8412a0217e77c658246",
     "restoration_check": "passed"
   },
   "notes": [
     "Predates the wrapper's TMPDIR inside the attempt directory, so the skill kept its private store under /tmp/review-code-* and wrote that path to /tmp/rc_dir, which it read back in later commands; both are the reviewer's own scratch created in this session and are allowed explicitly in the audit. The reviewer ran git checkout --detach and switched back; the tree identity at exit matches.",
-    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after completed_at"
+    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after the wrapper's recorded end"
   ]
 }

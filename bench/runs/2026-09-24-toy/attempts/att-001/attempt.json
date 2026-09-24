@@ -69,11 +69,11 @@
   },
   "transcript_archive": {
     "path": "~/.t3/bench-cache/transcripts/2026-09-24-toy/att-001.tar.gz",
-    "sha256": "b0e159dc6be8798a7f30d44db69de5d1d165b348316cbec740f8e2c0d6d5af36",
+    "sha256": "4f47594246ddbf975d572f0bc91bc6428a73611d509faa0833b11a8b43cc6f2b",
     "restoration_check": "passed"
   },
   "notes": [
     "Dispatched with the effort argument only (no session --effort flag) and a prompt naming base...review-head; the transcript shows effort high on every line (Sonnet's default) and the built-in diffed main...HEAD, where main and base were the same commit.",
-    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after completed_at"
+    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after the wrapper's recorded end"
   ]
 }
