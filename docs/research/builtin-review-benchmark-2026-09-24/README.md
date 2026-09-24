@@ -144,16 +144,39 @@ shape as observations.
 | (l) | [`l-bokeh-9232`](../../../bench/targets/l-bokeh-9232/) | ordinary behavioural change | buggy (GT-l1) |
 | (m) | [`m-grpc-go-7390`](../../../bench/targets/m-grpc-go-7390/) | clean, high risk (concurrency) | clean |
 | (n) | [`n-ripgrep-2957`](../../../bench/targets/n-ripgrep-2957/) | promised change that does not work as pasted | buggy (GT-n1, register v2) |
-| (o) | to hunt | security: authorization or injection, web backend | buggy, fresh |
-| (p) | to hunt | released-compatibility break, public API or SDK | buggy, fresh |
-| (q) | to hunt | refactor claiming no behaviour change, large mechanical diff | **clean**, fresh |
-| (r) | to hunt | frontend component logic, React or comparable; settleable statically or by a focused test, never visually | buggy, fresh |
+| (o) | [`o-astro-16079`](../../../bench/targets/o-astro-16079/) | security: authorization or injection, web backend | buggy, fresh, register sealed |
+| (p) | [`p-hono-5067`](../../../bench/targets/p-hono-5067/) | released-compatibility break, public API or SDK | buggy, fresh, register sealed |
+| (q) | [`q-soba-195`](../../../bench/targets/q-soba-195/) | refactor claiming no behaviour change, large mechanical diff | **clean**, fresh, register sealed |
+| (r) | [`r-base-ui-5460`](../../../bench/targets/r-base-ui-5460/) | frontend component logic, React or comparable; settleable statically or by a focused test, never visually | buggy, fresh, register sealed |
 
 Eight buggy, two clean. False findings are counted on every target, not only clean ones, so the
 two clean targets and the refactor trap are not the only precision evidence. Fresh-target rules:
 merged public pull requests with post-merge evidence (follow-up fix, revert, or issue); a register
 sealed by an adjudicator who has seen no reviewer output; a truncated mirror and a merge-time packet
 cutoff.
+
+**How the fresh targets were chosen (2026-09-24).** One vetting hunt per slot, then one independent
+adjudicator per chosen candidate, each a headless Opus 5.5 session at `high` (ledger S14–S21,
+$26.29). Each hunt checked every candidate against the #148 criteria E1–E10 (unused by any earlier
+grid, merged recently with an upstream confirmation or, for (q), an eight-week cleanliness window,
+small, packet-buildable at the merge instant, a GitHub-native review trail, offline focused
+execution on this machine, statically visible, not the promised behaviour, public and permissive)
+and preferred merges on or after 2026-07-01. The adjudicator got the hunt's proposal as an
+unproven hypothesis and the full history, and wrote the register; it confirmed each slot's
+expected status, corrected facts in two hunts, and, for one target, recorded more than the hunt
+proposed. The registers, hunt reports and rulings are sealed ([`sealed/`](sealed/README.md)).
+Three slots were filled from the preferred window; (o) was not: of 31 security candidates examined,
+none merged on or after 2026-07-01 passed, so it is a March 2026 merge from the fallback window,
+disclosed in its `target.json`. Each target's truncated mirror, dependency cache and smoke checks at
+both revisions are built and recorded like the regression set's.
+
+Two procedural notes. The hunts and adjudications ran on Opus 5.5 rather than #137's Sonnet 5,
+at the maintainer's request, which roughly doubles their price. And while the hunts ran, the
+preparation checkout was switched to another branch from 18:44Z to 18:58Z, so the hunt prompt's
+list of used pull requests was missing from disk for those 14 minutes. The transcripts show the
+(o), (p) and (r) hunts had read it at 18:40Z, before the switch; the (q) hunt's read failed inside
+the window, and it checked E1 against the list as committed instead. No later step switched the
+checkout while a session was reading it.
 
 **Training-data exposure.** Every target is public and may be in any model's training data, and
 the six reused targets have additionally shaped this repository's skill development; each
@@ -282,19 +305,18 @@ Observations carried into §2–§4:
    `$0.20`); record the ChatGPT plan's quota.
 2. Demonstrate focused-test execution under D's final adapter and under B on a suite target whose
    review needs a test run.
-3. Hunt, adjudicate and seal (o)–(r); encrypt their registers; the adjudicator sees no reviewer
-   output.
-4. Write the run manifest: arms resolved, the pre-dispatch probe's CLI versions and prompt hashes,
+3. Write the run manifest: arms resolved, the pre-dispatch probe's CLI versions and prompt hashes,
    the cohort with register versions and packet and diff hashes, the sealed order, the caps above,
    the rates, and the execution policy.
-5. Open the ledger's attempt table before any further chargeable step.
+4. Open the ledger's attempt table before any further chargeable step.
 
 Done since the first draft: targets (i)–(n) migrated with factual packets, rebuilt mirrors and
 verified diff identities; dependency caches archived with hashes and smoke checks measured on the
 suite machine; the shakedown filed as a run with attempt records and computed results; CLI test
 siblings for `attempt_audit.py` and `normalize_review.py`; `run_cell.py` (the caps and the
 method's dispatch record checked before every dispatch, then `dispatch.sh` and `file_attempt.py`),
-`score.py` and `compare.py`.
+`score.py` and `compare.py`; targets (o)–(r) hunted, adjudicated by a session that saw no reviewer
+output, provisioned and smoke-checked, with their registers, hunt reports and rulings sealed (§5).
 
 ## 11. Independent review of the first draft (2026-09-24)
 

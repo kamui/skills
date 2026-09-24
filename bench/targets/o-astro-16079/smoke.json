@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "target": "o-astro-16079",
+  "source": "measured",
+  "measured_at": "2026-09-24T21:05:22Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+  "provisioning": {
+    "recipe": "restore cache archive sha256:cf6aa8f80bafef19d60d08715579e115c699ae75f46c73ce6daa67aca76a92d9; mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store --filter '@astrojs/vercel...' --filter astro-scripts --filter '{packages/integrations/vercel/test/fixtures/**}' >/dev/null 2>&1; PATH={cache}/bin:$PATH pnpm -r --filter '@astrojs/vercel...' build >/dev/null 2>&1",
+    "duration_seconds": 17.28,
+    "tree_clean_after": true
+  },
+  "checks": [
+    {
+      "name": "adapter path-override and ISR tests",
+      "command": "cd packages/integrations/vercel && node --test test/path-override-security.test.js test/isr.test.js",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 4.02,
+      "summary": "ℹ duration_ms 3984.297985"
+    },
+    {
+      "name": "adapter path-override and ISR tests",
+      "command": "cd packages/integrations/vercel && node --test test/path-override-security.test.js test/isr.test.js",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 3.82,
+      "summary": "ℹ duration_ms 3783.255816"
+    }
+  ],
+  "notes": [
+    "Measured by provision.py smoke on this machine; cache kind pnpm-store. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 18.28s; tracked tree clean afterwards: true."
+  ],
+  "mirror": {
+    "built_at": "2026-09-24T19:58:58Z",
+    "cache_root": "~/.t3/bench-cache",
+    "staging_source": "full upstream bare clone at ~/.t3/bench-cache/staging/astro.git with refs/pull/16079/head fetched (2026-09-24)",
+    "negative_shas_absent": true,
+    "newest_reachable_equals_head": true,
+    "diff_identity_verified": true
+  }
+}

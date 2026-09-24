@@ -13,9 +13,9 @@ Python tools so historical commands keep working. The six targets of the #137 qu
 are converted under `targets/` (step 3); their truncated mirrors are rebuilt and verified, their
 dependency caches are built and archived with hashes, and every `smoke.json` is measured on this
 machine (step 4). The four arms are data under `arms/`, and the shakedown is filed as the run
-`runs/2026-09-24-toy/` with attempt records, a mapping and computed results (step 5). For step 6,
-`run_cell.py`, `score.py` and `compare.py` exist; the four fresh targets and the first frozen run
-are still to come.
+`runs/2026-09-24-toy/` with attempt records, a mapping and computed results (step 5). Of step 6,
+`run_cell.py`, `score.py` and `compare.py` exist, and the four fresh targets are hunted,
+adjudicated, provisioned and sealed under `targets/`; the first frozen run is still to come.
 
 ## Layout
 
@@ -25,9 +25,9 @@ are still to come.
 | `rubric/scoring.v<N>.md` | the scoring definitions a mapping is made under |
 | `rates.json` | dated price evidence per model |
 | `harness/*.json` | observed built-in prompt variants and presets per CLI version, by hash |
-| `targets/<id>/` | `target.json`, frozen `packet.md`, `register.v<N>.json`, `smoke.json`; a migrated target also keeps `packet.legacy.md` |
+| `targets/<id>/` | `target.json`, frozen `packet.md`, `register.v<N>.json` (`register.v<N>.json.enc` while sealed), `smoke.json`; a migrated target also keeps `packet.legacy.md` |
 | `arms/<id>.json` | reviewer configurations as data |
-| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`, `file_attempt.py`, `run_cell.py`, `score.py`, `compare.py` |
+| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`, `file_attempt.py`, `seal.py`, `run_cell.py`, `score.py`, `compare.py` |
 | `runs/<date>-<label>/` | frozen manifest, attempt records, mappings, results; a fixture run also holds its fixture target |
 
 Mirrors, dependency caches and transcripts live outside the repository under `~/.t3/bench-cache/`
@@ -59,8 +59,8 @@ Six targets are migrated from the [#137 qualification grid](../docs/research/one
   the three targets with no originating issue, the two instructions to record `issues=none`) and
   the whole run-conditions section, and keeps every other byte; it refuses an input whose markers
   are missing or repeated, or that carries that report vocabulary anywhere else before section 8.
-  Fresh targets will get a factual packet from `build_packet.py` directly once it grows that mode,
-  which must omit the same elements.
+  A fresh target's packet comes from `build_packet.py --factual`, which passes the rendering through
+  the same derivation, so it omits the same elements.
 - `register.v1.json`: the sealed truth converted from the prose register, with the pre-cutoff
   hints and the adjudicator's limits disclosed; `n-ripgrep-2957` also has `register.v2.json`, the
   blinded post-grid revision that added GT-n1. Defect ids never renumber.
@@ -70,6 +70,21 @@ Six targets are migrated from the [#137 qualification grid](../docs/research/one
   at the head and, for checks marked `base` or `both`, at the merge-base in a second clone
   provisioned the same way, plus the mirror rebuild outcome. The #137 machine's figures stay in
   that bundle's README and registers.
+
+Four fresh targets fill the slots the regression set lacks: `o-astro-16079` (security, web
+backend), `p-hono-5067` (released-compatibility break), `q-soba-195` (clean refactor with a large
+mechanical diff) and `r-base-ui-5460` (React component logic). Each was chosen by a vetting hunt
+and ruled on by an independent adjudicator that saw no reviewer output
+([narrative](../docs/research/builtin-review-benchmark-2026-09-24/README.md#5-targets)). Their
+directories hold the same files, except that the register is sealed:
+
+- `register.v1.json.enc` is the adjudicator's register encrypted by `seal.py`, and `target.json`'s
+  `sealed` block records the plaintext's SHA-256, so the register opened at scoring is provably the
+  one sealed before any reviewer ran. The key stays at `~/.config/bench/seal.key`, outside the
+  repository and every attempt directory. `score.py` reads an opened plaintext only when its hash
+  matches.
+- The `negative_shas` reasons say only where each commit sits ("later commit on main"), because a
+  reason naming a fix would describe the defect.
 
 **Diff identity.** `diff_identity.py <repo> <base> <head>` renders `git diff-tree -r --no-renames`
 as `<status>\t<path>\t<base-blob>\t<head-blob>` lines sorted by path and hashes them with SHA-256.

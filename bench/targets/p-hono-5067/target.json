@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "id": "p-hono-5067",
+  "repo": "honojs/hono",
+  "pr": 5067,
+  "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+  "merge_base": "9728702911073aec5a63a3ba2840b7240e5d3205",
+  "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+  "base_ref_name": "main",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {
+      "sha": "b20d4225c9aa9e615717ca74e437852cc9fd5b94",
+      "reason": "squash merge of the pull request on main"
+    },
+    {
+      "sha": "82b321b5b0e7a57cdaab45f2f90671ec0737795b",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "80959d47d56ac18c2985336ad311917dc56497c5",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "d7964503c956ae4af78597b7b11a05f9e5e73d2d",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "64c613ab0f15526b0c0edb25ad0c2989eace2ea1",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "fc8bd834dd2e01fc2d26d4459680984150e3b5f6",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "612b59c0227b421090d46721cd5a98243ad8c6ec",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "c409d855d91d1f0904d19439692216fcf789e6cb",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "531e9c5a3ae058d10de33f643055bd4009a87178",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "edd138ee3049749190de3dcd7e32d7bcbf224e41",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "626b185d0e80fa1c2a3cc1a8945afd0df6aaf3ec",
+      "reason": "later release commit on main"
+    },
+    {
+      "sha": "cda1af200256fa9a014bbcc2fdf79db201a627b6",
+      "reason": "later release commit on main"
+    },
+    {
+      "sha": "b2ae3a2204a48ce15a26448fd746d39745eb1837",
+      "reason": "later release commit on main"
+    },
+    {
+      "sha": "cadff88bba34153646c9b35f24d7cc0cb61be913",
+      "reason": "later release commit on main"
+    }
+  ],
+  "cutoff": "2026-07-01T09:42:27Z",
+  "cutoff_note": "the merge instant (build_packet.py default); nothing omitted",
+  "diff_manifest_sha256": "6531bbf4bfa521a092af6778066da35ed32ae05bd4600f33fa161adb317648e7",
+  "packet_sha256": "b8375c9b86b3e5edee4f1be877b7cd3ddaedcb1b200cd37a635680053b1530cf",
+  "shape": "released-compatibility break, public API or SDK",
+  "domain": "TypeScript web framework, request body parsing",
+  "language": "TypeScript",
+  "merged_at": "2026-07-01T09:42:27Z",
+  "fix_published_at": "2026-07-17T23:26:28Z",
+  "originating_issue": "honojs/hono#5060",
+  "provisioning": {
+    "recipe": "bun install --frozen-lockfile --ignore-scripts once, online, at the head (packageManager bun@1.2.20; installed with this machine's bun 1.3.10), its node_modules archived; in every attempt clone, offline: cp -a <cache>/node_modules <clone>/node_modules (ignored by .gitignore); the tracked tree must be clean afterwards",
+    "allowance": "Focused test execution is permitted on this target, offline: dependencies are already installed in the clone (untracked and ignored; leave them alone). Run vitest with the clone's own binary from the clone root, for example `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts` (a few seconds). Scratch TypeScript may be written under the work directory, bundled with `./node_modules/.bin/esbuild <file> --bundle --platform=node --format=esm --outfile=<work>/<name>.mjs` and run with node. Five minutes per command, a selection at most once per flag set; nothing may be added to or changed in the clone, and no network call of any kind is available.",
+    "unavailable": "network; the registry (bun, npm, npx); the runtime-tests suites for Deno, Bun, Workers, Lambda and other platforms",
+    "dependency_identity": [
+      {
+        "name": "bun.lock",
+        "sha256": "62131dd06018c26abcbd86a66c942197e2a81c744fa89b82fecfd583fff09b47",
+        "location": "head:bun.lock"
+      },
+      {
+        "name": "package.json",
+        "sha256": "0ad803f5895d029c002b6b348d8bd1b53510e1fa3eca282fd72fbc067ba34e1d",
+        "location": "head:package.json"
+      },
+      {
+        "name": "cache archive (node_modules)",
+        "sha256": "b0baf546ea1c051c310592841e07e478aded81f1217fe8c01cc1d37c4e1cdb9c",
+        "location": "~/.t3/bench-cache/archives/p-hono-5067.tar.gz"
+      }
+    ],
+    "platform": "measured on the suite machine at 2026-09-24T19:09:21Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "cache": {
+      "kind": "node_modules",
+      "build": [
+        "BUN_INSTALL_CACHE_DIR={work}/bun-cache bun install --frozen-lockfile --ignore-scripts",
+        "cp -a {clone}/node_modules {cache}/node_modules"
+      ],
+      "post_clone": [
+        "cp -a {cache}/node_modules {clone}/node_modules"
+      ],
+      "env": {},
+      "smoke": [
+        {
+          "name": "body, request and validator tests",
+          "command": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/request.test.ts src/validator/validator.test.ts",
+          "revision": "both"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-24 (built-in reviewer benchmark, fresh slot (p))",
+    "used_by": [],
+    "register_published": null,
+    "notes": "Hunted and adjudicated 2026-09-24 by headless sessions that saw no reviewer output; the register and both reports are sealed. The lockfile's only registry copy of hono is 4.12.18, which predates this change, so the dependency cache carries no later version of the package under review."
+  },
+  "current_register": 1,
+  "sealed": {
+    "key": "~/.config/bench/seal.key on the preparation machine (mode 0600, directory 0700), outside the repository and every attempt directory",
+    "files": [
+      {
+        "file": "register.v1.json.enc",
+        "plaintext_sha256": "d0fe3517872a2ba6c5a0d564b1f4e19f31c6407bad5c0f22e2b70fe51e6b0357",
+        "sealed_at": "2026-09-24T19:10:18Z"
+      }
+    ]
+  }
+}
