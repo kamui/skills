@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "id": "o-astro-16079",
+  "repo": "withastro/astro",
+  "pr": 16079,
+  "head": "71ae513388df11d7dad6b1e0077c402ad03d0d62",
+  "merge_base": "b089b904f1ed578e9edaefd129bf9843120a808f",
+  "base_sha": "be661fb9fd1348ffb038f561f9f053b1c64a3696",
+  "base_ref_name": "main",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {
+      "sha": "aa266364fe9e105317b66e218fe04567307fb57f",
+      "reason": "merge of the pull request on main"
+    },
+    {
+      "sha": "66830865d3c8e100a18f272733b3992d8c64025b",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "3a43cf0f3690a8e33cb30109bc5165611cf38fcd",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "0bae1a51f0f271403d43f5ec0ae031c9c614fd3c",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "5557dcabbfe70ae06cd39d96f5b52102a740a148",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "d1bb7fa0059a04ed8039ce92660c7c07a8b04914",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "ce9f1da4867f07206dec720fdab7f1d02112f73e",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "0a22ff5b7e4600356ccabfe571b7ffdad76064d7",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "98c07e1735b2c9e075ad31aeafa5af7db4bf0563",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "a09b3288d5d893be230934cb3dbd43afefca0d6c",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "b6eb4d1a3c9d1ba05d7e86fc193c9d3ef6c02e3c",
+      "reason": "head of a later pull-request branch; reachable upstream only through refs/pull"
+    }
+  ],
+  "cutoff": "2026-03-25T16:40:00Z",
+  "cutoff_note": "the merge instant (build_packet.py default); one conversation comment published after it is omitted",
+  "diff_manifest_sha256": "5eea3eced42c493667fcc25051e1cfd815496bb41d1455f9f264cdfc4a8a4f1c",
+  "packet_sha256": "418fffebfeab1cc84f9cfeee91042e52e250153e22b782ac5aafa1e7472512c4",
+  "shape": "security: authorization or injection, web backend",
+  "domain": "TypeScript web framework, serverless deployment adapter request handling",
+  "language": "TypeScript",
+  "merged_at": "2026-03-25T16:40:00Z",
+  "fix_published_at": "2026-07-13T20:14:33Z",
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "pnpm@10.30.3 from the packageManager field, cached under COREPACK_HOME=<cache>/corepack; only the Vercel adapter, its workspace dependencies, astro-scripts and the adapter's test fixtures are installed (pnpm --filter, which also skips the root preinstall). In every attempt clone, offline: corepack enable --install-directory <cache>/bin, pnpm install --frozen-lockfile --offline with the same filters, then pnpm -r --filter '@astrojs/vercel...' build, so the adapter and its dependencies are built before the review (ignored outputs); the tracked tree must be clean afterwards. The build drops pnpm's projects/ index, whose links point at the build clone.",
+    "allowance": "Focused test execution is permitted on this target, offline: the Vercel adapter, its workspace dependencies and its test fixtures are installed and built in the clone (untracked and ignored; leave them alone). Run the adapter's tests with node from `<clone>/packages/integrations/vercel`, for example `node --test test/path-override-security.test.js test/isr.test.js` (a few seconds; each test builds its fixture, which writes only ignored output). A scratch node script or test may be written under the work directory and import the built modules from the clone by absolute path. Five minutes per command, a selection at most once per flag set; nothing may be added to or changed in the clone's tracked or untracked files, and no network call of any kind is available (pnpm and npx cannot reach a registry). Rebuilding needs `PATH=<cache>/bin:$PATH` for pnpm.",
+    "unavailable": "network; the registry (pnpm, npx); Vercel's platform (edge middleware, firewall, the ISR cache), so behaviour is checked by calling the built handlers in-process; the rest of the monorepo, which is not installed",
+    "dependency_identity": [
+      {
+        "name": "pnpm-lock.yaml",
+        "sha256": "9e3a3f21c4a50fb1cf46355d8466a2f065e2fe3649e60320b0118da22d7c493c",
+        "location": "head:pnpm-lock.yaml"
+      },
+      {
+        "name": "package.json",
+        "sha256": "cd709c246635f707442a973fb74c1b9fba0b4c4c23e91aec6ed6f919ff814d7e",
+        "location": "head:package.json"
+      },
+      {
+        "name": "cache archive (pnpm-store)",
+        "sha256": "cf6aa8f80bafef19d60d08715579e115c699ae75f46c73ce6daa67aca76a92d9",
+        "location": "~/.t3/bench-cache/archives/o-astro-16079.tar.gz"
+      }
+    ],
+    "platform": "measured on the suite machine at 2026-09-24T20:00:33Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "cache": {
+      "kind": "pnpm-store",
+      "build": [
+        "mkdir -p {work}/bin && corepack enable --install-directory {work}/bin",
+        "PATH={work}/bin:$PATH pnpm install --frozen-lockfile --store-dir {cache}/pnpm-store --filter '@astrojs/vercel...' --filter astro-scripts --filter '{packages/integrations/vercel/test/fixtures/**}'",
+        "rm -rf {cache}/pnpm-store/*/projects"
+      ],
+      "post_clone": [
+        "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store --filter '@astrojs/vercel...' --filter astro-scripts --filter '{packages/integrations/vercel/test/fixtures/**}' >/dev/null 2>&1",
+        "PATH={cache}/bin:$PATH pnpm -r --filter '@astrojs/vercel...' build >/dev/null 2>&1"
+      ],
+      "env": {
+        "COREPACK_HOME": "{cache}/corepack",
+        "PNPM_HOME": "{cache}/pnpm-home",
+        "COREPACK_ENABLE_STRICT": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+      },
+      "smoke": [
+        {
+          "name": "adapter path-override and ISR tests",
+          "command": "cd packages/integrations/vercel && node --test test/path-override-security.test.js test/isr.test.js 2>&1 | tail -8",
+          "revision": "both"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-24 (built-in reviewer benchmark, fresh slot (o))",
+    "used_by": [],
+    "register_published": null,
+    "notes": "Hunted and adjudicated 2026-09-24 by headless sessions that saw no reviewer output; the register and both reports are sealed. Merged 2026-03-25, in the hunt's fallback window: no candidate merged on or after 2026-07-01 qualified, so the change itself may be in reviewers' training data; the advisory identifying the defect was published 2026-07-17."
+  },
+  "current_register": 1,
+  "sealed": {
+    "key": "~/.config/bench/seal.key on the preparation machine (mode 0600, directory 0700), outside the repository and every attempt directory",
+    "files": [
+      {
+        "file": "register.v1.json.enc",
+        "plaintext_sha256": "1978c85a1dfe29d9c1fce5d77d10d44c16fb89d07e7b4d5a34cc1313764cdc09",
+        "sealed_at": "2026-09-24T20:01:22Z"
+      }
+    ]
+  }
+}
