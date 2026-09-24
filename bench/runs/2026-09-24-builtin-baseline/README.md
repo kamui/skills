@@ -90,16 +90,18 @@ q, p, r, i, l, k, n, o, m, j.
 | Per-attempt bound | the arm file's `budget_usd_per_attempt` (A $5, B $2.50, C $5, D $3), reserved while an attempt is in flight; `dispatch.sh` also passes `--max-budget-usd 15` to Claude |
 
 `run_cell.py` refuses a dispatch whose bound does not fit in cap − spent − reserve, one attempt at
-a time; the word "block" appears nowhere in `bench/tools`. Replicate 1 runs first across all forty
-cells; replicate-2 blocks then run in the sealed target order until the next block's conservative
-bound no longer fits, and the unrun blocks are reported as unattempted (README §6).
+a time; no cap check in `bench/tools` works at block granularity. Replicate 1 runs first across all
+forty cells; replicate-2 blocks then run in the sealed target order until the next block's
+conservative bound no longer fits, and the unrun blocks are reported as unattempted (README §6).
 
 **The block gate of README §6 is the operator's, not `--next`'s.** Before starting each
 replicate-2 block, compare `--status`'s `room_usd` against that block's conservative bound — $15.50
 for the four arms — and stop the run there if it does not fit. Left to `--next` alone, a room
 figure between one arm's bound and $15.50 would let the block's cheaper arms dispatch and refuse
-the rest, and a half-run block cannot be repaired inside the cap. Twenty blocks need $310 against
-the $196.69 this manifest freezes, so the boundary will be reached.
+the rest, and a half-run block cannot be repaired inside the cap. README §6 expects $210 of cell
+spend, with a $310 conservative bound, against the $196.69 of room this manifest freezes, and says
+plainly that the expected total already exceeds the cap; the gate is expected to bind, not
+hypothetical.
 
 ## Dispatching
 
@@ -112,11 +114,14 @@ python3 bench/tools/run_cell.py --run bench/runs/2026-09-24-builtin-baseline --n
 
 Before each dispatch `run_cell.py` re-validates the manifest, re-hashes the four arm files, and
 compares the target's `packet.md` and diff identity against the cohort entry. The cohort's
-`provisioning_sha256` is not one of those gates: it is a comparison-contract dimension `compare.py`
-checks between runs, while `render_policy` writes the target's live `provisioning.allowance`
-straight into the reviewer's `input.md`. So an edit to a target's `provisioning` block after the
-freeze reaches the reviewer unrefused — treat that block as frozen with the manifest, and record
-any change to it as a deviation.
+`provisioning_sha256` is not one of those gates, and nothing else re-derives it either:
+`compare.py` reads the value out of each run's manifest to compare runs under the comparison
+contract, never off the live target, while `render_policy` writes the target's live
+`provisioning.allowance` straight into the reviewer's `input.md`. So an edit to a target's
+`provisioning` block after the freeze reaches the reviewer unrefused and no tool in this run
+notices. Treat that block as frozen with the manifest, record any change to it as a deviation, and
+re-derive the hash by hand with `compare.py --provisioning-hash bench/targets/<id>` whenever a
+target's provisioning is touched.
 
 Every filed attempt gets a ledger row. The first four cells are the pilot; they double as the
 demonstration that focused-test execution works under D and B on suite targets whose review needs
