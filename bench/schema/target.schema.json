@@ -1,7 +1,7 @@
 {
   "$id": "bench/schema/target.schema.json",
   "title": "target.json",
-  "description": "One benchmark target: a merged pull request pinned by revision, with its frozen packet, provisioning identity, and exposure history. Registers live beside it as register.v<N>.json.",
+  "description": "One benchmark target: a merged pull request pinned by revision, with its frozen packet, provisioning identity, and exposure history. Registers live beside it as register.v<N>.json, or as register.v<N>.json.enc while sealed.",
   "type": "object",
   "required": ["schema_version", "id", "repo", "pr", "head", "merge_base", "base_sha", "base_ref_name", "local_base_branch", "negative_shas", "cutoff", "diff_manifest_sha256", "packet_sha256", "shape", "domain", "language", "merged_at", "provisioning", "exposure", "current_register"],
   "additionalProperties": false,
@@ -63,6 +63,16 @@
         "notes": {"type": "string"}
       }
     },
-    "current_register": {"type": "integer", "minimum": 1}
+    "current_register": {"type": "integer", "minimum": 1},
+    "sealed": {
+      "type": "object",
+      "description": "Evaluator-only files beside target.json committed only as seal.py ciphertext until scoring (a fresh target's register), with the SHA-256 of each plaintext so a reveal is checkable.",
+      "required": ["key", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "key": {"type": "string", "description": "Where the key lives on the preparation machine, outside every reviewer read surface."},
+        "files": {"type": "array", "items": {"type": "object", "required": ["file", "plaintext_sha256", "sealed_at"], "additionalProperties": false, "properties": {"file": {"type": "string", "pattern": "\\.enc$"}, "plaintext_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "sealed_at": {"type": "string"}}}}
+      }
+    }
   }
 }

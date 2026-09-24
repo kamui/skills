@@ -21,7 +21,7 @@ Usage::
         [--cutoff 2024-05-01T12:00:00Z] [--execution-note "..."] [--extra-section FILE] \\
         [--ref-pr N] [--spec-issue owner/repo#n] [--experiment-label "..."] \\
         [--subagent-model sonnet] [--publish-to-fork [--upstream-repo owner/name] \\
-        [--original-author LOGIN]] [--truncation-newest SHA] [--replay DIR]
+        [--original-author LOGIN]] [--truncation-newest SHA] [--replay DIR] [--factual]
 
 Inputs: the forge response for ``--repo``/``--pr`` (fetched with ``gh``, or replayed from
 ``--replay``); a git clone at ``--staging`` holding ``--merge-base`` and ``--head``; optionally a
@@ -47,6 +47,11 @@ The strings that name the program rather than the target -- ``--experiment-label
 ``--subagent-model`` in the run conditions, and ``--upstream-repo`` and ``--original-author`` under
 ``--publish-to-fork`` -- default to the #124 effort experiment's values, so a default invocation
 renders the same bytes it always did and another program states its own.
+
+``--factual`` writes the suite's factual packet (``bench/`` design §3) instead: the rendered packet
+passed through ``derive_packet.derive``, which removes the run policy exactly as it does for the
+migrated #137 packets, so a fresh target's packet omits the same elements. A rendering the
+derivation refuses is exit ``1`` with its reasons, and nothing is written.
 
 ``--replay DIR`` reads saved forge responses instead of calling ``gh``: ``graphql.json``, plus
 ``ref-pr.json`` and ``ref-pr-comments.json`` under ``--ref-pr``, and ``spec-issue.json`` and
@@ -282,6 +287,7 @@ def parse_args(argv) -> argparse.Namespace:
     ap.add_argument("--original-author", default="scop", help="--publish-to-fork: who wrote the change upstream, distinguished from the posting identity")
     ap.add_argument("--cutoff", default=None, help="timezone-aware ISO-8601 instant; omit later publications and refuse unavailable historical text (default: the merge time)")
     ap.add_argument("--replay", default=None, help="directory of saved forge responses to read instead of calling gh")
+    ap.add_argument("--factual", action="store_true", help="write the factual packet: the rendering with its run policy removed by derive_packet.py")
     ap.add_argument("--out", required=True)
     return ap.parse_args(argv)
 
@@ -604,6 +610,16 @@ def build(a: argparse.Namespace) -> int:
            it if you read one anyway.
         """))
 
+    text = packet.text()
+    if a.factual:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import derive_packet
+        try:
+            text = derive_packet.derive(text)
+        except derive_packet.StructureError as exc:
+            print(exc)
+            return 1
+
     directory = os.path.dirname(a.out)
     if directory:
         try:
@@ -612,7 +628,7 @@ def build(a: argparse.Namespace) -> int:
             raise InputError(f"cannot create {directory}: {exc}") from exc
     try:
         with open(a.out, "w", encoding="utf-8") as handle:
-            handle.write(packet.text())
+            handle.write(text)
     except OSError as exc:
         raise InputError(f"cannot write {a.out}: {exc}") from exc
     print(f"cutoff {cutoff}; omitted after cutoff: {omitted}")

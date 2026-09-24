@@ -471,6 +471,30 @@ class BuildPacketTests(unittest.TestCase):
         packet = self.build_ok("--execution-note", "Focused tests only, five minutes each.")
         self.assertIn("Focused tests only, five minutes each.", packet)
 
+    # --- the factual packet ----------------------------------------------
+
+    def test_the_factual_packet_is_the_derived_rendering(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import derive_packet
+        for drop in (False, True):
+            with self.subTest(closing_reference=not drop):
+                if drop:
+                    self.drop_the_closing_reference()
+                rendered = self.build_ok()
+                factual = self.build_ok("--factual")
+                self.assertEqual(factual, derive_packet.derive(rendered))
+                for policy in ["## 8. Run conditions", "Posting identity", "review-head", "issues=",
+                               "summary.repository_url", "Mandatory note", "issue #124 effort experiment"]:
+                    self.assertNotIn(policy, factual)
+
+    def test_a_factual_rendering_the_derivation_refuses_writes_nothing(self) -> None:
+        self.drop_the_closing_reference()
+        self.save_replay(spec_issue=SPEC_ISSUE, spec_issue_comments=SPEC_ISSUE_COMMENTS)
+        result = self.run_cli("--spec-issue", "other/spec#12", "--factual", save=False)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("expected exactly one", result.stdout)
+        self.assertFalse(self.out.exists())
+
     # --- refusals -------------------------------------------------------
 
     def test_a_head_mismatch_exits_two(self) -> None:
