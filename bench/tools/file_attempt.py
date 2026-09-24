@@ -34,11 +34,13 @@ is kept as the parse status of a valid attempt and never turned into an empty re
 
 Timing follows design §7's four events. ``dispatched_at`` and ``payload_validated_at`` come from
 ``timing.json``. ``completed_at`` is set only on a ``valid completed`` attempt, from the wrapper's
-recorded end instant (``timing.json``'s ``completed_at``, which the wrapper writes on any exit).
-Every other disposition leaves ``completed_at`` null and sets ``stopped_at``: the ``stop.json``
-instant when there is one, otherwise that same wrapper end instant, so a harness-invalid attempt
-that ran to its end stops when the wrapper recorded its end. The copied ``timing.json`` keeps the
-wrapper's raw fields; the record's ``timing`` is the filed reading.
+recorded end instant, ``timing.json``'s ``completed_at``. The current ``dispatch.sh`` writes that
+after a zero exit and a successful normalization and writes ``stop.json`` otherwise; the older
+wrapper that ran the toy run's att-001 to att-006 wrote it on any exit. Every other disposition
+leaves ``completed_at`` null and sets ``stopped_at``: the ``stop.json`` instant when there is one,
+otherwise the wrapper's recorded end. A harness-invalid attempt that ran to its end therefore stops
+when the wrapper recorded its end. The copied ``timing.json`` keeps the wrapper's raw fields; the
+record's ``timing`` is the filed reading.
 
 Usage is priced from ``bench/rates.json`` by the observed model, with ``transcript_usage.py``
 (Claude; the built-in's root transcript bills nothing, so only subagent transcripts are metered)
@@ -636,6 +638,13 @@ def self_test() -> int:
         rec = json.loads((temp / "o3" / "attempt.json").read_text(encoding="utf-8"))
         assert rec["disposition"] == "stopped: timeout" and rec["timing"]["completed_at"] is None, rec
         assert rec["timing"]["stopped_at"] == "2026-01-01T00:01:00Z", rec["timing"]
+        # A non-zero exit without stop.json (the older wrapper) stops at the wrapper's recorded end.
+        (att / "stop.json").unlink()
+        (att / "dispatch.txt").write_text("claude 9.9.9 (Claude Code)\nmodel=m effort=high\nexit=1\n", encoding="utf-8")
+        done = run("o5")
+        rec = json.loads((temp / "o5" / "attempt.json").read_text(encoding="utf-8"))
+        assert rec["disposition"] == "stopped: exit 1" and rec["timing"]["completed_at"] is None, rec
+        assert rec["timing"]["stopped_at"] == "2026-01-01T00:00:05Z", rec["timing"]
         # Missing input is exit 2.
         (att / "dispatch.txt").unlink()
         done = run("o4")
