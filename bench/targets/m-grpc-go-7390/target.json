@@ -9,7 +9,10 @@
   "base_ref_name": "master",
   "local_base_branch": "main",
   "negative_shas": [
-    {"sha": "45d44a736ec6cdcb73f9411bf6a1c2d1abea1956", "reason": "squash-merge of #7390 on master; the content-bearing master commit, whose neighbourhood surfaces later touches to the same functions"}
+    {
+      "sha": "45d44a736ec6cdcb73f9411bf6a1c2d1abea1956",
+      "reason": "squash-merge of #7390 on master; the content-bearing master commit, whose neighbourhood surfaces later touches to the same functions"
+    }
   ],
   "cutoff": "2024-07-09T20:27:27Z",
   "cutoff_note": "the merge instant; nothing omitted",
@@ -23,14 +26,55 @@
   "fix_published_at": null,
   "originating_issue": "grpc/grpc-go#7365",
   "provisioning": {
-    "recipe": "GOMODCACHE=<cache-root>/gomodcache GOCACHE=<cache-root>/gocache GOFLAGS=-mod=mod GOPROXY=off go mod download, populated from the pinned head only (the #137 grid measured 2 s)",
+    "recipe": "nothing in the clone; every go command runs with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is ~/.t3/bench-cache/caches/m-grpc-go-7390, populated once online by go mod download, go build ./... and go vet . at the head (the #137 grid measured 2 s on macOS)",
     "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache-root>/gomodcache GOCACHE=<cache-root>/gocache GOFLAGS=-mod=mod GOPROXY=off; five minutes per command, a package's tests at most once per flag set, scratch modules only under the work directory, nothing added to or changed in the clone.",
     "unavailable": "network; the module proxy; the full grpc-go suite (only focused packages fit the allowance)",
     "dependency_identity": [
-      {"name": "go.mod", "sha256": "c7b1acfaf6b85e23ca2545740cfec9be812b0567baed4a3669b73d729114b78c", "location": "head:go.mod"},
-      {"name": "go.sum", "sha256": "2f9ba9c4026cb23b47ecb8a144abf6717633c2d2aaa6f5adb680c5066cb3b74f", "location": "head:go.sum"}
+      {
+        "name": "go.mod",
+        "sha256": "c7b1acfaf6b85e23ca2545740cfec9be812b0567baed4a3669b73d729114b78c",
+        "location": "head:go.mod"
+      },
+      {
+        "name": "go.sum",
+        "sha256": "2f9ba9c4026cb23b47ecb8a144abf6717633c2d2aaa6f5adb680c5066cb3b74f",
+        "location": "head:go.sum"
+      },
+      {
+        "name": "cache archive (go-modcache)",
+        "sha256": "e9d72d6ae4aa73395c2d20d1bf05d549c67c3d0ebc93be3cb1b77461542baf15",
+        "location": "~/.t3/bench-cache/archives/m-grpc-go-7390.tar.gz"
+      }
     ],
-    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; Go 1.27.0; git 2.55.0. Not yet re-measured on the suite's Linux machine (Go 1.26.5 there); the module cache archive is not yet built (design §8 step 4)."
+    "platform": "measured on the suite machine at 2026-09-24T10:25:28Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "cache": {
+      "kind": "go-modcache",
+      "build": [
+        "GOPROXY=https://proxy.golang.org,direct go mod download",
+        "go build ./...",
+        "go vet ."
+      ],
+      "post_clone": [],
+      "env": {
+        "GOMODCACHE": "{cache}/gomodcache",
+        "GOCACHE": "{cache}/gocache",
+        "GOFLAGS": "-mod=mod",
+        "GOPROXY": "off",
+        "GOTOOLCHAIN": "local"
+      },
+      "smoke": [
+        {
+          "name": "focused go test",
+          "command": "go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
+          "revision": "head"
+        },
+        {
+          "name": "go vet",
+          "command": "go vet . && echo clean",
+          "revision": "head"
+        }
+      ]
+    }
   },
   "exposure": {
     "entered_suite": "2026-09-07 (issue #137 qualification grid, target (m))",

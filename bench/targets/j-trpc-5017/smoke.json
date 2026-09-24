@@ -1,61 +1,27 @@
 {
   "schema_version": 1,
   "target": "j-trpc-5017",
-  "source": "recorded",
-  "source_document": "docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and j-trpc-5017/register.md (reproduction)",
-  "measured_at": "2026-09-07T04:52:01Z",
-  "platform": "Darwin 27.0.0 arm64; node v24.19.0 with corepack pnpm; git 2.55.0 (the #137 machine)",
+  "source": "measured",
+  "measured_at": "2026-09-24T10:31:22Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
-    "recipe": "PNPM_HOME=<cache-root>/pnpm-home corepack pnpm install --frozen-lockfile --offline --store-dir <cache-root>/pnpm-store",
-    "duration_seconds": 19,
+    "recipe": "COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+    "duration_seconds": 13.58,
     "tree_clean_after": true
   },
   "checks": [
     {
       "name": "type-check",
-      "command": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+      "command": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && echo clean",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 5,
+      "duration_seconds": 6.78,
       "summary": "clean"
-    },
-    {
-      "name": "adjudicator harness, issue-5020 test",
-      "command": "tsc -p tsconfig.base.json over a standalone copy of packages/server/src with typescript 5.2.2 (not the workspace)",
-      "revision": "base",
-      "exit_code": 2,
-      "duration_seconds": 0.85,
-      "summary": "fails (TS2554): the bug this PR targets is present before it"
-    },
-    {
-      "name": "adjudicator harness, issue-5020 test",
-      "command": "same",
-      "revision": "head",
-      "exit_code": 0,
-      "duration_seconds": 0.7,
-      "summary": "passes: the promised fix works"
-    },
-    {
-      "name": "adjudicator harness, issue-5037 test",
-      "command": "same",
-      "revision": "base",
-      "exit_code": 0,
-      "duration_seconds": 0.85,
-      "summary": "passes: GT-j1 is absent before this PR"
-    },
-    {
-      "name": "adjudicator harness, issue-5037 test",
-      "command": "same",
-      "revision": "head",
-      "exit_code": 2,
-      "duration_seconds": 1.13,
-      "summary": "fails (TS2345 Property 'some' is missing): GT-j1"
     }
   ],
   "notes": [
-    "Transcribed from the #137 record; not yet re-measured on the suite machine (Linux 6.6 WSL2 x86_64; node v24.19.0 and corepack present, pnpm not yet enabled). The pnpm store archive is not yet built (design §8 step 4).",
-    "The adjudicator's harness checks ran outside the workspace and are evidence for the register, not the reviewer-facing allowance; the in-clone tsc check is the provisioning smoke.",
-    "Mirror rebuilt on the suite machine at 2026-09-24T09:25:48Z by provision.py from the staging clone: every negative SHA absent, newest reachable commit date equals the head's, diff identity equals target.json."
+    "Measured by provision.py smoke on this machine; cache kind pnpm-store.",
+    "The earlier recorded figures were transcribed from docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and j-trpc-5017/register.md (reproduction)."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:25:48Z",

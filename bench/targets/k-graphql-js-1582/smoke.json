@@ -1,44 +1,26 @@
 {
   "schema_version": 1,
   "target": "k-graphql-js-1582",
-  "source": "recorded",
-  "source_document": "docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and k-graphql-js-1582/register.md (reproduction)",
-  "measured_at": "2026-09-07T04:52:01Z",
-  "platform": "Darwin 27.0.0 arm64; node v24.19.0, npm; git 2.55.0 (the #137 machine)",
+  "source": "measured",
+  "measured_at": "2026-09-24T10:31:45Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
-    "recipe": "npm install --no-audit --no-fund --offline --cache <cache-root>/npm-cache; git checkout -- yarn.lock; rm -f package-lock.json",
-    "duration_seconds": 4,
+    "recipe": "npm install --no-audit --no-fund --offline --cache {cache}/npm-cache >/dev/null 2>&1; git checkout -- yarn.lock; rm -f package-lock.json",
+    "duration_seconds": 5.66,
     "tree_clean_after": true
   },
   "checks": [
     {
       "name": "focused mocha",
       "command": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js",
-      "revision": "both",
-      "exit_code": 0,
-      "duration_seconds": 2,
-      "summary": "13 passing at both revisions; the defect is silent"
-    },
-    {
-      "name": "four changed test files",
-      "command": "mocha over GraphQLError-test.js, locatedError-test.js, printError-test.js, inspect-test.js",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 2,
-      "summary": "27 passing"
-    },
-    {
-      "name": "flow check",
-      "command": "npx flow check",
-      "revision": "head",
-      "exit_code": 0,
-      "duration_seconds": null,
-      "summary": "0 errors; reverting the nodes type widening reintroduces 8"
+      "duration_seconds": 1.61,
+      "summary": "  13 passing (56ms)"
     }
   ],
   "notes": [
-    "Transcribed from the #137 record; not yet re-measured on the suite machine (Linux 6.6 WSL2 x86_64; node v24.19.0, npm). The npm cache archive is not yet built (design §8 step 4).",
-    "Mirror rebuilt on the suite machine at 2026-09-24T09:25:48Z by provision.py from the staging clone: every negative SHA absent, newest reachable commit date equals the head's, diff identity equals target.json."
+    "Measured by provision.py smoke on this machine; cache kind npm-cache."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:25:48Z",
