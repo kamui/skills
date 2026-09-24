@@ -17,7 +17,12 @@
 #               Omitted = harness default (low variant).
 #
 # Writes under <attempt-dir>: home/ (fresh HOME; its credential copy is deleted at exit), tmp/ (TMPDIR), timing.json, stdout.*, stderr.txt, tree-before.txt,
-# tree-after.txt, dispatch.txt (the exact command and versions), and leaves usage/audit to the caller:
+# tree-after.txt, dispatch.txt (the exact command and versions), audit.json, payload.json (claude arms), normalized.json.
+#
+# Timing semantics: timing.json gets root_dispatched_at before the CLI starts; after a zero exit the wrapper runs the
+# read audit (claude arms, which also extracts payload.json) and the normalizer, which stamps payload_validated_at on a
+# parsed or empty result; only then is completed_at written. Any other outcome writes stop.json with stopped_at and
+# the reason and leaves completed_at null. Metering is left to the caller:
 #   claude-builtin: python3 attempt_audit.py --arm claude-builtin --attempt-dir <dir> --clone <clone>
 #                   python3 docs/research/tools/transcript_usage.py <dir>/home/.claude/projects/*/*/subagents/*.jsonl --prices ...
 #   codex:          python3 attempt_audit.py --arm codex --attempt-dir <dir> --clone <clone>
@@ -99,11 +104,38 @@ $(cat "$PACKET")"
     ;;
   *) echo "unknown arm: $ARM" >&2; exit 2;;
 esac
-python3 - "$DIR/timing.json" "$(stamp)" <<'PY'
+TOOLS=$(cd "$(dirname "$0")" && pwd)
+stop() { printf '{"stopped_at": "%s", "exit_code": %s, "reason": "%s"}\n' "$(stamp)" "$RC" "$1" > "$DIR/stop.json"; echo "stopped: $1" >> "$DIR/dispatch.txt"; }
+if [ "$RC" -ne 0 ]; then
+  stop "reviewer exit $RC"
+else
+  set +e
+  case "$ARM" in
+    claude-builtin)
+      python3 "$TOOLS/attempt_audit.py" --arm claude-builtin --attempt-dir "$DIR" --clone "$CLONE" > "$DIR/audit.txt" 2>&1
+      python3 "$TOOLS/normalize_review.py" --arm claude-builtin --payload "$DIR/payload.json" --out "$DIR/normalized.json" --timing "$DIR/timing.json" > "$DIR/normalize.txt" 2>&1; NRC=$? ;;
+    codex)
+      python3 "$TOOLS/attempt_audit.py" --arm codex --attempt-dir "$DIR" --clone "$CLONE" > "$DIR/audit.txt" 2>&1
+      python3 "$TOOLS/normalize_review.py" --arm codex --stdout "$DIR/stdout.txt" --sessions-dir "$H/.codex/sessions" --clone "$CLONE" --out "$DIR/normalized.json" --timing "$DIR/timing.json" > "$DIR/normalize.txt" 2>&1; NRC=$? ;;
+    review-code)
+      python3 "$TOOLS/attempt_audit.py" --arm review-code --attempt-dir "$DIR" --clone "$CLONE" > "$DIR/audit.txt" 2>&1
+      if [ -s "$DIR/artifacts/composition.json" ]; then
+        python3 "$TOOLS/normalize_review.py" --arm review-code --composition "$DIR/artifacts/composition.json" --clone "$CLONE" --out "$DIR/normalized.json" --timing "$DIR/timing.json" > "$DIR/normalize.txt" 2>&1; NRC=$?
+      else
+        echo "no artifacts/composition.json returned" > "$DIR/normalize.txt"; NRC=1
+      fi ;;
+  esac
+  set -e
+  if [ "$NRC" -eq 0 ]; then
+    python3 - "$DIR/timing.json" "$(stamp)" <<'PY'
 import json, sys
 t = json.load(open(sys.argv[1], encoding="utf-8")); t["completed_at"] = sys.argv[2]
 json.dump(t, open(sys.argv[1], "w", encoding="utf-8"), indent=2)
 PY
+  else
+    stop "normalization exit $NRC: $(head -c 200 "$DIR/normalize.txt" | tr '\n' ' ')"
+  fi
+fi
 tree_id > "$DIR/tree-after.txt"
 # The fresh home held a copy of the credentials only for the run; scrub it so fixtures can be kept.
 rm -f "$H/.claude/.credentials.json" "$H/.codex/auth.json"

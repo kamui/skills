@@ -1,0 +1,55 @@
+{
+  "$id": "bench/schema/target.schema.json",
+  "title": "target.json",
+  "description": "One benchmark target: a merged pull request pinned by revision, with its frozen packet, provisioning identity, and exposure history. Registers live beside it as register.v<N>.json.",
+  "type": "object",
+  "required": ["schema_version", "id", "repo", "pr", "head", "merge_base", "base_sha", "base_ref_name", "local_base_branch", "negative_shas", "cutoff", "diff_manifest_sha256", "packet_sha256", "shape", "domain", "language", "merged_at", "provisioning", "exposure", "current_register"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "repo": {"type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$"},
+    "pr": {"type": "integer", "minimum": 1},
+    "head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "merge_base": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$", "description": "The pull request's recorded base; kept separate from the computed merge-base."},
+    "base_ref_name": {"type": "string", "description": "Upstream base branch name, a fact about the pull request."},
+    "local_base_branch": {"const": "main", "description": "Every mirror names the base main because the Claude built-in diffs main...HEAD."},
+    "negative_shas": {"type": "array", "items": {"type": "object", "required": ["sha", "reason"], "additionalProperties": false, "properties": {"sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "reason": {"type": "string"}}}},
+    "cutoff": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"},
+    "cutoff_note": {"type": "string"},
+    "diff_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the sorted changed-file list with per-file base and head blob ids, so a rebuilt mirror is checked against the frozen diff identity."},
+    "packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "legacy_packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Hash of a preserved packet.legacy.md from an earlier grid, when one exists."},
+    "shape": {"type": "string"},
+    "domain": {"type": "string"},
+    "language": {"type": "string"},
+    "merged_at": {"type": "string"},
+    "fix_published_at": {"type": ["string", "null"]},
+    "originating_issue": {"type": ["string", "null"]},
+    "provisioning": {
+      "type": "object",
+      "required": ["recipe", "allowance", "unavailable", "dependency_identity", "platform"],
+      "additionalProperties": false,
+      "properties": {
+        "recipe": {"type": "string", "description": "Commands run after clone from the offline cache, or 'none'."},
+        "allowance": {"type": "string", "description": "The focused-command allowance text given identically to every arm."},
+        "unavailable": {"type": "string"},
+        "dependency_identity": {"type": "array", "items": {"type": "object", "required": ["name", "sha256"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "location": {"type": "string"}}}},
+        "platform": {"type": "string", "description": "Toolchain and OS record at freeze, e.g. 'Linux 6.6 x86_64; Python 3.14.7; node 24.19.0'."}
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "required": ["entered_suite", "used_by", "register_published"],
+      "additionalProperties": false,
+      "properties": {
+        "entered_suite": {"type": "string"},
+        "used_by": {"type": "array", "items": {"type": "string"}, "description": "Runs, grids, and skill-development work that used this target."},
+        "register_published": {"type": ["string", "null"]},
+        "notes": {"type": "string"}
+      }
+    },
+    "current_register": {"type": "integer", "minimum": 1}
+  }
+}
