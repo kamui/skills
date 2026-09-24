@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "l-bokeh-9232",
+  "repo": "bokeh/bokeh",
+  "pr": 9232,
+  "head": "36549bca3a63d581f7b68d08054a7813c1e6a499",
+  "merge_base": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+  "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {"sha": "ec1e525c9a8ad128e29b3b74beb732e79a0db437", "reason": "squash-merge of #9232 on master; sits next to the Flatpickr rewrite in the file's history"},
+    {"sha": "ec557b685bf941658b0a569db2ee4ae4d917045e", "reason": "head of the #9509 (Flatpickr) branch; reachable upstream only through refs/pull/9509/head"},
+    {"sha": "16d3d0efcc91a4206be0c3f11ede33f9fc03cda9", "reason": "squash-merge of #9509 (2020-01-17), which removes _unlocal_date and fixes the serialization ambiguity behind GT-l1"}
+  ],
+  "cutoff": "2019-10-03T15:51:00Z",
+  "cutoff_note": "62 s before the merge instant (2019-10-03T15:52:02Z): a maintainer comment created 25 s before the merge was edited 73 s after it, so build_packet.py refuses the merge-time cutoff; the earlier cutoff omits 4 conversation and 2 issue comments and is strictly more conservative",
+  "diff_manifest_sha256": "b3476ac5a902a0b5178472bbd8915714ea52e11d00067f0515ee6ffe7e569bd6",
+  "packet_sha256": "f39a26a189faf259a9cda8f51db376c16a215e2c7ca1662752037d9f902ee36b",
+  "legacy_packet_sha256": "5964e4ba6fb323734e75c868d22b3e5bbd35cb202f413637e0673399ad09b46d",
+  "shape": "ordinary behavioural change",
+  "domain": "TypeScript frontend widget",
+  "language": "TypeScript",
+  "merged_at": "2019-10-03T15:52:02Z",
+  "fix_published_at": "2020-01-17T04:00:39Z",
+  "originating_issue": "bokeh/bokeh#9129",
+  "provisioning": {
+    "recipe": "none beyond node on PATH; the bokehjs build and its Selenium suite are not provisioned",
+    "allowance": "Focused execution is permitted on this target, offline and outside the clone: node (v24.19.0 at the #137 freeze) is installed and scratch JavaScript may be written and run under the work directory, including with a TZ environment variable set, to check the behaviour of code that has been read; five minutes per command. Nothing may be added to or changed in the clone.",
+    "unavailable": "the project's own build, npm install, the Selenium integration suite, a browser, network",
+    "dependency_identity": [],
+    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; node v24.19.0; git 2.55.0. Not yet re-measured on the suite's Linux machine."
+  },
+  "exposure": {
+    "entered_suite": "2026-09-07 (issue #137 qualification grid, target (l))",
+    "used_by": [
+      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates",
+      "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
+      "routine-review-diagnosis-2026-09-13: consumed UTC-preservation and verifier-routing snippets",
+      "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",
+      "bounded-discovery-prototype/targets/criteria.md: listed as used and excluded from later hunts"
+    ],
+    "register_published": "2026-09-07T04:52:01Z (commit 588edce in the public kamui/skills repository)",
+    "notes": "The originating issue #9129 is safe to include: it describes only the east-of-UTC symptom this change fixes, not the west-of-UTC regression."
+  },
+  "current_register": 1
+}

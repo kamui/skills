@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "n-ripgrep-2957",
+  "repo": "BurntSushi/ripgrep",
+  "pr": 2957,
+  "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+  "merge_base": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+  "base_sha": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {"sha": "94305125ef33b86151b6cd2ce2b33d641f6b6ac3", "reason": "squash-merge of #2957 on master, 'Fixes #2956'; the same change under another hash, and its message names the originating bug"}
+  ],
+  "cutoff": "2024-12-31T13:23:13Z",
+  "cutoff_note": "the merge instant; two conversation comments after it are omitted",
+  "diff_manifest_sha256": "9701ee80bb81fd14d6217e233def684b2a24ac0264dda4291e61277cb66b5fc1",
+  "packet_sha256": "20cf68dcae6f7d13ea5059b1daab21f31cc00e9ff3dbc9f744beca177af67ccd",
+  "legacy_packet_sha256": "ac4ad8bf3c68466a8aca4e4debe1d3fd25a5f5130c8d6f35ef1aee23f390022b",
+  "shape": "promised change that does not work as pasted (documentation, shell surface)",
+  "domain": "Rust CLI project, zsh completion and FAQ",
+  "language": "zsh and Markdown in a Rust project",
+  "merged_at": "2024-12-31T13:23:13Z",
+  "fix_published_at": null,
+  "originating_issue": "BurntSushi/ripgrep#2956",
+  "provisioning": {
+    "recipe": "none beyond zsh on PATH; the Rust crate is not built",
+    "allowance": "Focused execution is permitted on this target, offline and outside the clone: zsh is installed and scratch zsh scripts may be written and run under the work directory to check the behaviour of shell code that has been read; five minutes per command. Building the Rust crate is not available (no network, no vendored registry); do not attempt cargo build or cargo test. Nothing may be added to or changed in the clone.",
+    "unavailable": "cargo build and cargo test (no vendored registry), network, the ci/test-complete script (needs a built rg)",
+    "dependency_identity": [],
+    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; zsh 5.9; git 2.55.0. Not yet re-measured on the suite's Linux machine."
+  },
+  "exposure": {
+    "entered_suite": "2026-09-07 (issue #137 qualification grid, target (n))",
+    "used_by": [
+      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates; one cell surfaced the claim that became GT-n1",
+      "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
+      "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",
+      "bounded-discovery-prototype/targets/criteria.md: listed as used and excluded from later hunts"
+    ],
+    "register_published": "2026-09-07T04:52:01Z (version 1, commit 588edce); 2026-09-07T10:10:11Z (version 2, commit c51d2ab), both in the public kamui/skills repository",
+    "notes": "Frozen clean in #137; revised to buggy (GT-n1) by blinded post-grid adjudication. The stray `$ ` prefix is still present in upstream FAQ.md at master 3fce3b5 (2026-08-04), so no upstream fix exists and fix_published_at is null; the adjudication ruling is the evidence."
+  },
+  "current_register": 2
+}
