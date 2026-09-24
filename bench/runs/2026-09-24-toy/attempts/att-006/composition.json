@@ -1,0 +1,133 @@
+{
+  "run": {
+    "coverage": "complete",
+    "target_kind": "range",
+    "base_ref": "main",
+    "base_sha": "8cff1c5dd76035b3e761ad26e31d57c00a71479b",
+    "head": "609ed60fe978c1387b5684c691e3c874a4202437",
+    "merge_base": "8cff1c5dd76035b3e761ad26e31d57c00a71479b",
+    "merged": false,
+    "issues": [],
+    "target": "main...review-head",
+    "change_description": "Add average() for cart summaries\n\n",
+    "specs": [
+      "pr-text"
+    ],
+    "context": "a2d20007de9967110e880aab5c42f8ab7f7381d73cf6e4d05d7a40f4d9f8efeb"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Add an average() helper returning the mean cart price for the new summary panel, which must cope with empty carts (PR title/body; commit 609ed60).",
+    "issue_fit": "Partial - the mean is computed, but the stated empty-cart case is not handled. No originating issue was available; the intent source is the caller-supplied PR text and the single commit message.",
+    "coverage": "Complete merge-base diff (main...review-head, one commit, pricing.py) reviewed; no callers exist in the repository and no tests were added. Reviewer-executed reproduction of average([]) at the head raised ZeroDivisionError. Base resolved from the caller's explicit local ref main; uncommitted changes: none."
+  },
+  "findings": [
+    {
+      "id": "pricing/average-empty-cart",
+      "title": "Handle empty carts in average()",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "average() is called with an empty list, e.g. a newly created cart.",
+      "impact": "average([]) raises an unhandled ZeroDivisionError, so the summary panel fails for every new cart, contrary to the PR's stated empty-cart case (the panel itself is not in this repository).",
+      "change": "In `pricing.py`, return 0.0 (or raise a documented ValueError that callers handle) when `prices` is empty; add a test for the empty list.",
+      "source": "PR body: \"Carts can be empty right after creation.\"",
+      "anchor": {
+        "type": "line",
+        "path": "pricing.py",
+        "start_line": 17,
+        "end_line": 17,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "clone-A",
+    "requirements": [
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "pricing.py:15 defines average()"
+      },
+      {
+        "source": "pr-body/\"compute the mean price of a cart\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "pricing.py:17 returns total/len"
+      },
+      {
+        "source": "pr-body/\"Carts can be empty right after creation.\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "pricing.py:17 divides by len(prices) unguarded; average([]) raises ZeroDivisionError"
+      }
+    ],
+    "files": [
+      {
+        "path": "pricing.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "average([]) evaluated against pricing.py at review-head via python3 exec (no repo writes)",
+        "head": "609ed60fe978c1387b5684c691e3c874a4202437",
+        "outcome": "reviewer-executed",
+        "reason": "raised ZeroDivisionError; no test suite run because the change adds no tests"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "pricing/average-empty-cart",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/tmp/review-code-OlMiOn/initial",
+          "raw_return": "/tmp/review-code-OlMiOn/initial-return.json",
+          "accounting": "/tmp/review-code-OlMiOn/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "allowance": {
+        "initial_spent": true,
+        "follow_up_spent": false,
+        "carried_from": null
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "paths": {
+      "private_dir": "/tmp/review-code-OlMiOn",
+      "store": "/tmp/review-code-OlMiOn/review-context.json",
+      "composition": "/tmp/review-code-OlMiOn/composition.json",
+      "skill_root": "/home/jack/.t3/bench-runs/toy/A/home/.claude/skills/review-code"
+    }
+  },
+  "finalization": {
+    "protocol": "review-code-finalization/1",
+    "profile": "publishable",
+    "report": "/tmp/review-code-OlMiOn/report.md",
+    "inputs": {
+      "store": "/tmp/review-code-OlMiOn/review-context.json",
+      "packet": null,
+      "fingerprint_input": "/tmp/review-code-OlMiOn/fingerprint.json"
+    },
+    "replies": []
+  }
+}

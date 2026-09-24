@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-006",
+  "run_id": "2026-09-24-toy",
+  "cell": {
+    "target": "toy-average",
+    "arm": "review-code-sonnet-high",
+    "replicate": 1
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-24T06:53:17Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.281",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "6862d993a1499009a4d59d54a38a1d34daef9ea7",
+    "diff_commands": [
+      "git diff --stat main...review-head",
+      "git diff main...review-head"
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4504fb037611266d19868b8215f9e804217544047c25f0f723efa717815d01a7",
+    "tree_identity_after": "4504fb037611266d19868b8215f9e804217544047c25f0f723efa717815d01a7"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.496241,
+    "cost_bounds_usd": {
+      "low": 0.496241,
+      "high": 0.496241
+    },
+    "rates_as_of": "2026-06-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-24T06:53:17Z",
+    "payload_validated_at": "2026-09-24T06:55:25Z",
+    "completed_at": "2026-09-24T06:54:46Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "c9ce588faf89f599e576c3e7cd83514c5ba2142a48e43db2255b62ffc36db21e"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-24-toy/att-006.tar.gz",
+    "sha256": "41e6bd58bd6611c26571315463d18c22b0de93ae5caf8f7dea5e9bdb200df051",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "Predates the wrapper's TMPDIR inside the attempt directory, so the skill kept its private store under /tmp/review-code-* and wrote that path to /tmp/rc_dir, which it read back in later commands; both are the reviewer's own scratch created in this session and are allowed explicitly in the audit. The reviewer ran git checkout --detach and switched back; the tree identity at exit matches.",
+    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after completed_at"
+  ]
+}

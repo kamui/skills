@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-004",
+  "run_id": "2026-09-24-toy",
+  "cell": {
+    "target": "toy-average",
+    "arm": "claude-builtin-opus-high",
+    "replicate": 1
+  },
+  "predecessor": "att-002",
+  "retry_reason": "harness configuration: the session --effort flag was missing, so the built-in ran its low variant",
+  "replacement_index": 1,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-24T06:51:37Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.281",
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "effort": "high",
+    "prompt_hash": "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a",
+    "prompt_header": "`high effort → 8 inline angles → dedup (no verify) → ≤10 findings`",
+    "prompt_registry_match": "claude-code 2.1.281 / session --effort high, model claude-opus-5-5",
+    "skill_tree": null,
+    "diff_commands": [
+      "git diff main...review-head "
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4504fb037611266d19868b8215f9e804217544047c25f0f723efa717815d01a7",
+    "tree_identity_after": "4504fb037611266d19868b8215f9e804217544047c25f0f723efa717815d01a7"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": null,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.059219,
+    "cost_bounds_usd": {
+      "low": 0.059219,
+      "high": 0.059219
+    },
+    "rates_as_of": "2026-06-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-24T06:51:37Z",
+    "payload_validated_at": null,
+    "completed_at": "2026-09-24T06:51:52Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "payload.json",
+    "sha256": "7156ffacc98029709b4eebc0f6cefc923615d8a608aef846207980b63d856f92"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-24-toy/att-004.tar.gz",
+    "sha256": "1b49444aae7423b93932e5b12f67bdd7c054f310aee835ff24684fd188d9b5f4",
+    "restoration_check": "passed"
+  },
+  "notes": []
+}

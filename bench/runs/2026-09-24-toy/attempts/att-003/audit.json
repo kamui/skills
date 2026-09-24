@@ -1,0 +1,43 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/toy/D/home/.codex/sessions/2026/09/24/rollout-2026-09-24T02-49-40-01a0d22d-4ff1-7103-8fe5-a3b5df676c51.jsonl",
+    "/home/jack/.t3/bench-runs/toy/D/home/.codex/sessions/2026/09/24/rollout-2026-09-24T02-49-40-01a0d22d-5032-7580-9f88-27bb1419a48e.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "pwd; git diff base...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md",
+    "ls -la; for p in /AGENTS.md /AGENTS.override.md /home/AGENTS.md /home/AGENTS.override.md /home/jack/AGENTS.md /home/jack/AGENTS.override.md /home/jack/.t3/AGENTS.md /home/jack/.t3/AGENTS.override.md /home/jack/.t3/bench-runs/AGENTS.md /home/jack/.t3/bench-runs/AGENTS.override.md /home/jack/.t3/bench-runs/toy/AGENTS.md /home/jack/.t3/bench-runs/toy/AGENTS.override.md; do if test -f \"$p\"; then echo \"$p\"; cat \"$p\"; fi; done; git ls-tree -r --name-only review-head; git show review-head:pricing.py",
+    "find .agents .codex -type f -maxdepth 2 -print -exec cat {} \\;; git show review-head:test_pricing.py; git show review-head:pricing.py | python -c 'import sys; ns={}; exec(sys.stdin.read(),ns); print(ns[\"average\"]([]))'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff base...review-head"
+  ],
+  "guidance_probes": [
+    "/AGENTS.md",
+    "/AGENTS.override.md",
+    "/home/AGENTS.md",
+    "/home/AGENTS.override.md",
+    "/home/jack/.t3/AGENTS.md",
+    "/home/jack/.t3/AGENTS.override.md",
+    "/home/jack/.t3/bench-runs/AGENTS.md",
+    "/home/jack/.t3/bench-runs/AGENTS.override.md",
+    "/home/jack/.t3/bench-runs/toy/AGENTS.md",
+    "/home/jack/.t3/bench-runs/toy/AGENTS.override.md",
+    "/home/jack/AGENTS.md",
+    "/home/jack/AGENTS.override.md"
+  ],
+  "violations": [
+    "path outside allowed roots in command: /home/jack/.t3/bench-runs/toy"
+  ],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/toy/clone-D",
+    "/home/jack/.t3/bench-runs/toy/D"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "arm": "codex",
+  "parse_status": "parsed",
+  "native_verdict": "patch is incorrect",
+  "verdict_source": "rollout overall_correctness",
+  "items": [
+    {
+      "file": "pricing.py",
+      "line_start": 17,
+      "line_end": 17,
+      "claim": "Handle empty carts before dividing by their length",
+      "consequence": "For a newly created empty cart, `average([])` raises `ZeroDivisionError` because `len(prices)` is zero. Empty carts are explicitly expected, so the summary panel cannot safely use this helper for that normal state. Handle empty input with an agreed summary value before performing the division and add a regression test.",
+      "proposed_fix": null,
+      "native_priority": "P1",
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

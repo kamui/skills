@@ -1,0 +1,28 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/toy/C/home/.claude/projects/-home-jack--t3-bench-runs-toy-clone-C/78b95a34-eab5-48cc-b89a-3c15afeaaa07/subagents/agent-a9414bf6af63cb5ce.jsonl",
+    "/home/jack/.t3/bench-runs/toy/C/home/.claude/projects/-home-jack--t3-bench-runs-toy-clone-C/78b95a34-eab5-48cc-b89a-3c15afeaaa07.jsonl"
+  ],
+  "prompt_headers": [
+    "`minimal prompt \u2192 single careful diff pass \u2192 \u226415 findings`"
+  ],
+  "report_findings_calls": 1,
+  "commands": [
+    "git diff base...review-head 2>/dev/null || git diff HEAD~1; git status --short"
+  ],
+  "workdirs": [
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff base...review-head 2>/dev/null ",
+    "git diff HEAD~1"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/toy/clone-C",
+    "/home/jack/.t3/bench-runs/toy/C"
+  ]
+}
