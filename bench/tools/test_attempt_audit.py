@@ -65,7 +65,8 @@ class AttemptAudit(unittest.TestCase):
         for command in ("cat src/../../outside/register.json", "cat ./../outside/secret", "ls src/..//../outside",
                         "cat --file=src/../../outside/x", f"cat /usr/..{self.outside}/x", "cat <../outside/x",
                         "dd if=../outside/x", "../outside/run.sh",
-                        'python3 -c "print(open(\'../outside/x\').read())"'):
+                        'python3 -c "print(open(\'../outside/x\').read())"', 'bash -c "cat ../outside/x"',
+                        'cat "a b/../../outside/x"', "cat foo\\ bar/../../outside/x", "cat src/%41/../../../outside/x"):
             with self.subTest(command=command):
                 rc, violations = self.bash(command)
                 self.assertEqual(rc, 1, violations)
@@ -92,6 +93,12 @@ class AttemptAudit(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertEqual(violations, [f"working directory outside allowed roots: {self.outside}",
                                       f"path outside allowed roots in command: {self.outside}/register.json"])
+
+    def test_codex_single_quoted_exec_code(self):
+        code = "await tools.exec_command({'cmd':'cat ../outside/x'});"
+        rc, violations = self.run_audit("codex", [self.exec_call(code)])
+        self.assertEqual(rc, 1)
+        self.assertIn(f"path outside allowed roots in command: {self.outside}/x", violations)
 
     def test_codex_workdir_in_clone_passes(self):
         code = f'await tools.exec_command({{cmd:"cd src && cat ../README.md",workdir:"{self.clone}"}});'
