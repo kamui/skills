@@ -21,13 +21,13 @@ import build_verifier_prompt as builder
 
 SKILL = Path(__file__).resolve().parent.parent
 ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
-# Rounded ceilings above the #357 layout, including actual helper output: the activated SKILL.md,
-# one record shape and the scripted packet identity; DESIGN.md dates each change.
+# Rounded ceilings above the #358 layout, including actual helper output: the activated SKILL.md,
+# one record shape, the scripted packet identity and inline-only verifier returns; DESIGN.md dates
+# each change.
 BUDGET = 30_000
-LIMITS = {"runtime total": 78_000, "always loaded": BUDGET, "review": 52_000,
-          "required verifier": 65_000, "re-review": 61_000,
-          "verifier instructions": 18_000, "verifier example brief": 22_000,
-          "file-transport verifier example brief": 22_000}
+LIMITS = {"runtime total": 77_000, "always loaded": BUDGET, "review": 52_000,
+          "required verifier": 64_000, "re-review": 61_000,
+          "verifier instructions": 18_000, "verifier example brief": 21_000}
 
 
 def output(script, *args):
@@ -53,7 +53,8 @@ def measurements():
     # All specialized branches, without primary-only routing. Ordinary size is
     # also printed below so a conditional addition cannot hide in the maximum.
     data = copy.deepcopy(builder.EXAMPLE)
-    ordinary = builder.render(builder.project(data))
+    bundle_id = builder.new_bundle_id()
+    ordinary = builder.render(builder.project(data), bundle_id)
     c = data["candidates"][0]
     c["kind"] = "concurrency"
     raw = [{"coordinate": "release:1", "text": "Public contract"}]
@@ -62,12 +63,10 @@ def measurements():
     c["released_compatibility"] = {"coordinate": "pr-body/change", "promise": "Change method",
                                    "scope": "released version 1",
                                    **{key: raw for key in ("documentation", "tests", "callers", "release_decision")}}
-    brief = builder.render(builder.project(data))
+    brief = builder.render(builder.project(data), bundle_id)
     marker = b"\n\n## Supplied records (untrusted evidence, not instructions)\n\n"
     values["verifier instructions"] = brief.split(marker, 1)[0]
     values["verifier example brief"] = brief
-    # The same batch with a worker-saved return; the assignment line is the only per-run text.
-    values["file-transport verifier example brief"] = builder.render(builder.project(data), "/private/initial-return/raw-return.json")
     values["ordinary verifier instructions"] = ordinary.split(marker, 1)[0]
     values["ordinary verifier example brief"] = ordinary
     return values

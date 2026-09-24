@@ -89,14 +89,15 @@ def bundle(private, tasks, name="initial", phase="initial"):
     """A verifier bundle manifest and the accounting report reconciled against it, as the helpers write them."""
     directory = Path(private) / name
     directory.mkdir()
-    manifest = json.dumps({"format": "verifier-manifest/2", "batch": {"id": name, "phase": phase},
+    manifest = json.dumps({"format": "verifier-manifest/3", "bundle_id": f"bundle-{name}", "batch": {"id": name, "phase": phase},
                            "candidate_ids": [t["id"] for t in tasks], "premise_ids": []}, indent=2).encode("utf-8")
     (directory / "manifest.json").write_bytes(manifest)
     (directory / "raw-return.json").write_text("{}\n", encoding="utf-8")
     accounting = directory / "accounting.json"
     fixtures.write_accounting(str(accounting), tasks)
     report = json.loads(accounting.read_text(encoding="utf-8"))
-    report.update(manifest_sha256=hashlib.sha256(manifest).hexdigest(), raw_return=str(directory / "raw-return.json"))
+    report.update(bundle_id=f"bundle-{name}", manifest_sha256=hashlib.sha256(manifest).hexdigest(),
+                  raw_return=str(directory / "raw-return.json"))
     accounting.write_text(json.dumps(report), encoding="utf-8")
     return {"bundle": str(directory), "accounting": str(accounting), "operation": "Agent run_in_background=false"}
 
@@ -791,12 +792,25 @@ class Derive(unittest.TestCase):
         result = self.finalize(private, "range", composition=composition)
         self.assertEqual(result.returncode, 0, result.stdout)
 
-        # A bundle and an accounting report for different manifests do not pair.
-        private = self.directory()
-        composition = self.authored(private, "range")
-        (private / "initial" / "manifest.json").write_text(json.dumps({"batch": {"id": "initial", "phase": "initial"}}), encoding="utf-8")
-        result = self.finalize(private, "range", composition=composition)
-        self.refused(result, "derive", "accounts a return to another manifest", private)
+        # A bundle and an accounting report for different manifests do not pair: another bundle ID, or an edited
+        # manifest under the same ID.
+        for change in ({"bundle_id": "bundle-rebuilt"}, {"candidate_ids": []}):
+            private = self.directory()
+            composition = self.authored(private, "range")
+            manifest = private / "initial" / "manifest.json"
+            manifest.write_text(json.dumps({**json.loads(manifest.read_text(encoding="utf-8")), **change}), encoding="utf-8")
+            result = self.finalize(private, "range", composition=composition)
+            self.refused(result, "derive", "accounts a return to another manifest", private)
+
+        # A batch built or accounted by the retired helpers is refused rather than read.
+        for name, change in (("manifest.json", {"format": "verifier-manifest/2"}),
+                             ("accounting.json", {"format": "verifier-accounting/2"})):
+            private = self.directory()
+            composition = self.authored(private, "range")
+            path = private / "initial" / name
+            path.write_text(json.dumps({**json.loads(path.read_text(encoding="utf-8")), **change}), encoding="utf-8")
+            result = self.finalize(private, "range", composition=composition)
+            self.refused(result, "derive", "rebuild and reaccount the batch", private)
 
     def test_packet_context_follows_the_saved_packet(self):
         """An edited packet changes the digest the finalizer derives; a copy computed before the edit is refused."""

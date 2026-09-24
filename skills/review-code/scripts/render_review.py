@@ -29,8 +29,10 @@ an omitted field no input establishes is named:
     a local target     run.merged (false); it has no packet_context
     this run           record.paths private_dir, store, composition, skill_root
     each batch         `name` and `phase` from its bundle's manifest.json,
-                       `raw_return` from its accounting report, whose
-                       manifest_sha256 must match that manifest
+                       `raw_return` from its accounting report, which must
+                       be a verifier-accounting/3 report of that
+                       verifier-manifest/3 bundle: the same bundle_id and
+                       the manifest's SHA-256
     the batches        record.verification.allowance: each flag is spent when
                        its batch is recorded here or the prior record spent it
     RECORD             record.lineage: the prior's lineage plus the prior
@@ -120,6 +122,8 @@ from typing import Any
 
 import forge_packet as fp
 import review_context as rc
+from account_verifier_return import ACCOUNTING_FORMAT
+from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
@@ -2390,14 +2394,15 @@ def derive_packet(report: Report, run: dict[str, Any], packet: dict[str, Any], c
 def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> None:
     """A batch's identity from its bundle manifest and its raw return from the accounting report reconciled."""
     bundle, accounting = batch.get("bundle"), batch.get("accounting")
-    manifest_bytes, identity = None, {}
+    manifest_bytes, manifest, identity = None, {}, {}
     if isinstance(bundle, str):
         try:
             manifest_bytes = (Path(bundle) / "manifest.json").read_bytes()
             manifest = json.loads(manifest_bytes)
-            identity = manifest["batch"] if isinstance(manifest, dict) and isinstance(manifest.get("batch"), dict) else {}
+            manifest = manifest if isinstance(manifest, dict) else {}
+            identity = manifest["batch"] if isinstance(manifest.get("batch"), dict) else {}
         except (OSError, ValueError):
-            manifest_bytes = None
+            manifest_bytes, manifest = None, {}
     source = f"bundle manifest `{bundle}/manifest.json`"
     settle(report, batch, "name", text_or_none(identity.get("id")), where, source)
     settle(report, batch, "phase", text_or_none(identity.get("phase")), where, source)
@@ -2406,8 +2411,14 @@ def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> None:
         reconciled, _why = load_object(accounting)
         reconciled = reconciled or {}
     settle(report, batch, "raw_return", text_or_none(reconciled.get("raw_return")), where, f"accounting report `{accounting}`", same_path)
-    hashed = reconciled.get("manifest_sha256")
-    if manifest_bytes is not None and isinstance(hashed, str) and hashed != hashlib.sha256(manifest_bytes).hexdigest():
+    if manifest_bytes is None or not reconciled:
+        return
+    formats = (manifest.get("format"), reconciled.get("format"))
+    if formats != (MANIFEST_FORMAT, ACCOUNTING_FORMAT):
+        report.add(where, "derived-field", f"bundle `{bundle}` and accounting report `{accounting}` are {json.dumps(formats[0])} and "
+                   f"{json.dumps(formats[1])}, not `{MANIFEST_FORMAT}` and `{ACCOUNTING_FORMAT}`; rebuild and reaccount the batch")
+    elif (reconciled.get("bundle_id") != manifest.get("bundle_id")
+          or reconciled.get("manifest_sha256") != hashlib.sha256(manifest_bytes).hexdigest()):
         report.add(where, "derived-field", f"accounting report `{accounting}` accounts a return to another manifest than `{bundle}/manifest.json`")
 
 

@@ -1,0 +1,63 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "candidates": [
+    {
+      "action": "must-fix",
+      "anchor": {
+        "end_line": 66,
+        "path": "ledger/accounts.py",
+        "side": "RIGHT",
+        "start_line": 65,
+        "type": "line"
+      },
+      "change": "In `Ledger.transfer`, raise `LedgerError` before appending either entry when the source or target account is frozen.",
+      "claim": "Ledger.transfer appends both entries without reading the frozen flag, so transfers into and out of a frozen account succeed",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:65-66",
+          "text": "if account.frozen:\n            raise LedgerError(f\"account {number} is frozen\")"
+        },
+        {
+          "coordinate": "ledger/accounts.py:83-88",
+          "text": "debit = self.get(source)\n        credit = self.get(target)\n        if debit.balance() < amount:\n            raise LedgerError(f\"transfer would overdraw {source}\")\n        debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\n        credit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+        }
+      ],
+      "fix": "ledger/accounts.py:85",
+      "id": "accounts/frozen-transfer-bypass",
+      "impact": "The frozen account is debited or credited despite the freeze, which spec criterion 2 forbids.",
+      "kind": "bug",
+      "priority": "P1",
+      "ranges": {
+        "anchor": {
+          "coordinate": "ledger/accounts.py:65-66",
+          "text": "ledger/accounts.py:31-88 @head"
+        },
+        "fix": {
+          "coordinate": "ledger/accounts.py:85",
+          "text": "ledger/accounts.py:31-88 @head"
+        }
+      },
+      "requirement_source": "ledger-spec/account-freeze/criterion-2",
+      "title": "Refuse transfers that touch a frozen account",
+      "trigger": "A transfer names a frozen account as its source or its target."
+    }
+  ],
+  "premises": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+    "id": "review-864eea8",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/baseline/continuation/repo"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; disposable copies only; no network, credentials, or destructive effect.",
+  "sources": [
+    {
+      "coordinate": "ledger-spec/account-freeze/criterion-2",
+      "text": "A frozen account accepts no new entries of any kind: postings, transfers out of it, and transfers into it each raise `LedgerError`."
+    }
+  ]
+}
