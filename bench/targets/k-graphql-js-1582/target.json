@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "k-graphql-js-1582",
+  "repo": "graphql/graphql-js",
+  "pr": 1582,
+  "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+  "merge_base": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+  "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {"sha": "f0ae3f4c0ba469c8f2147f8d12c9e670313b865c", "reason": "squash-merge of #1582 on master; its neighbourhood on master is post-merge history"},
+    {"sha": "8d621b00f7513194bce4a4b2f48d402a4da404bd", "reason": "the #4774 branch commit that fixes GT-k1 (delete original.stack); reachable upstream only through refs/pull/4774/head"},
+    {"sha": "25680d28f749a3e48362c355e1d3a2668d845006", "reason": "squash-merge of #4774 (2026-06-01), 'test: restore GraphQLError no-stack coverage'; names #1582 and states the defect"}
+  ],
+  "cutoff": "2018-11-21T14:33:19Z",
+  "cutoff_note": "the merge instant; nothing omitted",
+  "diff_manifest_sha256": "ffb09c3239a9b09fbe3b0544994d3fecbe5fe3779848ce1ab6557e0733a98e44",
+  "packet_sha256": "0473e248e7a759a30cab6c84abace66ecf2a04349764f18b9deaa6234c5d5258",
+  "legacy_packet_sha256": "6b5e1d3797ed3af4b34d01aa440dcf7540ea94c13b26cd3dca2bd4f0dd4d731b",
+  "shape": "changed-test correctness",
+  "domain": "JavaScript library, Flow-typed tests",
+  "language": "JavaScript",
+  "merged_at": "2018-11-21T14:33:19Z",
+  "fix_published_at": "2026-06-01T21:22:04Z",
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "npm install --no-audit --no-fund --offline --cache <cache-root>/npm-cache in the clone before dispatch, then git checkout -- yarn.lock and rm -f package-lock.json so the tracked tree is clean (the #137 grid measured 4 s)",
+    "allowance": "Focused test execution is permitted on this target, offline: dependencies are already installed in the clone (untracked and ignored; leave them alone). Run mocha with the clone's own binary, for example ./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill <test file> (about 2 seconds); five minutes per command, a selection at most once per flag set. Write any scratch JavaScript under the work directory; nothing may be added to or changed in the clone, and no network call of any kind is available (npm and npx cannot reach a registry).",
+    "unavailable": "network; the registry (npm, npx)",
+    "dependency_identity": [
+      {"name": "package.json", "sha256": "c3f2a305e458ed4438932f838696fc5f5295b711743f7b88601b54ae95f3c0ba", "location": "head:package.json"},
+      {"name": "yarn.lock", "sha256": "0d193d845ffb3f12da3d54422b797d444e5565655294044d4fb544ac6dec37c5", "location": "head:yarn.lock"}
+    ],
+    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; node v24.19.0, npm; git 2.55.0. Not yet re-measured on the suite's Linux machine; the npm cache archive is not yet built (design §8 step 4)."
+  },
+  "exposure": {
+    "entered_suite": "2026-09-07 (issue #137 qualification grid, target (k))",
+    "used_by": [
+      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates",
+      "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
+      "routine-review-diagnosis-2026-09-13: consumed an error-constructor and disposition-ledger snippet",
+      "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",
+      "bounded-discovery-prototype/targets/criteria.md: listed as used and excluded from later hunts"
+    ],
+    "register_published": "2026-09-07T04:52:01Z (commit 588edce in the public kamui/skills repository)",
+    "notes": "GT-k1 is a defect in a test, not in shipped code; the #137 scorer's false-clean exemption for cells that reported it as consider was corrected after review (README §3 deviation 7). The upstream fix (#4774, 2026-06-01) predates the #137 hunt by three months and is the register's primary-source evidence."
+  },
+  "current_register": 1
+}

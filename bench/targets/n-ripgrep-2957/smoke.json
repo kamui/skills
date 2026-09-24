@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "target": "n-ripgrep-2957",
+  "source": "recorded",
+  "source_document": "docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances), n-ripgrep-2957/register.md (reproduction) and adjudication/nc1-ruling.md",
+  "measured_at": "2026-09-07T10:03:00Z",
+  "platform": "Darwin 27.0.0 arm64; zsh 5.9; git 2.55.0 (the #137 machine); the adjudicator additionally had cargo and Homebrew rg 15.2.0, which the suite does not provision",
+  "provisioning": {
+    "recipe": "none beyond zsh on PATH",
+    "duration_seconds": 0,
+    "tree_clean_after": true
+  },
+  "checks": [
+    {
+      "name": "syntax",
+      "command": "zsh -n crates/core/flags/complete/rg.zsh",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": null,
+      "summary": "no syntax errors"
+    },
+    {
+      "name": "completion consistency (adjudicator only, needs a built rg)",
+      "command": "cargo build --release -q && ./ci/test-complete",
+      "revision": "both",
+      "exit_code": 0,
+      "duration_seconds": 13.3,
+      "summary": "OK at both revisions (build 13.3 s at head, 4.6 s at the merge-base); the script does not exercise the funcstack/compdef branch"
+    },
+    {
+      "name": "sourcing under compinit",
+      "command": "zsh: source the completion file after compinit, old and new bodies",
+      "revision": "both",
+      "exit_code": 1,
+      "duration_seconds": null,
+      "summary": "old body reproduces issue #2956's error (exit 1); new body exits 0 and registers _rg for rg"
+    },
+    {
+      "name": "GT-n1 reproduction",
+      "command": "zsh -c 'source test.zshrc' with the FAQ block as the file's only line; ZDOTDIR=<dir> zsh -i -c 'echo done'",
+      "revision": "head",
+      "exit_code": 127,
+      "duration_seconds": null,
+      "summary": "command not found: $ at every interactive start; the control without the `$ ` prefix sources cleanly (exit 0)"
+    }
+  ],
+  "notes": [
+    "Transcribed from the #137 record; not yet re-measured on the suite machine (Linux 6.6 WSL2 x86_64; zsh present, cargo absent). Building the crate is outside the reviewer allowance and was only used by the adjudicator.",
+    "Mirror rebuilt on the suite machine at 2026-09-24T09:25:54Z by provision.py from the staging clone: every negative SHA absent, newest reachable commit date equals the head's, diff identity equals target.json."
+  ],
+  "mirror": {
+    "built_at": "2026-09-24T09:25:54Z",
+    "cache_root": "~/.t3/bench-cache",
+    "staging_source": "full upstream clone at ~/.t3/bench-runs/grid/staging/<repo>.git with refs/pull/<n>/head fetched (2026-09-24)",
+    "negative_shas_absent": true,
+    "newest_reachable_equals_head": true,
+    "diff_identity_verified": true
+  }
+}
