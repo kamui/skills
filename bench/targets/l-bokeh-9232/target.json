@@ -9,9 +9,18 @@
   "base_ref_name": "master",
   "local_base_branch": "main",
   "negative_shas": [
-    {"sha": "ec1e525c9a8ad128e29b3b74beb732e79a0db437", "reason": "squash-merge of #9232 on master; sits next to the Flatpickr rewrite in the file's history"},
-    {"sha": "ec557b685bf941658b0a569db2ee4ae4d917045e", "reason": "head of the #9509 (Flatpickr) branch; reachable upstream only through refs/pull/9509/head"},
-    {"sha": "16d3d0efcc91a4206be0c3f11ede33f9fc03cda9", "reason": "squash-merge of #9509 (2020-01-17), which removes _unlocal_date and fixes the serialization ambiguity behind GT-l1"}
+    {
+      "sha": "ec1e525c9a8ad128e29b3b74beb732e79a0db437",
+      "reason": "squash-merge of #9232 on master; sits next to the Flatpickr rewrite in the file's history"
+    },
+    {
+      "sha": "ec557b685bf941658b0a569db2ee4ae4d917045e",
+      "reason": "head of the #9509 (Flatpickr) branch; reachable upstream only through refs/pull/9509/head"
+    },
+    {
+      "sha": "16d3d0efcc91a4206be0c3f11ede33f9fc03cda9",
+      "reason": "squash-merge of #9509 (2020-01-17), which removes _unlocal_date and fixes the serialization ambiguity behind GT-l1"
+    }
   ],
   "cutoff": "2019-10-03T15:51:00Z",
   "cutoff_note": "62 s before the merge instant (2019-10-03T15:52:02Z): a maintainer comment created 25 s before the merge was edited 73 s after it, so build_packet.py refuses the merge-time cutoff; the earlier cutoff omits 4 conversation and 2 issue comments and is strictly more conservative",
@@ -29,7 +38,20 @@
     "allowance": "Focused execution is permitted on this target, offline and outside the clone: node (v24.19.0 at the #137 freeze) is installed and scratch JavaScript may be written and run under the work directory, including with a TZ environment variable set, to check the behaviour of code that has been read; five minutes per command. Nothing may be added to or changed in the clone.",
     "unavailable": "the project's own build, npm install, the Selenium integration suite, a browser, network",
     "dependency_identity": [],
-    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; node v24.19.0; git 2.55.0. Not yet re-measured on the suite's Linux machine."
+    "platform": "measured on the suite machine at 2026-09-24T11:11:20Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "cache": {
+      "kind": "none",
+      "build": [],
+      "post_clone": [],
+      "env": {},
+      "smoke": [
+        {
+          "name": "node available with TZ support",
+          "command": "TZ=America/New_York node -e 'console.log(process.version, new Date(2019,9,3).getTimezoneOffset())'",
+          "revision": "head"
+        }
+      ]
+    }
   },
   "exposure": {
     "entered_suite": "2026-09-07 (issue #137 qualification grid, target (l))",
