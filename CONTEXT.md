@@ -13,7 +13,7 @@ One addressing pass over a pull request's review feedback, skipped when there is
 _Avoid_: loop, cycle, iteration
 
 **Delivery**:
-The whole run that takes a spec source to a pull request whose latest review status has been reached through one or more rounds. It never merges.
+The whole run that takes a spec source to a pull request whose latest review status has been reached through one or more rounds, or through the delivery's own first review when that review approves with nothing to address. It never merges.
 _Avoid_: pipeline, chain, ship
 
 **Reviewing app**:
