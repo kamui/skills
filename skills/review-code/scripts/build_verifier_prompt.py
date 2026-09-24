@@ -325,11 +325,9 @@ def main():
         return 0
     if not (args.input and args.output):
         parser.error("input and --output are required")
-    EVENT.update(event="verifier-brief-built", output=args.output)
     temporary = None
     try:
         data = project(read_json(args.input))
-        EVENT.update(projected=data)
         output = Path(args.output)
         if output.exists():
             raise OSError(f"output already exists: {output}")
@@ -385,19 +383,5 @@ EXAMPLE = {
     }],
 }
 
-# What this build hands run_events.py; recording never changes the result.
-EVENT = {}
-
-
 if __name__ == "__main__":
-    import time
-
-    started_ns = time.monotonic_ns()
-    status = main()
-    try:
-        import run_events
-
-        run_events.record(EVENT, status, started_ns, "build_verifier_prompt.py")
-    except Exception:
-        pass
-    raise SystemExit(status)
+    raise SystemExit(main())

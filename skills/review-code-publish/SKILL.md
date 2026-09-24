@@ -40,8 +40,7 @@ Never locate scripts through a sibling-relative path.
 Re-fetch the pull-request head, check it, and post the batch in one forge-native review call with the reference's freshness-and-submission block, one shell invocation.
 Exit 3 means nothing was written on that block's `preflight failed` route and on the thread write loop's pre-write exits: report what it printed — a stale or unreadable head, a review-token command that yielded no usable token, or a refused `writes.jsonl` — and stop.
 An exit 3 the block prints after its `write attempted` line is a failed review POST, not a preflight failure, and takes the repair, retry, and fallback rules below instead.
-Run that fetch, every write, and the readback below through the `run_events.py` wrapper under that skill root, as the reference's Timing events section classifies them.
-After the review posts, write `writes.jsonl` for every prior item and run the reference's thread write loop once for its replies and thread resolutions, wrapped as one `role=replies` event.
+After the review posts, write `writes.jsonl` for every prior item and run the reference's thread write loop once for its replies and thread resolutions.
 
 On a malformed-comment rejection, an ambiguous write, or a refused review, follow the reference's repair, retry, and fallback rules, using the scripts under the skill root `review-code` records; if compaction dropped the rendering instructions, re-read `references/output.md` from that root.
 
