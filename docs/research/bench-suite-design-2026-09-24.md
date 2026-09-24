@@ -1,7 +1,8 @@
 # Design: a rerunnable reviewer benchmark suite (`bench/`)
 
-**Status: design, not implemented.** Written 2026-09-24 after the first-draft proposal was
-reviewed by a Codex reviewer (`gpt-6-astra`, reasoning `high`); the review is
+**Status: §8 steps 1 and 2 implemented in [`bench/`](../../bench/README.md); the rest is design.**
+Written 2026-09-24 after the first-draft proposal was reviewed by a Codex reviewer (`gpt-6-astra`,
+reasoning `high`); the review is
 [`builtin-review-benchmark-2026-09-24/review-2.md`](builtin-review-benchmark-2026-09-24/review-2.md)
 and §9 records the disposition of every item. This design supersedes the layout of
 [`builtin-review-benchmark-2026-09-24/`](builtin-review-benchmark-2026-09-24/README.md), whose
@@ -190,12 +191,12 @@ cover clean, incomplete, malformed and multi-worker outputs.
 
 1. Create `bench/` with the schemas, the rubric v1, `rates.json` seeded from the dated evidence
    already recorded, and `harness/` seeded with the two Claude Code 2.1.281 prompt hashes.
-2. Move `dispatch.sh` (as `run_cell.py`), `attempt_audit.py`, `normalize_review.py`,
-   `codex_usage.py`, `transcript_usage.py`, and `build_packet.py` into `bench/tools/`, keeping
-   their provenance checks, replay support, request deduplication, cache-tier bounds, native
-   output retention and blind rendering; update links in the research docs that cite them. Apply
-   the three defect fixes from the review: relative-path audit, timing semantics, unresolved
-   parsing.
+2. Move `dispatch.sh` (under its own name until `run_cell.py` replaces it), `attempt_audit.py`,
+   `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, and `build_packet.py` into
+   `bench/tools/`, keeping their provenance checks, replay support, request deduplication,
+   cache-tier bounds, native output retention and blind rendering; update links in the research
+   docs that cite them. Apply the three defect fixes from the review: relative-path audit, timing
+   semantics, unresolved parsing.
 3. Convert the six #137 targets: `target.json` from the shell fragments and README tables;
    `packet.legacy.md` preserved with the recorded hash and a factual `packet.md` derived from it;
    `register.v1.json` from each prose register, and `register.v2.json` for (n); `smoke.json` from
