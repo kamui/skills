@@ -1,0 +1,24 @@
+{
+  "bundle_id": "dfc4e918ab0e001ab9df67b9937f61ab",
+  "candidates": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "verdict": "confirmed",
+      "basis": "`Ledger.transfer` reads neither account's `frozen` flag before appending both entries, so a transfer into or out of a frozen account succeeds where criterion 2 requires `LedgerError`.",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:83-88",
+          "text": "debit = self.get(source)\n        credit = self.get(target)\n        if debit.balance() < amount:\n            raise LedgerError(f\"transfer would overdraw {source}\")\n        debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\n        credit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+        },
+        {
+          "coordinate": "ledger-spec/account-freeze/criterion-2",
+          "text": "transfers out of it, and transfers into it each raise `LedgerError`"
+        }
+      ],
+      "safety_rulings": []
+    }
+  ],
+  "premises": [],
+  "duplicate_groups": [],
+  "observation": null
+}
