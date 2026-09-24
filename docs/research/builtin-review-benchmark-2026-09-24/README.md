@@ -83,7 +83,7 @@ Isolation for every B, C and D attempt, all verified in §9:
 3. **Network off.** Claude: `--allowedTools "Bash,Read,Glob,Grep,Agent"` (no `WebFetch`,
    `WebSearch`); Codex: the sandbox's `network_access: false`. Bash itself can reach the network, so
    the read audit below also covers `curl`/`gh`/`git fetch` invocations.
-4. **Post-hoc read audit** ([`tools/attempt_audit.py`](tools/attempt_audit.py)). Every command
+4. **Post-hoc read audit** ([`bench/tools/attempt_audit.py`](../../../bench/tools/attempt_audit.py), moved from this bundle on 2026-09-24). Every command
    and file read is in the transcript (Claude: root plus `subagents/agent-*.jsonl`; Codex: the
    child rollout's `exec` items). An attempt that read any path outside the clone, the attempt
    directory (which holds the fresh home and the reviewer's `TMPDIR`), or that ran a network
@@ -113,7 +113,7 @@ the parent rollout records no usage.
 and `review-head` checked out (the built-in's Phase 0 runs `git diff main...HEAD` whatever the
 argument says, §9, so the pinned range is honoured only under that naming), dependencies
 preinstalled; the byte-identical phase-1 packet from
-[`build_packet.py`](../tools/build_packet.py); the execution allowance (five minutes per focused
+[`build_packet.py`](../../../bench/tools/build_packet.py); the execution allowance (five minutes per focused
 command, ten minutes provisioning). The packet is transported to each arm the only way that arm
 accepts text: A through its caller contract; B/C in the prompt after the target argument
 (`/code-review <base>...review-head high` followed by the packet); D as the review's
@@ -123,7 +123,7 @@ executed diff command is checked against the pinned range from the transcript. D
 pinned to `workspace-write` on the disposable clone (`-c sandbox_mode="workspace-write"`, honoured
 in §9) so it can run focused checks as A can; a before/after tree identity check catches mutation.
 
-**Wrapper.** [`tools/dispatch.sh`](tools/dispatch.sh) builds the fresh home, exports `TMPDIR`
+**Wrapper.** [`bench/tools/dispatch.sh`](../../../bench/tools/dispatch.sh) (moved from this bundle on 2026-09-24) builds the fresh home, exports `TMPDIR`
 inside the attempt directory, records the tree identity before and after, writes the timing
 sidecar, and runs the arm: A through the Skill tool with the caller inputs above; B/C with
 `--safe-mode`, `--model`, session `--effort` and the argument; D with the stdin prompt and
@@ -140,7 +140,7 @@ B/C rank position), `native_action` (A only: `must-fix`/`consider`), `native_con
 (B/C `verdict` when present). **No `blocking` flag is derived**: the review of the first draft
 showed that mapping Codex priorities or built-in ranks to a blocking bit invents action
 information. **No `kind` is derived by keyword** either; every item is a finding until an
-adjudicator classifies it (§8). Normalization is mechanical ([`normalize_review.py`](../tools/normalize_review.py), stdlib,
+adjudicator classifies it (§8). Normalization is mechanical ([`normalize_review.py`](../../../bench/tools/normalize_review.py), stdlib,
 self-tested against the toy fixtures) and blind to the register; a parse failure is recorded, not repaired by hand.
 
 **Blinding.** Scorers receive uniformly rendered items (location, claim, consequence, fix) with
@@ -220,7 +220,7 @@ the per-shape tables use completed-only and attempt-level views as the method re
 
 **Codex spend is not dollars.** The maintainer's Codex runs on a ChatGPT plan
 (`plan_type: prolite` in the rollout's rate-limit block), so D's cost column is a list-price
-equivalent from [`codex_usage.py`](../tools/codex_usage.py) and its real constraint is the plan's
+equivalent from [`codex_usage.py`](../../../bench/tools/codex_usage.py) and its real constraint is the plan's
 weekly quota, recorded in the ledger before each D dispatch. The `$250` cap counts the list-price
 equivalent so the arms stay comparable.
 

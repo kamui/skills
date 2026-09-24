@@ -5,8 +5,11 @@ Method: [`docs/research/code-review-one-shot-method.md`](../docs/research/code-r
 Scripts follow [`docs/agents/scripts.md`](../docs/agents/scripts.md): standard-library Python 3.9+,
 `--self-test` or a `test_<name>.py` sibling, exit codes 0/1/2.
 
-**Status (2026-09-24): scaffolding.** The schemas, rubric v1, rates, harness registries and the
-manifest checker exist. Tools, targets, and runs migrate in the order the design's §8 gives.
+**Status (2026-09-24): scaffolding plus tools.** The schemas, rubric v1, rates, harness
+registries, the manifest checker, and the migrated tools exist (design §8 steps 1 and 2, with the
+three defect fixes applied: relative-path read audit, four-event timing in the wrapper, and an
+`unresolved` parse status). Forwarding stubs remain at `docs/research/tools/` for the four moved
+Python tools so historical commands keep working. Targets and runs migrate next.
 
 ## Layout
 
@@ -18,7 +21,7 @@ manifest checker exist. Tools, targets, and runs migrate in the order the design
 | `harness/*.json` | observed built-in prompt variants and presets per CLI version, by hash |
 | `targets/<id>/` | `target.json`, frozen `packet.md`, `register.v<N>.json`, `smoke.json` |
 | `arms/<id>.json` | reviewer configurations as data |
-| `tools/` | provisioning, dispatch, audit, normalization, metering, scoring, comparison |
+| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`; `provision.py`, `run_cell.py`, `score.py`, `compare.py` to come |
 | `runs/<date>-<label>/` | frozen manifest, attempt records, mappings, results |
 
 Mirrors, dependency caches and transcripts live outside the repository under `~/.t3/bench-cache/`
