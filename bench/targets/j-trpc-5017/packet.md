@@ -10,7 +10,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | --- | --- |
 | Pull request | [`trpc/trpc#5017`](https://github.com/trpc/trpc/pull/5017) — "fix(server): inference fix for inputs with middleware" |
 | Author | `KATT` (association at fetch time: `MEMBER`) |
-| Repository URL (`summary.repository_url`) | `https://github.com/trpc/trpc` |
+| Repository URL | `https://github.com/trpc/trpc` |
 | Head SHA | `7dc04a7e94654dfad6ef1289dfe01a0a206fff3b` |
 | Base ref | `main` |
 | Base SHA (as recorded on the pull request) | `2abb2d5cd19740be37272dac6ad7fdd36244ae54` |
@@ -19,7 +19,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | `state` | `MERGED` |
 | `merged` | **`true`** (merged 2023-11-10T10:08:08Z) |
 | `isDraft` | `false` |
-| Originating issue(s) | none — the PR body carries no closing reference; `issues=none` unless the dispatch supplies a spec |
+| Originating issue(s) | none — the PR body carries no closing reference |
 
 ## 2. Changed-file manifest (verified against the pinned SHAs from the mirror)
 
@@ -46,7 +46,7 @@ What changes are made in this PR? Is it a feature or a bug fix?
 
 ## 4. Originating issue
 
-None. The pull-request body is the only statement of intent. Record `issues=none` (or the coordinate of a spec the dispatch supplies).
+None. The pull-request body is the only statement of intent.
 
 ## 5. Commits on the head, oldest first — messages verbatim
 

@@ -14,7 +14,7 @@
   "cutoff": "2024-12-31T13:23:13Z",
   "cutoff_note": "the merge instant; two conversation comments after it are omitted",
   "diff_manifest_sha256": "9701ee80bb81fd14d6217e233def684b2a24ac0264dda4291e61277cb66b5fc1",
-  "packet_sha256": "9adc5502fe4c944e70df97541673d7dcc2fccdb47baed94850c45f8b907524f9",
+  "packet_sha256": "20cf68dcae6f7d13ea5059b1daab21f31cc00e9ff3dbc9f744beca177af67ccd",
   "legacy_packet_sha256": "ac4ad8bf3c68466a8aca4e4debe1d3fd25a5f5130c8d6f35ef1aee23f390022b",
   "shape": "promised change that does not work as pasted (documentation, shell surface)",
   "domain": "Rust CLI project, zsh completion and FAQ",

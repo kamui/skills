@@ -10,7 +10,7 @@ policy (branch layout, execution allowance, what is unavailable) separately.
 | --- | --- |
 | Pull request | [`BurntSushi/ripgrep#2957`](https://github.com/BurntSushi/ripgrep/pull/2957) — "feat(completion): support sourcing zsh completion dynamically" |
 | Author | `vegerot` (association at fetch time: `CONTRIBUTOR`) |
-| Repository URL (`summary.repository_url`) | `https://github.com/BurntSushi/ripgrep` |
+| Repository URL | `https://github.com/BurntSushi/ripgrep` |
 | Head SHA | `855bfa6cdae4f4fe8762f892fc4957635397083e` |
 | Base ref | `master` |
 | Base SHA (as recorded on the pull request) | `79cbe89deb1151e703f4d91b19af9cdcc128b765` |
