@@ -63,7 +63,9 @@ class AttemptAudit(unittest.TestCase):
 
     def test_embedded_dotdot_escapes_are_violations(self):
         for command in ("cat src/../../outside/register.json", "cat ./../outside/secret", "ls src/..//../outside",
-                        "cat --file=src/../../outside/x", f"cat /usr/..{self.outside}/x"):
+                        "cat --file=src/../../outside/x", f"cat /usr/..{self.outside}/x", "cat <../outside/x",
+                        "dd if=../outside/x", "../outside/run.sh",
+                        'python3 -c "print(open(\'../outside/x\').read())"'):
             with self.subTest(command=command):
                 rc, violations = self.bash(command)
                 self.assertEqual(rc, 1, violations)
@@ -93,6 +95,14 @@ class AttemptAudit(unittest.TestCase):
         rc, violations = self.run_audit("codex", [call])
         self.assertEqual(rc, 1)
         self.assertIn(f"working directory outside allowed roots: {self.outside}", violations)
+
+    def test_codex_local_shell_call_working_directory(self):
+        call = {"type": "response_item", "payload": {"type": "local_shell_call", "action": {
+                "type": "exec", "command": ["cat", "register.json"], "working_directory": str(self.outside)}}}
+        rc, violations = self.run_audit("codex", [call])
+        self.assertEqual(rc, 1)
+        self.assertIn(f"working directory outside allowed roots: {self.outside}", violations)
+        self.assertIn(f"path outside allowed roots in command: {self.outside}/register.json", violations)
 
     def test_codex_workdirs_without_a_literal_cmd_are_audited(self):
         code = (f'for (const c of cmds) {{ await tools.exec_command({{cmd:c,workdir:"{self.outside}"}}); }}'

@@ -72,6 +72,8 @@ HOME_DIR = None
 
 
 SPLIT = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
+# A path-like run starting a word or following a redirection, `=`, `:`, a quote or a bracket.
+RUN = re.compile(r"(?:^|(?<=[<>=:'\"(\[,]))([\w.@+-]*(?:/[\w.@+-]*)*)")
 
 
 def tokens(segment: str) -> list:
@@ -82,21 +84,23 @@ def tokens(segment: str) -> list:
 
 
 def paths_in(text: str, cwd: str, base: str = None):
-    """Absolute paths, ``~`` paths expanded against the fresh home, every operand with a ``..``
-    segment, and every relative operand while the working directory is not ``base`` (the clone),
-    each resolved against the command's working directory. The walk starts at ``cwd`` and tracks
-    ``cd`` across ``;``, ``&&``, ``||`` and ``|``."""
+    """Absolute paths, ``~`` paths expanded against the fresh home, every relative path run with a
+    ``..`` segment in any word (the command word, ``key=value`` and redirection operands, and paths
+    inside a quoted script included), and every relative operand while the working directory is
+    not ``base`` (the clone), each resolved against the command's working directory. The walk
+    starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||`` and ``|``."""
     found = [os.path.normpath(p) for p in re.findall(r"(?<![\w.~}\)\"'])(/[\w.@+-][\w./@+-]*)", text or "")]
     tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
     relative = []
     here, base = cwd, base or cwd
     for segment in SPLIT.split(text or ""):
         words = tokens(segment.strip().lstrip("({ "))
-        for word in words[1:]:
+        for index, word in enumerate(words):
+            for run in RUN.findall(word):
+                if run and not run.startswith("/") and ".." in run.split("/"):
+                    relative.append(os.path.normpath(os.path.join(here, run)))
             operand = word.split("=", 1)[1] if word.startswith("-") and "=" in word else word
-            if not operand or operand.startswith(("/", "~", "-")):
-                continue
-            if ".." in operand.split("/") or here != base:
+            if index and here != base and operand and not operand.startswith(("/", "~", "-")):
                 relative.append(os.path.normpath(os.path.join(here, operand)))
         if words and words[0] == "cd":
             target = words[1] if len(words) > 1 else "~"
@@ -190,7 +194,7 @@ def audit_codex(attempt: Path, roots):
             if record.get("type") == "response_item":
                 kind = payload.get("type")
                 if kind in ("function_call", "custom_tool_call", "local_shell_call"):
-                    args = payload.get("arguments") or payload.get("input") or ""
+                    args = payload.get("arguments") or payload.get("input") or (payload if kind == "local_shell_call" else "")
                     if isinstance(args, str):
                         try:
                             parsed = json.loads(args)
