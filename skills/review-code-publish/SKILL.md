@@ -43,7 +43,7 @@ An exit 3 the block prints after its `write attempted` line is a failed review P
 Run that fetch, every write, and the readback below through the `run_events.py` wrapper under that skill root, as the reference's Timing events section classifies them.
 After the review posts, write `writes.jsonl` for every prior item and run the reference's thread write loop once for its replies and thread resolutions, wrapped as one `role=replies` event.
 
-On a malformed-comment rejection, an ambiguous write, or a refused review, follow the reference's repair, retry, and fallback rules, using the scripts under the skill root `review-code` records; if compaction dropped the rendering instructions, re-read `references/rendering.md` from that root.
+On a malformed-comment rejection, an ambiguous write, or a refused review, follow the reference's repair, retry, and fallback rules, using the scripts under the skill root `review-code` records; if compaction dropped the rendering instructions, re-read `references/output.md` from that root.
 
 ## Report
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Normalize saved forge responses into one persisted review packet.
 
-`references/pull-request-target.md`, read at `SKILL.md` step 1 for a pull
+`references/targets.md`, read at `SKILL.md` step 1 for a pull
 request, fetches the pull request, its closing issues with their comments, and
 its reviews, review threads, and comments with `gh api graphql`, saving every
 response page to a file. This script turns those saved pages into

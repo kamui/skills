@@ -614,7 +614,7 @@ class RunEventTests(unittest.TestCase):
                                  (expected, "SIGTERM", child_signal))
 
     def test_documented_wrapped_commands_run(self):
-        sources = [SCRIPTS.parent / "references" / "pull-request-target.md",
+        sources = [SCRIPTS.parent / "references" / "targets.md",
                    SCRIPTS.parent.parent / "review-code-publish" / "references" / "publication.md"]
         binary = self.root / "bin"
         binary.mkdir()

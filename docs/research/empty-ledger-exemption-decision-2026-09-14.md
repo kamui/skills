@@ -8,7 +8,7 @@ enlarged, and the shipped skill is unchanged.
 
 ## Decision
 
-> Superseded on 2026-09-20: `v5b-22` removed the empty-ledger sentence and runs the no-material-survivor batch only when the ledger holds an attackable row. See the `v5b-21` → `v5b-22` section of `skills/review-code/HISTORY.md`. The decision below is retained as recorded.
+> Superseded on 2026-09-20: `v5b-22` removed the empty-ledger sentence and runs the no-material-survivor batch only when the ledger holds an attackable row. See the `v5b-21` → `v5b-22` section of `docs/review-code/HISTORY.md`. The decision below is retained as recorded.
 
 **Insufficient evidence; no change.** Keep `review-code` step 3's sentence "An empty ledger still
 requires the batch; its conclusion covers only that empty ledger." The inspected evidence has no
@@ -22,7 +22,7 @@ exemption is proposed and no implementation issue is opened.
 | --- | --- |
 | `7a349667b1606d4557ac0b1c4f4ef3d271c48117` (`origin/main`, workflow `v5b-17`) | Shipped rule under assessment: [`SKILL.md` step 3](../../skills/review-code/SKILL.md), no-material-survivor mode. It applies the same way to pull-request, range, and working-tree targets and to both caller modes. |
 | `9b9e18d98e2b22eb538410deda149a949159754f` (2026-09-11, `v5b-13`) | Added the empty-ledger sentence when [#202](clean-verdict-any-surface-2026-09-11.md) removed the surface condition. `v5b-12` and earlier ran no-material-survivor mode only on concurrency, integrity, and security surfaces and had no explicit empty-ledger rule. |
-| `v5b-17` at [#218](../../skills/review-code/HISTORY.md#ordinary-run-timing-records-issue-218) | Added `run-events.jsonl` recording. It is the first source that can tell an explicit zero-row complete-ledger batch from an unknown one. It was installed on this host at 2026-09-14 04:00 −0400. |
+| `v5b-17` at [#218](../review-code/HISTORY.md#ordinary-run-timing-records-issue-218) | Added `run-events.jsonl` recording. It is the first source that can tell an explicit zero-row complete-ledger batch from an unknown one. It was installed on this host at 2026-09-14 04:00 −0400. |
 
 ## Evidence table
 
@@ -61,7 +61,7 @@ The following facts are **mechanical** and hold by construction:
   therefore means the primary raised no candidate at all.
 - The worker receives no rows. It cannot search for new findings, and its required conclusion covers
   only the empty ledger. It cannot re-open anything or rule on any row.
-- [`HISTORY.md`'s transition replay](../../skills/review-code/HISTORY.md#instruction-transition-replay)
+- [`HISTORY.md`'s transition replay](../review-code/HISTORY.md#instruction-transition-replay)
   records that the builder accepts an empty complete-ledger batch and the accountant requires its
   conclusion.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate a would-be review-code record against the mechanical
-rules of ``references/rendering.md`` and
-``references/review-rubric.md``.
+rules of ``references/output.md`` and
+``references/rubric.md``.
 
 The reviewer keeps every semantic judgment (is the evidence real, is the fix
 location real, is a candidate a duplicate, is a question or observation

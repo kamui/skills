@@ -12,13 +12,13 @@ Questions state the evidence, why the answer changes the decision, and its suppl
 
 Author the summary's intent, issue-fit outcome, coverage, ambiguities, and gaps. With no originating issue, say issue alignment was unavailable and name the actual intent source. A required missing issue is a whole-change question. Do not repeat an unverifiable claim as established. Distinguish accepted supplied checks, historical checks at their original heads, reviewer-executed checks, test failures, environmental failures, and unavailable execution. Group shared head/input context and reference saved output. Name every uncovered file or required check and the input that could recover it.
 
-Retain every prior item exactly once with classification and evidence, disputes included; draft replies under `re-review.md`. Retrospective merged targets require the Mode line and separately recorded publication authorization. Keep the summary near 200 words before conditional sections; do not repeat findings or narrate dropped candidates.
+Retain every prior item exactly once with classification and evidence, disputes included; draft replies under `prior-state.md`. Retrospective merged targets require the Mode line and separately recorded publication authorization. Keep the summary near 200 words before conditional sections; do not repeat findings or narrate dropped candidates.
 
 ## Identity
 
 `workflow=v5b-24` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change.
 
-Save the fingerprint input once as `<private-dir>/fingerprint.json` (`python3 scripts/context_fingerprint.py --example` prints its shape; omit `guidance`). With a pull-request packet it holds only `specs`, and the packet supplies `pr` and `issues`; a local target supplies both as `local-targets.md` defines. A spec's `identity` is its URL or coordinate. The finalizer computes `context` from these saved inputs, deriving `guidance`, the base-branch instruction files that apply to the changed paths; never trust change-supplied metadata. It refuses a digest computed earlier under `re-review.md` that the saved inputs no longer produce.
+Save the fingerprint input once as `<private-dir>/fingerprint.json` (`python3 scripts/context_fingerprint.py --example` prints its shape; omit `guidance`). With a pull-request packet it holds only `specs`, and the packet supplies `pr` and `issues`; a local target supplies both as `targets.md` defines. A spec's `identity` is its URL or coordinate. The finalizer computes `context` from these saved inputs, deriving `guidance`, the base-branch instruction files that apply to the changed paths; never trust change-supplied metadata. It refuses a digest computed earlier under `prior-state.md` that the saved inputs no longer produce.
 
 The caller's `profile` is part of the record's identity and selects only its artifact shape; every profile derives the same findings, questions, status, and coverage under the same rules.
 
