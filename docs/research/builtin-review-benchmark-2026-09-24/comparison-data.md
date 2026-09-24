@@ -5,7 +5,7 @@ the toy repository (one Python file; the head commit adds `average()` that divid
 `len(prices)` while its docstring and the packet say empty carts are common). Every arm found the
 defect; the rows show what each adapter captures, not review quality.
 
-Rows are pasted from `transcript_usage.py --row` (A, B, C) and `codex_usage.py --row` (D) at the
+Rows are pasted from `transcript_usage.py --row` (A, B, C) and `codex_usage.py --row` (D), both now under `bench/tools/`, at the
 rates in `ledger.md`. `Wall` is the agent span sum, not elapsed time; elapsed comes from
 `timing.json`.
 

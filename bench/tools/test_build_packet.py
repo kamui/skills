@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the phase-1 packet builder through the build_packet.py CLI.
 
-Usage: python3 docs/research/tools/test_build_packet.py
+Usage: python3 bench/tools/test_build_packet.py
 Inputs: the saved GraphQL response in test_build_packet_fixture.json, small saved REST bodies
 for the two optional reference fetches, and a temporary git mirror built per test. No network:
 every forge call is replayed through --replay.
