@@ -113,21 +113,14 @@ def self_test() -> int:
         assert not (base / "bad.json").exists()
         other = base / "other.key"
         other.write_text(secrets.token_hex(32) + "\n", encoding="utf-8")
-        try:
-            open_sealed(other, base / "register.v1.json.enc", base / "wrong.json", digest)
-        except SealError:
-            pass
-        else:
-            raise AssertionError("a wrong key decrypted")
+        for name in ("wrong.json", "opened.json"):  # a wrong key fails openssl, or passes CBC padding and the hash check
+            try:
+                assert not open_sealed(other, base / "register.v1.json.enc", base / name, digest), "a wrong key decrypted"
+            except SealError:
+                pass
         assert not (base / "wrong.json").exists()
-        try:  # an earlier reveal survives a failed open onto it
-            open_sealed(other, base / "register.v1.json.enc", base / "opened.json", digest)
-        except SealError:
-            pass
-        else:
-            raise AssertionError("a wrong key decrypted")
         assert not open_sealed(key, base / "register.v1.json.enc", base / "opened.json", "0" * 64)
-        assert (base / "opened.json").read_bytes() == plain.read_bytes()
+        assert (base / "opened.json").read_bytes() == plain.read_bytes()  # an earlier reveal survives failed opens
         assert not list(base.glob(".*.tmp"))
         run = subprocess.run([sys.executable, __file__, "seal", str(plain), str(base / "cli.enc"), "--key", str(key)],
                              capture_output=True, text=True, encoding="utf-8")
