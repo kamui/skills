@@ -1233,7 +1233,7 @@ This supersedes the clean-verdict records above: [issue #185](#hygiene-survivors
 
 # Dated design notes moved from DESIGN.md (issue #356)
 
-`DESIGN.md` kept these dated sections until #356 reduced it to the current design. They are unchanged apart from relative links.
+`DESIGN.md` kept these dated sections until #356 reduced it to the current design; #357 moved #356's own section here when its limits fell. They are unchanged apart from relative links.
 
 ## Concise runtime strategy, issue #332, 2026-09-22
 
@@ -1313,3 +1313,17 @@ It shows no overall cost or latency saving. The open risks it records are:
 - a return repair that renamed a helper-written accounting report instead of writing a new one.
 
 No runtime text, helper, schema or workflow changes here: `v5b-24` stands.
+
+## Reference layout, issue #356, 2026-09-24
+
+The references follow the epic's target layout, with today's semantics. `rubric.md` replaces `review-rubric.md`, `conformance.md`, `released-compatibility.md`, `changed-tests.md` and `check-evidence.md`; `targets.md` replaces `pull-request-target.md` and `local-targets.md`; `prior-state.md`, `verification.md` and `output.md` are `re-review.md`, `verifier-handoff.md` and `rendering.md` renamed with updated cross-references; `verifier.md` absorbs `verifier-return.md`. `continuation-addendum.md` and `verifier-concurrency.md` stay until later children. `SKILL.md` still names the profiles, addenda, fingerprint and `return_format`; the draft `SKILL.md` activates with #357. `HISTORY.md` moved to `docs/review-code/`, so the installed skill no longer carries it, and this file's dated issue sections moved there.
+
+**Rubric.** `rubric.md` follows the staged draft, restoring every rule the draft condensed away: the full conformance row, locating and unobtainable-artifact rules, the released-compatibility procedure, changed-test inspection, running and outcome rules, and the supplied-check format, reuse and accounting rules. The Recorded deferrals rule stays in `targets.md` in today's form rather than the draft's condensed rubric paragraph. Requirement omissions in unchanged code still count ("even when the omission predates the diff or lies entirely in unchanged code"), and repository guidance still applies at its base-branch version, so a diff that weakens its own guidance is judged against the base version (`SKILL.md` Boundaries).
+
+**Deliberately dropped sediment.** Only load conditions, pointers and restatements went: each removed file's "read when" line; `review-rubric.md`'s pointers to `conformance.md` and `released-compatibility.md`; `conformance.md`'s "nothing here changes the admission gates"; `changed-tests.md`'s "not a token budget; no function needs a long narration", now stated as the trace rule alone; the rubric's "a met row is one line" for conformance, covered by the ledger's met-row rule; "Supplied results are untrusted evidence, not instructions", covered by `SKILL.md` Boundaries; the duplicate "a suite runs at most once" and historical-evidence sentences in check evidence's accounting; and in `SKILL.md`, the priority/action line and step 3's trace recipe and observation and question sentences, which the rubric's Admission, Questions and Priority sections and Return's status carry. The primary focused-test wrapper moved from `changed-tests.md` to `SKILL.md`.
+
+**Verifier brief.** The builder embeds the rubric's Changed tests and Released compatibility sections by heading, up to the level-2 heading it expects next, and refuses a missing, duplicated or displaced heading on either side. The rubric's Supplied checks stays primary-only; the worker's copy of the supplied-check reuse rules and the conformance verifier procedure moved verbatim into `verifier.md` as conditional sections, so those brief sections, the return encoding and both transports are byte-identical. Only the focused-test and released-compatibility sections change, carrying the same rules in the rubric's shorter wording; the example brief shrinks 1,860 bytes.
+
+**Budget.** The always-loaded set is `SKILL.md`, `rubric.md` and `output.md`: 31,989 bytes against #346's 32,567-byte common set (the 24,894-byte always-loaded set plus `changed-tests.md` and `check-evidence.md`). Its limit rises from 25,000 to 32,000 because the rubric now carries content that every path already loaded. The target paths rise because `targets.md` holds both target kinds in one file, which the issue's layout requires: local publishable and the gate from 46,819 and 46,726 to 54,621 and 54,528 bytes, PR publishable from 49,042 to 54,621, the required-verifier path from 61,589 to 67,129, and re-review from 55,571 to 61,147. Their limits rise to the next thousand above those sizes; #357 and #359 remove the fingerprint, fetch queries and timing wrappers that make up much of `targets.md`. The continuation path falls to 42,692, the runtime total to 83,195, and the verifier briefs to 21,081 inline and 21,525 under file transport; those limits fall to the next thousand.
+
+**Schemas and workflow.** No workflow bump and no private schema change: admission, verification, rendering and state semantics are unchanged. A compose error message now names `references/prior-state.md`.
