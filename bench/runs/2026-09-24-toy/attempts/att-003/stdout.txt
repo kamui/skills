@@ -1,0 +1,6 @@
+The new helper raises ZeroDivisionError for empty carts, an explicitly anticipated input.
+
+Review comment:
+
+- [P2] Handle empty carts before dividing by the item count — /home/jack/.t3/bench-runs/toy/clone-D/pricing.py:17-17
+  For a newly created empty cart, `average([])` divides zero by zero and raises `ZeroDivisionError`, preventing the summary panel from displaying. Empty carts are explicitly supported by the stated use case and docstring, so define and return an appropriate empty-cart result before performing the division and add a regression test.

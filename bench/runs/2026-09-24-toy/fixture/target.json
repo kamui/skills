@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "toy-average",
+  "repo": "local/toy-average",
+  "pr": null,
+  "head": "609ed60fe978c1387b5684c691e3c874a4202437",
+  "merge_base": "8cff1c5dd76035b3e761ad26e31d57c00a71479b",
+  "base_sha": "8cff1c5dd76035b3e761ad26e31d57c00a71479b",
+  "base_ref_name": "main",
+  "local_base_branch": "main",
+  "negative_shas": [],
+  "cutoff": "2026-09-24T06:21:22Z",
+  "cutoff_note": "the head commit's instant; the fixture has no forge record, so the packet is a hand-written title and body",
+  "diff_manifest_sha256": "dbb463100063d457933c799164c604e8f4ccca9b8d3cfde0fec38c4722c47649",
+  "packet_sha256": "edacd8f40c23639ab9ed31c80b687b975c9a06655619b307345cc9020bb4c041",
+  "shape": "ordinary behavioural change (a stated edge case unhandled)",
+  "domain": "Python helper module",
+  "language": "Python",
+  "merged_at": "not merged: a local two-commit fixture built for the 2026-09-24 shakedown",
+  "fix_published_at": null,
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "none; git clone the bundle (toy-average.bundle, sha256 2e31162f9961e53df4ff57e0fe0174945dad63a1408bb12d903b954f3dd8dbed) as the staging repository",
+    "allowance": "No focused-command allowance was stated to the arms in the shakedown; reviewers could read the clone and run python3 on it.",
+    "unavailable": "network",
+    "dependency_identity": [
+      {
+        "name": "toy-average.bundle",
+        "sha256": "2e31162f9961e53df4ff57e0fe0174945dad63a1408bb12d903b954f3dd8dbed",
+        "location": "bench/runs/2026-09-24-toy/fixture/toy-average.bundle"
+      }
+    ],
+    "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7 (the shakedown machine, 2026-09-24)",
+    "cache": {
+      "kind": "none",
+      "build": [],
+      "post_clone": [],
+      "env": {},
+      "smoke": [
+        {
+          "name": "defect reproduces",
+          "command": "python3 -c 'from pricing import average; average([])' 2>&1 | tail -1",
+          "revision": "head"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-24 (built for the Phase 0 shakedown)",
+    "used_by": [
+      "2026-09-24-toy: the four arms' adapter shakedown"
+    ],
+    "register_published": "2026-09-24 (this directory)",
+    "notes": "A synthetic fixture: it exercises the harness and is never pooled with regression or fresh results."
+  },
+  "current_register": 1
+}

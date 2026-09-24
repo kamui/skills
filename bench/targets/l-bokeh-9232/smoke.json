@@ -20,7 +20,8 @@
     }
   ],
   "notes": [
-    "Measured by provision.py smoke on this machine; cache kind none."
+    "Measured by provision.py smoke on this machine; cache kind none.",
+    "The earlier recorded figures were transcribed from docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and l-bokeh-9232/register.md (reproduction)."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:25:52Z",

@@ -8,8 +8,8 @@
   "properties": {
     "schema_version": {"const": 1},
     "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
-    "repo": {"type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$"},
-    "pr": {"type": "integer", "minimum": 1},
+    "repo": {"type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$", "description": "owner/name on the forge, or local/<name> for a fixture repository shipped as a git bundle."},
+    "pr": {"type": ["integer", "null"], "minimum": 1, "description": "Pull-request number, or null for a local fixture that never had one."},
     "head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "merge_base": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$", "description": "The pull request's recorded base; kept separate from the computed merge-base."},

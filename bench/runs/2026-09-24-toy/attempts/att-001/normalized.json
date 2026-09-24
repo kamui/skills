@@ -1,0 +1,21 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "pricing.py",
+      "line_start": 17,
+      "line_end": 17,
+      "claim": "average() divides by len(prices) with no empty-list guard, so it raises ZeroDivisionError on an empty cart.",
+      "consequence": "average([]) evaluates total([]) / 0 and raises ZeroDivisionError. The PR body and the docstring both say carts are empty right after creation, so the new summary panel crashes for every freshly created cart. The function needs to return 0.0, return None, or raise a clear error, and the summary panel needs to handle whichever it picks.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

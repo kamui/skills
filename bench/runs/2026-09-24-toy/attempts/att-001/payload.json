@@ -1,0 +1,4 @@
+{
+  "final_text": "The diff is one small function, so I did the review directly instead of spawning agents.\n\n```json\n[\n  {\n    \"file\": \"pricing.py\",\n    \"line\": 17,\n    \"summary\": \"average() divides by len(prices) with no empty-list guard, so it raises ZeroDivisionError on an empty cart.\",\n    \"failure_scenario\": \"average([]) evaluates total([]) / 0 and raises ZeroDivisionError. The PR body and the docstring both say carts are empty right after creation, so the new summary panel crashes for every freshly created cart. The function needs to return 0.0, return None, or raise a clear error, and the summary panel needs to handle whichever it picks.\"\n  }\n]\n```",
+  "report_findings": []
+}

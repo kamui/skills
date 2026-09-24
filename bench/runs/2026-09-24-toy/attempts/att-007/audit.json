@@ -1,0 +1,34 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/toy/D3/home/.codex/sessions/2026/09/24/rollout-2026-09-24T03-50-46-01a0d265-403d-7651-b702-b4b87dc1b9b7.jsonl",
+    "/home/jack/.t3/bench-runs/toy/D3/home/.codex/sessions/2026/09/24/rollout-2026-09-24T03-50-46-01a0d265-40ae-7520-8903-f0c5b5c1eade.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "pwd; ls -a; git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md",
+    "find .agents .codex -type f -maxdepth 4 -print; for p in /AGENTS.md /AGENTS.override.md /home/AGENTS.md /home/jack/AGENTS.md /home/jack/.t3/AGENTS.md /home/jack/.t3/bench-runs/AGENTS.md /home/jack/.t3/bench-runs/toy/AGENTS.md /home/jack/.t3/bench-runs/toy/D3/AGENTS.md; do if test -f \"$p\"; then echo \"$p\"; cat \"$p\"; fi; done; git show review-head:pricing.py; git show review-head:test_pricing.py; git status --short; find .codex .agents -type f -exec sh -c 'echo \"$1\"; cat \"$1\"' sh {} \\;"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [
+    "/AGENTS.md",
+    "/AGENTS.override.md",
+    "/home/AGENTS.md",
+    "/home/jack/.t3/AGENTS.md",
+    "/home/jack/.t3/bench-runs/AGENTS.md",
+    "/home/jack/.t3/bench-runs/toy/AGENTS.md",
+    "/home/jack/AGENTS.md"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/toy/D3/clone",
+    "/home/jack/.t3/bench-runs/toy/D3"
+  ]
+}

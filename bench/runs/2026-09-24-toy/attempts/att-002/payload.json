@@ -1,0 +1,19 @@
+{
+  "final_text": "I found one bug in this change. The diff adds a single function, `average()`, to `pricing.py`.\n\n- `pricing.py:17` \u2014 `average()` divides by `len(prices)` without checking whether the list is empty, so `average([])` raises `ZeroDivisionError`. The PR description and the function's own docstring both say empty carts are common right after creation, so the new summary panel will crash on every new cart. The fix is to check for an empty list first and return a default, such as `0.0` or `None`, whichever the panel expects.",
+  "report_findings": [
+    {
+      "level": "high",
+      "findings": [
+        {
+          "file": "pricing.py",
+          "line": 17,
+          "category": "correctness",
+          "short_summary": "average() divides by zero on empty cart",
+          "summary": "average() divides by len(prices) without an empty guard, so it raises ZeroDivisionError for empty lists, which the docstring and PR description both say are common.",
+          "failure_scenario": "A newly created cart has prices == []. The summary panel calls average([]), which evaluates 0 / 0 and raises ZeroDivisionError, so the panel crashes instead of showing a value such as 0.0 or None.",
+          "verdict": "CONFIRMED"
+        }
+      ]
+    }
+  ]
+}

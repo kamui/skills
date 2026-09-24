@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-24-toy",
+  "created_at": "2026-09-24T15:35:00Z",
+  "frozen_at": null,
+  "freeze_commit": null,
+  "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
+  "rubric_version": 1,
+  "metric_code_revision": "9efa2c6a5c4d6ddc37004de051c9d29875c6a31c",
+  "arms": [
+    {
+      "id": "review-code-sonnet-high",
+      "arm_file_sha256": "b1e566c1cf1e55977b9d61ed39e2db4eeab18392ced4fa9506c93f14740b8a44",
+      "resolved_skill_tree": "6862d993a1499009a4d59d54a38a1d34daef9ea7",
+      "expected_cli_version": "claude-code 2.1.281",
+      "expected_prompt_hashes": [],
+      "probe_attempt": null
+    },
+    {
+      "id": "claude-builtin-sonnet-high",
+      "arm_file_sha256": "972dc4cc2a6c30c4954e3b0dcfffa23b0eeb6118b3a2c25b4f495b899cde74d4",
+      "resolved_skill_tree": null,
+      "expected_cli_version": "claude-code 2.1.281",
+      "expected_prompt_hashes": [
+        "665e2e510c91fdd577b75239ee22b3aa51347cb1cb81dcd1adc791ef2e6b6bd9"
+      ],
+      "probe_attempt": null
+    },
+    {
+      "id": "claude-builtin-opus-high",
+      "arm_file_sha256": "fb950b27afbae141b4f8836d2708856d30e2e21a1fe80712743bf0ff0336c3fe",
+      "resolved_skill_tree": null,
+      "expected_cli_version": "claude-code 2.1.281",
+      "expected_prompt_hashes": [
+        "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a"
+      ],
+      "probe_attempt": null
+    },
+    {
+      "id": "codex-default",
+      "arm_file_sha256": "80c51e7cc0dd983a5560abd2938de5ebfa3cff1732aa9a6affe418d65ad390cb",
+      "resolved_skill_tree": null,
+      "expected_cli_version": "codex-cli 0.156.1",
+      "expected_prompt_hashes": [
+        "ec60e7f36a1d1c2679ce095c0205ecc56f7dd8fb57707a13ef362072390f219f"
+      ],
+      "probe_attempt": null
+    }
+  ],
+  "cohort": [
+    {
+      "target": "toy-average",
+      "register_version": 1,
+      "packet_sha256": "edacd8f40c23639ab9ed31c80b687b975c9a06655619b307345cc9020bb4c041",
+      "diff_manifest_sha256": "dbb463100063d457933c799164c604e8f4ccca9b8d3cfde0fec38c4722c47649",
+      "cohort_group": "fixture",
+      "execution_available": true
+    }
+  ],
+  "exclusions": [],
+  "planned_cells": [
+    {
+      "target": "toy-average",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "toy-average",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1
+    },
+    {
+      "target": "toy-average",
+      "arm": "codex-default",
+      "replicate": 1
+    },
+    {
+      "target": "toy-average",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "toy-average",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "toy-average",
+      "arm": "codex-default",
+      "replicate": 2
+    }
+  ],
+  "caps": {
+    "max_attempts": 7,
+    "replacements": 1,
+    "spend_usd": 2.0,
+    "closeout_reserve_usd": 0.0,
+    "max_in_flight": 3,
+    "attempt_usd": 15.0
+  },
+  "sealed_order": [
+    "toy-average/claude-builtin-sonnet-high/1",
+    "toy-average/claude-builtin-opus-high/1",
+    "toy-average/codex-default/1",
+    "toy-average/claude-builtin-opus-high/1",
+    "toy-average/claude-builtin-sonnet-high/2",
+    "toy-average/review-code-sonnet-high/1",
+    "toy-average/codex-default/2"
+  ],
+  "rates": [
+    {
+      "model": "claude-sonnet-5",
+      "as_of": "2026-06-24"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "as_of": "2026-06-24"
+    },
+    {
+      "model": "gpt-6-astra",
+      "as_of": "2026-09-24"
+    }
+  ],
+  "execution_policy": {
+    "allowance": "none stated: the shakedown gave no focused-command allowance; reviewers could read the clone and run python3 on it",
+    "branch_layout": "main at the merge-base and review-head checked out at the head; the clones of att-001, att-002 and att-003 also carried a branch named base at the merge-base",
+    "unprivileged_user": null
+  },
+  "deviations": [
+    {
+      "at": "2026-09-24T15:35:00Z",
+      "what": "This manifest was written after every attempt had run, from the fixture records, when the run was filed into the suite. Nothing was frozen before dispatch: the planned cells, caps and order record what ran, not a plan. The toy run is a harness shakedown and is never pooled with scored runs.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-24T15:35:00Z",
+      "what": "The attempts were audited and normalized again at filing with the tools at metric_code_revision (file_attempt.py --replay); the wrapper's original outputs are kept beside them as *.recorded.json in the fixture directories. The replayed audit flags att-003's `find ..`, which walked the directory holding the other attempts' clones.",
+      "invalidates": [
+        "toy-average/codex-default/1"
+      ]
+    },
+    {
+      "at": "2026-09-24T15:35:00Z",
+      "what": "att-002 ran without the session --effort flag and got the built-in's low variant under Opus; att-004 replaced it with the flag set.",
+      "invalidates": [
+        "toy-average/claude-builtin-opus-high/1 (att-002 only)"
+      ]
+    }
+  ]
+}
