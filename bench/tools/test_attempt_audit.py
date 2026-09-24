@@ -85,6 +85,14 @@ class AttemptAudit(unittest.TestCase):
         self.assertIn(f"path outside allowed roots in command: {self.outside}/register.json", violations)
         self.assertEqual(len(violations), 2, violations)
 
+    def test_codex_quoted_keys_pair_each_cmd_with_its_workdir(self):
+        code = (f'await tools.exec_command({{cmd:"cat src/a.py","workdir":"{self.clone}","max_output_tokens":6000}});'
+                f' await tools.exec_command({{"cmd":"cat register.json",workdir:"{self.outside}"}});')
+        rc, violations = self.run_audit("codex", [self.exec_call(code)])
+        self.assertEqual(rc, 1)
+        self.assertEqual(violations, [f"working directory outside allowed roots: {self.outside}",
+                                      f"path outside allowed roots in command: {self.outside}/register.json"])
+
     def test_codex_workdir_in_clone_passes(self):
         code = f'await tools.exec_command({{cmd:"cd src && cat ../README.md",workdir:"{self.clone}"}});'
         self.assertEqual(self.run_audit("codex", [self.exec_call(code)]), (0, []))
