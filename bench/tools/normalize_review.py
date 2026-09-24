@@ -28,8 +28,9 @@ Native shapes:
 Output schema: ``{"arm", "parse_status", "native_verdict", "verdict_source", "items": [...],
 "parse_notes": [...]}``; ``parse_status`` is ``parsed`` (a recognized review with items),
 ``empty`` (a recognized review that reports nothing), or ``unresolved`` (the arm's expected
-markers are absent; the raw text is kept as one item and the attempt needs adjudication before
-it can count as a review). An unresolved result exits 1 after writing the file.
+markers are absent, or some region of the output could not be parsed; the raw text is kept as an
+item and the attempt needs adjudication before it can count as a review). An unresolved result
+exits 1 after writing the file.
 where each item has ``file``, ``line_start``, ``line_end``, ``claim``, ``consequence``,
 ``proposed_fix`` (nullable), ``native_priority``, ``native_action`` (review-code only),
 ``native_confidence`` (claude-builtin ``verdict`` when present) and ``kind``
@@ -101,7 +102,7 @@ def from_claude_builtin(payload: dict) -> dict:
     calls = payload.get("report_findings") or []
     text = payload.get("final_text") or ""
     source = None
-    findings = []
+    findings, raw = [], False
     if calls:
         source = "ReportFindings"
         for call in calls:
@@ -113,16 +114,18 @@ def from_claude_builtin(payload: dict) -> dict:
             try:
                 findings = json.loads(m.group(1))
             except json.JSONDecodeError as error:
-                notes.append(f"fenced JSON did not parse: {error.msg}")
+                notes.append(f"unresolved: fenced JSON did not parse: {error.msg}")
                 items.append(item(claim=m.group(1)))
+                raw = True
         elif text.strip():
             notes.append("unresolved: no fenced JSON array and no ReportFindings call; final text kept raw")
             items.append(item(claim=text.strip()))
             source = None
     for f in findings:
         if not isinstance(f, dict):
-            notes.append("non-object finding kept raw")
+            notes.append("unresolved: non-object finding kept raw")
             items.append(item(claim=json.dumps(f)))
+            raw = True
             continue
         items.append(item(file=f.get("file"), line_start=f.get("line"), line_end=f.get("line"),
                           claim=f.get("summary", ""), consequence=f.get("failure_scenario"),
@@ -130,7 +133,7 @@ def from_claude_builtin(payload: dict) -> dict:
     if source is None and not items:
         notes.append("unresolved: no review output found")
     verdict = "empty-array" if source and not findings and not notes else ("findings" if findings else None)
-    status = "unresolved" if source is None else ("parsed" if findings else "empty")
+    status = "unresolved" if source is None or raw else ("parsed" if findings else "empty")
     return {"parse_status": status, "native_verdict": verdict, "verdict_source": source, "items": items, "parse_notes": notes}
 
 
@@ -158,7 +161,7 @@ def from_codex(text: str, clone, sessions_dir) -> dict:
         i += 1
     has_marker = i < len(lines)
     i += 1
-    current = None
+    current, raw = None, False
     while i < len(lines):
         line = lines[i]
         m = CODEX_BULLET.match(line)
@@ -167,12 +170,16 @@ def from_codex(text: str, clone, sessions_dir) -> dict:
             current = item(file=relpath(m.group(3), clone), line_start=start, line_end=end, claim=m.group(2).strip(),
                            consequence="", native_priority=m.group(1), kind="finding")
             items.append(current)
-        elif line.startswith("- ") and line.strip():
-            notes.append(f"bullet did not match the priority form: {line.strip()[:120]}")
-            current = item(claim=line[2:].strip(), consequence="", kind="finding")
-            items.append(current)
-        elif current is not None and line.strip():
+        elif not line.strip():
+            pass
+        elif current is not None and line[0].isspace():
             current["consequence"] = (current["consequence"] + " " + line.strip()).strip()
+        else:
+            # Neither a priority bullet nor an indented body line: keep it raw as its own item.
+            notes.append(f"unresolved: line did not match the review-comment form: {line.strip()[:120]}")
+            current = item(claim=line.strip(), consequence="", kind="finding")
+            items.append(current)
+            raw = True
         i += 1
     overall, source = codex_overall(sessions_dir)
     if overall is None:
@@ -183,7 +190,7 @@ def from_codex(text: str, clone, sessions_dir) -> dict:
         items.append(item(claim=text.strip()))
         status = "unresolved"
     else:
-        status = "parsed" if items else "empty"
+        status = "unresolved" if raw else ("parsed" if items else "empty")
     return {"parse_status": status, "native_verdict": overall, "verdict_source": source, "items": items, "parse_notes": notes}
 
 
@@ -217,6 +224,10 @@ def self_test() -> int:
     raw = from_claude_builtin({"final_text": "I found nothing structured", "report_findings": []})
     assert raw["parse_status"] == "unresolved" and raw["items"][0]["claim"].startswith("I found"), raw
     assert hi["parse_status"] == "parsed" and empty["parse_status"] == "empty", (hi, empty)
+    bad = from_claude_builtin({"final_text": '```json\n[{"file": "p.py", "line": 1, "summary": "s"},]\n```', "report_findings": []})
+    assert bad["parse_status"] == "unresolved" and bad["items"][0]["claim"].startswith("[{") and bad["parse_notes"], bad
+    cut = from_claude_builtin({"final_text": '```json\n[{"file": "p.py", "line": 1, "summ]\n```', "report_findings": []})
+    assert cut["parse_status"] == "unresolved" and len(cut["items"]) == 1, cut
     unknown = from_codex("Findings:\n- something in a new format\n", "/c", None)
     assert unknown["parse_status"] == "unresolved" and unknown["items"][0]["claim"].startswith("Findings:"), unknown
     nothing = from_codex("No issues found.\n\nReview comment:\n", "/c", None)
@@ -224,7 +235,16 @@ def self_test() -> int:
     cx = from_codex("Summary line.\n\nReview comment:\n\n- [P2] Handle empty — /c/pricing.py:17-17\n  Body one.\n  Body two.\n- weird bullet\n", "/c", None)
     assert cx["items"][0]["file"] == "pricing.py" and cx["items"][0]["native_priority"] == "P2", cx
     assert cx["items"][0]["consequence"] == "Body one. Body two." and cx["native_verdict"] == "Summary line.", cx
-    assert len(cx["items"]) == 2 and cx["parse_notes"], cx
+    assert len(cx["items"]) == 2 and cx["parse_notes"] and cx["parse_status"] == "unresolved", cx
+    ok = from_codex("Summary.\n\nReview comment:\n\n- [P2] Handle empty — /c/pricing.py:17-17\n  Body.\n", "/c", None)
+    assert ok["parse_status"] == "parsed" and len(ok["items"]) == 1 and not ok["parse_notes"], ok
+    for changed in ("* [P1] Title — /c/a.py:1-2\n  Body.\n", "1. [P2] Other — /c/b.py:3\n"):
+        doc = from_codex("Summary.\n\nReview comment:\n\n" + changed, "/c", None)
+        assert doc["parse_status"] == "unresolved" and doc["items"][0]["claim"] == changed.splitlines()[0], doc
+        assert doc["parse_notes"], doc
+    later = from_codex("S.\n\nReview comment:\n\n- [P2] A — /c/a.py:1\n  Body.\n* [P1] B — /c/b.py:2\n  More.\n", "/c", None)
+    assert later["parse_status"] == "unresolved" and [i["claim"] for i in later["items"]] == ["A", "* [P1] B — /c/b.py:2"], later
+    assert later["items"][1]["consequence"] == "More.", later
     with tempfile.TemporaryDirectory() as temp:
         p = Path(temp) / "rollout-x.jsonl"
         p.write_text(json.dumps({"payload": {"text": '{"overall_correctness": "patch is incorrect"}'}}) + "\n", encoding="utf-8")
