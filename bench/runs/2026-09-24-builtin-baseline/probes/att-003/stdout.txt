@@ -1,0 +1,6 @@
+The new helper raises an exception for empty carts, an explicitly expected input.
+
+Review comment:
+
+- [P2] Handle empty carts before dividing by their length — /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-003/clone/pricing.py:17-17
+  For a newly created empty cart, `average([])` raises `ZeroDivisionError` because `len(prices)` is zero. Empty carts are explicitly expected, so the summary cannot safely use this helper. Define and return an appropriate empty-cart result before dividing, and add a test for this case.

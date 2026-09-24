@@ -5,7 +5,7 @@ Method: [`docs/research/code-review-one-shot-method.md`](../docs/research/code-r
 Scripts follow [`docs/agents/scripts.md`](../docs/agents/scripts.md): standard-library Python 3.9+,
 `--self-test` or a `test_<name>.py` sibling, exit codes 0/1/2.
 
-**Status (2026-09-24): design §8 steps 1–5 done; step 6 under way.** The schemas, rubric v1, rates, harness
+**Status (2026-09-24): design §8 steps 1–6 done; the first run is frozen and awaits dispatch.** The schemas, rubric v1, rates, harness
 registries, the manifest checker, and the migrated tools exist (steps 1 and 2, with the three
 defect fixes applied: relative-path read audit, four-event timing in the wrapper, and an
 `unresolved` parse status). Forwarding stubs remain at `docs/research/tools/` for the four moved
@@ -13,9 +13,10 @@ Python tools so historical commands keep working. The six targets of the #137 qu
 are converted under `targets/` (step 3); their truncated mirrors are rebuilt and verified, their
 dependency caches are built and archived with hashes, and every `smoke.json` is measured on this
 machine (step 4). The four arms are data under `arms/`, and the shakedown is filed as the run
-`runs/2026-09-24-toy/` with attempt records, a mapping and computed results (step 5). Of step 6,
-`run_cell.py`, `score.py` and `compare.py` exist, and the four fresh targets are hunted,
-adjudicated, provisioned and sealed under `targets/`; the first frozen run is still to come.
+`runs/2026-09-24-toy/` with attempt records, a mapping and computed results (step 5). Step 6 added
+`run_cell.py`, `score.py` and `compare.py`, the four fresh targets hunted, adjudicated, provisioned
+and sealed under `targets/`, and the first scored run frozen as `runs/2026-09-24-builtin-baseline/`
+(manifest, sealed order, charges and pre-dispatch probes); no scored cell has been dispatched.
 
 ## Layout
 
@@ -28,7 +29,7 @@ adjudicated, provisioned and sealed under `targets/`; the first frozen run is st
 | `targets/<id>/` | `target.json`, frozen `packet.md`, `register.v<N>.json` (`register.v<N>.json.enc` while sealed), `smoke.json`; a migrated target also keeps `packet.legacy.md` |
 | `arms/<id>.json` | reviewer configurations as data |
 | `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`, `file_attempt.py`, `seal.py`, `run_cell.py`, `score.py`, `compare.py` |
-| `runs/<date>-<label>/` | frozen manifest, attempt records, mappings, results; a fixture run also holds its fixture target |
+| `runs/<date>-<label>/` | frozen manifest, `charges.jsonl`, pre-dispatch probes, attempt records, mappings, results; a fixture run also holds its fixture target |
 
 Mirrors, dependency caches and transcripts live outside the repository under `~/.t3/bench-cache/`
 with their hashes recorded in the manifests.
