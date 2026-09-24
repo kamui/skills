@@ -35,7 +35,8 @@ fetches the issues the saved responses lack and rewrites `packet.json` from
 every saved response. Stdout is `packet <path>: complete|incomplete, <n>
 responses`, then one `gap <text>` line per gap. `fetch` exits 0 when the packet
 is written, gaps included; 2 when `gh` cannot run, the directory is unusable or
-already holds another fetch, or the root response is missing or unrecognized.
+already holds another fetch, the root call fails, even with data, or the root
+response is missing or unrecognized.
 
 `normalize` accepts the raw stdout of each `gh api graphql` call from the
 documented root query and its continuation queries, in any order, and prints
@@ -964,11 +965,13 @@ class Fetch:
         return found
 
     def run(self, issues: list[tuple[Optional[str], Optional[str], int]]) -> dict[str, Any]:
+        failed_root = None
         if not self.open(issues):
             root = self.gh("root", "root", ROOT_QUERY, [
                 ("-f", "owner", self.owner), ("-f", "name", self.name), ("-F", "number", self.number)])
             if root is None:
-                issues = []  # without the root response there is no packet to add them to
+                failed_root = self.calls[-1]
+                issues = []  # a failed root call stops the fetch, even when it printed data
             else:
                 self.follow(root)
                 self.drain()
@@ -990,6 +993,9 @@ class Fetch:
                 handle.write(json.dumps(manifest, indent=2) + "\n")
         except OSError as error:
             raise FetchError(f"cannot write {MANIFEST}: {error}") from error
+        if failed_root is not None:
+            raise FetchError(f"no root page: the root call ({failed_root['file']}) exited {failed_root['exit']}; "
+                             f"no packet is written")
         packet = normalize(self.pages)
         try:
             with open(os.path.join(self.directory, PACKET), "w", encoding="utf-8") as handle:

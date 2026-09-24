@@ -45,7 +45,7 @@ A dependent reaches this script only through the review-token command returned b
 `review-code/scripts/forge_packet.py fetch` runs the pull request's GraphQL root query, every continuation query and each referenced issue query through `gh api graphql`, instead of leaving them to `SKILL.md` prose. The pagination loop holds no judgment: follow each `endCursor` until `hasNextPage` is false and save every response.
 
 - It runs `gh` as a subprocess in the reviewed repository against the `--repo` it is given, never a checkout remote's default. A missing `gh` exits 2.
-- It saves each response as `gh` printed it, a failed call included, and normalizes them with the same code as `normalize`, so the packet and its `packet_context` do not depend on who fetched. A failed call is a named gap in the packet at exit 0; a missing root response is exit 2.
+- It saves each response as `gh` printed it, a failed call included, and normalizes them with the same code as `normalize`, so the packet and its `packet_context` do not depend on who fetched. A failed call is a named gap in the packet at exit 0; a failed or missing root response is exit 2.
 - It decides nothing about which issues are relevant: the model passes those as `--issue` arguments, and supplied issues or specs still reach the record only through the model's `run.specs`.
 
 ## Invocation from `SKILL.md`
