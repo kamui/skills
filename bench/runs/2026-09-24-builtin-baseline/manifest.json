@@ -3,7 +3,7 @@
   "run_id": "2026-09-24-builtin-baseline",
   "created_at": "2026-09-24T22:24:55Z",
   "frozen_at": "2026-09-24T22:24:55Z",
-  "freeze_commit": null,
+  "freeze_commit": "339356370942429075935b2c2507dbd88d3ea984",
   "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
   "rubric_version": 1,
   "metric_code_revision": "33c78ced23988a540ced1786e0e2a97d20448831",
