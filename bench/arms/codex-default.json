@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "codex-default",
+  "kind": "codex",
+  "label": "Codex CLI `codex review`, default model and reasoning effort",
+  "model": null,
+  "effort": null,
+  "requested_workers": {
+    "model": null,
+    "effort": null
+  },
+  "isolation": {
+    "fresh_home": true,
+    "safe_mode": false,
+    "allowed_tools": [],
+    "sandbox": "workspace-write, network_access false, pinned with -c sandbox_mode",
+    "network": "off",
+    "unprivileged_user": null
+  },
+  "adapter": {
+    "range_transport": "stdin prompt naming `git diff main...review-head` (codex review --base refuses a prompt)",
+    "packet_transport": "stdin prompt after the range instruction (`codex review - < prompt.txt`)",
+    "output_capture": "stdout.txt verbatim; overall_correctness read from the child rollout's final JSON",
+    "expected_prompt_variants": [
+      "ec60e7f36a1d1c2679ce095c0205ecc56f7dd8fb57707a13ef362072390f219f"
+    ]
+  },
+  "budget_usd_per_attempt": 3.0
+}

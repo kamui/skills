@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "claude-builtin-sonnet-high",
+  "kind": "claude-builtin",
+  "label": "Claude Code built-in /code-review, Sonnet 5, session --effort high",
+  "model": "claude-sonnet-5",
+  "effort": "high",
+  "requested_workers": {
+    "model": null,
+    "effort": null
+  },
+  "isolation": {
+    "fresh_home": true,
+    "safe_mode": true,
+    "allowed_tools": [
+      "Bash",
+      "Read",
+      "Glob",
+      "Grep",
+      "Agent"
+    ],
+    "sandbox": "n/a",
+    "network": "off",
+    "unprivileged_user": null
+  },
+  "adapter": {
+    "range_transport": "argument `main...review-head high` with session --effort high; the built-in diffs main...HEAD whatever the argument says, so the base branch is named main",
+    "packet_transport": "prompt text after the argument (the built-in folds it into its Review target line)",
+    "output_capture": "payload.json extracted by attempt_audit.py: the forked subagent's final text and any ReportFindings input",
+    "expected_prompt_variants": [
+      "665e2e510c91fdd577b75239ee22b3aa51347cb1cb81dcd1adc791ef2e6b6bd9"
+    ]
+  },
+  "budget_usd_per_attempt": 2.5
+}

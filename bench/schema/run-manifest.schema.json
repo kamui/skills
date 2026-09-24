@@ -41,7 +41,7 @@
           "register_version": {"type": "integer", "minimum": 1},
           "packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
           "diff_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-          "cohort_group": {"enum": ["regression", "fresh"]},
+          "cohort_group": {"enum": ["regression", "fresh", "fixture"], "description": "fixture: a synthetic target that exercises the harness and is never pooled with regression or fresh results."},
           "execution_available": {"type": "boolean"}
         }
       }

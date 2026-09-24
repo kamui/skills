@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "description": "Observed review presets of Codex CLI's `codex review`, keyed by CLI version. The hash is SHA-256 of the reviewer system text (the block beginning 'You are acting as a reviewer for a proposed code change') as recorded in the child thread's session_meta. A run manifest records which entry each Codex attempt matched; an unmatched hash is a new preset to register before the attempt counts.",
+  "description": "Observed review presets of Codex CLI's `codex review`, keyed by CLI version. The hash is SHA-256 of the reviewer system text (the block beginning 'You are acting as a reviewer for a proposed code change') as recorded in the child thread's session_meta base_instructions, hashed as UTF-8; rubric_bytes is its byte length. file_attempt.py computes the hash. A run manifest records which entry each Codex attempt matched; an unmatched hash is a new preset to register before the attempt counts.",
   "versions": {
     "0.156.1": {
       "observed_on": "2026-09-24",
       "default_model": "gpt-6-astra",
       "default_reasoning_effort": "none (as the CLI header reports it)",
       "rubric_sha256": "ec60e7f36a1d1c2679ce095c0205ecc56f7dd8fb57707a13ef362072390f219f",
-      "rubric_bytes": 7666,
+      "rubric_bytes": 7685,
       "rubric_marker": "You are acting as a reviewer for a proposed code change",
       "output_contract": "stdout: summary paragraph, then 'Review comment:' bullets `- [P<n>] <title> — <path>:<start>-<end>` with an indented body; the child rollout's final JSON carries overall_correctness",
       "notes": [
