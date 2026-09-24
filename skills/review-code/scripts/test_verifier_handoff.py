@@ -235,11 +235,16 @@ class HandoffTests(unittest.TestCase):
     def test_rubric_sections_embed_by_heading(self):
         source = self.root / "rubric.md"
         source.write_text("# Rubric\n\n## Changed tests\n\nworker\n\n## Supplied checks\n\nprimary\n", encoding="utf-8")
-        self.assertEqual(builder.heading_section(self.root, source.name, "Changed tests"), "\nworker\n")
-        for content in ("# Rubric\n\nChanged tests\n", "\n## Changed tests\na\n\n## Changed tests\nb\n"):
+        self.assertEqual(builder.heading_section(self.root, source.name, "Changed tests", "Supplied checks"), "\nworker\n")
+        # A missing, duplicated, or displaced heading on either side refuses rather than spilling into the next section.
+        for content in ("# Rubric\n\nChanged tests\n\n## Supplied checks\n",
+                        "\n## Changed tests\na\n\n## Changed tests\nb\n\n## Supplied checks\n",
+                        "# Rubric\n\n## Changed tests\n\nworker\n\nSupplied checks\n\nprimary\n",
+                        "# Rubric\n\n## Changed tests\n\nworker\n\n## Other\n\n## Supplied checks\n\nprimary\n",
+                        "# Rubric\n\n## Supplied checks\n\nprimary\n\n## Changed tests\n\nworker\n"):
             source.write_text(content, encoding="utf-8")
             with self.assertRaises(builder.ContentError):
-                builder.heading_section(self.root, source.name, "Changed tests")
+                builder.heading_section(self.root, source.name, "Changed tests", "Supplied checks")
         rubric = (SCRIPTS.parent / "references" / "rubric.md").read_text(encoding="utf-8")
         brief = (self.build() / "brief.md").read_text(encoding="utf-8")
         changed = rubric.split("\n## Changed tests\n", 1)[1].split("\n## ", 1)[0].strip()

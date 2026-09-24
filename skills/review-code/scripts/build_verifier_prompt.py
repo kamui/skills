@@ -293,10 +293,11 @@ def section(refs, name, start, end=None):
     return tail
 
 
-def heading_section(refs, name, heading):
-    """One level-2 section's body, up to the next level-2 heading, which the builder embeds by name."""
-    body = section(refs, name, f"\n## {heading}\n")
-    return body.split("\n## ", 1)[0].rstrip("\n") + "\n"
+def heading_section(refs, name, heading, following):
+    """One level-2 section's body, which the builder embeds by name, ending at the heading it expects next."""
+    body = section(refs, name, f"\n## {heading}\n", f"\n## {following}\n")
+    require("\n## " not in body, name, "instruction boundary changed")
+    return body.rstrip("\n") + "\n"
 
 
 def worker(start, end=None):
@@ -310,10 +311,10 @@ def render(data, return_file=None):
     source = instruction(refs, "verifier.md")
     require(source.startswith("# Independent verifier\n"), "verifier.md", "instruction boundary changed")
     instructions = ["# Independent verifier\n" + worker("# Independent verifier\n", SUPPLIED),
-                    "## Focused-test safety and execution\n" + heading_section(refs, "rubric.md", "Changed tests")]
+                    "## Focused-test safety and execution\n" + heading_section(refs, "rubric.md", "Changed tests", "Supplied checks")]
     records = data["candidates"] + data["premises"]
     if any("released_compatibility" in item for item in records):
-        instructions.append("## Released compatibility\n" + heading_section(refs, "rubric.md", "Released compatibility"))
+        instructions.append("## Released compatibility\n" + heading_section(refs, "rubric.md", "Released compatibility", "Changed tests"))
     if any(item.get("test_evidence") for item in records):
         instructions.append(SUPPLIED + worker(SUPPLIED, CONFORMANCE))
     if any("conformance" in item for item in records):
