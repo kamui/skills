@@ -32,7 +32,8 @@ Disposition, first rule that applies: ``stopped: <reason>`` on a ``stop.json`` o
 model or effort other than the arm's, a prompt hash outside the arm's expected variants, an
 executed range other than the pinned one, or a CLI version or ``review-code`` skill tree other than
 the run pinned (``--expect-cli-version``, ``--expect-skill-tree``, which ``run_cell.py`` passes from
-the run manifest); otherwise ``valid completed``. An ``unresolved`` parse
+the run manifest; the CLI version is compared by its ``N.N.N`` number, so ``claude-code 2.1.281``
+pins ``2.1.281``); otherwise ``valid completed``. An ``unresolved`` parse
 is kept as the parse status of a valid attempt and never turned into an empty review.
 
 Timing follows design §7's four events. ``dispatched_at`` and ``payload_validated_at`` come from
@@ -467,7 +468,9 @@ def file_attempt(args) -> tuple:
         problems.append(f"prompt {prompt_hash[:12] if prompt_hash else 'hash missing'} is not among the arm's expected variants"
                         + (f" (registry: {match})" if match else " (unregistered)"))
     problems.extend(f"executed diff: {f}" for f in range_failures)
-    if args.expect_cli_version and cli_version != args.expect_cli_version:
+    # The manifest pins the version as the probe printed it (``claude-code 2.1.281``); compare its number.
+    pinned = re.search(r"\d+\.\d+\.\d+", args.expect_cli_version or "")
+    if args.expect_cli_version and cli_version != (pinned.group(0) if pinned else args.expect_cli_version):
         problems.append(f"CLI version {cli_version!r}, the run pinned {args.expect_cli_version!r}")
     if args.expect_skill_tree and skill_tree != args.expect_skill_tree:
         problems.append(f"skill tree {skill_tree or 'missing'}, the run pinned {args.expect_skill_tree}")
@@ -629,6 +632,8 @@ def self_test() -> int:
         # The run's pinned CLI version: the matching pin keeps the attempt valid, another one does not.
         done = run("o6", "--expect-cli-version", "9.9.9")
         assert json.loads((temp / "o6" / "attempt.json").read_text(encoding="utf-8"))["disposition"] == "valid completed", done
+        done = run("o8", "--expect-cli-version", "claude-code 9.9.9")
+        assert json.loads((temp / "o8" / "attempt.json").read_text(encoding="utf-8"))["disposition"] == "valid completed", done
         done = run("o7", "--expect-cli-version", "9.9.8")
         disp = json.loads((temp / "o7" / "attempt.json").read_text(encoding="utf-8"))["disposition"]
         assert disp == "harness-invalid: CLI version '9.9.9', the run pinned '9.9.8'", disp
