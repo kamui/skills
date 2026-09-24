@@ -67,7 +67,8 @@ Six targets are migrated from the [#137 qualification grid](../docs/research/one
   `provision.py smoke` (`source: measured`): the platform, the cache restore and offline post-clone
   duration, whether the tracked tree stayed clean, and every smoke command's exit code and duration
   at the head and, for checks marked `base` or `both`, at the merge-base in a second clone
-  provisioned the same way, plus the mirror rebuild outcome. The #137 machine's figures stay in that bundle's README and registers.
+  provisioned the same way, plus the mirror rebuild outcome. The #137 machine's figures stay in
+  that bundle's README and registers.
 
 **Diff identity.** `diff_identity.py <repo> <base> <head>` renders `git diff-tree -r --no-renames`
 as `<status>\t<path>\t<base-blob>\t<head-blob>` lines sorted by path and hashes them with SHA-256.
@@ -90,15 +91,17 @@ archive's hash); `post_clone` commands run offline in every attempt clone and mu
 tracked tree clean (`provision.py prepare`); `env` is exported for all of them; `smoke` names the
 commands `provision.py smoke` runs at the head, the base, or both. The archive, not the build
 directory, is what every clone uses: `prepare` checks the archive against the hash `target.json`
-records and restores it into `<clone>-cache`, that clone's own `{cache}`, so a clone's writes (Go's
-build cache, npm's index, bytecode) never reach another clone or the archive. Commands go through
-`sh -c` with `{cache}`, `{clone}`, `{work}` and `{cache_root}` substituted, so an `--offline` flag
-or `GOPROXY=off` is the command's own responsibility. The six migrated targets use a uv-built Python 3.13 virtualenv
-(requests; its dev requirements pin a pytest that cannot import under 3.14), a corepack-managed
-pnpm store (trpc), an npm cache (graphql-js), a Go module and build cache (grpc-go), and nothing
-beyond node or zsh (bokeh, ripgrep). Archives are machine-specific (a virtualenv is not
-relocatable); the hash identifies what this machine used, and a later machine rebuilds and records
-its own.
+records and restores it into `<clone>-cache`, that clone's own `{cache}`, so a clone's writes
+(Go's build cache, npm's index, bytecode) never reach another clone or the archive. A restore
+works at any path, so an archive holds no relative link out of the cache (`prepare` refuses a
+dangling one). Commands go through `sh -c` with `{cache}`, `{clone}`, `{work}` and `{cache_root}`
+substituted, so an `--offline` flag or `GOPROXY=off` is the command's own responsibility. The six
+migrated targets use a uv-built relocatable Python 3.13 virtualenv (requests; its dev requirements
+pin a pytest that cannot import under 3.14), a corepack-managed pnpm store whose launcher links
+each clone makes after its restore (trpc), an npm cache (graphql-js), a Go module and build cache
+(grpc-go), and nothing beyond node or zsh (bokeh, ripgrep). Archives are machine-specific (the
+virtualenv links this machine's uv Python); the hash identifies what this machine used, and a later
+machine rebuilds and records its own.
 
 ## Three rules
 

@@ -38,7 +38,7 @@
   "fix_published_at": "2023-11-17T11:37:49Z",
   "originating_issue": "trpc/trpc#5020",
   "provisioning": {
-    "recipe": "corepack enable --install-directory <cache>/bin (pnpm@8.5.1 from the packageManager field, cached under COREPACK_HOME=<cache>/corepack); then in every attempt clone, offline: pnpm install --frozen-lockfile --offline --store-dir <cache>/pnpm-store, whose postinstall runs pnpm codegen; the tracked tree must be clean afterwards (the #137 grid measured 19 s on macOS)",
+    "recipe": "pnpm@8.5.1 from the packageManager field, cached under COREPACK_HOME=<cache>/corepack; in every attempt clone, offline: corepack enable --install-directory <cache>/bin (its links are relative, so they are made after the restore rather than archived), then pnpm install --frozen-lockfile --offline --store-dir <cache>/pnpm-store, whose postinstall runs pnpm codegen; the tracked tree must be clean afterwards (the #137 grid measured 19 s on macOS)",
     "allowance": "Focused type-checking is permitted on this target, offline: dependencies are already installed in the clone (untracked and ignored; leave them alone). Run the TypeScript compiler with the clone's own binary, for example `cd <clone>/packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json` (about 5 seconds); five minutes per command, a configuration at most once per flag set. Write any scratch TypeScript under the work directory and point tsc at it from there; nothing may be added to or changed in the clone, and no network call of any kind is available (npx and pnpm cannot reach a registry).",
     "unavailable": "network; the registry (npx, pnpm fetch); the runtime vitest suite is not the discriminating check, only tsc is",
     "dependency_identity": [
@@ -54,19 +54,19 @@
       },
       {
         "name": "cache archive (pnpm-store)",
-        "sha256": "0c2f247f8fb33c13f8fcc412df1c54d0e86d8e48aad7f0002e6821bf7c611cc4",
+        "sha256": "9ea0916b60da64cfdb2c6b7f324c6de6968946ade3996462302174db8909f9fa",
         "location": "~/.t3/bench-cache/archives/j-trpc-5017.tar.gz"
       }
     ],
-    "platform": "measured on the suite machine at 2026-09-24T10:56:52Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T11:09:53Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "pnpm-store",
       "build": [
-        "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin",
-        "PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --store-dir {cache}/pnpm-store"
+        "mkdir -p {work}/bin && corepack enable --install-directory {work}/bin",
+        "PATH={work}/bin:$PATH pnpm install --frozen-lockfile --store-dir {cache}/pnpm-store"
       ],
       "post_clone": [
-        "COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1"
+        "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1"
       ],
       "env": {
         "COREPACK_HOME": "{cache}/corepack",

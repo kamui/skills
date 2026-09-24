@@ -2,11 +2,11 @@
   "schema_version": 1,
   "target": "k-graphql-js-1582",
   "source": "measured",
-  "measured_at": "2026-09-24T10:55:56Z",
+  "measured_at": "2026-09-24T11:11:02Z",
   "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
     "recipe": "restore cache archive sha256:b8de64655287794c2e95764e2d3ed1edaf397666b66a4e4f454b37017a06ed0c; npm install --no-audit --no-fund --offline --cache {cache}/npm-cache >/dev/null 2>&1; git checkout -- yarn.lock; rm -f package-lock.json",
-    "duration_seconds": 7.23,
+    "duration_seconds": 6.75,
     "tree_clean_after": true
   },
   "checks": [
@@ -15,21 +15,21 @@
       "command": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 1.91,
-      "summary": "  13 passing (66ms)"
+      "duration_seconds": 1.76,
+      "summary": "  13 passing (57ms)"
     },
     {
       "name": "focused mocha",
       "command": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js",
       "revision": "base",
       "exit_code": 0,
-      "duration_seconds": 1.79,
+      "duration_seconds": 1.67,
       "summary": "  13 passing (56ms)"
     }
   ],
   "notes": [
     "Measured by provision.py smoke on this machine; cache kind npm-cache. Each clone restored its own copy of the cache archive after checking its recorded hash.",
-    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 6.47s; tracked tree clean afterwards: true."
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 6.79s; tracked tree clean afterwards: true."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:25:48Z",
