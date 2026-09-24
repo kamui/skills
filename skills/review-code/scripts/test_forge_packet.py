@@ -1027,6 +1027,15 @@ def case_fetch_failures(directory: Path) -> None:
         fail(case, f"a failed root call must stop with exit 2 before any issue, got {failed_root.returncode} {log}: {failed_root.stderr!r}")
     if (private / "packet.json").exists() or not (private / "forge-1.json").exists():
         fail(case, "a failed root call must save its response and write no packet")
+    # `gh` exits 1 on a partial GraphQL error yet still prints the page; the root call has still failed.
+    with_data = dict(simple_root(), errors=[{"message": "Resource not accessible by integration"}])
+    failed_root, private, log = fetch(directory, "root-with-data", {"root": {"stdout": with_data, "rc": 1,
+                                                                            "stderr": "gh: Resource not accessible by integration\n"}},
+                                      "--issue", "98")
+    if failed_root.returncode != 2 or log != ["root"] or "root root" not in failed_root.stderr or "no root page" not in failed_root.stderr:
+        fail(case, f"a failed root call with data must stop with exit 2 before any issue, got {failed_root.returncode} {log}: {failed_root.stderr!r}")
+    if (private / "packet.json").exists() or not (private / "forge-1.json").exists():
+        fail(case, "a failed root call with data must save its response and write no packet")
 
 
 def case_fetch_referenced_issues(directory: Path) -> None:
