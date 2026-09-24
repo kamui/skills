@@ -9,8 +9,8 @@ Instructions: references/verifier.md and the parts of it that apply, verifier-co
 for concurrency or invariant candidates, and rubric.md's Changed tests and Released
 compatibility sections, embedded by heading.
 Identity: every build generates a fresh opaque ``bundle_id``, stores it in the manifest
-and prints it at the end of the brief, which asks for the JSON return inline with that ID
-copied verbatim. A rebuild of the same input gets a new ID.
+and prints it after the brief's return encoding, which asks for the JSON return inline with
+that ID copied verbatim. A rebuild of the same input gets a new ID.
 Exit 0: bundle written and path printed; 1: content violations, one per stdout
 line, no bundle; 2: unreadable input or unwritable output, named on stderr.
 No forge calls, candidate admission, task selection, or evidence judgment.
