@@ -34,7 +34,7 @@ Leave reviewed source and the forge unchanged; the only execution is the rubric'
 ## Steps
 
 1. **Pin.** Read [`targets.md`](references/targets.md) and pin the repository, base, head, and merge-base, and fetch or snapshot once into a private directory outside the checkout. An unresolved target or base returns `target-unresolved`. Build the context store once with `python3 scripts/review_context.py` and the arguments `targets.md` gives; recover withheld or truncated output with `--from <store>` and its selectors, never by rebuilding. A diff chunk still `missing` leaves its file unreviewed.
-2. **Carry prior state.** A pull request with an earlier review from the reviewer identity, or a local target with a `prior_record`, is a re-review: read [`prior-state.md`](references/prior-state.md) before inspection. It settles the duplicate-review shortcut, delta or full scope, and the carried allowance.
+2. **Carry prior state.** A pull request with an earlier review from the reviewer identity, or a local target with a `prior_record`, is a re-review: read [`prior-state.md`](references/prior-state.md) before inspection. It settles the duplicate-review shortcut, delta or full scope, and the carried allowance. The shortcut requires matching scripted packet identity and no supplied issues or specs in either run, as well as unchanged revisions and settled later state.
 3. **Ledger intent.** Read [`rubric.md`](references/rubric.md). List the requirements from issues and specs, then from the change description, before reading the diff for compliance. Each row ends `met`, `partial`, or `not-verifiable` with evidence. A requirement missed in unchanged code is still this change's responsibility.
 4. **Inspect.** Read the complete merge-base diff from the store, including deleted, renamed, generated, and binary files, and whatever callers, tests, configuration, CI, or history the affected behavior needs. Account for every changed file as `reviewed`, `ignored` with a reason, or `unreviewed`.
 5. **Falsify.** Try to disprove each suspected defect under the rubric and admit only what survives. Drop what the evidence contradicts; dropped candidates leave no record.
@@ -47,7 +47,7 @@ A fresh-context verifier receives claims and cited evidence, never your reasonin
 
 The **risk areas** are security or authorization, data loss or corruption, destructive migrations, and released-compatibility breaks.
 
-**Mandatory candidates.** Verify every surviving candidate that is proposed `must-fix`, falls in a risk area, or, on a re-review, is a prior `must-fix` whose fate the code decides. A mandatory candidate publishes only when `confirmed`. A `refuted` one is dropped, or becomes a question when its basis is an unresolved fact. Refuting one candidate establishes nothing about the rest of the change.
+**Mandatory candidates.** Verify every surviving candidate that is proposed `must-fix`, falls in a risk area, or, on a PR re-review, is a prior `must-fix` whose fate the code decides. A local `prior_record` run rechecks fixed findings itself; new mandatory candidates, materially changed mandatory claims and required safety premises still need verification within its remaining allowance. A mandatory candidate publishes only when `confirmed`. A `refuted` one is dropped, or becomes a question when its basis is an unresolved fact. Refuting one candidate establishes nothing about the rest of the change.
 
 **Safety premises.** When the review would conclude with no blocker and the change touches a risk area or a concurrency or failover invariant, name the few concrete premises that conclusion rests on, such as "the lookup always succeeds before `updateShardId()` runs." The verifier attacks each through its opposite branch and rules `holds`, `fails`, or `unresolved`. A failed premise reopens as a candidate under full admission and, when mandatory, confirmation. An unresolved premise becomes a material question when its answer could change the decision and otherwise stays outstanding. When refutations remove every blocker, the premises that conclusion now needs go in the follow-up.
 
@@ -55,7 +55,7 @@ The **risk areas** are security or authorization, data loss or corruption, destr
 
 **Allowance.** One initial batch and at most one follow-up. A run from a `prior_record` spends from that record's allowance; every other run starts its own. Every batch is awaited: choose an awaited route before dispatch and hand back only after the batch returns. Failed batches, repairs, and new workers grant nothing extra.
 
-**Incomplete.** Required verification is unfinished when there is no awaited route or fresh-context isolation (dispatch nothing and name `review-wait-unavailable`), a return is failed or withheld, the allowance is spent, a new mandatory candidate appears after the follow-up, or an unresolved premise has no question. Confirmed findings still publish.
+**Incomplete.** Required verification is unfinished when there is no awaited route or fresh-context isolation (dispatch nothing and name `review-wait-unavailable`), a return is failed or withheld, required work remains after the allowance is spent, or an unresolved premise has no question. Confirmed findings still publish.
 
 ## Status
 
