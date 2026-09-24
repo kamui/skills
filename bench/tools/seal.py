@@ -17,9 +17,9 @@ that touches it, and a separate Unix user would make it unreachable rather than 
 
 ``keygen`` writes a key only if none exists. ``seal`` prints the plaintext's SHA-256, which the
 caller records beside the ciphertext (``target.json`` ``sealed``, or a ``SHA256SUMS`` file) so a
-reveal is checkable without trusting the ciphertext. ``open`` decrypts and refuses a plaintext
-whose SHA-256 differs from ``--sha256``, removing what it wrote; a failed decryption removes its
-partial output too.
+reveal is checkable without trusting the ciphertext. ``open`` decrypts to a temporary sibling of
+the plaintext path and moves it into place only when its SHA-256 matches ``--sha256``; a mismatch
+or a failed decryption removes the sibling and leaves any existing file at that path untouched.
 
 Exit codes: 0 done; 1 ``open`` produced a plaintext whose hash does not match; 2 a file or the key
 cannot be read or written, or ``openssl`` failed.
@@ -69,8 +69,6 @@ def openssl(key: Path, source: Path, target: Path, decrypt: bool) -> None:
     except FileNotFoundError as error:
         raise SealError(f"cannot run openssl: {error}") from error
     except subprocess.CalledProcessError as error:
-        if decrypt:  # openssl writes before it can tell the key or ciphertext is wrong
-            target.unlink(missing_ok=True)
         raise SealError(f"openssl failed on {source}: {error.stderr.decode('utf-8', 'replace').strip()}") from error
 
 
@@ -85,11 +83,18 @@ def seal(key: Path, plaintext: Path, out: Path) -> str:
 def open_sealed(key: Path, sealed: Path, out: Path, expected: str) -> bool:
     if not sealed.is_file():
         raise SealError(f"cannot read {sealed}")
-    openssl(key, sealed, out, decrypt=True)
-    if sha256(out) != expected:
-        out.unlink()
-        return False
-    return True
+    # openssl writes before it can tell the key or ciphertext is wrong, so decrypt beside `out`
+    descriptor, name = tempfile.mkstemp(dir=out.parent, prefix=f".{out.name}.", suffix=".tmp")
+    os.close(descriptor)
+    partial = Path(name)
+    try:
+        openssl(key, sealed, partial, decrypt=True)
+        if sha256(partial) != expected:
+            return False
+        os.replace(partial, out)
+        return True
+    finally:
+        partial.unlink(missing_ok=True)
 
 
 def self_test() -> int:
@@ -115,6 +120,15 @@ def self_test() -> int:
         else:
             raise AssertionError("a wrong key decrypted")
         assert not (base / "wrong.json").exists()
+        try:  # an earlier reveal survives a failed open onto it
+            open_sealed(other, base / "register.v1.json.enc", base / "opened.json", digest)
+        except SealError:
+            pass
+        else:
+            raise AssertionError("a wrong key decrypted")
+        assert not open_sealed(key, base / "register.v1.json.enc", base / "opened.json", "0" * 64)
+        assert (base / "opened.json").read_bytes() == plain.read_bytes()
+        assert not list(base.glob(".*.tmp"))
         run = subprocess.run([sys.executable, __file__, "seal", str(plain), str(base / "cli.enc"), "--key", str(key)],
                              capture_output=True, text=True, encoding="utf-8")
         assert run.returncode == 0 and run.stdout.strip() == digest, run
@@ -150,7 +164,7 @@ def main() -> int:
             print(seal(args.key, args.source, args.out))
         elif args.command == "open":
             if not open_sealed(args.key, args.source, args.out, args.sha256):
-                print(f"{args.out}: plaintext SHA-256 does not match {args.sha256}; removed")
+                print(f"{args.source}: plaintext SHA-256 does not match {args.sha256}; {args.out} not written")
                 return 1
             print(f"{args.out} ok")
         else:

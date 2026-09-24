@@ -31,5 +31,6 @@ for f in *.enc; do
 done
 ```
 
-`seal.py open` removes any plaintext whose hash does not match. A mismatch means the file is not
-the sealed one: do not score against it.
+`seal.py open` writes a plaintext only when its hash matches, and a failed `open` leaves any file
+already at that path untouched. A mismatch means the ciphertext is not the sealed one: do not score
+against it.
