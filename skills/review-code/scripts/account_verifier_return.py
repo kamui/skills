@@ -182,7 +182,6 @@ def main():
     parser.add_argument("--output", required=True, help="new accounting report, never the raw return")
     parser.add_argument("--repair-of", metavar="ORIGINAL", help="the unmodified return this repaired file was made from")
     args = parser.parse_args()
-    EVENT.update(event="verifier-return-accounted", bundle=args.bundle)
     try:
         bundle = Path(args.bundle)
         data = read_json(bundle / "input.json")
@@ -218,7 +217,6 @@ def main():
                 report = account(data, manifest, manifest_hash, returned)
             except (ValueError, UnicodeError) as error:
                 report = withheld_report(manifest, manifest_hash, [f"return: {error}"])
-        EVENT.update(manifest=manifest, report=report)
         report["raw_return"] = str(Path(args.raw_return).resolve())
         report["raw_return_sha256"] = digest(raw)
         if repair is not None:
@@ -238,19 +236,5 @@ def main():
         return 2
 
 
-# What this accounting hands run_events.py; recording never changes the result.
-EVENT = {}
-
-
 if __name__ == "__main__":
-    import time
-
-    started_ns = time.monotonic_ns()
-    status = main()
-    try:
-        import run_events
-
-        run_events.record(EVENT, status, started_ns, "account_verifier_return.py")
-    except Exception:
-        pass
-    raise SystemExit(status)
+    raise SystemExit(main())

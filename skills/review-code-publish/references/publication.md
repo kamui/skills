@@ -19,13 +19,13 @@ Use a literal command as-is without consulting `review-bot`. Read its login with
 
 For an app without a literal command, invoke `review-bot`'s Resolve entry point when it is among the installed skills, passing the client id and the pull request's base repository as `<owner>/<repo>`. Take its returned reviewer login and review-token command verbatim. If the skill is absent or returns any `unavailable` result, fall back to the authenticated user, record the reason in the report, and withhold gating. Resolution never stops the run. With no app or command declared, use the authenticated user under the ordinary self-review and gating rules. Every app command targets the base repository explicitly, never a checkout remote that may name a fork.
 
-Both shell blocks below carry that command in `tok`, which they assign empty: fill it in when a reviewing app publishes, and leave it empty to publish as the authenticated user. Each block runs it through `sh -c` and exports the token it prints, rather than expanding a command prefix in command position: an unquoted multiword expansion splits into words under `sh`, `bash`, and `dash` but not under `zsh`, where the whole string is read as one command name. Keeping the token in the environment also keeps it out of `argv`, which the timing wrapper records.
+Both shell blocks below carry that command in `tok`, which they assign empty: fill it in when a reviewing app publishes, and leave it empty to publish as the authenticated user. Each block runs it through `sh -c` and exports the token it prints, rather than expanding a command prefix in command position: an unquoted multiword expansion splits into words under `sh`, `bash`, and `dash` but not under `zsh`, where the whole string is read as one command name. Keeping the token in the environment also keeps it out of `argv`.
 
 Each block then proves that token with `gh api "repos/{owner}/{repo}" --silent` before its first write, and exits 3 with nothing written when a filled-in `tok` fails, prints nothing, or prints a token the forge refuses. An empty `tok` means resolution selected the authenticated user, including a recorded fallback, and the block writes as that user. Non-empty is not usable: a token minted against the wrong repository, or one whose installation was suspended after the review posted, passes an emptiness test and is then refused on every write. In the thread write loop that refusal is terminal — each reply records `failed`, every rerun skips it as `refused earlier; not retried`, and the thread actions behind those replies stay `blocked` — so the round's replies and resolutions would never publish against that results file.
 
 Every login comparison against this identity ignores a trailing `[bot]`: REST records carry the suffix that GraphQL's `author{login}` omits for the same app, so an unnormalized compare makes an app's own prior review invisible.
 
-A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with that token in the environment, as one `sh -c` argument so the timing wrapper can exec it:
+A review published under a reviewing app is not a self-review, so the event table's gating events are available to it once the caller's packet carries that authorization. A gating event stands until a later review from the same identity replaces it or it is dismissed; a subsequent `COMMENT` leaves it standing. Dismiss a superseded gate with that token in the environment, as one `sh -c` command:
 
 ```sh
 sh -c 'GH_TOKEN=$(<review-token command>) || { echo "the review-token command failed; nothing was dismissed"; exit 3; }
@@ -34,7 +34,7 @@ export GH_TOKEN
 gh api --method PUT "repos/{owner}/{repo}/pulls/<pr>/reviews/<review id>/dismissals" -f message="$1" -f event=DISMISS' _ '<why>'
 ```
 
-Dismiss only a review this identity published. The token is computed inside that shell, so it reaches the forge through the environment and never through the recorded `argv`. An empty one exits 3 with nothing dismissed rather than falling through: `gh` reads an empty `GH_TOKEN` as no token at all and would dismiss the app's review as the authenticated user. Each guard prints a reason before it exits, as the other two blocks do, and names its own route, which they do not need to: this is the only place where a review-token command that failed and one that printed an empty token are separate guards, and the gate left standing is reported rather than passed over in silence. A non-empty token the forge refuses needs no separate check here, because this single write is where it would be refused, visibly. The message travels as a positional argument rather than inside the quoted command: written into that string it would be expanded again by the inner shell, and a dismissal reason carrying a backtick, a `$`, or a code span would be executed or corrupted on its way to the forge. It is still a single-quoted argument of the outer shell, so a reason containing a single quote is quoted the ordinary way, as is a review-token command that contains one.
+Dismiss only a review this identity published. The token is computed inside that shell, so it reaches the forge through the environment and never through `argv`. An empty one exits 3 with nothing dismissed rather than falling through: `gh` reads an empty `GH_TOKEN` as no token at all and would dismiss the app's review as the authenticated user. Each guard prints a reason before it exits, as the other two blocks do, and names its own route, which they do not need to: this is the only place where a review-token command that failed and one that printed an empty token are separate guards, and the gate left standing is reported rather than passed over in silence. A non-empty token the forge refuses needs no separate check here, because this single write is where it would be refused, visibly. The message travels as a positional argument rather than inside the quoted command: written into that string it would be expanded again by the inner shell, and a dismissal reason carrying a backtick, a `$`, or a code span would be executed or corrupted on its way to the forge. It is still a single-quoted argument of the outer shell, so a reason containing a single quote is quoted the ordinary way, as is a review-token command that contains one.
 
 ## Publication invariants
 
@@ -46,22 +46,6 @@ Dismiss only a review this identity published. The token is computed inside that
 - Store the run trailer in the summary and finding/question trailers in raw comment bodies.
 
 - On a conclusive malformed-comment rejection, apply `review-code`'s render-and-validate step to the repaired record, confirm no review exists, and retry once.
-
-## Timing events
-
-Run every forge fetch and write this skill makes through `run_events.py` under the skill root the review record carries: `python3 <skill-root>/scripts/run_events.py wrap --private-dir <private-dir> --event <event> --data role=<role> [--data connection=root] -- <command>`, where `<private-dir>` is the directory of the record's private store. Wrap each command of a chain separately so no fetch or write escapes, and keep stdout redirects outside the wrapper. The thread write loop is the one exception: its whole run is wrapped once, and the replies, resolutions, and reconciliation reads inside it are not wrapped again. A record without that path runs the same commands unwrapped.
-
-| Command | Event and data |
-| --- | --- |
-| Head re-fetch before writing, re-read after an ambiguous result, published-review readback | `forge-fetched`, `role=root`, `connection=root` |
-| Review submission | `forge-written`, `role=review` |
-| Each run of the thread write loop, reruns included | `forge-written`, `role=replies` |
-| Dismissal of a superseded gate, as its single `sh -c` argument | `forge-written`, `role=review` |
-| General-comment fallback | `forge-written`, `role=summary` |
-
-A dismissal shares `role=review` because it writes that review's state; the wrapper's roles are a fixed vocabulary, and a command beginning with a `GH_TOKEN=` assignment is not one the wrapper can exec, which is why the dismissal is written as a single `sh -c` argument. The reviewer identity's own calls are the forge calls outside this table: the login read above, and each block's token check. They authenticate the publisher rather than reading or writing review state, and each block's check gates that block's writes.
-
-The wrapper exits with the command's status; exit 2 with a `run_events:` line on stderr means it could not run the command, which counts as that fetch or write failing. These events time commands only. A successful wrapped write is not evidence that publication finished; the readback and failure reporting below still decide that. The loop's interval covers the whole loop, not each mutation, and its `write-results.jsonl` decides which writes succeeded.
 
 On GitHub, the `Create a review for a pull request` batch documents line comments but not file subjects. Keep file-anchored findings in `Unanchored findings` rather than making a separate write through the review-comment endpoint or inventing an unrelated line. The one-call batch shape is:
 
@@ -85,19 +69,13 @@ GitHub's separate review-comment endpoint documents `subject_type: "file"`, but 
 
 ### Freshness and review submission
 
-Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it, and `ev` is empty when the record names no skill root:
+Run the head re-fetch, the equality check, and the single review POST as one shell invocation. `<reviewed head>` is the record's full head SHA, and `<private-dir>` holds the record's `batch.json` as `--emit-batch` printed it:
 
 ```sh
-d=<private-dir> ev=<skill-root>/scripts/run_events.py pr=<pr> reviewed=<reviewed head>
+d=<private-dir> pr=<pr> reviewed=<reviewed head>
 tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
 rm -f "$d/head.txt" "$d/review-response.json"
-forge() { # <forge-fetched|forge-written> <command...>
-  kind=$1; shift
-  if [ -z "$ev" ]; then "$@"
-  elif [ "$kind" = forge-fetched ]; then python3 "$ev" wrap --private-dir "$d" --event forge-fetched --data role=root --data connection=root -- "$@"
-  else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=review -- "$@"; fi
-}
-forge forge-fetched gh api "repos/{owner}/{repo}/pulls/$pr" --jq .head.sha > "$d/head.part" 2> "$d/head.stderr"
+gh api "repos/{owner}/{repo}/pulls/$pr" --jq .head.sha > "$d/head.part" 2> "$d/head.stderr"
 rc=$?
 live=$(cat "$d/head.part")
 batch_head=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["commit_id"])' "$d/batch.json" 2> /dev/null)
@@ -122,7 +100,7 @@ if [ -n "$tok" ]; then
   fi
 fi
 echo "preflight passed: live head $live"
-forge forge-written gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
+gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
 rc=$?
 if [ "$rc" -ne 0 ]; then
   echo "write attempted: review POST exited $rc; re-read the pull request's reviews before one retry"
@@ -155,7 +133,7 @@ Write `<private-dir>/writes.jsonl` once, one JSON object per prior item per line
 
 ### Thread write loop
 
-Run as one shell invocation after replacing `<private-dir>` and `<pr>`; `ev` is empty when the record names no skill root:
+Run as one shell invocation after replacing `<private-dir>` and `<pr>`:
 
 ```sh
 d=<private-dir> pr=<pr>
@@ -445,7 +423,6 @@ while [ "$i" -lt "$n" ]; do
 done
 w summary
 SH
-ev=<skill-root>/scripts/run_events.py
 tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
 if [ -n "$tok" ]; then
   GH_TOKEN=$(sh -c "$tok" 2> "$d/reviewer.stderr") || GH_TOKEN=
@@ -455,8 +432,7 @@ if [ -n "$tok" ]; then
     cat "$d/reviewer.stderr"; exit 3
   fi
 fi
-if [ -z "$ev" ]; then sh "$d/write-loop.sh" "$d" "$pr"
-else python3 "$ev" wrap --private-dir "$d" --event forge-written --data role=replies -- sh "$d/write-loop.sh" "$d" "$pr"; fi
+sh "$d/write-loop.sh" "$d" "$pr"
 ```
 
 The loop validates the whole file before its first write. A row that is not a JSON object, lacks or adds a field, has a mistyped value, lacks an id its operation needs (a reply needs `comment_id` and `thread_id`, a thread action needs `thread_id`), repeats an id, a reply body to one comment, or an action on one thread, or puts any row after its thread's action row refuses the file. The loop then prints one line per violation and `writes.jsonl refused; nothing was written`, and exits 3. Otherwise it takes items in file order, one write at a time. It posts the reply when `body` is non-null and performs the thread action only after every reply on that thread is confirmed; a thread with no reply to post leaves the action to run directly. Bodies travel as JSON request files through `--input` and are never evaluated or interpolated as shell, so multiline text, quotes, backslashes, Unicode, and trailing newlines arrive unchanged. A failed item does not stop the items after it.

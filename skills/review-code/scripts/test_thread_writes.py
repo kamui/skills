@@ -157,11 +157,9 @@ class Loop(unittest.TestCase):
         (private / "state.json").write_text(json.dumps(state), encoding="utf-8")
         return private
 
-    def run_loop(self, private, shell="sh", source=PUBLICATION, wrapped=False, tok="", silent_rc=0,
+    def run_loop(self, private, shell="sh", source=PUBLICATION, tok="", silent_rc=0,
                  launcher=False, launcher_path=LAUNCHER, cwd=None, record_context=False):
-        script = shlex.quote(str(SCRIPTS / "run_events.py")) if wrapped else "''"
-        text = (loop_block(source).replace("<private-dir>", shlex.quote(str(private))).replace("<pr>", "7")
-                .replace("<skill-root>/scripts/run_events.py", script))
+        text = loop_block(source).replace("<private-dir>", shlex.quote(str(private))).replace("<pr>", "7")
         if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
             marker = "tok=  #"
             self.assertIn(marker, text)
@@ -188,11 +186,8 @@ class Loop(unittest.TestCase):
     def test_both_references_carry_the_same_loop(self):
         publication, addressing = loop_block(PUBLICATION), loop_block(ADDRESSING)
         self.assertEqual(shared(publication), shared(addressing))
-        self.assertNotIn("run_events", addressing)
-        self.assertEqual(publication.count("wrap --private-dir"), 1)
-        self.assertIn("--event forge-written --data role=replies -- sh", publication)
-        self.assertNotIn("role=resolutions", publication)
-        self.assertTrue(addressing.rstrip().endswith('sh "$d/write-loop.sh" "$d" "$pr"'))
+        for block in (publication, addressing):
+            self.assertTrue(block.rstrip().endswith('\nsh "$d/write-loop.sh" "$d" "$pr"'))
         text = PUBLICATION.read_text(encoding="utf-8")
         rules = text[text.index(publication) + len(publication) + 4:].strip().split("\n\n")
         self.assertEqual(len(rules), 3)
@@ -246,34 +241,26 @@ class Loop(unittest.TestCase):
                 row("e"), row("f", 106, "T6", "reopened: regressed", "reopen", is_resolved=True)]
         for source in (PUBLICATION, ADDRESSING):
             for shell in SHELLS:
-                for wrapped in ((False, True) if source == PUBLICATION else (False,)):
-                    with self.subTest(source=source.name, shell=shell, wrapped=wrapped):
-                        private = self.fresh(rows)
-                        result, state, results = self.run_loop(private, shell, source, wrapped)
-                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                        self.assertEqual(self.calls(state), [("reply", "101"), ("resolve", "T1"), ("resolve", "T2"),
-                                                             ("reply", "103"), ("reply", "106"), ("reopen", "T6")])
-                        self.assertEqual(state["log"][0]["input"], {"body": NASTY})
-                        self.assertEqual(state["comments"]["T1"][0]["body"], NASTY)
-                        self.assertFalse((private / "pwned").exists() or (private / "pwned2").exists())
-                        self.assertIn("writes: 6 confirmed, 6 not required, 0 unresolved", result.stdout)
-                        skipped = {(r["item"], r["reason"]) for r in results if r["kind"] == "skip"}
-                        self.assertIn(("d", "thread already in that state"), skipped)
-                        self.assertIn(("e", "no thread action"), skipped)
-                        replies = [r for r in results if r["step"] == "reply" and r["kind"] == "write" and "exit" in r]
-                        self.assertEqual(len(replies), 3)
-                        self.assertTrue(all(r["outcome"] == "confirmed" and r["created_id"] for r in replies))
-                        self.assertNotIn(NASTY, (private / "write-results.jsonl").read_text(encoding="utf-8"))
-                        events = private / "run-events.jsonl"
-                        if wrapped:
-                            recorded = [json.loads(line) for line in events.read_text(encoding="utf-8").splitlines()]
-                            self.assertEqual([(e["event"], e["data"]["role"], e["data"]["argv0"], e["exit"])
-                                              for e in recorded], [("forge-written", "replies", "sh", 0)])
-                        else:
-                            self.assertFalse(events.exists())
-                        again, state, _ = self.run_loop(private, shell, source, wrapped)
-                        self.assertEqual(again.returncode, 0, again.stdout)
-                        self.assertEqual(len(state["log"]), 6, "a confirmed write ran again")
+                with self.subTest(source=source.name, shell=shell):
+                    private = self.fresh(rows)
+                    result, state, results = self.run_loop(private, shell, source)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(self.calls(state), [("reply", "101"), ("resolve", "T1"), ("resolve", "T2"),
+                                                         ("reply", "103"), ("reply", "106"), ("reopen", "T6")])
+                    self.assertEqual(state["log"][0]["input"], {"body": NASTY})
+                    self.assertEqual(state["comments"]["T1"][0]["body"], NASTY)
+                    self.assertFalse((private / "pwned").exists() or (private / "pwned2").exists())
+                    self.assertIn("writes: 6 confirmed, 6 not required, 0 unresolved", result.stdout)
+                    skipped = {(r["item"], r["reason"]) for r in results if r["kind"] == "skip"}
+                    self.assertIn(("d", "thread already in that state"), skipped)
+                    self.assertIn(("e", "no thread action"), skipped)
+                    replies = [r for r in results if r["step"] == "reply" and r["kind"] == "write" and "exit" in r]
+                    self.assertEqual(len(replies), 3)
+                    self.assertTrue(all(r["outcome"] == "confirmed" and r["created_id"] for r in replies))
+                    self.assertNotIn(NASTY, (private / "write-results.jsonl").read_text(encoding="utf-8"))
+                    again, state, _ = self.run_loop(private, shell, source)
+                    self.assertEqual(again.returncode, 0, again.stdout)
+                    self.assertEqual(len(state["log"]), 6, "a confirmed write ran again")
         private = self.fresh(rows)
         result, state, results = self.run_loop(private, source=ADDRESSING, launcher=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -359,19 +346,15 @@ class Loop(unittest.TestCase):
         # command name under zsh, which is why the block runs it through `sh -c`.
         rows = [row("a", 101, "T1", "fixed", "resolve")]
         for shell in SHELLS:
-            for wrapped in (False, True):
-                with self.subTest(shell=shell, wrapped=wrapped):
-                    private = self.fresh(rows)
-                    result, state, _ = self.run_loop(private, shell, wrapped=wrapped, tok="printf %s app-token-xyz")
-                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertEqual(state["checks"], ["app-token-xyz"], "the token is proved exactly once")
-                    self.assertEqual({call["token"] for call in state["log"]}, {"app-token-xyz"},
-                                     "every write in the loop runs under the token, wrapped or not")
-                    self.assertNotIn("app-token-xyz", json.dumps([call["args"] for call in state["log"]]),
-                                     "a token never reaches argv")
-                    if wrapped:
-                        events = (private / "run-events.jsonl").read_text(encoding="utf-8")
-                        self.assertNotIn("app-token-xyz", events, "a token never reaches a recorded event")
+            with self.subTest(shell=shell):
+                private = self.fresh(rows)
+                result, state, _ = self.run_loop(private, shell, tok="printf %s app-token-xyz")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(state["checks"], ["app-token-xyz"], "the token is proved exactly once")
+                self.assertEqual({call["token"] for call in state["log"]}, {"app-token-xyz"},
+                                 "every write in the loop runs under the token")
+                self.assertNotIn("app-token-xyz", json.dumps([call["args"] for call in state["log"]]),
+                                 "a token never reaches argv")
 
     def test_unusable_app_token_stops_the_loop_before_its_first_write(self):
         # A token the forge refuses would fail every reply, and `refused earlier; not retried`

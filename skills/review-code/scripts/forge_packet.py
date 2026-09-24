@@ -1,22 +1,41 @@
 #!/usr/bin/env python3
-"""Normalize saved forge responses into one persisted review packet.
+"""Fetch a pull request's forge inputs and normalize them into one persisted review packet.
 
-`references/targets.md`, read at `SKILL.md` step 1 for a pull
-request, fetches the pull request, its closing issues with their comments, and
-its reviews, review threads, and comments with `gh api graphql`, saving every
-response page to a file. This script turns those saved pages into
-one logical collection of the reviewed forge inputs -- the packet -- with
-stable numeric ids, edit timestamps, and per-connection completeness. It reads
-only the files it is given: it never calls `gh`, never touches the network,
-and never decides a review judgment.
+`references/targets.md`, read at `SKILL.md` step 1 for a pull request, runs
+`fetch`, which fetches the pull request, its closing issues with their
+comments, its reviews, review threads, and comments, and each explicitly
+referenced non-closing issue with `gh api graphql`, saving every response to a
+file. The saved responses become one logical collection of the reviewed forge
+inputs -- the packet -- with stable numeric ids, edit timestamps, and
+per-connection completeness. Only `fetch` calls `gh`; every other subcommand
+reads the files it is given. No subcommand decides a review judgment.
 
 Usage:
+    python3 scripts/forge_packet.py fetch --repo OWNER/NAME --pr NUMBER
+        --dir PRIVATE_DIR [--issue [OWNER/NAME]#NUMBER ...]
     python3 scripts/forge_packet.py normalize PAGE [PAGE ...] > packet.json
     python3 scripts/forge_packet.py later-state packet.json --review ID
         [--after ISO-8601]
     python3 scripts/forge_packet.py shortcut packet.json --review ID
         --merge-base SHA --supplied-inputs yes|no
     python3 scripts/forge_packet.py --self-test
+
+`fetch` runs the root query, then one continuation query per bounded
+connection whose `pageInfo.hasNextPage` is true, following each `endCursor`
+until it is false, and one issue query per `--issue` not already among the
+closing issues, with that issue's comment continuations. It runs in the
+reviewed repository, targets `--repo` explicitly, and saves each response as
+`gh` printed it to `forge-<n>.json` in `--dir`, a failed call included. It
+records each call's file, role, connection, and exit in `fetch.json`, then
+writes `packet.json`: exactly what `normalize` prints for those responses in
+call order. A failed call is not followed further and names its gap in the
+packet; its stderr line goes to stderr. A second `fetch` into the same
+directory must name the same pull request and only `--issue` values: it
+fetches the issues the saved responses lack and rewrites `packet.json` from
+every saved response. Stdout is `packet <path>: complete|incomplete, <n>
+responses`, then one `gap <text>` line per gap. `fetch` exits 0 when the packet
+is written, gaps included; 2 when `gh` cannot run, the directory is unusable or
+already holds another fetch, or the root response is missing or unrecognized.
 
 `normalize` accepts the raw stdout of each `gh api graphql` call from the
 documented root query and its continuation queries, in any order, and prints
@@ -83,11 +102,11 @@ distinct ids equal that count, some page reports `hasNextPage: false`, and no
 page carried a GraphQL error or an HTTP failure. Anything else is a named gap.
 
 Exit codes:
-    0  the packet or an empty later-state report was written to stdout
+    0  the packet or an empty later-state report was written
     1  later-state or shortcut lines were written to stdout, or a --self-test
        assertion failed
-    2  a page file cannot be opened or matches no documented shape; the file
-       is named on stderr
+    2  a page file cannot be opened or matches no documented shape, or `fetch`
+       cannot run; the file or failing command is named on stderr
 """
 
 from __future__ import annotations
@@ -96,7 +115,9 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -709,6 +730,275 @@ def normalize(pages: list[tuple[str, Any]]) -> dict[str, Any]:
     return packet.build()
 
 
+def packet_text(packet: dict[str, Any]) -> str:
+    return json.dumps(packet, ensure_ascii=False, indent=2) + "\n"
+
+
+# --- fetch ------------------------------------------------------------------
+
+PAGE_INFO = "totalCount pageInfo{ hasNextPage endCursor }"
+ISSUE_COMMENT_FIELDS = "fullDatabaseId author{login} createdAt updatedAt lastEditedAt body url"
+ISSUE_FIELDS = f"number title body url updatedAt lastEditedAt comments(first:100){{ {PAGE_INFO} nodes{{ {ISSUE_COMMENT_FIELDS} }} }}"
+THREAD_COMMENT_FIELDS = ("fullDatabaseId author{login} body createdAt updatedAt lastEditedAt "
+                         "replyTo{ fullDatabaseId } pullRequestReview{ fullDatabaseId } url")
+CONNECTION_FIELDS = {
+    "closingIssuesReferences": (20, ISSUE_FIELDS),
+    "reviews": (100, "fullDatabaseId author{login} state body submittedAt updatedAt lastEditedAt commit{oid} url"),
+    "reviewThreads": (100, "id isResolved isOutdated path line originalLine diffSide "
+                           f"comments(first:100){{ {PAGE_INFO} nodes{{ {THREAD_COMMENT_FIELDS} }} }}"),
+    "comments": (100, "fullDatabaseId author{login} body createdAt updatedAt lastEditedAt url"),
+}
+REPOSITORY = "repository(owner:$owner,name:$name)"
+
+
+def connection_query(name: str, after: bool) -> str:
+    first, fields = CONNECTION_FIELDS[name]
+    return f"{name}(first:{first}{',after:$after' if after else ''}){{ {PAGE_INFO} nodes{{ {fields} }} }}"
+
+
+ROOT_QUERY = ("query($owner:String!,$name:String!,$number:Int!){ " + REPOSITORY + "{ url pullRequest(number:$number){ "
+              "title body state merged isDraft baseRefName baseRefOid headRefOid updatedAt lastEditedAt baseRepository{ url } "
+              + " ".join(connection_query(name, False) for name in PR_CONNECTIONS) + " } } }")
+ISSUE_QUERY = "query($owner:String!,$name:String!,$issue:Int!){ " + REPOSITORY + "{ issue(number:$issue){ " + ISSUE_FIELDS + " } } }"
+ISSUE_COMMENTS_QUERY = ("query($owner:String!,$name:String!,$issue:Int!,$after:String){ " + REPOSITORY + "{ issue(number:$issue){ "
+                        f"number url comments(first:100,after:$after){{ {PAGE_INFO} nodes{{ {ISSUE_COMMENT_FIELDS} }} }} }} }} }}")
+THREAD_COMMENTS_QUERY = ("query($thread:ID!,$after:String){ node(id:$thread){ ... on PullRequestReviewThread { "
+                         f"id comments(first:100,after:$after){{ {PAGE_INFO} nodes{{ {THREAD_COMMENT_FIELDS} }} }} }} }} }}")
+
+
+def pr_continuation_query(name: str) -> str:
+    return ("query($owner:String!,$name:String!,$number:Int!,$after:String){ " + REPOSITORY
+            + "{ pullRequest(number:$number){ " + connection_query(name, True) + " } } }")
+
+
+FETCH_FORMAT = "forge-fetch/1"
+MANIFEST = "fetch.json"
+PACKET = "packet.json"
+MAX_CALLS = 1000  # far beyond any real pull request; a forge that never ends a connection stops here
+
+
+class FetchError(Exception):
+    """`fetch` cannot run: `gh` is missing, the directory is unusable, or it holds another fetch."""
+
+
+def repository_argument(value: str) -> tuple[str, str]:
+    match = re.fullmatch(r"([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", value)
+    if not match:
+        raise argparse.ArgumentTypeError(f"expected OWNER/NAME, got {value!r}")
+    return match.group(1), match.group(2)
+
+
+def issue_argument(value: str) -> tuple[Optional[str], Optional[str], int]:
+    match = re.fullmatch(r"(?:([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+))?#?([1-9][0-9]*)", value)
+    if not match:
+        raise argparse.ArgumentTypeError(f"expected NUMBER or OWNER/NAME#NUMBER, got {value!r}")
+    return match.group(1), match.group(2), int(match.group(3))
+
+
+def positive_int(value: str) -> int:
+    if not value.isdigit() or int(value) < 1:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {value!r}")
+    return int(value)
+
+
+def next_cursor(connection: Any) -> Optional[str]:
+    info = connection.get("pageInfo") if isinstance(connection, dict) else None
+    if isinstance(info, dict) and info.get("hasNextPage") is True:
+        cursor = info.get("endCursor")
+        if isinstance(cursor, str) and cursor:
+            return cursor
+    return None
+
+
+def nodes_of(connection: Any) -> list[dict[str, Any]]:
+    nodes = connection.get("nodes") if isinstance(connection, dict) else None
+    return [node for node in nodes if isinstance(node, dict)] if isinstance(nodes, list) else []
+
+
+class Fetch:
+    """One pull request's saved responses, in call order, and the continuations they still owe."""
+
+    def __init__(self, directory: str, repository: tuple[str, str], number: int) -> None:
+        self.directory = directory
+        self.owner, self.name = repository
+        self.number = number
+        self.calls: list[dict[str, Any]] = []
+        self.pages: list[tuple[str, Any]] = []
+        self.queue: list[tuple[tuple[Any, ...], str]] = []
+        self.seen: set[tuple[tuple[Any, ...], str]] = set()
+
+    def open(self, issues: list[tuple[Optional[str], Optional[str], int]]) -> bool:
+        """Check the directory; load an earlier fetch's responses. True when this call adds issues to one."""
+        if not os.path.isdir(self.directory):
+            raise FetchError(f"{self.directory}: not a directory; create the private directory first")
+        manifest_path = os.path.join(self.directory, MANIFEST)
+        if not os.path.exists(manifest_path):
+            leftovers = sorted(name for name in os.listdir(self.directory)
+                               if name == PACKET or re.fullmatch(r"forge-.*\.json", name))
+            if leftovers:
+                raise FetchError(f"{self.directory}: already holds {', '.join(leftovers)}; fetch into a fresh private directory")
+            return False
+        try:
+            with open(manifest_path, encoding="utf-8") as handle:
+                manifest = json.load(handle)
+            if manifest.get("format") != FETCH_FORMAT:
+                raise ValueError(f"format is not {FETCH_FORMAT}")
+            repository, number, calls = manifest["repository"], manifest["pull_request"], manifest["responses"]
+            files = [call["file"] for call in calls]
+            if not all(isinstance(name, str) and re.fullmatch(r"forge-[0-9]+\.json", name) for name in files):
+                raise ValueError("a response file name is not forge-<n>.json")
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+            raise FetchError(f"{manifest_path}: cannot read the earlier fetch: {error}") from error
+        if not isinstance(repository, str) or repository.lower() != f"{self.owner}/{self.name}".lower() or number != self.number:
+            raise FetchError(f"{self.directory}: already holds the fetch of {repository}#{number}; fetch into a fresh private directory")
+        if not issues:
+            raise FetchError(f"{self.directory}: already fetched; a second fetch only adds --issue values")
+        if not os.path.exists(os.path.join(self.directory, PACKET)):
+            raise FetchError(f"{self.directory}: the earlier fetch wrote no {PACKET}; fetch into a fresh private directory")
+        self.calls = list(calls)
+        self.pages = [(os.path.join(self.directory, name), load_page(os.path.join(self.directory, name))) for name in files]
+        return True
+
+    def gh(self, role: str, connection: str, query: str, variables: list[tuple[str, str, Any]]) -> Optional[Any]:
+        """Run one `gh api graphql` call and save its stdout; the parsed response, or None when the call failed."""
+        if len(self.calls) >= MAX_CALLS:
+            raise FetchError(f"more than {MAX_CALLS} calls; a connection never reported its last page")
+        path = os.path.join(self.directory, f"forge-{len(self.calls) + 1}.json")
+        command = ["gh", "api", "graphql"]
+        for flag, key, value in variables:
+            command += [flag, f"{key}={value}"]
+        command += ["-f", f"query={query}"]
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        except OSError as error:
+            raise FetchError(f"cannot run gh api graphql: {error}") from error
+        try:
+            with open(path, "x", encoding="utf-8") as handle:
+                handle.write(result.stdout)
+        except OSError as error:
+            raise FetchError(f"cannot save {path}: {error}") from error
+        self.calls.append({"file": os.path.basename(path), "role": role, "connection": connection, "exit": result.returncode})
+        payload = load_page(path)
+        self.pages.append((path, payload))
+        if result.returncode != 0:
+            detail = (result.stderr.strip().splitlines() or ["no stderr"])[-1]
+            print(f"forge_packet: fetch: {role} {connection} ({path}): gh api graphql exited {result.returncode}: {detail}",
+                  file=sys.stderr)
+            return None
+        return payload
+
+    def owe(self, key: tuple[Any, ...], connection: Any) -> None:
+        cursor = next_cursor(connection)
+        if cursor is not None and (key, cursor) not in self.seen:
+            self.seen.add((key, cursor))
+            self.queue.append((key, cursor))
+
+    def issue_key(self, issue: dict[str, Any]) -> Optional[tuple[Any, ...]]:
+        coordinate = coordinate_from_url(text(issue.get("url")))
+        if coordinate is not None:
+            slug, _, number = coordinate.partition("#")
+            owner, _, name = slug.partition("/")
+            return ("issue", owner, name, int(number))
+        number = issue.get("number")
+        if isinstance(number, int) and not isinstance(number, bool):
+            return ("issue", self.owner, self.name, number)
+        return None
+
+    def follow(self, payload: Any) -> None:
+        """Queue every continuation a successful response reports: a connection with a further page."""
+        data = payload.get("data", payload) if isinstance(payload, dict) else None
+        if not isinstance(data, dict):
+            return
+        repository, node = data.get("repository"), data.get("node")
+        if isinstance(repository, dict) and isinstance(repository.get("pullRequest"), dict):
+            pull_request = repository["pullRequest"]
+            for name in PR_CONNECTIONS:
+                connection = pull_request.get(name)
+                self.owe(("pr", name), connection)
+                for item in nodes_of(connection):
+                    if name == "closingIssuesReferences":
+                        key = self.issue_key(item)
+                        if key is not None:
+                            self.owe(key, item.get("comments"))
+                    elif name == "reviewThreads" and isinstance(item.get("id"), str):
+                        self.owe(("thread", item["id"]), item.get("comments"))
+        if isinstance(repository, dict) and isinstance(repository.get("issue"), dict):
+            key = self.issue_key(repository["issue"])
+            if key is not None:
+                self.owe(key, repository["issue"].get("comments"))
+        if isinstance(node, dict) and isinstance(node.get("id"), str):
+            self.owe(("thread", node["id"]), node.get("comments"))
+
+    def drain(self) -> None:
+        while self.queue:
+            key, cursor = self.queue.pop(0)
+            if key[0] == "pr":
+                page = self.gh("continuation", key[1], pr_continuation_query(key[1]), [
+                    ("-f", "owner", self.owner), ("-f", "name", self.name), ("-F", "number", self.number),
+                    ("-f", "after", cursor)])
+            elif key[0] == "issue":
+                page = self.gh("continuation", "issue-comments", ISSUE_COMMENTS_QUERY, [
+                    ("-f", "owner", key[1]), ("-f", "name", key[2]), ("-F", "issue", key[3]), ("-f", "after", cursor)])
+            else:
+                page = self.gh("continuation", "thread-comments", THREAD_COMMENTS_QUERY, [
+                    ("-f", "thread", key[1]), ("-f", "after", cursor)])
+            if page is not None:
+                self.follow(page)
+
+    def fetched_issues(self) -> set[str]:
+        """Lower-cased coordinates of the closing and explicitly fetched issues the saved responses carry."""
+        found: set[str] = set()
+        for _, payload in self.pages:
+            data = payload.get("data", payload) if isinstance(payload, dict) else None
+            repository = data.get("repository") if isinstance(data, dict) else None
+            if not isinstance(repository, dict):
+                continue
+            issues = nodes_of((repository.get("pullRequest") or {}).get("closingIssuesReferences")) \
+                if isinstance(repository.get("pullRequest"), dict) else []
+            if isinstance(repository.get("issue"), dict) and "title" in repository["issue"]:
+                issues.append(repository["issue"])
+            for issue in issues:
+                key = self.issue_key(issue)
+                if key is not None:
+                    found.add(f"{key[1]}/{key[2]}#{key[3]}".lower())
+        return found
+
+    def run(self, issues: list[tuple[Optional[str], Optional[str], int]]) -> dict[str, Any]:
+        if not self.open(issues):
+            root = self.gh("root", "root", ROOT_QUERY, [
+                ("-f", "owner", self.owner), ("-f", "name", self.name), ("-F", "number", self.number)])
+            if root is None:
+                issues = []  # without the root response there is no packet to add them to
+            else:
+                self.follow(root)
+                self.drain()
+        known = self.fetched_issues()
+        for owner, name, number in issues:
+            owner, name = owner or self.owner, name or self.name
+            coordinate = f"{owner}/{name}#{number}"
+            if coordinate.lower() in known:
+                continue
+            known.add(coordinate.lower())
+            page = self.gh("issue", "issue", ISSUE_QUERY, [("-f", "owner", owner), ("-f", "name", name), ("-F", "issue", number)])
+            if page is not None:
+                self.follow(page)
+                self.drain()
+        manifest = {"format": FETCH_FORMAT, "repository": f"{self.owner}/{self.name}", "pull_request": self.number,
+                    "responses": self.calls}
+        try:
+            with open(os.path.join(self.directory, MANIFEST), "w", encoding="utf-8") as handle:
+                handle.write(json.dumps(manifest, indent=2) + "\n")
+        except OSError as error:
+            raise FetchError(f"cannot write {MANIFEST}: {error}") from error
+        packet = normalize(self.pages)
+        try:
+            with open(os.path.join(self.directory, PACKET), "w", encoding="utf-8") as handle:
+                handle.write(packet_text(packet))
+        except OSError as error:
+            raise FetchError(f"cannot write {PACKET}: {error}") from error
+        return packet
+
+
 # --- later-state ------------------------------------------------------------
 
 
@@ -1077,6 +1367,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--self-test", action="store_true", help="run the built-in assertions")
     subparsers = parser.add_subparsers(dest="command")
+    fetch_parser = subparsers.add_parser("fetch", help="fetch a pull request's forge inputs with gh and write packet.json")
+    fetch_parser.add_argument("--repo", required=True, type=repository_argument, help="the base repository, OWNER/NAME")
+    fetch_parser.add_argument("--pr", required=True, type=positive_int, help="the pull request number")
+    fetch_parser.add_argument("--dir", required=True, help="the run's private directory")
+    fetch_parser.add_argument("--issue", action="append", default=[], type=issue_argument,
+                              help="an explicitly referenced non-closing issue, NUMBER or OWNER/NAME#NUMBER; repeatable")
     normalize_parser = subparsers.add_parser("normalize", help="merge saved response pages into one packet")
     normalize_parser.add_argument("pages", nargs="+", help="saved `gh api graphql` responses, or - for stdin")
     later_parser = subparsers.add_parser("later-state", help="list state created or edited after a review")
@@ -1096,6 +1392,18 @@ def main() -> int:
     if args.command is None:
         parser.print_usage(sys.stderr)
         return 2
+    if args.command == "fetch":
+        fetch = Fetch(args.dir, args.repo, args.pr)
+        try:
+            packet = fetch.run(args.issue)
+        except (FetchError, PageError) as error:
+            print(f"forge_packet: {error}", file=sys.stderr)
+            return 2
+        state = "complete" if packet["complete"] else "incomplete"
+        print(f"packet {os.path.join(args.dir, PACKET)}: {state}, {len(fetch.calls)} responses")
+        for gap in packet["gaps"]:
+            print(f"gap {gap}")
+        return 0
     try:
         if args.command == "normalize":
             pages = [(path, load_page(path)) for path in args.pages]

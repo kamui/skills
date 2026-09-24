@@ -23,7 +23,7 @@ A script does mechanical work: builds a prompt, validates a payload, hashes cont
 ## Each script
 
 - Opens with `#!/usr/bin/env python3`, a module docstring giving purpose, usage, exit codes, and input schema, then `from __future__ import annotations`.
-- Parses arguments with `argparse`. Input arrives as arguments, stdin, or the local git repository; forge calls (`gh`) stay in `SKILL.md` steps.
+- Parses arguments with `argparse`. Input arrives as arguments, stdin, or the local git repository; forge calls (`gh`) stay in `SKILL.md` steps, except the departures recorded below.
 - Passes `encoding="utf-8"` to every `open()` and to `subprocess.run(..., text=True)`.
 - Exits `0` on success, `1` on a content violation with one line per violation on stdout, `2` when input cannot be read or a subprocess fails, naming the failing command on stderr.
 - Ships a `--self-test` flag or a `test_<name>.py` sibling that drives it through `subprocess`, so exit codes are what gets tested. Run it before committing.
@@ -39,6 +39,14 @@ A script does mechanical work: builds a prompt, validates a payload, hashes cont
 - Its stdout carries only the token, and every failure reason, exit 1 or 2, goes to stderr. Consumers capture stdout as the token and discard it on failure, so a reason on stdout would be swallowed.
 
 A dependent reaches this script only through the review-token command returned by `review-bot`, which names the installed skill's own absolute path; no dependent writes a path to it.
+
+## `review-code` fetch departure
+
+`review-code/scripts/forge_packet.py fetch` runs the pull request's GraphQL root query, every continuation query and each referenced issue query through `gh api graphql`, instead of leaving them to `SKILL.md` prose. The pagination loop holds no judgment: follow each `endCursor` until `hasNextPage` is false and save every response.
+
+- It runs `gh` as a subprocess in the reviewed repository against the `--repo` it is given, never a checkout remote's default. A missing `gh` exits 2.
+- It saves each response as `gh` printed it, a failed call included, and normalizes them with the same code as `normalize`, so the packet and its `packet_context` do not depend on who fetched. A failed call is a named gap in the packet at exit 0; a missing root response is exit 2.
+- It decides nothing about which issues are relevant: the model passes those as `--issue` arguments, and supplied issues or specs still reach the record only through the model's `run.specs`.
 
 ## Invocation from `SKILL.md`
 
