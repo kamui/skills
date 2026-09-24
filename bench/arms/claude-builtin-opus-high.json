@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "claude-builtin-opus-high",
+  "kind": "claude-builtin",
+  "label": "Claude Code built-in /code-review, Opus 5.5, session --effort high",
+  "model": "claude-opus-5-5",
+  "effort": "high",
+  "requested_workers": {
+    "model": null,
+    "effort": null
+  },
+  "isolation": {
+    "fresh_home": true,
+    "safe_mode": true,
+    "allowed_tools": [
+      "Bash",
+      "Read",
+      "Glob",
+      "Grep",
+      "Agent"
+    ],
+    "sandbox": "n/a",
+    "network": "off",
+    "unprivileged_user": null
+  },
+  "adapter": {
+    "range_transport": "argument `main...review-head high` with session --effort high and no --model (the harness default is claude-opus-5-5); the built-in diffs main...HEAD",
+    "packet_transport": "prompt text after the argument",
+    "output_capture": "payload.json extracted by attempt_audit.py: the forked subagent's final text and its ReportFindings input",
+    "expected_prompt_variants": [
+      "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a"
+    ]
+  },
+  "budget_usd_per_attempt": 5.0
+}

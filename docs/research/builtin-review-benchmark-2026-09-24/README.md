@@ -1,14 +1,25 @@
 # Built-in reviewer benchmark — `review-code` against Claude Code's `/code-review` and Codex `review`
 
-**Status: draft preregistration, not frozen.** Phase 0 (mechanism shakedown) ran on 2026-09-24;
-its records are in §9 and the independent review of the first draft is in §11. No scored cell has
-been dispatched. Freezing happens when §10's open items are closed and this file is committed with
-its stage-1 commit named in `ledger.md`.
+**Status: draft preregistration, not frozen.** This is the narrative of the first scored run of the
+[reviewer benchmark suite](../../../bench/README.md). The run will live at
+`bench/runs/<freeze date>-builtin-baseline/`; its `manifest.json` is written and committed at freeze,
+and its commit is named in [`ledger.md`](ledger.md). No scored cell has been dispatched. Freezing
+happens when §10's open items are closed.
 
-This bundle follows [the one-shot method](../code-review-one-shot-method.md) for freezing,
-inputs, attempt accounting, adjudication and scoring, and departs from it only where §3, §4 and
-§8 say so. It is a **benchmark**, not an adoption screen: it preregisters questions, not
-thresholds, and nothing it measures authorizes changing any skill.
+The mechanism this file used to describe has moved into `bench/`: the arms are data in
+[`bench/arms/`](../../../bench/arms/), the targets and their sealed registers in
+[`bench/targets/`](../../../bench/targets/), the scoring definitions in
+[`bench/rubric/scoring.v1.md`](../../../bench/rubric/scoring.v1.md), and the tools in
+[`bench/tools/`](../../../bench/tools/). The suite's design and its comparison contract are in
+[`bench-suite-design-2026-09-24.md`](../bench-suite-design-2026-09-24.md). What stays here is what
+a run's narrative owns: the question, the decisions, the grid and budget, the scoring
+clarifications this run adds, what the shakedown established, what is open, and the review
+history.
+
+This run follows [the one-shot method](../code-review-one-shot-method.md) for freezing, inputs,
+attempt accounting, adjudication and scoring, and departs from it only where §3, §4 and §8 say so.
+It is a **benchmark**, not an adoption screen: it preregisters questions, not thresholds, and
+nothing it measures authorizes changing any skill.
 
 ## 1. Question and decisions
 
@@ -28,36 +39,36 @@ Decisions taken by the maintainer on 2026-09-24, before any dispatch:
 
 ## 2. Arms
 
-| Arm | What runs | Model / prompt variant | Row label |
+| Arm | Arm file | What runs | Row label |
 | --- | --- | --- | --- |
-| A | `skills/review-code` at the pinned tree, invoked as a caller would: `mode: one-shot`, `return_format: artifacts`, render-only | `claude-sonnet-5` / `high`, verifiers the same | `review-code` |
-| B | Claude Code built-in `/code-review` | `claude-sonnet-5` / session `--effort high`; the built-in then selects `high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased)` | `claude-builtin-sonnet` |
-| C | Claude Code built-in `/code-review` | `claude-opus-5-5` (the harness default when no `--model` is passed, observed in §9) / session `--effort high`; the built-in then selects `high effort → 8 inline angles → dedup (no verify)` | `claude-builtin-opus` |
-| D | Codex `codex review`, as shipped | Codex default model and reasoning effort as the CLI header reports them (`gpt-6-astra`, `reasoning effort: none` on 2026-09-24) | `codex-review-default` |
+| A | [`review-code-sonnet-high`](../../../bench/arms/review-code-sonnet-high.json) | `skills/review-code` at the tree resolved at freeze, invoked as a caller would: `mode: one-shot`, `return_format: artifacts`, render-only; Sonnet 5 at `high`, verifiers the same | `review-code` |
+| B | [`claude-builtin-sonnet-high`](../../../bench/arms/claude-builtin-sonnet-high.json) | built-in `/code-review`, `claude-sonnet-5`, session `--effort high`; expected variant `3+5 angles × 6 candidates → 1-vote verify (recall-biased)` | `claude-builtin-sonnet` |
+| C | [`claude-builtin-opus-high`](../../../bench/arms/claude-builtin-opus-high.json) | built-in `/code-review`, `claude-opus-5-5` (the harness default), session `--effort high`; expected variant `8 inline angles → dedup (no verify)` | `claude-builtin-opus` |
+| D | [`codex-default`](../../../bench/arms/codex-default.json) | `codex review` as shipped, default model and reasoning effort (`gpt-6-astra`, `reasoning effort: none` on 2026-09-24) | `codex-review-default` |
 
 A/B is the matched pair that separates skill from model. **B/C is not a model ablation**: the
-built-in chooses its prompt per model, and under Opus it runs an inline, no-verifier variant (§9),
-so B/C compares two shipped configurations of the same product. D is a product comparison: what a user gets by typing the
-command. The built-in's **as-shipped default** is not run: with no effort argument in a fresh home
-it selects the `low` variant (`minimal prompt → single careful diff pass → ≤15 findings`, §9),
-which would differ from B in both model and prompt; that fact is recorded here and the `low`
-variant is left to a later experiment. `/code-review ultra` and the Codex GitHub app are excluded
-by construction. The publish step of `review-code-publish` is not under test; nothing is posted.
+built-in chooses its prompt per model, and under Opus it runs an inline, no-verifier variant, so
+B/C compares two shipped configurations of the same product. D is a product comparison: what a
+user gets by typing the command. The built-in's **as-shipped default** is not run: with no effort
+flag in a fresh home it selects the `low` variant (`minimal prompt → single careful diff pass →
+≤15 findings`), which would differ from B in both model and prompt; the fact is registered in
+[`bench/harness/claude-code.json`](../../../bench/harness/claude-code.json) and the `low` variant is
+left to a later run. `/code-review ultra` and the Codex GitHub app are excluded by construction.
+The publish step of `review-code-publish` is not under test; nothing is posted.
 
 **Arm A runs without the research-report dispatch of prior grids.** The #137 template made the
 reviewer write a staged research report during the review, which the independent review (§11)
 identified as an intervention the other arms do not receive. Here A is invoked the way
 `review-code-publish` invokes it, and the run record is derived afterwards from the skill's own
-artifacts (`report.md`, `run-events.jsonl`, the private directory) and the transcripts. No
-production-shaped subtraction is applied to any arm; every arm's billed cost is reported as-is.
+artifacts and the transcripts. No production-shaped subtraction is applied to any arm; every arm's
+billed cost is reported as-is.
 
-Pins recorded at freeze: `skills/review-code` tree hash; Claude Code version (`2.1.281` at
-shakedown), because the built-in's prompts are compiled into the binary; Codex CLI version
-(`0.156.1`); SHA-256 of the built-in prompt text the subagent received for each variant that runs
-(`high` on 2.1.281: `30dad62c…78e40`; `low`, recorded not run: `95d10a8c…bff4`), kept outside
-the repository because the prompt is proprietary; and the presence of Codex's rubric system text
-(`You are acting as a reviewer for a proposed code change`) in each D child rollout. A pin that
-changes mid-grid invalidates the affected cells.
+**Pins are observations, recorded per attempt.** The manifest records each arm file's hash, the
+resolved `skills/review-code` tree, and the CLI versions and prompt hashes a pre-dispatch probe
+observed. Every `attempt.json` records the CLI version, the models and effort on every request,
+and the prompt hash, matched against the harness registries (Claude Code `2.1.281` and Codex CLI
+`0.156.1` at the shakedown). An attempt whose prompt hash is not among its arm's expected variants
+is harness-invalid; a pin that changes mid-grid invalidates the affected cells.
 
 ## 3. Isolation
 
@@ -69,121 +80,87 @@ The first shakedown probes under the maintainer's normal environment were both c
   maintainer's iCloud skills, which hold this repository's own skill) and applied
   `~/.codex/AGENTS.md`.
 
-Isolation for every B, C and D attempt, all verified in §9:
+The controls are the suite's (design §5), applied by
+[`dispatch.sh`](../../../bench/tools/dispatch.sh) and checked by
+[`attempt_audit.py`](../../../bench/tools/attempt_audit.py) and
+[`file_attempt.py`](../../../bench/tools/file_attempt.py):
 
-1. **Fresh home per attempt.** A new directory outside `/tmp` (Codex refuses to create PATH
-   helpers under `/tmp`) holding only the credentials: for Claude, `.claude/.credentials.json` and a
-   `.claude.json` reduced to the account and onboarding keys; for Codex, `.codex/auth.json` and a
-   `trust_level` entry for the clone. `HOME` (and `CODEX_HOME`) point at it. No `CLAUDE.md`,
-   `AGENTS.md`, skills, plugins, hooks or typed-effort history exist there, so the built-in's
-   "reuse the level you typed last" rule has nothing to reuse and the effort argument alone selects
-   the variant.
-2. **`--safe-mode`** for Claude, which additionally disables bundled plugin skills the built-in
-   might otherwise see; the bundled `code-review` itself stays available.
-3. **Network off.** Claude: `--allowedTools "Bash,Read,Glob,Grep,Agent"` (no `WebFetch`,
-   `WebSearch`); Codex: the sandbox's `network_access: false`. Bash itself can reach the network, so
-   the read audit below also covers `curl`/`gh`/`git fetch` invocations.
-4. **Post-hoc read audit** ([`bench/tools/attempt_audit.py`](../../../bench/tools/attempt_audit.py), moved from this bundle on 2026-09-24). Every command
-   and file read is in the transcript (Claude: root plus `subagents/agent-*.jsonl`; Codex: the
-   child rollout's `exec` items). An attempt that read any path outside the clone, the attempt
-   directory (which holds the fresh home and the reviewer's `TMPDIR`), or that ran a network
-   command, is **harness-invalid**: it stays in the denominators and cost totals with zero
-   admissible recovery and is replaced inside the cap. Probes of `AGENTS.md`/`CLAUDE.md` in
-   ancestors of the clone are recorded as guidance probes and violate only if the file exists;
-   the clone's ancestors are kept free of guidance files. A tree identity mismatch between
-   dispatch and exit is likewise harness-invalid.
+1. **Export layout and a fresh home per attempt.** The attempt directory holds only the clone,
+   the packet and a home with credentials alone; the reviewer's `TMPDIR` is inside it. Nothing
+   from `bench/` is mounted or copied in. The toy run showed why: a clone beside other attempts'
+   clones let Codex's `find ..` walk them (att-003).
+2. **`--safe-mode`** for the Claude built-in, so bundled plugin skills stay out; arm A keeps its
+   own skill as the only user skill instead.
+3. **Network off.** No web tools for Claude; Codex's sandbox with `network_access: false`; any
+   network command in the audit is a violation.
+4. **Read audit.** Every path in every command and file read is resolved against its working
+   directory, `..` and `~` included; anything outside the attempt directory and its clone is a
+   violation. Ancestor probes for `AGENTS.md`/`CLAUDE.md` are recorded and violate only if the file
+   exists. A violation, a tree-identity change, or an unexpected model, effort or prompt makes the
+   attempt **harness-invalid**: it stays in the denominators and cost totals with zero admissible
+   recovery and is replaced inside the cap.
 5. **Truth kept unreadable, as far as this machine allows.** The four fresh registers and every
-   adjudication note are stored as a passphrase-encrypted archive until scoring; the sealed (i)–(n)
-   registers are already public on GitHub and in the maintainer's checkouts, so a same-user process
-   *could* read them. The audit in item 4 is the control; a separate Unix user would be stronger
-   and is recorded as a limitation, not done.
+   adjudication note stay in an encrypted archive until scoring. The reused registers are public
+   already, so a same-user process *could* read them; the audit is the control. A separate Unix
+   user would make that impossible rather than detectable and is recorded as not done.
 
-Arm A runs from the same fresh home with the pinned `skills/review-code` tree copied in as its
-only user skill (no `--safe-mode`, which would disable it), `model: "sonnet"` on every sub-agent,
-and items 3–5.
+## 4. Adapters
 
-Two more facts the adapters rely on: the built-in runs its review inside a **forked subagent**
-whose transcript is `<session-dir>/subagents/agent-*.jsonl` (the root transcript bills nothing);
-the Codex review runs in a **child thread** (`thread_source: subagent`, `parent_thread_id` set) and
-the parent rollout records no usage.
+Inputs are identical across arms: an offline clone at the pinned head with `main` at the merge-base
+and `review-head` checked out (the built-in diffs `main...HEAD` whatever its argument says), the
+dependency cache restored from its hashed archive, the factual packet, and the target's
+execution allowance. Each arm file's `adapter` block states how the range and the packet reach that
+arm: A through its caller inputs, B and C in the prompt after the range argument, D on stdin
+because `codex review --base` refuses a prompt. Every executed diff command is resolved in the
+clone and must name the pinned merge-base and head.
 
-## 4. Adapters — identical inputs, native outputs, mechanical normalization
-
-**Inputs.** An offline clone at the pinned head with local branch **`main`** at the merge-base
-and `review-head` checked out (the built-in's Phase 0 runs `git diff main...HEAD` whatever the
-argument says, §9, so the pinned range is honoured only under that naming), dependencies
-preinstalled; the byte-identical phase-1 packet from
-[`build_packet.py`](../../../bench/tools/build_packet.py); the execution allowance (five minutes per focused
-command, ten minutes provisioning). The packet is transported to each arm the only way that arm
-accepts text: A through its caller contract; B/C in the prompt after the target argument
-(`/code-review <base>...review-head high` followed by the packet); D as the review's
-custom-instructions argument read from stdin, naming the range (`git diff <base>...review-head`)
-and carrying the packet, because `codex review --base` **refuses a prompt** (§9). Each attempt's
-executed diff command is checked against the pinned range from the transcript. D's sandbox is
-pinned to `workspace-write` on the disposable clone (`-c sandbox_mode="workspace-write"`, honoured
-in §9) so it can run focused checks as A can; a before/after tree identity check catches mutation.
-
-**Wrapper.** [`bench/tools/dispatch.sh`](../../../bench/tools/dispatch.sh) (moved from this bundle on 2026-09-24) builds the fresh home, exports `TMPDIR`
-inside the attempt directory, records the tree identity before and after, writes the timing
-sidecar, and runs the arm: A through the Skill tool with the caller inputs above; B/C with
-`--safe-mode`, `--model`, session `--effort` and the argument; D with the stdin prompt and
-`workspace-write`. **Outputs per attempt.** `prompt.txt`, `dispatch.txt` (versions, model, effort,
-skill tree hash), the native final output verbatim (A's `artifacts/{composition,payload,report}`;
-B/C's `payload.json` from the audit, holding the final text and any `ReportFindings` input; D's
-`stdout.txt`), `audit.json`, `normalized.json`, `timing.json`, and the usage row.
-
-**Normalized schema.** Review level: `native_verdict` (A's status; B/C: `empty-array` or
-`findings`; D: `overall_correctness` when the rubric JSON is present in the child rollout, else
-the stdout summary line) and `arm_reported_complete`. Finding level: `file`, `line_start`,
-`line_end`, `claim`, `consequence`, `proposed_fix` (nullable), `native_priority` (A and D `P<n>`;
-B/C rank position), `native_action` (A only: `must-fix`/`consider`), `native_confidence`
-(B/C `verdict` when present). **No `blocking` flag is derived**: the review of the first draft
-showed that mapping Codex priorities or built-in ranks to a blocking bit invents action
-information. **No `kind` is derived by keyword** either; every item is a finding until an
-adjudicator classifies it (§8). Normalization is mechanical ([`normalize_review.py`](../../../bench/tools/normalize_review.py), stdlib,
-self-tested against the toy fixtures) and blind to the register; a parse failure is recorded, not repaired by hand.
+Native output is kept verbatim and normalized mechanically by
+[`normalize_review.py`](../../../bench/tools/normalize_review.py): review level (`native_verdict`)
+and per item `file`, `line_start`, `line_end`, `claim`, `consequence`, `proposed_fix`,
+`native_priority`, `native_action` (A only) and `native_confidence`. **No `blocking` flag and no
+keyword `kind` are derived**; the first review of this plan showed both invent information. An
+output the normalizer does not recognize is `unresolved`, never an empty review.
 
 **Blinding.** Scorers receive uniformly rendered items (location, claim, consequence, fix) with
 native formatting, priority labels, verdict words and arm-identifying structure stripped, under
-`blind-<hash>.md` names. Residual cues (prose style, item count) are disclosed; blinding is a
-mitigation, not a guarantee.
+random names. Residual cues (prose style, item count) are disclosed; blinding is a mitigation, not
+a guarantee.
 
 ## 5. Targets
 
-Six targets are reused from the [#137 preregistration](../one-shot-qualification-2026-09-07/README.md)
-§Targets; their SHAs and packet hashes are pinned there. **Their registers are the versioned ones
-after #137's adjudication**, not the originals: target (n) gained GT-n1 (the `.zshrc` snippet
-carries a `$ ` prompt prefix and cannot work as pasted; [evaluation §2](../one-shot-qualification-2026-09-07/evaluation.md))
-and is **buggy**, so the reused set is five buggy and one clean. Mirrors are rebuilt from the
-pinned SHAs ([#333](../review-code-rewrite-2026-09-22/acceptance/README.md) found the historical
-mirrors unavailable); a rebuilt packet must hash to the recorded value or the deviation is recorded.
-Four fresh targets are hunted for the shapes the regression set lacks. Shape is the **sampling
-rationale**, not a causal claim: prior grids varied shape, language and repository together, so
-results are reported per target and per shape as observations.
+Six targets are reused from the [#137 grid](../one-shot-qualification-2026-09-07/README.md) and are
+now suite targets, each with its pins, factual packet, register, provisioning and exposure history.
+**Their registers are the versioned ones after #137's adjudication**: target (n) gained GT-n1 and
+is **buggy**, so the reused set is five buggy and one clean. Four fresh targets are hunted for the
+shapes the regression set lacks. Shape is the **sampling rationale**, not a causal claim: prior
+grids varied shape, language and repository together, so results are reported per target and per
+shape as observations.
 
-| Slot | Shape | Domain | Truth |
+| Slot | Suite target | Shape | Truth |
 | --- | --- | --- | --- |
-| (i) | concurrency, shared mutable state | Python HTTP client | buggy, sealed (GT-i1, GT-i2) |
-| (j) | cross-file type obligation outside the diff | TypeScript API | buggy, sealed (GT-j1) |
-| (k) | changed-test correctness | JavaScript | buggy, sealed (GT-k1) |
-| (l) | ordinary behavioural change | TypeScript frontend widget | buggy, sealed (GT-l1) |
-| (m) | clean, high risk | Go concurrency | clean, sealed |
-| (n) | promised change that does not work as pasted | Rust project, shell surface | buggy, sealed (GT-n1, versioned register) |
-| (o) | security: authorization or injection | web backend | buggy, fresh |
-| (p) | released-compatibility break | public API or SDK | buggy, fresh |
-| (q) | refactor claiming no behaviour change | any, large mechanical diff | **clean**, fresh |
-| (r) | frontend component logic | React or comparable | buggy, fresh; defect settleable statically or by a focused test, never visual |
+| (i) | [`i-requests-6667`](../../../bench/targets/i-requests-6667/) | concurrency, shared mutable state | buggy (GT-i1, GT-i2) |
+| (j) | [`j-trpc-5017`](../../../bench/targets/j-trpc-5017/) | cross-file type obligation outside the diff | buggy (GT-j1) |
+| (k) | [`k-graphql-js-1582`](../../../bench/targets/k-graphql-js-1582/) | changed-test correctness | buggy (GT-k1) |
+| (l) | [`l-bokeh-9232`](../../../bench/targets/l-bokeh-9232/) | ordinary behavioural change | buggy (GT-l1) |
+| (m) | [`m-grpc-go-7390`](../../../bench/targets/m-grpc-go-7390/) | clean, high risk (concurrency) | clean |
+| (n) | [`n-ripgrep-2957`](../../../bench/targets/n-ripgrep-2957/) | promised change that does not work as pasted | buggy (GT-n1, register v2) |
+| (o) | to hunt | security: authorization or injection, web backend | buggy, fresh |
+| (p) | to hunt | released-compatibility break, public API or SDK | buggy, fresh |
+| (q) | to hunt | refactor claiming no behaviour change, large mechanical diff | **clean**, fresh |
+| (r) | to hunt | frontend component logic, React or comparable; settleable statically or by a focused test, never visually | buggy, fresh |
 
 Eight buggy, two clean. False findings are counted on every target, not only clean ones, so the
 two clean targets and the refactor trap are not the only precision evidence. Fresh-target rules:
-merged public PRs with post-merge evidence (follow-up fix, revert, or issue); register sealed by an
-adjudicator who has seen no reviewer output; truncated mirror and merge-time packet cutoff.
+merged public pull requests with post-merge evidence (follow-up fix, revert, or issue); a register
+sealed by an adjudicator who has seen no reviewer output; a truncated mirror and a merge-time packet
+cutoff.
 
 **Training-data exposure.** Every target is public and may be in any model's training data, and
-the six reused targets have additionally shaped this repository's skill development. Controls: the
-merge date, the fix-publication date and each model's published cutoff are recorded per target;
-regression and fresh results are reported **separately**; post-cutoff cases are preferred for the
-fresh slots; and chronology is never claimed to prove non-exposure.
+the six reused targets have additionally shaped this repository's skill development; each
+`target.json` lists that history. Controls: the merge date, the fix-publication date and each
+model's published cutoff are recorded per target; regression and fresh results are reported
+**separately**; post-cutoff cases are preferred for the fresh slots; and chronology is never claimed
+to prove non-exposure.
 
 ## 6. Grid, order, caps
 
@@ -195,10 +172,10 @@ fresh slots; and chronology is never claimed to prove non-exposure.
 | Replacements | at most **4** across the grid, 84 attempts total; a harness-invalid cell is replaced, a miss never is |
 | Pilot | targets (i) and (n), arms B and D, one replicate each, before the sealed order runs; valid rows count |
 
-**Budget.** Dated rates: Sonnet 5 `$2/$10`; Opus 5.5 `$4/$20`, cache read `$0.20` (the `claude-api`
-skill's table cached 2026-06-24; re-checked against the pricing page at freeze); GPT-6 Astra `$10/$50`, cached input `$1`, cache
-write `$12.50` (launched 2026-09-03, looked up 2026-09-24). Expected per-cell spend, with A from
-prior grids and the built-ins scaled up from §9's five-line-diff probes to a grid-sized diff:
+**Budget.** Rates are the dated entries in [`bench/rates.json`](../../../bench/rates.json): Sonnet 5
+`$2/$10`; Opus 5.5 `$4/$20` with cache reads at `$0.20`; GPT-6 Astra `$10/$50`, cached input `$1`,
+cache write `$12.50`. Expected per-cell spend, with A from prior grids and the built-ins scaled up
+from the shakedown's five-line diff to a grid-sized one:
 
 | Arm | Expected / cell | Conservative / cell | 20 cells expected | 20 cells conservative |
 | --- | --- | --- | --- | --- |
@@ -219,53 +196,54 @@ unattempted, never as incomplete evidence about the arms that happened to be sch
 the per-shape tables use completed-only and attempt-level views as the method requires.
 
 **Codex spend is not dollars.** The maintainer's Codex runs on a ChatGPT plan
-(`plan_type: prolite` in the rollout's rate-limit block), so D's cost column is a list-price
-equivalent from [`codex_usage.py`](../../../bench/tools/codex_usage.py) and its real constraint is the plan's
-weekly quota, recorded in the ledger before each D dispatch. The `$250` cap counts the list-price
-equivalent so the arms stay comparable.
+(`plan_type: prolite`), so D's cost column is a list-price equivalent and its real constraint is
+the plan's weekly quota, recorded in the ledger before each D dispatch. The `$250` cap counts the
+list-price equivalent so the arms stay comparable.
 
-## 7. Metering
+## 7. Metering and timing
 
-| Arm | Meter | Inputs |
-| --- | --- | --- |
-| A | `transcript_usage.py --prices 2,10` | root transcript and every sub-agent transcript |
-| B, C | `transcript_usage.py --prices <model rates>` | `<session-dir>/subagents/agent-*.jsonl` only; the root has no billed turn and makes the meter exit 2 |
-| D | `codex_usage.py --sessions-dir <fresh CODEX_HOME>/sessions --session <root thread> --prices 10,50 --cached-mult 0.1 --cache-write-mult 1.25` | gathers child threads by `parent_thread_id`; ordinary input is `input − cached − cache_write`; a malformed line or inconsistent usage exits 2 and the attempt keeps an upper-bound reservation instead of a total |
-
-Timing sidecars record `root_dispatched_at` immediately before the CLI call, `payload_validated_at`
-when `normalized.json` is written, and `completed_at` at CLI exit.
+`file_attempt.py` meters every attempt from its transcripts at the `rates.json` entry for the
+observed model: `transcript_usage.py` for Claude (the built-in's root transcript bills nothing, so
+only its subagent transcripts are metered) and `codex_usage.py` for Codex (the review runs in a
+child thread; ordinary input is `input − cached − cache_write`). Per-request records go beside each
+attempt record; transcripts are archived outside the repository with their hashes, because the
+built-in's proprietary prompt is in them. Timing has four events: `dispatched_at`,
+`payload_validated_at` when normalization succeeds inside the wrapper, `completed_at` only for a
+valid completed attempt, and `stopped_at` otherwise.
 
 ## 8. Adjudication and scoring
 
-Section 4 of the method applies: material defect, false finding (raw and unique, including
-unsupported assertions), false clean, fix sufficiency, priority errors, questions, duplicates,
-three cost views, elapsed-to-payload. Clarifications for arms that lack `review-code`'s vocabulary:
+Rubric v1 applies. Clarifications for arms that lack `review-code`'s vocabulary:
 
-- **False clean** is measured on **buggy targets**, as the method defines it: a completed review
-  whose payload recovers no registered defect. Per-arm review-level outcomes are fixed now: A
-  `Approved`; B/C an empty array; D `patch is correct` or a stdout summary with no finding. A
-  buggy-target review that recovers nothing but was not a clean verdict (incomplete, or findings
-  that all miss the register) is **zero recovery**, reported separately.
+- **Review-level outcomes are three separate columns.** `approved_on_buggy` (the #137 false
+  clean), `zero_recovery`, and `false_clean` (both). Per arm, an approving verdict is A
+  `Approved`; B/C an empty findings array; D `patch is correct` or a stdout summary with no
+  finding.
 - **Action errors** are scorable for A only. For D, priority errors use its `P<n>`; for B/C,
   rank errors (a material defect ranked below a non-material item).
 - **Materiality is adjudicated, not keyword-classified.** Every normalized item is scored the
-  same way in every arm: material recovery, false finding, or non-material (cleanup,
-  observation, hygiene). Non-material items go to a **noise column** per review. A "waste" item
-  that establishes a material performance failure is a recovery; a guidance-rule item that
-  establishes an explicit requirement failure is a recovery.
-- **Per-shape breakdown** is the primary table: recall, false findings and false-clean per target
-  per arm. Macro figures are secondary. Regression (i)–(n) and fresh (o)–(r) are tabulated apart.
+  same way in every arm: recovery, false finding, non-material, or unresolved. Non-material items
+  go to a **noise column** per review. A "waste" item that establishes a material performance
+  failure is a recovery; a guidance-rule item that establishes an explicit requirement failure is a
+  recovery.
+- **Per-shape breakdown** is the primary table: recall, false findings and the three review-level
+  columns per target per arm. Macro figures are secondary. Regression (i)–(n) and fresh (o)–(r) are
+  tabulated apart.
 - Unexpected plausible findings go to blind adjudication and the register is versioned before
-  rescoring; a clean target that turns buggy is a target-mix deviation.
+  rescoring, with every earlier attempt re-adjudicated for the new defect only; a clean target that
+  turns buggy is a target-mix deviation.
 
 Preregistered questions, answered per arm against A: material recall per completed review; raw
-and unique false findings per review; false-clean rate on buggy targets; matched median cost
-ratio; elapsed-to-payload ratio; and the set of registered defects no arm recovered.
+and unique false findings per review; the three review-level rates on buggy targets; matched
+median cost ratio; elapsed-to-payload ratio; and the set of registered defects no arm recovered.
 
-## 9. Shakedown record (Phase 0, 2026-09-24)
+## 9. What the shakedown established (Phase 0, 2026-09-24)
 
-Toy repository: one Python file, base commit adds two helpers, head commit adds `average()` that
-divides by `len(prices)` while its docstring says empty lists are common. Every valid probe found it.
+The adapter shakedown is filed as the suite run
+[`2026-09-24-toy`](../../../bench/runs/2026-09-24-toy/README.md): seven attempts of the four arms on
+a two-commit fixture whose `average()` divides by `len(prices)` while its docstring says empty carts
+are common. Every attempt recovered the planted defect. Before those wrapper runs, six probes
+established the isolation facts in §3; they are recorded in [`ledger.md`](ledger.md) and here:
 
 | Probe | Valid | Model | Turns | Tool calls | Input | Cache write | Cache read | Output | Wall | Cost ($) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -276,54 +254,55 @@ divides by `len(prices)` while its docstring says empty lists are common. Every 
 | D: codex, clean home under `/tmp`, `--base base` | valid; no prompt possible | gpt-6-astra | 3 | 2 | 8,046 | 0 | 13,824 | 379 | 0:00:12 | 0.11 list |
 | D: codex, clean home outside `/tmp`, prompt on stdin naming the range, `workspace-write` | valid | gpt-6-astra | 3 | 2 | 11,660 | 0 | 10,496 | 361 | 0:00:12 | 0.15 list |
 
-Wrapper runs on the toy (all four arms, [`comparison-data.md`](comparison-data.md)): every arm
-found the defect; A billed `$0.50` over 17 requests with one verifier, the others about `$0.10`.
-
 Observations carried into §2–§4:
 
 - The `high` built-in did not fan out its eight angles or run a verifier on a five-line diff (two
   requests, one `git diff`, findings as a fenced JSON array). Whether it fans out on grid-sized
-  diffs is recorded per cell from the subagent count. Its Phase 0 ran `git diff main...HEAD`
-  despite the `base..review-head` argument, which coincided on the toy repository; the grid checks
-  the executed diff against the pinned range.
-- With no effort argument in a fresh home the built-in ran the `low` variant, which submits via a
-  `ReportFindings` call (`level: "low"`, `verdict: CONFIRMED`) instead of the JSON block, and the
-  harness default model was `claude-opus-5-5`. The effort **argument alone does not select the
-  variant** (Opus with `high` as an argument still ran `low`); the session `--effort high` flag
-  does, and under Opus it selects `8 inline angles → dedup (no verify)` rather than Sonnet's
-  fan-out-and-verify prompt. Hence arm C's definition in §2.
+  diffs is recorded per attempt from the subagent count. Its Phase 0 ran `git diff main...HEAD`
+  despite the `base..review-head` argument; the suite names every base branch `main`.
+- The **session `--effort` flag, not the argument, selects the built-in's variant**: Opus with
+  `high` only as the argument ran at `medium` with the `low` variant (toy att-002), and with the
+  flag it matched the `8 inline angles → dedup (no verify)` variant (att-004). Sonnet's default
+  effort is already `high`.
 - `codex review --base <branch>` exits 2 with `--base <BRANCH> cannot be used with '[PROMPT]'`
-  when a prompt is given. The stdin-prompt transport ran `git diff base...review-head` exactly as
-  instructed, kept the rubric (four rubric markers in the child rollout), and honoured
-  `workspace-write`. Under the clean home Codex still walked up the tree looking for `AGENTS.md`
-  (`find .. -name AGENTS.md`, `ls /tmp/AGENTS*`) and found none; the clone's parent directory must
-  therefore stay free of guidance files.
+  when a prompt is given. The stdin-prompt transport ran the named range exactly, kept the rubric,
+  and honoured `workspace-write`. Under the clean home Codex still walked up the tree looking for
+  `AGENTS.md`; the clone's ancestors must hold none, and with a sibling layout that walk reads other
+  attempts' clones (att-003), hence the export layout.
 - The clean-home Codex probes confirmed the crash **statically** (diff and file reads only); the
   first, contaminated run was the one that executed `average([])`. Focused-test execution under
-  the final D adapter is demonstrated separately in §10.
-- Priority varied between two otherwise identical D probes (`P2`, then `P1`): a reminder that
+  the final D adapter is still to be demonstrated (§10).
+- Priority varied between two otherwise identical D attempts (`P2`, then `P1`): a reminder that
   replicate variance is real and priority is not a stable signal for scoring.
 
 ## 10. Open before freeze
 
-1. Re-check Opus 5.5 rates against the pricing page; record the ChatGPT plan quota.
-2. Done on 2026-09-24: normalizer, wrapper, audit, and toy fixtures for all four arms
-   ([`comparison-data.md`](comparison-data.md)). Remaining: a CLI test sibling for
-   `normalize_review.py` and `attempt_audit.py` beyond their self-tests.
-3. Demonstrate focused-test execution under D's final adapter (a target whose review needs a test
-   run) and under B; A reproduced the toy error at the head already.
-4. Rebuild mirrors and packets for (i)–(n); compare packet hashes with the recorded values; pin
-   the versioned (n) register.
-5. Hunt, adjudicate and seal (o)–(r); encrypt the registers; the adjudicator sees no reviewer
+1. Re-check the Opus 5.5 and Sonnet 5 rates against the live pricing page (the recorded entries
+   come from the `claude-api` skill's table cached 2026-06-24, which gives Opus 5.5 cache reads at
+   `$0.20`); record the ChatGPT plan's quota.
+2. A CLI test sibling for `normalize_review.py` beyond its self-test.
+3. Demonstrate focused-test execution under D's final adapter and under B on a suite target whose
+   review needs a test run.
+4. Hunt, adjudicate and seal (o)–(r); encrypt their registers; the adjudicator sees no reviewer
    output.
-6. Record CLI versions, prompt hashes, model cutoffs and per-target merge and fix dates.
-7. Open `ledger.md` with the setup entries before any further chargeable step; the shakedown
-   probes above are its first rows.
+5. `run_cell.py` (dispatch, then `file_attempt.py`, with the cell's accounting), `score.py` and
+   `compare.py`.
+6. Write the run manifest: arms resolved, the pre-dispatch probe's CLI versions and prompt hashes,
+   the cohort with register versions and packet and diff hashes, the sealed order, the caps above,
+   the rates, and the execution policy.
+7. Open the ledger's attempt table before any further chargeable step.
+
+Done since the first draft: targets (i)–(n) migrated with factual packets, rebuilt mirrors and
+verified diff identities; dependency caches archived with hashes and smoke checks measured on the
+suite machine; the shakedown filed as a run with attempt records; a CLI test sibling for
+`attempt_audit.py`.
 
 ## 11. Independent review of the first draft (2026-09-24)
 
 A Codex reviewer (`gpt-6-astra`, reasoning `high`, read-only) reviewed the first draft of this
-file and the meter. Its report is kept at the bundle's `review-1.md`. Disposition of each item:
+file and the meter. Its report is kept at [`review-1.md`](review-1.md); the review of the suite
+design that followed is [`review-2.md`](review-2.md), dispositioned in the design's §9. Disposition
+of each item of the first review:
 
 | # | Finding | Disposition |
 | --- | --- | --- |

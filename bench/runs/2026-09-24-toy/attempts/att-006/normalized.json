@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "pricing.py",
+      "line_start": 17,
+      "line_end": 17,
+      "claim": "Handle empty carts in average(). average() is called with an empty list, e.g. a newly created cart.",
+      "consequence": "average([]) raises an unhandled ZeroDivisionError, so the summary panel fails for every new cart, contrary to the PR's stated empty-cart case (the panel itself is not in this repository).",
+      "proposed_fix": "In `pricing.py`, return 0.0 (or raise a documented ValueError that callers handle) when `prices` is empty; add a test for the empty list.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

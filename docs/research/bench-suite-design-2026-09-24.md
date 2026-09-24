@@ -1,8 +1,10 @@
 # Design: a rerunnable reviewer benchmark suite (`bench/`)
 
-**Status: §8 steps 1–4 implemented in [`bench/`](../../bench/README.md): mirrors rebuilt and
-verified, dependency caches built and archived with hashes, smoke checks measured on the suite
-machine (`provision.py`); the toy run of step 5 and the fresh targets of step 6 remain.**
+**Status: §8 steps 1–5 implemented in [`bench/`](../../bench/README.md): the #137 targets migrated,
+mirrors and dependency caches rebuilt and verified, the arms written as data, and the shakedown
+filed as the run `bench/runs/2026-09-24-toy/` by `file_attempt.py`; step 6, the fresh targets and
+the first frozen run, remains.**
+
 Written 2026-09-24 after the first-draft proposal was reviewed by a Codex reviewer (`gpt-6-astra`,
 reasoning `high`); the review is
 [`builtin-review-benchmark-2026-09-24/review-2.md`](builtin-review-benchmark-2026-09-24/review-2.md)

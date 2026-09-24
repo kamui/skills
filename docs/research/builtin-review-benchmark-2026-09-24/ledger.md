@@ -17,14 +17,17 @@ experiment total, closeout reserve `$25` (README §6). Nothing below is a scored
 | S6 | codex review, clean home outside `/tmp`, stdin prompt, `workspace-write` | valid | gpt-6-astra | 0.15 | rubric present, range honoured |
 | S7 | codex reviewer of the draft plan (`gpt-6-astra`, reasoning high, read-only) | n/a | gpt-6-astra | not metered (normal home; review, not a probe) | `review-1.md` |
 | S8 | wrapper run B (sonnet, `high` argument only) | valid | claude-sonnet-5 | 0.10 | `high` variant; diffed `main...HEAD` |
-| S9 | wrapper run C (opus, `high` argument only) | valid | claude-opus-5-5 | 0.10 | ran the `low` variant: the argument alone does not select it |
-| S10 | wrapper run D (stdin prompt) | valid | gpt-6-astra | 0.10 | `overall_correctness` recovered from the rollout |
+| S9 | wrapper run C (opus, `high` argument only) | harness-invalid (att-002) | claude-opus-5-5 | 0.10 | ran the `low` variant: the argument alone does not select it |
+| S10 | wrapper run D (stdin prompt) | harness-invalid (att-003) | gpt-6-astra | 0.10 | `overall_correctness` recovered from the rollout; `find ..` read the other attempts' clones |
 | S11 | wrapper run C2 (opus, `--effort high` + argument, base `main`) | valid | claude-opus-5-5 | 0.07 | `high effort → 8 inline angles → dedup (no verify)` variant |
 | S12 | wrapper run B2 (sonnet, `--effort high` + argument, base `main`) | valid | claude-sonnet-5 | 0.04 | `3+5 angles × 6 candidates → 1-vote verify` variant |
 | S13 | wrapper run A (pinned `skills/review-code` tree `6862d993`, fresh home, sonnet high) | valid | claude-sonnet-5 | 0.50 | one verifier; 17 requests; 89 s |
 
-Running total of metered setup spend is kept in `comparison-data.md` once it exists; the rows
-above sum to about `$1.04` billed plus `$0.56` Codex list-price.
+The rows above sum to about `$1.04` billed plus `$0.56` Codex list-price. S8–S13 are filed as the
+suite run `bench/runs/2026-09-24-toy` (attempts att-001 to att-006), metered again from their
+transcripts at the `bench/rates.json` entries; there S11 prices at `$0.059`, because the recorded
+Opus 5.5 cache-read rate is `$0.20` per million tokens where this row used a one-tenth ratio. A
+seventh fixture attempt (att-007, `$0.09` list) re-ran D after the wrapper's timing fix.
 
 ## Attempts
 

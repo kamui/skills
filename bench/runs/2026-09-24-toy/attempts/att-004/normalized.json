@@ -1,0 +1,45 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "pricing.py",
+      "line_start": 17,
+      "line_end": 17,
+      "claim": "average() divides by len(prices) with no empty-list guard, so it raises ZeroDivisionError on an empty cart, which the PR body and docstring both say is a common case.",
+      "consequence": "A new cart has no items, so the summary panel calls average([]); total([]) returns 0, then 0 / 0 raises ZeroDivisionError and the panel fails to render instead of showing 0.0 or 'no items'.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "pricing.py",
+      "line_start": 15,
+      "line_end": 15,
+      "claim": "The docstring says empty lists are common and implies they're handled, but the code doesn't handle them and the function doesn't say what it returns for an empty cart.",
+      "consequence": "A caller reads 'empty lists are common for new carts', assumes average([]) is safe, and skips its own guard; the summary panel then crashes on every new cart.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "test_pricing.py",
+      "line_start": 1,
+      "line_end": 1,
+      "claim": "No tests were added for average(), neither for the normal case nor for the empty-cart case the PR says it supports.",
+      "consequence": "A test like average([]) would have caught the ZeroDivisionError before merge; without one, the empty-cart crash only shows up in the summary panel in production.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

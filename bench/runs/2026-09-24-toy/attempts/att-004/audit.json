@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/toy/C2/home/.claude/projects/-home-jack--t3-bench-runs-toy-clone-C2/00e2a3ed-0927-4ca9-a369-0502e33bbb21/subagents/agent-a25e9de3909d180ee.jsonl",
+    "/home/jack/.t3/bench-runs/toy/C2/home/.claude/projects/-home-jack--t3-bench-runs-toy-clone-C2/00e2a3ed-0927-4ca9-a369-0502e33bbb21.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && git ls-files && ls ~/.claude/CLAUDE.md CLAUDE.md 2>&1",
+    "cat pricing.py test_pricing.py"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/toy/clone-C2",
+    "/home/jack/.t3/bench-runs/toy/C2"
+  ]
+}

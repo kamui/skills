@@ -1,0 +1,27 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/toy/B/home/.claude/projects/-home-jack--t3-bench-runs-toy-clone-B/328a664a-6bf3-482f-b563-de7ded51461c/subagents/agent-ab5bd7e91f8739e20.jsonl",
+    "/home/jack/.t3/bench-runs/toy/B/home/.claude/projects/-home-jack--t3-bench-runs-toy-clone-B/328a664a-6bf3-482f-b563-de7ded51461c.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD"
+  ],
+  "workdirs": [
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/toy/clone-B",
+    "/home/jack/.t3/bench-runs/toy/B"
+  ]
+}
