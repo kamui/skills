@@ -16,6 +16,7 @@ The narrative, the decisions and the review history that led to it are in
 | `fixture/` | `target.json`, `register.v1.json` (GT-toy1), `packet.md`, and the repository as `toy-average.bundle` |
 | `attempts/att-NNN/` | `attempt.json` plus `dispatch.txt`, `timing.json`, `audit.json`, `normalized.json`, the native output, `usage-requests.jsonl` |
 | `scoring/toy-average/mapping.v1.json` | rubric v1 assignments for all seven attempts, not blind |
+| `results.v1.json` | the metrics `score.py` computed from the attempts and the mapping |
 
 Transcripts are archived outside the repository under `~/.t3/bench-cache/transcripts/2026-09-24-toy/`
 with their hashes in each `attempt.json`; every archive passed its restoration check. The fixture
@@ -76,4 +77,12 @@ python3 bench/tools/file_attempt.py --attempt-dir <attempt-dir> --clone <attempt
     --attempt-id att-001 --replicate 1 --out bench/runs/<new-run-id>/attempts/att-001
 ```
 
-`results.v1.json` is not computed: `score.py` does not exist yet.
+## Results
+
+`results.v1.json` is computed by `score.py` from the seven records and mapping v1 against register
+v1. Of the six planned cells, five ended valid completed and one harness-invalid (codex-default
+replicate 1, att-003, never replaced). Every arm's completed-only recall is 1.0. The attempt-level
+recall of the Opus built-in and of Codex is 0.5, because each has one harness-invalid attempt that
+scores zero. There are no false findings, and the Opus built-in has one noise item. Repricing every
+request at the run's own `rates.json` entries reproduces each metered cost exactly, for both the
+Claude and the Codex formulas.
