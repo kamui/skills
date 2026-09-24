@@ -14,6 +14,8 @@ Usage:
     python3 scripts/forge_packet.py normalize PAGE [PAGE ...] > packet.json
     python3 scripts/forge_packet.py later-state packet.json --review ID
         [--after ISO-8601]
+    python3 scripts/forge_packet.py shortcut packet.json --review ID
+        --merge-base SHA --supplied-inputs yes|no
     python3 scripts/forge_packet.py --self-test
 
 `normalize` accepts the raw stdout of each `gh api graphql` call from the
@@ -44,6 +46,25 @@ Exit 0 means the packet is complete
 and nothing later exists, so the deduplication rule may consider the candidate;
 exit 1 means the lines on stdout stand between the run and that shortcut.
 
+`shortcut` decides the duplicate-review identity for the same candidate. It
+reads the candidate's `review-run` trailer from its body and prints one
+`identity` line per mismatch: head, base ref and SHA against the packet,
+merge-base against `--merge-base`, workflow against `render_review.WORKFLOW`,
+`packet_context` against the digest this script computes from the packet, and
+`supplied_inputs=no` required of both the trailer and `--supplied-inputs`. A
+trailer without `packet_context` and `supplied_inputs`, such as an older one
+carrying only `context=`, names the absent marker and never qualifies. The
+`later-state` lines follow. Exit 0 permits the shortcut; exit 1 prints what
+stands between the run and it.
+
+The packet's `fingerprint` section holds the pull request's intent: its title
+and body, and each linked issue's coordinate, title, body and comment records
+with their availability and completeness. `packet_context` is the SHA-256 of
+that section's canonical form, so any change to the pull request's text, a
+linked issue's text or comments, a deleted comment, or the set of linked
+issues changes it. The finalizer computes the same digest from the saved
+packet; nothing accepts a model-supplied one.
+
 Recognized page shapes (each response's `data` wrapper is optional):
 
 - root page: `repository.pullRequest` carrying `title`, exactly one per run;
@@ -59,15 +80,12 @@ Every bounded connection carries `totalCount`, `pageInfo{hasNextPage
 endCursor}`, and `nodes`. Nodes are merged across pages by stable id; a
 connection is complete only when every page agrees on `totalCount`, the
 distinct ids equal that count, some page reports `hasNextPage: false`, and no
-page carried a GraphQL error or an HTTP failure. Anything else is a named gap. The packet's
-`fingerprint` object is the `pr` and `issues` input of
-`context_fingerprint.py`, so `context_fingerprint.py --packet packet.json`
-hashes the same normalized records the review and the re-review read.
+page carried a GraphQL error or an HTTP failure. Anything else is a named gap.
 
 Exit codes:
     0  the packet or an empty later-state report was written to stdout
-    1  later-state lines were written to stdout, or a --self-test assertion
-       failed
+    1  later-state or shortcut lines were written to stdout, or a --self-test
+       assertion failed
     2  a page file cannot be opened or matches no documented shape; the file
        is named on stderr
 """
@@ -76,6 +94,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import re
 import sys
@@ -792,6 +811,81 @@ def later_state(packet: dict[str, Any], review_id: str, after: Optional[str]) ->
     return lines
 
 
+# --- packet identity --------------------------------------------------------
+
+PACKET_CONTEXT_FORMAT = "packet-context/1"
+RUN_TRAILER_RE = re.compile(r"<!--\s+review-run((?:\s+\S+=\S*)*)\s+-->")
+
+
+def packet_context(packet: dict[str, Any]) -> str:
+    """The SHA-256 of the packet's normalized intent: the pull request's title and body and each linked issue's
+    coordinate, title, body, comment availability and completeness, and comment records, in canonical order."""
+    if packet.get("schema") != SCHEMA or not isinstance(packet.get("fingerprint"), dict):
+        raise PageError(f"packet schema is not {SCHEMA} with a `fingerprint` section; produce it with `normalize`")
+    intent = packet["fingerprint"]
+    pr = intent.get("pr") if isinstance(intent.get("pr"), dict) else {}
+    issues = intent.get("issues") if isinstance(intent.get("issues"), list) else []
+
+    def order(identity: str) -> tuple[int, str]:
+        return (int(identity), "") if identity.isdigit() else (-1, identity)
+
+    canonical = {
+        "format": PACKET_CONTEXT_FORMAT,
+        "pr": {"title": text(pr.get("title")), "body": text(pr.get("body"))},
+        "issues": sorted(
+            ({"coordinate": text(issue.get("coordinate")), "title": text(issue.get("title")),
+              "body": text(issue.get("body")),
+              "comments_available": issue.get("comments_available") is not False,
+              "comments_complete": issue.get("comments_complete") is not False,
+              "comments": sorted(
+                  ({key: text(comment.get(key)) for key in ("id", "author", "created_at", "updated_at", "body")}
+                   for comment in issue.get("comments") or [] if isinstance(comment, dict)),
+                  key=lambda comment: order(comment["id"]))}
+             for issue in issues if isinstance(issue, dict)),
+            key=lambda issue: issue["coordinate"]),
+    }
+    encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def run_trailer(body: str) -> Optional[dict[str, str]]:
+    """The key=value fields of the last `review-run` trailer in a review body, or None when it has none."""
+    matches = list(RUN_TRAILER_RE.finditer(body or ""))
+    if not matches:
+        return None
+    return dict(token.partition("=")[::2] for token in matches[-1].group(1).split())
+
+
+def shortcut(packet: dict[str, Any], review_id: str, merge_base: str, supplied_inputs: str) -> list[str]:
+    """Why the candidate review cannot stand in for this run, one line each; empty when the shortcut applies."""
+    import render_review  # the workflow constant; imported late because render_review imports this module
+
+    lines = later_state(packet, review_id, None)  # also refuses a packet or review it cannot read
+    candidate = next(review for review in packet["reviews"] if review["id"] == review_id)
+    fields = run_trailer(candidate.get("body") or "")
+    identity: list[str] = []
+    if fields is None:
+        identity.append(f"identity review {review_id} carries no review-run trailer")
+        return identity + lines
+    if "packet_context" not in fields or "supplied_inputs" not in fields:
+        older = " (an older `context=` trailer)" if "context" in fields else ""
+        identity.append(f"identity review {review_id} carries no packet_context and supplied_inputs markers{older}; "
+                        "its packet identity cannot be established")
+    pr = packet["pr"]
+    expected = {"head": pr.get("head_sha"), "base-ref": pr.get("base_ref"), "base-sha": pr.get("base_sha"),
+                "merge-base": merge_base, "workflow": render_review.WORKFLOW}
+    if "packet_context" in fields:
+        expected["packet_context"] = packet_context(packet)
+    for key, value in expected.items():
+        if fields.get(key) != value:
+            identity.append(f"identity {key}: review {review_id} has {fields.get(key) or 'none'}, this run has {value}")
+    if fields.get("supplied_inputs", "no") != "no":
+        identity.append(f"identity supplied_inputs: review {review_id} used caller-supplied issues or specs")
+    if supplied_inputs != "no":
+        identity.append("identity supplied_inputs: this run has caller-supplied issues or specs")
+    return identity + lines
+
+
 # --- self-test --------------------------------------------------------------
 
 
@@ -989,6 +1083,12 @@ def main() -> int:
     later_parser.add_argument("packet", help="packet written by `normalize`")
     later_parser.add_argument("--review", required=True, help="fullDatabaseId of the candidate review")
     later_parser.add_argument("--after", help="ISO-8601 cutoff overriding the review's submission time")
+    shortcut_parser = subparsers.add_parser("shortcut", help="decide the duplicate-review identity for a candidate review")
+    shortcut_parser.add_argument("packet", help="packet written by `normalize`")
+    shortcut_parser.add_argument("--review", required=True, help="fullDatabaseId of the candidate review")
+    shortcut_parser.add_argument("--merge-base", required=True, help="this run's full merge-base SHA")
+    shortcut_parser.add_argument("--supplied-inputs", required=True, choices=("yes", "no"),
+                                 help="whether this run has caller-supplied issues or specs")
     args = parser.parse_args()
 
     if args.self_test:
@@ -1008,7 +1108,10 @@ def main() -> int:
         packet = load_page(args.packet)
         if not isinstance(packet, dict):
             raise PageError(f"{args.packet}: packet must be a JSON object")
-        lines = later_state(packet, args.review, args.after)
+        if args.command == "shortcut":
+            lines = shortcut(packet, args.review, args.merge_base, args.supplied_inputs)
+        else:
+            lines = later_state(packet, args.review, args.after)
         for line in lines:
             print(line)
         return 1 if lines else 0

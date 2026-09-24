@@ -5,8 +5,8 @@ The scripts every run invokes in fixed order append one event each to
 ``run-events.jsonl`` in the run's private directory: ``review_context.py``
 (a ``--store`` build: ``context-built``), ``build_verifier_prompt.py``
 (``verifier-brief-built``), ``account_verifier_return.py``
-(``verifier-return-accounted``) and ``compose_review.py`` with ``--store``
-(``payload-composed``; exit 0 is the validated payload). The private directory
+(``verifier-return-accounted``) and ``render_review.py`` when it finalizes
+(``payload-composed``; exit 0 is the finalized record). The private directory
 is the parent of the store, bundle or ``--output`` path. Recording is
 mechanical and silent: it prints nothing, never changes a script's output or
 exit status, and any failure simply leaves the event out, which the summary
@@ -56,7 +56,7 @@ Event schema (one JSON object per line, ``format: review-run-event/1``)::
       "event": "context-built" | "verifier-brief-built" | "verifier-return-accounted" | "payload-composed"
                | "forge-fetched" | "focused-test-ran" | "forge-written",
       "exit": 0,                                  # the script's exit status
-      "origin": {"script": "compose_review.py", "pid": 123,
+      "origin": {"script": "render_review.py", "pid": 123,
                  "harness": {"name": "claude-code", "source": "env:CLAUDECODE", "session": "<id>"}},
       "clock": {"host": "<node name>", "boot": "<boot id>", "boot_source": "linux:boot_id",
                 "implementation": "clock_gettime(CLOCK_MONOTONIC)"},
@@ -210,8 +210,8 @@ def _boot() -> tuple:
 def _policy() -> dict:
     policy = {"workflow": None, "commit": None, "commit_source": None}
     try:
-        import validate_review
-        policy["workflow"] = validate_review.WORKFLOW
+        import render_review
+        policy["workflow"] = render_review.WORKFLOW
     except Exception:
         pass
     env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
@@ -706,7 +706,7 @@ def summarize(lines, events_path: str, mode) -> tuple:
         "format": SUMMARY_FORMAT, "events": events_path, "event_count": len(events), "invalid_lines": invalid,
         "complete": False, "gaps": gaps, "violations": violations,
         "identity": {
-            "workflow": identity(first_policy.get("workflow"), "validate_review.WORKFLOW"),
+            "workflow": identity(first_policy.get("workflow"), "render_review.WORKFLOW"),
             "policy_commit": identity(first_policy.get("commit"), first_policy.get("commit_source")),
             "harness": identity(harness.get("name"), harness.get("source")),
             "harness_session": identity(harness.get("session"), harness.get("source")),

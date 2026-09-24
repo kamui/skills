@@ -1,0 +1,157 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+    "change_description": "864eea86ab86bf5a3375898bc606933ea20696cc\nAdd account freezing\n\nA frozen account refuses new entries until it is unfrozen.\n\n03ce7cd85d34afda4ae47f06d7958ea906b3fcc1\nRefuse transfers from frozen accounts\n\n",
+    "specs": [
+      "ledger-spec/account-freeze"
+    ],
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "issues": [],
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Add account freezing: a frozen account accepts no new entries until it is unfrozen (spec `ledger-spec/account-freeze`).",
+    "issue_fit": "Partial — freezing, unfreezing, refused postings and refused transfers out of a frozen account are implemented; criterion 2's refusal of transfers into a frozen account is not.",
+    "coverage": "Complete merge-base diff reviewed (2 files), with the fix delta `864eea8..03ce7cd` read in full. Reviewer-executed `python3 -m unittest discover -s tests -v` at the head: 17 tests, pass."
+  },
+  "findings": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "title": "Refuse transfers that touch a frozen account",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A transfer names a frozen account as its target.",
+      "impact": "`Ledger.transfer` refuses a frozen source but appends the credit to a frozen target, so that account is credited despite the freeze that spec criterion 2 forbids.",
+      "change": "In `Ledger.transfer` (`ledger/accounts.py:85`), also raise `LedgerError` before appending either entry when the target account is frozen.",
+      "source": "Spec `ledger-spec/account-freeze`, criterion 2.",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 85,
+        "end_line": 86,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "ledger/accounts.py",
+        "start_line": 85
+      }
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "title": "Name the frozen-account error in the post docstring",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "A caller reads `Ledger.post`'s docstring to learn which errors to handle.",
+      "impact": "The docstring still lists only zero amounts, overdrafts, and unknown accounts, although `post` now raises `LedgerError` for a frozen account.",
+      "change": "Add the frozen-account case to the `Ledger.post` docstring at `ledger/accounts.py:61`.",
+      "source": "`AGENTS.md`: every public function's docstring names the errors it raises.",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 65,
+        "end_line": 66,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "ledger/accounts.py",
+        "start_line": 61
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "still-open",
+      "action": "must-fix",
+      "note": "ledger/accounts.py:85-86 at 03ce7cd refuses a frozen source only; a transfer into a frozen account still reaches the credit append at ledger/accounts.py:90"
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "still-open",
+      "action": "consider",
+      "note": "ledger/accounts.py:61 at 03ce7cd still lists no frozen-account error in the post docstring"
+    }
+  ],
+  "record": {
+    "repository": "/home/jack/.cache/rc357x/root/continuation/repo",
+    "paths": {
+      "spec": "/home/jack/.cache/rc357x/root/continuation/inputs/spec.md"
+    },
+    "requirements": [
+      {
+        "source": "ledger-spec/account-freeze/criterion-1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:52-58 sets and clears `frozen` through `self.get`, which raises for an unknown account"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-2",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "ledger/accounts.py:85-86 refuses a frozen source; ledger/accounts.py:90 still credits a frozen target"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:65-66 raises before the append at ledger/accounts.py:70; tests/test_freeze.py:15-21"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-4",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:56-58; tests/test_freeze.py:23-27"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-5",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`Account.balance` and `render_statement` never read `frozen`; tests/test_freeze.py:29-31"
+      }
+    ],
+    "files": [
+      {
+        "path": "ledger/accounts.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_freeze.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 -m unittest discover -s tests -v",
+        "head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+        "outcome": "reviewer-executed",
+        "reason": "the fix changes ledger/accounts.py, which the suite covers; 17 tests, pass"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "accounts/frozen-transfer-bypass",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed",
+          "confirmed_in": "/home/jack/.cache/rc357x/root/continuation/seed/r1/record.json"
+        }
+      ],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

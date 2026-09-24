@@ -135,7 +135,7 @@ A `preflight failed` line with exit 3 is the freshness route: a failed, empty, m
 
 ## Authorized gating emission
 
-`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <skill-root>/scripts/validate_review.py --emit-batch --event <REQUEST_CHANGES|APPROVE> < <private-dir>/payload.json > <private-dir>/batch.json`, replacing the advisory batch the freshness-and-submission block posts. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
+`review-code` returns the advisory `COMMENT` batch. For a separately authorized gating event, run `python3 <skill-root>/scripts/render_review.py --emit-batch --event <REQUEST_CHANGES|APPROVE> < <private-dir>/payload.json > <private-dir>/batch.json`, replacing the advisory batch the freshness-and-submission block posts. Never edit the batch by hand. A non-zero exit stops publication: report the script's output.
 
 On this gating path only, the script enforces the first-line grammar `**<Status>[ (advisory)]** — …`: the input advisory suffix is present exactly for `Changes Requested` or `Approved` under `COMMENT`. `APPROVE` requires `Approved`, and `REQUEST_CHANGES` requires `Changes Requested`; a mismatch exits 1. It removes the suffix and re-validates the edited body before printing. The batch is what validated after that one scripted edit. The ordinary `COMMENT` path retains its existing acceptance rules. Report the posted form from `batch.json`, not the advisory form in `payload.json`.
 
@@ -145,7 +145,7 @@ Every drafted reply and thread resolution goes through the thread write loop bel
 
 For every prior item `review-code` classified `fixed`, `accepted`, or `obsolete`, resolve its existing thread. If the item has a drafted reply, post it successfully before resolving; if it has no drafted reply, resolve directly. Use the returned thread node id, not the numeric comment id. Skip threads already resolved; leave `still-open`, `not-verifiable`, and disputed items open. An author's `declined` reply alone does not qualify: `review-code`'s evidence-backed classification governs the action. A prior item without a forge thread has no thread to resolve. Preserve the draft's stable id and disposition; do not create a new finding for a surviving prior item.
 
-Write `<private-dir>/writes.jsonl` once, one JSON object per prior item per line, with the host's file-writing tool rather than a shell `echo`. Take each item from the retained `composition.json`'s `finalization.replies`, in order, which `review-code` checked against the packet; a composition without `finalization` comes from an earlier `review-code`, whose record supplies the same fields:
+Write `<private-dir>/writes.jsonl` once, one JSON object per prior item per line, with the host's file-writing tool rather than a shell `echo`. Take each item from `record.json`'s `finalization.replies`, in order, which `review-code` checked against the packet:
 
 - `id`: the item's stable id.
 - `comment_id`: the numeric id of the thread's first comment; `thread_id`: the thread's GraphQL node id. Both are null for an item without a forge thread.

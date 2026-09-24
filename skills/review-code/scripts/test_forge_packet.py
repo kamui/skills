@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-"""CLI fixtures for `forge_packet.py` and its hand-off to `context_fingerprint.py`.
+"""CLI fixtures for `forge_packet.py`: the packet, its `packet_context` identity, and the shortcut.
 
 `SKILL.md` step 1 keeps the forge inputs as one packet that the review, the
-`context` digest, and the re-review all read. These cases drive the script
+`packet_context` digest, and the re-review all read. These cases drive the script
 through `subprocess` on saved-response fixtures shaped like the documented
-GraphQL queries and pin what issue #132 requires of it:
+GraphQL queries and pin what issues #132 and #357 require of it:
 
 - a fixture shaped like the root query with a real non-empty issue-comment
-  list normalizes and fingerprints without synthesized identities;
+  list normalizes and hashes without synthesized identities;
+- the digest covers the pull request's text and each linked issue's text,
+  comments, availability and completeness, and the set of linked issues, in
+  canonical order;
+- the duplicate-review shortcut refuses a deleted issue comment, an added or
+  removed older linked issue, supplied specs in either run, a trailer without the
+  new markers or with only the older `context=`, and accepts equal complete inputs;
 - two-page outer (reviews) and nested (issue comments, thread replies)
   connections merge to a complete packet;
 - duplicate items at a page boundary collapse by stable id, and a duplicate
@@ -38,7 +44,9 @@ from typing import Any, Optional
 
 HERE = Path(__file__).resolve().parent
 SCRIPT = HERE / "forge_packet.py"
-FINGERPRINT = HERE / "context_fingerprint.py"
+sys.path.insert(0, str(HERE))
+import forge_packet  # noqa: E402  the digest the shortcut and the finalizer both derive
+import render_review  # noqa: E402
 
 failures: list[str] = []
 
@@ -77,20 +85,12 @@ def normalize(case: str, directory: Path, pages: dict[str, Any]) -> Optional[dic
         return None
 
 
-def digest(case: str, directory: Path, packet: dict[str, Any], extra: Optional[dict[str, Any]] = None) -> Optional[str]:
-    path = write(directory, f"{case}-packet.json", packet)
-    result = subprocess.run(
-        [sys.executable, str(FINGERPRINT), "--packet", path],
-        input=json.dumps(extra) if extra is not None else "",
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
-    if result.returncode != 0:
-        fail(case, f"context_fingerprint exited {result.returncode}: {result.stderr.strip()}")
+def digest(case: str, directory: Path, packet: dict[str, Any]) -> Optional[str]:
+    try:
+        return forge_packet.packet_context(packet)
+    except forge_packet.PageError as error:
+        fail(case, f"packet_context refused the packet: {error}")
         return None
-    return result.stdout.strip()
 
 
 # --- fixtures ---------------------------------------------------------------
@@ -264,23 +264,12 @@ def case_root_fixture_fingerprints(directory: Path) -> None:
         fail(case, "a complete issue must not carry a truncation marker")
     if packet["pr"]["head_sha"] != "a" * 40 or packet["pr"]["merged"] is not False:
         fail(case, "run identity fields were not carried")
-    via_packet = digest(case, directory, packet, {"specs": [], "guidance": []})
-    direct_payload = dict(packet["fingerprint"], specs=[], guidance=[])
-    direct = subprocess.run(
-        [sys.executable, str(FINGERPRINT)],
-        input=json.dumps(direct_payload),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
-    if via_packet is None or direct.returncode != 0:
-        fail(case, f"direct digest exited {direct.returncode}: {direct.stderr.strip()}")
-    elif via_packet != direct.stdout.strip():
-        fail(case, "--packet digest differs from the digest of the same fields supplied directly")
-    without_extra = digest(case, directory, packet)
-    if without_extra != via_packet:
-        fail(case, "empty stdin with --packet must equal empty specs and guidance")
+    first = digest(case, directory, packet)
+    reordered = copy.deepcopy(packet)
+    reordered["fingerprint"]["issues"][0]["comments"].reverse()
+    reordered["fingerprint"] = dict(reversed(list(reordered["fingerprint"].items())))
+    if first is None or first != digest(case, directory, reordered) or len(first) != 64:
+        fail(case, "the digest depends on key or comment order")
 
 
 def case_two_page_connections(directory: Path) -> None:
@@ -695,6 +684,132 @@ def case_shape_errors(directory: Path) -> None:
         fail(case, f"--self-test exited {result.returncode}: {result.stdout} {result.stderr}")
 
 
+def case_packet_context_sensitivity(directory: Path) -> None:
+    """Every intent field moves the digest; ordering and fields outside the intent do not."""
+    case = "packet context sensitivity"
+    packet = normalize(case, directory, {"root.json": simple_root()})
+    if packet is None:
+        return
+    base = digest(case, directory, packet)
+
+    def changed(mutate) -> Optional[str]:
+        value = copy.deepcopy(packet)
+        mutate(value)
+        return digest(case, directory, value)
+
+    intent = packet["fingerprint"]
+    for name, mutate in (
+        ("pr title", lambda p: p["fingerprint"]["pr"].update(title="Other title")),
+        ("pr body", lambda p: p["fingerprint"]["pr"].update(body="Closes #124.")),
+        ("issue title", lambda p: p["fingerprint"]["issues"][0].update(title="Other")),
+        ("issue body", lambda p: p["fingerprint"]["issues"][0].update(body="Other criterion.")),
+        ("issue coordinate", lambda p: p["fingerprint"]["issues"][0].update(coordinate="acme/payments#999")),
+        ("comment body", lambda p: p["fingerprint"]["issues"][0]["comments"][0].update(body="edited")),
+        ("comment edit time", lambda p: p["fingerprint"]["issues"][0]["comments"][0].update(updated_at=AFTER)),
+        ("comment author", lambda p: p["fingerprint"]["issues"][0]["comments"][0].update(author="someone")),
+        ("deleted comment", lambda p: p["fingerprint"]["issues"][0]["comments"].pop()),
+        ("comments unavailable", lambda p: p["fingerprint"]["issues"][0].update(comments=[], comments_available=False)),
+        ("comments truncated", lambda p: p["fingerprint"]["issues"][0].update(comments_complete=False)),
+        ("added linked issue", lambda p: p["fingerprint"]["issues"].append(dict(intent["issues"][0], coordinate="acme/payments#124"))),
+        ("removed linked issue", lambda p: p["fingerprint"]["issues"].clear()),
+    ):
+        if changed(mutate) == base:
+            fail(case, f"{name} did not change the digest")
+    empty = copy.deepcopy(packet)
+    empty["fingerprint"]["issues"][0]["comments"] = []
+    unavailable = copy.deepcopy(empty)
+    unavailable["fingerprint"]["issues"][0]["comments_available"] = False
+    if digest(case, directory, empty) == digest(case, directory, unavailable):
+        fail(case, "an empty comment list and unavailable comments share a digest")
+    two = copy.deepcopy(packet)
+    two["fingerprint"]["issues"].append(dict(intent["issues"][0], coordinate="acme/payments#124"))
+    swapped = copy.deepcopy(two)
+    swapped["fingerprint"]["issues"].reverse()
+    if digest(case, directory, two) != digest(case, directory, swapped):
+        fail(case, "linked-issue order changed the digest")
+    for name, mutate in (
+        ("review body", lambda p: p["reviews"][0].update(body="edited review")),
+        ("pr edit time", lambda p: p["pr"].update(last_edited_at=AFTER)),
+    ):
+        if changed(mutate) != base:
+            fail(case, f"{name} is outside the intent but changed the digest")
+    result = run("shortcut", write(directory, "bad-packet.json", {"schema": "forge-packet/0"}), "--review", "900",
+                 "--merge-base", "c" * 40, "--supplied-inputs", "no")
+    if result.returncode != 2:
+        fail(case, f"a packet of another schema must exit 2, got {result.returncode}: {result.stdout!r}")
+
+
+def trailer(digest_value: Optional[str], supplied: Optional[str] = "no", *, workflow: Optional[str] = None,
+            context: Optional[str] = None, head: str = "a" * 40, merge_base: str = "c" * 40) -> str:
+    fields = [f"head={head}", "base-ref=main", f"base-sha={'b' * 40}", f"merge-base={merge_base}",
+              f"workflow={workflow or render_review.WORKFLOW}"]
+    if context is not None:
+        fields.append(f"context={context}")
+    if digest_value is not None:
+        fields.append(f"packet_context={digest_value}")
+    if supplied is not None:
+        fields.append(f"supplied_inputs={supplied}")
+    return "**Approved (advisory)** — no findings.\n\n<!-- review-run " + " ".join(fields + ["issues=acme/payments#123", "coverage=complete"]) + " -->"
+
+
+def case_shortcut(directory: Path) -> None:
+    """The scripted identity decides duplicates later-state cannot see; equal complete inputs qualify."""
+    case = "duplicate-review shortcut"
+
+    def pages(comments: list[int], extra_issues: tuple[int, ...] = (), body: str = "") -> dict[str, Any]:
+        issues = [issue(123, connection([issue_comment(n) for n in comments], len(comments), False))]
+        issues += [issue(n, connection([], 0, False, None)) for n in extra_issues]
+        candidate = review(900, T0)
+        candidate["body"] = body
+        return root(closing=connection(issues, len(issues), False), reviews=connection([candidate], 1, False),
+                    threads=connection([thread("PRRT_1", connection([thread_comment(5000, T0, "900")], 1, False))], 1, False))
+
+    def packet_digest(comments: list[int], extra_issues: tuple[int, ...] = ()) -> Optional[str]:
+        packet = normalize(case, directory, {f"prior-{len(comments)}-{len(extra_issues)}.json": pages(comments, extra_issues)})
+        return None if packet is None else digest(case, directory, packet)
+
+    prior = packet_digest([42, 7])
+    prior_two = packet_digest([42, 7], (124,))
+    count = 0
+
+    def shortcut(body: str, comments: list[int] = (42, 7), extra_issues: tuple[int, ...] = (), supplied: str = "no",
+                 merge_base: str = "c" * 40) -> subprocess.CompletedProcess[str]:
+        nonlocal count
+        count += 1
+        path = write(directory, f"shortcut-{count}.json", normalize(case, directory, {f"now-{count}.json": pages(list(comments), extra_issues, body)}))
+        return run("shortcut", path, "--review", "900", "--merge-base", merge_base, "--supplied-inputs", supplied)
+
+    same = shortcut(trailer(prior))
+    if same.returncode != 0 or same.stdout:
+        fail(case, f"equal complete inputs must qualify, got {same.returncode}: {same.stdout!r}")
+    expectations = [
+        ("deleted older issue comment", shortcut(trailer(prior), comments=[42]), "identity packet_context:"),
+        ("added older linked issue", shortcut(trailer(prior), extra_issues=(124,)), "identity packet_context:"),
+        ("removed older linked issue", shortcut(trailer(prior_two)), "identity packet_context:"),
+        ("current-only supplied spec", shortcut(trailer(prior), supplied="yes"), "this run has caller-supplied issues or specs"),
+        ("prior-only supplied spec", shortcut(trailer(prior, "yes")), "review 900 used caller-supplied issues or specs"),
+        ("absent markers", shortcut(trailer(None, None)), "carries no packet_context and supplied_inputs markers;"),
+        ("older context= trailer", shortcut(trailer(None, None, context=prior)), "(an older `context=` trailer)"),
+        ("digest without its supplied-inputs marker", shortcut(trailer(prior, None)), "carries no packet_context and supplied_inputs"),
+        ("no trailer", shortcut("Looks fine."), "carries no review-run trailer"),
+        ("other workflow", shortcut(trailer(prior, workflow="v5b-24")), "identity workflow:"),
+        ("other merge-base", shortcut(trailer(prior), merge_base="d" * 40), "identity merge-base:"),
+        ("other head", shortcut(trailer(prior, head="e" * 40)), "identity head:"),
+    ]
+    for name, result, needle in expectations:
+        if result.returncode != 1 or needle not in result.stdout:
+            fail(case, f"{name}: expected exit 1 naming {needle!r}, got {result.returncode}: {result.stdout!r}")
+        elif any(not line.startswith("identity ") for line in result.stdout.splitlines()):
+            fail(case, f"{name}: later-state saw what only the digest or markers can: {result.stdout!r}")
+    # The digest does not waive later state: an edited issue after the review still stands in the way.
+    edited = pages([42, 7], body=trailer(prior))
+    edited["data"]["repository"]["pullRequest"]["closingIssuesReferences"]["nodes"][0]["lastEditedAt"] = AFTER
+    path = write(directory, "edited.json", normalize(case, directory, {"edited-page.json": edited}))
+    result = run("shortcut", path, "--review", "900", "--merge-base", "c" * 40, "--supplied-inputs", "no")
+    if result.returncode != 1 or "issue acme/payments#123 edited" not in result.stdout:
+        fail(case, f"a later issue edit must still defeat the shortcut, got {result.returncode}: {result.stdout!r}")
+
+
 CASES = (
     case_root_fixture_fingerprints,
     case_two_page_connections,
@@ -704,11 +819,13 @@ CASES = (
     case_publication_artifacts,
     case_explicit_issue_page,
     case_shape_errors,
+    case_packet_context_sensitivity,
+    case_shortcut,
 )
 
 
 def main() -> int:
-    for script in (SCRIPT, FINGERPRINT):
+    for script in (SCRIPT,):
         if not script.exists():
             print(f"test_forge_packet: {script} not found")
             return 1

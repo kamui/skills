@@ -46,15 +46,15 @@ Before dispatching any review or continuation, choose an **awaited** route that 
 
 Spawn one resumable **general-purpose** reviewer capable of dispatching a verifier, with a fresh context excluding the implementation conversation (`fork_turns="none"` or equivalent). Brief it to:
 
-- Invoke `review-code` with `mode: one-shot`, `profile: implementation-gate` and `return_format: artifacts`, reviewing the base-to-committed-head range with explicit refs and every spec source from step 1 as user-supplied specs.
+- Invoke `review-code` with `mode: one-shot`, reviewing the base-to-committed-head range with explicit refs and every spec source from step 1 as user-supplied specs.
 - Use step 3's saved verification results and missing required evidence, passing checks as caller-supplied check evidence. Supply observations and artifact references without implementation rationale or correctness claims.
-- Return the output of `review-code`'s `scripts/finalize_review.py --check --profile implementation-gate` on the record's directory: status, coverage, and the `record.json`, `addenda`, `continuation` helper and `report.md` paths. Keep the verification results' path with the review record.
+- Return the output of `review-code`'s `scripts/render_review.py --check` on the record's private directory: status, coverage, and the `record.json`, `payload.json`, `batch.json` and `report.md` paths. Keep the verification results' path with the review record.
 
-Read `report.md`; a missing report, or a record whose `finalization` names another protocol, is an incomplete review. A record without `finalization` predates the report: read it as before. Evaluate findings against the code and spec. Treat `must-fix` as blocking and `consider` as optional. Report coverage gaps and unresolved questions. Fix warranted defects, verify under step 3 and commit. Give evidence-based reasons for declining findings; disputed blockers remain unresolved.
+Read `report.md`; a missing report, or a record `--check` refuses, is an incomplete review, and its record is discarded. Otherwise accept the record as the current result and keep the absolute path of every `record.json` you accepted, the latest last. Evaluate findings against the code and spec. Treat `must-fix` as blocking and `consider` as optional. Report coverage gaps and unresolved questions. Fix warranted defects, verify under step 3 and commit. Give evidence-based reasons for declining findings; disputed blockers remain unresolved.
 
 After committing fixes, read and follow [the continuation procedure](references/continuation.md) before choosing or dispatching the next phase, and include it in the continuation brief.
 
-Require review of the final committed head with no blocking defects or material coverage gaps; any later commit requires review. After a continuation, that review is the chain state the returned helper validates with exit 0 at that head. If isolated review is unavailable or this gate remains unmet, report why and stop before publishing. Otherwise proceed through step 5 before returning.
+Require review of the final committed head with no blocking defects or material coverage gaps; any later commit requires review. That review is the record `python3 <skill root>/scripts/render_review.py --check --head <final head> --lineage <record> … <private-dir>` accepts with exit 0, with one `--lineage` for the final record and each record accepted before it; `<skill root>` is the record's `record.paths.skill_root`. If isolated review is unavailable or this gate remains unmet, report why and stop before publishing. Otherwise proceed through step 5 before returning.
 
 ### 5. Open the pull request
 
