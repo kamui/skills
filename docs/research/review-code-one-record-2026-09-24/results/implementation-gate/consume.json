@@ -1,0 +1,62 @@
+{
+  "task": "implementation-gate",
+  "private_dir": "/home/jack/.cache/rc357x/root/implementation-gate/work/review",
+  "status": "Changes Requested",
+  "coverage": "complete",
+  "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+  "packet_context": "none",
+  "supplied_inputs": "yes",
+  "findings": [
+    {
+      "id": "ledger/statement-running-balance-filter",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug"
+    },
+    {
+      "id": "ledger/cli-strict-date-format",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "requirement"
+    }
+  ],
+  "questions": [],
+  "observations": 0,
+  "allowance": {
+    "initial_spent": true,
+    "follow_up_spent": false
+  },
+  "batches": [
+    "initial/initial"
+  ],
+  "tasks": [
+    {
+      "id": "ledger/statement-running-balance-filter",
+      "type": "candidate",
+      "trigger": "must-fix",
+      "batch": "initial",
+      "ruling": "confirmed",
+      "confirmed_in": null
+    },
+    {
+      "id": "ledger/cli-strict-date-format",
+      "type": "candidate",
+      "trigger": "must-fix",
+      "batch": "initial",
+      "ruling": "confirmed",
+      "confirmed_in": null
+    }
+  ],
+  "outstanding": [],
+  "lineage": [],
+  "prior_record": null,
+  "prior_items": [],
+  "caller_check": {
+    "command": "python3 /home/jack/.cache/rc357x/skill/scripts/render_review.py --check --head 2ba40465ef91f15b2963a4b12e80f46ee0e9efae --lineage /home/jack/.cache/rc357x/root/implementation-gate/work/review/record.json /home/jack/.cache/rc357x/root/implementation-gate/work/review",
+    "exit": 0,
+    "stdout": "status Changes Requested\ncoverage complete\nrecord /home/jack/.cache/rc357x/root/implementation-gate/work/review/record.json\npayload /home/jack/.cache/rc357x/root/implementation-gate/work/review/payload.json\nbatch /home/jack/.cache/rc357x/root/implementation-gate/work/review/batch.json\nreport /home/jack/.cache/rc357x/root/implementation-gate/work/review/report.md\n"
+  },
+  "implement_publish_gate_met": false,
+  "report_bytes": 7664,
+  "unmet": []
+}

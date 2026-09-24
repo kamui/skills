@@ -2,11 +2,11 @@
 """Measure runtime instructions, primary paths, and generated verifier briefs.
 
 Usage: python3 scripts/test_instruction_budget.py
-Counts UTF-8 bytes, including expanded help/examples on representative paths:
-local and pull-request publishable reviews, the implementation gate, a pull-request
-review with one required verifier batch, a pull-request re-review, and a gate
-continuation. Evidence and code are excluded; example briefs also report their
-supplied records.
+Counts UTF-8 bytes, including expanded help/examples on representative paths: a
+first review of a pull request or local target (one record shape serves both), a
+review with one required verifier batch, and a re-review, which covers both a pull
+request's prior review and a local prior record. Evidence and code are excluded;
+example briefs also report their supplied records.
 Raise a limit only with a dated DESIGN.md justification. Exit 0 within all limits,
 1 over budget, 2 when an instruction or helper output cannot be read.
 """
@@ -21,13 +21,11 @@ import build_verifier_prompt as builder
 
 SKILL = Path(__file__).resolve().parent.parent
 ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
-# Rounded ceilings above the #356 layout, including actual helper output. The always-loaded
-# set now carries the rubric and stays below #346's 32,567-byte common set (always loaded
-# plus changed tests and check evidence); DESIGN.md dates why the target paths rose.
-BUDGET = 32_000
-LIMITS = {"runtime total": 84_000, "always loaded": BUDGET,
-          "local publishable": 55_000, "PR publishable": 55_000, "implementation-gate": 55_000,
-          "required verifier": 68_000, "re-review": 62_000, "continuation": 43_000,
+# Rounded ceilings above the #357 layout, including actual helper output: the activated SKILL.md,
+# one record shape and the scripted packet identity; DESIGN.md dates each change.
+BUDGET = 30_000
+LIMITS = {"runtime total": 78_000, "always loaded": BUDGET, "review": 52_000,
+          "required verifier": 65_000, "re-review": 61_000,
           "verifier instructions": 18_000, "verifier example brief": 22_000,
           "file-transport verifier example brief": 22_000}
 
@@ -47,18 +45,11 @@ def measurements():
         return b"".join(files["references/" + name] for name in names)
     # Every path builds context once; the rubric carries changed tests and supplied checks.
     common = always + output("review_context.py", "--help")
-    first = common + output("context_fingerprint.py", "--example")
-    publishable = output("compose_review.py", "--example", "--profile", "publishable")
-    pr = first + refs("targets.md") + publishable
-    values = {"runtime total": b"".join(files.values()), "always loaded": always,
-              "local publishable": first + refs("targets.md") + publishable,
-              "PR publishable": pr,
-              "implementation-gate": first + refs("targets.md") + output(
-                  "compose_review.py", "--example", "--profile", "implementation-gate"),
+    review = common + refs("targets.md") + output("render_review.py", "--example")
+    values = {"runtime total": b"".join(files.values()), "always loaded": always, "review": review,
               # One ordinary batch; the worker-only references stay out of the primary.
-              "required verifier": pr + refs("verification.md") + output("build_verifier_prompt.py", "--example"),
-              "re-review": pr + refs("prior-state.md"),
-              "continuation": common + refs("continuation-addendum.md") + output("continue_review.py", "--example")}
+              "required verifier": review + refs("verification.md") + output("build_verifier_prompt.py", "--example"),
+              "re-review": review + refs("prior-state.md")}
     # All specialized branches, without primary-only routing. Ordinary size is
     # also printed below so a conditional addition cannot hide in the maximum.
     data = copy.deepcopy(builder.EXAMPLE)

@@ -1,0 +1,57 @@
+{
+  "task": "continuation",
+  "private_dir": "/home/jack/.cache/rc357x/root/continuation/work/review",
+  "status": "Approved",
+  "coverage": "complete",
+  "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+  "packet_context": "none",
+  "supplied_inputs": "yes",
+  "findings": [],
+  "questions": [],
+  "observations": 0,
+  "allowance": {
+    "initial_spent": true,
+    "follow_up_spent": true
+  },
+  "batches": [
+    "follow-up/follow-up"
+  ],
+  "tasks": [
+    {
+      "id": "accounts/frozen-refusal-atomicity",
+      "type": "safety-premise",
+      "trigger": null,
+      "batch": "follow-up",
+      "ruling": "holds",
+      "confirmed_in": null
+    }
+  ],
+  "outstanding": [],
+  "lineage": [
+    "/home/jack/.cache/rc357x/root/continuation/seed/r1/record.json",
+    "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json"
+  ],
+  "prior_record": "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json",
+  "prior_items": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "fixed",
+      "action": "must-fix"
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "fixed",
+      "action": "consider"
+    }
+  ],
+  "caller_check": {
+    "command": "python3 /home/jack/.cache/rc357x/skill/scripts/render_review.py --check --head b96a362e99ce4f5b6b1fe26ad02fda66e8343723 --lineage /home/jack/.cache/rc357x/root/continuation/seed/r1/record.json --lineage /home/jack/.cache/rc357x/root/continuation/seed/r2/record.json --lineage /home/jack/.cache/rc357x/root/continuation/work/review/record.json /home/jack/.cache/rc357x/root/continuation/work/review",
+    "exit": 0,
+    "stdout": "status Approved\ncoverage complete\nrecord /home/jack/.cache/rc357x/root/continuation/work/review/record.json\npayload /home/jack/.cache/rc357x/root/continuation/work/review/payload.json\nbatch /home/jack/.cache/rc357x/root/continuation/work/review/batch.json\nreport /home/jack/.cache/rc357x/root/continuation/work/review/report.md\n"
+  },
+  "open_blockers": [],
+  "seed_unchanged": true,
+  "implement_publish_gate_met": true,
+  "report_bytes": 6561,
+  "unmet": []
+}

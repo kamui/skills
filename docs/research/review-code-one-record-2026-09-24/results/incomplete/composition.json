@@ -1,0 +1,77 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "issues": [],
+    "specs": [
+      "ledger-spec/account-freeze"
+    ],
+    "change_description": "864eea86ab86bf5a3375898bc606933ea20696cc\nAdd account freezing\n\nA frozen account refuses new entries until it is unfrozen.\n\n03ce7cd85d34afda4ae47f06d7958ea906b3fcc1\nRefuse transfers from frozen accounts\n\nb96a362e99ce4f5b6b1fe26ad02fda66e8343723\nRefuse transfers into frozen accounts\n\nDocument the frozen-account errors on post and transfer.\n\n",
+    "coverage": "incomplete"
+  },
+  "summary": {
+    "status": "Incomplete",
+    "intent": "Refuse transfers that touch a frozen account.",
+    "issue_fit": "Criterion 2 appears met, but its no-change guarantee rests on an unverified premise.",
+    "coverage": "Complete diff read; the required safety premise could not be verified.",
+    "coverage_gaps": [
+      "accounts/refusal-atomicity: required data-integrity premise, no awaited verifier route (disposable exercise record)"
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [],
+  "prior_items": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "fixed",
+      "action": "must-fix",
+      "note": "ledger/accounts.py:87-95 checks both frozen flags before either append"
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "fixed",
+      "action": "consider",
+      "note": "ledger/accounts.py:61-64 names the frozen-account error"
+    }
+  ],
+  "record": {
+    "repository": "/home/jack/.cache/rc357x/root/continuation/repo",
+    "requirements": [],
+    "check_evidence": [],
+    "files": [
+      {
+        "path": "ledger/accounts.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_freeze.py",
+        "state": "reviewed"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "accounts/refusal-atomicity",
+          "type": "safety-premise",
+          "area": "data-integrity",
+          "premise": "A refused post or transfer appends no entry to any account.",
+          "evidence": "ledger/accounts.py:65-95",
+          "batch": null,
+          "ruling": "pending"
+        }
+      ],
+      "batches": [],
+      "outstanding": [
+        "accounts/refusal-atomicity: required data-integrity premise, no awaited verifier route (disposable exercise record)"
+      ]
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
