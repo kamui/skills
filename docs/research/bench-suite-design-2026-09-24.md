@@ -3,8 +3,8 @@
 **Status: §8 steps 1–5 implemented in [`bench/`](../../bench/README.md): the #137 targets migrated,
 mirrors and dependency caches rebuilt and verified, the arms written as data, and the shakedown
 filed as the run `bench/runs/2026-09-24-toy/` by `file_attempt.py`. Step 6 has its runner, scorer
-and comparer (`run_cell.py`, `score.py`, `compare.py`); the fresh targets and the first frozen run
-remain.**
+and comparer (`run_cell.py`, `score.py`, `compare.py`) and the four fresh targets with sealed
+registers; the first frozen run remains.**
 
 Written 2026-09-24 after the first-draft proposal was reviewed by a Codex reviewer (`gpt-6-astra`,
 reasoning `high`); the review is

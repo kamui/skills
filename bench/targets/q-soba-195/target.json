@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "id": "q-soba-195",
+  "repo": "jonhadfield/soba",
+  "pr": 195,
+  "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+  "merge_base": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+  "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+  "base_ref_name": "main",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {
+      "sha": "06922a224f36436511eb098e9c698b6966b58b78",
+      "reason": "squash merge of the pull request on main"
+    },
+    {
+      "sha": "a84ace57c4e2fec9d26f65608f03ff4a9dd93bb8",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "31b464f26ae20643751d3b3df1021d7f5707a0fe",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "f3cb641e16503f88face92b791f59b146b3f4622",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "2a30df57915f0581651946138832964ff4086e27",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "b3560291850c947fa3e55ef2d551e0270da4c2f4",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "7476b2b388ce37df3ca92a55514de1bed254563f",
+      "reason": "later commit on main"
+    },
+    {
+      "sha": "c39e6c035cdb6115b449a5fce3abd86c33b510cb",
+      "reason": "later commit on main"
+    }
+  ],
+  "cutoff": "2026-07-30T07:53:54Z",
+  "cutoff_note": "the merge instant (build_packet.py default); nothing omitted",
+  "diff_manifest_sha256": "7235f4573902842b222c6a7cf738f2e038208cf034fee4b0439eb6864eddc088",
+  "packet_sha256": "57d65e01a6d224b248823f69422de1d3d6099bf527d70c3fbde82ae7a9ec757d",
+  "shape": "refactor claiming no behaviour change, large mostly mechanical diff",
+  "domain": "Go command-line backup tool for git hosting providers",
+  "language": "Go",
+  "merged_at": "2026-07-30T07:53:54Z",
+  "fix_published_at": null,
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "nothing in the clone; every go command runs with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's own restore of the cache archive, populated once online by go mod download, go build ./... and go vet ./... at the head",
+    "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's dependency cache, for example `go test ./internal/ -count=1` (a few seconds); tests that need provider credentials skip. Five minutes per command, a package's tests at most once per flag set, scratch modules only under the work directory, nothing added to or changed in the clone.",
+    "unavailable": "network; the module proxy; provider credentials, so the live backup tests skip; Docker, so the Dockerfile cannot be built",
+    "dependency_identity": [
+      {
+        "name": "go.mod",
+        "sha256": "02d5fd338af07587af3531a05a4dde0eebbb39a0cbd8702b875af37af356fcf1",
+        "location": "head:go.mod"
+      },
+      {
+        "name": "go.sum",
+        "sha256": "27343516997f312b96df38b9c60b71b95f94ad07845911246bac5c05d392b408",
+        "location": "head:go.sum"
+      },
+      {
+        "name": "cache archive (go-modcache)",
+        "sha256": "70f114db9d74f7cfe8dbe0d292e437bac7b25ce7cd92681e9423aeb9ed007327",
+        "location": "~/.t3/bench-cache/archives/q-soba-195.tar.gz"
+      }
+    ],
+    "platform": "measured on the suite machine at 2026-09-24T19:11:05Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "cache": {
+      "kind": "go-modcache",
+      "build": [
+        "GOPROXY=https://proxy.golang.org,direct go mod download",
+        "go build ./...",
+        "go vet ./..."
+      ],
+      "post_clone": [],
+      "env": {
+        "GOMODCACHE": "{cache}/gomodcache",
+        "GOCACHE": "{cache}/gocache",
+        "GOFLAGS": "-mod=mod",
+        "GOPROXY": "off",
+        "GOTOOLCHAIN": "local"
+      },
+      "smoke": [
+        {
+          "name": "go test",
+          "command": "go test ./... -count=1",
+          "revision": "both"
+        },
+        {
+          "name": "go vet",
+          "command": "go vet ./... && echo clean",
+          "revision": "head"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-24 (built-in reviewer benchmark, fresh slot (q))",
+    "used_by": [],
+    "register_published": null,
+    "notes": "Hunted and adjudicated 2026-09-24 by headless sessions that saw no reviewer output; the register and both reports are sealed. The cleanliness window is the 56 days from the merge to the adjudication."
+  },
+  "current_register": 1,
+  "sealed": {
+    "key": "~/.config/bench/seal.key on the preparation machine (mode 0600, directory 0700), outside the repository and every attempt directory",
+    "files": [
+      {
+        "file": "register.v1.json.enc",
+        "plaintext_sha256": "e54d5cbf17ad2aa15e1ce523215d6cb304a89cc1301fcb8ef35f04a6b48527f5",
+        "sealed_at": "2026-09-24T19:11:27Z"
+      }
+    ]
+  }
+}
