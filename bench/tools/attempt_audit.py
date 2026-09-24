@@ -49,10 +49,10 @@ BUILTIN_HEADER = re.compile(r"^`(high effort|medium effort|low effort|minimal pr
 CODEX_RUBRIC = "You are acting as a reviewer for a proposed code change"
 DIFF_CMD = re.compile(r"git\s+diff\s+[^;&|\n]*")
 GUIDANCE = ("AGENTS.md", "AGENTS.override.md", "CLAUDE.md", "CLAUDE.local.md")
-CODEX_CMD = re.compile(r'cmd:\s*"((?:[^"\\]|\\.)*)"')
+CODEX_CMD = re.compile(r'cmd"?:\s*"((?:[^"\\]|\\.)*)"')
 # One exec_command object literal whose values are strings or bare scalars, so its cmd and workdir pair up.
-CODEX_OBJ = re.compile(r'\{((?:\s*[\w$]+\s*:\s*(?:"(?:[^"\\]|\\.)*"|[^,{}"\[\]]+)\s*,?)+)\}')
-CODEX_FIELD = re.compile(r'([\w$]+)\s*:\s*(?:"((?:[^"\\]|\\.)*)"|[^,{}"\[\]]+)')
+CODEX_OBJ = re.compile(r'\{((?:\s*"?[\w$]+"?\s*:\s*(?:"(?:[^"\\]|\\.)*"|[^,{}"\[\]]+)\s*,?)+)\}')
+CODEX_FIELD = re.compile(r'"?([\w$]+)"?\s*:\s*(?:"((?:[^"\\]|\\.)*)"|[^,{}"\[\]]+)')
 CODEX_WORKDIR = re.compile(r'(?:workdir|cwd|working_directory)"?\s*:\s*"((?:[^"\\]|\\.)*)"')
 
 
