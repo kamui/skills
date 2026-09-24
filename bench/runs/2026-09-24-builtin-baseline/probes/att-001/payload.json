@@ -1,0 +1,4 @@
+{
+  "final_text": "```json\n[\n  {\n    \"file\": \"pricing.py\",\n    \"line\": 17,\n    \"summary\": \"average() divides by len(prices) with no empty-list guard, so it raises ZeroDivisionError for an empty cart.\",\n    \"failure_scenario\": \"The docstring and PR description both say carts are often empty right after creation. average([]) evaluates total([]) / 0, which raises ZeroDivisionError. The new cart summary panel would crash on any freshly created cart. The function needs to return a defined value for empty input, such as 0.0, or the caller needs to handle the empty case explicitly.\"\n  }\n]\n```\n\nI verified this by reading the code and treated it as CONFIRMED. Nothing else in the repo calls `average` yet. There is no `ZeroDivisionError` handling anywhere, and no tests cover the function.",
+  "report_findings": []
+}
