@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "i-requests-6667",
+  "repo": "psf/requests",
+  "pr": 6667,
+  "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+  "merge_base": "8dd3b26bf59808de24fd654699f592abf6de581e",
+  "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+  "base_ref_name": "main",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {"sha": "9a40d1277807f0a4f26c9a37eea8ec90faa8aadc", "reason": "squash-merge of #6667 on main, tree-identical to the head; its neighbourhood on main surfaces the fixes"},
+    {"sha": "145b5399486b56e00250204f033441f3fdf2f3c9", "reason": "merge of #6716 (2024-05-24), the partial fix for GT-i1"},
+    {"sha": "90fee0876aea97c639b3bf698d83a12876d2f160", "reason": "#6767 (2025-06-13), the full revert of the cached SSLContext; reveals both defects"},
+    {"sha": "11d68c17bcd66bd3e2c5137b0a7aad7f59967102", "reason": "head of the #6767 branch (merge of main into remove_cached_sslcontext); reachable upstream only through refs/pull/6767/head"}
+  ],
+  "cutoff": "2024-05-15T20:07:26Z",
+  "cutoff_note": "the merge instant; one review and eleven conversation comments after it are omitted",
+  "diff_manifest_sha256": "453df0a9556fa8768460058cffeaeff2fe0e856369cbf4118af1572ca1573133",
+  "packet_sha256": "a8ac4d2cf9314f85a3fb16fcdfae594e8903ce189f34dcf98805294a21f280c6",
+  "legacy_packet_sha256": "f217cd71acce435aa1062c52ba3997aa4b0777293c824da131353028a4cb96b4",
+  "shape": "concurrency, shared mutable state",
+  "domain": "Python HTTP client",
+  "language": "Python",
+  "merged_at": "2024-05-15T20:07:26Z",
+  "fix_published_at": "2024-05-24T21:37:06Z",
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "python3 -m venv <cache-root>/venvs/requests; <venv>/bin/pip install -e <clone> -r <clone>/requirements-dev.txt from an offline wheel cache; nothing is written into the clone (the #137 grid measured 9 s)",
+    "allowance": "Focused test execution is permitted on this target, offline: run pytest from the clone root with the pre-provisioned virtualenv, as PYTHONPATH=<clone>/src <cache-root>/venvs/requests/bin/python -m pytest <selection>; five minutes per command, a selection at most once per flag set, scratch files only under the work directory, nothing added to or changed in the clone. The virtualenv has no network access and its packages are already installed.",
+    "unavailable": "network; tests that need a live host. One test in the ssl/verify selection fails at the merge-base as well (an OpenSSL versus fixture-certificate mismatch), which is not introduced by the change.",
+    "dependency_identity": [
+      {"name": "requirements-dev.txt", "sha256": "ad61553c237e9a6c292e9e21dbe0df7f2879689373d7b64f14e0223e57ea24f9", "location": "head:requirements-dev.txt"},
+      {"name": "setup.py", "sha256": "b45df91c5c6c34e6a799e5a2cbec75eb8bfcead682aaddd10d5da4583f20bfc1", "location": "head:setup.py"}
+    ],
+    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; Python 3.14.7; git 2.55.0. Not yet re-measured on the suite's Linux machine; the wheel cache archive is not yet built (design §8 step 4)."
+  },
+  "exposure": {
+    "entered_suite": "2026-09-07 (issue #137 qualification grid, target (i))",
+    "used_by": [
+      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates",
+      "one-shot-effort-2026-09-06: considered as a buggy backup target, not used",
+      "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
+      "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",
+      "bounded-discovery-prototype/targets/criteria.md: listed as used and excluded from later hunts"
+    ],
+    "register_published": "2026-09-07T04:52:01Z (commit 588edce in the public kamui/skills repository)",
+    "notes": "The pre-cutoff review record already gestures at part of GT-i1 (sigmavirus24 and tiran on SSLContext sharing); every arm's packet carries it."
+  },
+  "current_register": 1
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "m-grpc-go-7390",
+  "repo": "grpc/grpc-go",
+  "pr": 7390,
+  "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+  "merge_base": "daab56344e612097fd50c46c433de5d9b6013837",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {"sha": "45d44a736ec6cdcb73f9411bf6a1c2d1abea1956", "reason": "squash-merge of #7390 on master; the content-bearing master commit, whose neighbourhood surfaces later touches to the same functions"}
+  ],
+  "cutoff": "2024-07-09T20:27:27Z",
+  "cutoff_note": "the merge instant; nothing omitted",
+  "diff_manifest_sha256": "adb972f66328b4ce030c4e4b0ebed60f482611eb86f26e681dd6fbe02f701c4f",
+  "packet_sha256": "22f225ba217d22b0ed97546e2d462fc2a53d395ada8180e465a2e66b06c5d185",
+  "legacy_packet_sha256": "a003ca717a66aea689fe350a479454b02c92f32e9edd268504ba8a1d2a46a2f6",
+  "shape": "clean, high risk (concurrency)",
+  "domain": "Go RPC client connection management",
+  "language": "Go",
+  "merged_at": "2024-07-09T20:27:27Z",
+  "fix_published_at": null,
+  "originating_issue": "grpc/grpc-go#7365",
+  "provisioning": {
+    "recipe": "GOMODCACHE=<cache-root>/gomodcache GOCACHE=<cache-root>/gocache GOFLAGS=-mod=mod GOPROXY=off go mod download, populated from the pinned head only (the #137 grid measured 2 s)",
+    "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache-root>/gomodcache GOCACHE=<cache-root>/gocache GOFLAGS=-mod=mod GOPROXY=off; five minutes per command, a package's tests at most once per flag set, scratch modules only under the work directory, nothing added to or changed in the clone.",
+    "unavailable": "network; the module proxy; the full grpc-go suite (only focused packages fit the allowance)",
+    "dependency_identity": [
+      {"name": "go.mod", "sha256": "c7b1acfaf6b85e23ca2545740cfec9be812b0567baed4a3669b73d729114b78c", "location": "head:go.mod"},
+      {"name": "go.sum", "sha256": "2f9ba9c4026cb23b47ecb8a144abf6717633c2d2aaa6f5adb680c5066cb3b74f", "location": "head:go.sum"}
+    ],
+    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; Go 1.27.0; git 2.55.0. Not yet re-measured on the suite's Linux machine (Go 1.26.5 there); the module cache archive is not yet built (design §8 step 4)."
+  },
+  "exposure": {
+    "entered_suite": "2026-09-07 (issue #137 qualification grid, target (m))",
+    "used_by": [
+      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates",
+      "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
+      "review-code-rewrite-2026-09-22 comparison: case C6 (clean high-risk control)",
+      "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",
+      "bounded-discovery-prototype/targets/criteria.md: listed as used and excluded from later hunts"
+    ],
+    "register_published": "2026-09-07T04:52:01Z (commit 588edce in the public kamui/skills repository)",
+    "notes": "Clean control. The ground-truth surface a correct review must not assert as a defect is the lock handed across the go ac.resetTransportAndUnlock() boundary."
+  },
+  "current_register": 1
+}
