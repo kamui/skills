@@ -42,7 +42,8 @@
           "packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
           "diff_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
           "cohort_group": {"enum": ["regression", "fresh", "fixture"], "description": "fixture: a synthetic target that exercises the harness and is never pooled with regression or fresh results."},
-          "execution_available": {"type": "boolean"}
+          "execution_available": {"type": "boolean"},
+          "provisioning_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the target's provisioning block (recipe, allowance, unavailable, dependency identities, cache recipe) as canonical JSON, platform excluded; compare.py checks it under the comparison contract."}
         }
       }
     },
