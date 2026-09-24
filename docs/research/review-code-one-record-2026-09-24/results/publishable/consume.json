@@ -52,6 +52,7 @@
     "exit": 0,
     "advisory_suffix_removed": true
   },
+  "implement_publish_gate_met": false,
   "report_bytes": 5318,
   "unmet": []
 }

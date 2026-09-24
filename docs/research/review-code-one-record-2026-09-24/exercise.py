@@ -5,6 +5,7 @@ Usage:
     python3 exercise.py prepare --root ROOT --skill-root SKILL
     python3 exercise.py consume --root ROOT --task TASK
     python3 exercise.py observe EVENTS --skill-root SKILL
+    python3 exercise.py incomplete --root ROOT
 
 ``prepare`` materializes the #341 archive under ROOT with SKILL as the installed review-code, reseeds
 the continuation task as prior records, and writes each task's prompt from ``prompts/``. The archived
@@ -23,6 +24,14 @@ continuation that the seed records are unchanged. review-code-publish (``publish
 ``required-verification``): ``--check``, the batch's head, the ``writes.jsonl`` items its
 ``finalization.replies`` would produce, and a gating ``--emit-batch --event`` to a scratch file when the
 status admits one.
+
+``consume`` also reports whether implement-publish's gate is met: complete coverage, nothing outstanding,
+and no ``must-fix`` finding. ``incomplete`` builds the incomplete result no live run produced: a
+disposable re-review from ``seed/r2`` at the continuation's final head whose required safety premise had
+no awaited route, so it is ``Incomplete`` with the premise outstanding, in ``continuation/work/incomplete``.
+It then runs both callers on it: implement-publish's lineage check accepts the record structurally and
+its gate stays unmet, and review-code-publish may post the advisory ``COMMENT`` batch but every gating
+``--event`` is refused.
 
 ``observe`` summarizes a ``codex exec --json`` event log: commands run with their exit codes, the skill
 files read, each ``render_review.py`` finalization and its exit (repairs are the failures before the
@@ -242,8 +251,84 @@ def consume(args: argparse.Namespace) -> int:
                              "advisory_suffix_removed": gated.returncode == 0 and "(advisory)**" not in json.loads(gated.stdout)["body"].split("\n", 1)[0]}
             if gated.returncode != 0:
                 unmet.append(f"gating emission failed: {gated.stdout}")
+    out["implement_publish_gate_met"] = gate_met(record)
     report = private / "report.md"
     out["report_bytes"] = report.stat().st_size if report.is_file() else None
+    out["unmet"] = unmet
+    print(json.dumps(out, indent=2, ensure_ascii=False))
+    for line in unmet:
+        print(line, file=sys.stderr)
+    return 1 if unmet else 0
+
+
+def gate_met(record: dict[str, Any]) -> bool:
+    """implement-publish's gate: the final head reviewed with no blocking defect and no material coverage gap."""
+    blockers = [i for i in record["items"] if i["type"] == "finding" and i["action"] == "must-fix"]
+    return (record["run"]["coverage"] == "complete" and not record["record"]["verification"]["outstanding"]
+            and not blockers and record["status"] in ("Approved", "Needs Information"))
+
+
+def incomplete(args: argparse.Namespace) -> int:
+    root = Path(os.path.abspath(args.root))
+    task = root / "continuation"
+    seed = task / "seed"
+    r2 = load(seed / "r2" / "record.json")
+    render = str(Path(r2["record"]["paths"]["skill_root"]) / "scripts" / "render_review.py")
+    context = str(Path(r2["record"]["paths"]["skill_root"]) / "scripts" / "review_context.py")
+    private = task / "work" / "incomplete"
+    private.mkdir(parents=True)
+    store = private / "review-context.json"
+    must(["python3", context, "--merge-base", BASE, "--head", HEADS["continuation"], "--base-ref", "main",
+          "--prior-head", R2_HEAD, "--store", str(store)], task / "repo")
+    messages = must(["git", "log", "--reverse", "--format=%H%n%B", f"{BASE}..{HEADS['continuation']}"], task / "repo")
+    gap = "accounts/refusal-atomicity: required data-integrity premise, no awaited verifier route (disposable exercise record)"
+    composition = {
+        "run": {"target_kind": "range", "target": f"main...{HEADS['continuation']}", "base_ref": "main", "base_sha": BASE,
+                "issues": [], "specs": ["ledger-spec/account-freeze"], "change_description": messages, "coverage": "incomplete"},
+        "summary": {"status": "Incomplete", "intent": "Refuse transfers that touch a frozen account.",
+                    "issue_fit": "Criterion 2 appears met, but its no-change guarantee rests on an unverified premise.",
+                    "coverage": "Complete diff read; the required safety premise could not be verified.",
+                    "coverage_gaps": [gap]},
+        "findings": [], "questions": [], "observations": [],
+        "prior_items": [{"id": MUST_FIX, "classification": "fixed", "action": "must-fix",
+                         "note": "ledger/accounts.py:87-95 checks both frozen flags before either append"},
+                        {"id": CONSIDER, "classification": "fixed", "action": "consider",
+                         "note": "ledger/accounts.py:61-64 names the frozen-account error"}],
+        "record": {"repository": r2["record"]["repository"], "requirements": [], "check_evidence": [],
+                   "files": [{"path": "ledger/accounts.py", "state": "reviewed"}, {"path": "tests/test_freeze.py", "state": "reviewed"}],
+                   "verification": {"tasks": [{"id": "accounts/refusal-atomicity", "type": "safety-premise", "area": "data-integrity",
+                                               "premise": "A refused post or transfer appends no entry to any account.",
+                                               "evidence": "ledger/accounts.py:65-95", "batch": None, "ruling": "pending"}],
+                                    "batches": [], "outstanding": [gap]},
+                   "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}},
+    }
+    dump(private / "composition.json", composition)
+    finalized = run(["python3", render, "--store", str(store), "--prior-record", str(seed / "r2" / "record.json"), str(private)],
+                    task / "repo")
+    out: dict[str, Any] = {"finalize": {"exit": finalized.returncode, "stdout": finalized.stdout}}
+    unmet: list[str] = []
+    if finalized.returncode != 0:
+        unmet.append("the disposable incomplete record did not finalize")
+    else:
+        record = load(private / "record.json")
+        checked = run(["python3", render, "--check", "--head", HEADS["continuation"], "--lineage", str(seed / "r1" / "record.json"),
+                       "--lineage", str(seed / "r2" / "record.json"), "--lineage", str(private / "record.json"), str(private)])
+        out.update(status=record["status"], coverage=record["run"]["coverage"], outstanding=record["record"]["verification"]["outstanding"],
+                   allowance=record["record"]["verification"]["allowance"], lineage=record["lineage"],
+                   lineage_check={"exit": checked.returncode}, implement_publish_gate_met=gate_met(record))
+        if checked.returncode != 0:
+            unmet.append("the lineage check refused a structurally consumable record")
+        if gate_met(record):
+            unmet.append("implement-publish's gate reads an incomplete record as met")
+        payload = (private / "payload.json").read_text(encoding="utf-8")
+        gating = {}
+        for event in ("COMMENT", "APPROVE", "REQUEST_CHANGES"):
+            result = run(["python3", render, "--emit-batch", "--event", event], stdin=payload)
+            gating[event] = {"exit": result.returncode, "stdout": result.stdout if result.returncode else ""}
+        out["review_code_publish_emission"] = gating
+        if gating["COMMENT"]["exit"] != 0 or any(gating[e]["exit"] != 1 or "event-status" not in gating[e]["stdout"]
+                                                 for e in ("APPROVE", "REQUEST_CHANGES")):
+            unmet.append("an incomplete record must post only the advisory COMMENT batch")
     out["unmet"] = unmet
     print(json.dumps(out, indent=2, ensure_ascii=False))
     for line in unmet:
@@ -318,8 +403,10 @@ def main() -> int:
     three = sub.add_parser("observe")
     three.add_argument("events")
     three.add_argument("--skill-root", required=True)
+    four = sub.add_parser("incomplete")
+    four.add_argument("--root", required=True)
     args = parser.parse_args()
-    return {"prepare": prepare, "consume": consume, "observe": observe}[args.command](args)
+    return {"prepare": prepare, "consume": consume, "observe": observe, "incomplete": incomplete}[args.command](args)
 
 
 if __name__ == "__main__":

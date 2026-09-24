@@ -56,6 +56,7 @@
     "exit": 0,
     "stdout": "status Changes Requested\ncoverage complete\nrecord /home/jack/.cache/rc357x/root/implementation-gate/work/review/record.json\npayload /home/jack/.cache/rc357x/root/implementation-gate/work/review/payload.json\nbatch /home/jack/.cache/rc357x/root/implementation-gate/work/review/batch.json\nreport /home/jack/.cache/rc357x/root/implementation-gate/work/review/report.md\n"
   },
+  "implement_publish_gate_met": false,
   "report_bytes": 7664,
   "unmet": []
 }

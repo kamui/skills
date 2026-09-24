@@ -1,0 +1,120 @@
+{
+  "schema": "review-code-record/1",
+  "workflow": "v5b-25",
+  "run": {
+    "target_kind": "range",
+    "target": "main...b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "tree": null,
+    "specs": [
+      "ledger-spec/account-freeze"
+    ],
+    "supplied_inputs": "yes",
+    "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "base_ref": "main",
+    "packet_context": "none",
+    "issues": [],
+    "coverage": "incomplete",
+    "merged": false,
+    "prior_head": null,
+    "repository_url": null
+  },
+  "status": "Incomplete",
+  "summary": {
+    "body": "**Incomplete** — no findings.\n\n**Intent:** Refuse transfers that touch a frozen account.\n\n**Issue fit:** Criterion 2 appears met, but its no-change guarantee rests on an unverified premise. Source: user-supplied spec; commit messages in the range.\n\n**Coverage:** Complete diff read; the required safety premise could not be verified.\n\n**Reviewed:** Range `main...b96a362e99ce4f5b6b1fe26ad02fda66e8343723`: `b96a362` against merge-base `2301c83`.\n\n## Prior findings\n\n- `accounts/frozen-transfer-bypass` — fixed: ledger/accounts.py:87-95 checks both frozen flags before either append\n- `accounts/post-docstring-frozen` — fixed: ledger/accounts.py:61-64 names the frozen-account error\n\n## Coverage gaps\n\n- accounts/refusal-atomicity: required data-integrity premise, no awaited verifier route (disposable exercise record)\n\n<!-- review-run head=b96a362e99ce4f5b6b1fe26ad02fda66e8343723 base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-25 packet_context=none supplied_inputs=yes issues=none coverage=incomplete -->\n",
+    "trailer": "<!-- review-run head=b96a362e99ce4f5b6b1fe26ad02fda66e8343723 base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-25 packet_context=none supplied_inputs=yes issues=none coverage=incomplete -->"
+  },
+  "items": [],
+  "prior_items": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "fixed",
+      "action": "must-fix",
+      "note": "ledger/accounts.py:87-95 checks both frozen flags before either append"
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "fixed",
+      "action": "consider",
+      "note": "ledger/accounts.py:61-64 names the frozen-account error"
+    }
+  ],
+  "record": {
+    "repository": "/home/jack/.cache/rc357x/root/continuation/repo",
+    "paths": {
+      "private_dir": "/home/jack/.cache/rc357x/root/continuation/work/incomplete",
+      "store": "/home/jack/.cache/rc357x/root/continuation/work/incomplete/review-context.json",
+      "composition": "/home/jack/.cache/rc357x/root/continuation/work/incomplete/composition.json",
+      "skill_root": "/home/jack/.cache/rc357x/skill"
+    },
+    "requirements": [],
+    "files": [
+      {
+        "path": "ledger/accounts.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_freeze.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "accounts/refusal-atomicity",
+          "type": "safety-premise",
+          "area": "data-integrity",
+          "premise": "A refused post or transfer appends no entry to any account.",
+          "evidence": "ledger/accounts.py:65-95",
+          "batch": null,
+          "ruling": "pending"
+        }
+      ],
+      "batches": [],
+      "allowance": {
+        "initial_spent": true,
+        "follow_up_spent": false
+      },
+      "outstanding": [
+        "accounts/refusal-atomicity: required data-integrity premise, no awaited verifier route (disposable exercise record)"
+      ]
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  },
+  "lineage": [
+    "/home/jack/.cache/rc357x/root/continuation/seed/r1/record.json",
+    "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json"
+  ],
+  "prior_record": "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json",
+  "finalization": {
+    "protocol": "review-code-finalization/2",
+    "report": "/home/jack/.cache/rc357x/root/continuation/work/incomplete/report.md",
+    "inputs": {
+      "store": "/home/jack/.cache/rc357x/root/continuation/work/incomplete/review-context.json",
+      "packet": null,
+      "prior_record": "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json"
+    },
+    "replies": [
+      {
+        "id": "accounts/frozen-transfer-bypass",
+        "classification": "fixed",
+        "thread_id": null,
+        "comment_id": null,
+        "body": null
+      },
+      {
+        "id": "accounts/post-docstring-frozen",
+        "classification": "fixed",
+        "thread_id": null,
+        "comment_id": null,
+        "body": null
+      }
+    ]
+  }
+}
