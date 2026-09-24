@@ -30,20 +30,25 @@ The dependency cache is described by ``provisioning.cache`` in ``target.json``: 
 label), ``build`` (commands run once, online, in a scratch clone at the head, to populate
 ``<cache-root>/caches/<id>``), ``post_clone`` (commands run offline in every attempt clone after
 cloning, which must leave the tracked tree clean), ``env`` (variables exported for build,
-post-clone and smoke commands), and ``smoke`` (named commands run in a prepared clone at the head).
-Commands run through ``sh -c`` with the placeholders ``{cache}`` (the target's cache directory),
-``{clone}``, ``{work}`` (a scratch directory outside the clone) and ``{cache_root}`` substituted.
-Whether a post-clone command is offline is the command's own business (``--offline``,
-``GOPROXY=off``); the tool does not cut the network.
+post-clone and smoke commands), and ``smoke`` (named commands, each run at the ``head``, the
+``base`` or ``both``). Commands run through ``sh -c`` with the placeholders ``{cache}`` (the cache
+directory), ``{clone}``, ``{work}`` (a scratch directory outside the clone) and ``{cache_root}``
+substituted. Whether a post-clone command is offline is the command's own business
+(``--offline``, ``GOPROXY=off``); the tool does not cut the network.
 
 ``cache`` runs the build commands, archives the cache directory to
 ``<cache-root>/archives/<id>.tar.gz``, records the archive's SHA-256 in
 ``<cache-root>/caches/<id>.json`` and prints the ``dependency_identity`` entry to paste into
-``target.json``. ``prepare`` clones and runs the post-clone commands, printing the outcome as JSON.
-``smoke`` prepares a scratch clone, runs the smoke commands and writes a ``smoke.json``
+``target.json``. The archive is the cache's identity: nothing after the build uses the build
+directory. ``prepare`` clones, checks the archive against the ``cache archive (<kind>)`` hash that
+``target.json`` records, restores it into ``<out>-cache`` (the clone's own ``{cache}``, so writes
+by one clone reach no other), runs the post-clone commands, and prints the outcome as JSON.
+``smoke`` prepares a scratch clone at the head, and one checked out at ``main`` when any check runs
+at the base, runs each check in the clone for its revision and writes a ``smoke.json``
 (``source: measured``) with the platform, the provisioning duration, every check's exit code and
 duration, and the existing file's ``mirror`` block carried over. A non-zero smoke check is an
-observation, not a failure; a post-clone step that fails or dirties the tree is a failure.
+observation, not a failure; a missing or mismatched archive, or a post-clone step that fails or
+dirties the tree, is a failure.
 
 The cache root defaults to ``~/.t3/bench-cache``. Nothing under it enters the repository.
 
@@ -61,7 +66,9 @@ import json
 import os
 from pathlib import Path
 import platform as platform_module
+import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -152,6 +159,30 @@ def cache_path(cache_root: str, target: dict) -> str:
     return os.path.join(cache_root, "caches", target["id"])
 
 
+def archive_path(cache_root: str, target: dict) -> str:
+    return os.path.join(cache_root, "archives", target["id"] + ".tar.gz")
+
+
+def remove_tree(path: str) -> None:
+    """Remove a directory tree, first adding the owner write bit to every directory in it: Go makes
+    module-cache directories read-only, which plain ``shutil.rmtree`` cannot delete from."""
+    if not os.path.lexists(path):
+        return
+    try:
+        if os.path.isdir(path) and not os.path.islink(path):
+            for root, dirs, _files in os.walk(path):
+                os.chmod(root, os.lstat(root).st_mode | stat.S_IWUSR | stat.S_IXUSR)
+                for name in dirs:
+                    full = os.path.join(root, name)
+                    if not os.path.islink(full):
+                        os.chmod(full, os.lstat(full).st_mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
+    except OSError as error:
+        raise ProvisionError(f"cannot remove {path}: {error}") from error
+
+
 def make_clone(target: dict, cache_root: str, out: str) -> list:
     """Clone the mirror into ``out`` with the attempt layout; return check failures (the clone is
     removed when any fail)."""
@@ -198,8 +229,8 @@ def command_env(cfg: dict, subs: dict) -> dict:
     return env
 
 
-def substitutions(target: dict, cache_root: str, clone: str, work: str) -> dict:
-    return {"cache": cache_path(cache_root, target), "clone": clone, "work": work, "cache_root": cache_root}
+def substitutions(cache: str, cache_root: str, clone: str, work: str) -> dict:
+    return {"cache": cache, "clone": clone, "work": work, "cache_root": cache_root}
 
 
 def platform_record() -> str:
@@ -300,17 +331,16 @@ def cmd_cache(args) -> int:
     scratch = os.path.join(args.cache_root, "scratch", target["id"] + "-cache")
     work = scratch + "-work"
     for path in (cache, scratch, work):
-        if os.path.exists(path):
-            shutil.rmtree(path)
+        remove_tree(path)
     os.makedirs(cache)
     os.makedirs(work)
     failures = make_clone(target, args.cache_root, scratch)
     if failures:
         for line in failures:
             print(line)
-        shutil.rmtree(cache)
+        remove_tree(cache)
         return 1
-    subs = substitutions(target, args.cache_root, scratch, work)
+    subs = substitutions(cache, args.cache_root, scratch, work)
     env = command_env(cfg, subs)
     steps = []
     started = now()
@@ -322,25 +352,24 @@ def cmd_cache(args) -> int:
             if code != 0:
                 print(f"build step failed (exit {code}): {rendered}")
                 print(tail(output))
-                shutil.rmtree(cache)
+                remove_tree(cache)
                 return 1
         record = {"target": target["id"], "kind": cfg["kind"], "built_at": started, "finished_at": now(),
                   "platform": platform_record(), "cache": cache, "build": steps, "archive": None}
         if cfg["build"]:
-            archives = os.path.join(args.cache_root, "archives")
-            os.makedirs(archives, exist_ok=True)
-            archive = os.path.join(archives, target["id"] + ".tar.gz")
+            archive = archive_path(args.cache_root, target)
+            os.makedirs(os.path.dirname(archive), exist_ok=True)
             code, duration, output, _stdout = shell(f"tar -C {os.path.dirname(cache)!s} -czf {archive!s} {target['id']}", scratch, env)
             if code != 0:
                 print(f"archive failed (exit {code})")
                 print(tail(output))
-                shutil.rmtree(cache)
+                remove_tree(cache)
                 return 1
             record["archive"] = {"path": archive, "sha256": sha256_file(archive), "bytes": os.path.getsize(archive),
                                  "duration_seconds": duration}
     finally:
-        shutil.rmtree(scratch, ignore_errors=True)
-        shutil.rmtree(work, ignore_errors=True)
+        remove_tree(scratch)
+        remove_tree(work)
     Path(os.path.dirname(cache), target["id"] + ".json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     if record["archive"]:
         entry = {"name": f"cache archive ({cfg['kind']})", "sha256": record["archive"]["sha256"],
@@ -352,19 +381,59 @@ def cmd_cache(args) -> int:
     return 0
 
 
-def prepare(target: dict, cache_root: str, out: str) -> dict:
-    """Clone and run the post-clone steps; return the provisioning record with a ``failures`` list."""
+def restore_cache(target: dict, cfg: dict, cache_root: str, dest: str) -> tuple:
+    """Check the archive against the hash ``target.json`` records and extract it into ``dest``;
+    return (restore step, failures)."""
+    name = f"cache archive ({cfg['kind']})"
+    recorded = [e.get("sha256") for e in target.get("provisioning", {}).get("dependency_identity", [])
+                if e.get("name") == name]
+    archive = archive_path(cache_root, target)
+    if len(recorded) != 1:
+        return None, [f"target.json records {len(recorded)} '{name}' entries in provisioning.dependency_identity, expected 1"]
+    if not os.path.isfile(archive):
+        return None, [f"no cache archive at {archive}"]
+    actual = sha256_file(archive)
+    if actual != recorded[0]:
+        return None, [f"cache archive {archive} has sha256 {actual}; target.json records {recorded[0]}"]
+    if os.path.exists(dest):
+        raise ProvisionError(f"cache directory exists: {dest} (attempt directories are never reused)")
+    os.makedirs(dest)
+    command = f"restore cache archive sha256:{actual}"
+    code, duration, output, _stdout = shell(f"tar -C {shlex.quote(dest)} --strip-components=1 -xzf {shlex.quote(archive)}",
+                                            dest, dict(os.environ))
+    step = {"command": command, "exit_code": code, "duration_seconds": duration}
+    if code != 0:
+        return step, [f"cache restore failed (exit {code}): {archive}\n{tail(output, 10)}"]
+    return step, []
+
+
+def prepare(target: dict, cache_root: str, out: str, revision: str = "head") -> dict:
+    """Clone (checking out the base branch for ``revision`` base), restore the cache archive into
+    ``<out>-cache`` and run the post-clone steps; return the provisioning record with a
+    ``failures`` list."""
     cfg = cache_config(target)
     failures = make_clone(target, cache_root, out)
     record = {"recipe": "; ".join(cfg["post_clone"]) or "none", "duration_seconds": 0.0, "tree_clean_after": None,
               "steps": [], "failures": failures}
     if failures:
         return record
-    work = out + "-work"
+    if revision == "base":
+        git("-C", out, "checkout", "-q", target["local_base_branch"])
+    work, cache = out + "-work", out + "-cache"
     os.makedirs(work, exist_ok=True)
-    subs = substitutions(target, cache_root, out, work)
+    subs = substitutions(cache, cache_root, out, work)
     env = command_env(cfg, subs)
     total = 0.0
+    if cfg["build"]:
+        step, failures = restore_cache(target, cfg, cache_root, cache)
+        if step:
+            record["steps"].append(step)
+            record["recipe"] = "; ".join([step["command"], *cfg["post_clone"]])
+            total += step["duration_seconds"]
+        if failures:
+            record["failures"].extend(failures)
+            record["duration_seconds"] = round(total, 2)
+            return record
     for command in cfg["post_clone"]:
         code, duration, output, _stdout = shell(render(command, subs), out, env)
         total += duration
@@ -392,30 +461,38 @@ def cmd_smoke(args) -> int:
     target = load_target(args.target)
     cfg = cache_config(target)
     out = os.path.abspath(args.out) if args.out else os.path.join(os.path.abspath(args.target), "smoke.json")
-    scratch = os.path.join(args.cache_root, "scratch", target["id"] + "-smoke")
-    for path in (scratch, scratch + "-work"):
-        if os.path.exists(path):
-            shutil.rmtree(path)
-    os.makedirs(os.path.dirname(scratch), exist_ok=True)
+    wanted = {item.get("revision", "head") for item in cfg["smoke"]}
+    revisions = ["head"] + (["base"] if wanted & {"base", "both"} else [])
+    scratch = {rev: os.path.join(args.cache_root, "scratch", target["id"] + ("-smoke" if rev == "head" else "-smoke-base"))
+               for rev in revisions}
+    paths = [p + suffix for p in scratch.values() for suffix in ("", "-work", "-cache")]
+    for path in paths:
+        remove_tree(path)
+    os.makedirs(os.path.join(args.cache_root, "scratch"), exist_ok=True)
     measured_at = now()
+    records = {}
     try:
-        record = prepare(target, args.cache_root, scratch)
-        if record["failures"]:
-            for line in record["failures"]:
-                print(line)
-            return 1
-        subs = substitutions(target, args.cache_root, scratch, scratch + "-work")
-        env = command_env(cfg, subs)
+        for rev in revisions:
+            records[rev] = prepare(target, args.cache_root, scratch[rev], rev)
+            if records[rev]["failures"]:
+                for line in records[rev]["failures"]:
+                    print(f"{rev}: {line}")
+                return 1
         checks_out = []
         for item in cfg["smoke"]:
-            code, duration, output, stdout = shell(render(item["command"], subs), scratch, env)
-            # The result line of a test runner is on stdout; stderr carries warnings that would hide it.
-            last = (tail(stdout, 1) or tail(output, 1))[:200]
-            checks_out.append({"name": item["name"], "command": item["command"], "revision": item.get("revision", "head"),
-                               "exit_code": code, "duration_seconds": duration, "summary": last or "(no output)"})
+            wanted_rev = item.get("revision", "head")
+            for rev in [r for r in revisions if wanted_rev in (r, "both")]:
+                clone = scratch[rev]
+                subs = substitutions(clone + "-cache", args.cache_root, clone, clone + "-work")
+                code, duration, output, stdout = shell(render(item["command"], subs), clone, command_env(cfg, subs))
+                # The result line of a test runner is on stdout; stderr carries warnings that would hide it.
+                last = (tail(stdout, 1) or tail(output, 1))[:200]
+                checks_out.append({"name": item["name"], "command": item["command"], "revision": rev,
+                                   "exit_code": code, "duration_seconds": duration, "summary": last or "(no output)"})
     finally:
-        shutil.rmtree(scratch, ignore_errors=True)
-        shutil.rmtree(scratch + "-work", ignore_errors=True)
+        for path in paths:
+            remove_tree(path)
+    record = records["head"]
     previous = {}
     if os.path.exists(out):
         try:
@@ -428,10 +505,19 @@ def cmd_smoke(args) -> int:
         "provisioning": {"recipe": record["recipe"], "duration_seconds": record["duration_seconds"],
                          "tree_clean_after": record["tree_clean_after"]},
         "checks": checks_out,
-        "notes": [f"Measured by provision.py smoke on this machine; cache kind {cfg['kind']}."],
+        "notes": [f"Measured by provision.py smoke on this machine; cache kind {cfg['kind']}."
+                  + (" Each clone restored its own copy of the cache archive after checking its recorded hash."
+                     if cfg["build"] else "")],
     }
+    if "base" in records:
+        base = records["base"]
+        smoke["notes"].append(f"Base-revision checks ran in a second clone with {target['local_base_branch']} (the merge-base) "
+                              f"checked out, provisioned the same way in {base['duration_seconds']}s; tracked tree clean "
+                              f"afterwards: {str(base['tree_clean_after']).lower()}.")
     if previous.get("source") == "recorded" and previous.get("source_document"):
         smoke["notes"].append(f"The earlier recorded figures were transcribed from {previous['source_document']}.")
+    else:  # a re-measurement keeps the provenance of the figures it replaced
+        smoke["notes"].extend(n for n in previous.get("notes", []) if n.startswith("The earlier recorded figures"))
     if previous.get("mirror"):
         smoke["mirror"] = previous["mirror"]
     Path(out).write_text(json.dumps(smoke, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -490,26 +576,46 @@ def self_test() -> int:
         # No cache configured: cache builds nothing, smoke still measures provisioning.
         done = run("cache", "--target", str(target_dir))
         assert done.returncode == 0 and "nothing to build" in done.stdout, done
-        # A cache with build, post-clone, env and smoke commands using every placeholder.
+        # A cache with build, post-clone, env and smoke commands using every placeholder; the build
+        # leaves a read-only directory, as Go does in its module cache.
         with_cache = dict(target, provisioning={"cache": {
             "kind": "test",
-            "build": ["mkdir -p {cache}/store && printf hi > {cache}/store/f", "test -f {clone}/f.txt"],
-            "post_clone": ["test -f {cache}/store/f && printf x > {work}/marker && test \"$BENCH_TEST_ENV\" = {cache}/store"],
+            "build": ["mkdir -p {cache}/store {cache}/ro/sub && printf hi > {cache}/store/f && printf r > {cache}/ro/sub/g"
+                      " && chmod 555 {cache}/ro/sub {cache}/ro", "test -f {clone}/f.txt && test -d {cache_root}/mirrors"],
+            "post_clone": ["test -f {cache}/store/f && printf x > {work}/marker && test \"$BENCH_TEST_ENV\" = {cache}/store"
+                           " && printf w > {cache}/store/written"],
             "env": {"BENCH_TEST_ENV": "{cache}/store"},
             "smoke": [{"name": "read", "command": "cat $BENCH_TEST_ENV/f", "revision": "head"},
-                      {"name": "fails", "command": "echo nope; exit 3", "revision": "head"}]}})
+                      {"name": "fails", "command": "echo nope; exit 3", "revision": "head"},
+                      {"name": "revision", "command": "cat f.txt", "revision": "both"}]}})
         (target_dir / "target.json").write_text(json.dumps(with_cache), encoding="utf-8")
         done = run("cache", "--target", str(target_dir))
         assert done.returncode == 0 and "dependency_identity entry" in done.stdout, done
+        entry = json.loads(done.stdout.split("dependency_identity entry: ", 1)[1])
         archive = Path(cache, "archives", "t-1.tar.gz")
         assert archive.is_file() and Path(cache, "caches", "t-1", "store", "f").read_text() == "hi"
         rec = json.loads(Path(cache, "caches", "t-1.json").read_text(encoding="utf-8"))
         assert rec["archive"]["sha256"] == sha256_file(str(archive)) and len(rec["build"]) == 2, rec
         assert not Path(cache, "scratch", "t-1-cache").exists(), "the scratch clone must be removed"
+        # prepare refuses an archive target.json does not record, then restores a recorded one per clone.
         prepared = str(Path(temp, "prepared"))
         done = run("prepare", "--target", str(target_dir), "--out", prepared)
+        assert done.returncode == 1 and "expected 1" in done.stdout, done
+        with_cache["provisioning"]["dependency_identity"] = [dict(entry, sha256="0" * 64)]
+        (target_dir / "target.json").write_text(json.dumps(with_cache), encoding="utf-8")
+        mismatched = str(Path(temp, "mismatched"))
+        done = run("prepare", "--target", str(target_dir), "--out", mismatched)
+        assert done.returncode == 1 and "target.json records " + "0" * 64 in done.stdout, done
+        with_cache["provisioning"]["dependency_identity"] = [entry]
+        (target_dir / "target.json").write_text(json.dumps(with_cache), encoding="utf-8")
+        shutil.rmtree(prepared)
+        done = run("prepare", "--target", str(target_dir), "--out", prepared)
         assert done.returncode == 0 and json.loads(done.stdout)["tree_clean_after"] is True, done
+        assert json.loads(done.stdout)["recipe"].startswith("restore cache archive sha256:" + entry["sha256"]), done
         assert Path(prepared + "-work", "marker").is_file()
+        assert Path(prepared + "-cache", "store", "written").is_file(), "the clone writes into its own restore"
+        assert not Path(cache, "caches", "t-1", "store", "written").exists(), "the build directory must stay untouched"
+        assert sha256_file(str(archive)) == entry["sha256"]
         smoke_out = str(Path(temp, "smoke.json"))
         Path(smoke_out).write_text(json.dumps({"source": "recorded", "source_document": "old.md", "mirror": {"built_at": "x"}}),
                                    encoding="utf-8")
@@ -517,17 +623,26 @@ def self_test() -> int:
         assert done.returncode == 0 and "non-zero: fails" in done.stdout, done
         smoke = json.loads(Path(smoke_out).read_text(encoding="utf-8"))
         assert smoke["source"] == "measured" and smoke["provisioning"]["tree_clean_after"] is True
-        assert [c["exit_code"] for c in smoke["checks"]] == [0, 3] and smoke["checks"][0]["summary"] == "hi", smoke
+        got = [(c["name"], c["revision"], c["exit_code"], c["summary"]) for c in smoke["checks"]]
+        assert got == [("read", "head", 0, "hi"), ("fails", "head", 3, "nope"), ("revision", "head", 0, "head"),
+                       ("revision", "base", 0, "base")], smoke
         assert smoke["mirror"] == {"built_at": "x"} and any("old.md" in n for n in smoke["notes"])
-        assert not Path(cache, "scratch", "t-1-smoke").exists()
-        # A failing build leaves no cache; a dirtying post-clone step fails prepare and smoke.
+        assert any("merge-base" in n for n in smoke["notes"]), smoke
+        done = run("smoke", "--target", str(target_dir), "--out", smoke_out)
+        remeasured = json.loads(Path(smoke_out).read_text(encoding="utf-8"))
+        assert done.returncode == 0 and any("old.md" in n for n in remeasured["notes"]), remeasured
+        for suffix in ("", "-work", "-cache", "-base", "-base-work", "-base-cache"):
+            assert not Path(cache, "scratch", "t-1-smoke" + suffix).exists(), suffix
+        # A failing build leaves no cache, removing the earlier one's read-only directories first; a
+        # dirtying post-clone step fails prepare and smoke.
         bad = dict(with_cache)
-        bad["provisioning"] = {"cache": dict(with_cache["provisioning"]["cache"], build=["exit 7"])}
+        bad["provisioning"] = dict(with_cache["provisioning"], cache=dict(with_cache["provisioning"]["cache"], build=["exit 7"]))
         (target_dir / "target.json").write_text(json.dumps(bad), encoding="utf-8")
         done = run("cache", "--target", str(target_dir))
         assert done.returncode == 1 and "exit 7" in done.stdout and not Path(cache, "caches", "t-1").exists(), done
         dirty = dict(with_cache)
-        dirty["provisioning"] = {"cache": dict(with_cache["provisioning"]["cache"], post_clone=["echo dirty >> f.txt"])}
+        dirty["provisioning"] = dict(with_cache["provisioning"], cache=dict(with_cache["provisioning"]["cache"],
+                                                                             post_clone=["echo dirty >> f.txt"]))
         (target_dir / "target.json").write_text(json.dumps(dirty), encoding="utf-8")
         done = run("smoke", "--target", str(target_dir), "--out", smoke_out)
         assert done.returncode == 1 and "dirtied" in done.stdout, done
