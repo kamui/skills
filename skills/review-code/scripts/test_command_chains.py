@@ -2,7 +2,7 @@
 """Run the documented one-invocation command chains against local fixtures.
 
 Usage: python3 scripts/test_command_chains.py
-Inputs: rendering.md's `finalize_review.py` commands, the pull-request target's root
+Inputs: output.md's `finalize_review.py` commands, the pull-request target's root
 fetch block, the publisher's freshness and
 review-submission block, its dismissal command, the app-token acquisition
 blocks in `audit-code-publish` and `code-review-publish`, a disposable Git
@@ -42,7 +42,7 @@ import test_compose_review as fixtures
 
 SCRIPTS = Path(__file__).resolve().parent
 SKILL = SCRIPTS.parent
-TARGET = SKILL / "references" / "pull-request-target.md"
+TARGET = SKILL / "references" / "targets.md"
 PUBLICATION = SKILL.parent / "review-code-publish" / "references" / "publication.md"
 TOKEN_BLOCKS = {"audit": SKILL.parent / "audit-code-publish" / "references" / "publishing.md",
                 "legacy": SKILL.parent / "code-review-publish" / "references" / "review-protocol.md"}
@@ -189,7 +189,7 @@ class Chains(unittest.TestCase):
 
     def documented(self, gate, private, store):
         """The single documented finalize line, run in the reviewed repository with this skill's absolute script path."""
-        text = command((SKILL / "references" / "rendering.md").read_text(encoding="utf-8"), gate=gate)
+        text = command((SKILL / "references" / "output.md").read_text(encoding="utf-8"), gate=gate)
         return (text.replace("scripts/finalize_review.py", shlex.quote(str(SCRIPTS / "finalize_review.py")))
                 .replace("<private-dir>", shlex.quote(str(private))).replace("<store>", shlex.quote(str(store))))
 

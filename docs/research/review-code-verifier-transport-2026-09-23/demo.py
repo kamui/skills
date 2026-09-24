@@ -16,7 +16,7 @@ For each baseline cell with a verifier batch (publishable, required-verification
   completeness, and the return less its manifest hash, with each other and with the archived report.
 
 It also measures the primary's return instructions (verifier-handoff.md plus verifier-return.md at
-BASE, handoff alone here). No model runs.
+BASE, the handoff alone here, now named verification.md). No model runs.
 
 Exit 0 when both transports account every cell identically to the archive; 1 otherwise; 2 when an
 input cannot be read or a helper cannot run.
@@ -125,7 +125,7 @@ def main() -> int:
         before = "".join(subprocess.run(["git", "show", f"{BASE}:skills/review-code/references/{name}"], cwd=ROOT,
                                         check=True, capture_output=True, text=True, encoding="utf-8").stdout
                          for name in ("verifier-handoff.md", "verifier-return.md"))
-        after = (refs / "verifier-handoff.md").read_text(encoding="utf-8")
+        after = (refs / "verification.md").read_text(encoding="utf-8")  # verifier-handoff.md until #356
         with tempfile.TemporaryDirectory(prefix="rcs344-") as scratch:
             rows = [dict(replay(Path(scratch), cell), baseline_transcript=transcript(cell)) for cell in CELLS]
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
