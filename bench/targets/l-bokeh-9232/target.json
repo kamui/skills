@@ -38,7 +38,7 @@
     "allowance": "Focused execution is permitted on this target, offline and outside the clone: node (v24.19.0 at the #137 freeze) is installed and scratch JavaScript may be written and run under the work directory, including with a TZ environment variable set, to check the behaviour of code that has been read; five minutes per command. Nothing may be added to or changed in the clone.",
     "unavailable": "the project's own build, npm install, the Selenium integration suite, a browser, network",
     "dependency_identity": [],
-    "platform": "measured on the suite machine at 2026-09-24T10:31:53Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T10:56:15Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "none",
       "build": [],

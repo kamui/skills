@@ -26,8 +26,8 @@
   "fix_published_at": null,
   "originating_issue": "grpc/grpc-go#7365",
   "provisioning": {
-    "recipe": "nothing in the clone; every go command runs with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is ~/.t3/bench-cache/caches/m-grpc-go-7390, populated once online by go mod download, go build ./... and go vet . at the head (the #137 grid measured 2 s on macOS)",
-    "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache-root>/gomodcache GOCACHE=<cache-root>/gocache GOFLAGS=-mod=mod GOPROXY=off; five minutes per command, a package's tests at most once per flag set, scratch modules only under the work directory, nothing added to or changed in the clone.",
+    "recipe": "nothing in the clone; every go command runs with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's own restore of the cache archive, populated once online by go mod download, go build ./... and go vet . at the head (the #137 grid measured 2 s on macOS)",
+    "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's dependency cache; five minutes per command, a package's tests at most once per flag set, scratch modules only under the work directory, nothing added to or changed in the clone.",
     "unavailable": "network; the module proxy; the full grpc-go suite (only focused packages fit the allowance)",
     "dependency_identity": [
       {
@@ -46,7 +46,7 @@
         "location": "~/.t3/bench-cache/archives/m-grpc-go-7390.tar.gz"
       }
     ],
-    "platform": "measured on the suite machine at 2026-09-24T10:25:28Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T10:56:16Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "go-modcache",
       "build": [
@@ -66,7 +66,7 @@
         {
           "name": "focused go test",
           "command": "go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
-          "revision": "head"
+          "revision": "both"
         },
         {
           "name": "go vet",

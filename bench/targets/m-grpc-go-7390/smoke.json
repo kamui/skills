@@ -2,11 +2,11 @@
   "schema_version": 1,
   "target": "m-grpc-go-7390",
   "source": "measured",
-  "measured_at": "2026-09-24T10:31:53Z",
+  "measured_at": "2026-09-24T10:56:16Z",
   "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
-    "recipe": "none",
-    "duration_seconds": 0.0,
+    "recipe": "restore cache archive sha256:e9d72d6ae4aa73395c2d20d1bf05d549c67c3d0ebc93be3cb1b77461542baf15",
+    "duration_seconds": 2.5,
     "tree_clean_after": true
   },
   "checks": [
@@ -15,20 +15,29 @@
       "command": "go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 0.23,
-      "summary": "ok  \tgoogle.golang.org/grpc\t(cached)"
+      "duration_seconds": 3.12,
+      "summary": "ok  \tgoogle.golang.org/grpc\t0.162s"
+    },
+    {
+      "name": "focused go test",
+      "command": "go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 2.97,
+      "summary": "ok  \tgoogle.golang.org/grpc\t0.162s"
     },
     {
       "name": "go vet",
       "command": "go vet . && echo clean",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 0.21,
+      "duration_seconds": 0.71,
       "summary": "clean"
     }
   ],
   "notes": [
-    "Measured by provision.py smoke on this machine; cache kind go-modcache."
+    "Measured by provision.py smoke on this machine; cache kind go-modcache. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 2.51s; tracked tree clean afterwards: true."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:25:53Z",

@@ -34,7 +34,7 @@
   "fix_published_at": "2026-06-01T21:22:04Z",
   "originating_issue": null,
   "provisioning": {
-    "recipe": "npm install --no-audit --no-fund --offline --cache <cache>/npm-cache in the clone before dispatch, then git checkout -- yarn.lock and rm -f package-lock.json so the tracked tree is clean; <cache> is ~/.t3/bench-cache/caches/k-graphql-js-1582, populated once online by the same install (the #137 grid measured 4 s on macOS)",
+    "recipe": "npm install --no-audit --no-fund --offline --cache <cache>/npm-cache in the clone before dispatch, then git checkout -- yarn.lock and rm -f package-lock.json so the tracked tree is clean; <cache> is the attempt's own restore of the cache archive, populated once online by the same install (the #137 grid measured 4 s on macOS)",
     "allowance": "Focused test execution is permitted on this target, offline: dependencies are already installed in the clone (untracked and ignored; leave them alone). Run mocha with the clone's own binary, for example ./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill <test file> (about 2 seconds); five minutes per command, a selection at most once per flag set. Write any scratch JavaScript under the work directory; nothing may be added to or changed in the clone, and no network call of any kind is available (npm and npx cannot reach a registry).",
     "unavailable": "network; the registry (npm, npx)",
     "dependency_identity": [
@@ -54,7 +54,7 @@
         "location": "~/.t3/bench-cache/archives/k-graphql-js-1582.tar.gz"
       }
     ],
-    "platform": "measured on the suite machine at 2026-09-24T10:25:10Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T10:55:56Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "npm-cache",
       "build": [
@@ -70,7 +70,7 @@
         {
           "name": "focused mocha",
           "command": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js",
-          "revision": "head"
+          "revision": "both"
         }
       ]
     }
