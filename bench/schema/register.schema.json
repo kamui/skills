@@ -52,6 +52,8 @@
     },
     "clean_basis": {"type": ["string", "null"], "description": "For a clean target: what was executed and compared to establish it."},
     "leakage": {"type": "array", "items": {"type": "string"}, "description": "Commits, issues, and comments that reveal the answer and must stay out of reviewer reach."},
+    "preexisting_hints": {"type": "array", "items": {"type": "string"}, "description": "Pre-cutoff review-record comments that gesture at a defect or at the ground-truth surface; disclosed because they are in every arm's packet."},
+    "limits": {"type": "array", "items": {"type": "string"}, "description": "The adjudicator's stated confidence limits and unresolved reproductions."},
     "source": {"type": "string", "description": "Path of the prose register this was converted from, when applicable."}
   }
 }
