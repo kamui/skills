@@ -5,16 +5,16 @@ Method: [`docs/research/code-review-one-shot-method.md`](../docs/research/code-r
 Scripts follow [`docs/agents/scripts.md`](../docs/agents/scripts.md): standard-library Python 3.9+,
 `--self-test` or a `test_<name>.py` sibling, exit codes 0/1/2.
 
-**Status (2026-09-24): scaffolding, tools, and the six #137 targets.** The schemas, rubric v1,
-rates, harness registries, the manifest checker, and the migrated tools exist (design §8 steps 1
-and 2, with the three defect fixes applied: relative-path read audit, four-event timing in the
-wrapper, and an `unresolved` parse status). Forwarding stubs remain at `docs/research/tools/` for
-the four moved Python tools so historical commands keep working. The six targets of the #137
-qualification grid are converted under `targets/` (step 3); their truncated mirrors are rebuilt
-and verified, their dependency caches are built and archived with hashes, and every `smoke.json` is
-measured on this machine (step 4). Still to come: the toy run filed as `runs/2026-09-24-toy/`
-(step 5); the four fresh targets and the first frozen run (step 6); `run_cell.py`, `score.py`,
-`compare.py`.
+**Status (2026-09-24): design §8 steps 1–5 done.** The schemas, rubric v1, rates, harness
+registries, the manifest checker, and the migrated tools exist (steps 1 and 2, with the three
+defect fixes applied: relative-path read audit, four-event timing in the wrapper, and an
+`unresolved` parse status). Forwarding stubs remain at `docs/research/tools/` for the four moved
+Python tools so historical commands keep working. The six targets of the #137 qualification grid
+are converted under `targets/` (step 3); their truncated mirrors are rebuilt and verified, their
+dependency caches are built and archived with hashes, and every `smoke.json` is measured on this
+machine (step 4). The four arms are data under `arms/`, and the shakedown is filed as the run
+`runs/2026-09-24-toy/` with attempt records and a mapping (step 5). Still to come: the four fresh
+targets and the first frozen run (step 6); `run_cell.py`, `score.py`, `compare.py`.
 
 ## Layout
 
@@ -26,8 +26,8 @@ measured on this machine (step 4). Still to come: the toy run filed as `runs/202
 | `harness/*.json` | observed built-in prompt variants and presets per CLI version, by hash |
 | `targets/<id>/` | `target.json`, frozen `packet.md`, `register.v<N>.json`, `smoke.json`; a migrated target also keeps `packet.legacy.md` |
 | `arms/<id>.json` | reviewer configurations as data |
-| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`; `run_cell.py`, `score.py`, `compare.py` to come |
-| `runs/<date>-<label>/` | frozen manifest, attempt records, mappings, results |
+| `tools/` | `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, `build_packet.py`, `check_manifest.py`, `diff_identity.py`, `derive_packet.py`, `provision.py`, `file_attempt.py`; `run_cell.py`, `score.py`, `compare.py` to come |
+| `runs/<date>-<label>/` | frozen manifest, attempt records, mappings, results; a fixture run also holds its fixture target |
 
 Mirrors, dependency caches and transcripts live outside the repository under `~/.t3/bench-cache/`
 with their hashes recorded in the manifests.
@@ -101,7 +101,30 @@ pin a pytest that cannot import under 3.14), a corepack-managed pnpm store whose
 each clone makes after its restore (trpc), an npm cache (graphql-js), a Go module and build cache
 (grpc-go), and nothing beyond node or zsh (bokeh, ripgrep). Archives are machine-specific (the
 virtualenv links this machine's uv Python); the hash identifies what this machine used, and a later
-machine rebuilds and records its own.
+machine rebuilds and records its own. The requests virtualenv's interpreter lives outside its archive, so
+`target.json` records the interpreter binary's own hash beside the archive's.
+
+## Arms and runs
+
+An arm file (`arms/<id>.json`) is a reviewer configuration as data: kind, requested model and
+effort, isolation, and the adapter, including the prompt-variant hashes the arm expects from the
+harness registries. Nothing in it is observed.
+
+`file_attempt.py` turns one attempt directory written by `dispatch.sh` into
+`runs/<run>/attempts/<attempt>/attempt.json` plus its small artifacts. Every observed field comes
+from evidence: the CLI version from `dispatch.txt`; models and effort from every assistant line or
+Codex turn context; the prompt hash from the transcript (the built-in's prompt body without its
+`Review target:` line, stripped; Codex's `base_instructions`), matched against `harness/`; executed
+diff ranges resolved in the clone against the target's merge-base and head. The disposition is
+`stopped` on a stop record or non-zero exit, `harness-invalid` on a tree change, an audit
+violation, a model, effort or prompt the arm does not expect, or a wrong range, and otherwise
+`valid completed`. It meters usage at the `rates.json` entry for the observed model, writes
+per-request records, and archives the transcripts outside the repository with a hash and a
+restoration check. `--replay` re-runs the audit and the normalizer first, for attempts filed after
+the tools changed.
+
+[`runs/2026-09-24-toy/`](runs/2026-09-24-toy/README.md) is the first run: the four-arm shakedown
+on a two-commit fixture, seven attempts, filed after the fact with its deviations stated.
 
 ## Three rules
 

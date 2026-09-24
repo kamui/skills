@@ -23,8 +23,11 @@ experiment total, closeout reserve `$25` (README §6). Nothing below is a scored
 | S12 | wrapper run B2 (sonnet, `--effort high` + argument, base `main`) | valid | claude-sonnet-5 | 0.04 | `3+5 angles × 6 candidates → 1-vote verify` variant |
 | S13 | wrapper run A (pinned `skills/review-code` tree `6862d993`, fresh home, sonnet high) | valid | claude-sonnet-5 | 0.50 | one verifier; 17 requests; 89 s |
 
-Running total of metered setup spend is kept in `comparison-data.md` once it exists; the rows
-above sum to about `$1.04` billed plus `$0.56` Codex list-price.
+The rows above sum to about `$1.04` billed plus `$0.56` Codex list-price. S8–S13 are filed as the
+suite run `bench/runs/2026-09-24-toy` (attempts att-001 to att-006), metered again from their
+transcripts at the `bench/rates.json` entries; there S11 prices at `$0.059`, because the recorded
+Opus 5.5 cache-read rate is `$0.20` per million tokens where this row used a one-tenth ratio. A
+seventh fixture attempt (att-007, `$0.09` list) re-ran D after the wrapper's timing fix.
 
 ## Attempts
 
