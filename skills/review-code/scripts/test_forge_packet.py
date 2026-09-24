@@ -25,7 +25,12 @@ GraphQL queries and pin what issues #132 and #357 require of it:
   state; unedited publication replies and their empty containers are excluded;
 - an undated thread resolution is never silently unchanged, whether the thread
   is resolved now or predates the review and may have been un-resolved since;
-- a page carrying the forge's HTTP error body is a named gap, not exit 2.
+- a page carrying the forge's HTTP error body is a named gap, not exit 2;
+- `fetch`, run against a stub `gh`, saves a single page, follows the
+  continuation of every connection, leaves a failed call as a named gap it does
+  not follow, fetches referenced issues once, and writes exactly the packet and
+  digest `normalize` derives from its saved responses; a partial fetch cannot
+  pass the shortcut, and the caller's supplied-inputs marker still decides it.
 
 Run with ``python3 scripts/test_forge_packet.py``. Exit 0 when every case
 passes; exit 1 after printing one line per failed case. Standard library only;
@@ -36,6 +41,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -55,7 +61,7 @@ def fail(case: str, detail: str) -> None:
     failures.append(f"{case}: {detail}")
 
 
-def run(*args: str, stdin: Optional[str] = None) -> subprocess.CompletedProcess[str]:
+def run(*args: str, stdin: Optional[str] = None, env: Optional[dict[str, str]] = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(SCRIPT), *args],
         input=stdin,
@@ -63,6 +69,7 @@ def run(*args: str, stdin: Optional[str] = None) -> subprocess.CompletedProcess[
         text=True,
         encoding="utf-8",
         check=False,
+        env=env,
     )
 
 
@@ -810,6 +817,268 @@ def case_shortcut(directory: Path) -> None:
         fail(case, f"a later issue edit must still defeat the shortcut, got {result.returncode}: {result.stdout!r}")
 
 
+# --- fetch against a stub `gh` ----------------------------------------------
+
+STUB_GH = r'''#!/usr/bin/env python3
+"""A stub `gh api graphql`: answers each call from GH_FIXTURES by query kind and variables, and logs it."""
+import json, os, re, sys
+args = sys.argv[1:]
+assert args[:2] == ["api", "graphql"], args
+values = {}
+for flag, pair in zip(args[2::2], args[3::2]):
+    key, _, value = pair.partition("=")
+    values[key] = value
+    assert flag == ("-F" if key in ("number", "issue") else "-f"), (flag, key)
+query = values.pop("query")
+if "title body state merged" in query:
+    name = "root"
+elif "pullRequest(number:$number)" in query:
+    name = "pr:%s:%s" % (re.search(r"pullRequest\(number:\$number\)\{ (\w+)\(", query).group(1), values["after"])
+elif "node(id:$thread)" in query:
+    name = "thread:%s:%s" % (values["thread"], values["after"])
+elif "after" in values:
+    name = "issue-comments:%s/%s#%s:%s" % (values["owner"], values["name"], values["issue"], values["after"])
+else:
+    name = "issue:%s/%s#%s" % (values["owner"], values["name"], values["issue"])
+with open(os.environ["GH_LOG"], "a", encoding="utf-8") as log:
+    log.write(name + "\n")
+fixture = json.load(open(os.environ["GH_FIXTURES"], encoding="utf-8")).get(name)
+if fixture is None:
+    sys.stderr.write("stub gh: no fixture for %s\n" % name)
+    sys.exit(1)
+stdout = fixture.get("stdout", "")
+sys.stdout.write(stdout if isinstance(stdout, str) else json.dumps(stdout))
+sys.stderr.write(fixture.get("stderr", ""))
+sys.exit(fixture.get("rc", 0))
+'''
+
+
+def pr_comment(number: int) -> dict[str, Any]:
+    return {"fullDatabaseId": str(number), "author": {"login": "author"}, "body": f"pr comment {number}",
+            "createdAt": BEFORE, "updatedAt": BEFORE, "lastEditedAt": None,
+            "url": f"https://github.com/acme/payments/pull/7#issuecomment-{number}"}
+
+
+def ok(page: Any) -> dict[str, Any]:
+    return {"stdout": page}
+
+
+def fetch(directory: Path, name: str, fixtures: dict[str, Any], *args: str,
+          pr: str = "7") -> tuple[subprocess.CompletedProcess[str], Path, list[str]]:
+    """Run `fetch` into `directory/name` (created when absent) against the stub `gh` answering from `fixtures`."""
+    binary = directory / "bin"
+    if not binary.exists():
+        binary.mkdir()
+        (binary / "gh").write_text(STUB_GH, encoding="utf-8")
+        (binary / "gh").chmod(0o755)
+    private = directory / name
+    private.mkdir(exist_ok=True)
+    (directory / f"{name}.fixtures.json").write_text(json.dumps(fixtures), encoding="utf-8")
+    log = directory / f"{name}.log"
+    log.write_text("", encoding="utf-8")
+    env = dict(os.environ, PATH=f"{binary}{os.pathsep}{os.environ['PATH']}", GH_LOG=str(log),
+               GH_FIXTURES=str(directory / f"{name}.fixtures.json"))
+    result = run("fetch", "--repo", "acme/payments", "--pr", pr, "--dir", str(private), *args, env=env)
+    return result, private, log.read_text(encoding="utf-8").splitlines()
+
+
+def matches_normalize(case: str, private: Path) -> Optional[dict[str, Any]]:
+    """The written packet must be `normalize`'s output for the saved responses in call order, digest included."""
+    manifest = json.loads((private / "fetch.json").read_text(encoding="utf-8"))
+    paths = [str(private / response["file"]) for response in manifest["responses"]]
+    if sorted(os.listdir(private)) != sorted(["fetch.json", "packet.json", *(response["file"] for response in manifest["responses"])]):
+        fail(case, f"unexpected files in the private directory: {sorted(os.listdir(private))}")
+    normalized = run("normalize", *paths)
+    written = (private / "packet.json").read_text(encoding="utf-8")
+    if normalized.returncode != 0 or normalized.stdout != written:
+        fail(case, f"the fetched packet is not what normalize prints for its saved responses ({normalized.returncode})")
+        return None
+    packet = json.loads(written)
+    if forge_packet.packet_context(packet) != forge_packet.packet_context(json.loads(normalized.stdout)):
+        fail(case, "the fetched packet's digest differs from normalize's")
+    return packet
+
+
+def case_fetch_single_page(directory: Path) -> None:
+    """A pull request whose every connection fits the root page is one call and one complete packet."""
+    case = "fetch single page"
+    result, private, log = fetch(directory, "single", {"root": ok(simple_root())})
+    if result.returncode != 0 or log != ["root"]:
+        fail(case, f"expected one root call and exit 0, got {result.returncode} {log}: {result.stderr}")
+        return
+    expected = f"packet {private / 'packet.json'}: complete, 1 responses\n"
+    if result.stdout != expected:
+        fail(case, f"stdout {result.stdout!r}, expected {expected!r}")
+    manifest = json.loads((private / "fetch.json").read_text(encoding="utf-8"))
+    if manifest != {"format": "forge-fetch/1", "repository": "acme/payments", "pull_request": 7,
+                    "responses": [{"file": "forge-1.json", "role": "root", "connection": "root", "exit": 0}]}:
+        fail(case, f"unexpected manifest {manifest}")
+    if json.loads((private / "forge-1.json").read_text(encoding="utf-8")) != simple_root():
+        fail(case, "the root response was not saved as returned")
+    packet = matches_normalize(case, private)
+    if packet is not None and not packet["complete"]:
+        fail(case, f"expected a complete packet, got {packet['gaps']}")
+
+
+def case_fetch_continuations(directory: Path) -> None:
+    """Every connection, outer and nested, is followed through its cursors until its last page."""
+    case = "fetch continuations"
+    first = root(
+        closing=connection([issue(123, connection([issue_comment(42)], 2, True, "i123-c1"))], 2, True, "closing-1"),
+        reviews=connection([review(900, T0)], 3, True, "rev-1"),
+        threads=connection([thread("PRRT_1", connection([thread_comment(5000, T0, "900")], 2, True, "t1-c1"))], 2, True,
+                           "threads-1"),
+        comments=connection([pr_comment(1)], 2, True, "comments-1"),
+    )
+    fixtures = {
+        "root": ok(first),
+        "pr:closingIssuesReferences:closing-1": ok(pr_continuation(closingIssuesReferences=connection(
+            [issue(124, connection([issue_comment(60)], 2, True, "i124-c1"))], 2, False))),
+        "issue-comments:acme/payments#123:i123-c1": ok(issue_continuation(123, connection([issue_comment(7)], 2, False))),
+        "issue-comments:acme/payments#124:i124-c1": ok(issue_continuation(124, connection([issue_comment(61)], 2, False))),
+        "pr:reviews:rev-1": ok(pr_continuation(reviews=connection([review(901, BEFORE, "other")], 3, True, "rev-2"))),
+        "pr:reviews:rev-2": ok(pr_continuation(reviews=connection([review(902, BEFORE, "other")], 3, False))),
+        "thread:PRRT_1:t1-c1": ok(thread_continuation("PRRT_1", connection(
+            [thread_comment(5001, AFTER, "901", reply_to="5000", author="author")], 2, False))),
+        "pr:reviewThreads:threads-1": ok(pr_continuation(reviewThreads=connection(
+            [thread("PRRT_2", connection([thread_comment(5002, T0, "900")], 2, True, "t2-c1"), path="src/b.ts")], 2, False))),
+        "thread:PRRT_2:t2-c1": ok(thread_continuation("PRRT_2", connection([thread_comment(5003, T0, "900")], 2, False))),
+        "pr:comments:comments-1": ok(pr_continuation(comments=connection([pr_comment(2)], 2, False))),
+    }
+    result, private, log = fetch(directory, "pages", fixtures)
+    if result.returncode != 0 or sorted(log) != sorted(fixtures) or log[0] != "root" or len(log) != len(set(log)):
+        fail(case, f"expected each fixture called once, root first; got {result.returncode} {log}: {result.stderr}")
+        return
+    manifest = json.loads((private / "fetch.json").read_text(encoding="utf-8"))
+    connections = {(response["role"], response["connection"]) for response in manifest["responses"]}
+    if connections != {("root", "root"), ("continuation", "closingIssuesReferences"), ("continuation", "reviews"),
+                       ("continuation", "reviewThreads"), ("continuation", "comments"),
+                       ("continuation", "issue-comments"), ("continuation", "thread-comments")}:
+        fail(case, f"unexpected roles and connections {sorted(connections)}")
+    packet = matches_normalize(case, private)
+    if packet is None:
+        return
+    if not packet["complete"]:
+        fail(case, f"expected complete, got gaps {packet['gaps']}")
+    comments = {entry["coordinate"]: sorted(c["id"] for c in entry["comments"]) for entry in packet["issues"]}
+    if comments != {"acme/payments#123": ["42", "7"], "acme/payments#124": ["60", "61"]}:
+        fail(case, f"issues or their comments did not merge: {comments}")
+    if sorted(r["id"] for r in packet["reviews"]) != ["900", "901", "902"]:
+        fail(case, "reviews did not follow both continuations")
+    threads = {t["id"]: [c["id"] for c in t["comments"]] for t in packet["threads"]}
+    if threads != {"PRRT_1": ["5000", "5001"], "PRRT_2": ["5002", "5003"]}:
+        fail(case, f"threads or their comments did not merge: {threads}")
+    if [c["id"] for c in packet["pr_comments"]] != ["1", "2"]:
+        fail(case, "pull-request comments did not follow their continuation")
+
+
+def case_fetch_failures(directory: Path) -> None:
+    """A failed call is saved, named as a gap and not followed; a partial fetch never passes the shortcut."""
+    case = "fetch failures"
+    complete = simple_root()
+    digest_value = forge_packet.packet_context(forge_packet.normalize([("page", complete)]))
+    complete["data"]["repository"]["pullRequest"]["reviews"]["nodes"][0]["body"] = trailer(digest_value)
+    partial = copy.deepcopy(complete)
+    pr = partial["data"]["repository"]["pullRequest"]
+    pr["reviews"] = connection(pr["reviews"]["nodes"], 2, True, "rev-1")
+    pr["comments"] = connection([pr_comment(1)], 3, True, "comments-1")
+    fixtures = {
+        "root": ok(partial),
+        "pr:reviews:rev-1": {"stdout": {"message": "Server Error"}, "rc": 1, "stderr": "gh: HTTP 502: Bad Gateway\n"},
+        # A response with errors is not followed even when its data reports a further page.
+        "pr:comments:comments-1": {"stdout": {"data": {"repository": {"pullRequest": {
+            "comments": connection([pr_comment(2)], 3, True, "comments-2")}}}, "errors": [{"message": "timeout"}]},
+            "rc": 1, "stderr": "gh: timeout\n"},
+    }
+    result, private, log = fetch(directory, "failed", fixtures)
+    if result.returncode != 0 or log != ["root", "pr:reviews:rev-1", "pr:comments:comments-1"]:
+        fail(case, f"expected exit 0 and no call after a failure, got {result.returncode} {log}: {result.stderr}")
+        return
+    if not result.stdout.startswith(f"packet {private / 'packet.json'}: incomplete, 3 responses\ngap "):
+        fail(case, f"stdout does not report the incomplete packet and its gaps: {result.stdout!r}")
+    for needle in ("continuation reviews", "continuation comments", "exited 1", "HTTP 502"):
+        if needle not in result.stderr:
+            fail(case, f"stderr does not name {needle!r}: {result.stderr!r}")
+    if [r["exit"] for r in json.loads((private / "fetch.json").read_text(encoding="utf-8"))["responses"]] != [0, 1, 1]:
+        fail(case, "the manifest does not record each call's exit")
+    packet = matches_normalize(case, private)
+    if packet is None:
+        return
+    for needle in ("forge-2.json: HTTP error: Server Error", "reviews: 1 of 2 items fetched", "GraphQL errors: timeout",
+                   "comments: 2 of 3 items fetched"):
+        if packet["complete"] or not any(needle in gap for gap in packet["gaps"]):
+            fail(case, f"no gap names {needle!r}: {packet['gaps']}")
+        if f"gap " not in result.stdout or not any(needle in line for line in result.stdout.splitlines()):
+            fail(case, f"stdout does not print the gap {needle!r}")
+    single, whole, _ = fetch(directory, "whole", {"root": ok(complete)})
+    shortcut = ("shortcut", "--review", "900", "--merge-base", "c" * 40, "--supplied-inputs")
+    allowed = run(shortcut[0], str(whole / "packet.json"), *shortcut[1:], "no")
+    refused = run(shortcut[0], str(private / "packet.json"), *shortcut[1:], "no")
+    supplied = run(shortcut[0], str(whole / "packet.json"), *shortcut[1:], "yes")
+    if single.returncode != 0 or allowed.returncode != 0 or allowed.stdout:
+        fail(case, f"a complete fetch with equal inputs must qualify, got {allowed.returncode}: {allowed.stdout!r}")
+    if refused.returncode != 1 or not refused.stdout or any(not line.startswith("incomplete ") for line in refused.stdout.splitlines()):
+        fail(case, f"a partial fetch must be refused by its gaps alone, got {refused.returncode}: {refused.stdout!r}")
+    if supplied.returncode != 1 or "this run has caller-supplied issues or specs" not in supplied.stdout:
+        fail(case, f"the caller's supplied-inputs marker must still decide, got {supplied.stdout!r}")
+    failed_root, private, log = fetch(directory, "no-root", {"root": {"stdout": "", "rc": 1, "stderr": "gh: HTTP 502\n"}},
+                                      "--issue", "98")
+    if failed_root.returncode != 2 or log != ["root"] or "root root" not in failed_root.stderr or "no root page" not in failed_root.stderr:
+        fail(case, f"a failed root call must stop with exit 2 before any issue, got {failed_root.returncode} {log}: {failed_root.stderr!r}")
+    if (private / "packet.json").exists() or not (private / "forge-1.json").exists():
+        fail(case, "a failed root call must save its response and write no packet")
+
+
+def case_fetch_referenced_issues(directory: Path) -> None:
+    """Referenced issues are fetched once each, never a closing one, and a later call adds only new ones."""
+    case = "fetch referenced issues"
+    other = issue(5, connection([], 0, False, None))
+    other["url"] = "https://github.com/acme/other/issues/5"
+    fixtures = {
+        "root": ok(simple_root()),
+        "issue:acme/payments#98": ok({"data": {"repository": {"url": "https://github.com/acme/payments",
+                                                              "issue": issue(98, connection([issue_comment(300)], 2, True, "i98-c1"))}}}),
+        "issue-comments:acme/payments#98:i98-c1": ok(issue_continuation(98, connection([issue_comment(301)], 2, False))),
+        "issue:acme/other#5": ok({"data": {"repository": {"url": "https://github.com/acme/other", "issue": other}}}),
+    }
+    result, private, log = fetch(directory, "issues", fixtures, "--issue", "98", "--issue", "acme/payments#123",
+                                 "--issue", "#98")
+    if result.returncode != 0 or log != ["root", "issue:acme/payments#98", "issue-comments:acme/payments#98:i98-c1"]:
+        fail(case, f"expected the root, issue 98 and its continuation once each, got {result.returncode} {log}: {result.stderr}")
+        return
+    packet = matches_normalize(case, private)
+    if packet is not None:
+        if packet["explicit_issues"] != ["acme/payments#98"] or [i["closing"] for i in packet["issues"]] != [True, False]:
+            fail(case, f"closing and referenced issues are not distinguished: {packet['explicit_issues']}")
+        if [i["coordinate"] for i in packet["fingerprint"]["issues"]] != ["acme/payments#123", "acme/payments#98"]:
+            fail(case, "the referenced issue is absent from the digest input")
+        if sorted(c["id"] for c in packet["issues"][1]["comments"]) != ["300", "301"] or not packet["complete"]:
+            fail(case, f"the referenced issue's comments did not merge: {packet['gaps']}")
+    again, private, log = fetch(directory, "issues", fixtures, "--issue", "98", "--issue", "acme/other#5")
+    if again.returncode != 0 or log != ["issue:acme/other#5"] or "complete, 4 responses" not in again.stdout:
+        fail(case, f"a second call must fetch only the new issue, got {again.returncode} {log}: {again.stdout!r} {again.stderr!r}")
+    packet = matches_normalize(case, private)
+    if packet is not None and packet["explicit_issues"] != ["acme/payments#98", "acme/other#5"]:
+        fail(case, f"the added issue is missing: {packet['explicit_issues']}")
+    refusals = [
+        ("a second call without issues", fetch(directory, "issues", fixtures)[0], "already fetched"),
+        ("another pull request", fetch(directory, "issues", fixtures, "--issue", "1", pr="8")[0], "already holds the fetch"),
+    ]
+    stray = directory / "stray"
+    stray.mkdir()
+    (stray / "forge-1.json").write_text("{}", encoding="utf-8")
+    refusals.append(("saved responses without a fetch", fetch(directory, "stray", fixtures)[0], "already holds forge-1.json"))
+    refusals.append(("a missing directory", run("fetch", "--repo", "acme/payments", "--pr", "7", "--dir",
+                                                 str(directory / "absent")), "not a directory"))
+    refusals.append(("a malformed issue", run("fetch", "--repo", "acme/payments", "--pr", "7", "--dir", str(stray),
+                                               "--issue", "acme#x"), "expected NUMBER or OWNER/NAME#NUMBER"))
+    for name, refused, needle in refusals:
+        if refused.returncode != 2 or needle not in refused.stderr:
+            fail(case, f"{name}: expected exit 2 naming {needle!r}, got {refused.returncode}: {refused.stderr!r}")
+    if json.loads((private / "fetch.json").read_text(encoding="utf-8"))["pull_request"] != 7:
+        fail(case, "a refused call changed the earlier fetch")
+
+
 CASES = (
     case_root_fixture_fingerprints,
     case_two_page_connections,
@@ -821,6 +1090,10 @@ CASES = (
     case_shape_errors,
     case_packet_context_sensitivity,
     case_shortcut,
+    case_fetch_single_page,
+    case_fetch_continuations,
+    case_fetch_failures,
+    case_fetch_referenced_issues,
 )
 
 

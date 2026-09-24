@@ -2703,7 +2703,6 @@ def finalize(args: argparse.Namespace, private: Path) -> int:
         return 2
 
     composition = read_json(private / "composition.json", "composition")
-    EVENT.update(composition=composition)
     packet = read_json(Path(args.packet), "packet") if args.packet else None
     store = read_json(Path(args.store), "store")
     if not isinstance(store, dict):
@@ -2714,7 +2713,6 @@ def finalize(args: argparse.Namespace, private: Path) -> int:
         if problems:
             raise fail("prior-record", 1, "".join(line + "\n" for line in problems))
     composition, violations = derive(args, private, composition, packet, store, prior)
-    EVENT.update(composition=composition)
     if violations:
         raise fail("derive", 1, "".join(line + "\n" for line in violations))
     violations = check_accounting(composition, packet)
@@ -3852,26 +3850,11 @@ def main() -> int:
         parser.error("--head and --lineage apply only with --check")
     if args.store is None:
         parser.error("--store is required unless --check")
-    EVENT.update(event="payload-composed", store=args.store)
     try:
         return finalize(args, private)
     except Stop as stop:
         return stop.status
 
 
-# What a finalization hands run_events.py; recording never changes the result.
-EVENT: dict[str, Any] = {}
-
-
 if __name__ == "__main__":
-    import time
-
-    started_ns = time.monotonic_ns()
-    status = main()
-    try:
-        import run_events
-
-        run_events.record(EVENT, status, started_ns, "render_review.py")
-    except Exception:
-        pass
-    raise SystemExit(status)
+    raise SystemExit(main())
