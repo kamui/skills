@@ -259,7 +259,7 @@ def batch_paths(name: str, phase: str | None = None) -> dict:
 
 def write_accounting(path: str, tasks: list) -> None:
     """An accounting report, in the shape account_verifier_return.py writes, that establishes each task's ruling."""
-    report = {"format": "verifier-accounting/2", "accounted": {"candidates": [], "premises": []},
+    report = {"format": "verifier-accounting/3", "accounted": {"candidates": [], "premises": []},
               "withheld": {"candidates": [], "premises": []}, "return": {"candidates": [], "premises": []}}
     for task in tasks:
         role = "candidates" if task["type"] == "candidate" else "premises"
