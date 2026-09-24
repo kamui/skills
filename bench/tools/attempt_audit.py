@@ -16,7 +16,9 @@ for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 files. Every shell command and every file-tool path is listed; a path outside the
 clone, the attempt directory and the fresh home, or a command that names a
 network tool (``curl``, ``wget``, ``gh``, ``git fetch``/``pull``/``push``/``clone``,
-``pip``, ``npm install``, ``ssh``), is a violation. Codex walks up the directory tree
+``pip``, ``npm install``, ``ssh``), is a violation. Relative ``..`` paths are resolved against
+the command's working directory (the clone, following ``cd`` across ``;``, ``&&`` and ``|``) and
+judged like absolute ones. Codex walks up the directory tree
 looking for ``AGENTS.md``/``AGENTS.override.md`` and the built-in looks for ``CLAUDE.md``;
 a probe of such a guidance file in an ancestor of the clone is recorded under
 ``guidance_probes`` and is a violation only if that file exists. The built-in's prompt header
@@ -62,10 +64,27 @@ def load_lines(path: Path):
 HOME_DIR = None
 
 
-def paths_in(text: str):
+SPLIT = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
+CD = re.compile(r"^cd\s+(\S+)")
+DOTDOT = re.compile(r"(?<![\w./])((?:\.\./)+[\w./@+-]*|\.\.(?=[\s;|&'\")]|$))")
+
+
+def paths_in(text: str, cwd: str):
+    """Absolute paths, ``~`` paths expanded against the fresh home, and ``..`` paths resolved
+    against the command's working directory (tracking ``cd`` across ``;``, ``&&``, ``|``)."""
     found = re.findall(r"(?<![\w.~}\)\"'])(/[\w.@+-][\w./@+-]*)", text or "")
     tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
-    return found + [HOME_DIR + t for t in tilde if HOME_DIR]
+    relative = []
+    here = cwd
+    for segment in SPLIT.split(text or ""):
+        for rel in DOTDOT.findall(segment):
+            relative.append(os.path.normpath(os.path.join(here, rel)))
+        m = CD.match(segment.strip())
+        if m:
+            target = m.group(1).strip("'\"")
+            target = HOME_DIR + target[1:] if target.startswith("~") and HOME_DIR else target
+            here = os.path.normpath(os.path.join(here, target))
+    return found + [HOME_DIR + t for t in tilde if HOME_DIR] + relative
 
 
 PREFIXES: list = []
@@ -79,9 +98,15 @@ def inside(path: str, roots) -> bool:
 
 
 def audit_claude(attempt: Path, roots):
-    commands, reads, headers, findings_calls, texts = [], [], [], [], []
+    """Returns the transcripts, commands, file-tool paths, built-in headers, ReportFindings inputs,
+    and the final assistant text of the transcript that carried the built-in header (or of the
+    root when none did), so a worker's chatter never stands in for the review."""
+    commands, reads, headers, findings_calls = [], [], [], []
+    texts_by_file = {}
+    header_files = []
     files = sorted((attempt / "home" / ".claude" / "projects").rglob("*.jsonl"))
     for path in files:
+        texts_by_file[path] = []
         for _, record in load_lines(path):
             message = record.get("message") or {}
             content = message.get("content")
@@ -94,8 +119,9 @@ def audit_claude(attempt: Path, roots):
                     m = BUILTIN_HEADER.search(block.get("text", ""))
                     if m:
                         headers.append(m.group(0))
+                        header_files.append(path)
                 if block.get("type") == "text" and record.get("type") == "assistant":
-                    texts.append(block.get("text", ""))
+                    texts_by_file[path].append(block.get("text", ""))
                 if block.get("type") == "tool_use":
                     name, inp = block.get("name"), block.get("input") or {}
                     if name == "Bash":
@@ -106,6 +132,8 @@ def audit_claude(attempt: Path, roots):
                                 reads.append(inp[key])
                     elif name == "ReportFindings":
                         findings_calls.append(inp)
+    authoritative = header_files[-1] if header_files else (files[0] if files else None)
+    texts = texts_by_file.get(authoritative, []) if authoritative else []
     return files, commands, reads, headers, findings_calls, texts
 
 
@@ -188,7 +216,7 @@ def main() -> int:
     for cmd in commands:
         if NETWORK.search(cmd):
             violations.append(f"network-capable command: {cmd[:200]}")
-        for p in paths_in(cmd):
+        for p in paths_in(cmd, clone_real):
             if inside(p, roots) or p.startswith(("/usr/", "/bin/", "/dev/", "/proc/", "/etc/")):
                 continue
             if os.path.basename(p) in GUIDANCE and os.path.dirname(os.path.realpath(p)) in ancestors:
