@@ -70,8 +70,8 @@
   "timing": {
     "dispatched_at": "2026-09-24T06:49:33Z",
     "payload_validated_at": "2026-09-24T06:51:26Z",
-    "completed_at": "2026-09-24T06:50:06Z",
-    "stopped_at": null
+    "completed_at": null,
+    "stopped_at": "2026-09-24T06:50:06Z"
   },
   "native_payload": {
     "path": "stdout.txt",
@@ -84,11 +84,11 @@
   },
   "transcript_archive": {
     "path": "~/.t3/bench-cache/transcripts/2026-09-24-toy/att-003.tar.gz",
-    "sha256": "9a28f32261674e30af8198c78bfdc6c8e792ac277f1c3b7a60f28e146d24190c",
+    "sha256": "243cd8fe398c10971049c84cf25bd61598866ffe998c6b998074e72de6146a47",
     "restoration_check": "passed"
   },
   "notes": [
     "First wrapper run of the stdin-prompt adapter.",
-    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after completed_at"
+    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after the wrapper's recorded end"
   ]
 }

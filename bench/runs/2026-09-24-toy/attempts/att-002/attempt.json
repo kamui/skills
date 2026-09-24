@@ -56,8 +56,8 @@
   "timing": {
     "dispatched_at": "2026-09-24T06:49:22Z",
     "payload_validated_at": "2026-09-24T06:51:25Z",
-    "completed_at": "2026-09-24T06:49:31Z",
-    "stopped_at": null
+    "completed_at": null,
+    "stopped_at": "2026-09-24T06:49:31Z"
   },
   "native_payload": {
     "path": "payload.json",
@@ -70,11 +70,11 @@
   },
   "transcript_archive": {
     "path": "~/.t3/bench-cache/transcripts/2026-09-24-toy/att-002.tar.gz",
-    "sha256": "2a022a5de9ab32598be859f380b3e00097e7a9d6fcc66c8e5b23d42782dce5e7",
+    "sha256": "b2cb42ddfb3b02c453eaef006657ba633180ae6b7c30eef72a22d8e7fce6a4be",
     "restoration_check": "passed"
   },
   "notes": [
     "Dispatched with the effort argument only; the built-in selected its low variant under Opus. This attempt established that the session --effort flag, not the argument, selects the variant.",
-    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after completed_at"
+    "timing predates the four-event semantics: payload_validated_at was stamped by a later normalizer run, after the wrapper's recorded end"
   ]
 }

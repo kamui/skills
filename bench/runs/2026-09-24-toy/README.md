@@ -34,16 +34,21 @@ directories the attempts ran in are under `~/.t3/bench-runs/toy/`.
 | att-007 | codex-default, 2 | valid completed | 34 s | 0.09 list | 3 |
 
 Codex costs are list-price equivalents; the account is a ChatGPT plan that consumes quota.
-Elapsed runs from dispatch to completion. The six attempts before att-007 predate the four-event
-timing semantics, so their `payload_validated_at` was stamped by a later normalizer run.
+Elapsed runs from `dispatched_at` to `completed_at` for a valid completed attempt. The two
+harness-invalid attempts carry no `completed_at`: their `stopped_at` is the wrapper's recorded end,
+and Elapsed runs to it. The attempts before att-007 predate the four-event timing semantics. att-001,
+att-002, att-003 and att-006 had their `payload_validated_at` stamped by a later normalizer run,
+after the wrapper's recorded end; att-004 and att-005 have none.
 
 ## What the records show
 
 - **Every attempt recovered GT-toy1**, the planted `ZeroDivisionError` on an empty cart,
-  including the two harness-invalid ones. Three attempts stated a sufficient fix: review-code and
-  both Codex attempts. The built-in's output contract carries no fix field, so its recoveries map
-  to `absent`. The Opus built-in also restated the defect from the docstring's side and added a
-  no-test remark, which maps to `non-material`.
+  including the two harness-invalid ones, and every recovery stated a sufficient fix. Rubric v1
+  grades fix sufficiency by what the item states, not by whether the arm has a fix field: only
+  review-code filled `proposed_fix`, and the built-in and Codex items state the required outcome
+  (a defined value or a handled error for an empty cart) in their claim, title or consequence. The
+  Opus built-in also restated the defect from the docstring's side and added a no-test remark,
+  which maps to `non-material`.
 - **The session effort flag selects the built-in's prompt.** att-002 passed `high` only as the
   argument and ran Opus at `medium` with the low variant; att-004 set `--effort high` and matched
   the registered high variant. Sonnet's default effort is already `high`, which is why att-001

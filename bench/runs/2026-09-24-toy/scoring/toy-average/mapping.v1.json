@@ -15,7 +15,7 @@
     "blind": false,
     "evidence_access": "normalized.json of every attempt with arm and attempt labels visible; the fixture's source"
   },
-  "scored_at": "2026-09-24T15:31:43Z",
+  "scored_at": "2026-09-24T15:56:38Z",
   "attempts": [
     {
       "attempt_id": "att-001",
@@ -25,9 +25,9 @@
           "item_id": "item-0",
           "assignment": "defect:GT-toy1",
           "duplicate_group": null,
-          "fix_sufficiency": "absent",
+          "fix_sufficiency": "sufficient",
           "priority_error": "n/a",
-          "notes": "names the unguarded division but proposes no corrective change"
+          "notes": "no fix field; the consequence states the required outcome: return 0.0, return None, or raise a clear error that the summary panel handles"
         }
       ],
       "review_level": {
@@ -46,9 +46,9 @@
           "item_id": "item-0",
           "assignment": "defect:GT-toy1",
           "duplicate_group": null,
-          "fix_sufficiency": "absent",
+          "fix_sufficiency": "sufficient",
           "priority_error": "n/a",
-          "notes": "names the unguarded division but proposes no corrective change"
+          "notes": "no fix field; the item states the missing empty guard and the outcome the panel should show instead of crashing, a value such as 0.0 or None"
         }
       ],
       "review_level": {
@@ -88,17 +88,17 @@
           "item_id": "item-0",
           "assignment": "defect:GT-toy1",
           "duplicate_group": "g1",
-          "fix_sufficiency": "absent",
+          "fix_sufficiency": "sufficient",
           "priority_error": "n/a",
-          "notes": "names the unguarded division but proposes no corrective change"
+          "notes": "no fix field; the item states the missing empty-list guard and the outcome the panel should show instead of failing, 0.0 or 'no items'"
         },
         {
           "item_id": "item-1",
           "assignment": "defect:GT-toy1",
           "duplicate_group": "g1",
-          "fix_sufficiency": "absent",
+          "fix_sufficiency": "sufficient",
           "priority_error": "n/a",
-          "notes": "the same claim restated from the docstring's side"
+          "notes": "the same claim restated from the docstring's side: the function must handle empty lists and say what it returns for them"
         },
         {
           "item_id": "item-2",
@@ -125,9 +125,9 @@
           "item_id": "item-0",
           "assignment": "defect:GT-toy1",
           "duplicate_group": null,
-          "fix_sufficiency": "absent",
+          "fix_sufficiency": "sufficient",
           "priority_error": "n/a",
-          "notes": "names the unguarded division but proposes no corrective change"
+          "notes": "no fix field; the consequence states the required outcome: return 0.0 (or None) for an empty list, or raise a clear domain error the caller handles"
         }
       ],
       "review_level": {
