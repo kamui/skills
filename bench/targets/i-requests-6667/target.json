@@ -38,8 +38,8 @@
   "fix_published_at": "2024-05-24T21:37:06Z",
   "originating_issue": null,
   "provisioning": {
-    "recipe": "uv venv --python 3.13 <cache-root>/caches/i-requests-6667/venv; uv pip install -r requirements-dev.txt; uv pip uninstall requests (the clone's src goes on PYTHONPATH at run time). Python 3.13 because requirements-dev.txt pins pytest<=6.2.5, which cannot import under 3.14 (ast.Str was removed); the #137 grid measured 9 s on macOS.",
-    "allowance": "Focused test execution is permitted on this target, offline: run pytest from the clone root with the pre-provisioned virtualenv, as PYTHONPATH=<clone>/src <cache-root>/venvs/requests/bin/python -m pytest <selection>; five minutes per command, a selection at most once per flag set, scratch files only under the work directory, nothing added to or changed in the clone. The virtualenv has no network access and its packages are already installed.",
+    "recipe": "uv venv --python 3.13 <cache>/venv; uv pip install -r requirements-dev.txt; uv pip uninstall requests (the clone's src goes on PYTHONPATH at run time), built once online and archived; each attempt restores the archive into its own <cache>. Python 3.13 because requirements-dev.txt pins pytest<=6.2.5, which cannot import under 3.14 (ast.Str was removed); the #137 grid measured 9 s on macOS.",
+    "allowance": "Focused test execution is permitted on this target, offline: run pytest from the clone root with the pre-provisioned virtualenv in the attempt's dependency cache, as PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest <selection>; five minutes per command, a selection at most once per flag set, scratch files only under the work directory, nothing added to or changed in the clone. The virtualenv has no network access and its packages are already installed.",
     "unavailable": "network; tests that need a live host. Two tests in the ssl/verify selection fail at the merge-base as well as at the head on this machine (test_pyopenssl_redirect and test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert, both 'Missing Authority Key Identifier': a fixture-certificate mismatch under the installed OpenSSL), which is not introduced by the change.",
     "dependency_identity": [
       {
@@ -58,7 +58,7 @@
         "location": "~/.t3/bench-cache/archives/i-requests-6667.tar.gz"
       }
     ],
-    "platform": "measured on the suite machine at 2026-09-24T10:28:30Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the virtualenv runs uv-managed CPython 3.13.15; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T10:54:40Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the virtualenv runs uv-managed CPython 3.13.15; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "python-venv",
       "build": [
@@ -74,7 +74,7 @@
         {
           "name": "focused pytest, ssl/verify selection",
           "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider -k \"ssl or verify\" tests",
-          "revision": "head"
+          "revision": "both"
         },
         {
           "name": "adapters suite",

@@ -30,7 +30,7 @@
     "allowance": "Focused execution is permitted on this target, offline and outside the clone: zsh is installed and scratch zsh scripts may be written and run under the work directory to check the behaviour of shell code that has been read; five minutes per command. Building the Rust crate is not available (no network, no vendored registry); do not attempt cargo build or cargo test. Nothing may be added to or changed in the clone.",
     "unavailable": "cargo build and cargo test (no vendored registry), network, the ci/test-complete script (needs a built rg)",
     "dependency_identity": [],
-    "platform": "measured on the suite machine at 2026-09-24T10:31:54Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T10:56:30Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "none",
       "build": [],
@@ -40,7 +40,7 @@
         {
           "name": "syntax",
           "command": "zsh -n crates/core/flags/complete/rg.zsh && echo 'no syntax errors'",
-          "revision": "head"
+          "revision": "both"
         }
       ]
     }

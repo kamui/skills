@@ -2,11 +2,11 @@
   "schema_version": 1,
   "target": "j-trpc-5017",
   "source": "measured",
-  "measured_at": "2026-09-24T10:31:22Z",
+  "measured_at": "2026-09-24T10:56:52Z",
   "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
-    "recipe": "COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
-    "duration_seconds": 13.58,
+    "recipe": "restore cache archive sha256:0c2f247f8fb33c13f8fcc412df1c54d0e86d8e48aad7f0002e6821bf7c611cc4; COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+    "duration_seconds": 21.26,
     "tree_clean_after": true
   },
   "checks": [
@@ -15,12 +15,21 @@
       "command": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && echo clean",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 6.78,
+      "duration_seconds": 6.25,
+      "summary": "clean"
+    },
+    {
+      "name": "type-check",
+      "command": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && echo clean",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 6.2,
       "summary": "clean"
     }
   ],
   "notes": [
-    "Measured by provision.py smoke on this machine; cache kind pnpm-store.",
+    "Measured by provision.py smoke on this machine; cache kind pnpm-store. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 22.96s; tracked tree clean afterwards: true.",
     "The earlier recorded figures were transcribed from docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and j-trpc-5017/register.md (reproduction)."
   ],
   "mirror": {
