@@ -1226,7 +1226,7 @@ commit the run records.
   It does **not** regenerate this bundle's packets, which came from the earlier cutoff-free builder:
   that one titles a packet "holdout target (x)" and gives §6 no cutoff, as
   `../one-shot-effort-2026-09-06/a-hyper-3952/packet.md` shows.
-  `python3 ../tools/test_build_packet.py` checks the shipped tool
+  `python3 ../../../bench/tools/test_build_packet.py` checks the shipped tool
 - [`../tools/cost_split.py`](../tools/cost_split.py) and
   [`../tools/transcript_usage.py`](../tools/transcript_usage.py) — the metering scripts;
   `--self-test` checks each
