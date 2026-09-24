@@ -1,0 +1,48 @@
+{
+  "$id": "bench/schema/arm.schema.json",
+  "title": "arm.json",
+  "description": "One reviewer configuration as data. Nothing here is observed; observations belong to attempt.json. A skill_tree of 'current' is resolved once at run start and frozen in the run manifest.",
+  "type": "object",
+  "required": ["schema_version", "id", "kind", "model", "effort", "requested_workers", "isolation", "adapter", "budget_usd_per_attempt"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "kind": {"enum": ["review-code", "claude-builtin", "codex"]},
+    "label": {"type": "string"},
+    "model": {"type": ["string", "null"], "description": "Model identifier requested, or null for the harness default (recorded as observed)."},
+    "effort": {"type": ["string", "null"], "description": "Session effort requested, or null for the harness default."},
+    "requested_workers": {
+      "type": "object",
+      "required": ["model", "effort"],
+      "additionalProperties": false,
+      "properties": {"model": {"type": ["string", "null"]}, "effort": {"type": ["string", "null"]}}
+    },
+    "skill_tree": {"type": "string", "description": "review-code only: a git tree hash, or 'current'."},
+    "isolation": {
+      "type": "object",
+      "required": ["fresh_home", "safe_mode", "allowed_tools", "sandbox", "network"],
+      "additionalProperties": false,
+      "properties": {
+        "fresh_home": {"const": true},
+        "safe_mode": {"type": "boolean"},
+        "allowed_tools": {"type": "array", "items": {"type": "string"}},
+        "sandbox": {"type": "string", "description": "e.g. workspace-write for codex; n/a for claude arms."},
+        "network": {"const": "off"},
+        "unprivileged_user": {"type": ["string", "null"], "description": "Unix user the reviewer runs as, or null when the enforced sandbox is not in use."}
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "required": ["range_transport", "packet_transport", "output_capture"],
+      "additionalProperties": false,
+      "properties": {
+        "range_transport": {"type": "string"},
+        "packet_transport": {"type": "string"},
+        "output_capture": {"type": "string"},
+        "expected_prompt_variants": {"type": "array", "items": {"type": "string"}, "description": "Registry headers or hashes this arm is expected to match; a mismatch is recorded, not silently accepted."}
+      }
+    },
+    "budget_usd_per_attempt": {"type": "number", "minimum": 0}
+  }
+}
