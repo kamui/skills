@@ -2,11 +2,11 @@
   "schema_version": 1,
   "target": "i-requests-6667",
   "source": "measured",
-  "measured_at": "2026-09-24T10:54:40Z",
+  "measured_at": "2026-09-24T11:09:45Z",
   "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
-    "recipe": "restore cache archive sha256:bcd160432eb7e9fb00c0eb60e9b69c42be4a3fa6c53707e6fb4457ebd56cf990",
-    "duration_seconds": 0.19,
+    "recipe": "restore cache archive sha256:f301c682696033bfabc154d1df76b09405a8d50229d0acca2508ddd70969e3d5",
+    "duration_seconds": 0.17,
     "tree_clean_after": true
   },
   "checks": [
@@ -15,24 +15,24 @@
       "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider -k \"ssl or verify\" tests",
       "revision": "head",
       "exit_code": 1,
-      "duration_seconds": 3.71,
-      "summary": "2 failed, 5 passed, 599 deselected, 6468 warnings in 2.95s"
+      "duration_seconds": 3.53,
+      "summary": "2 failed, 5 passed, 599 deselected, 6468 warnings in 2.92s"
     },
     {
       "name": "focused pytest, ssl/verify selection",
       "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider -k \"ssl or verify\" tests",
       "revision": "base",
       "exit_code": 1,
-      "duration_seconds": 3.54,
-      "summary": "2 failed, 5 passed, 599 deselected, 6468 warnings in 2.91s"
+      "duration_seconds": 3.55,
+      "summary": "2 failed, 5 passed, 599 deselected, 6468 warnings in 2.93s"
     },
     {
       "name": "adapters suite",
       "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider tests/test_adapters.py",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 0.21,
-      "summary": "1 passed in 0.00s"
+      "duration_seconds": 0.25,
+      "summary": "1 passed in 0.01s"
     }
   ],
   "notes": [

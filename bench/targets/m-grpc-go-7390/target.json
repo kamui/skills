@@ -46,7 +46,7 @@
         "location": "~/.t3/bench-cache/archives/m-grpc-go-7390.tar.gz"
       }
     ],
-    "platform": "measured on the suite machine at 2026-09-24T10:56:16Z Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "platform": "measured on the suite machine at 2026-09-24T11:11:21Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
     "cache": {
       "kind": "go-modcache",
       "build": [

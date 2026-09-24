@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "n-ripgrep-2957",
   "source": "measured",
-  "measured_at": "2026-09-24T10:56:30Z",
+  "measured_at": "2026-09-24T11:11:34Z",
   "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
     "recipe": "none",

@@ -47,8 +47,8 @@ by one clone reach no other), runs the post-clone commands, and prints the outco
 at the base, runs each check in the clone for its revision and writes a ``smoke.json``
 (``source: measured``) with the platform, the provisioning duration, every check's exit code and
 duration, and the existing file's ``mirror`` block carried over. A non-zero smoke check is an
-observation, not a failure; a missing or mismatched archive, or a post-clone step that fails or
-dirties the tree, is a failure.
+observation, not a failure; a missing or mismatched archive, a restore with a dangling symlink,
+or a post-clone step that fails or dirties the tree, is a failure.
 
 The cache root defaults to ``~/.t3/bench-cache``. Nothing under it enters the repository.
 
@@ -404,6 +404,13 @@ def restore_cache(target: dict, cfg: dict, cache_root: str, dest: str) -> tuple:
     step = {"command": command, "exit_code": code, "duration_seconds": duration}
     if code != 0:
         return step, [f"cache restore failed (exit {code}): {archive}\n{tail(output, 10)}"]
+    # A relative link out of the cache resolves only at the build directory's depth.
+    dangling = sorted(os.path.relpath(os.path.join(root, name), dest) for root, dirs, files in os.walk(dest)
+                      for name in dirs + files
+                      if os.path.islink(os.path.join(root, name)) and not os.path.exists(os.path.join(root, name)))
+    if dangling:
+        return step, [f"restored cache has {len(dangling)} dangling symlink(s), first {dangling[0]}: the archive "
+                      "only works at the build directory's path"]
     return step, []
 
 
@@ -581,7 +588,7 @@ def self_test() -> int:
         with_cache = dict(target, provisioning={"cache": {
             "kind": "test",
             "build": ["mkdir -p {cache}/store {cache}/ro/sub && printf hi > {cache}/store/f && printf r > {cache}/ro/sub/g"
-                      " && chmod 555 {cache}/ro/sub {cache}/ro", "test -f {clone}/f.txt && test -d {cache_root}/mirrors"],
+                      " && ln -s store {cache}/inside && chmod 555 {cache}/ro/sub {cache}/ro", "test -f {clone}/f.txt && test -d {cache_root}/mirrors"],
             "post_clone": ["test -f {cache}/store/f && printf x > {work}/marker && test \"$BENCH_TEST_ENV\" = {cache}/store"
                            " && printf w > {cache}/store/written"],
             "env": {"BENCH_TEST_ENV": "{cache}/store"},
@@ -646,6 +653,16 @@ def self_test() -> int:
         (target_dir / "target.json").write_text(json.dumps(dirty), encoding="utf-8")
         done = run("smoke", "--target", str(target_dir), "--out", smoke_out)
         assert done.returncode == 1 and "dirtied" in done.stdout, done
+        # A relative link out of the cache dangles once restored elsewhere, so prepare refuses it.
+        linked = dict(with_cache)
+        linked["provisioning"] = dict(with_cache["provisioning"], cache=dict(
+            with_cache["provisioning"]["cache"], build=with_cache["provisioning"]["cache"]["build"] + ["ln -s ../../mirrors {cache}/up"]))
+        (target_dir / "target.json").write_text(json.dumps(linked), encoding="utf-8")
+        done = run("cache", "--target", str(target_dir))
+        linked["provisioning"]["dependency_identity"] = [json.loads(done.stdout.split("dependency_identity entry: ", 1)[1])]
+        (target_dir / "target.json").write_text(json.dumps(linked), encoding="utf-8")
+        done = run("prepare", "--target", str(target_dir), "--out", str(Path(temp, "linked")))
+        assert done.returncode == 1 and "dangling symlink(s), first up" in done.stdout, done
         # A wrong diff identity is a check failure, and a failed build leaves no mirror.
         (target_dir / "target.json").write_text(json.dumps(dict(target, diff_manifest_sha256="0" * 64)), encoding="utf-8")
         done = run("mirror", "--target", str(target_dir), "--staging", staging)
