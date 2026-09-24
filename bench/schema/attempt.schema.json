@@ -1,0 +1,67 @@
+{
+  "$id": "bench/schema/attempt.schema.json",
+  "title": "runs/<run>/attempts/<attempt>/attempt.json",
+  "description": "One dispatch of one cell. Attempt ids are never reused. Everything observed about the execution lives here; nothing here is planned.",
+  "type": "object",
+  "required": ["schema_version", "attempt_id", "run_id", "cell", "predecessor", "retry_reason", "continuity", "dispatched_at", "observed", "phase_reached", "disposition", "arm_reported_complete", "audit", "usage", "timing", "native_payload", "normalized", "transcript_archive"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "attempt_id": {"type": "string", "pattern": "^att-[0-9]{3,}$"},
+    "run_id": {"type": "string"},
+    "cell": {"type": "object", "required": ["target", "arm", "replicate"], "additionalProperties": false, "properties": {"target": {"type": "string"}, "arm": {"type": "string"}, "replicate": {"type": "integer", "minimum": 1}}},
+    "predecessor": {"type": ["string", "null"]},
+    "retry_reason": {"type": ["string", "null"]},
+    "replacement_index": {"type": ["integer", "null"], "description": "k of the run's replacement cap when this attempt is a replacement."},
+    "continuity": {"type": "string", "pattern": "^(fresh|resumed from att-[0-9]{3,})$"},
+    "dispatched_at": {"type": "string"},
+    "observed": {
+      "type": "object",
+      "required": ["harness", "cli_version", "models", "effort", "prompt_hash", "prompt_header", "skill_tree", "diff_commands", "sandbox", "tree_identity_before", "tree_identity_after"],
+      "additionalProperties": false,
+      "properties": {
+        "harness": {"enum": ["claude-code", "codex"]},
+        "cli_version": {"type": "string"},
+        "models": {"type": "array", "items": {"type": "string"}, "description": "Distinct models across every request of every transcript."},
+        "effort": {"type": ["string", "null"]},
+        "prompt_hash": {"type": ["string", "null"]},
+        "prompt_header": {"type": ["string", "null"]},
+        "prompt_registry_match": {"type": ["string", "null"], "description": "Registry entry matched, or null with the hash recorded when unmatched."},
+        "skill_tree": {"type": ["string", "null"]},
+        "diff_commands": {"type": "array", "items": {"type": "string"}},
+        "sandbox": {"type": ["string", "null"]},
+        "subagent_count": {"type": "integer", "minimum": 0},
+        "tree_identity_before": {"type": "string"},
+        "tree_identity_after": {"type": "string"}
+      }
+    },
+    "phase_reached": {"enum": ["root dispatch", "primary", "verifier", "validation", "result"]},
+    "disposition": {"type": "string", "pattern": "^(valid completed|stopped: .+|harness-invalid: .+|skill failure: .+)$"},
+    "arm_reported_complete": {"type": ["boolean", "null"]},
+    "audit": {"type": "object", "required": ["violations", "guidance_probes", "network_commands", "audit_file"], "additionalProperties": false, "properties": {"violations": {"type": "array", "items": {"type": "string"}}, "guidance_probes": {"type": "array", "items": {"type": "string"}}, "network_commands": {"type": "array", "items": {"type": "string"}}, "audit_file": {"type": "string"}}},
+    "usage": {
+      "type": "object",
+      "required": ["requests", "priced_total_usd", "cost_bounds_usd", "rates_as_of", "billing"],
+      "additionalProperties": false,
+      "properties": {
+        "requests": {"type": "string", "description": "Path of the per-request usage records (model, cache tier, service tier per request)."},
+        "priced_total_usd": {"type": ["number", "null"]},
+        "cost_bounds_usd": {"type": "object", "required": ["low", "high"], "properties": {"low": {"type": ["number", "null"]}, "high": {"type": ["number", "null"]}}},
+        "rates_as_of": {"type": "string"},
+        "billing": {"enum": ["api-dollars", "list-price-equivalent"]},
+        "quota_consumed": {"type": ["string", "null"]},
+        "metering_status": {"enum": ["complete", "incomplete", "unavailable"]}
+      }
+    },
+    "timing": {
+      "type": "object",
+      "required": ["dispatched_at", "payload_validated_at", "completed_at", "stopped_at"],
+      "additionalProperties": false,
+      "properties": {"dispatched_at": {"type": "string"}, "payload_validated_at": {"type": ["string", "null"]}, "completed_at": {"type": ["string", "null"]}, "stopped_at": {"type": ["string", "null"]}}
+    },
+    "native_payload": {"type": "object", "required": ["path", "sha256"], "additionalProperties": false, "properties": {"path": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+    "normalized": {"type": "object", "required": ["path", "parse_status"], "additionalProperties": false, "properties": {"path": {"type": ["string", "null"]}, "parse_status": {"enum": ["parsed", "empty", "unresolved"]}, "reason": {"type": ["string", "null"]}}},
+    "transcript_archive": {"type": "object", "required": ["path", "sha256", "restoration_check"], "additionalProperties": false, "properties": {"path": {"type": ["string", "null"]}, "sha256": {"type": ["string", "null"]}, "restoration_check": {"enum": ["passed", "failed", "not-run"]}}},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}

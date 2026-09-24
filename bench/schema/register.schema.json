@@ -1,0 +1,57 @@
+{
+  "$id": "bench/schema/register.schema.json",
+  "title": "register.v<N>.json",
+  "description": "Sealed truth for one target at one version. Defect ids are stable across versions; a new version adds defects or non-defects and never renumbers or removes.",
+  "type": "object",
+  "required": ["schema_version", "target", "version", "sealed_at", "sealed_by", "supersedes", "defects", "non_defects"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "target": {"type": "string"},
+    "version": {"type": "integer", "minimum": 1},
+    "sealed_at": {"type": "string"},
+    "sealed_by": {
+      "type": "object",
+      "required": ["adjudicator", "evidence_access", "saw_reviewer_output"],
+      "additionalProperties": false,
+      "properties": {
+        "adjudicator": {"type": "string", "description": "Person or model with effort and tools."},
+        "evidence_access": {"type": "string"},
+        "saw_reviewer_output": {"type": "boolean", "description": "False for a pre-dispatch seal; true for a post-grid revision adjudicating a surfaced claim."}
+      }
+    },
+    "supersedes": {"type": ["integer", "null"]},
+    "revision_reason": {"type": "string"},
+    "defects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "trigger", "consequence", "required_outcome", "evidence", "demonstration", "added_in_version"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^GT-[a-z0-9]+-?[0-9]+$"},
+          "title": {"type": "string"},
+          "trigger": {"type": "string"},
+          "consequence": {"type": "string"},
+          "required_outcome": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "demonstration": {"type": "string", "description": "The reproduction performed, or 'static' with the reasoning."},
+          "manifestations": {"type": "array", "items": {"type": "string"}},
+          "added_in_version": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "non_defects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "ruling"],
+        "additionalProperties": false,
+        "properties": {"claim": {"type": "string"}, "ruling": {"type": "string"}, "added_in_version": {"type": "integer", "minimum": 1}}
+      }
+    },
+    "clean_basis": {"type": ["string", "null"], "description": "For a clean target: what was executed and compared to establish it."},
+    "leakage": {"type": "array", "items": {"type": "string"}, "description": "Commits, issues, and comments that reveal the answer and must stay out of reviewer reach."},
+    "source": {"type": "string", "description": "Path of the prose register this was converted from, when applicable."}
+  }
+}
