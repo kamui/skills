@@ -32,6 +32,7 @@ import hashlib
 import os
 from pathlib import Path
 import secrets
+import signal
 import subprocess
 import sys
 import tempfile
@@ -148,6 +149,9 @@ def main() -> int:
         if name == "open":
             command.add_argument("--sha256", required=True)
     args = parser.parse_args()
+    # exit through SystemExit so subprocess.run kills openssl and open_sealed removes its sibling
+    for number in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(number, lambda signum, frame: sys.exit(128 + signum))
     if args.self_test:
         return self_test()
     try:
