@@ -9,10 +9,22 @@
   "base_ref_name": "main",
   "local_base_branch": "main",
   "negative_shas": [
-    {"sha": "f27d50c774908059e263bbbf25e20a782f6faa89", "reason": "squash-merge of #5017 on main; its neighbourhood on main surfaces the regression fix"},
-    {"sha": "a2a14f0fb131bc8f06573a62d18bdd6f920a120b", "reason": "head of the #5039 branch, the fix for GT-j1; reachable upstream only through refs/pull/5039/head"},
-    {"sha": "de8589879a461dc107402cd2fb1b06919a6c1c69", "reason": "squash-merge of #5039 (2023-11-17), 'fix regression introduced by #5017'; its body states the diagnosis"},
-    {"sha": "afa9ad92288f26427623cd0efd0daaae6fb61775", "reason": "a main commit between #5017 and #5039 (2023-11-15); excluded so no post-merge main history is reachable"}
+    {
+      "sha": "f27d50c774908059e263bbbf25e20a782f6faa89",
+      "reason": "squash-merge of #5017 on main; its neighbourhood on main surfaces the regression fix"
+    },
+    {
+      "sha": "a2a14f0fb131bc8f06573a62d18bdd6f920a120b",
+      "reason": "head of the #5039 branch, the fix for GT-j1; reachable upstream only through refs/pull/5039/head"
+    },
+    {
+      "sha": "de8589879a461dc107402cd2fb1b06919a6c1c69",
+      "reason": "squash-merge of #5039 (2023-11-17), 'fix regression introduced by #5017'; its body states the diagnosis"
+    },
+    {
+      "sha": "afa9ad92288f26427623cd0efd0daaae6fb61775",
+      "reason": "a main commit between #5017 and #5039 (2023-11-15); excluded so no post-merge main history is reachable"
+    }
   ],
   "cutoff": "2023-11-10T10:08:08Z",
   "cutoff_note": "the merge instant; nothing omitted",
@@ -26,14 +38,49 @@
   "fix_published_at": "2023-11-17T11:37:49Z",
   "originating_issue": "trpc/trpc#5020",
   "provisioning": {
-    "recipe": "PNPM_HOME=<cache-root>/pnpm-home corepack pnpm install --frozen-lockfile --offline --store-dir <cache-root>/pnpm-store, run in the clone before dispatch; the tracked tree must be clean afterwards (the #137 grid measured 19 s)",
+    "recipe": "pnpm@8.5.1 from the packageManager field, cached under COREPACK_HOME=<cache>/corepack; in every attempt clone, offline: corepack enable --install-directory <cache>/bin (its links are relative, so they are made after the restore rather than archived), then pnpm install --frozen-lockfile --offline --store-dir <cache>/pnpm-store, whose postinstall runs pnpm codegen; the tracked tree must be clean afterwards (the #137 grid measured 19 s on macOS)",
     "allowance": "Focused type-checking is permitted on this target, offline: dependencies are already installed in the clone (untracked and ignored; leave them alone). Run the TypeScript compiler with the clone's own binary, for example `cd <clone>/packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json` (about 5 seconds); five minutes per command, a configuration at most once per flag set. Write any scratch TypeScript under the work directory and point tsc at it from there; nothing may be added to or changed in the clone, and no network call of any kind is available (npx and pnpm cannot reach a registry).",
     "unavailable": "network; the registry (npx, pnpm fetch); the runtime vitest suite is not the discriminating check, only tsc is",
     "dependency_identity": [
-      {"name": "pnpm-lock.yaml", "sha256": "70883f88df3d1865bdec9ca0e8389ae38ffa739f353f405a8482cf55b82beeb8", "location": "head:pnpm-lock.yaml"},
-      {"name": "package.json", "sha256": "b38f4cd8d339c609ed1380cd46546f23945b5ede46f29d90fe270ab3d73c860d", "location": "head:package.json"}
+      {
+        "name": "pnpm-lock.yaml",
+        "sha256": "70883f88df3d1865bdec9ca0e8389ae38ffa739f353f405a8482cf55b82beeb8",
+        "location": "head:pnpm-lock.yaml"
+      },
+      {
+        "name": "package.json",
+        "sha256": "b38f4cd8d339c609ed1380cd46546f23945b5ede46f29d90fe270ab3d73c860d",
+        "location": "head:package.json"
+      },
+      {
+        "name": "cache archive (pnpm-store)",
+        "sha256": "9ea0916b60da64cfdb2c6b7f324c6de6968946ade3996462302174db8909f9fa",
+        "location": "~/.t3/bench-cache/archives/j-trpc-5017.tar.gz"
+      }
     ],
-    "platform": "recorded at the #137 freeze (2026-09-07): Darwin 27.0.0 arm64; node v24.19.0 with corepack pnpm; git 2.55.0. Not yet re-measured on the suite's Linux machine; the pnpm store archive is not yet built (design §8 step 4)."
+    "platform": "measured on the suite machine at 2026-09-24T11:09:53Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1; the #137 freeze (2026-09-07) ran on Darwin 27.0.0 arm64",
+    "cache": {
+      "kind": "pnpm-store",
+      "build": [
+        "mkdir -p {work}/bin && corepack enable --install-directory {work}/bin",
+        "PATH={work}/bin:$PATH pnpm install --frozen-lockfile --store-dir {cache}/pnpm-store"
+      ],
+      "post_clone": [
+        "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1"
+      ],
+      "env": {
+        "COREPACK_HOME": "{cache}/corepack",
+        "PNPM_HOME": "{cache}/pnpm-home",
+        "COREPACK_ENABLE_STRICT": "0"
+      },
+      "smoke": [
+        {
+          "name": "type-check",
+          "command": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && echo clean",
+          "revision": "both"
+        }
+      ]
+    }
   },
   "exposure": {
     "entered_suite": "2026-09-07 (issue #137 qualification grid, target (j))",

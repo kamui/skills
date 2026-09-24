@@ -1,52 +1,43 @@
 {
   "schema_version": 1,
   "target": "i-requests-6667",
-  "source": "recorded",
-  "source_document": "docs/research/one-shot-qualification-2026-09-07/README.md §1.2 (execution allowances) and i-requests-6667/register.md (reproduction)",
-  "measured_at": "2026-09-07T04:52:01Z",
-  "platform": "Darwin 27.0.0 arm64; Python 3.14.7; git 2.55.0 (the #137 machine)",
+  "source": "measured",
+  "measured_at": "2026-09-24T11:09:45Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.19.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
   "provisioning": {
-    "recipe": "python3 -m venv <cache-root>/venvs/requests; pip install -e <clone> -r requirements-dev.txt",
-    "duration_seconds": 9,
+    "recipe": "restore cache archive sha256:f301c682696033bfabc154d1df76b09405a8d50229d0acca2508ddd70969e3d5",
+    "duration_seconds": 0.17,
     "tree_clean_after": true
   },
   "checks": [
     {
       "name": "focused pytest, ssl/verify selection",
-      "command": "PYTHONPATH=<clone>/src <venv>/bin/python -m pytest -k \"ssl or verify\"",
+      "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider -k \"ssl or verify\" tests",
       "revision": "head",
       "exit_code": 1,
-      "duration_seconds": 2.7,
-      "summary": "one failure, present at the merge-base too: an OpenSSL versus fixture-certificate mismatch, not introduced by the change"
+      "duration_seconds": 3.53,
+      "summary": "2 failed, 5 passed, 599 deselected, 6468 warnings in 2.92s"
+    },
+    {
+      "name": "focused pytest, ssl/verify selection",
+      "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider -k \"ssl or verify\" tests",
+      "revision": "base",
+      "exit_code": 1,
+      "duration_seconds": 3.55,
+      "summary": "2 failed, 5 passed, 599 deselected, 6468 warnings in 2.93s"
     },
     {
       "name": "adapters suite",
-      "command": "pytest tests/test_adapters.py -q",
+      "command": "PYTHONPATH={clone}/src {cache}/venv/bin/python -m pytest -q -p no:cacheprovider tests/test_adapters.py",
       "revision": "head",
       "exit_code": 0,
-      "duration_seconds": 1.2,
-      "summary": "1 passed"
-    },
-    {
-      "name": "adapter and TLS selection",
-      "command": "pytest tests/test_requests.py -q -k \"ssl or verify or cert or Adapter or adapter\"",
-      "revision": "both",
-      "exit_code": 1,
-      "duration_seconds": 3.4,
-      "summary": "1 failed, 20 passed, 308 deselected at both revisions; the same test (test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert) fails at both"
-    },
-    {
-      "name": "override reproduction",
-      "command": "python repro.py (custom ssl_context via init_poolmanager, then _get_connection(pr, verify=True))",
-      "revision": "both",
-      "exit_code": 0,
-      "duration_seconds": 0,
-      "summary": "custom context preserved at the merge-base; replaced by the preloaded context at head"
+      "duration_seconds": 0.25,
+      "summary": "1 passed in 0.01s"
     }
   ],
   "notes": [
-    "Transcribed from the #137 record; not yet re-measured on the suite machine (Linux 6.6 WSL2 x86_64; Python 3.14.7). The offline wheel cache for the virtualenv is not yet archived (design §8 step 4).",
-    "Mirror rebuilt on the suite machine at 2026-09-24T09:31:05Z by provision.py from the staging clone: every negative SHA absent, newest reachable commit date equals the head's, diff identity equals target.json."
+    "Measured by provision.py smoke on this machine; cache kind python-venv. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 0.18s; tracked tree clean afterwards: true."
   ],
   "mirror": {
     "built_at": "2026-09-24T09:31:05Z",

@@ -10,11 +10,11 @@ rates, harness registries, the manifest checker, and the migrated tools exist (d
 and 2, with the three defect fixes applied: relative-path read audit, four-event timing in the
 wrapper, and an `unresolved` parse status). Forwarding stubs remain at `docs/research/tools/` for
 the four moved Python tools so historical commands keep working. The six targets of the #137
-qualification grid are converted under `targets/` (step 3) and their truncated mirrors are rebuilt
-and verified in the cache root (the mirror half of step 4). Still to come: the dependency-cache
-archives (venv, pnpm store, npm cache, Go module cache) and a re-measurement of `smoke.json` on
-this machine; the toy run filed as `runs/2026-09-24-toy/` (step 5); the four fresh targets and the
-first frozen run (step 6); `run_cell.py`, `score.py`, `compare.py`.
+qualification grid are converted under `targets/` (step 3); their truncated mirrors are rebuilt
+and verified, their dependency caches are built and archived with hashes, and every `smoke.json` is
+measured on this machine (step 4). Still to come: the toy run filed as `runs/2026-09-24-toy/`
+(step 5); the four fresh targets and the first frozen run (step 6); `run_cell.py`, `score.py`,
+`compare.py`.
 
 ## Layout
 
@@ -63,9 +63,12 @@ Six targets are migrated from the [#137 qualification grid](../docs/research/one
 - `register.v1.json`: the sealed truth converted from the prose register, with the pre-cutoff
   hints and the adjudicator's limits disclosed; `n-ripgrep-2957` also has `register.v2.json`, the
   blinded post-grid revision that added GT-n1. Defect ids never renumber.
-- `smoke.json`: provisioning and smoke-check outcomes. For the six migrated targets these are
-  transcribed from the #137 record (`source: recorded`) and carry the mirror rebuild outcome from
-  this machine; a `measured` file replaces them when the suite re-runs the checks here.
+- `smoke.json`: provisioning and smoke-check outcomes measured on this machine by
+  `provision.py smoke` (`source: measured`): the platform, the cache restore and offline post-clone
+  duration, whether the tracked tree stayed clean, and every smoke command's exit code and duration
+  at the head and, for checks marked `base` or `both`, at the merge-base in a second clone
+  provisioned the same way, plus the mirror rebuild outcome. The #137 machine's figures stay in
+  that bundle's README and registers.
 
 **Diff identity.** `diff_identity.py <repo> <base> <head>` renders `git diff-tree -r --no-renames`
 as `<status>\t<path>\t<base-blob>\t<head-blob>` lines sorted by path and hashes them with SHA-256.
@@ -79,6 +82,26 @@ the checks; `provision.py clone --out <dir>` makes an attempt's working clone an
 Four of the recorded negative SHAs are pull-request branch heads that a default clone never holds
 (`refs/pull/<n>/head` only), so the staging clone cannot confirm them as present; the mirror check
 confirms them absent, which is the property that matters.
+
+**Dependency caches.** `provisioning.cache` in `target.json` is the executable recipe: `build`
+commands run once, online, in a scratch clone at the head to populate
+`~/.t3/bench-cache/caches/<id>` (`provision.py cache`, which then archives the directory to
+`~/.t3/bench-cache/archives/<id>.tar.gz` and prints the `dependency_identity` entry with the
+archive's hash); `post_clone` commands run offline in every attempt clone and must leave the
+tracked tree clean (`provision.py prepare`); `env` is exported for all of them; `smoke` names the
+commands `provision.py smoke` runs at the head, the base, or both. The archive, not the build
+directory, is what every clone uses: `prepare` checks the archive against the hash `target.json`
+records and restores it into `<clone>-cache`, that clone's own `{cache}`, so a clone's writes
+(Go's build cache, npm's index, bytecode) never reach another clone or the archive. A restore
+works at any path, so an archive holds no relative link out of the cache (`prepare` refuses a
+dangling one). Commands go through `sh -c` with `{cache}`, `{clone}`, `{work}` and `{cache_root}`
+substituted, so an `--offline` flag or `GOPROXY=off` is the command's own responsibility. The six
+migrated targets use a uv-built relocatable Python 3.13 virtualenv (requests; its dev requirements
+pin a pytest that cannot import under 3.14), a corepack-managed pnpm store whose launcher links
+each clone makes after its restore (trpc), an npm cache (graphql-js), a Go module and build cache
+(grpc-go), and nothing beyond node or zsh (bokeh, ripgrep). Archives are machine-specific (the
+virtualenv links this machine's uv Python); the hash identifies what this machine used, and a later
+machine rebuilds and records its own.
 
 ## Three rules
 

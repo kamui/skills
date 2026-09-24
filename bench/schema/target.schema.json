@@ -33,10 +33,23 @@
       "additionalProperties": false,
       "properties": {
         "recipe": {"type": "string", "description": "Commands run after clone from the offline cache, or 'none'."},
-        "allowance": {"type": "string", "description": "The focused-command allowance text given identically to every arm."},
+        "allowance": {"type": "string", "description": "The focused-command allowance text given identically to every arm. <clone> is the attempt's clone and <cache> its own restore of the cache archive (provision.py prepare puts it at <clone>-cache)."},
         "unavailable": {"type": "string"},
         "dependency_identity": {"type": "array", "items": {"type": "object", "required": ["name", "sha256"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "location": {"type": "string"}}}},
-        "platform": {"type": "string", "description": "Toolchain and OS record at freeze, e.g. 'Linux 6.6 x86_64; Python 3.14.7; node 24.19.0'."}
+        "platform": {"type": "string", "description": "Toolchain and OS record at freeze, e.g. 'Linux 6.6 x86_64; Python 3.14.7; node 24.19.0'."},
+        "cache": {
+          "type": "object",
+          "description": "The executable form of the recipe, run by provision.py. Commands go through sh -c with {cache}, {clone}, {work} and {cache_root} substituted.",
+          "required": ["kind", "build", "post_clone", "env", "smoke"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {"type": "string"},
+            "build": {"type": "array", "items": {"type": "string"}, "description": "Run once, online, in a scratch clone at the head, to populate {cache}; the cache directory is then archived and hashed, and every later clone restores its own copy of the archive after checking the hash recorded in dependency_identity."},
+            "post_clone": {"type": "array", "items": {"type": "string"}, "description": "Run offline in every attempt clone after cloning; must leave the tracked tree clean."},
+            "env": {"type": "object", "additionalProperties": {"type": "string"}},
+            "smoke": {"type": "array", "items": {"type": "object", "required": ["name", "command", "revision"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "command": {"type": "string"}, "revision": {"enum": ["head", "base", "both"], "description": "base runs in a second clone with main (the merge-base) checked out and provisioned the same way; both runs at each and records one check per revision."}}}}
+          }
+        }
       }
     },
     "exposure": {
