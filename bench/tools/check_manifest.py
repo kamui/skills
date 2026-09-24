@@ -46,6 +46,20 @@ def type_ok(value, name: str) -> bool:
     return isinstance(value, TYPES[name])
 
 
+def same(a, b) -> bool:
+    """JSON Schema equality for ``const`` and ``enum``: a boolean never equals a number, ``1``
+    equals ``1.0``, and arrays and objects compare member by member."""
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return a == b
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(same(a[k], b[k]) for k in a)
+    return type(a) is type(b) and a == b
+
+
 def check(schema: dict, value, path: str, root: dict, out: list) -> None:
     unknown = set(schema) - SUPPORTED
     if unknown:
@@ -59,10 +73,10 @@ def check(schema: dict, value, path: str, root: dict, out: list) -> None:
             raise SchemaError(f"{path}: unresolved {ref}")
         check(target, value, path, root, out)
         return
-    if "const" in schema and value != schema["const"]:
+    if "const" in schema and not same(value, schema["const"]):
         out.append(f"{path}: expected constant {schema['const']!r}, got {value!r}")
         return
-    if "enum" in schema and value not in schema["enum"]:
+    if "enum" in schema and not any(same(value, member) for member in schema["enum"]):
         out.append(f"{path}: {value!r} not in {schema['enum']!r}")
         return
     if "type" in schema:
@@ -111,6 +125,9 @@ def self_test() -> int:
                    "missing required key 'k'", "unexpected key 'zzz'"):
         assert needle in reasons, (needle, reasons)
     assert validate({"type": "integer"}, True), "bool is not an integer"
+    assert validate({"const": 1}, True) and validate({"const": True}, 1), "bool and number are distinct consts"
+    assert validate({"enum": [True, False, "n/a"]}, 0) and validate({"enum": [0, 1]}, False), "bool is not a numeric enum member"
+    assert validate({"const": 1}, 1.0) == [] and validate({"enum": [True, "n/a"]}, True) == []
     try:
         validate({"type": "object", "oneOf": []}, {})
     except SchemaError:
