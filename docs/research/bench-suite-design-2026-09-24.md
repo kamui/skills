@@ -1,6 +1,8 @@
 # Design: a rerunnable reviewer benchmark suite (`bench/`)
 
-**Status: §8 steps 1 and 2 implemented in [`bench/`](../../bench/README.md); the rest is design.**
+**Status: §8 steps 1–3 implemented in [`bench/`](../../bench/README.md), and step 4's mirrors are
+rebuilt and verified (`provision.py`); the dependency-cache archives of step 4, the toy run of
+step 5, and the fresh targets of step 6 remain.**
 Written 2026-09-24 after the first-draft proposal was reviewed by a Codex reviewer (`gpt-6-astra`,
 reasoning `high`); the review is
 [`builtin-review-benchmark-2026-09-24/review-2.md`](builtin-review-benchmark-2026-09-24/review-2.md)
