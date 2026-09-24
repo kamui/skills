@@ -1,0 +1,30 @@
+{
+  "commands": 38,
+  "failed_commands": 2,
+  "agent_messages": 7,
+  "skill_files_read": {
+    "SKILL.md": 1,
+    "references/output.md": 1,
+    "references/rubric.md": 2,
+    "references/targets.md": 1,
+    "references/verification.md": 1
+  },
+  "finalizations": [
+    0
+  ],
+  "repair_loops": 0,
+  "checks": [],
+  "forge_packet": [],
+  "verifier_builds": 1,
+  "verifier_dispatches": 1,
+  "accountings": [
+    0
+  ],
+  "usage": {
+    "input_tokens": 1637918,
+    "cached_input_tokens": 1535872,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 12677,
+    "reasoning_output_tokens": 3534
+  }
+}

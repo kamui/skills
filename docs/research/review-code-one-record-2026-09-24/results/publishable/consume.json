@@ -1,0 +1,57 @@
+{
+  "task": "publishable",
+  "private_dir": "/home/jack/.cache/rc357x/root/publishable/work/review",
+  "status": "Changes Requested",
+  "coverage": "complete",
+  "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+  "packet_context": "02f8e5cc19a99022c291144b2ce7827adcebedb35f8948a16f0b72feed469ced",
+  "supplied_inputs": "no",
+  "findings": [
+    {
+      "id": "ledger/export/formula-leading-description",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "security"
+    }
+  ],
+  "questions": [],
+  "observations": 0,
+  "allowance": {
+    "initial_spent": true,
+    "follow_up_spent": false
+  },
+  "batches": [
+    "initial/initial"
+  ],
+  "tasks": [
+    {
+      "id": "ledger/export/formula-leading-description",
+      "type": "candidate",
+      "trigger": "must-fix",
+      "batch": "initial",
+      "ruling": "confirmed",
+      "confirmed_in": null
+    }
+  ],
+  "outstanding": [],
+  "lineage": [],
+  "prior_record": null,
+  "prior_items": [],
+  "caller_check": {
+    "exit": 0,
+    "stdout": "status Changes Requested\ncoverage complete\nrecord /home/jack/.cache/rc357x/root/publishable/work/review/record.json\npayload /home/jack/.cache/rc357x/root/publishable/work/review/payload.json\nbatch /home/jack/.cache/rc357x/root/publishable/work/review/batch.json\nreport /home/jack/.cache/rc357x/root/publishable/work/review/report.md\n"
+  },
+  "batch": {
+    "commit_id": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "event": "COMMENT",
+    "comments": 1
+  },
+  "writes_jsonl_items": 0,
+  "gating": {
+    "event": "REQUEST_CHANGES",
+    "exit": 0,
+    "advisory_suffix_removed": true
+  },
+  "report_bytes": 5318,
+  "unmet": []
+}
