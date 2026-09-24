@@ -85,7 +85,7 @@
         "location": "~/.t3/bench-cache/archives/o-astro-16079.tar.gz"
       }
     ],
-    "platform": "measured on the suite machine at 2026-09-24T20:00:33Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "platform": "measured on the suite machine at 2026-09-24T21:05:22Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
     "cache": {
       "kind": "pnpm-store",
       "build": [
@@ -106,7 +106,7 @@
       "smoke": [
         {
           "name": "adapter path-override and ISR tests",
-          "command": "cd packages/integrations/vercel && node --test test/path-override-security.test.js test/isr.test.js 2>&1 | tail -8",
+          "command": "cd packages/integrations/vercel && node --test test/path-override-security.test.js test/isr.test.js",
           "revision": "both"
         }
       ]
