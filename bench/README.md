@@ -64,9 +64,10 @@ Six targets are migrated from the [#137 qualification grid](../docs/research/one
   hints and the adjudicator's limits disclosed; `n-ripgrep-2957` also has `register.v2.json`, the
   blinded post-grid revision that added GT-n1. Defect ids never renumber.
 - `smoke.json`: provisioning and smoke-check outcomes measured on this machine by
-  `provision.py smoke` (`source: measured`): the platform, the offline post-clone duration, whether
-  the tracked tree stayed clean, and every smoke command's exit code and duration, plus the mirror
-  rebuild outcome. The #137 machine's figures stay in that bundle's README and registers.
+  `provision.py smoke` (`source: measured`): the platform, the cache restore and offline post-clone
+  duration, whether the tracked tree stayed clean, and every smoke command's exit code and duration
+  at the head and, for checks marked `base` or `both`, at the merge-base in a second clone
+  provisioned the same way, plus the mirror rebuild outcome. The #137 machine's figures stay in that bundle's README and registers.
 
 **Diff identity.** `diff_identity.py <repo> <base> <head>` renders `git diff-tree -r --no-renames`
 as `<status>\t<path>\t<base-blob>\t<head-blob>` lines sorted by path and hashes them with SHA-256.
@@ -87,9 +88,12 @@ commands run once, online, in a scratch clone at the head to populate
 `~/.t3/bench-cache/archives/<id>.tar.gz` and prints the `dependency_identity` entry with the
 archive's hash); `post_clone` commands run offline in every attempt clone and must leave the
 tracked tree clean (`provision.py prepare`); `env` is exported for all of them; `smoke` names the
-commands `provision.py smoke` runs at the head. Commands go through `sh -c` with `{cache}`,
-`{clone}`, `{work}` and `{cache_root}` substituted, so an `--offline` flag or `GOPROXY=off` is the
-command's own responsibility. The six migrated targets use a uv-built Python 3.13 virtualenv
+commands `provision.py smoke` runs at the head, the base, or both. The archive, not the build
+directory, is what every clone uses: `prepare` checks the archive against the hash `target.json`
+records and restores it into `<clone>-cache`, that clone's own `{cache}`, so a clone's writes (Go's
+build cache, npm's index, bytecode) never reach another clone or the archive. Commands go through
+`sh -c` with `{cache}`, `{clone}`, `{work}` and `{cache_root}` substituted, so an `--offline` flag
+or `GOPROXY=off` is the command's own responsibility. The six migrated targets use a uv-built Python 3.13 virtualenv
 (requests; its dev requirements pin a pytest that cannot import under 3.14), a corepack-managed
 pnpm store (trpc), an npm cache (graphql-js), a Go module and build cache (grpc-go), and nothing
 beyond node or zsh (bokeh, ripgrep). Archives are machine-specific (a virtualenv is not
