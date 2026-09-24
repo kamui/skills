@@ -18,7 +18,8 @@ that touches it, and a separate Unix user would make it unreachable rather than 
 ``keygen`` writes a key only if none exists. ``seal`` prints the plaintext's SHA-256, which the
 caller records beside the ciphertext (``target.json`` ``sealed``, or a ``SHA256SUMS`` file) so a
 reveal is checkable without trusting the ciphertext. ``open`` decrypts and refuses a plaintext
-whose SHA-256 differs from ``--sha256``, removing what it wrote.
+whose SHA-256 differs from ``--sha256``, removing what it wrote; a failed decryption removes its
+partial output too.
 
 Exit codes: 0 done; 1 ``open`` produced a plaintext whose hash does not match; 2 a file or the key
 cannot be read or written, or ``openssl`` failed.
@@ -68,6 +69,8 @@ def openssl(key: Path, source: Path, target: Path, decrypt: bool) -> None:
     except FileNotFoundError as error:
         raise SealError(f"cannot run openssl: {error}") from error
     except subprocess.CalledProcessError as error:
+        if decrypt:  # openssl writes before it can tell the key or ciphertext is wrong
+            target.unlink(missing_ok=True)
         raise SealError(f"openssl failed on {source}: {error.stderr.decode('utf-8', 'replace').strip()}") from error
 
 
@@ -111,6 +114,7 @@ def self_test() -> int:
             pass
         else:
             raise AssertionError("a wrong key decrypted")
+        assert not (base / "wrong.json").exists()
         run = subprocess.run([sys.executable, __file__, "seal", str(plain), str(base / "cli.enc"), "--key", str(key)],
                              capture_output=True, text=True, encoding="utf-8")
         assert run.returncode == 0 and run.stdout.strip() == digest, run
