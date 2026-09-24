@@ -16,9 +16,11 @@ for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 files. Every shell command and every file-tool path is listed; a path outside the
 clone, the attempt directory and the fresh home, or a command that names a
 network tool (``curl``, ``wget``, ``gh``, ``git fetch``/``pull``/``push``/``clone``,
-``pip``, ``npm install``, ``ssh``), is a violation. Relative ``..`` paths are resolved against
-the command's working directory (the clone, following ``cd`` across ``;``, ``&&`` and ``|``) and
-judged like absolute ones. Codex walks up the directory tree
+``pip``, ``npm install``, ``ssh``), is a violation. Every operand with a ``..`` segment, and every
+relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the clone, is resolved
+against the command's working directory (the clone or that ``workdir``, following ``cd`` across
+``;``, ``&&``, ``||`` and ``|``) and judged like an absolute path; a ``workdir`` outside the
+allowed roots is itself a violation. Codex walks up the directory tree
 looking for ``AGENTS.md``/``AGENTS.override.md`` and the built-in looks for ``CLAUDE.md``;
 a probe of such a guidance file in an ancestor of the clone is recorded under
 ``guidance_probes`` and is a violation only if that file exists. The built-in's prompt header
@@ -39,6 +41,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import sys
 
 NETWORK = re.compile(r"(?<![\w-])(curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+|git\s+(fetch|pull|push|clone|ls-remote|remote\s+add)\b")
@@ -47,6 +50,10 @@ CODEX_RUBRIC = "You are acting as a reviewer for a proposed code change"
 DIFF_CMD = re.compile(r"git\s+diff\s+[^;&|\n]*")
 GUIDANCE = ("AGENTS.md", "AGENTS.override.md", "CLAUDE.md", "CLAUDE.local.md")
 CODEX_CMD = re.compile(r'cmd:\s*"((?:[^"\\]|\\.)*)"')
+# One exec_command object literal whose values are strings or bare scalars, so its cmd and workdir pair up.
+CODEX_OBJ = re.compile(r'\{((?:\s*[\w$]+\s*:\s*(?:"(?:[^"\\]|\\.)*"|[^,{}"\[\]]+)\s*,?)+)\}')
+CODEX_FIELD = re.compile(r'([\w$]+)\s*:\s*(?:"((?:[^"\\]|\\.)*)"|[^,{}"\[\]]+)')
+CODEX_WORKDIR = re.compile(r'(?:workdir|cwd|working_directory)"?\s*:\s*"((?:[^"\\]|\\.)*)"')
 
 
 def load_lines(path: Path):
@@ -65,26 +72,38 @@ HOME_DIR = None
 
 
 SPLIT = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
-CD = re.compile(r"^cd\s+(\S+)")
-DOTDOT = re.compile(r"(?<![\w./])((?:\.\./)+[\w./@+-]*|\.\.(?=[\s;|&'\")]|$))")
 
 
-def paths_in(text: str, cwd: str):
-    """Absolute paths, ``~`` paths expanded against the fresh home, and ``..`` paths resolved
-    against the command's working directory (tracking ``cd`` across ``;``, ``&&``, ``|``)."""
-    found = re.findall(r"(?<![\w.~}\)\"'])(/[\w.@+-][\w./@+-]*)", text or "")
+def tokens(segment: str) -> list:
+    try:
+        return shlex.split(segment)
+    except ValueError:  # an unbalanced quote, e.g. a quoted pattern split at a pipe
+        return [t.strip("'\"") for t in segment.split()]
+
+
+def paths_in(text: str, cwd: str, base: str = None):
+    """Absolute paths, ``~`` paths expanded against the fresh home, every operand with a ``..``
+    segment, and every relative operand while the working directory is not ``base`` (the clone),
+    each resolved against the command's working directory. The walk starts at ``cwd`` and tracks
+    ``cd`` across ``;``, ``&&``, ``||`` and ``|``."""
+    found = [os.path.normpath(p) for p in re.findall(r"(?<![\w.~}\)\"'])(/[\w.@+-][\w./@+-]*)", text or "")]
     tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
     relative = []
-    here = cwd
+    here, base = cwd, base or cwd
     for segment in SPLIT.split(text or ""):
-        for rel in DOTDOT.findall(segment):
-            relative.append(os.path.normpath(os.path.join(here, rel)))
-        m = CD.match(segment.strip())
-        if m:
-            target = m.group(1).strip("'\"")
-            target = HOME_DIR + target[1:] if target.startswith("~") and HOME_DIR else target
-            here = os.path.normpath(os.path.join(here, target))
-    return found + [HOME_DIR + t for t in tilde if HOME_DIR] + relative
+        words = tokens(segment.strip().lstrip("({ "))
+        for word in words[1:]:
+            operand = word.split("=", 1)[1] if word.startswith("-") and "=" in word else word
+            if not operand or operand.startswith(("/", "~", "-")):
+                continue
+            if ".." in operand.split("/") or here != base:
+                relative.append(os.path.normpath(os.path.join(here, operand)))
+        if words and words[0] == "cd":
+            target = words[1] if len(words) > 1 else "~"
+            if target != "-":
+                target = HOME_DIR + target[1:] if target.startswith("~") and HOME_DIR else target
+                here = os.path.normpath(os.path.join(here, target))
+    return list(dict.fromkeys(found + [HOME_DIR + t for t in tilde if HOME_DIR] + relative))
 
 
 PREFIXES: list = []
@@ -137,8 +156,33 @@ def audit_claude(attempt: Path, roots):
     return files, commands, reads, headers, findings_calls, texts
 
 
+def codex_calls(text: str) -> tuple:
+    """(command, workdir) pairs from one Codex tool call's text, and the workdirs it names that no
+    pair carries. Each ``exec_command`` object's ``cmd`` pairs with its own ``workdir``; a ``cmd``
+    outside a parseable object gets the call's only ``workdir`` when it names exactly one, else
+    none; with no ``cmd`` the whole text is the command."""
+    decode = lambda value: value.encode().decode("unicode_escape")
+    pairs, spans = [], []
+    for obj in CODEX_OBJ.finditer(text):
+        fields = {m.group(1): m.group(2) for m in CODEX_FIELD.finditer(obj.group(1))}
+        if fields.get("cmd") is not None:
+            workdir = fields.get("workdir")
+            pairs.append((obj.start(), decode(fields["cmd"]), decode(workdir) if workdir is not None else None))
+            spans.append(obj.span())
+    workdirs = {decode(w) for w in CODEX_WORKDIR.findall(text)}
+    lone = next(iter(workdirs)) if len(workdirs) == 1 else None
+    for m in CODEX_CMD.finditer(text):
+        if not any(start <= m.start() < end for start, end in spans):
+            pairs.append((m.start(), decode(m.group(1)), lone))
+    pairs.sort(key=lambda pair: pair[0])
+    calls = [(cmd, workdir) for _, cmd, workdir in pairs] or [(text, lone)]
+    return calls, sorted(workdirs - {w for _, w in calls})
+
+
 def audit_codex(attempt: Path, roots):
-    commands, rubric, texts = [], 0, []
+    """Returns the transcripts, the (command, workdir) calls, the workdirs no call carries, the
+    rubric marker count, and the assistant texts."""
+    commands, stray, rubric, texts = [], [], 0, []
     files = sorted((attempt / "home" / ".codex" / "sessions").rglob("rollout-*.jsonl"))
     for path in files:
         for _, record in load_lines(path):
@@ -156,8 +200,14 @@ def audit_codex(attempt: Path, roots):
                         parsed = args
                     cmd = parsed.get("cmd") or parsed.get("command") or (parsed.get("action") or {}).get("command") if isinstance(parsed, dict) else str(parsed)
                     text = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
-                    inner = CODEX_CMD.findall(text)
-                    commands.extend(c.encode().decode("unicode_escape") for c in inner) if inner else commands.append(text)
+                    workdir = None
+                    if isinstance(parsed, dict):
+                        action = parsed.get("action") if isinstance(parsed.get("action"), dict) else {}
+                        workdir = parsed.get("workdir") or parsed.get("cwd") or action.get("working_directory") or action.get("workdir")
+                        workdir = workdir if isinstance(workdir, str) else None
+                    inner, unpaired = codex_calls(text)
+                    commands.extend((c, w if w is not None else workdir) for c, w in inner)
+                    stray.extend(unpaired)
                 elif kind == "message" and payload.get("role") == "assistant":
                     for block in payload.get("content") or []:
                         if isinstance(block, dict) and block.get("text"):
@@ -165,7 +215,7 @@ def audit_codex(attempt: Path, roots):
             blob = json.dumps(payload)
             if CODEX_RUBRIC in blob:
                 rubric += 1
-    return files, commands, rubric, texts
+    return files, commands, stray, rubric, texts
 
 
 def main() -> int:
@@ -186,6 +236,7 @@ def main() -> int:
     try:
         if args.arm in ("claude-builtin", "review-code"):
             files, commands, reads, headers, calls, texts = audit_claude(attempt, roots)
+            workdirs, stray = [None] * len(commands), []
             report = {"transcripts": [str(f) for f in files], "prompt_headers": headers,
                       "report_findings_calls": len(calls)}
             if args.arm == "claude-builtin" and not headers:
@@ -195,7 +246,8 @@ def main() -> int:
             payload = {"final_text": texts[-1] if texts else None, "report_findings": calls}
             (attempt / "payload.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
         else:
-            files, commands, rubric, texts = audit_codex(attempt, roots)
+            files, calls, stray, rubric, texts = audit_codex(attempt, roots)
+            commands, workdirs = [c for c, _ in calls], [w for _, w in calls]
             reads = []
             report = {"transcripts": [str(f) for f in files], "rubric_markers": rubric}
             if rubric == 0:
@@ -213,10 +265,16 @@ def main() -> int:
         d = os.path.dirname(d)
         ancestors.add(d)
     probes = []
-    for cmd in commands:
+    for cmd, workdir in list(zip(commands, workdirs)) + [("", w) for w in stray]:
         if NETWORK.search(cmd):
             violations.append(f"network-capable command: {cmd[:200]}")
-        for p in paths_in(cmd, clone_real):
+        start = clone_real
+        if workdir:
+            start = os.path.normpath(os.path.join(clone_real, HOME_DIR + workdir[1:] if workdir.startswith("~") else workdir))
+            if not inside(start, roots):
+                violations.append(f"working directory outside allowed roots: {workdir}")
+            start = os.path.realpath(start)
+        for p in paths_in(cmd, start, clone_real):
             if inside(p, roots) or p.startswith(("/usr/", "/bin/", "/dev/", "/proc/", "/etc/")):
                 continue
             if os.path.basename(p) in GUIDANCE and os.path.dirname(os.path.realpath(p)) in ancestors:
@@ -229,7 +287,7 @@ def main() -> int:
         if p.startswith("/") and not inside(p, roots):
             violations.append(f"file tool read outside allowed roots: {p}")
     diffs = [m.group(0) for cmd in commands for m in DIFF_CMD.finditer(cmd)]
-    report.update({"commands": commands, "file_tool_paths": reads, "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
+    report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": reads, "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
                    "violations": violations, "allowed_roots": roots})
     (attempt / "audit.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     if args.json:
