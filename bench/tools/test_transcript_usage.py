@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise run timing through the transcript_usage.py CLI.
 
-Usage: python3 docs/research/tools/test_transcript_usage.py
+Usage: python3 bench/tools/test_transcript_usage.py
 Inputs: temporary synthetic JSONL transcripts and JSON timing sidecars.
 Exit codes: 0 all checks pass; 1 a test fails.
 """

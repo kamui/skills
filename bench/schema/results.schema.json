@@ -1,0 +1,51 @@
+{
+  "$id": "bench/schema/results.schema.json",
+  "title": "runs/<run>/results.v<M>.json",
+  "description": "Metrics computed by score.py from a run's attempts and mappings. Names the mapping and register versions it was computed from; every cell is either included, unattempted, or invalid, with denominators stated.",
+  "type": "object",
+  "required": ["schema_version", "run_id", "computed_at", "metric_code_revision", "rubric_version", "inputs", "cells", "by_target_arm", "by_arm", "by_shape", "by_cohort"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string"},
+    "computed_at": {"type": "string"},
+    "metric_code_revision": {"type": "string"},
+    "rubric_version": {"type": "integer", "minimum": 1},
+    "inputs": {"type": "array", "items": {"type": "object", "required": ["target", "mapping_version", "register_version"], "additionalProperties": false, "properties": {"target": {"type": "string"}, "mapping_version": {"type": "integer"}, "register_version": {"type": "integer"}}}},
+    "cells": {"type": "array", "items": {"type": "object", "required": ["target", "arm", "replicate", "status", "attempts"], "additionalProperties": false, "properties": {"target": {"type": "string"}, "arm": {"type": "string"}, "replicate": {"type": "integer"}, "status": {"enum": ["valid completed", "incomplete", "harness-invalid", "unattempted"]}, "attempts": {"type": "array", "items": {"type": "string"}}}}},
+    "by_target_arm": {"type": "array", "items": {"$ref": "#/$defs/metrics_row"}},
+    "by_arm": {"type": "array", "items": {"$ref": "#/$defs/metrics_row"}},
+    "by_shape": {"type": "array", "items": {"$ref": "#/$defs/metrics_row"}},
+    "by_cohort": {"type": "array", "items": {"$ref": "#/$defs/metrics_row"}}
+  },
+  "$defs": {
+    "metrics_row": {
+      "type": "object",
+      "required": ["key", "attempts_included", "cells_unattempted", "cells_invalid", "replacements_used", "recall_attempt_level", "recall_completed_only", "false_findings_raw", "false_findings_unique", "unresolved_items", "approved_on_buggy", "zero_recovery", "false_clean", "fix_sufficient", "priority_errors", "noise_items", "cost_contemporaneous_usd", "cost_common_rate_usd", "quota_consumed", "elapsed_to_payload_s", "elapsed_to_completion_s"],
+      "additionalProperties": false,
+      "properties": {
+        "key": {"type": "object", "additionalProperties": {"type": "string"}},
+        "attempts_included": {"type": "integer"},
+        "cells_unattempted": {"type": "integer"},
+        "cells_invalid": {"type": "integer"},
+        "replacements_used": {"type": "integer"},
+        "recall_attempt_level": {"type": ["number", "null"]},
+        "recall_completed_only": {"type": ["number", "null"]},
+        "false_findings_raw": {"type": "integer"},
+        "false_findings_unique": {"type": "integer"},
+        "unresolved_items": {"type": "integer"},
+        "approved_on_buggy": {"type": "integer"},
+        "zero_recovery": {"type": "integer"},
+        "false_clean": {"type": "integer"},
+        "fix_sufficient": {"type": "object", "required": ["sufficient", "partial", "absent"], "properties": {"sufficient": {"type": "integer"}, "partial": {"type": "integer"}, "absent": {"type": "integer"}}},
+        "priority_errors": {"type": ["integer", "null"]},
+        "noise_items": {"type": "integer"},
+        "cost_contemporaneous_usd": {"type": ["number", "null"]},
+        "cost_common_rate_usd": {"type": ["number", "null"]},
+        "quota_consumed": {"type": ["string", "null"]},
+        "elapsed_to_payload_s": {"type": ["number", "null"]},
+        "elapsed_to_completion_s": {"type": ["number", "null"]}
+      }
+    }
+  }
+}

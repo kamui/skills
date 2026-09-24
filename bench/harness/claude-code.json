@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "description": "Observed prompt variants of Claude Code's built-in /code-review, keyed by CLI version. The hash is SHA-256 of the prompt body the forked subagent received with its first line (the 'Review target:' line, which carries the argument) removed, so the same variant hashes identically across targets. Selection depends on the session --effort flag and the model; the effort argument alone does not select a variant (observed 2026-09-24). A run manifest records which entry each built-in attempt matched; an unmatched hash is a new variant to register before the attempt counts.",
+  "versions": {
+    "2.1.281": {
+      "observed_on": "2026-09-24",
+      "variants": [
+        {
+          "header": "`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings`",
+          "selected_by": "session --effort high, model claude-sonnet-5",
+          "output_contract": "fenced JSON array in the final message (file, line, summary, failure_scenario); ReportFindings forbidden",
+          "body_sha256": "665e2e510c91fdd577b75239ee22b3aa51347cb1cb81dcd1adc791ef2e6b6bd9",
+          "body_bytes": 6496
+        },
+        {
+          "header": "`high effort → 8 inline angles → dedup (no verify) → ≤10 findings`",
+          "selected_by": "session --effort high, model claude-opus-5-5",
+          "output_contract": "ReportFindings call (file, line, summary, failure_scenario, category, verdict)",
+          "body_sha256": "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a",
+          "body_bytes": 5615
+        },
+        {
+          "header": "`minimal prompt → single careful diff pass → ≤15 findings`",
+          "selected_by": "no session effort flag (harness default), model claude-opus-5-5; also selected with the effort argument alone",
+          "output_contract": "ReportFindings call with level low",
+          "body_sha256": "3bfc28c5516ae5d3537bfe2235f84f6d2d2d487615928c89d50f39b89f2196e2",
+          "body_bytes": 1571
+        }
+      ],
+      "notes": [
+        "Phase 0 of every variant runs `git diff main...HEAD` (or `git diff HEAD~1`) regardless of the range argument; the local base branch must be named main.",
+        "The high Sonnet variant did not fan out its angles or run a verifier on a five-line diff; fan-out on grid-sized diffs is recorded per attempt from the subagent count.",
+        "The root transcript records no billed request; the review runs in <session-dir>/subagents/agent-*.jsonl."
+      ]
+    }
+  }
+}
