@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Forwarding stub: this tool moved to bench/tools/codex_usage.py on 2026-09-24.
 
-Historical bundles cite this path; the stub keeps those commands and the
-sibling import in interface_metrics.py working. Exit codes and output are the
-moved tool's own.
+Historical bundles cite this path; the stub keeps those commands working.
+Exit codes and output are the moved tool's own.
 """
 
 from __future__ import annotations

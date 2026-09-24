@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise codex_usage.py through its CLI.
 
-Usage: python3 docs/research/tools/test_codex_usage.py
+Usage: python3 bench/tools/test_codex_usage.py
 Inputs: temporary synthetic Codex rollout JSONL files.
 Exit codes: 0 all checks pass; 1 a test fails.
 """

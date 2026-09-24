@@ -41,8 +41,8 @@ kept as an item with ``claim`` set to its raw text and a ``parse_notes`` entry.
 ``--render`` prints every item uniformly (Location, Claim, Consequence, Fix) with priorities,
 verdict words and arm structure removed, for blind scoring.
 
-Exit codes: 0 success; 1 the native input contained no parseable review (details on stdout);
-2 unreadable input, named on stderr.
+Exit codes: 0 success; 1 the result is ``unresolved`` (the file is still written; details on
+stdout); 2 unreadable input, named on stderr.
 """
 
 from __future__ import annotations
@@ -291,7 +291,7 @@ def main() -> int:
     else:
         print(text)
     if doc["parse_status"] == "unresolved":
-        print("unresolved: the native input lacks the arm's expected review markers; adjudication required")
+        print("unresolved: the native input lacks the arm's expected review markers or has a region that did not parse; adjudication required")
         return 1
     if args.timing:
         from datetime import datetime, timezone
