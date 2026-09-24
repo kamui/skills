@@ -1,0 +1,77 @@
+{
+  "$id": "bench/schema/run-manifest.schema.json",
+  "title": "runs/<run>/manifest.json",
+  "description": "The frozen definition of one run: resolved arms, cohort, planned cells, caps, order, rates, policy, and the revisions of method, rubric and metric code. Append-only after the first dispatch; later changes are deviations that name the cells they invalidate.",
+  "type": "object",
+  "required": ["schema_version", "run_id", "created_at", "method_revision", "rubric_version", "metric_code_revision", "arms", "cohort", "planned_cells", "caps", "sealed_order", "rates", "execution_policy", "deviations"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}-[a-z0-9-]+$"},
+    "created_at": {"type": "string"},
+    "frozen_at": {"type": ["string", "null"]},
+    "freeze_commit": {"type": ["string", "null"]},
+    "method_revision": {"type": "string", "description": "Commit of docs/research/code-review-one-shot-method.md in force."},
+    "rubric_version": {"type": "integer", "minimum": 1},
+    "metric_code_revision": {"type": "string", "description": "Commit of bench/tools at freeze."},
+    "arms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "arm_file_sha256", "resolved_skill_tree", "expected_cli_version", "expected_prompt_hashes"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string"},
+          "arm_file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "resolved_skill_tree": {"type": ["string", "null"]},
+          "expected_cli_version": {"type": "string"},
+          "expected_prompt_hashes": {"type": "array", "items": {"type": "string"}},
+          "probe_attempt": {"type": ["string", "null"], "description": "The pre-dispatch probe that observed the CLI version and prompt hash."}
+        }
+      }
+    },
+    "cohort": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target", "register_version", "packet_sha256", "diff_manifest_sha256", "cohort_group"],
+        "additionalProperties": false,
+        "properties": {
+          "target": {"type": "string"},
+          "register_version": {"type": "integer", "minimum": 1},
+          "packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "diff_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "cohort_group": {"enum": ["regression", "fresh"]},
+          "execution_available": {"type": "boolean"}
+        }
+      }
+    },
+    "exclusions": {"type": "array", "items": {"type": "object", "required": ["target", "reason"], "additionalProperties": false, "properties": {"target": {"type": "string"}, "reason": {"type": "string"}}}},
+    "planned_cells": {
+      "type": "array",
+      "items": {"type": "object", "required": ["target", "arm", "replicate"], "additionalProperties": false, "properties": {"target": {"type": "string"}, "arm": {"type": "string"}, "replicate": {"type": "integer", "minimum": 1}}}
+    },
+    "caps": {
+      "type": "object",
+      "required": ["max_attempts", "replacements", "spend_usd", "closeout_reserve_usd", "max_in_flight"],
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {"type": "integer", "minimum": 1},
+        "replacements": {"type": "integer", "minimum": 0},
+        "spend_usd": {"type": "number", "minimum": 0},
+        "closeout_reserve_usd": {"type": "number", "minimum": 0},
+        "max_in_flight": {"type": "integer", "minimum": 1},
+        "attempt_usd": {"type": "number", "minimum": 0}
+      }
+    },
+    "sealed_order": {"type": "array", "items": {"type": "string"}, "description": "Cell keys 'target/arm/replicate' in dispatch order, sealed before the first dispatch."},
+    "rates": {"type": "array", "items": {"type": "object", "required": ["model", "as_of"], "properties": {"model": {"type": "string"}, "as_of": {"type": "string"}}}},
+    "execution_policy": {
+      "type": "object",
+      "required": ["allowance", "branch_layout"],
+      "additionalProperties": false,
+      "properties": {"allowance": {"type": "string"}, "branch_layout": {"type": "string"}, "unprivileged_user": {"type": ["string", "null"]}}
+    },
+    "deviations": {"type": "array", "items": {"type": "object", "required": ["at", "what", "invalidates"], "additionalProperties": false, "properties": {"at": {"type": "string"}, "what": {"type": "string"}, "invalidates": {"type": "array", "items": {"type": "string"}}}}}
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "description": "Observed review presets of Codex CLI's `codex review`, keyed by CLI version. The hash is SHA-256 of the reviewer system text (the block beginning 'You are acting as a reviewer for a proposed code change') as recorded in the child thread's session_meta. A run manifest records which entry each Codex attempt matched; an unmatched hash is a new preset to register before the attempt counts.",
+  "versions": {
+    "0.156.1": {
+      "observed_on": "2026-09-24",
+      "default_model": "gpt-6-astra",
+      "default_reasoning_effort": "none (as the CLI header reports it)",
+      "rubric_sha256": "ec60e7f36a1d1c2679ce095c0205ecc56f7dd8fb57707a13ef362072390f219f",
+      "rubric_bytes": 7666,
+      "rubric_marker": "You are acting as a reviewer for a proposed code change",
+      "output_contract": "stdout: summary paragraph, then 'Review comment:' bullets `- [P<n>] <title> — <path>:<start>-<end>` with an indented body; the child rollout's final JSON carries overall_correctness",
+      "notes": [
+        "`codex review --base <branch>` refuses a prompt; the range and the packet go on stdin (`codex review - < prompt`) and the rubric still applies.",
+        "The review runs in a child thread (thread_source subagent, parent_thread_id set); the parent rollout records no usage.",
+        "Under a clean HOME the preset still walks up the tree probing for AGENTS.md and AGENTS.override.md; the clone's ancestors must hold none.",
+        "The sandbox is read-only by default for an untrusted directory and workspace-write for a trusted one; the run pins it explicitly."
+      ]
+    }
+  }
+}
