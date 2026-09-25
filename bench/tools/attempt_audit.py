@@ -39,6 +39,7 @@ Exit codes: 0 no violation; 1 one or more violations (listed on stdout);
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 from pathlib import Path
@@ -76,7 +77,17 @@ HOME_DIR = None
 SPLIT = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
 # A path-like run starting a word or following whitespace (inside a quoted word), a redirection,
 # `=`, `:`, a quote or a bracket.
-RUN = re.compile(r"(?:^|(?<=[\s<>=:'\"(\[,]))([\w.@+-]*(?:/[\w.@+-]*)*)")
+RUN = re.compile(r"(?:^|(?<=[\s<>=:'\"(\[,]))([\w.@+*?\[\]-]*(?:/[\w.@+*?\[\]-]*)*)")
+GLOB_CLASS = re.compile(r"\[[!^]?\]?(?:\[:\w+:\]|[^\]])*\]")
+
+
+def climbs(path: str) -> str:
+    """``path`` with ``..`` for every segment a shell glob could expand to ``..``: one that starts
+    with a literal dot and matches ``..`` once each bracket expression is read as any character
+    (bash 5.1 expands ``.*``, ``.?`` and ``.[.]`` to ``..``), so a globbed climb is judged like a
+    literal one."""
+    return "/".join(".." if s[:1] == "." and set(s) & set("*?[") and fnmatch.fnmatchcase("..", GLOB_CLASS.sub("?", s))
+                    else s for s in path.split("/"))
 
 
 def tokens(segment: str) -> list:
@@ -97,7 +108,7 @@ def paths_in(text: str, cwd: str, base: str = None):
     # not start an absolute path. Glob characters inside an absolute path (``/opt/py*/x``) stay part
     # of it, so the whole path is judged against the roots; a first segment that starts with one
     # (``/*/x``) counts once another slash follows, so a regex class such as ``/[a-z]+`` does not.
-    found = [os.path.normpath(p) for p in re.findall(
+    found = [os.path.normpath(climbs(p)) for p in re.findall(
         r"(?<![\w.~}\)\"'*?\]])(/(?:[\w.@+-]|[*?\[][\w.@+*?\[\]-]*/)[\w./@+*?\[\]-]*)", text or "")]
     tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
     relative = []
@@ -105,10 +116,10 @@ def paths_in(text: str, cwd: str, base: str = None):
     for segment in SPLIT.split(text or ""):
         words = tokens(segment.strip().lstrip("({ "))
         for index, word in enumerate(words):
-            for run in RUN.findall(word):
+            for run in map(climbs, RUN.findall(word)):
                 if run and not run.startswith("/") and ".." in run.split("/"):
                     relative.append(os.path.normpath(os.path.join(here, run)))
-            operand = word.split("=", 1)[1] if word.startswith("-") and "=" in word else word
+            operand = climbs(word.split("=", 1)[1] if word.startswith("-") and "=" in word else word)
             if operand and not operand.startswith(("/", "~", "-")) and (
                     ".." in operand.split("/") or (index and here != base)):
                 relative.append(os.path.normpath(os.path.join(here, operand)))
@@ -116,7 +127,7 @@ def paths_in(text: str, cwd: str, base: str = None):
             target = words[1] if len(words) > 1 else "~"
             if target != "-":
                 target = HOME_DIR + target[1:] if target.startswith("~") and HOME_DIR else target
-                here = os.path.normpath(os.path.join(here, target))
+                here = os.path.normpath(os.path.join(here, climbs(target)))
     return list(dict.fromkeys(found + [HOME_DIR + t for t in tilde if HOME_DIR] + relative))
 
 
