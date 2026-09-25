@@ -380,14 +380,46 @@ def dispatch(args) -> list:
 
 # --- map ----------------------------------------------------------------------------------------
 
+def fix_problems(where: str, recovery: bool, fix) -> list:
+    if recovery and fix not in ("sufficient", "partial", "absent"):
+        return [f"{where}: fix_sufficiency {fix!r} on a recovery, expected sufficient, partial or absent"]
+    if not recovery and fix != "n/a":
+        return [f"{where}: fix_sufficiency {fix!r} on a non-recovery, expected n/a"]
+    return []
+
+
+def item_verdicts(reviews: dict, counts: dict, fields: set) -> tuple:
+    """(problems, verdicts): every review given and no other, item keys ``"1"``..``"n"``, each item exactly
+    ``fields`` with non-empty ``notes``; ``verdicts`` maps (token, item number) to every item with exactly ``fields``."""
+    problems = [f"{t}: no verdicts for this review" for t in sorted(set(counts) - set(reviews))]
+    problems += [f"{t}: not a review the grader was given" for t in sorted(set(reviews) - set(counts))]
+    found = {}
+    for token in sorted(set(counts) & set(reviews)):
+        items = reviews[token].get("items") if isinstance(reviews[token], dict) else None
+        if not isinstance(items, dict):
+            problems.append(f"{token}: needs an items object")
+            continue
+        expected = [str(n) for n in range(1, counts[token] + 1)]
+        if set(items) != set(expected):
+            problems.append(f"{token}: item keys {sorted(items)}, expected "
+                            + (f'"1".."{counts[token]}"' if expected else "none ({} for an empty review)"))
+        for key in [k for k in expected if k in items]:
+            verdict = items[key]
+            if not isinstance(verdict, dict) or set(verdict) != fields:
+                problems.append(f"{token} item {key}: needs exactly {', '.join(sorted(fields))}")
+                continue
+            if not (isinstance(verdict["notes"], str) and verdict["notes"].strip()):
+                problems.append(f"{token} item {key}: notes are empty")
+            found[(token, int(key))] = verdict
+    return problems, found
+
+
 def check_verdicts(verdicts, counts: dict, defect_ids: set) -> list:
     """Problems with the grader's verdicts, given the item count per token and the register's defect ids."""
     if not (isinstance(verdicts, dict) and isinstance(verdicts.get("reviews"), dict)
             and isinstance(verdicts.get("new_candidates"), list)):
         return ["verdicts.json needs a reviews object and a new_candidates list"]
-    reviews = verdicts["reviews"]
-    problems = [f"{t}: no verdicts for this review" for t in sorted(set(counts) - set(reviews))]
-    problems += [f"{t}: not a review the grader was given" for t in sorted(set(reviews) - set(counts))]
+    problems, found = item_verdicts(verdicts["reviews"], counts, ITEM_FIELDS)
     candidates = {}
     for index, candidate in enumerate(verdicts["new_candidates"]):
         if not isinstance(candidate, dict) or set(candidate) != CANDIDATE_FIELDS:
@@ -406,44 +438,26 @@ def check_verdicts(verdicts, counts: dict, defect_ids: set) -> list:
             items = []
         candidates[name] = {(i["review"], i["item"]) for i in items}
     naming = {name: set() for name in candidates}
-    for token in sorted(set(counts) & set(reviews)):
-        items = reviews[token].get("items") if isinstance(reviews[token], dict) else None
-        if not isinstance(items, dict):
-            problems.append(f"{token}: needs an items object")
-            continue
-        expected = [str(n) for n in range(1, counts[token] + 1)]
-        if set(items) != set(expected):
-            problems.append(f"{token}: item keys {sorted(items)}, expected "
-                            + (f'"1".."{counts[token]}"' if expected else "none ({} for an empty review)"))
-        for key in [k for k in expected if k in items]:
-            where, verdict = f"{token} item {key}", items[key]
-            if not isinstance(verdict, dict) or set(verdict) != ITEM_FIELDS:
-                problems.append(f"{where}: needs exactly {', '.join(sorted(ITEM_FIELDS))}")
-                continue
-            assignment = verdict["assignment"]
-            recovery = isinstance(assignment, str) and assignment.startswith("defect:")
-            if recovery and assignment[len("defect:"):] not in defect_ids:
-                problems.append(f"{where}: {assignment} is not a defect in the register")
-            elif not recovery and assignment not in OTHER_ASSIGNMENTS:
-                problems.append(f"{where}: assignment {assignment!r} is not defect:<id>, {', '.join(OTHER_ASSIGNMENTS)}")
-            fix = verdict["fix_sufficiency"]
-            if recovery and fix not in ("sufficient", "partial", "absent"):
-                problems.append(f"{where}: fix_sufficiency {fix!r} on a recovery, expected sufficient, partial or absent")
-            elif not recovery and fix != "n/a":
-                problems.append(f"{where}: fix_sufficiency {fix!r} on a non-recovery, expected n/a")
-            group = verdict["duplicate_group"]
-            if group is not None and not (isinstance(group, str) and group.strip()):
-                problems.append(f"{where}: duplicate_group must be null or a non-empty string")
-            candidate = verdict["candidate"]
-            if candidate is not None:
-                if assignment != "unresolved":
-                    problems.append(f"{where}: candidate {candidate!r} on a {assignment!r} item; only unresolved items name one")
-                elif candidate not in candidates:
-                    problems.append(f"{where}: candidate {candidate!r} is not in new_candidates")
-                else:
-                    naming[candidate].add((token, int(key)))
-            if not (isinstance(verdict["notes"], str) and verdict["notes"].strip()):
-                problems.append(f"{where}: notes are empty")
+    for (token, number), verdict in found.items():
+        where = f"{token} item {number}"
+        assignment = verdict["assignment"]
+        recovery = isinstance(assignment, str) and assignment.startswith("defect:")
+        if recovery and assignment[len("defect:"):] not in defect_ids:
+            problems.append(f"{where}: {assignment} is not a defect in the register")
+        elif not recovery and assignment not in OTHER_ASSIGNMENTS:
+            problems.append(f"{where}: assignment {assignment!r} is not defect:<id>, {', '.join(OTHER_ASSIGNMENTS)}")
+        problems.extend(fix_problems(where, recovery, verdict["fix_sufficiency"]))
+        group = verdict["duplicate_group"]
+        if group is not None and not (isinstance(group, str) and group.strip()):
+            problems.append(f"{where}: duplicate_group must be null or a non-empty string")
+        candidate = verdict["candidate"]
+        if candidate is not None:
+            if assignment != "unresolved":
+                problems.append(f"{where}: candidate {candidate!r} on a {assignment!r} item; only unresolved items name one")
+            elif candidate not in candidates:
+                problems.append(f"{where}: candidate {candidate!r} is not in new_candidates")
+            else:
+                naming[candidate].add((token, number))
     for name, listed in candidates.items():
         if listed != naming[name]:
             problems.append(f"{name}: lists items {sorted(listed)}, but the items naming it are {sorted(naming[name])}")
@@ -521,20 +535,18 @@ ARMS = {
 }
 
 
-def unblind(entry: dict, verdicts: dict, record: dict, doc: dict, buggy: bool) -> dict:
-    token = entry["token"]
+def scored(attempt_id: str, token: str, items: list, record: dict, doc: dict, buggy: bool) -> dict:
+    """One attempt's mapping entry: its items (``assignment``, ``duplicate_group``, ``fix_sufficiency``,
+    ``notes``) with ``priority_error`` from the arm's rule, and the review level derived from them."""
     arm = ARMS[record["cell"]["arm"]]
-    given = [verdicts["reviews"][token]["items"][str(n)] for n in range(1, entry["items"] + 1)]
-    assignments = [v["assignment"] for v in given]
+    assignments = [i["assignment"] for i in items]
     errors = arm.priority_errors(assignments, doc["items"])
     approving, recovered = arm.approving(doc), any(map(is_recovery, assignments))
     return {
-        "attempt_id": entry["attempt_id"], "blind_token": token,
-        "items": [{"item_id": f"item-{n}", "assignment": v["assignment"],
-                   "duplicate_group": f"{token}:{v['duplicate_group']}" if v["duplicate_group"] else None,
-                   "fix_sufficiency": v["fix_sufficiency"], "priority_error": error,
-                   "notes": (f"{v['candidate']}: " if v["candidate"] else "") + v["notes"]}
-                  for n, (v, error) in enumerate(zip(given, errors))],
+        "attempt_id": attempt_id, "blind_token": token,
+        "items": [{"item_id": f"item-{n}", "assignment": i["assignment"], "duplicate_group": i["duplicate_group"],
+                   "fix_sufficiency": i["fix_sufficiency"], "priority_error": error, "notes": i["notes"]}
+                  for n, (i, error) in enumerate(zip(items, errors))],
         "review_level": {"native_verdict": doc["native_verdict"],
                          "approved_on_buggy": approving if buggy else "n/a",
                          "zero_recovery": (not recovered) if buggy else "n/a",
@@ -543,7 +555,67 @@ def unblind(entry: dict, verdicts: dict, record: dict, doc: dict, buggy: bool) -
     }
 
 
-def scorecard(mapping: dict, arms: dict, candidates: list, where: dict) -> str:
+def unblind(entry: dict, verdicts: dict, record: dict, doc: dict, buggy: bool) -> dict:
+    token = entry["token"]
+    given = [verdicts["reviews"][token]["items"][str(n)] for n in range(1, entry["items"] + 1)]
+    items = [{"assignment": v["assignment"],
+              "duplicate_group": f"{token}:{v['duplicate_group']}" if v["duplicate_group"] else None,
+              "fix_sufficiency": v["fix_sufficiency"], "notes": (f"{v['candidate']}: " if v["candidate"] else "") + v["notes"]}
+             for v in given]
+    return scored(entry["attempt_id"], token, items, record, doc, buggy)
+
+
+def grader_line(record: dict) -> str:
+    return (f"headless Claude Code {record['cli_version']}, --safe-mode, fresh home, {record['model']} at "
+            f"{record['effort']}, single-threaded; prompt sha256 {record['prompt_sha256']}; session "
+            f"{record['session_id']}; read audit clean")
+
+
+def evidence_access(register_version: int, reviews: int) -> str:
+    return (f"the grader's working directory only: prompt.md, register.json (register v{register_version}), rubric.md, "
+            f"packet.md, reviews/ ({reviews} reviews rendered under blind tokens), clone/ (offline clone at the pinned "
+            "head) and clone-cache/ (its dependency cache)")
+
+
+def dispatch_record(work: Path, key: dict) -> tuple:
+    """(record, problems): WORK's ``dispatch.json`` checked against the key; no record when it is missing."""
+    if not (work / "dispatch.json").is_file():
+        return None, [f"no {work}/dispatch.json: the grader has not been dispatched"]
+    record = read_json(work / "dispatch.json")
+    problems = []
+    if record["exit_code"] != 0:
+        problems.append(f"dispatch session exit {record['exit_code']}: a failed dispatch is graded again from a new prepare")
+    if not record["verdicts_present"]:
+        problems.append("dispatch wrote no verdicts.json: a failed dispatch is graded again from a new prepare")
+    if record["usage"]["priced_total_usd"] is None:
+        problems.append("dispatch usage was not priced: a failed dispatch is graded again from a new prepare")
+    problems.extend(f"dispatch read audit: {v}" for v in record["audit_violations"])
+    if record["prompt_sha256"] != key["prompt_sha256"]:
+        problems.append(f"dispatch ran prompt {record['prompt_sha256'][:12]}, the key's is {key['prompt_sha256'][:12]}")
+    if record["models_observed"] != [record["model"]] or record["subagents"]:
+        problems.append(f"dispatch observed models {record['models_observed']} and {record['subagents']} subagent(s); "
+                        f"expected {record['model']} alone")
+    return record, problems
+
+
+def check_attempts(run_dir: Path, target_id: str, sources: dict) -> tuple:
+    """(records, docs, problems): the run's attempts on the target against each named source's item count per
+    attempt, with every attempt's arm in ``ARMS``."""
+    records, problems = attempts_on(run_dir, target_id), []
+    for name, counts in sources.items():
+        problems.extend(f"{a}: on {target_id} but not in {name}" for a in sorted(set(records) - set(counts)))
+        problems.extend(f"{a}: in {name} but not on {target_id} in the run" for a in sorted(set(counts) - set(records)))
+    common = set(records).intersection(*sources.values())
+    problems.extend(f"{a}: arm {records[a]['cell']['arm']!r} has no rule in grade.py's ARMS table"
+                    for a in sorted(common) if records[a]["cell"]["arm"] not in ARMS)
+    docs = {a: read_json(run_dir / "attempts" / a / "normalized.json") for a in sorted(common)}
+    for name, counts in sources.items():
+        problems.extend(f"{a}: normalized.json has {len(doc['items'])} items, {name} {counts[a]}"
+                        for a, doc in docs.items() if len(doc["items"]) != counts[a])
+    return records, docs, problems
+
+
+def scorecard(mapping: dict, arms: dict) -> list:
     lines = [f"# Scorecard: {mapping['target']}, mapping v{mapping['mapping_version']}", "",
              f"Register v{mapping['register']['version']} ({mapping['register']['sha256'][:12]}), rubric "
              f"v{mapping['rubric_version']}, scored at {mapping['scored_at']}.", "",
@@ -558,7 +630,11 @@ def scorecard(mapping: dict, arms: dict, candidates: list, where: dict) -> str:
                          f"{item['priority_error']}, group {item['duplicate_group'] or 'none'}. {item['notes']}")
         lines += ["(no items)"] if not attempt["items"] else []
         lines.append("")
-    lines += ["## New candidates", ""]
+    return lines
+
+
+def candidate_lines(candidates: list, where: dict) -> list:
+    lines = ["## New candidates", ""]
     for candidate in candidates:
         items = ", ".join(f"{where[i['review']]} item-{i['item'] - 1} ({i['review']} item {i['item']})"
                           for i in candidate["items"])
@@ -566,7 +642,7 @@ def scorecard(mapping: dict, arms: dict, candidates: list, where: dict) -> str:
                   f"- Confidence: {candidate['confidence']}", f"- Would settle: {candidate['would_settle']}",
                   f"- Items: {items}", ""]
     lines += ["None.", ""] if not candidates else []
-    return "\n".join(lines)
+    return lines
 
 
 def map_verdicts(args) -> list:
@@ -579,33 +655,16 @@ def map_verdicts(args) -> list:
     problems = [f"{p} exists; a mapping version is never overwritten" for p in (mapping_path, card_path) if p.exists()]
     if args.supersedes is not None and not (out_dir / f"mapping.v{args.supersedes}.json").is_file():
         problems.append(f"--supersedes {args.supersedes}: no {out_dir}/mapping.v{args.supersedes}.json")
-    if not (work / "dispatch.json").is_file():
-        raise Inconsistent("\n".join(problems + [f"no {work}/dispatch.json: the grader has not been dispatched"]))
-    record = read_json(work / "dispatch.json")
-    if record["exit_code"] != 0:
-        problems.append(f"dispatch session exit {record['exit_code']}: a failed dispatch is graded again from a new prepare")
-    if not record["verdicts_present"]:
-        problems.append("dispatch wrote no verdicts.json: a failed dispatch is graded again from a new prepare")
-    if record["usage"]["priced_total_usd"] is None:
-        problems.append("dispatch usage was not priced: a failed dispatch is graded again from a new prepare")
-    problems.extend(f"dispatch read audit: {v}" for v in record["audit_violations"])
-    if record["prompt_sha256"] != key["prompt_sha256"]:
-        problems.append(f"dispatch ran prompt {record['prompt_sha256'][:12]}, the key's is {key['prompt_sha256'][:12]}")
-    if record["models_observed"] != [record["model"]] or record["subagents"]:
-        problems.append(f"dispatch observed models {record['models_observed']} and {record['subagents']} subagent(s); "
-                        f"expected {record['model']} alone")
+    record, found = dispatch_record(work, key)
+    problems.extend(found)
+    if record is None:
+        raise Inconsistent("\n".join(problems))
     _directory, register, _raw, digest = register_of(run_dir, args.target, key["register"]["version"], args.opened)
     if digest != key["register"]["sha256"]:
         problems.append(f"register v{register['version']} hashes {digest[:12]}, the key names {key['register']['sha256'][:12]}")
-    records = attempts_on(run_dir, args.target)
-    keyed = {r["attempt_id"]: r for r in key["reviews"]}
-    problems.extend(f"{a}: on {args.target} but not in the key" for a in sorted(set(records) - set(keyed)))
-    problems.extend(f"{a}: in the key but not on {args.target} in the run" for a in sorted(set(keyed) - set(records)))
-    problems.extend(f"{a}: arm {records[a]['cell']['arm']!r} has no rule in grade.py's ARMS table"
-                    for a in sorted(set(records) & set(keyed)) if records[a]["cell"]["arm"] not in ARMS)
-    docs = {a: read_json(run_dir / "attempts" / a / "normalized.json") for a in sorted(set(records) & set(keyed))}
-    problems.extend(f"{a}: normalized.json has {len(doc['items'])} items, the key {keyed[a]['items']}"
-                    for a, doc in docs.items() if len(doc["items"]) != keyed[a]["items"])
+    records, docs, found = check_attempts(run_dir, args.target,
+                                          {"the key": {r["attempt_id"]: r["items"] for r in key["reviews"]}})
+    problems.extend(found)
     if problems:
         raise Inconsistent("\n".join(problems))
     verdicts = read_json(work / "verdicts.json")
@@ -619,15 +678,8 @@ def map_verdicts(args) -> list:
         "schema_version": 1, "run_id": manifest["run_id"], "target": args.target, "mapping_version": args.version,
         "supersedes": args.supersedes, "revision_reason": args.reason,
         "register": {"version": register["version"], "sha256": digest}, "rubric_version": manifest["rubric_version"],
-        "scored_by": {
-            "adjudicator": f"headless Claude Code {record['cli_version']}, --safe-mode, fresh home, {record['model']} at "
-                           f"{record['effort']}, single-threaded; prompt sha256 {record['prompt_sha256']}; session "
-                           f"{record['session_id']}; read audit clean",
-            "blind": True,
-            "evidence_access": f"the grader's working directory only: prompt.md, register.json (register "
-                               f"v{register['version']}), rubric.md, packet.md, reviews/ ({len(key['reviews'])} reviews "
-                               "rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ "
-                               "(its dependency cache)"},
+        "scored_by": {"adjudicator": grader_line(record), "blind": True,
+                      "evidence_access": evidence_access(register["version"], len(key["reviews"]))},
         "scored_at": record["completed_at"],
         "attempts": [unblind(entry, verdicts, records[entry["attempt_id"]], docs[entry["attempt_id"]], buggy)
                      for entry in sorted(key["reviews"], key=lambda r: r["attempt_id"])],
@@ -639,7 +691,8 @@ def map_verdicts(args) -> list:
     arms = {a: records[a]["cell"]["arm"] for a in records}
     out_dir.mkdir(parents=True, exist_ok=True)
     mapping_path.write_text(json.dumps(mapping, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    card_path.write_text(scorecard(mapping, arms, verdicts["new_candidates"], where), encoding="utf-8")
+    card_path.write_text("\n".join(scorecard(mapping, arms) + candidate_lines(verdicts["new_candidates"], where)),
+                         encoding="utf-8")
     items = sum(len(a["items"]) for a in mapping["attempts"])
     print(f"wrote {mapping_path} and {card_path.name}: {len(mapping['attempts'])} attempts, {items} items, "
           f"{len(verdicts['new_candidates'])} new candidate(s)")
