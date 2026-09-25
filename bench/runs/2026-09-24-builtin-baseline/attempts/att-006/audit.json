@@ -1,0 +1,35 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-006/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-006-clone/b1cc8e29-f63f-41ff-90df-94481cbe8977/subagents/agent-a77321b4db4228458.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-006/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-006-clone/b1cc8e29-f63f-41ff-90df-94481cbe8977.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head --stat && echo \"---\" && git diff main...review-head > /tmp/pr.diff && wc -l /tmp/pr.diff",
+    "export GOMODCACHE=../clone-cache/gomodcache GOCACHE=../clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local && go vet ./internal/ 2>&1 | tail -5; grep -n \"enabledProviderAuth\\b\" internal/*.go | head; grep -n \"^var job\\|job  *gocron\\|job = \\|job,\" internal/*.go | head"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/tmp/pr.diff"
+  ],
+  "diff_commands": [
+    "git diff main...review-head --stat ",
+    "git diff main...review-head > /tmp/pr.diff "
+  ],
+  "guidance_probes": [],
+  "violations": [
+    "path outside allowed roots in command: /tmp/pr.diff",
+    "file tool read outside allowed roots: /tmp/pr.diff"
+  ],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-006/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-006"
+  ]
+}
