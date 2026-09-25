@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-023/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-24-57-01a0d706-1fb4-7802-8bd3-a0b800a6534e.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-023/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-24-58-01a0d706-202a-7c21-a42b-2d3bb80cfa72.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md",
+    "cat bokehjs/src/lib/models/widgets/date_picker.ts; rg -n 'class DatePicker|class Date\\(|transform.*|serialize' bokeh/core/property/datetime.py bokeh/models/widgets/inputs.py; cat bokeh/core/property/datetime.py",
+    "sed -n '248,282p' bokeh/models/widgets/inputs.py; rg -n 'date|convert_datetime' bokeh/core/json_encoder.py bokeh/util/serialization.py; TZ=America/Los_Angeles node -e 'function conv(date,patched) {if(patched) date.setTime(date.getTime()-date.getTimezoneOffset()*60000); const t=date.toISOString().substr(0,10).split(\"-\"); return new Date(+t[0],+t[1]-1,+t[2]).toDateString()}; for(const value of [\"2019-09-20\",1568937600000,\"Fri Sep 20 2019\"]) console.log(value,conv(new Date(value),false),conv(new Date(value),true))'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-023/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-023"
+  ]
+}

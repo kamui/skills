@@ -1,0 +1,1 @@
+The refactoring preserves the existing backup, scheduling, validation, and notification behavior; no actionable regressions were identified. Test execution was blocked by read-only permissions on the prescribed Go cache.

@@ -1,0 +1,1 @@
+Both callers now retain the mutex until the connection attempt transitions to Connecting, closing the race window. All return paths release the mutex, and no introduced regressions were identified.

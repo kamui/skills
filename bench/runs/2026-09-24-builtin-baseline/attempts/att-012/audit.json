@@ -1,0 +1,30 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-012/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-09-50-01a0d6f8-4570-7623-9262-54d747880f2f.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-012/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-09-50-01a0d6f8-45b5-7603-94d5-af5d701c058c.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md -o -name CLAUDE.md",
+    "sed -n '200,330p' src/request.ts; sed -n '80,155p' src/validator/validator.ts; cat package.json | head -65; rg 'bodyCache|formData\\(' src/request.test.ts -n | head -45; sed -n '1,155p' src/utils/body.ts",
+    "printf '%s\\n' \"import { HonoRequest } from './src/request.ts'; for (const body of [new URLSearchParams({foo:'bar'}), (()=>{const f=new FormData(); f.set('foo','bar'); return f})()]) { const req = new HonoRequest(new Request('http://localhost/', {method:'POST',body})); console.log('first', [...(await req.formData()).entries()]); try {console.log('parsed',await req.parseBody())} catch(e) {console.log('error',e.message)} }\" | ./node_modules/.bin/esbuild --bundle --platform=node --format=esm --loader=ts --sourcefile=probe.ts | node --input-type=module",
+    "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts src/request.test.ts"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-012/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-012"
+  ]
+}

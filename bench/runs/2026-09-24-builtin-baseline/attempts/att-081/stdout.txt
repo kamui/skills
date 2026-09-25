@@ -1,0 +1,1 @@
+No actionable regressions were identified in the committed diff. The updated overwrite behavior fixes primitive input inference, and the server test TypeScript configuration passes type-checking.

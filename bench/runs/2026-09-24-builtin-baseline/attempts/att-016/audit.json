@@ -1,0 +1,58 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-016-clone/4cc0efcc-e66d-450c-8afe-c06d15db0e6c.jsonl"
+  ],
+  "prompt_headers": [],
+  "report_findings_calls": 0,
+  "commands": [
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code && ls -R . | head -50 && cat references/targets.md",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code/references && cat rubric.md output.md",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code/references && cat verification.md verifier.md verifier-concurrency.md",
+    "git rev-parse --verify main^{commit} review-head^{commit} && git merge-base main review-head && git status --short | head; PD=$(mktemp -d /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone-work/rc.XXXXXX); echo $PD; S=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code; MB=$(git merge-base main review-head); H=$(git rev-parse review-head); python3 $S/scripts/review_context.py --merge-base $MB --head $H --store $PD/review-context.json 2>&1 | head -80; ls docs/agents 2>/dev/null",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone-work/rc.5XZdiu; ls $PD; git rev-parse main review-head; git merge-base main review-head; git log --format='%H%n%B' main..review-head; ls docs/agents 2>&1|head -3",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx; cat -n packages/react/src/field/control/FieldControl.tsx | sed -n 1,210p",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone/packages/react/src && cat internals/useValueChanged.ts* internals/field-register-control/useRegisterFieldControl.ts*; grep -rn \"useValueChanged\" --include=*.tsx --include=*.ts . | grep -v test | head -20",
+    "grep -rn \"registerFieldControl\\|initialValue\" --include=*.ts --include=*.tsx . | grep -v \"test\\.\" | head -40",
+    "cat -n internals/field-register-control/useFieldControlRegistration.ts | sed -n 20,140p",
+    "sed -n 40,120p field/root/useFieldValidation.ts; sed -n 280,380p field/root/useFieldValidation.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone && TZ=UTC VITEST_ENV=jsdom timeout 280 ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx 2>&1 | tail -25; git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx | grep -n \"^+\" | sed -n 1,400p",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code && python3 scripts/render_review.py --example; python3 scripts/render_review.py --help | head -30",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone-work/rc.5XZdiu && git log -1 --format=%B review-head | od -c | tail -3; cat > $PD/composition.json <<'EOF'\n{\n  \"run\": {\n    \"coverage\": \"complete\",\n    \"specs\": [\"pr-5460-text\"],\n    \"target_kind\": \"range\",\n    \"target\": \"main...review-head\",\n    \"base_ref\": \"main\",\n    \"base_sha\": \"30b8ea2004fa999bed151204208676c6c0a9d261\",\n    \"issues\": [],\n    \"change_description\": \"[field] Sync controlled value changes with field state\\n\"\n  },\n  \"summary\": {\n    \"status\": \"Approved\",\n    \"intent\": \"Make Field.Control sync controlled value changes with field state through useValueChanged (controlled) and onChange (uncontrolled), fix dirty state for non-string values, honor details.cancel(), and stop rejected controlled values from reaching field state (caller-supplied PR #5460 text; no originating issue).\",\n    \"issue_fit\": \"Met \u2014 every stated outcome is implemented; issue alignment unavailable beyond the supplied PR text and commit message. The uncontrolled cancel path still updates dirty and filled, which follows the DOM and is noted as an observation.\",\n    \"coverage\": \"Complete merge-base diff of both changed files reviewed with useValueChanged, useRegisterFieldControl, useFieldControlRegistration and useFieldValidation read; existing `FieldControl.test.tsx` run once at the head under jsdom: 26 passed, 1 skipped, exit 0. Chromium and rendered-output checks unavailable. Supplied CI bot comments (bundle size +88B, benchmarks on unrelated components) were not used as evidence. No risk area is touched, so no verifier was dispatched.\"\n  },\n  \"findings\": [],\n  \"questions\": [],\n  \"observations\": [\n    {\n      \"fact\": \"In uncontrolled mode a canceled change still updates dirty and filled before the cancel check, so only clearErrors and validation are skipped; this tracks the DOM value, which React cannot revert.\",\n      \"evidence\": \"`packages/react/src/field/control/FieldControl.tsx:149-156`.\"\n    },\n    {\n      \"fact\": \"No added test asserts that a rejected or rewritten controlled value leaves dirty, filled and validity untouched, though the PR body promises it.\",\n      \"evidence\": \"`packages/react/src/field/control/FieldControl.test.tsx` added tests; `FieldControl.tsx:105-115`.\"\n    }\n  ],\n  \"prior_items\": [],\n  \"record\": {\n    \"requirements\": [\n      {\"source\": \"pr-body/\\\"Dirty state never cleared for non-string values\\\"\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"FieldControl.tsx:86-97 registers String(value); test 'clears dirty state when a numeric controlled value returns to its initial value' passes\"},\n      {\"source\": \"pr-body/\\\"Programmatic changes left the field stale\\\"\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"FieldControl.tsx:105-115 useValueChanged updates errors, dirty, filled and validation; test 'syncs state and validates when the controlled value changes programmatically' passes\"},\n      {\"source\": \"pr-body/\\\"onChange returns early when controlled\\\"\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"FieldControl.tsx:144-146; test 'validates once when a controlled value is changed by the user' passes\"},\n      {\"source\": \"pr-body/\\\"details.cancel() in onValueChange now stops the internal handling\\\"\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"FieldControl.tsx:153 gates clearErrors/validation on !details.isCanceled; controlled mode is decided by the consumer's value; test 'does not validate when the change is canceled' passes\"},\n      {\"source\": \"pr-body/\\\"A controlled value the consumer rejects or rewrites no longer reaches the field state\\\"\", \"class\": \"acceptance\", \"disposition\": \"met\", \"evidence\": \"FieldControl.tsx:105-115 fires only on the serialized value prop changing; no dedicated test\"},\n      {\"source\": \"pr-body/\\\"Renders per keystroke for a controlled input\\\"\", \"class\": \"supporting\", \"disposition\": \"met\", \"evidence\": \"onSubmit steady state asserted by test 'renders once per keystroke for controlled input changes'; onChange extra render traced to setValidityData in commit, not run\"}\n    ],\n    \"files\": [\n      {\"path\": \"packages/react/src/field/control/FieldControl.tsx\", \"state\": \"reviewed\"},\n      {\"path\": \"packages/react/src/field/control/FieldControl.test.tsx\", \"state\": \"reviewed\"}\n    ],\n    \"check_evidence\": [\n      {\"check\": \"TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx\", \"head\": \"14d39e5d1ad6b7aca2fb067415dba09c6bea219b\", \"outcome\": \"reviewer-executed\", \"reason\": \"run once at the head, exit 0, 26 passed and 1 skipped\"}\n    ],\n    \"verification\": {\"tasks\": [], \"batches\": [], \"outstanding\": []},\n    \"routed\": {\"unresolved\": [], \"disputed\": [], \"unrecoverable_inputs\": []}\n  }\n}\nEOF\nS=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code; python3 $S/scripts/render_review.py --store $PD/review-context.json $PD 2>&1 | tail -30",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone-work/rc.5XZdiu && python3 - <<EOF\nimport json\np=\"$PD/composition.json\"; d=json.load(open(p)); d[\"record\"][\"repository\"]=[]; json.dump(d,open(p,\"w\"),indent=2)\nEOF\nS=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code; python3 $S/scripts/render_review.py --store $PD/review-context.json $PD 2>&1 | tail -30",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone-work/rc.5XZdiu && python3 - <<EOF\nimport json\np=\"$PD/composition.json\"; d=json.load(open(p)); d[\"record\"][\"repository\"]=\"mui/base-ui\"; json.dump(d,open(p,\"w\"),indent=2)\nEOF\nS=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/home/.claude/skills/review-code; python3 $S/scripts/render_review.py --store $PD/review-context.json $PD 2>&1 | tail -30",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone-work/rc.5XZdiu; A=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/artifacts; mkdir -p $A && cp $PD/composition.json $PD/payload.json $PD/report.md $A/ && ls -l $A; cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone && git status --short | head"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone/packages/react/src"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-016"
+  ]
+}

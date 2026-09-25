@@ -1,0 +1,38 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-008/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-008-clone/68aefcd8-92b0-4cd3-96bd-87f8842bfe10/subagents/agent-a290a48d06ef47750.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-008/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-008-clone/68aefcd8-92b0-4cd3-96bd-87f8842bfe10.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- docker internal/notify.go internal/backup.go",
+    "git diff main...review-head -- internal/backup_test.go; grep -n \"compareType\\|^var job\\|job \\|func envTrue\\|func GetEnvOrFile\" -r internal/*.go | head -30",
+    "git show main:internal/backup_test.go | sed -n 540,600p; sed -n 25,95p internal/backup.go; sed -n 660,740p internal/backup.go; cat internal/envfile.go | head -40",
+    "sed -n 595,640p internal/backup_test.go; grep -n \"enabledProviderAuth\\s*=\" -A25 internal/*.go | head -40; grep -rn \"HasPrefix(entry.Name\" internal | head; cat docker/Dockerfile",
+    "GOMODCACHE=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-008/clone-cache/gomodcache GOCACHE=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-008/clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test ./internal/ -count=1 2>&1 | tail -5; git status --short",
+    "grep -n \"Organistations\\|\\\"Gitlab\\\"\\|func displayBitBucketStartupConfig\\|bbUser, exists\\|complete$\\|envGiteaToken, Gitea\\|envAzureDevOpsUserName, AzureDevOps\\|func logProviderBackupLFS\\|exists && envTrue(envVar)\\|ToLower(orgs) != \\\"\\\"\\|gocron.NewScheduler\\|execProviderBackups()$\" internal/backup.go; grep -n \"justTokenProviders\\s*=\\|userAndPasswordProviders\\s*=\" -A8 internal/*.go | head -24"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- docker internal/notify.go internal/backup.go",
+    "git diff main...review-head -- internal/backup_test.go"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-008/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-008"
+  ]
+}

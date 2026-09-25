@@ -1,0 +1,59 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-059/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-059-clone/169c9fc2-529d-435e-aa2e-40e5f24e7824/subagents/agent-ae33d319867be4006.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-059/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-059-clone/169c9fc2-529d-435e-aa2e-40e5f24e7824.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- . | head -300",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-059/clone-work 2>/dev/null || cd /tmp; cat > t.js <<'E'\nfunction u(date){const o=date.getTimezoneOffset()*60000;date.setTime(date.getTime()-o);const t=date.toISOString().substr(0,10).split('-');return new Date(+t[0],+t[1]-1,+t[2]).toDateString()}\nfor (const tz of ['America/Los_Angeles','Europe/Paris','UTC','Pacific/Auckland']){process.env.TZ=tz;}\nE\nfor tz in America/Los_Angeles Europe/Paris Asia/Kolkata Pacific/Auckland; do TZ=$tz node -e \"\nfunction u(date){const o=date.getTimezoneOffset()*60000;date.setTime(date.getTime()-o);const t=date.toISOString().substr(0,10).split('-');return new Date(+t[0],+t[1]-1,+t[2]).toDateString()}\nconsole.log('$tz', u(new Date(1568937600000)), u(new Date('Mon Sep 16 2019')), u(new Date('2019-09-20')))\"; done"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-059/clone/bokehjs/src/lib/models/widgets/date_picker.ts"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- . "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/tmp/16",
+    "/tmp/2019')),",
+    "/tmp/<<E",
+    "/tmp/>",
+    "/tmp/America/Los_Angeles",
+    "/tmp/Asia/Kolkata",
+    "/tmp/Date('2019-09-20')))",
+    "/tmp/Date('Mon",
+    "/tmp/Date(+t[0],+t[1]-1,+t[2]).toDateString()}",
+    "/tmp/Date(1568937600000)),",
+    "/tmp/Europe/Paris",
+    "/tmp/Pacific/Auckland",
+    "/tmp/Sep",
+    "/tmp/TZ=$tz",
+    "/tmp/console.log('$tz',",
+    "/tmp/for",
+    "/tmp/function",
+    "/tmp/in",
+    "/tmp/new",
+    "/tmp/node",
+    "/tmp/o=date.getTimezoneOffset()*60000",
+    "/tmp/t.js",
+    "/tmp/t=date.toISOString().substr(0,10).split(-)",
+    "/tmp/tz",
+    "/tmp/u(date){const",
+    "/tmp/u(new"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-059/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-059"
+  ]
+}

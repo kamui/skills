@@ -1,0 +1,35 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-021/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-021-clone/66dd7b47-380e-4a41-b598-04dc2b3cd2bb/subagents/agent-ab8a69474dc3fd5df.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-021/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-021-clone/66dd7b47-380e-4a41-b598-04dc2b3cd2bb.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- bokehjs/src/lib/models/widgets/date_picker.ts",
+    "git diff main...review-head --stat",
+    "git show review-head:tests/integration/widgets/test_datepicker.py"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-021/clone/bokehjs/src/lib/models/widgets/date_picker.ts"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- bokehjs/src/lib/models/widgets/date_picker.ts",
+    "git diff main...review-head --stat"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-021/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-021"
+  ]
+}

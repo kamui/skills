@@ -1,0 +1,41 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-043/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-043-clone/a5c3bd67-1517-4b21-a1ab-ff5cb577f880/subagents/agent-a5d0a31986a654389.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-043/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-043-clone/a5c3bd67-1517-4b21-a1ab-ff5cb577f880.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- docker internal/notify.go internal/backup_test.go",
+    "git diff main...review-head -- internal/backup.go",
+    "grep -n \"job\\b\\|job,\\|var job\\|compareType\\|checkProvidersDefined\\|func execProviderBackups\\|func GetEnvOrFile\\|func envTrue\" -r internal/*.go | grep -v _test | head -40; sed -n 600,640p internal/backup_test.go; sed -n 660,720p internal/backup.go",
+    "sed -n 719,740p internal/backup.go; cat internal/envfile.go; sed -n 25,95p internal/backup.go; sed -n 300,330p internal/backup.go; grep -rn \"Organistations\\|Organisations\" --include=*.go . | head",
+    "sed -n 545,570p internal/backup_test.go; grep -n \"Backups *=\\|Sourcehut.*=\\|BackupLFS *=\" internal/constants.go; grep -rn \"backupStatusTitle\\|titleBackups\\|succeeded\\b.*failed\" internal/*_test.go | head; sed -n 1,20p docker/Dockerfile",
+    "C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-043/clone-cache && GOMODCACHE=$C/gomodcache GOCACHE=$C/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test ./internal/ -count=1 2>&1 | tail -15; git status --short",
+    "sed -n 26,28p internal/notify.go | od -c | head -12; grep -n \"envTrue(env.*LFS\\|BackupLFS\" internal/*.go | grep -v _test | grep -v constants | head"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- docker internal/notify.go internal/backup_test.go",
+    "git diff main...review-head -- internal/backup.go"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-043/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-043"
+  ]
+}

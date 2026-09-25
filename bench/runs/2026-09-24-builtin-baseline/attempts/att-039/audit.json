@@ -1,0 +1,47 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-039-clone/f123056d-9f86-47cf-b1dc-a3431b7073b6/subagents/agent-a745a09d977050904.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-039-clone/f123056d-9f86-47cf-b1dc-a3431b7073b6.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages/tests && cat tsconfig.json; cat ../../tsconfig*.json 2>/dev/null | head -60; ls ../../ ; ls /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone-work",
+    "ls -d node_modules/zod packages/tests/node_modules/zod packages/server/node_modules/zod 2>&1; sed -n 195,240p packages/server/src/core/middleware.ts",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone\nmkdir -p $W/scratch\ncat > $W/scratch/tsconfig.json <<EOF\n{\n  \"compilerOptions\": {\n    \"strict\": true, \"noEmit\": true, \"skipLibCheck\": true, \"target\": \"ES2020\", \"module\": \"esnext\",\n    \"moduleResolution\": \"node\", \"lib\": [\"ES2020\",\"DOM\"], \"esModuleInterop\": true, \"types\": [],\n    \"noUncheckedIndexedAccess\": true,\n    \"baseUrl\": \"$C\",\n    \"paths\": { \"@trpc/server\": [\"packages/server/src\"], \"@trpc/server/*\": [\"packages/server/src/*\"], \"zod\": [\"node_modules/zod\"] },\n    \"typeRoots\": [\"$C/node_modules/@types\"]\n  },\n  \"files\": [\"t.ts\"]\n}\nEOF\ncat > $W/scratch/t.ts <<'EOF'\nimport { inferRouterInputs, inferRouterOutputs, initTRPC, experimental_standaloneMiddleware } from '@trpc/server';\nimport type { Overwrite } from '@trpc/server/core/internals/utils';\nimport { z } from 'zod';\n\ntype Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;\nfunction assert<T extends true>() {}\n\nconst t = initTRPC.context<{ user: string | null }>().create();\nconst mw = t.middleware((opts) => opts.next());\nconst appRouter = t.router({\n  arr: t.procedure.input(z.array(z.string())).use((o) => o.next()).query(({ input }) => { const x: string[] = input; return x; }),\n  tuple: t.procedure.input(z.tuple([z.string(), z.number()])).use((o) => o.next()).query(({ input }) => input),\n  date: t.procedure.input(z.date()).use((o) => o.next()).query(({ input }) => input),\n  map: t.procedure.input(z.map(z.string(), z.number())).use((o) => o.next()).query(({ input }) => input),\n  du: t.procedure.input(z.discriminatedUnion('type', [z.object({ type: z.literal('a'), a: z.string() }), z.object({ type: z.literal('b'), b: z.number() })])).use((o) => o.next()).query(({ input }) => input),\n  optObj: t.procedure.input(z.object({ a: z.string() }).optional()).use((o) => o.next()).query(({ input }) => input),\n  obj: t.procedure.input(z.object({ a: z.string() })).use(mw).query(({ input }) => input),\n  strOrNum: t.procedure.input(z.union([z.string(), z.number()])).use((o) => o.next()).query(({ input }) => input),\n  strOrObj: t.procedure.input(z.union([z.string(), z.object({a: z.string()})])).use((o) => o.next()).query(({ input }) => input),\n  unk: t.procedure.input(z.unknown()).use((o) => o.next()).query(({ input }) => input),\n  anyIn: t.procedure.input(z.any()).use((o) => o.next()).query(({ input }) => input),\n  voidMw: t.procedure.use(mw).query(({ input }) => input),\n  ctxAny: t.procedure.use((o) => o.next({ ctx: {} as any })).query(({ ctx }) => ctx),\n});\ntype I = inferRouterInputs<typeof appRouter>;\ntype O = inferRouterOutputs<typeof appRouter>;\nassert<Equal<I['arr'], string[]>>();\nassert<Equal<I['tuple'], [string, number]>>();\nassert<Equal<I['date'], Date>>();\nassert<Equal<I['map'], Map<string, number>>>();\nassert<Equal<I['du'], { type: 'a'; a: string } | { type: 'b'; b: number }>>();\nassert<Equal<I['optObj'], { a: string } | undefined>>();\nassert<Equal<I['strOrNum'], string | number>>();\nassert<Equal<I['strOrObj'], string | { a: string }>>();\nassert<Equal<I['unk'], unknown>>();\ntype Arr = I['arr'];\n//\ntype T1 = Overwrite<{ a: 1 }, never>;\nassert<Equal<T1, { a: 1 }>>();\ntype T2 = Overwrite<{ a: 1 }, unknown>;\nassert<Equal<T2, { a: 1 }>>();\ntype T3 = Overwrite<{ a: 1 }, any>;\ntype T4 = Overwrite<string, never>;\nassert<Equal<T4, string>>();\nEOF\ncd $C/packages/tests && timeout 280 ./node_modules/.bin/tsc -p $W/scratch/tsconfig.json 2>&1 | head -60",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone\ncat >> $W/scratch/t.ts <<'EOF'\nconst s1: 'x' = null as any as I['arr'];\nconst s2: 'x' = null as any as I['tuple'];\nconst s3: 'x' = null as any as I['map'];\nconst s4: 'x' = null as any as I['du'];\nconst s5: 'x' = null as any as I['optObj'];\nconst s6: 'x' = null as any as T1;\nconst s7: 'x' = null as any as T2;\nconst s8: 'x' = null as any as T3;\nconst s9: 'x' = null as any as T4;\nconst s10: 'x' = null as any as O['ctxAny'];\nconst s11: 'x' = null as any as I['date'];\nconst okArr: I['arr'] = ['a'];\nconst badArr: I['arr'] = { length: 1 } as any as { [k: number]: string; length: number };\nEOF\ncd $C/packages/tests && timeout 280 ./node_modules/.bin/tsc -p $W/scratch/tsconfig.json 2>&1 | grep 'scratch' | grep -v \"TS2344\" | cut -c1-600",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone\nmkdir -p $W/base && cd $C && git archive main packages/server/src | tar -x -C $W/base\nmkdir -p $W/scratchbase && cp $W/scratch/t.ts $W/scratchbase/t.ts\nsed -e \"s#\\\"@trpc/server\\\": \\[\\\"packages/server/src\\\"\\], \\\"@trpc/server/\\*\\\": \\[\\\"packages/server/src/\\*\\\"\\]#\\\"@trpc/server\\\": [\\\"$W/base/packages/server/src\\\"], \\\"@trpc/server/*\\\": [\\\"$W/base/packages/server/src/*\\\"]#\" $W/scratch/tsconfig.json > $W/scratchbase/tsconfig.json\ngrep paths $W/scratchbase/tsconfig.json\ncd $C/packages/tests && timeout 280 ./node_modules/.bin/tsc -p $W/scratchbase/tsconfig.json 2>&1 | grep 'scratch' | cut -c1-400",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone\ncat > $W/scratch/t2.ts <<'EOF'\nimport { inferRouterInputs, initTRPC, experimental_standaloneMiddleware } from '@trpc/server';\nimport { z } from 'zod';\nconst t = initTRPC.context<{ user: string | null }>().create();\nconst sm = experimental_standaloneMiddleware<{ input: { foo: string } }>().create((o) => o.next());\nconst smStr = experimental_standaloneMiddleware<{ input: string }>().create((o) => o.next());\nconst appRouter = t.router({\n  chain: t.procedure.input(z.object({ a: z.string() })).use((o) => o.next()).input(z.object({ b: z.number() })).query(({ input }) => input),\n  sa: t.procedure.input(z.object({ foo: z.string(), bar: z.number() })).use(sm).query(({ input }) => input),\n  saStr: t.procedure.input(z.string()).use(smStr).query(({ input }) => input),\n  ctxUnk: t.procedure.use((o) => o.next({ ctx: { x: 1 } as unknown })).query(({ ctx }) => { const c: 'x' = ctx; return c; }),\n  ctxNarrow: t.procedure.use((o) => o.next({ ctx: { user: 'u' } })).query(({ ctx }) => { const c: 'x' = ctx; return c; }),\n});\ntype I = inferRouterInputs<typeof appRouter>;\nconst s1: 'x' = null as any as I['chain'];\nconst s2: 'x' = null as any as I['sa'];\nconst s3: 'x' = null as any as I['saStr'];\nEOF\nsed 's/\"t.ts\"/\"t2.ts\"/' $W/scratch/tsconfig.json > $W/scratch/tsconfig2.json\nsed 's/\"t.ts\"/\"t2.ts\"/' $W/scratchbase/tsconfig.json > $W/scratchbase/tsconfig2.json; cp $W/scratch/t2.ts $W/scratchbase/\ncd $C/packages/tests; echo HEAD; timeout 280 ./node_modules/.bin/tsc -p $W/scratch/tsconfig2.json 2>&1 | grep scratch | cut -c1-400; echo BASE; timeout 280 ./node_modules/.bin/tsc -p $W/scratchbase/tsconfig2.json 2>&1 | grep scratch | cut -c1-400"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages/server/src/core/internals/utils.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages/server/src/core/middleware.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages/server/src/core/internals/procedureBuilder.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages/server/src/core/internals/procedureBuilder.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone/packages/server/src/core/middleware.ts"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-039"
+  ]
+}

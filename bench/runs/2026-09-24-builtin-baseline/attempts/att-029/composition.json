@@ -1,0 +1,91 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+    "issues": [
+      "BurntSushi/ripgrep#2956"
+    ],
+    "change_description": "7c2a7b018e2a3fe65be19f8d3f0bd1028e8421b1\nfeat(completion): support sourcing zsh completion dynamically\n\nSummary:\nPreviously, you needed to save the completion script to a file and then\nsource it.  Now, you can dynamically source completions in zsh by\nrunning\n\n```zsh\n$ source <(rg --generate complete-zsh)\n```\n\nTest plan:\n1. Run `source <(rg --generate complete-zsh)`\n2. Run `rg --generate=complete-zs<TAB>`\n\nBefore this commit, you would get an error after step 1.\nAfter this commit, it should work as expected.\n\nCloses #2956\n\n855bfa6cdae4f4fe8762f892fc4957635397083e\nimprove FAQ text for zsh completions\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Let zsh users load ripgrep completions with `source <(rg --generate complete-zsh)` (issue #2956) instead of installing an `_rg` file on `fpath`, and document it in the FAQ.",
+    "issue_fit": "Met \u2014 with the completion system initialised, sourcing the generated script now registers `_rg` via `compdef` instead of erroring; the `fpath`-autoload path and the non-interactive `ci/test-complete` path keep their old behaviour.",
+    "coverage": "Complete merge-base diff (2 files) reviewed. Scratch zsh 5.8.1 scripts under the work directory exercised the new guard: sourced after compinit, via eval, from inside a function, and autoloaded from fpath all register `_rg`; sourced before compinit fails; a literal `$ ` prefix fails. `cargo` builds and `ci/test-complete` were unavailable (no vendored registry, no built rg); the CI path was settled by trace. Issue comments were none; no repository guidance files at the merge-base. The forge review discussion supplied in the request was treated as context only. No verification workers were required: no must-fix or risk-area candidate survived."
+  },
+  "findings": [
+    {
+      "id": "FAQ/zsh-source-snippet",
+      "title": "Make the zshrc source snippet paste-safe and state the compinit precondition",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "A reader copies the new FAQ snippet into `~/.zshrc` as instructed: the block is prefixed with `$ ` (unlike the `fpath=` block above it), and it does not say `compinit` must already have run.",
+      "impact": "Zsh prints `command not found: $` on every shell start, and if the line precedes `compinit` the guard falls through to `_rg` and fails with `command not found: _arguments`, the failure class #2956 reports. The same paragraph also reads `easier to setup, is generally slower`.",
+      "change": "In `FAQ.md`, drop the `$ ` prefix from the `source` line, add that it must come after `compinit`, and reword the caveat to `while this approach is easier to set up, it is generally slower...`.",
+      "anchor": {
+        "type": "line",
+        "path": "FAQ.md",
+        "start_line": 135,
+        "end_line": 139,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The guard `[[ $funcstack[1] == _rg ]] || (( ! $+functions[compdef] ))` keeps the `fpath`-autoload and non-interactive sourcing paths running `_rg`, so `ci/test-complete` (which sources the file with no completion system) is unaffected.",
+      "evidence": "`crates/core/flags/complete/rg.zsh:437-443`, `ci/test-complete:14`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "BurntSushi/ripgrep",
+    "requirements": [
+      {
+        "source": "issue-2956/\"source <(rg --generate=complete-zsh)\" works",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "crates/core/flags/complete/rg.zsh:437-443; zsh 5.8.1 scratch runs: after compinit, _comps[rg]=_rg with exit 0 via source, eval and source-in-function"
+      },
+      {
+        "source": "commit-7c2a7b0/\"Before this commit, you would get an error after step 1. After this commit, it should work as expected.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Step 2 (TAB completion of a built rg) needs a built binary and an interactive shell; registration was verified only via _comps"
+      },
+      {
+        "source": "commit-7c2a7b0/\"Previously, you needed to save the completion script to a file and then source it.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FAQ.md:131-136 documents the source method next to the fpath method (855bfa6)"
+      }
+    ],
+    "files": [
+      {
+        "path": "FAQ.md",
+        "state": "reviewed"
+      },
+      {
+        "path": "crates/core/flags/complete/rg.zsh",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

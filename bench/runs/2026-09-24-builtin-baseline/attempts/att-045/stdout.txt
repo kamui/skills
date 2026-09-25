@@ -1,0 +1,1 @@
+The refactoring preserves provider selection, configuration validation, scheduling, notification titles, and test assertions. No actionable regressions were identified in the committed diff; tests and the Docker build were not run.

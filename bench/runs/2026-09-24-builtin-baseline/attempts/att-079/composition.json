@@ -1,0 +1,102 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-pr7390-review-packet"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "issues": [
+   "grpc/grpc-go#7365"
+  ],
+  "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix grpc/grpc-go#7365: two concurrent addrConn.connect() calls could both observe Idle and both start connection attempts, orphaning a transport. The change keeps ac.mu held from connect()'s Idle check through the Connecting transition by turning resetTransport into resetTransportAndUnlock.",
+  "issue_fit": "Met. connect() and updateAddrs() now enter resetTransportAndUnlock with ac.mu held, so the Idle-to-Connecting transition is atomic with the check and a second connect() sees Connecting. The 100000-run flake measurement is reported by the author and not reproducible here.",
+  "coverage": "Complete merge-base diff (clientconn.go, +6/-7) reviewed with callers, transport onClose/GracefulClose and the balancer serializer. Focused tests run once at the head with -race: Test/ResetConnectBackoff, Test/UpdateAddresses_NoopIfCalledWithSameAddresses, Test/WithConnectParams and Test/ConnectParamsWithMinConnectTimeout passed. No added or changed tests, so none to inspect. Two concurrency safety premises were verified in one batch and both hold. No supplied CI checks; the packet's 18 prior review submissions and discussion were read as intent evidence only."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "Commit 6214c9dd's message says it makes resetBackoff() callers lock the mutex, but the net range diff contains no such change and touches only clientconn.go's connect, updateAddrs and resetTransport.",
+   "evidence": "`git diff main...review-head --stat`: `clientconn.go | 13 ++++++-------`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "spec-pr7390-review-packet/pr-body/\"no concurrent requests are able to start once caller of `resetTransport` does some validation and calls `resetTransport`\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:906-923 keeps ac.mu held from the Idle check into resetTransportAndUnlock; clientconn.go:1261 sets Connecting before clientconn.go:1262 unlocks; a second connect() returns at the non-Idle check."
+   },
+   {
+    "source": "spec-pr7390-review-packet/issue-7365/root-cause",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "The window between connect()'s Unlock and resetTransport's Lock (base clientconn.go:918-1238) is removed; verifier ruled premise-connect-single-critical-section holds."
+   },
+   {
+    "source": "spec-pr7390-review-packet/pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Author-reported measurement over 100000 runs on a forge; not repeatable offline within the five-minute allowance, and nothing material to the decision depends on it."
+   },
+   {
+    "source": "spec-pr7390-review-packet/pr-body/\"RELEASE NOTES: client: fix race that could lead to orphaned connections\"",
+    "class": "supporting",
+    "disposition": "met",
+    "evidence": "The change removes the race that orphaned a second transport per the issue's root-cause comment."
+   }
+  ],
+  "files": [
+   {
+    "path": "clientconn.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "premise-connect-single-critical-section",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "connect()'s Idle check and Connecting transition share one ac.mu critical section; the early acCtx.Err() return leaves state as before the change.",
+     "evidence": "clientconn.go:906-923, clientconn.go:1234-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-updateaddrs-no-deadlock",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "updateAddrs now returns with ac.mu held for the spawned goroutine; the deferred GracefulClose's onClose waits on ac.mu but the goroutine's path to Unlock never waits on anything GracefulClose holds.",
+     "evidence": "clientconn.go:975-996, internal/transport/http2_client.go:1045-1058, balancer_wrapper.go:255-264",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-079/clone-work/rc.zZ6V/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-079/clone-work/rc.zZ6V/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "grpc/grpc-go"
+ }
+}

@@ -1,0 +1,37 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-025-clone/7ae61965-b64e-48bf-a51f-9cb0fb7a86f1/subagents/agent-ac2eb2db62ab4e7cf.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-025-clone/7ae61965-b64e-48bf-a51f-9cb0fb7a86f1.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "cat .flowconfig; ./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/*.js src/jsutils/__tests__/inspect-test.js 2>&1 | tail -15; ls node_modules/.bin | grep -i flow; sed -n 1,60p src/jsutils/__tests__/inspect-test.js | sed -n 25,40p",
+    "sed -n 15,45p src/error/locatedError.js"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/clone/src/error/GraphQLError.js",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/clone/src/error/__tests__/GraphQLError-test.js",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/clone/src/error/__tests__/printError-test.js",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/clone/src/error"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-025"
+  ]
+}

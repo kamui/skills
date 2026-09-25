@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-015/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-16-48-01a0d6fe-a984-72e3-958c-7c23548e81f6.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-015/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-16-49-01a0d6fe-a9f0-7a70-8f14-1628c6a6a870.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "cat .agents/skills/base-ui-review/SKILL.md; cat AGENTS.md; cat CONTRIBUTING.md; git diff main...review-head",
+    "find packages -name AGENTS.md -o -name AGENTS.override.md; cat packages/react/src/internals/useValueChanged.ts; cat packages/react/src/field/control/FieldControl.tsx; cat packages/react/src/field/useRegisterFieldControl.ts; cat packages/react/src/field/root/useFieldValidation.ts",
+    "cat packages/react/src/internals/field-register-control/useRegisterFieldControl.ts; sed -n '200,380p' packages/react/src/field/control/FieldControl.test.tsx; cat packages/react/src/input/Input.tsx; TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+    "cat packages/react/src/internals/field-register-control/useFieldControlRegistration.ts; rg -n '9023|defaultPrevented|useValueChanged' packages/react/src/number-field/root/NumberFieldRoot.tsx packages/react/src/combobox/root/ComboboxRoot.tsx; git status --short; find . -maxdepth 2 -name AGENTS.override.md; nl -ba packages/react/src/field/control/FieldControl.tsx | sed -n '96,160p'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-015/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-015"
+  ]
+}

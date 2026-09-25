@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-010-clone/67992ca4-b646-46c0-897a-c7df2451571a/subagents/agent-a9374c578ec6ac3a4.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-010-clone/67992ca4-b646-46c0-897a-c7df2451571a.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "grep -n \"bodyCache\\|cachedBody\" -B2 -A25 src/request.ts | sed -n 1,140p; sed -n 85,150p src/utils/body.ts; grep -n \"Regex\\|content-type\\|Content-Type\" -i src/validator/validator.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/clone-work && cat > t.ts <<'EOF'\nimport { Hono } from '/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/clone/src/hono'\nconst app = new Hono()\napp.post('/a', async (c) => {\n  const a = await c.req.parseBody()\n  let b: any\n  try { b = await c.req.parseBody() } catch (e) { b = 'ERR ' + e }\n  return c.json({ a, b })\n})\nfor (const [ct, body] of [['application/x-www-form-urlencoded','a=1&b=2']] as const) {\n  const r = await app.request('/a', { method: 'POST', headers: { 'Content-Type': ct }, body })\n  console.log(await r.text())\n}\nconst fd = new FormData(); fd.append('a','1')\nconst r = await app.request('/a', { method: 'POST', body: fd })\nconsole.log(await r.text())\nEOF\ncd ../clone && ./node_modules/.bin/esbuild ../clone-work/t.ts --bundle --platform=node --format=esm --outfile=../clone-work/t.mjs --log-level=error && node ../clone-work/t.mjs",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/clone-work && cat > t.ts <<'EOF'\nimport { Hono } from '/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/clone/src/hono'\nconst app = new Hono()\napp.post('/a', async (c) => {\n  await c.req.formData()\n  let b: any\n  try { b = await c.req.parseBody() } catch (e) { b = 'ERR ' + e }\n  return c.json({ b })\n})\nconst fd = new FormData(); fd.append('a','1')\nconsole.log(await (await app.request('/a', { method: 'POST', body: fd })).text())\nconsole.log(await (await app.request('/a', { method: 'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'a=1' })).text())\nEOF\ncd ../clone && ./node_modules/.bin/esbuild ../clone-work/t.ts --bundle --platform=node --format=esm --outfile=../clone-work/t.mjs --log-level=error && node ../clone-work/t.mjs; git stash -q 2>/dev/null; git checkout -q main && ./node_modules/.bin/esbuild ../clone-work/t.ts --bundle --platform=node --format=esm --outfile=../clone-work/t0.mjs --log-level=error && node ../clone-work/t0.mjs; git checkout -q review-head"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-010"
+  ]
+}

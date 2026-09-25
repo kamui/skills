@@ -1,0 +1,40 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-019-clone/0fa11d6f-c659-4ab5-a869-2cbff316aa2c/subagents/agent-a32d88e08cdfeaf0b.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-019-clone/0fa11d6f-c659-4ab5-a869-2cbff316aa2c.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "sed -n 1,140p src/requests/adapters.py && grep -n \"def \\|pool_kwargs\\|cert_verify\\|ssl_context\" src/requests/adapters.py | sed -n 1,200p; ls ../clone-cache/venv/lib/*/site-packages | grep -i urllib3",
+    "sed -n 140,560p src/requests/adapters.py",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019/clone-cache/venv/lib/*/site-packages/urllib3 && grep -n \"context\\.\\(verify_mode\\|check_hostname\\|load\\|set_\\|post\\|keylog\\|minimum\\|maximum\\)\\|ssl_context\\b\" connection.py util/ssl_.py | head -60; grep -n \"_merge_pool_kwargs\" -A20 poolmanager.py | head -30; grep -n \"SSL_KEYWORDS\\|key_ssl_context\\|key_ca_certs\" poolmanager.py | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019/clone-cache/venv/lib/*/site-packages/urllib3 && sed -n 1020,1070p connection.py; sed -n 400,425p util/ssl_.py",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019/clone-cache/venv/lib/*/site-packages/urllib3 && sed -n 940,990p connection.py; sed -n 425,436p util/ssl_.py; sed -n 1095,1115p connection.py",
+    "grep -n \"conn.cert_reqs = \\\"CERT_REQUIRED\\\"\\|if verify is not True\\|conn.ca_cert_dir = cert_loc\\|raise OSError\" src/requests/adapters.py"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-019"
+  ]
+}
