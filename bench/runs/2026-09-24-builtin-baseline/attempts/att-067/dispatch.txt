@@ -1,0 +1,3 @@
+codex-cli 0.156.1
+model=<default> effort=<default>
+exit=0

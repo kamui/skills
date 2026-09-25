@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-061/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-58-34-01a0d724-e622-7ce3-9e8e-7e92862314ae.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-061/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-58-34-01a0d724-e68e-71a2-bbaf-b6dc402d1eaa.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md",
+    "cat bokehjs/src/lib/models/widgets/date_picker.ts; rg -n 'class DatePicker|class Date\\b|transform.*date' bokeh/models/widgets/inputs.py bokeh/core/property/datetime.py; cat bokeh/core/property/datetime.py",
+    "sed -n '248,295p' bokeh/models/widgets/inputs.py; rg -n 'date|convert_datetime' bokeh/core/json_encoder.py bokeh/util/serialization.py; find bokehjs tests -name CLAUDE.md -o -name AGENTS.override.md; TZ=America/Los_Angeles node -e 'function convert(value, patched) { const date = new Date(value); if(patched) date.setTime(date.getTime()-date.getTimezoneOffset()*60000); const t=date.toISOString().substr(0,10).split(\"-\"); return new Date(+t[0],+t[1]-1,+t[2]).toDateString(); } for(const v of [1568937600000,\"2019-09-20\",\"Fri Sep 20 2019\"]) console.log(v,convert(v,false),convert(v,true));'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-061/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-061"
+  ]
+}

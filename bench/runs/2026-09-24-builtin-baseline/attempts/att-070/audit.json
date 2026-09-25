@@ -1,0 +1,46 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-070-clone/48388081-5c5f-43ef-b2ce-e5cadf3b7e0d/subagents/agent-a35a43eb82109861c.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-070-clone/48388081-5c5f-43ef-b2ce-e5cadf3b7e0d.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "head -30 crates/core/flags/complete/rg.zsh; cat ci/test-complete | head -80; grep -rn \"rg.zsh\\|complete-zsh\" --include=*.rs --include=*.md --include=*.sh . | grep -v \"^./target\" | head -20",
+    "grep -rn \"rg.zsh\" crates/ ; sed -n 1,80p crates/core/flags/complete/zsh.rs; grep -n \"!\" crates/core/flags/complete/rg.zsh | grep -n \"![A-Z]\" | head",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/clone-work; mkdir -p $W/fp; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/clone; sed 's/!ENCODINGS!/utf-8 latin1/' $C/crates/core/flags/complete/rg.zsh > $W/fp/_rg\ncd $W\necho \"== source before compinit\"; zsh -f -c 'source <(cat fp/_rg); echo rc=$?' 2>&1 | head -5\necho \"== source after compinit\"; zsh -f -c 'autoload -Uz compinit; compinit -D; source <(cat fp/_rg); echo rc=$?; echo ${_comps[rg]}' 2>&1 | head -5\necho \"== source inside function after compinit\"; zsh -f -c 'autoload -Uz compinit; compinit -D; f(){ source <(cat fp/_rg); }; f; echo rc=$?; echo ${_comps[rg]}' 2>&1 | head -5\necho \"== eval after compinit\"; zsh -f -c 'autoload -Uz compinit; compinit -D; eval \"$(cat fp/_rg)\"; echo rc=$?; echo ${_comps[rg]}' 2>&1 | head -5\necho \"== eval no EVAL_LINENO in function\"; zsh -f -c 'autoload -Uz compinit; compinit -D; setopt no_eval_lineno; eval \"$(cat fp/_rg)\"; echo rc=$?; echo ${_comps[rg]}' 2>&1 | head -5\necho \"== test harness style\"; zsh -f -c '( _RG_COMPLETE_LIST_ARGS=1 source fp/_rg ) | head -3'\necho \"== harness style with compinit loaded\"; zsh -f -c 'autoload -Uz compinit; compinit -D; ( _RG_COMPLETE_LIST_ARGS=1 source fp/_rg ) | head -3; echo lines'",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/clone-work; cd $W\necho \"== ksh_arrays after compinit\"; zsh -f -c 'autoload -Uz compinit; compinit -D; setopt ksh_arrays; source <(cat fp/_rg); echo rc=$?; echo ${_comps[rg]}' 2>&1 | head -5\necho \"== interactive-ish before compinit with fpath default\"; zsh -f -i -c 'source <(cat fp/_rg); echo rc=$?' 2>&1 | head -5\necho \"== fpath autoload + direct call of _rg outside completion (compinit loaded)\"; zsh -f -c 'fpath=($PWD/fp $fpath); autoload -Uz compinit; compinit -D; echo ${_comps[rg]}; which _rg | head -2' 2>&1 | head",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/clone-work; cd $W; zsh -f -c 'autoload -Uz compinit; compinit -D; echo \"[${_comps[rg]}]\"; print -l $^fpath/_rg(N)'; zsh -f -c 'autoload -Uz compinit; compinit -D; unset \"_comps[rg]\"; setopt ksh_arrays; source <(cat fp/_rg); echo rc=$?; echo \"[${_comps[rg]}]\"' 2>&1",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/clone-work; cd $W; zsh -f -c 'compdef(){ echo \"compdef called: $*\"; }; source <(cat fp/_rg); echo rc=$?' 2>&1; echo ---; zsh -f -c 'compdef(){ echo \"compdef called: $*\"; }; setopt ksh_arrays; source <(cat fp/_rg); echo rc=$?' 2>&1",
+    "sed -n 1,25p CHANGELOG.md; sed -n 425,450p crates/core/flags/complete/rg.zsh",
+    "grep -n \"zsh-complete\\|source <(\\|easier to setup\\|recommended approach\" FAQ.md"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/utf-8"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-070"
+  ]
+}
