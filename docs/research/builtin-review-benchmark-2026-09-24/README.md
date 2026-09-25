@@ -262,6 +262,40 @@ Preregistered questions, answered per arm against A: material recall per complet
 and unique false findings per review; the three review-level rates on buggy targets; matched
 median cost ratio; elapsed-to-payload ratio; and the set of registered defects no arm recovered.
 
+**Scoring procedure, settled 2026-09-25 after the grid and before any grading.** An independent
+review of the scoring plan (ledger S25) settled what the text above leaves open. The run's
+eighteenth deviation records it.
+
+- **Graders.** One fresh headless session, `claude-opus-5-5` at `high` as for every helper in this
+  run, grades each target, single-threaded, under a fresh home,
+  in an export directory holding only that target's reviews rendered by `normalize_review.py
+  --render` under random tokens, the whole register, the rubric, the packet and an offline
+  provisioned clone. A read audit of the grader's transcript takes that directory as its only
+  root; a leak means the target is graded again under new tokens. `bench/tools/grade.py` prepares,
+  dispatches and unblinds. Opus 5.5 is also arm C's model, so a grader preference for its own
+  model's reviews is possible and is disclosed, not controlled; the maintainer chose it over
+  Fable 5.1, which no arm runs, at about 2.5 times the price.
+- **What the grader decides**: each item's assignment, its `duplicate_group` within the review,
+  and the fix sufficiency of a recovery, judged from the whole item because only arm A has a fix
+  line.
+- **What is derived after unblinding, per arm.** `completion`: A is `completed` when the skill
+  reported complete; B, C and D unless the attempt stopped. `approved_on_buggy` as above;
+  `zero_recovery` from the grader's assignments. `priority_error`: A, a recovery not marked
+  `must-fix` or a non-material item marked `must-fix`; B `n/a`, because its `high` variant gives no
+  ordering instruction; C, a recovery listed after a non-material item, because its variant
+  instructs "Sort by severity" (checked in att-011's archived transcript); D, a recovery whose
+  `P<n>` ranks below a non-material item's.
+- **Blinding residue beyond §4**: a non-empty fix line, and an observation rendered as `(no
+  file)`, both mark arm A.
+- **New candidates.** A plausible material claim the register lacks is `unresolved` in mapping
+  v1 and goes to one independent adjudicator, given the claim with arm, attempt and cost labels
+  removed and the register. Every ruling versions the register (a defect or a non-defect) and
+  produces mapping v2; a new defect also means a blind re-grade of every attempt on that target
+  for that defect alone. `results.v1.json` pins mapping v1 and `results.v2.json` uses v2.
+- **The reveal.** The fresh registers are opened one at a time, only after the tests pass and all
+  six regression targets are mapped. Once a plaintext register exists on disk, the run is closed
+  to dispatch.
+
 ## 9. What the shakedown established (Phase 0, 2026-09-24)
 
 The adapter shakedown is filed as the suite run

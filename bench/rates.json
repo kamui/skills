@@ -56,6 +56,17 @@
       "cache_write_1h": 12.5,
       "source": "OpenAI GPT-6 Astra launch pricing, 2026-09-03 (developers.openai.com/api/docs/models/gpt-6-astra; openrouter.ai/openai/gpt-6-astra), looked up 2026-09-24",
       "billing": "list-price-equivalent; the maintainer's Codex account is a ChatGPT plan (plan_type prolite) and consumes quota, not dollars"
+    },
+    {
+      "model": "claude-fable-5-1",
+      "as_of": "2026-09-25",
+      "input": 10,
+      "output": 50,
+      "cache_read": 0.25,
+      "cache_write_5m": 12.5,
+      "cache_write_1h": 20,
+      "source": "platform.claude.com pricing page read on 2026-09-25: $10/$50, cache write $12.50 (5m) and $20 (1h), cache read $0.25 (0.025x input). Added for the scoring phase of run 2026-09-24-builtin-baseline, whose frozen arms do not use it",
+      "billing": "api-dollars"
     }
   ]
 }
