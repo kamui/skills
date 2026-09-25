@@ -126,7 +126,8 @@ def build_run(root: Path, defects: list, attempts: dict) -> Path:
     packet = b"# Packet\n\nThe pull request.\n"
     (run / "fixture").mkdir(parents=True)
     (run / "fixture" / "packet.md").write_bytes(packet)
-    write_json(run / "fixture" / "target.json", {"id": TARGET, "shape": "buggy" if defects else "clean"})
+    write_json(run / "fixture" / "target.json", {"id": TARGET, "shape": "buggy" if defects else "clean", "provisioning": {
+        "allowance": "Run go test from <clone> with GOMODCACHE=<cache>/gomodcache.", "unavailable": "network"}})
     write_json(run / "fixture" / "register.v1.json", {"schema_version": 1, "target": TARGET, "version": 1,
                                                       "defects": [{"id": d} for d in defects], "non_defects": []})
     cells = []
@@ -141,6 +142,7 @@ def build_run(root: Path, defects: list, attempts: dict) -> Path:
         write_json(run / "attempts" / attempt_id / "normalized.json", doc)
     write_json(run / "manifest.json", {
         "run_id": RUN_ID, "rubric_version": 1, "rates": [], "planned_cells": cells,
+        "execution_policy": {"allowance": "Five minutes per command.", "branch_layout": "`main` is the merge-base."},
         "cohort": [{"target": TARGET, "register_version": 1, "cohort_group": "regression",
                     "packet_sha256": hashlib.sha256(packet).hexdigest()}]})
     return run
@@ -198,6 +200,9 @@ class Prepare(Grade):
         self.assertEqual(by_attempt["att-004"].splitlines()[-1], "(no items)")
         self.assertIn("Claim: Wrong", by_attempt["att-006"])
         self.assertNotIn("P2", by_attempt["att-008"])
+        self.assertIn("Five minutes per command. Run go test from <clone> with GOMODCACHE=<cache>/gomodcache.\n\n"
+                      "Unavailable: network", texts["prompt.md"])
+        self.assertIn("`<cache>` is `clone-cache/`", texts["prompt.md"])
         prompt = texts["prompt.md"]
         self.assertIn("Registered defects: GT-t1, GT-t2.", prompt)
         listed = [line for line in prompt.splitlines() if line.startswith("- `reviews/blind-")]
