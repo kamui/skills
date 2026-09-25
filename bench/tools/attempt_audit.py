@@ -86,10 +86,37 @@ def commands_only(cmd: str) -> str:
     return HEREDOC.sub(lambda m: m.group(0) if re.search(r"\b(?:ba|z|da|k)?sh\b", m.group(1)) else m.group(1), cmd)
 
 
+def unquoted(cmd: str) -> str:
+    """``cmd`` with quoted text masked, since a quoted pattern or message is data (``rg "a|go b"``),
+    except a script opened right after ``-c`` and a ``$(...)`` inside double quotes, which run."""
+    out, i, quote, depth = [], 0, None, 0
+    while i < len(cmd):
+        c = cmd[i]
+        if quote is None:
+            if c == "\\":
+                out.append(cmd[i:i + 2]); i += 2; continue
+            if c in "'\"" and not re.search(r"-c\s+$", cmd[:i]):
+                quote = c
+            out.append(c)
+        elif c == quote and depth == 0 and not (quote == '"' and cmd[i - 1] == "\\"):
+            quote = None
+            out.append(c)
+        elif quote == '"' and cmd.startswith("$(", i):
+            depth += 1; out.append("$("); i += 2; continue
+        elif depth:
+            depth += c == "("
+            depth -= c == ")"
+            out.append(c)
+        else:
+            out.append("_")
+        i += 1
+    return "".join(out)
+
+
 def network_use(cmd: str) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when the command itself sets
     ``GOPROXY=off`` and ``GOTOOLCHAIN=local`` before it, as the Go targets' allowances do."""
-    cmd = commands_only(cmd)
+    cmd = unquoted(commands_only(cmd))
     for m in NETWORK.finditer(cmd):
         tool, sub = m.group("tool"), m.group("sub")
         if tool == "go":
