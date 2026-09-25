@@ -47,11 +47,12 @@ template specifies: every key token present and no other; item keys exactly ``"1
 ``assignment`` ``defect:<registered id>``, ``false-finding``, ``non-material`` or ``unresolved``;
 ``fix_sufficiency`` graded only on a ``defect:`` item; a ``candidate`` only on an ``unresolved`` item
 and naming a ``new_candidates`` entry whose ``items`` are exactly the items naming it; non-empty
-``notes``), refuses when ``dispatch.json`` is missing, records a violation, another model or a
-subagent, or a prompt hash other than the key's, and when the key's attempts are not exactly the
-run's attempts on the target. It unblinds, derives ``priority_error`` and the review level from the
-per-arm table ``ARMS``, and writes ``scoring/<target>/mapping.v<M>.json`` (validated against
-``bench/schema/mapping.schema.json``; never overwritten) and ``scorecard.v<M>.md``.
+``notes``), refuses when ``dispatch.json`` is missing or records a session that did not exit 0, no
+``verdicts.json``, unpriced usage, a violation, another model or a subagent, or a prompt hash other
+than the key's, and when the key's attempts are not exactly the run's attempts on the target. It
+unblinds, derives ``priority_error`` and the review level from the per-arm table ``ARMS``, and writes
+``scoring/<target>/mapping.v<M>.json`` (validated against ``bench/schema/mapping.schema.json``; never
+overwritten) and ``scorecard.v<M>.md``.
 
 Exit codes: 0 done; 1 the inputs are inconsistent or a check failed, one line per problem on stdout;
 2 an input cannot be read or a helper command failed, named on stderr.
