@@ -163,7 +163,11 @@ none of these paths had run before. Commit `0200519` fixes all three with tests,
 records the move of `bench/tools` as a deviation that invalidates nothing: the change touches no
 reviewer input or execution condition, and att-001 and att-003 re-audit and re-normalize
 identically. Re-processed into scratch files with the fixed tools, att-002 parses to three items
-with no audit violation, and att-004 to an empty review.
+with no audit violation, and att-004 to an empty review. The glob fix also stopped the audit
+reading a word that starts with a slash and then a glob, such as `/*/x`, as an absolute path.
+Commit `552a6f8` keeps glob characters inside an absolute path, and the manifest's third deviation
+records it; the paths extracted from the four attempts' recorded commands are unchanged, so no
+filed attempt changes.
 
 **How att-002 and att-004 count: re-filed, no replacement.** The method reruns a cell, consuming
 a replacement, when a harness repair changes inputs or execution conditions (method §3); this
