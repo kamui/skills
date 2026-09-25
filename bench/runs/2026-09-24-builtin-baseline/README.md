@@ -20,8 +20,8 @@ freeze; the pilot ran on 2026-09-25 (below).
 | `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes, the scoring sessions), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
 | `attempts/att-NNN/` | one record per dispatched attempt, written by `run_cell.py`: att-001 to att-083 for the 80 cells; the attempts re-filed with `--replay` are listed in the manifest's deviations and the ledger |
-| `scoring/<target>/mapping.v<M>.json`, `scorecard.v<M>.md` | blind adjudication per target, written by `grade.py map` (none yet) |
-| `results.v<M>.json` | `score.py` output (none yet) |
+| `scoring/<target>/mapping.v<M>.json`, `scorecard.v<M>.md` | blind adjudication per target, written by `grade.py map`; v2 by `grade.py revise` on (i), (j) and (l) |
+| `results.v<M>.json` | `score.py` output: v1 pins mapping v1 on every target, v2 uses the revised mappings |
 
 ## Pins
 
@@ -225,6 +225,8 @@ carried past the command they prefix; the fourteenth to seventeenth deviations r
 filed attempt's audit changes. The audit's scope is the sixth deviation's: accidental reads, not disguised ones.
 
 ## Scoring
+
+Scored 2026-09-25; the results and answers are in the research README's §12.
 
 The procedure is the research README's §8, settled 2026-09-25 before any grading and recorded as
 the eighteenth deviation. Each target is graded once, by a fresh headless session that sees only

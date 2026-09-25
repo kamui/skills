@@ -23,6 +23,9 @@ unreachable rather than detectable; that control is not in place (README §3).
 
 ## Reveal (after every reviewer attempt has been filed)
 
+Done 2026-09-25 after the run was scored: the plaintexts now sit beside their ciphertexts, each
+matching `SHA256SUMS`, and each fresh target's `register.v1.json` beside its `.enc`.
+
 ```sh
 cd docs/research/builtin-review-benchmark-2026-09-24/sealed
 for f in *.enc; do
