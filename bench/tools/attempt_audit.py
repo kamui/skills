@@ -14,9 +14,11 @@ Reads the transcripts the dispatch wrapper collected under ``<attempt-dir>``:
 for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 ``subagents/agent-*.jsonl``), for ``codex`` the ``home/.codex/sessions/**/rollout-*.jsonl``
 files. Every shell command and every file-tool path is listed; a path outside the
-clone, the attempt directory and the fresh home, or a command that names a
-network tool (``curl``, ``wget``, ``gh``, ``git fetch``/``pull``/``push``/``clone``,
-``pip``, ``npm install``, ``ssh``), is a violation. Every relative path with a ``..`` segment, or
+clone, the attempt directory and the fresh home, or a command that runs a
+network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
+``git fetch``/``pull``/``push``/``clone``; ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
+that reaches a registry; ``go`` unless the command sets ``GOPROXY=off`` and ``GOTOOLCHAIN=local``
+before it), is a violation. Every relative path with a ``..`` segment, or
 with a dot-led glob segment such as ``.*`` that bash can expand to ``..`` (a whole word, or a run
 inside one after whitespace, a redirection, ``=``, ``:``, a quote or a bracket), and every
 relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the clone, is resolved
@@ -47,7 +49,21 @@ import re
 import shlex
 import sys
 
-NETWORK = re.compile(r"(?<![\w-])(curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+|git\s+(fetch|pull|push|clone|ls-remote|remote\s+add)\b")
+# A tool counts only in command position: at the start, after a separator, a ``do``/``then``-style
+# keyword or a wrapper such as ``env``/``xargs``/``timeout N``, or opening a ``-c`` script, past any
+# ``NAME=value`` assignments.
+NETWORK = re.compile(
+    r"(?:^|[;&|(){}\n`]|\$\(|-c\s+['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
+    r"\s*(?:[A-Za-z_]\w*=\S*\s+)*(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
+    r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>\S*)"
+    r"|git\s+(?:fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
+# The package managers reach a registry only through these subcommands; the rest (a build, a script
+# run, ``--version``) work offline, as target (o)'s allowance uses pnpm.
+FETCHING = {"npm": {"install", "i", "add", "ci", "update", "upgrade", "up", "dlx", "exec", "x", "fetch", "publish",
+                    "view", "info", "outdated", "audit", "create", "init"},
+            "pip": {"install", "download"}}
+# A heredoc: its header line (group 1), then the body up to the delimiter line or the end.
+HEREDOC = re.compile(r"^([^\n]*<<-?\s*(['\"]?)(\w+)\2[^\n]*)\n.*?(?:\n[ \t]*\3[ \t]*(?=\n|\Z)|\Z)", re.M | re.S)
 BUILTIN_HEADER = re.compile(r"^`(high effort|medium effort|low effort|minimal prompt)[^`]*`$", re.M)
 CODEX_RUBRIC = "You are acting as a reviewer for a proposed code change"
 DIFF_CMD = re.compile(r"git\s+diff\s+[^;&|\n]*")
@@ -57,6 +73,24 @@ CODEX_CMD = re.compile(r'cmd"?:\s*"((?:[^"\\]|\\.)*)"')
 CODEX_OBJ = re.compile(r'\{((?:\s*"?[\w$]+"?\s*:\s*(?:"(?:[^"\\]|\\.)*"|[^,{}"\[\]]+)\s*,?)+)\}')
 CODEX_FIELD = re.compile(r'"?([\w$]+)"?\s*:\s*(?:"((?:[^"\\]|\\.)*)"|[^,{}"\[\]]+)')
 CODEX_WORKDIR = re.compile(r'(?:workdir|cwd|working_directory)"?\s*:\s*"((?:[^"\\]|\\.)*)"')
+
+
+def network_use(cmd: str) -> bool:
+    """True when ``cmd`` runs a network tool; ``go`` is offline when the command itself sets
+    ``GOPROXY=off`` and ``GOTOOLCHAIN=local`` before it, as the Go targets' allowances do. A heredoc
+    body is data, not commands, unless a shell reads it."""
+    cmd = HEREDOC.sub(lambda m: m.group(0) if re.search(r"\b(?:ba|z|da|k)?sh\b", m.group(1)) else m.group(1), cmd)
+    for m in NETWORK.finditer(cmd):
+        tool, sub = m.group("tool"), m.group("sub")
+        if tool == "go":
+            before = cmd[:m.start("tool")]
+            if re.search(r"\bGOPROXY=off\b", before) and re.search(r"\bGOTOOLCHAIN=local\b", before):
+                continue
+        elif tool in ("npm", "pnpm", "yarn", "pip", "pip3"):
+            if sub not in FETCHING["pip" if tool.startswith("pip") else "npm"]:
+                continue
+        return True
+    return False
 
 
 def load_lines(path: Path):
@@ -291,7 +325,7 @@ def main() -> int:
         ancestors.add(d)
     probes = []
     for cmd, workdir in list(zip(commands, workdirs)) + [("", w) for w in stray]:
-        if NETWORK.search(cmd):
+        if network_use(cmd):
             violations.append(f"network-capable command: {cmd[:200]}")
         start = clone_real
         if workdir:

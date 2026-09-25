@@ -61,6 +61,30 @@ class AttemptAudit(unittest.TestCase):
                                    "grep -rn 'x|y' . | head", "cd src && sed -n '1,5p' a.py")
         self.assertEqual((rc, violations), (0, []))
 
+    def test_offline_and_non_command_tool_names_pass(self):
+        offline = "GOMODCACHE=$C/gomodcache GOCACHE=$C/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local"
+        for cmd in ("rg -n foo --glob '*.go' | head", "rg -n foo src/*.go | head -30",
+                    "python3 x.py --path src/backup.go --chunk 1", "for p in src/a.go src/b.go; do wc -l $p; done",
+                    "rg -n 'go func' src", "grep -rn 'npm install' src", "echo cargo test",
+                    f"{offline} go test ./src/ -count=1", f"{offline} timeout 280 go vet ./src/ 2>&1 | tail -5",
+                    f"export {offline} && go vet ./src/", "PATH=$C/bin:$PATH pnpm build",
+                    "cd src && npm run test", "pnpm --version",
+                    "python3 - <<'EOF'\nimport sys\nprint('ran `go vet`; go test ./src/ passes')\nEOF\necho done"):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.bash(cmd), (0, []))
+
+    def test_network_commands_are_violations(self):
+        for cmd in ("curl https://example.com", "cd src && wget x", "gh pr view 1", "git fetch origin",
+                    "go test ./...", "GOPROXY=off go test ./...", "timeout 30 go get example.com/m",
+                    "cat src/a.go; go mod download", "npm install", "cd src && pnpm add left-pad",
+                    "pnpm dlx x", "pip install requests", "cargo test", "bash -c 'curl x'",
+                    "for p in a b; do curl $p; done", "x=$(curl -s y)", "bash <<'EOF'\ncurl x\nEOF",
+                    "python3 - <<'EOF'\nprint(1)\nEOF\ncurl x"):
+            with self.subTest(cmd=cmd):
+                rc, violations = self.bash(cmd)
+                self.assertEqual(rc, 1)
+                self.assertTrue(any(v.startswith("network-capable command") for v in violations), violations)
+
     def test_embedded_dotdot_escapes_are_violations(self):
         for command in ("cat src/../../outside/register.json", "cat ./../outside/secret", "ls src/..//../outside",
                         "cat --file=src/../../outside/x", f"cat /usr/..{self.outside}/x", "cat <../outside/x",
