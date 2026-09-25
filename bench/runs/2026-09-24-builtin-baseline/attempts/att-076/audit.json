@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-076/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-076-clone/6e409ffc-6816-41ab-8fd8-960cab7a8ab2/subagents/agent-ae4f2dbd2993e19bd.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-076/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-076-clone/6e409ffc-6816-41ab-8fd8-960cab7a8ab2.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- clientconn.go"
+  ],
+  "workdirs": [
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-076/clone/clientconn.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-076/clone/clientconn.go"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- clientconn.go"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-076/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-076"
+  ]
+}
