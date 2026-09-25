@@ -54,9 +54,37 @@ is the SHA-256 prefix of the rendered prompt. Reports and rulings are sealed in 
 | S21 | adjudication (o), 19:51Z | `0413d38b…` | `a2f5bddbe60a` | the slot's expected status confirmed; register sealed | 1.42 |
 
 Step 6 setup so far: **$26.29**, all Opus 5.5 at API list price. Provisioning the four targets
-(mirrors, caches, smoke checks) ran no model and is not charged. These rows become the first lines
-of the frozen run's `charges.jsonl`, which `run_cell.py` counts against the cap.
+(mirrors, caches, smoke checks) ran no model and is not charged. These rows are in the frozen run's
+`charges.jsonl`, which `run_cell.py` counts against the cap.
+
+## Setup (freeze, 2026-09-24, pre-dispatch probes)
+
+Each probe ran one arm through `dispatch.sh` on the toy fixture, under the run's pinned `bin/`
+(`claude` 2.1.282, `codex` 0.156.1; see the run's README), and was filed with `file_attempt.py`
+against the pinned version as `bench/runs/2026-09-24-builtin-baseline/probes/att-00N`. Costs are
+`file_attempt.py`'s metering at the `rates.json` entries of 2026-09-24. The Codex rollout's last
+`rate_limits` event put the ChatGPT plan (`plan_type: prolite`) at **62% of its weekly window
+used, resetting 2026-09-26T09:19:52Z**; that is the quota the grid starts from.
+
+| # | Step | Session | Result | Billed / list ($) |
+| --- | --- | --- | --- | --- |
+| S22 | probe B: built-in, sonnet, `--effort high`, 22:22Z | `ad178ae0…` | claude-code 2.1.282; prompt `665e2e51…` as on 2.1.281; `git diff main...HEAD`; valid | 0.11 |
+| S23 | probe C: built-in, opus, `--effort high`, 22:22Z | `f856e5de…` | claude-code 2.1.282; prompt `bf131e06…` as on 2.1.281; diffed `main...review-head`; findings as a fenced JSON array; valid | 0.10 |
+| S24 | probe D: `codex review`, defaults, 22:22Z | `01a0d583…` | codex-cli 0.156.1; rubric `ec60e7f3…`; `git diff main...review-head`; valid | 0.13 list |
+
+Frozen run charges before any cell: **$28.31** (`charges.jsonl`: the shakedown $1.69, the hunts
+and adjudications $26.29, the probes $0.33). Room under the cap after the $25 reserve: $196.69.
 
 ## Attempts
 
-None dispatched. The attempt table opens with the pilot (README §6).
+Opened 2026-09-24 before the pre-dispatch probes (S22–S24) and before any scored cell, as README
+§10 required. Every dispatch of the frozen run `bench/runs/2026-09-24-builtin-baseline` gets a row
+here when it is filed: the attempt id, the cell, the dispatch instant, the disposition, the metered
+cost (billed dollars for Claude, list-price equivalent for Codex), and for Codex the plan quota
+as the rollout's last `rate_limits` event reports it. The pilot ((i) and (n) under B and D, one
+replicate each) runs first; its valid rows count.
+
+| Attempt | Cell | Dispatched | Disposition | Billed / list ($) | Quota after (D) | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+
+No scored cell has been dispatched.

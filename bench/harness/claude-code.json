@@ -32,6 +32,30 @@
         "The high Sonnet variant did not fan out its angles or run a verifier on a five-line diff; fan-out on grid-sized diffs is recorded per attempt from the subagent count.",
         "The root transcript records no billed request; the review runs in <session-dir>/subagents/agent-*.jsonl."
       ]
+    },
+    "2.1.282": {
+      "observed_on": "2026-09-24",
+      "variants": [
+        {
+          "header": "`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings`",
+          "selected_by": "session --effort high, model claude-sonnet-5",
+          "output_contract": "fenced JSON array in the final message (file, line, summary, failure_scenario); ReportFindings forbidden",
+          "body_sha256": "665e2e510c91fdd577b75239ee22b3aa51347cb1cb81dcd1adc791ef2e6b6bd9",
+          "body_bytes": 6541
+        },
+        {
+          "header": "`high effort → 8 inline angles → dedup (no verify) → ≤10 findings`",
+          "selected_by": "session --effort high, model claude-opus-5-5",
+          "output_contract": "ReportFindings call (file, line, summary, failure_scenario, category, verdict) on 2.1.281; on 2.1.282 the probe's final message carried a fenced JSON array instead, under the same prompt body",
+          "body_sha256": "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a",
+          "body_bytes": 5657
+        }
+      ],
+      "notes": [
+        "Observed by the pre-dispatch probes of run 2026-09-24-builtin-baseline (probes/att-001 Sonnet, probes/att-002 Opus) on the toy fixture: both high variants hash exactly as on 2.1.281.",
+        "The low variant (no session effort flag) was not re-observed on 2.1.282; the run does not use it.",
+        "The Opus probe ran `git diff main...review-head` (the argument's range) where 2.1.281 ran `git diff main...HEAD`; the Sonnet probe ran `git diff main...HEAD`. Both resolve to the pinned range under the suite's branch layout."
+      ]
     }
   }
 }
