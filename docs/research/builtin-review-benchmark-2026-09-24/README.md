@@ -408,10 +408,10 @@ one-defect re-grades, all Opus 5.5 at `high` ($18.11 with the plan review; ledge
 [`results.v2.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v2.json) is the
 answer: mapping v2 on (i), (j) and (l), v1 elsewhere, no unresolved item.
 [`results.v1.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v1.json) pins mapping
-v1 everywhere, with the five candidate items unresolved. The tables below are printed by
-[`answers.py`](answers.py) from results v2, the attempt records and the mappings; a ratio is the
-median over the 20 cells matched to A's by target and replicate, a cell's cost counting every
-attempt it took.
+v1 everywhere, leaving unresolved the 11 items that raised the five candidates. The tables below
+are printed by [`answers.py`](answers.py) from results v2, the attempt records and the mappings; a
+ratio is the median over the 20 cells matched to A's by target and replicate, a cell's cost
+counting every attempt it took.
 
 | Arm | Reviews | Recall, completed-only (attempt-level) | False findings raw / unique per review | Approved on buggy | Zero recovery | False clean | Noise per review |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -471,7 +471,8 @@ Answers to the preregistered questions, per arm against A:
   approve, because an empty findings array is their only approving form and neither produced one.
   Zero recovery: D 5, A 4, B 2, C 2. A's approvals follow §8's rule that `Approved` approves
   whatever the items say: four of A's eight approvals carried a recovered defect at `consider`,
-  which is also where A's five priority errors come from.
+  and those four recoveries are four of A's five priority errors. The fifth is att-055's GT-i3
+  recovery, not marked `must-fix`, in a `Changes Requested` review.
 - **Matched median cost ratio.** B 0.18, D 0.35, C 0.45 of A's cost; A spent $15.99 on its
   cells, C $7.52, D $5.92 (list price; D consumed ChatGPT-plan quota), B $3.04.
 - **Elapsed-to-payload ratio.** B 0.21, D 0.23, C 0.58 of A's; median elapsed to payload B 28 s,
