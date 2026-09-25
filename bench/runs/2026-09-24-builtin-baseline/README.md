@@ -187,3 +187,20 @@ manifest's second deviation records this and invalidates nothing. The pilot ther
 four valid attempts and no replacement used, and the sealed order continues at
 `q-soba-195/review-code-sonnet-high/1` on the maintainer's go.
 
+**What the read audit guards against: accidental reads, not deliberate evasion.** Every reviewer
+runs as the maintainer's user, so method §3 item 5 makes the read audit the control on what it
+reads. The audit judges each command by its text, and the shell rewrites that text before it
+runs, so some spellings read outside the allowed roots without naming the path: a variable
+(`x=..; cat $x/$x/<path>`), a quoted or escaped dot glob (`cat "$HOME"/.*/.*/<path>`,
+`cat ~/\.*/\.*/<path>`), brace expansion, `~user`, and a symlink the reviewer plants in the clone
+or its fresh home and reads through, including `cat ~/<link>/../<path>`, which main caught by
+following the link and `a49dd79` no longer does. The reviewers are code reviewers with no reason
+to hide a read, and each runs with a fresh `HOME`, so a stray read shows its path (`find ..`,
+`../`, an absolute path) and the audit catches it. The maintainer decided on 2026-09-25 that the
+audit guards against that and not against a reviewer disguising its reads on purpose, which only
+real isolation (a separate Unix user, recorded in §3 as not done) would stop. The spellings above
+are known blind spots, not defects to repair during this run; the manifest's sixth deviation
+records the decision and invalidates nothing. Quoted regular expressions that look like paths,
+such as `sed 's|.*/.*/||'` or `awk '$1 ~ /[0-9]+/'`, still read as reads outside the roots and
+would file an attempt harness-invalid; none of the pilot's attempts has one.
+

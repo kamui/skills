@@ -675,6 +675,11 @@
       "at": "2026-09-25T04:23:42Z",
       "what": "bench/tools moved to a49dd79d82b58267de4fa9a83e60f3e6a4aa68e2, which extends the fourth deviation's fix to ~ paths: attempt_audit.py's ~ pattern stopped at a glob character, so cat ~/.*/.*/<path>, which bash 5.1 expands to a read two levels above the attempt's home, went unflagged at 02005197f6b4df4d6a1471d548ca9f00d69112e9 and at f1a4343038f5d182231f83e9bb8328060dd8cdce, where the frozen revision had flagged it by misreading the slash after the glob as an absolute path. A ~ path now keeps its glob characters, a dot-led segment that can match .. is judged as .., and the path is normalised once expanded against the fresh home. The change touches no reviewer input or execution condition. None of the commands recorded in the audit.json of att-001 to att-004 contains ~, and the paths extracted from them are identical at f1a4343038f5d182231f83e9bb8328060dd8cdce and at the new revision, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T04:55:06Z",
+      "what": "Scope of the read audit, decided by the maintainer after the pilot: method §3 item 5's control guards against a reviewer's accidental reads outside the allowed roots, which name their path, and not against reads a reviewer disguises on purpose. Spellings the shell rewrites before running (a variable, a quoted or escaped dot glob, brace expansion, ~user, a symlink planted in the clone or the fresh home and read through) are recorded as known blind spots in the run README's pilot section, not repaired during this run. No tool, reviewer input or execution condition changes, and no filed attempt changes.",
+      "invalidates": []
     }
   ]
 }
