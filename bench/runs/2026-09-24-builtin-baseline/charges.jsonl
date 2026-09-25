@@ -11,3 +11,11 @@
 {"at": "2026-09-24T22:22:32Z", "step": "ledger S23: pre-dispatch probe C on the toy fixture (probes/att-002)", "usd": 0.097975, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "f856e5de"}
 {"at": "2026-09-24T22:22:35Z", "step": "ledger S24: pre-dispatch probe D on the toy fixture (probes/att-003)", "usd": 0.125178, "model": "gpt-6-astra", "billing": "list-price-equivalent", "session": "codex"}
 {"at": "2026-09-25T18:22:58Z", "step": "ledger S25: independent review of the scoring plan (Fable 5.1 at high, headless, read-only)", "usd": 5.474289, "model": "claude-fable-5-1", "billing": "api-dollars", "session": "dc19ec16"}
+{"at": "2026-09-25T20:42:21Z", "step": "ledger G2: grading j-trpc-5017 (claude-opus-5-5 at high)", "usd": 0.918607, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "6a8b1251"}
+{"at": "2026-09-25T20:42:29Z", "step": "ledger G1: grading i-requests-6667 (claude-opus-5-5 at high)", "usd": 1.22794, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "fc3bf4c9"}
+{"at": "2026-09-25T20:44:00Z", "step": "ledger G4: grading l-bokeh-9232 (claude-opus-5-5 at high)", "usd": 0.572066, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "d710b325"}
+{"at": "2026-09-25T20:44:07Z", "step": "ledger G3: grading k-graphql-js-1582 (claude-opus-5-5 at high)", "usd": 0.49168, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "cd6f7bb9"}
+{"at": "2026-09-25T20:46:01Z", "step": "ledger G5: grading m-grpc-go-7390 (claude-opus-5-5 at high)", "usd": 0.668669, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "62b6e582"}
+{"at": "2026-09-25T20:46:18Z", "step": "ledger G6: grading n-ripgrep-2957 (claude-opus-5-5 at high)", "usd": 0.64279, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "0cdfe2fd"}
+{"at": "2026-09-25T20:48:24Z", "step": "ledger G8: grading n-ripgrep-2957 again after G6's read-audit violation (claude-opus-5-5 at high)", "usd": 0.557745, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "7733bf50"}
+{"at": "2026-09-25T20:49:28Z", "step": "ledger G7: grading i-requests-6667 again after G1's malformed verdicts (claude-opus-5-5 at high)", "usd": 0.990657, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "4aa1d91a"}
