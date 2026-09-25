@@ -4,17 +4,18 @@
 Usage::
 
     python3 bench/tools/grade.py prepare --run bench/runs/<run> --target <id> --work WORK --key KEYFILE \\
-        --template TEMPLATE [--opened DIR] [--cache-root DIR] [--provision SCRIPT]
+        --template TEMPLATE [--register-version N] [--only-defect GT-x] [--opened DIR] [--cache-root DIR] \\
+        [--provision SCRIPT]
     python3 bench/tools/grade.py dispatch --work WORK --model MODEL --effort EFFORT --max-budget-usd X \\
         [--run bench/runs/<run> --step LABEL] [--timeout 5400]
     python3 bench/tools/grade.py map --run bench/runs/<run> --target <id> --work WORK --key KEYFILE --version M \\
         [--opened DIR] [--supersedes N --reason TEXT]
 
-``prepare`` reads the run's ``manifest.json`` (the cohort entry's ``register_version`` and
-``packet_sha256``, the ``rubric_version``), every ``attempts/<id>/attempt.json`` whose ``cell.target``
-is the target with its ``normalized.json``, and the target directory (``bench/targets/<id>`` or the
-run's ``fixture``). WORK must be new or empty and KEYFILE new and outside it. Every attempt, empty and
-harness-invalid ones included, gets a unique token ``blind-`` plus six hex digits, and WORK receives
+``prepare`` reads the run's ``manifest.json`` (the cohort entry's ``register_version``, which
+``--register-version`` overrides, and ``packet_sha256``, the ``rubric_version``), every
+``attempts/<id>/attempt.json`` whose ``cell.target`` is the target with its ``normalized.json``, and
+the target directory (``bench/targets/<id>`` or the run's ``fixture``). WORK must be new or empty
+and KEYFILE new and outside it. Every attempt, empty and harness-invalid ones included, gets a unique token ``blind-`` plus six hex digits, and WORK receives
 ``reviews/<token>.md`` (``# Review <token>`` and ``normalize_review.render`` of its items, nothing
 else), ``register.json`` (the register's bytes; a sealed one from ``--opened DIR/<target>/`` checked
 against ``target.json``'s ``plaintext_sha256``), ``rubric.md``, ``packet.md`` (checked against the
@@ -22,11 +23,14 @@ manifest's hash), ``clone/`` with ``clone-cache/`` and ``clone-work/`` from ``pr
 (``--provision`` substitutes another script with its interface), and ``prompt.md``, the template with
 ``{TARGET}``, ``{DEFECT_IDS}``, ``{REVIEWS}`` and ``{ALLOWANCE}`` (the manifest's ``execution_policy``
 allowance and the target's ``provisioning`` allowance and unavailability, which the reviewers were
-given, with ``<clone>``, ``<cache>`` and the work directory mapped to WORK's) substituted. A prompt or review that names an attempt
-id, an arm id, the run id or the run path, or a prompt that names WORK, the home directory or the
-repository, is refused. KEYFILE (mode 0600) records ``run_id``, ``target``, ``register``
-(``version``, ``sha256``), ``template_sha256``, ``prompt_sha256``, ``created_at`` and ``reviews``
-(``token``, ``attempt_id``, ``items``) in attempt order.
+given, with ``<clone>``, ``<cache>`` and the work directory mapped to WORK's) substituted. With
+``--only-defect GT-x``, a defect in that register version, the template must also have ``{DEFECT}``,
+which becomes the defect's id and title: a re-grade of every attempt for that defect alone
+(``regrade-template.md``). A prompt or review that names an attempt id, an arm id, the run id or
+the run path, or a prompt that names WORK, the home directory or the repository, is refused.
+KEYFILE (mode 0600) records ``run_id``, ``target``, ``register`` (``version``, ``sha256``),
+``only_defect`` (null without the option), ``template_sha256``, ``prompt_sha256``, ``created_at``
+and ``reviews`` (``token``, ``attempt_id``, ``items``) in attempt order.
 
 ``dispatch`` runs one grader session in WORK: ``claude`` from PATH, ``-p --safe-mode`` with the model,
 effort, a fresh session id, ``Agent`` disallowed, ``Read Glob Grep Write Bash`` allowed and the budget
@@ -145,14 +149,19 @@ def prepare(args) -> list:
         raise Inconsistent(f"{key_path} exists; a key is never overwritten")
     manifest = read_json(run_dir / "manifest.json")
     entry = cohort_entry(manifest, args.target)
-    directory, register, register_raw, digest = register_of(run_dir, args.target, entry["register_version"], args.opened)
+    version = entry["register_version"] if args.register_version is None else args.register_version
+    directory, register, register_raw, digest = register_of(run_dir, args.target, version, args.opened)
     packet = read_bytes(directory / "packet.md")
     if sha256(packet) != entry["packet_sha256"]:
         raise Inconsistent(f"{directory / 'packet.md'} does not match the manifest's packet_sha256")
     rubric = read_bytes(BENCH / "rubric" / f"scoring.v{manifest['rubric_version']}.md")
     template_raw = read_bytes(args.template)
     template = template_raw.decode("utf-8")
-    problems = [f"template lacks {p}" for p in PLACEHOLDERS if p not in template]
+    placeholders = PLACEHOLDERS + (("{DEFECT}",) if args.only_defect else ())
+    problems = [f"template lacks {p}" for p in placeholders if p not in template]
+    defect = next((d for d in register["defects"] if d["id"] == args.only_defect), None)
+    if args.only_defect and defect is None:
+        problems.append(f"--only-defect {args.only_defect} is not a defect in register v{version}")
     records = attempts_on(run_dir, args.target)
     if not records:
         problems.append(f"no attempts on {args.target}")
@@ -180,6 +189,8 @@ def prepare(args) -> list:
               .replace("{DEFECT_IDS}", ", ".join(defect_ids) or "none: the register records this target as clean")
               .replace("{REVIEWS}", listing)
               .replace("{ALLOWANCE}", allowance))
+    if defect:
+        prompt = prompt.replace("{DEFECT}", f"{defect['id']}, {defect['title']}")
     problems = [f"prompt.md keeps the placeholder {p}" for p in sorted(set(re.findall(r"\{[A-Z_]+\}", prompt)))]
     identifying = ({*records, *(r["cell"]["arm"] for r in records.values()), manifest["run_id"],
                     str(run_dir.resolve())} - {""})
@@ -206,7 +217,7 @@ def prepare(args) -> list:
     (work / "packet.md").write_bytes(packet)
     (work / "prompt.md").write_text(prompt, encoding="utf-8")
     key = {"run_id": manifest["run_id"], "target": args.target,
-           "register": {"version": register["version"], "sha256": digest},
+           "register": {"version": register["version"], "sha256": digest}, "only_defect": args.only_defect,
            "template_sha256": sha256(template_raw), "prompt_sha256": sha256(prompt.encode("utf-8")),
            "created_at": now(),
            "reviews": [{"token": r["token"], "attempt_id": r["attempt_id"], "items": r["items"]} for r in reviews]}
@@ -215,7 +226,8 @@ def prepare(args) -> list:
         os.fchmod(handle.fileno(), 0o600)
         handle.write(json.dumps(key, indent=2) + "\n")
     print(f"prepared {work}: {len(reviews)} reviews, {sum(r['items'] for r in reviews)} items, "
-          f"register v{register['version']} ({len(defect_ids)} defects); key {key_path}")
+          f"register v{register['version']} ({len(defect_ids)} defects)"
+          + (f", re-grading {args.only_defect} alone" if defect else "") + f"; key {key_path}")
     return []
 
 
@@ -643,6 +655,8 @@ def main() -> int:
     p.add_argument("--work", required=True)
     p.add_argument("--key", required=True)
     p.add_argument("--template", required=True)
+    p.add_argument("--register-version", type=int, help="default: the cohort entry's register_version")
+    p.add_argument("--only-defect", help="re-grade for this defect alone; the template must have {DEFECT}")
     p.add_argument("--opened", help="directory of opened sealed registers, <dir>/<target>/register.v<N>.json")
     p.add_argument("--cache-root", help="passed to provision.py (its default: ~/.t3/bench-cache)")
     p.add_argument("--provision", default=str(TOOLS / "provision.py"), help="a script with provision.py's prepare interface")
