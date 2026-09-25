@@ -170,7 +170,9 @@ class AttemptAudit(unittest.TestCase):
                     "export GOPROXY=off GOTOOLCHAIN=local; unset -v GOPROXY; go test ./...",
                     "export GOPROXY=off GOTOOLCHAIN=local; export -n GOTOOLCHAIN; go test ./...",
                     "zsh -fc 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download",
-                    "bash -c 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download"):
+                    "bash -c 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download",
+                    "zsh -fc 'pnpm test'; gh pr view 1", "bash -lc 'cd src && pnpm install'", "npm ci; echo done",
+                    "zsh -fc 'export GOPROXY=off GOTOOLCHAIN=local; go build'; go mod download"):
             with self.subTest(cmd=cmd):
                 rc, violations = self.bash(cmd)
                 self.assertEqual(rc, 1)
