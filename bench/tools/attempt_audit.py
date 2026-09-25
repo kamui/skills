@@ -14,7 +14,8 @@ Reads the transcripts the dispatch wrapper collected under ``<attempt-dir>``:
 for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 ``subagents/agent-*.jsonl``), for ``codex`` the ``home/.codex/sessions/**/rollout-*.jsonl``
 files. Every shell command and every file-tool path is listed; a path outside the
-clone, the attempt directory and the fresh home, or a command that runs a
+clone, the attempt directory and the fresh home that names something on disk when the audit
+runs (a glob by any match; absent ones are listed as ``absent_outside_paths``), or a command that runs a
 network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
 ``git fetch``/``pull``/``push``/``clone``; ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
 that reaches a registry; ``go`` unless the command sets ``GOPROXY=off`` and ``GOTOOLCHAIN=local``
@@ -43,6 +44,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import glob
 import os
 from pathlib import Path
 import re
@@ -167,6 +169,12 @@ def paths_in(text: str, cwd: str, base: str = None):
 
 
 PREFIXES: list = []
+
+
+def present(path: str) -> bool:
+    """Whether ``path`` names anything on disk now, a glob by any match. A path that names nothing
+    was read by nothing (route strings, JSX closing tags, import specifiers, sed patterns)."""
+    return bool(glob.glob(path)) if any(c in path for c in "*?[") else os.path.lexists(path)
 
 
 def inside(path: str, roots) -> bool:
@@ -324,7 +332,7 @@ def main() -> int:
     while d and d != os.path.dirname(d):
         d = os.path.dirname(d)
         ancestors.add(d)
-    probes = []
+    probes, absent = [], []
     for cmd, workdir in list(zip(commands, workdirs)) + [("", w) for w in stray]:
         if network_use(cmd):
             violations.append(f"network-capable command: {cmd[:200]}")
@@ -342,12 +350,19 @@ def main() -> int:
                 if os.path.exists(p):
                     violations.append(f"guidance file exists in an ancestor of the clone and was probed: {p}")
                 continue
-            violations.append(f"path outside allowed roots in command: {p}")
+            if present(p):
+                violations.append(f"path outside allowed roots in command: {p}")
+            else:
+                absent.append(p)
     for p in reads:
         if p.startswith("/") and not inside(p, roots):
-            violations.append(f"file tool read outside allowed roots: {p}")
+            if present(p):
+                violations.append(f"file tool read outside allowed roots: {p}")
+            else:
+                absent.append(p)
     diffs = [m.group(0) for cmd in commands for m in DIFF_CMD.finditer(cmd)]
     report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": reads, "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
+                   "absent_outside_paths": sorted(set(absent)),
                    "violations": violations, "allowed_roots": roots})
     (attempt / "audit.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     if args.json:
