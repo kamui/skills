@@ -17,10 +17,10 @@ freeze; the pilot ran on 2026-09-25 (below).
 | Path | Holds |
 | --- | --- |
 | `manifest.json` | the frozen run: arms resolved with file hashes, the `review-code` tree, the pinned CLI versions and expected prompt hashes; the cohort with register versions and packet, diff and provisioning identities; the 80 planned cells; the caps; the sealed order; the rates used; the execution policy |
-| `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes), counted against the cap by `run_cell.py` |
+| `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes, the scoring sessions), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
 | `attempts/att-NNN/` | one record per dispatched attempt, written by `run_cell.py`: att-001 to att-083 for the 80 cells; the attempts re-filed with `--replay` are listed in the manifest's deviations and the ledger |
-| `scoring/<target>/mapping.v<M>.json` | blind adjudication per target (none yet) |
+| `scoring/<target>/mapping.v<M>.json`, `scorecard.v<M>.md` | blind adjudication per target, written by `grade.py map` (none yet) |
 | `results.v<M>.json` | `score.py` output (none yet) |
 
 ## Pins
@@ -224,6 +224,34 @@ gaps in the new network rule, a script handed to `zsh -fc` or `bash -lc` and Go'
 carried past the command they prefix; the fourteenth to seventeenth deviations record it, and no
 filed attempt's audit changes. The audit's scope is the sixth deviation's: accidental reads, not disguised ones.
 
-Scoring is next and waits for the maintainer: it opens the sealed registers with `seal.py` and
-runs `score.py --opened`, as the Dispatching section says.
+## Scoring
+
+The procedure is the research README's §8, settled 2026-09-25 before any grading and recorded as
+the eighteenth deviation. Each target is graded once, by a fresh headless session that sees only
+blind renderings. Grading directories and token keys live outside the repository, under
+`~/.t3/bench-runs/2026-09-24-builtin-baseline/grading/`:
+
+```sh
+G=~/.t3/bench-runs/2026-09-24-builtin-baseline/grading
+python3 bench/tools/grade.py prepare --run bench/runs/2026-09-24-builtin-baseline --target <id> \
+    --work $G/<id>/work --key $G/keys/<id>.json \
+    --template docs/research/builtin-review-benchmark-2026-09-24/prompts/grader-template.md [--opened <dir>]
+python3 bench/tools/grade.py dispatch --work $G/<id>/work --model claude-opus-5-5 --effort high --max-budget-usd 10 \
+    --run bench/runs/2026-09-24-builtin-baseline --step "ledger G<n>: grading <id>"
+python3 bench/tools/grade.py map --run bench/runs/2026-09-24-builtin-baseline --target <id> \
+    --work $G/<id>/work --key $G/keys/<id>.json --version 1 [--opened <dir>]
+```
+
+A dispatch that exits 1 is graded again from a new `prepare`, never completed by hand. The six
+regression targets go first. Only when all six are mapped are the four sealed registers opened,
+one at a time, with `seal.py open bench/targets/<id>/register.v1.json.enc <dir>/<id>/register.v1.json
+--sha256 <the target.json plaintext_sha256>`. From then on the run is closed to dispatch. The
+hunts and rulings are opened when the write-up needs them. When every target is mapped:
+`score.py --run bench/runs/2026-09-24-builtin-baseline --out bench/runs/2026-09-24-builtin-baseline/results.v1.json --opened <dir>`.
+
+**Re-auditing the three replaced attempts** needs the files they read: `/tmp/pr.diff` (att-006),
+`/tmp/pr_diff.txt` (att-042) and `/tmp/pd071` (att-071). The audit counts a path outside the roots
+only if it exists. Copies with their SHA-256 sums are at
+`~/.t3/bench-runs/2026-09-24-builtin-baseline/evidence/tmp/`; restore them to `/tmp` before a
+`--replay` of those attempts.
 

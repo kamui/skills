@@ -238,3 +238,16 @@ att-042 wrote the diff to `/tmp/pr_diff.txt`, as att-006 had on the same target 
 att-071 (arm A) kept its scratch path in `/tmp/pd071`. The three `/tmp` files are left in place,
 because a re-audit judges a path by whether it exists.
 
+The copies, with their SHA-256 sums, are also kept outside the repository at
+`~/.t3/bench-runs/2026-09-24-builtin-baseline/evidence/tmp/`, so a re-audit can restore them.
+
+## Scoring (2026-09-25)
+
+Scoring steps are charges in `charges.jsonl`, metered from each session's own transcript at its
+`rates.json` entry. Fable 5.1 was added to `rates.json` on 2026-09-25 for this phase; no arm uses it.
+
+| # | Step | Session | Result | Billed ($) |
+| --- | --- | --- | --- | --- |
+| S25 | independent review of the scoring plan: `claude -p --model claude-fable-5-1 --effort high`, read-only tools, no sub-agents, 18:23–18:31Z | `dc19ec16…` | 14 findings, all adopted; on its advice to grade with Fable 5.1, the maintainer kept Opus 5.5; every assistant line `claude-fable-5-1` | 5.47 |
+
+Run spend after S25: $66.26; room under the cap after the reserve: $158.74.

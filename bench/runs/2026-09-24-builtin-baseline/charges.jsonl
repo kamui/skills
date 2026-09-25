@@ -10,3 +10,4 @@
 {"at": "2026-09-24T22:22:29Z", "step": "ledger S22: pre-dispatch probe B on the toy fixture (probes/att-001)", "usd": 0.111339, "model": "claude-sonnet-5", "billing": "api-dollars", "session": "ad178ae0"}
 {"at": "2026-09-24T22:22:32Z", "step": "ledger S23: pre-dispatch probe C on the toy fixture (probes/att-002)", "usd": 0.097975, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "f856e5de"}
 {"at": "2026-09-24T22:22:35Z", "step": "ledger S24: pre-dispatch probe D on the toy fixture (probes/att-003)", "usd": 0.125178, "model": "gpt-6-astra", "billing": "list-price-equivalent", "session": "codex"}
+{"at": "2026-09-25T18:22:58Z", "step": "ledger S25: independent review of the scoring plan (Fable 5.1 at high, headless, read-only)", "usd": 5.474289, "model": "claude-fable-5-1", "billing": "api-dollars", "session": "dc19ec16"}
