@@ -122,6 +122,19 @@ class AttemptAudit(unittest.TestCase):
                                         lambda a: (a / "xy").symlink_to(self.outside))
         self.assertEqual(rc, 1, violations)
 
+    def test_claude_commands_run_in_their_recorded_cwd(self):
+        deep = self.clone / "src" / "a" / "b"
+        deep.mkdir(parents=True)
+
+        def call(command, cwd):
+            return {"type": "assistant", "cwd": str(cwd), "message": {"content": [
+                {"type": "tool_use", "name": "Bash", "input": {"command": command}}]}}
+        # Claude Code keeps a cd between calls; its transcript records the directory each call ran in.
+        self.assertEqual(self.run_audit("review-code", [call("C=$(cd ../../.. && pwd); ls $C", deep)]), (0, []))
+        rc, violations = self.run_audit("review-code", [call("cat ../../outside/x", self.clone / "src")])
+        self.assertEqual(rc, 1, violations)
+        self.assertIn(f"path outside allowed roots in command: {self.outside}/x", violations)
+
     def test_network_commands_are_violations(self):
         for cmd in ("curl https://example.com", "cd src && wget x", "gh pr view 1", "git fetch origin",
                     "go test ./...", "GOPROXY=off go test ./...", "timeout 30 go get example.com/m",

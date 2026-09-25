@@ -207,9 +207,11 @@ def provisioned(path: str, roots) -> bool:
 
 def audit_claude(attempt: Path, roots):
     """Returns the transcripts, commands, file-tool paths, built-in headers, ReportFindings inputs,
-    and the final assistant text of the transcript that carried the built-in header (or of the
-    root when none did), so a worker's chatter never stands in for the review."""
-    commands, reads, headers, findings_calls = [], [], [], []
+    the final assistant text of the transcript that carried the built-in header (or of the root
+    when none did), so a worker's chatter never stands in for the review, and the directory each
+    command ran in. Claude Code keeps a ``cd`` between Bash calls and records the directory on
+    every transcript line."""
+    commands, cwds, reads, headers, findings_calls = [], [], [], [], []
     texts_by_file = {}
     header_files = []
     files = sorted((attempt / "home" / ".claude" / "projects").rglob("*.jsonl"))
@@ -234,6 +236,7 @@ def audit_claude(attempt: Path, roots):
                     name, inp = block.get("name"), block.get("input") or {}
                     if name == "Bash":
                         commands.append(inp.get("command", ""))
+                        cwds.append(record.get("cwd"))
                     elif name in ("Read", "Glob", "Grep", "Write", "Edit"):
                         for key in ("file_path", "path"):
                             if inp.get(key):
@@ -242,7 +245,7 @@ def audit_claude(attempt: Path, roots):
                         findings_calls.append(inp)
     authoritative = header_files[-1] if header_files else (files[0] if files else None)
     texts = texts_by_file.get(authoritative, []) if authoritative else []
-    return files, commands, reads, headers, findings_calls, texts
+    return files, commands, reads, headers, findings_calls, texts, cwds
 
 
 def codex_calls(text: str) -> tuple:
@@ -330,8 +333,10 @@ def main() -> int:
     violations = []
     try:
         if args.arm in ("claude-builtin", "review-code"):
-            files, commands, reads, headers, calls, texts = audit_claude(attempt, roots)
-            workdirs, stray = [None] * len(commands), []
+            files, commands, reads, headers, calls, texts, cwds = audit_claude(attempt, roots)
+            clone_path = os.path.realpath(args.clone)
+            workdirs = [None if not c or os.path.realpath(c) == clone_path else c for c in cwds]
+            stray = []
             report = {"transcripts": [str(f) for f in files], "prompt_headers": headers,
                       "report_findings_calls": len(calls)}
             if args.arm == "claude-builtin" and not headers:
