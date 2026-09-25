@@ -660,6 +660,11 @@
       "at": "2026-09-25T03:13:19Z",
       "what": "The codex-default attempts att-002 and att-004 are re-filed from their own outputs, with no replacement. Their reviews ran to a zero exit; only the wrapper's normalizer stopped them, and the repair in the first deviation changed no reviewer input or execution condition, so method §3's rerun rule does not apply. bench/tools moved to 6f61765dbfd07d70539ffea90779f671be0af5f4, whose file_attempt.py --replay supersedes a stop written only for a failed normalization after a zero exit once the replayed normalizer parses, keeping it as stop.recorded.json. Re-filed at that revision, att-002 is valid completed with 3 parsed items and a clean audit, and att-004 is valid completed and empty; each keeps its stop instant as completed_at and a null payload_validated_at. Their usage is unchanged; their transcript archives were rewritten with new hashes and passed the restoration check. The claude-builtin records att-001 and att-003 are not re-filed.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T03:34:57Z",
+      "what": "bench/tools moved to 552a6f827dae7dc05ec8a951941f49437faf11fe, which corrects the glob fix of the first deviation: at 02005197f6b4df4d6a1471d548ca9f00d69112e9 attempt_audit.py no longer read a word that starts with a slash and then a glob character (/*/x, /*/*/.config/bench) as an absolute path, so such a read outside the allowed roots went unflagged. Glob characters now stay part of an absolute path and the whole path is judged against the roots; a first segment that starts with a glob counts once another slash follows, and a slash after a glob in a relative word still continues that word. The change touches no reviewer input or execution condition. The paths extracted from the commands recorded in the audit.json of att-001 to att-004 are identical at 6f61765dbfd07d70539ffea90779f671be0af5f4 and at the new revision, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
+      "invalidates": []
     }
   ]
 }

@@ -104,4 +104,6 @@ and re-audited with the fixed tools, att-002 parses to three items with no viola
 to an empty review. The maintainer chose to re-file both from their own outputs with no
 replacement, since the repair changed no reviewer input or execution condition; `6f61765` lets
 `file_attempt.py --replay` supersede a normalization-only stop, and the manifest's second deviation
-records the re-filing. No charge: nothing was dispatched. Replacements used: 0 of 4.
+records the re-filing. `552a6f8` keeps a leading glob (`/*/x`) inside an absolute path, which the
+glob fix had stopped flagging; the third deviation records it, and no filed attempt's audit
+changes. No charge: nothing was dispatched. Replacements used: 0 of 4.
