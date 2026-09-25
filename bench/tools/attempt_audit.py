@@ -57,9 +57,11 @@ import sys
 # A tool counts only in command position: at the start, after a separator, a ``do``/``then``-style
 # keyword or a wrapper such as ``env``/``xargs``/``timeout N``, or opening a ``-c`` script, past any
 # ``NAME=value`` assignments.
+# A shell given a script: ``sh -c``, ``bash -lc``, ``zsh -fc``, ``bash --norc -c``.
+SHELL_C = r"\b(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-[A-Za-z]*c[A-Za-z]*\s+"
 NETWORK = re.compile(
-    r"(?:^|[;&|(){}\n`]|\$\(|-c\s+['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
-    r"\s*(?:[A-Za-z_]\w*=\S*\s+)*(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
+    r"(?:^|[;&|(){}\n`]|\$\(|" + SHELL_C + r"['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
+    r"\s*(?P<assign>(?:[A-Za-z_]\w*=[^\s;&|()]*\s+)*)(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
     r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>\S*)"
     r"|git\s+(?:fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
 # The package managers reach a registry only through these subcommands; the rest (a build, a script
@@ -88,14 +90,15 @@ def commands_only(cmd: str) -> str:
 
 def unquoted(cmd: str) -> str:
     """``cmd`` with quoted text masked, since a quoted pattern or message is data (``rg "a|go b"``),
-    except a script opened right after ``-c`` and a ``$(...)`` inside double quotes, which run."""
+    except a script handed to a shell's ``-c`` and a ``$(...)`` inside double quotes, which run.
+    Every character keeps its position, so a match in the result indexes the original."""
     out, i, quote, depth = [], 0, None, 0
     while i < len(cmd):
         c = cmd[i]
         if quote is None:
             if c == "\\":
                 out.append(cmd[i:i + 2]); i += 2; continue
-            if c in "'\"" and not re.search(r"-c\s+$", cmd[:i]):
+            if c in "'\"" and not re.search(SHELL_C + "$", cmd[:i]):
                 quote = c
             out.append(c)
         elif c == quote and depth == 0 and not (quote == '"' and cmd[i - 1] == "\\"):
@@ -113,15 +116,31 @@ def unquoted(cmd: str) -> str:
     return "".join(out)
 
 
+def go_env(text: str, m) -> dict:
+    """The environment a ``go`` match runs with: variables exported earlier in ``text`` and not
+    unset since, then the match's own prefix assignments, which reach that one command only."""
+    env = {}
+    assignment = re.compile(r"([A-Za-z_]\w*)=([^\s;&|()]*)")
+    for e in re.finditer(r"\bexport\s+((?:[A-Za-z_]\w*=[^\s;&|()]*[ \t]*)+)|\bunset\s+((?:[A-Za-z_]\w*[ \t]*)+)",
+                         text[:m.start()]):
+        if e.group(1):
+            env.update(assignment.findall(e.group(1)))
+        else:
+            for name in e.group(2).split():
+                env.pop(name, None)
+    env.update(assignment.findall(text[m.start("assign"):m.end("assign")]))
+    return {k: v.strip("'\"") for k, v in env.items()}
+
+
 def network_use(cmd: str) -> bool:
-    """True when ``cmd`` runs a network tool; ``go`` is offline when the command itself sets
-    ``GOPROXY=off`` and ``GOTOOLCHAIN=local`` before it, as the Go targets' allowances do."""
-    cmd = unquoted(commands_only(cmd))
-    for m in NETWORK.finditer(cmd):
+    """True when ``cmd`` runs a network tool; ``go`` is offline when it runs with ``GOPROXY=off``
+    and ``GOTOOLCHAIN=local``, as the Go targets' allowances do."""
+    text = commands_only(cmd)
+    for m in NETWORK.finditer(unquoted(text)):
         tool, sub = m.group("tool"), m.group("sub")
         if tool == "go":
-            before = cmd[:m.start("tool")]
-            if re.search(r"\bGOPROXY=off\b", before) and re.search(r"\bGOTOOLCHAIN=local\b", before):
+            env = go_env(text, m)
+            if env.get("GOPROXY") == "off" and env.get("GOTOOLCHAIN") == "local":
                 continue
         elif tool in ("npm", "pnpm", "yarn", "pip", "pip3"):
             if sub not in FETCHING["pip" if tool.startswith("pip") else "npm"]:
