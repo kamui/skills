@@ -20,11 +20,7 @@
     "git diff main...review-head"
   ],
   "guidance_probes": [],
-  "violations": [
-    "path outside allowed roots in command: /site-packages/urllib3/util/ssl_.py",
-    "path outside allowed roots in command: /site-packages/urllib3/util/ssl_.py",
-    "path outside allowed roots in command: /site-packages/urllib3/poolmanager.py"
-  ],
+  "violations": [],
   "allowed_roots": [
     "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-002/clone",
     "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-002"

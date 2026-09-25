@@ -655,6 +655,11 @@
       "at": "2026-09-25T00:39:18Z",
       "what": "After the pilot's four attempts (att-001 to att-004), bench/tools moved from the frozen metric_code_revision 33c78ced23988a540ced1786e0e2a97d20448831 to 02005197f6b4df4d6a1471d548ca9f00d69112e9, which fixes normalize_review.py's Codex parsing (the 'Full review comments:' marker Codex CLI 0.156.1 writes for several findings, and a summary-only review with rollout verdict 'patch is correct' read as empty) and attempt_audit.py's reading of a slash after a glob character as an absolute path. The change touches no reviewer input or execution condition. The claude-builtin attempts att-001 and att-003 re-normalize and re-audit identically. The codex-default attempts att-002 and att-004 were stopped by the old normalizer after reviews that ran to completion; their disposition is decided in a later deviation. Every later attempt is filed with the fixed tools.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T03:13:19Z",
+      "what": "The codex-default attempts att-002 and att-004 are re-filed from their own outputs, with no replacement. Their reviews ran to a zero exit; only the wrapper's normalizer stopped them, and the repair in the first deviation changed no reviewer input or execution condition, so method §3's rerun rule does not apply. bench/tools moved to 6f61765dbfd07d70539ffea90779f671be0af5f4, whose file_attempt.py --replay supersedes a stop written only for a failed normalization after a zero exit once the replayed normalizer parses, keeping it as stop.recorded.json. Re-filed at that revision, att-002 is valid completed with 3 parsed items and a clean audit, and att-004 is valid completed and empty; each keeps its stop instant as completed_at and a null payload_validated_at. Their usage is unchanged; their transcript archives were rewritten with new hashes and passed the restoration check. The claude-builtin records att-001 and att-003 are not re-filed.",
+      "invalidates": []
     }
   ]
 }
