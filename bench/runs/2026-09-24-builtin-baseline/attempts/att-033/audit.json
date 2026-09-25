@@ -1,0 +1,45 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-033-clone/373e4b41-d3fe-4d55-a62d-46715e7679d5/subagents/agent-aaf65a406d1d06bf0.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-033-clone/373e4b41-d3fe-4d55-a62d-46715e7679d5.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone/packages/integrations/vercel && grep -rn \"ASTRO_PATH_PARAM\\|x-vercel-isr\\|ASTRO_PATH_HEADER\\|ISR_PATH\\|isr\" src --include=*.ts | head -60; git log --oneline -5 main -- src/serverless/entrypoint.ts; ls test | head -80",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone/packages/integrations/vercel && cat test/path-override-security.test.js; git show 67a1c8a --stat 2>/dev/null | head; git log --oneline -8 main -- . | cat",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone/packages/integrations/vercel && git show 335a20416 -- src | head -120; grep -rn \"ASTRO_PATH_PARAM\\|x-vercel-isr\\|ASTRO_PATH_HEADER\\|isrConfig\\|bypassToken\\|allowQuery\\|passQuery\" src | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone/packages/integrations/vercel && sed -n 40,70p src/index.ts; sed -n 440,500p src/index.ts; sed -n 690,730p src/index.ts; sed -n 100,160p src/serverless/middleware.ts; cat test/isr.test.js | head -80",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone/packages/integrations/vercel && ls test/fixtures/serverless-with-dynamic-routes/ test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions 2>&1; cat test/test-utils.js | head -30; git status --short | head",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone/packages/integrations/vercel; mkdir -p $W; cat > $W/isr-spoof.test.mjs <<EOF\nimport assert from 'node:assert/strict';\nimport { before, describe, it } from 'node:test';\nimport { loadFixture } from '$C/test/test-utils.js';\nasync function loadFn(fixture, name) {\n  const cfg = JSON.parse(await fixture.readFile(\\`../.vercel/output/functions/\\${name}.func/.vc-config.json\\`));\n  return import(new URL(\\`../.vercel/output/functions/\\${name}.func/\\${cfg.handler}\\`, fixture.config.outDir));\n}\ndescribe('spoof', () => {\n  let fixture;\n  before(async () => {\n    process.env.PRERENDER = true;\n    fixture = await loadFixture({ root: './fixtures/serverless-with-dynamic-routes/', output: 'server' });\n    await fixture.build();\n  });\n  it('x-vercel-isr spoof on _render', async () => {\n    const fn = await loadFn(fixture, '_render');\n    const res = await fn.default.fetch(new Request('https://example.com/api/public?x_astro_path=/api/private', { headers: { 'x-vercel-isr': '1' } }));\n    const body = await res.json();\n    console.log('BODY', body);\n    assert.equal(body.id, 'public');\n  });\n  it('path with query in ISR param', async () => {\n    const fn = await loadFn(fixture, '_render');\n    const res = await fn.default.fetch(new Request('https://example.com/_isr?x_astro_path=/api/public%3Fa%3Db', { headers: { 'x-vercel-isr': '1' } }));\n    console.log('STATUS', res.status, (await res.text()).slice(0,100));\n  });\n});\nEOF\ncd $C && timeout 280 node --test $W/isr-spoof.test.mjs 2>&1 | tail -40",
+    "grep -rn \"middlewareSecret\" packages/integrations/vercel/src | head; grep -n \"\" AGENTS.md | head -60; ls .changeset | head -3; cat .changeset/README.md 2>/dev/null | head -20"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/api/private",
+    "/api/public"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-033"
+  ]
+}

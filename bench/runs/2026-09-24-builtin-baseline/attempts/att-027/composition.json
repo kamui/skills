@@ -1,0 +1,90 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Enable `@flow strict` on the error and inspect tests and widen the `GraphQLError` constructor typing so `nodes` accepts `null` like its other optional arguments (commit-7e39a12/\"Fix typing for Error constructor\"; the caller-supplied PR text names the same title and adds no body).",
+    "issue_fit": "Unavailable as an issue check: no originating issue or spec exists; the intent source is the commit message and the caller-supplied PR title. Both requirements are met.",
+    "coverage": "Complete merge-base diff reviewed (5 of 5 files). Focused mocha run once at the head over the four changed test files: 27 passing. `flow check` and lint were outside the execution allowance, so the Flow typings themselves are unchecked. The supplied prior review comment (nodes should accept null) is addressed by the added `| null` in the declared constructor; no forge packet exists for a local range, so it is not carried as a prior item."
+  },
+  "findings": [
+    {
+      "id": "error/GraphQLError-test/no-stack-case-unexercised",
+      "title": "Keep the no-stack original error in the fallback-stack test",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "The test 'creates new stack if original error has no stack' now passes `new Error('original')`, which always has a `stack`.",
+      "impact": "`GraphQLError` takes the `originalError.stack` branch, so the `Error.captureStackTrace` fallback (`src/error/GraphQLError.js:201`) is no longer exercised and the test name is misleading; the base fixture `{ message: 'original' }` did exercise it.",
+      "change": "Build an error without a stack, for example `const original: any = new Error('original'); delete original.stack;` (or set it to `undefined`), keeping the Flow typing satisfied.",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`@noflow` replaced by `@flow strict` in the four test files (GraphQLError-test.js, locatedError-test.js, printError-test.js, inspect-test.js)"
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/error/GraphQLError.js:25 adds `| null` to `nodes`; runtime already treats null as absent (GraphQLError.js:102-108)"
+      }
+    ],
+    "files": [
+      {
+        "path": "src/error/GraphQLError.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/locatedError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/printError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/jsutils/__tests__/inspect-test.js",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

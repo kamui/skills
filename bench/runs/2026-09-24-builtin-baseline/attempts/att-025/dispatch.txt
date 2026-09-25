@@ -1,0 +1,3 @@
+claude 2.1.282 (Claude Code)
+model=claude-opus-5-5 effort=high session=7ae61965-b64e-48bf-a51f-9cb0fb7a86f1
+exit=0
