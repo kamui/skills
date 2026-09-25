@@ -1,0 +1,93 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 58,
+      "line_end": 58,
+      "claim": "The test 'creates new stack if original error has no stack' now passes `new Error('original')`, which has a stack, so the test no longer covers the case its name describes.",
+      "consequence": "`original.stack` is now a string, so GraphQLError.js:195 (`if (originalError && originalError.stack)`) takes the 'reuse original stack' branch. The `Error.captureStackTrace` and `Error().stack` fallbacks for an originalError without a stack are no longer tested. If that path regressed (for example, `e.stack` left undefined for a plain `{ message }` original), this test would still pass because `e.stack === original.stack` is a string. It now does the same thing as the previous test ('uses the stack of an original error'), passing null instead of undefined. To keep the case, use an Error whose stack is deleted (`delete original.stack`), or cast a plain object to `any`.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/error/GraphQLError.js",
+      "line_start": 94,
+      "line_end": 94,
+      "claim": "`null` was added to `nodes` only in the `declare class` constructor (line 25). The real `function GraphQLError` signature on line 94 still says `$ReadOnlyArray<ASTNode> | ASTNode | void`, so the declaration and the implementation now disagree.",
+      "consequence": "Callers are checked against the declared constructor, which accepts `null`. The implementation body is checked against its own narrower signature, which never includes `null`. Flow therefore never checks how the implementation handles null `nodes` (it currently works only because `nodes ? [nodes] : undefined` treats null as falsy). A future edit such as `nodes !== undefined ? [nodes] : undefined` would type-check and then produce `[null]` at runtime, breaking the `node.loc` reads at lines 114/120/135. The PR also leaves the existing `originalError` mismatch in place (`?Error` in the declaration vs `?Error & { +extensions: mixed }` at line 98).",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 30,
+      "line_end": 30,
+      "claim": "The PR removed the only test that builds a GraphQLError with no arguments; it was changed to `new GraphQLError('str')`.",
+      "consequence": "Untyped JS consumers and `locatedError` (which passes `originalError && originalError.message`, possibly undefined) still reach the constructor without a string message. Before, `new GraphQLError()` confirmed the constructor didn't throw and produced an `instanceof Error` object with `message` undefined. That runtime case is now untested, so a regression such as calling `message.length` inside the constructor would go unnoticed.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/jsutils/__tests__/inspect-test.js",
+      "line_start": 31,
+      "line_end": 31,
+      "claim": "A bare `// $FlowFixMe` was added to silence the `String.raw` typing issue. It suppresses every Flow error on that line, not only the `String.raw` one.",
+      "consequence": "Any later type error on that line (for example, a changed `inspect` signature or return type) will be hidden without notice. Writing the literal `'\"\\\\\"\"'` gives the same expected value and needs no suppression, so the file stays fully checked under the new `@flow strict` header.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/error/__tests__/locatedError-test.js",
+      "line_start": 29,
+      "line_end": 29,
+      "claim": "Annotating `e` as `any` turns off type checking for `e` and for the `locatedError(e, [], [])` calls, which weakens the new `@flow strict` coverage in this file.",
+      "consequence": "If `locatedError`'s first parameter type changed incompatibly (for example, to `GraphQLError` only), these tests would still type-check because `e` is `any`, so the strict header adds no coverage here. A narrower form keeps the checks: `const e = Object.assign(new Error('...'), { locations: [], path: [], nodes: [] })`, or casting only at the property assignments.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/error/__tests__/printError-test.js",
+      "line_start": 62,
+      "line_end": 62,
+      "claim": "`opA`/`opB` are misleading names: they hold `ObjectTypeDefinition` nodes, not operations. Also, `invariant(fieldA && fieldB)` on line 80 is redundant.",
+      "consequence": "Readers will expect `opA` to be an OperationDefinition, when the invariant asserts `Kind.OBJECT_TYPE_DEFINITION`. Flow types `opA.fields[0]` as `FieldDefinitionNode`, not `?FieldDefinitionNode`, so the extra invariant adds a runtime check and noise without narrowing anything. Names like `typeA`/`typeB` and dropping the extra invariant would be clearer.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 17,
+      "line_end": 17,
+      "claim": "The fixtures (`source`, `ast`, `operationNode`, `fieldNode`) and their `invariant` checks moved from inside each test to module load time, outside any `it` block.",
+      "consequence": "If `parse` or the AST shape changes so an invariant fails (or `parse` throws), the error is raised while mocha loads the file. The whole suite fails to load with a single error instead of individual test failures, which hides which assertions were affected. Every test also shares the same AST objects, so a test that mutates a node (for example, `loc`) would affect the others. A `before()` hook or a small factory function would keep failures isolated.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

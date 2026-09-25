@@ -1,0 +1,34 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-032/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-032-clone/4e24eaef-b889-4b45-9892-22097ddae40f/subagents/agent-a1f793b5ad4636502.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-032/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-032-clone/4e24eaef-b889-4b45-9892-22097ddae40f.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "cat packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-032/clone/packages/integrations/vercel && grep -rn \"ASTRO_PATH_PARAM\\|x-vercel-isr\\|ASTRO_PATH_HEADER\" src test --include=*.ts --include=*.js | grep -v node_modules | head -40; cat test/path-override-security.test.js | head -80"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-032/clone/packages/integrations/vercel/src"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-032/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-032"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-029-clone/7da2b34a-c3e8-4a56-8bf0-f4e3663f1de2.jsonl"
+  ],
+  "prompt_headers": [],
+  "report_findings_calls": 0,
+  "commands": [
+    "ls -R /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code | head -50",
+    "git rev-parse --verify main^{commit} review-head^{commit} && git merge-base main review-head && git status --short | head && ls docs/agents 2>&1 | head -3; PD=$(mktemp -d /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/clone-work/rc.XXXXXX); echo $PD; git log --reverse --format='%H%n%B' main..review-head > $PD/msgs.txt; S=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code; MB=$(git merge-base main review-head); H=$(git rev-parse review-head); python3 $S/scripts/review_context.py --merge-base $MB --head $H --store $PD/review-context.json 2>&1 | head -150",
+    "git rev-parse --verify 'main^{commit}'; git rev-parse --verify 'review-head^{commit}'; git merge-base main review-head; git status --short | head -3; cat ../clone-work/rc.DQJUbg/msgs.txt | head -40; sed -n 425,450p crates/core/flags/complete/rg.zsh; git show main:crates/core/flags/complete/rg.zsh | rg -n 'compdef|#compdef' ; head -3 crates/core/flags/complete/rg.zsh; rg -rn 'complete-zsh|rg.zsh|_rg' --glob '!crates/core/flags/complete/rg.zsh' -l . | head; ls ci",
+    "cat ci/test-complete | sed -n 1,140p; S=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code/references; wc -l $S/output.md $S/verification.md $S/verifier.md",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/clone-work && mkdir -p exp && cd exp && git -C ../../clone show review-head:crates/core/flags/complete/rg.zsh > rg.zsh && cat > t1.zsh <<'EOF'\n# emulate a sourced file & dynamic paths\ncat >/dev/null <<'X'\nX\nprint -r -- \"zsh $ZSH_VERSION\"\n# A: source before compinit\nzsh -f -c 'source <(cat rg.zsh) ; print \"A exit=$?\"; print -r \"compdef defined: $+functions[compdef]\"' 2>&1 | head -5\n# B: after compinit\nzsh -f -c 'autoload -Uz compinit; compinit -u -d /tmp/zcd$$ ; source <(cat rg.zsh); print \"B exit=$?\"; print -r \"comp for rg: $_comps[rg]\"' 2>&1 | head -5\n# C: eval \"$(...)\"\nzsh -f -c 'autoload -Uz compinit; compinit -u -d /tmp/zcd$$ ; eval \"$(cat rg.zsh)\"; print \"C exit=$?\"; print -r \"comp for rg: $_comps[rg]\"' 2>&1 | head -5\n# D: FAQ literal with \"$ \" prefix in zshrc\nzsh -f -c '$ source /dev/null; print \"D exit=$?\"' 2>&1 | head\n# E: sourced from function\nzsh -f -c 'autoload -Uz compinit; compinit -u -d /tmp/zcd$$ ; f(){ source <(cat rg.zsh) }; f; print \"E: $_comps[rg]\"' 2>&1|head -3\n# F: fpath autoload\nmkdir -p fp; cp rg.zsh fp/_rg\nzsh -f -c 'fpath=($PWD/fp $fpath); autoload -Uz compinit; compinit -u -d /tmp/zcd$$; print \"F: $_comps[rg]\"' 2>&1|head -3\nEOF\nzsh t1.zsh",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code && python3 scripts/render_review.py --example",
+    "git show review-head:FAQ.md | rg -n 'source <\\(|easier to setup|fpath=|^Or if you' ",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/clone-work/rc.DQJUbg && python3 - <<EOF\nimport json\nmsgs=open(\"$PD/msgs.txt\").read()\nc={\n\"run\":{\"coverage\":\"complete\",\"specs\":[],\"target_kind\":\"range\",\"target\":\"main...review-head\",\"base_ref\":\"main\",\"base_sha\":\"79cbe89deb1151e703f4d91b19af9cdcc128b765\",\"issues\":[\"BurntSushi/ripgrep#2956\"],\"change_description\":msgs},\n\"summary\":{\"status\":\"Approved\",\n\"intent\":\"Let zsh users load ripgrep completions with \\`source <(rg --generate complete-zsh)\\` (issue #2956) instead of installing an \\`_rg\\` file on \\`fpath\\`, and document it in the FAQ.\",\n\"issue_fit\":\"Met \u2014 with the completion system initialised, sourcing the generated script now registers \\`_rg\\` via \\`compdef\\` instead of erroring; the \\`fpath\\`-autoload path and the non-interactive \\`ci/test-complete\\` path keep their old behaviour.\",\n\"coverage\":\"Complete merge-base diff (2 files) reviewed. Scratch zsh 5.8.1 scripts under the work directory exercised the new guard: sourced after compinit, via eval, from inside a function, and autoloaded from fpath all register \\`_rg\\`; sourced before compinit fails; a literal \\`\\$ \\` prefix fails. \\`cargo\\` builds and \\`ci/test-complete\\` were unavailable (no vendored registry, no built rg); the CI path was settled by trace. Issue comments were none; no repository guidance files at the merge-base. The forge review discussion supplied in the request was treated as context only. No verification workers were required: no must-fix or risk-area candidate survived.\"},\n\"findings\":[{\n\"id\":\"FAQ/zsh-source-snippet\",\n\"title\":\"Make the zshrc source snippet paste-safe and state the compinit precondition\",\n\"priority\":\"P3\",\"action\":\"consider\",\"kind\":\"maintainability\",\n\"trigger\":\"A reader copies the new FAQ snippet into \\`~/.zshrc\\` as instructed: the block is prefixed with \\`\\$ \\` (unlike the \\`fpath=\\` block above it), and it does not say \\`compinit\\` must already have run.\",\n\"impact\":\"Zsh prints \\`command not found: \\$\\` on every shell start, and if the line precedes \\`compinit\\` the guard falls through to \\`_rg\\` and fails with \\`command not found: _arguments\\`, the failure class #2956 reports. The same paragraph also reads \\`easier to setup, is generally slower\\`.\",\n\"change\":\"In \\`FAQ.md\\`, drop the \\`\\$ \\` prefix from the \\`source\\` line, add that it must come after \\`compinit\\`, and reword the caveat to \\`while this approach is easier to set up, it is generally slower...\\`.\",\n\"anchor\":{\"type\":\"line\",\"path\":\"FAQ.md\",\"start_line\":135,\"end_line\":139,\"side\":\"RIGHT\"}}],\n\"questions\":[],\n\"observations\":[{\"fact\":\"The guard \\`[[ \\$funcstack[1] == _rg ]] || (( ! \\$+functions[compdef] ))\\` keeps the \\`fpath\\`-autoload and non-interactive sourcing paths running \\`_rg\\`, so \\`ci/test-complete\\` (which sources the file with no completion system) is unaffected.\",\"evidence\":\"\\`crates/core/flags/complete/rg.zsh:437-443\\`, \\`ci/test-complete:14\\`.\"}],\n\"prior_items\":[],\n\"record\":{\"repository\":\"BurntSushi/ripgrep\",\n\"requirements\":[\n{\"source\":\"issue-2956/\\\"source <(rg --generate=complete-zsh)\\\" works\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"crates/core/flags/complete/rg.zsh:437-443; zsh 5.8.1 scratch runs: after compinit, _comps[rg]=_rg with exit 0 via source, eval and source-in-function\"},\n{\"source\":\"commit-7c2a7b0/\\\"Before this commit, you would get an error after step 1. After this commit, it should work as expected.\\\"\",\"class\":\"supporting\",\"disposition\":\"not-verifiable\",\"evidence\":\"Step 2 (TAB completion of a built rg) needs a built binary and an interactive shell; registration was verified only via _comps\"},\n{\"source\":\"commit-7c2a7b0/\\\"Previously, you needed to save the completion script to a file and then source it.\\\"\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"FAQ.md:131-136 documents the source method next to the fpath method (855bfa6)\"}],\n\"files\":[{\"path\":\"FAQ.md\",\"state\":\"reviewed\"},{\"path\":\"crates/core/flags/complete/rg.zsh\",\"state\":\"reviewed\"}],\n\"check_evidence\":[],\n\"verification\":{\"tasks\":[],\"batches\":[],\"outstanding\":[]},\n\"routed\":{\"unresolved\":[],\"disputed\":[],\"unrecoverable_inputs\":[]}}}\njson.dump(c,open(\"$PD/composition.json\",\"w\"),indent=2)\nEOF\nS=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code; python3 $S/scripts/render_review.py --store $PD/review-context.json $PD 2>&1 | tail -60",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/clone-work/rc.DQJUbg; A=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/artifacts; mkdir -p $A && cp $PD/composition.json $PD/payload.json $PD/report.md $A/ && ls -l $A; cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/clone && git status --short | head -3"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code/references/targets.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code/references/rubric.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code/references/output.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/home/.claude/skills/review-code/references/verification.md"
+  ],
+  "diff_commands": [],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/tmp/zcd"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-029"
+  ]
+}

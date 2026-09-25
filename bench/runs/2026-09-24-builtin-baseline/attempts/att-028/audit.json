@@ -1,0 +1,32 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-028/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-028-clone/e027ff67-71ef-476e-b1ef-35dbb5507518/subagents/agent-af01fcc11ab126ab0.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-028/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-028-clone/e027ff67-71ef-476e-b1ef-35dbb5507518.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "sed -n 1,40p crates/core/flags/complete/rg.zsh; echo ----; cat ci/test-complete; echo ----; grep -rn \"rg.zsh\\|complete-zsh\\|_rg\" --include=*.rs --include=*.sh --include=*.md --include=*.yml . | grep -v \"^./crates/core/flags/complete/rg.zsh\" | head -30",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-028/clone-work; mkdir -p $W/fp; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-028/clone/crates/core/flags/complete/rg.zsh; cp $C $W/fp/_rg\ncd $W\necho \"== source before compinit\"; zsh -f -c \"source <(cat $C); echo rc=\\$?\" 2>&1 | head -3\necho \"== source after compinit\"; zsh -f -c \"autoload -Uz compinit; compinit -D -u; source <(cat $C); echo \\${_comps[rg]}\" 2>&1 | head -3\necho \"== source with ksh_arrays after compinit\"; zsh -f -c \"setopt ksh_arrays; autoload -Uz compinit; compinit -D -u; source <(cat $C); echo \\${_comps[rg]}\" 2>&1 | head -3\necho \"== funcstack in autoload w/ ksh_arrays\"; zsh -f -c 'setopt ksh_arrays; f(){ [[ $funcstack[1] == f ]] && echo match || echo nomatch \"$funcstack[1]\"; }; f'\necho \"== fpath after compinit\"; zsh -f -c \"autoload -Uz compinit; compinit -D -u; fpath=($W/fp \\$fpath); echo \\${_comps[rg]:-unset}\"\necho \"== eval form\"; zsh -f -c \"autoload -Uz compinit; compinit -D -u; eval \\\"\\$(cat $C)\\\"; echo \\${_comps[rg]}\" 2>&1|head -3"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-028/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-028"
+  ]
+}
