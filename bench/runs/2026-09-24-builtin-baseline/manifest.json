@@ -650,5 +650,36 @@
     "allowance": "Reading the clone is always permitted. Commands may be run only as the target's allowance below states, offline, with a five-minute limit per command; scratch files go under the work directory; nothing may be added to or changed in the clone, whose tree identity is checked before and after the review.",
     "unprivileged_user": null
   },
-  "deviations": []
+  "deviations": [
+    {
+      "at": "2026-09-25T00:39:18Z",
+      "what": "After the pilot's four attempts (att-001 to att-004), bench/tools moved from the frozen metric_code_revision 33c78ced23988a540ced1786e0e2a97d20448831 to 02005197f6b4df4d6a1471d548ca9f00d69112e9, which fixes normalize_review.py's Codex parsing (the 'Full review comments:' marker Codex CLI 0.156.1 writes for several findings, and a summary-only review with rollout verdict 'patch is correct' read as empty) and attempt_audit.py's reading of a slash after a glob character as an absolute path. The change touches no reviewer input or execution condition. The claude-builtin attempts att-001 and att-003 re-normalize and re-audit identically. The codex-default attempts att-002 and att-004 were stopped by the old normalizer after reviews that ran to completion; their disposition is decided in a later deviation. Every later attempt is filed with the fixed tools.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-25T03:13:19Z",
+      "what": "The codex-default attempts att-002 and att-004 are re-filed from their own outputs, with no replacement. Their reviews ran to a zero exit; only the wrapper's normalizer stopped them, and the repair in the first deviation changed no reviewer input or execution condition, so method §3's rerun rule does not apply. bench/tools moved to 6f61765dbfd07d70539ffea90779f671be0af5f4, whose file_attempt.py --replay supersedes a stop written only for a failed normalization after a zero exit once the replayed normalizer parses, keeping it as stop.recorded.json. Re-filed at that revision, att-002 is valid completed with 3 parsed items and a clean audit, and att-004 is valid completed and empty; each keeps its stop instant as completed_at and a null payload_validated_at. Their usage is unchanged; their transcript archives were rewritten with new hashes and passed the restoration check. The claude-builtin records att-001 and att-003 are not re-filed.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-25T03:34:57Z",
+      "what": "bench/tools moved to 552a6f827dae7dc05ec8a951941f49437faf11fe, which corrects the glob fix of the first deviation: at 02005197f6b4df4d6a1471d548ca9f00d69112e9 attempt_audit.py no longer read a word that starts with a slash and then a glob character (/*/x, /*/*/.config/bench) as an absolute path, so such a read outside the allowed roots went unflagged. Glob characters now stay part of an absolute path and the whole path is judged against the roots; a first segment that starts with a glob counts once another slash follows, and a slash after a glob in a relative word still continues that word. The change touches no reviewer input or execution condition. The paths extracted from the commands recorded in the audit.json of att-001 to att-004 are identical at 6f61765dbfd07d70539ffea90779f671be0af5f4 and at the new revision, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-25T04:12:22Z",
+      "what": "bench/tools moved to f1a4343038f5d182231f83e9bb8328060dd8cdce, which restores a flag the first deviation's glob fix dropped: bash 5.1 expands a path segment such as .*, .? or .[.] to .., so cat .*/.*/<path> reads above the attempt directory, and at 02005197f6b4df4d6a1471d548ca9f00d69112e9 attempt_audit.py no longer flagged it, where the frozen revision had, by misreading the slash after the glob as an absolute path. A segment that starts with a literal dot and can match .. is now judged as .., in absolute paths, relative operands, runs inside quoted scripts and cd targets, and path-like runs inside a word now include glob characters. The change touches no reviewer input or execution condition. Over the commands recorded in the audit.json of att-001 to att-004, the paths extracted at 552a6f827dae7dc05ec8a951941f49437faf11fe and at the new revision differ only in att-002, whose two commands through ../clone-cache/venv/lib/python*/site-packages no longer also yield the truncated run ending at python; every path extracted is inside the attempt directory at both revisions, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-25T04:23:42Z",
+      "what": "bench/tools moved to a49dd79d82b58267de4fa9a83e60f3e6a4aa68e2, which extends the fourth deviation's fix to ~ paths: attempt_audit.py's ~ pattern stopped at a glob character, so cat ~/.*/.*/<path>, which bash 5.1 expands to a read two levels above the attempt's home, went unflagged at 02005197f6b4df4d6a1471d548ca9f00d69112e9 and at f1a4343038f5d182231f83e9bb8328060dd8cdce, where the frozen revision had flagged it by misreading the slash after the glob as an absolute path. A ~ path now keeps its glob characters, a dot-led segment that can match .. is judged as .., and the path is normalised once expanded against the fresh home. The change touches no reviewer input or execution condition. None of the commands recorded in the audit.json of att-001 to att-004 contains ~, and the paths extracted from them are identical at f1a4343038f5d182231f83e9bb8328060dd8cdce and at the new revision, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-25T04:55:06Z",
+      "what": "Scope of the read audit, decided by the maintainer after the pilot: method §3 item 5's control guards against a reviewer's accidental reads outside the allowed roots, which name their path, and not against reads a reviewer disguises on purpose. Spellings the shell rewrites before running (a variable, a quoted or escaped dot glob, brace expansion, ~user, a symlink planted in the clone or the fresh home and read through) are recorded as known blind spots in the run README's pilot section, not repaired during this run. No tool, reviewer input or execution condition changes, and no filed attempt changes.",
+      "invalidates": []
+    }
+  ]
 }
