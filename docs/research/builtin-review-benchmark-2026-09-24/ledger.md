@@ -248,6 +248,6 @@ Scoring steps are charges in `charges.jsonl`, metered from each session's own tr
 
 | # | Step | Session | Result | Billed ($) |
 | --- | --- | --- | --- | --- |
-| S25 | independent review of the scoring plan: `claude -p --model claude-fable-5-1 --effort high`, read-only tools, no sub-agents, 18:23–18:31Z | `dc19ec16…` | 14 findings, all adopted; its advice to grade with Fable 5.1 rather than Opus 5.5 is left to the maintainer; every assistant line `claude-fable-5-1` | 5.47 |
+| S25 | independent review of the scoring plan: `claude -p --model claude-fable-5-1 --effort high`, read-only tools, no sub-agents, 18:23–18:31Z | `dc19ec16…` | 14 findings, all adopted; on its advice to grade with Fable 5.1, the maintainer kept Opus 5.5; every assistant line `claude-fable-5-1` | 5.47 |
 
 Run spend after S25: $66.26; room under the cap after the reserve: $158.74.
