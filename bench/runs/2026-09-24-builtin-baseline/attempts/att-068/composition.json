@@ -1,0 +1,106 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+  "issues": [],
+  "change_description": "feat(completion): support sourcing zsh completion dynamically\n\nSummary:\nPreviously, you needed to save the completion script to a file and then\nsource it.  Now, you can dynamically source completions in zsh by\nrunning\n\n```zsh\n$ source <(rg --generate complete-zsh)\n```\n\nTest plan:\n1. Run `source <(rg --generate complete-zsh)`\n2. Run `rg --generate=complete-zs<TAB>`\n\nBefore this commit, you would get an error after step 1.\nAfter this commit, it should work as expected.\n\nCloses #2956\n\nimprove FAQ text for zsh completions\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Let zsh users run `source <(rg --generate complete-zsh)` (issue #2956 text supplied in the PR packet) by making the generated script register `_rg` with `compdef` instead of calling `_arguments` outside a completion function, and document it in the FAQ.",
+  "issue_fit": "Partial \u2014 sourcing after `compinit` now works (checked in scratch zsh runs), but sourcing before `compinit` still ends in an error, and the new FAQ snippet does not say so. Intent came from the supplied PR text and commit messages; no forge access.",
+  "coverage": "Both changed files reviewed against the merge-base diff. Scratch zsh runs outside the clone: source without compinit, source after compinit, source before compinit, and pasting a `$ ` prefixed line. cargo build/test and ci/test-complete were unavailable, so the ci/test-complete path was judged from the `(( ! $+functions[compdef] ))` branch by trace. No risk area touched, so no verification batch was dispatched."
+ },
+ "findings": [
+  {
+   "id": "rg.zsh/source-before-compinit",
+   "title": "Document or handle sourcing before compinit",
+   "priority": "P3",
+   "action": "consider",
+   "kind": "bug",
+   "trigger": "A user adds the new FAQ line to `~/.zshrc` above `compinit`, where `compdef` is not yet defined.",
+   "impact": "The `! $+functions[compdef]` branch runs `_rg`, which fails with `_rg:341: command not found: _arguments` on every shell start, the failure class issue #2956 reported.",
+   "change": "In `FAQ.md`, state that the `source` line must come after `compinit`, or make the `rg.zsh` tail skip `_rg` when `_arguments` is missing while `ci/test-complete` still works.",
+   "source": "Issue #2956; commit-7c2a7b0/\"Now, you can dynamically source completions in zsh\".",
+   "anchor": {
+    "type": "line",
+    "path": "crates/core/flags/complete/rg.zsh",
+    "start_line": 441,
+    "end_line": 441,
+    "side": "RIGHT"
+   },
+   "fix": {
+    "path": "FAQ.md",
+    "start_line": 135
+   }
+  },
+  {
+   "id": "FAQ.md/zshrc-snippet-prompt-and-typo",
+   "title": "Fix the zshrc snippet prompt and sentence",
+   "priority": "P3",
+   "action": "consider",
+   "kind": "maintainability",
+   "trigger": "A reader pastes the `$ source <(...)` line into `~/.zshrc` as the FAQ says.",
+   "impact": "The literal `$ ` runs as a command and prints `command not found: $`, so nothing is loaded. The next sentence also reads \"is generally slower\" with no subject.",
+   "change": "Drop the `$ ` prefix from the `.zshrc` snippet, and reword to \"this approach is easier to set up but is generally slower\".",
+   "anchor": {
+    "type": "line",
+    "path": "FAQ.md",
+    "start_line": 135,
+    "end_line": 135,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [],
+ "prior_items": [],
+ "record": {
+  "repository": "BurntSushi/ripgrep",
+  "requirements": [
+   {
+    "source": "pr-body/\"you can dynamically source completions in zsh\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "crates/core/flags/complete/rg.zsh:441 works after compinit; a scratch zsh run before compinit fails with `command not found: _arguments`"
+   },
+   {
+    "source": "commit-7c2a7b0/\"Before this commit, you would get an error after step 1\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "Same trace: error removed only when compdef exists"
+   },
+   {
+    "source": "pr-body/\"Run `rg --generate=complete-zs<TAB>`\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Needs an interactive zsh and a built rg; only the script's registration was exercised"
+   }
+  ],
+  "files": [
+   {
+    "path": "FAQ.md",
+    "state": "reviewed"
+   },
+   {
+    "path": "crates/core/flags/complete/rg.zsh",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

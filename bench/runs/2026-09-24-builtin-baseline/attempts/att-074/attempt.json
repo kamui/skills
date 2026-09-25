@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-074",
+  "run_id": "2026-09-24-builtin-baseline",
+  "cell": {
+    "target": "o-astro-16079",
+    "arm": "review-code-sonnet-high",
+    "replicate": 2
+  },
+  "predecessor": "att-071",
+  "retry_reason": "harness-invalid: wrote and read /tmp/pd071 outside the attempt's roots (method §3 item 4)",
+  "replacement_index": 3,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-25T06:07:38Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "c3c53da5381dace16876b0f5b7abe4bccc6bc58b",
+    "diff_commands": [],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "25d59831eb64dcdcee852ee293d076d3435e8ba6bcde18ff8d37c63d8af04e3a",
+    "tree_identity_after": "25d59831eb64dcdcee852ee293d076d3435e8ba6bcde18ff8d37c63d8af04e3a"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.843304,
+    "cost_bounds_usd": {
+      "low": 0.843304,
+      "high": 0.843304
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-25T06:07:38Z",
+    "payload_validated_at": "2026-09-25T06:10:11Z",
+    "completed_at": "2026-09-25T06:10:11Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "5ed059e4894f23c7a9bca77b57ef81e74cdb8eb3b146ace1577c480554342262"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-24-builtin-baseline/att-074.tar.gz",
+    "sha256": "0b2486e5d45aa87f17c7b793ddbb85f0fc20e67aca6c698be57751aa7909703f",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 90be34dddaf6722112528137340998aac0c75362747cc25a13a88f5e9638f735; run policy sha256 41106340c8a32cf0d337fc735666a7475a4b6e5d18e699c1ad0005a55ce99d30 (before path substitution)"
+  ]
+}
