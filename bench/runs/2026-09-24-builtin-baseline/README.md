@@ -219,8 +219,10 @@ and JSX in scratch code as absolute paths, the provisioned venv's interpreter sy
 carried between Claude Bash calls, a fallback `cd` that never ran, and a `|` inside a quoted
 pattern. Each fix has a test, was re-run over every filed attempt, and is a manifest deviation
 (the seventh to the thirteenth) that invalidates nothing; the eight attempts it misfiled were
-re-audited with `file_attempt.py --replay`, with no replacement. The audit's scope is the sixth
-deviation's: accidental reads, not disguised ones.
+re-audited with `file_attempt.py --replay`, with no replacement. Review of the grid then closed two
+gaps in the new network rule, a script handed to `zsh -fc` or `bash -lc` and Go's offline settings
+carried past the command they prefix; the fourteenth deviation records it, and no filed attempt's
+audit changes. The audit's scope is the sixth deviation's: accidental reads, not disguised ones.
 
 Scoring is next and waits for the maintainer: it opens the sealed registers with `seal.py` and
 runs `score.py --opened`, as the Dispatching section says.
