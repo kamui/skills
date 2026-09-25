@@ -19,7 +19,7 @@ freeze; the pilot ran on 2026-09-25 (below).
 | `manifest.json` | the frozen run: arms resolved with file hashes, the `review-code` tree, the pinned CLI versions and expected prompt hashes; the cohort with register versions and packet, diff and provisioning identities; the 80 planned cells; the caps; the sealed order; the rates used; the execution policy |
 | `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
-| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (the pilot's att-001 to att-004 so far) |
+| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (the pilot's att-001 to att-004 so far; att-002 and att-004 re-filed with `--replay`) |
 | `scoring/<target>/mapping.v<M>.json` | blind adjudication per target (none yet) |
 | `results.v<M>.json` | `score.py` output (none yet) |
 
@@ -141,12 +141,12 @@ The first four cells of the sealed order, (i) and (n) under B and D, ran on 2026
 00:33Z and 00:36Z, two in flight, with the pinned `bin/` on `PATH`. Each finished in under a
 minute. The ledger has a row per attempt.
 
-| Attempt | Cell | Disposition as filed | Metered ($) | What the reviewer did |
+| Attempt | Cell | Disposition | Metered ($) | What the reviewer did |
 | --- | --- | --- | --- | --- |
 | att-001 | (i) / B / 1 | valid completed | 0.19 | one `git diff`; 7 items |
-| att-002 | (i) / D / 1 | stopped: normalization exit 1 | 0.26 list | read the change, the clone and its own dependency cache's urllib3 sources; 3 findings, verdict `patch is incorrect` |
+| att-002 | (i) / D / 1 | valid completed (re-filed; first filed stopped) | 0.26 list | read the change, the clone and its own dependency cache's urllib3 sources; 3 findings, verdict `patch is incorrect` |
 | att-003 | (n) / B / 1 | valid completed | 0.08 | one `git diff`; 4 items |
-| att-004 | (n) / D / 1 | stopped: normalization exit 1 | 0.20 list | ran offline zsh checks of the completion script; no finding, verdict `patch is correct` |
+| att-004 | (n) / D / 1 | valid completed, empty (re-filed; first filed stopped) | 0.20 list | ran offline zsh checks of the completion script; no finding, verdict `patch is correct` |
 
 **Focused execution.** The Codex arm ran commands under the target's allowance on (n), so the D
 adapter's execution path works on a suite target. The Sonnet built-in ran nothing beyond one
@@ -165,17 +165,17 @@ reviewer input or execution condition, and att-001 and att-003 re-audit and re-n
 identically. Re-processed into scratch files with the fixed tools, att-002 parses to three items
 with no audit violation, and att-004 to an empty review.
 
-**Open decision: how att-002 and att-004 count.** Their filed records still say `stopped`. The
-method reruns a cell, consuming a replacement, when a harness repair changes inputs or execution
-conditions (method §3); this repair changed neither. Two readings:
-
-1. **Re-file both from their own outputs** with the fixed tools, recording the superseded stop and
-   that validation came after the wrapper's end. No replacement is used and no reviewer reruns.
-   The toy run's re-filing with `file_attempt.py --replay` is the precedent, though it did not
-   supersede a stop.
-2. **Replace both** with `run_cell.py --replace --stopped-by-harness`, keeping the stopped records.
-   That spends two of the run's four replacements on a harness defect in the pilot and about $0.46
-   of list-price quota, and discards two complete reviews.
-
-The sealed order does not continue until this is decided and written as a deviation.
+**How att-002 and att-004 count: re-filed, no replacement.** The method reruns a cell, consuming
+a replacement, when a harness repair changes inputs or execution conditions (method §3); this
+repair changed neither, so the maintainer chose to re-file both from their own outputs rather than
+spend two of the four replacements discarding two complete reviews. Commit `6f61765` lets
+`file_attempt.py --replay` supersede a stop the wrapper wrote only because its normalizer failed
+after a zero exit, once the replayed normalizer parses; the stop is kept as `stop.recorded.json`
+and noted in the record. Re-filed at that revision, att-002 is valid with three parsed items and a
+clean audit, and att-004 is valid and empty. Each takes its stop instant as `completed_at` and keeps
+a null `payload_validated_at`, because the replay stamps no validation time. Usage is unchanged; the
+transcript archives were rewritten, with new hashes, and passed the restoration check. The
+manifest's second deviation records this and invalidates nothing. The pilot therefore closes with
+four valid attempts and no replacement used, and the sealed order continues at
+`q-soba-195/review-code-sonnet-high/1` on the maintainer's go.
 

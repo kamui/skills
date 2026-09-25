@@ -31,8 +31,8 @@
     "tree_identity_before": "ae7b2833838e297ab27fc365121c19ab560af76c4c844dd820439c5f5196ee32",
     "tree_identity_after": "ae7b2833838e297ab27fc365121c19ab560af76c4c844dd820439c5f5196ee32"
   },
-  "phase_reached": "primary",
-  "disposition": "stopped: normalization exit 1: unresolved: the native input lacks the arm's expected review markers or has a region that did not parse; adjudication required ",
+  "phase_reached": "result",
+  "disposition": "valid completed",
   "arm_reported_complete": null,
   "audit": {
     "violations": [],
@@ -55,8 +55,8 @@
   "timing": {
     "dispatched_at": "2026-09-25T00:35:10Z",
     "payload_validated_at": null,
-    "completed_at": null,
-    "stopped_at": "2026-09-25T00:35:52Z"
+    "completed_at": "2026-09-25T00:35:52Z",
+    "stopped_at": null
   },
   "native_payload": {
     "path": "stdout.txt",
@@ -64,15 +64,17 @@
   },
   "normalized": {
     "path": "normalized.json",
-    "parse_status": "unresolved",
-    "reason": "unresolved: no 'Review comment:' marker and no bullets; stdout kept raw"
+    "parse_status": "empty",
+    "reason": null
   },
   "transcript_archive": {
     "path": "~/.t3/bench-cache/transcripts/2026-09-24-builtin-baseline/att-004.tar.gz",
-    "sha256": "087cbcd060e24faf3e392079bbd46a59684265cd0cd0e470044c398a7d6986a7",
+    "sha256": "9142c5eedad600a70c45179705609b8dd558f1a46d29a90db58ef8245b5cbbf5",
     "restoration_check": "passed"
   },
   "notes": [
-    "input.md sha256 b0f6b341ab1cd51f1b74b417062390f056b82b51aab8dd876a6cca22e4f65473; run policy sha256 2e205f254de4c33b8c1350ae01b956e0e71c2f09238844c90da225d51280bda0 (before path substitution)"
+    "input.md sha256 b0f6b341ab1cd51f1b74b417062390f056b82b51aab8dd876a6cca22e4f65473; run policy sha256 2e205f254de4c33b8c1350ae01b956e0e71c2f09238844c90da225d51280bda0 (before path substitution)",
+    "re-filed with file_attempt.py --replay at bench/tools 6f61765 per the manifest's second deviation; no replacement",
+    "stop superseded on replay (kept as stop.recorded.json): normalization exit 1: unresolved: the native input lacks the arm's expected review markers or has a region that did not parse; adjudication required"
   ]
 }

@@ -1,23 +1,8 @@
 {
   "arm": "codex",
-  "parse_status": "unresolved",
+  "parse_status": "empty",
   "native_verdict": "patch is correct",
   "verdict_source": "rollout overall_correctness",
-  "items": [
-    {
-      "file": null,
-      "line_start": null,
-      "line_end": null,
-      "claim": "The change supports direct sourcing while preserving normal completion invocation and standalone option enumeration. Focused offline zsh checks passed; no actionable regressions were identified.",
-      "consequence": null,
-      "proposed_fix": null,
-      "native_priority": null,
-      "native_action": null,
-      "native_confidence": null,
-      "kind": "finding"
-    }
-  ],
-  "parse_notes": [
-    "unresolved: no 'Review comment:' marker and no bullets; stdout kept raw"
-  ]
+  "items": [],
+  "parse_notes": []
 }

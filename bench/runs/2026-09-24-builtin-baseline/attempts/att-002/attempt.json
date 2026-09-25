@@ -31,15 +31,11 @@
     "tree_identity_before": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f",
     "tree_identity_after": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f"
   },
-  "phase_reached": "primary",
-  "disposition": "stopped: normalization exit 1: unresolved: the native input lacks the arm's expected review markers or has a region that did not parse; adjudication required ",
+  "phase_reached": "result",
+  "disposition": "valid completed",
   "arm_reported_complete": null,
   "audit": {
-    "violations": [
-      "path outside allowed roots in command: /site-packages/urllib3/util/ssl_.py",
-      "path outside allowed roots in command: /site-packages/urllib3/util/ssl_.py",
-      "path outside allowed roots in command: /site-packages/urllib3/poolmanager.py"
-    ],
+    "violations": [],
     "guidance_probes": [],
     "network_commands": [],
     "audit_file": "audit.json"
@@ -59,8 +55,8 @@
   "timing": {
     "dispatched_at": "2026-09-25T00:34:29Z",
     "payload_validated_at": null,
-    "completed_at": null,
-    "stopped_at": "2026-09-25T00:35:15Z"
+    "completed_at": "2026-09-25T00:35:15Z",
+    "stopped_at": null
   },
   "native_payload": {
     "path": "stdout.txt",
@@ -68,15 +64,17 @@
   },
   "normalized": {
     "path": "normalized.json",
-    "parse_status": "unresolved",
-    "reason": "unresolved: no 'Review comment:' marker and no bullets; stdout kept raw"
+    "parse_status": "parsed",
+    "reason": null
   },
   "transcript_archive": {
     "path": "~/.t3/bench-cache/transcripts/2026-09-24-builtin-baseline/att-002.tar.gz",
-    "sha256": "bfbe301dc4eb85b7c3aca7b096e70805f08f64e130c3bf12aeef68d45094baa4",
+    "sha256": "0db02ff484a96c1db77304c88931d2f5539c050b20ab8186f22980feb8208c3a",
     "restoration_check": "passed"
   },
   "notes": [
-    "input.md sha256 104a262deac56f2da98d89fb5d40337d516bbdde1cfe05508e7fffd960b201ae; run policy sha256 b4355b29cd11b55b24f958b339ea068a42994bed76c1a58876da0ebb1b18b25f (before path substitution)"
+    "input.md sha256 104a262deac56f2da98d89fb5d40337d516bbdde1cfe05508e7fffd960b201ae; run policy sha256 b4355b29cd11b55b24f958b339ea068a42994bed76c1a58876da0ebb1b18b25f (before path substitution)",
+    "re-filed with file_attempt.py --replay at bench/tools 6f61765 per the manifest's second deviation; no replacement",
+    "stop superseded on replay (kept as stop.recorded.json): normalization exit 1: unresolved: the native input lacks the arm's expected review markers or has a region that did not parse; adjudication required"
   ]
 }
