@@ -116,12 +116,17 @@ Before each dispatch `run_cell.py` re-validates the manifest, re-hashes the four
 compares the target's `packet.md` and diff identity against the cohort entry. The cohort's
 `provisioning_sha256` is not one of those gates, and nothing else re-derives it either:
 `compare.py` reads the value out of each run's manifest to compare runs under the comparison
-contract, never off the live target, while `render_policy` writes the target's live
-`provisioning.allowance` straight into the reviewer's `input.md`. So an edit to a target's
-`provisioning` block after the freeze reaches the reviewer unrefused and no tool in this run
-notices. Treat that block as frozen with the manifest, record any change to it as a deviation, and
-re-derive the hash by hand with `compare.py --provisioning-hash bench/targets/<id>` whenever a
-target's provisioning is touched.
+contract, never off the live target. So nothing holds a target's live `provisioning` block against
+the freeze, and the prose fields pass straight through: `render_policy` writes the live
+`provisioning.allowance` and `provisioning.unavailable` into the reviewer's `input.md`, so an edit
+to either reaches the reviewer unrefused. The cache archive is the one part checked live. On the
+eight targets whose `provisioning.cache.build` is non-empty, `provision.py prepare` restores the
+archive only when its sha256 matches the live `dependency_identity` entry, and `run_cell.py` turns
+that failure into an `InputError` before any reviewer starts — but it checks the live file, not the
+freeze, so an edit that moves the archive and its entry together still passes, and `l-bokeh-9232`
+and `n-ripgrep-2957` (`cache.kind: none`) have no archive to check. Treat that block as frozen with
+the manifest, record any change to it as a deviation, and re-derive the hash by hand with
+`compare.py --provisioning-hash bench/targets/<id>` whenever a target's provisioning is touched.
 
 Every filed attempt gets a ledger row. The first four cells are the pilot; they double as the
 demonstration that focused-test execution works under D and B on suite targets whose review needs
