@@ -164,7 +164,6 @@ class Grade(unittest.TestCase):
         self.stub = self.root / "provision_stub.py"
         self.stub.write_text(PROVISION_STUB, encoding="utf-8")
         self.work, self.key = self.root / "work", self.root / "keys" / "key.json"
-        self.key.parent.mkdir()
 
     def tearDown(self):
         self.temp.cleanup()
@@ -365,6 +364,11 @@ class Map(Grade):
              "dispatch read audit: file tool read outside allowed roots: /x"),
             ("another prompt", dict(self.dispatch, prompt_sha256="0" * 64), "dispatch ran prompt 000000000000"),
             ("a subagent", dict(self.dispatch, subagents=1), "1 subagent(s)"),
+            ("a failed session", dict(self.dispatch, exit_code=1), "dispatch session exit 1"),
+            ("a timeout", dict(self.dispatch, exit_code=None), "dispatch session exit None"),
+            ("no verdicts", dict(self.dispatch, verdicts_present=False), "dispatch wrote no verdicts.json"),
+            ("unpriced", dict(self.dispatch, usage={"priced_total_usd": None, "low": None, "high": None}),
+             "dispatch usage was not priced"),
         ]
         for name, record, expected in cases:
             with self.subTest(name):
