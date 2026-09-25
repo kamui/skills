@@ -91,24 +91,28 @@ def commands_only(cmd: str) -> str:
     return HEREDOC.sub(lambda m: m.group(0) if re.search(r"\b(?:ba|z|da|k)?sh\b", m.group(1)) else m.group(1), cmd)
 
 
-def unquoted(cmd: str) -> str:
+def unquoted(cmd: str, scripts: list = None) -> str:
     """``cmd`` with quoted text masked, since a quoted pattern or message is data (``rg "a|go b"``),
     except a script handed to a shell's ``-c`` and a ``$(...)`` inside double quotes, which run.
-    Every character keeps its position, so a match in the result indexes the original."""
-    out, i, quote, script, depth = [], 0, None, None, 0
+    Every character keeps its position, so a match in the result indexes the original. Each
+    script's ``(start, end)`` span is appended to ``scripts`` when given."""
+    out, i, quote, script, depth, opened = [], 0, None, None, 0, 0
     while i < len(cmd):
         c = cmd[i]
         if script:
             if c == "\\" and script == '"':
                 out.append(cmd[i:i + 2]); i += 2; continue
-            script = None if c == script else script
+            if c == script:
+                script = None
+                if scripts is not None:
+                    scripts.append((opened, i))
             out.append(c)
         elif quote is None:
             if c == "\\":
                 out.append(cmd[i:i + 2]); i += 2; continue
             if c in "'\"":
                 if re.search(SHELL_SCRIPT + "$", cmd[:i]):
-                    script = c
+                    script, opened = c, i
                 else:
                     quote = c
             out.append(c)
@@ -127,16 +131,20 @@ def unquoted(cmd: str) -> str:
     return "".join(out)
 
 
-def go_env(text: str, masked: str, m) -> dict:
+def go_env(text: str, masked: str, scripts: list, m) -> dict:
     """The environment a ``go`` match runs with: variables exported earlier and not unset since,
     then the match's own prefix assignments, which reach that one command only. ``masked`` is
-    ``unquoted(text)``, so an ``export`` inside quoted text does not count; values come from ``text``."""
+    ``unquoted(text)``, so an ``export`` inside quoted text does not count; values come from ``text``.
+    An ``export`` inside a ``-c`` script reaches only a ``go`` inside that script (``scripts``)."""
     env = {}
+    here = [(a, b) for a, b in scripts if a < m.start() < b]
 
     def values(start, end):
         for a in ASSIGNMENT.finditer(masked, start, end):
             yield a.group(1), text[a.start(2):a.end(2)].strip("'\"")
     for e in EXPORTS.finditer(masked, 0, m.start()):
+        if any(a < e.start() < b for a, b in scripts) and not any(a < e.start() < b for a, b in here):
+            continue
         if e.group(1):
             env.update(values(e.start(1), e.end(1)))
         else:
@@ -150,11 +158,12 @@ def network_use(cmd: str) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when it runs with ``GOPROXY=off``
     and ``GOTOOLCHAIN=local``, as the Go targets' allowances do."""
     text = commands_only(cmd).replace("\\\n", "  ")
-    masked = unquoted(text)
+    scripts = []
+    masked = unquoted(text, scripts)
     for m in NETWORK.finditer(masked):
         tool, sub = m.group("tool"), m.group("sub")
         if tool == "go":
-            env = go_env(text, masked, m)
+            env = go_env(text, masked, scripts, m)
             if env.get("GOPROXY") == "off" and env.get("GOTOOLCHAIN") == "local":
                 continue
         elif tool in ("npm", "pnpm", "yarn", "pip", "pip3"):
