@@ -685,6 +685,11 @@
       "at": "2026-09-25T05:07:55Z",
       "what": "bench/tools moved to 33b0c25e694cc2f276ed39347198a6178c5a0752, which fixes attempt_audit.py's network rule. The old pattern matched a network tool's name anywhere it followed a non-word character, so a Go file name before a space (`internal/notify.go internal/...`, `--path internal/backup.go --chunk 1`), prose inside a Python heredoc, and the offline go commands the (m) and (q) allowances grant (`GOPROXY=off GOTOOLCHAIN=local ... go test`) all read as network commands. The rule now counts a tool only in command position, judges `go` offline when the command sets GOPROXY=off and GOTOOLCHAIN=local before it, counts npm, pnpm, yarn and pip only with a subcommand that reaches a registry (target (o)'s allowance permits a pnpm rebuild), and skips a heredoc body unless a shell reads it. The first two grid attempts ran on (q): att-005 (A) was filed harness-invalid on five such false network flags alone and is re-audited with file_attempt.py --replay to valid completed, with no replacement; att-006 (B) is re-audited the same way and stays harness-invalid on its own read and write of /tmp/pr.diff, outside the attempt's roots although the policy sends scratch files to the work directory and its TMPDIR was there, and is replaced under method §3 item 4. The change touches no reviewer input or execution condition; the pilot's att-001 to att-004 have no command the old or new rule flags.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T05:11:44Z",
+      "what": "bench/tools moved to f563ef22a3df3ea3d367c619dbb3bafe45561f4f: attempt_audit.py no longer starts an absolute path at a slash that follows ':/', so a URL's authority inside a command (`new Request('http://localhost/')` in att-012's scratch script) is not read as the path /localhost; `file:///<path>` still yields the path. att-012 ((p) / D / 1) was filed harness-invalid on that one flag alone and is re-audited with file_attempt.py --replay to valid completed, with no replacement. att-011 ((p) / C / 1) finished while the fix was being tested and is re-audited the same way; its audit is unchanged and it stays valid completed. No filed attempt other than att-012 has a command containing ':/'. The change touches no reviewer input or execution condition.",
+      "invalidates": []
     }
   ]
 }
