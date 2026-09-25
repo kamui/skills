@@ -306,3 +306,18 @@ history. The read audit flagged only the allowed network commands. Rulings are i
 | A3 | (l) | `00d55259…` | 21:02–21:03 | NC-1 a duplicate of GT-l1 | 0.41 |
 
 Registers (i) and (j) move to version 2; (l)'s stays at version 1.
+
+### Re-grades for the revised defects
+
+`grade.py prepare --only-defect` and `dispatch`, from `prompts/regrade-template.md`, same
+configuration as the grading sessions; every attempt on the target re-graded blind for the one
+defect, then `grade.py revise` wrote mapping v2 from mapping v1, the rulings and the re-grade.
+
+| # | Target | Defect | Session | Time (Z) | Result | Billed ($) |
+| --- | --- | --- | --- | --- | --- | --- |
+| R1 | (i) | GT-i3, register v2 | `86f7bde2…` | 21:26–21:27 | all five NC-2/NC-3 items recover GT-i3; the four NC-1 items become non-material; mapping v2 | 0.48 |
+| R2 | (j) | GT-j2, register v2 | `5b7fd66d…` | 21:26–21:27 | the NC-1 item recovers GT-j2; mapping v2 | 0.34 |
+| R3 | (l) | GT-l1, register v1 | `6c0d4e3d…` | 21:27–21:28 | the NC-1 item does not recover GT-l1 on the re-grade, so it becomes non-material; mapping v2 | 0.45 |
+
+Scoring phase in all (S25, G1–G12, A1–A3, R1–R3): $18.11. Run spend: $78.91 ($32.48 attempts,
+$46.43 charges); room under the cap after the reserve: $146.09.
