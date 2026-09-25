@@ -1,0 +1,33 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "pricing.py",
+      "line_start": 17,
+      "line_end": 17,
+      "claim": "average() divides by len(prices) without checking for an empty list, so it raises ZeroDivisionError on exactly the case its docstring and the PR body call common (new, empty carts).",
+      "consequence": "The summary panel renders a newly created cart: average([]) -> total([]) / len([]) -> 0 / 0 -> ZeroDivisionError, and the panel crashes instead of showing 0.0 (or None). Fix: `if not prices: return 0.0` (or return Optional[float]) before dividing.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "test_pricing.py",
+      "line_start": 1,
+      "line_end": 1,
+      "claim": "The new average() function ships without any tests, in particular none for the empty-cart case the PR says is common.",
+      "consequence": "test_pricing.py only imports apply_discount and total. A test_average([]) case would have caught the ZeroDivisionError above, and without one the crash on new carts passes CI and reaches the summary panel.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

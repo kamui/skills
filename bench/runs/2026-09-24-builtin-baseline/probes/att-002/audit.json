@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-002/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-probes-att-002-clone/f856e5de-e3c0-477c-a8b1-b428452b6cd3/subagents/agent-aeeba5587bc3e674c.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-002/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-probes-att-002-clone/f856e5de-e3c0-477c-a8b1-b428452b6cd3.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && git ls-files && ls ~/.claude/CLAUDE.md 2>/dev/null",
+    "cat -n pricing.py test_pricing.py"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-002/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-002"
+  ]
+}

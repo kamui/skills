@@ -1,0 +1,34 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-003/home/.codex/sessions/2026/09/24/rollout-2026-09-24T18-22-41-01a0d583-83b7-7311-904a-c2c7c03d071f.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-003/home/.codex/sessions/2026/09/24/rollout-2026-09-24T18-22-41-01a0d583-8432-7ab1-925f-058ab53d6d03.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "pwd; ls -a; git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md",
+    "find .agents .codex -type f -maxdepth 4 -print; cat pricing.py test_pricing.py; for p in /AGENTS.md /home/AGENTS.md /home/jack/AGENTS.md /home/jack/.t3/AGENTS.md /home/jack/.t3/bench-runs/AGENTS.md /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/AGENTS.md /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/AGENTS.md /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-003/AGENTS.md; do test ! -f \"$p\" || { echo \"$p\"; cat \"$p\"; }; done; git status --short; git show review-head:pricing.py | nl -ba"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [
+    "/AGENTS.md",
+    "/home/AGENTS.md",
+    "/home/jack/.t3/AGENTS.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/AGENTS.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/AGENTS.md",
+    "/home/jack/.t3/bench-runs/AGENTS.md",
+    "/home/jack/AGENTS.md"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-003/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/probes/att-003"
+  ]
+}
