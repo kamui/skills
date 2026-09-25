@@ -41,9 +41,12 @@ class AttemptAudit(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def run_audit(self, arm: str, records: list) -> tuple:
+    def run_audit(self, arm: str, records: list, prepare=None) -> tuple:
         self.attempts += 1
         attempt = Path(self.temp.name) / f"attempt-{self.attempts}"
+        if prepare:
+            attempt.mkdir()
+            prepare(attempt)
         if arm == "codex":
             path = attempt / "home" / ".codex" / "sessions" / "rollout-1.jsonl"
             records = [{"type": "session_meta", "payload": {"instructions": RUBRIC}}] + records
@@ -89,6 +92,35 @@ class AttemptAudit(unittest.TestCase):
         report = json.loads((Path(self.temp.name) / f"attempt-{self.attempts}" / "audit.json").read_text(encoding="utf-8"))
         for path in ("/Form", "/button", "/clone/src/hono", f"{self.outside}/missing", "/no/such/*/file"):
             self.assertIn(path, report["absent_outside_paths"])
+
+    def test_symlinks_made_before_dispatch_may_leave_the_roots(self):
+        import datetime
+
+        def stamp(seconds):
+            at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=seconds)
+            return at.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        def provisioned(attempt):
+            (attempt / "cache" / "venv" / "bin").mkdir(parents=True)
+            (attempt / "cache" / "venv" / "bin" / "python").symlink_to(self.outside / "x")
+            (attempt / "timing.json").write_text(json.dumps({"root_dispatched_at": stamp(5)}), encoding="utf-8")
+
+        def planted(attempt):
+            (attempt / "timing.json").write_text(json.dumps({"root_dispatched_at": stamp(-60)}), encoding="utf-8")
+            (attempt / "xy").symlink_to(self.outside)
+
+        blocks = lambda *cs: [{"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "name": "Bash", "input": {"command": c}} for c in cs]}}]
+        attempt = Path(self.temp.name) / f"attempt-{self.attempts + 1}"
+        self.assertEqual(self.run_audit("review-code", blocks(f"{attempt}/cache/venv/bin/python -m pytest"), provisioned), (0, []))
+        attempt = Path(self.temp.name) / f"attempt-{self.attempts + 1}"
+        rc, violations = self.run_audit("review-code", blocks(f"cat {attempt}/xy/secret"), planted)
+        self.assertEqual(rc, 1, violations)
+        # Without a dispatch instant nothing counts as provisioned.
+        attempt = Path(self.temp.name) / f"attempt-{self.attempts + 1}"
+        rc, violations = self.run_audit("review-code", blocks(f"cat {attempt}/xy/secret"),
+                                        lambda a: (a / "xy").symlink_to(self.outside))
+        self.assertEqual(rc, 1, violations)
 
     def test_network_commands_are_violations(self):
         for cmd in ("curl https://example.com", "cd src && wget x", "gh pr view 1", "git fetch origin",
