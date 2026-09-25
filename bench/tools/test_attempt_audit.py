@@ -79,7 +79,9 @@ class AttemptAudit(unittest.TestCase):
                     f"{offline} go test ./src/ -count=1", f"{offline} timeout 280 go vet ./src/ 2>&1 | tail -5",
                     f"export {offline} && go vet ./src/", "PATH=$C/bin:$PATH pnpm build",
                     "cd src && npm run test", "pnpm --version",
-                    "python3 - <<'EOF'\nimport sys\nprint('ran `go vet`; go test ./src/ passes')\nEOF\necho done"):
+                    "python3 - <<'EOF'\nimport sys\nprint('ran `go vet`; go test ./src/ passes')\nEOF\necho done",
+                    'rg -n -A12 "func \\(ac \\*addrConn\\) resetTransport|go ac.resetTransport" src',
+                    "grep -E 'x|curl y' src/a.py", 'rg "then go test" src', "echo 'a; npm install b'"):
             with self.subTest(cmd=cmd):
                 self.assertEqual(self.bash(cmd), (0, []))
 
@@ -150,7 +152,8 @@ class AttemptAudit(unittest.TestCase):
                     "cat src/a.go; go mod download", "npm install", "cd src && pnpm add left-pad",
                     "pnpm dlx x", "pip install requests", "cargo test", "bash -c 'curl x'",
                     "for p in a b; do curl $p; done", "x=$(curl -s y)", "bash <<'EOF'\ncurl x\nEOF",
-                    "python3 - <<'EOF'\nprint(1)\nEOF\ncurl x"):
+                    "python3 - <<'EOF'\nprint(1)\nEOF\ncurl x", 'echo "$(curl -s y)"', 'sh -c "cd src && go test ./..."',
+                    "echo 'ok'; curl x"):
             with self.subTest(cmd=cmd):
                 rc, violations = self.bash(cmd)
                 self.assertEqual(rc, 1)
