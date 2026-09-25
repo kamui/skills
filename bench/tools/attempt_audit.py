@@ -93,7 +93,9 @@ def paths_in(text: str, cwd: str, base: str = None):
     while the working directory is not ``base`` (the clone), each resolved against the command's
     working directory. The walk starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||``
     and ``|``."""
-    found = [os.path.normpath(p) for p in re.findall(r"(?<![\w.~}\)\"'])(/[\w.@+-][\w./@+-]*)", text or "")]
+    # A slash after a glob character (``python*/site-packages``) continues a relative word; it does
+    # not start an absolute path.
+    found = [os.path.normpath(p) for p in re.findall(r"(?<![\w.~}\)\"'*?\]])(/[\w.@+-][\w./@+-]*)", text or "")]
     tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
     relative = []
     here, base = cwd, base or cwd
