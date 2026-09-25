@@ -1,0 +1,108 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Behaviour-preserving refactor resolving SonarQube findings: split high-complexity backup/startup functions into helpers, extract notification title constants, drop a duplicate GitLab test, and tidy the Dockerfile (jonhadfield/soba#195, already merged).",
+    "issue_fit": "Unavailable: no originating issue; intent taken from the supplied PR text and commit message. All stated outcomes are met, including 'behaviour and log output unchanged'.",
+    "coverage": "Complete merge-base diff (4 files) read. Provider ordering, env-lookup semantics, scheduler job assignment, notification title bytes and the removed test's identity to its twin were compared base vs head. Reviewer-executed at head: `go vet ./internal/` and `go test ./internal/ -count=1` passed (live provider tests skip without credentials). golangci-lint not run; Dockerfile not built (Docker unavailable), judged by reading. Prior Copilot threads: both concern pre-existing code (typo and double reset exist at the merge-base), so neither is a finding here. SonarQube's '1 new issue' is not identified in the supplied text."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The 'Organistations' log typo Copilot flagged is carried unchanged from the base into the new logProviderOrgs helper, so log output stays identical as the PR states.",
+      "evidence": "`internal/backup.go:207`, base `internal/backup.go` displayStartupConfig."
+    },
+    {
+      "fact": "The duplicated resetBackups() calls in TestGiteaOrgsRepositoryBackup Copilot flagged also exist at the merge-base and were kept as-is.",
+      "evidence": "`internal/backup_test.go:600-620`, merge-base `internal/backup_test.go:619-710`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "jonhadfield/soba",
+    "requirements": [
+      {
+        "source": "pr-body/\"Behaviour and log output are unchanged.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go: helper order, messages and env checks match base; checkProvidersDefined now computes the API-token flag up front, only removing map-order dependence of a count tested against 0; go test ./internal/ passes"
+      },
+      {
+        "source": "pr-body/\"backup status titles extracted into constants with a shared `backupStatusTitle` helper\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:18-44; three call sites use the helper; title bytes identical to base"
+      },
+      {
+        "source": "pr-body/\"removed `TestPublicGitLabRepositoryBackup2`, an exact duplicate\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup_test.go base bodies of the two tests are identical"
+      },
+      {
+        "source": "pr-body/\"merged consecutive `RUN` instructions, sorted apk package names, quoted `${TAG}`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:3-18; same package set; ARG TAG is visible to RUN so quoting is safe; not built (Docker unavailable)"
+      },
+      {
+        "source": "pr-body/\"`go build`, `go vet`, `golangci-lint run` (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "go vet and go test ./internal/ reproduced passing; golangci-lint not run"
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go vet ./internal/",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline, exit 0"
+      },
+      {
+        "check": "go test ./internal/ -count=1",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline, ok in 5.2s; live provider tests skip without credentials"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

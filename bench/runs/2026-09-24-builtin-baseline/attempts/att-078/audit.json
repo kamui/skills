@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-078/home/.codex/sessions/2026/09/25/rollout-2026-09-25T02-11-39-01a0d730-de54-7210-a703-33f79fdfffc8.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-078/home/.codex/sessions/2026/09/25/rollout-2026-09-25T02-11-39-01a0d730-de8d-71e2-a971-57706bf24a0e.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; git status --short; ls -a | grep -E 'AGENTS|CLAUDE|CONTEXT|CONTRIBUTING'",
+    "cat CONTRIBUTING.md; sed -n '880,1005p' clientconn.go; sed -n '1180,1420p' clientconn.go; rg 'resetTransport'",
+    "find . -maxdepth 1 -name '*AGENTS*' -o -maxdepth 1 -name 'CLAUDE.md'; sed -n '270,335p' balancer_wrapper.go; rg -n 'func .*updateState|func .*Connect|UpdateAddresses' balancer_wrapper.go; rg -n '^func .*Test.*(Connect|Update|Addr)' clientconn_test.go | head -25; head -25 go.mod"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-078/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-078"
+  ]
+}

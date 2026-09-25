@@ -1,0 +1,113 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-16079-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "b089b904f1ed578e9edaefd129bf9843120a808f",
+    "issues": [],
+    "change_description": "fix(vercel): Fix ISR path rewrite to prevent 404\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Restore ISR page serving after #15959 (a 404 on every ISR route) by letting the ISR function recover the real path from the x_astro_path query param. Intent source: the supplied pull-request text and the commit message; there is no originating issue, so issue alignment was unavailable.",
+    "issue_fit": "Partial — the ISR rewrite is implemented, but it is gated on a client-settable header and so undoes the trust rule #15959 added; the reported manual ISR deployments could not be checked offline.",
+    "coverage": "Complete merge-base diff (2 files) reviewed. Reviewer-executed at the head: `node --test test/path-override-security.test.js test/isr.test.js` passed (4/4), a scratch in-process probe of the built `_render` handler reproduced the override, and `biome check` on the changed file reported a formatting error. Vercel platform behaviour for `x-vercel-isr` could not be checked (unavailable offline)."
+  },
+  "findings": [
+    {
+      "id": "vercel-entrypoint/untrusted-isr-header-path-override",
+      "title": "Do not trust a client-settable header to allow path override",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "A request without the middleware secret carries `x-vercel-isr: 1` and `?x_astro_path=/api/private`, sent to the `_render` function (the ISR function shares the same entrypoint).",
+      "impact": "The routed path is replaced with the query value, re-opening the override #15959 closed: in-process, `/api/public` returned `{\"id\":\"private\"}` with the header and `{\"id\":\"public\"}` without it. Vercel-level routing, edge middleware and firewall decisions made for the requested path are bypassed; in-app middleware still runs and `x-astro-locals` still gets 403. Whether the platform strips the header on external requests could not be established.",
+      "change": "In `packages/integrations/vercel/src/serverless/entrypoint.ts`, honour `x_astro_path` only in the ISR function (for example a build-time flag set when building `_isr`), or authenticate the request with a value clients cannot forge; add a regression test beside the existing untrusted-override tests in `test/path-override-security.test.js` that sends the header to `_render`.",
+      "source": "Commit 335a204 (#15959) and its test `test/path-override-security.test.js`.",
+      "anchor": {
+        "type": "line",
+        "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+        "start_line": 24,
+        "end_line": 26,
+        "side": "RIGHT"
+      }
+    },
+    {
+      "id": "vercel-entrypoint/biome-format",
+      "title": "Format the new path-override block with Biome",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "Run `pnpm format` or `biome check` on the changed file.",
+      "impact": "Biome reports a formatting error: `if(` lacks a space and the `realPath = request.headers.get(ASTRO_PATH_HEADER)` line lacks a semicolon, contrary to the repository style rule enforced by `biome.jsonc`.",
+      "change": "Run `pnpm format` so lines 22-24 read `if (hasValidMiddlewareSecret) {`, `...get(ASTRO_PATH_HEADER);` and `} else if (...) {`.",
+      "source": "AGENTS.md, Style Guide (formatting enforced by Biome).",
+      "anchor": {
+        "type": "line",
+        "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+        "start_line": 22,
+        "end_line": 24,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "withastro/astro",
+    "requirements": [
+      {
+        "source": "pr-body/\"Fix a bug which prevented pages from being served by ISR by the vercel adapter\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "entrypoint.ts:24-26 rewrites the path for ISR requests, but on an unauthenticated header (finding vercel-entrypoint/untrusted-isr-header-path-override)."
+      },
+      {
+        "source": "pr-body/\"Manual e2e tests performed on a test vercel project\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Deployments are external and the Vercel platform is unavailable offline; no test was added."
+      }
+    ],
+    "files": [
+      {
+        "path": ".changeset/common-cats-travel.md",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "vercel-entrypoint/untrusted-isr-header-path-override",
+          "type": "candidate",
+          "trigger": "security",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-031/clone-work/rc.xJMmJd/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-031/clone-work/rc.xJMmJd/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

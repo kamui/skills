@@ -1,0 +1,35 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-063-clone/62ddbb03-bd1d-4512-b65a-f278f0d949a7/subagents/agent-af523bde4ee9f67b0.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-063-clone/62ddbb03-bd1d-4512-b65a-f278f0d949a7.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/*-test.js src/jsutils/__tests__/inspect-test.js 2>&1 | tail -15; grep -rn \"GraphQLError(\" src --include=*.js | grep -v __tests__ | grep -n \"null\\|undefined\" | head"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/clone/src/error/GraphQLError.js",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/clone/src/error/__tests__/GraphQLError-test.js",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/clone/src",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/clone/src/jsutils/__tests__/inspect-test.js"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-063"
+  ]
+}

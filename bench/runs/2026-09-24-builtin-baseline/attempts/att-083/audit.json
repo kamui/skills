@@ -1,0 +1,34 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-083-clone/8aad502c-f61d-4b26-8685-9826757f60bb/subagents/agent-aab5d4b0396da407a.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-083-clone/8aad502c-f61d-4b26-8685-9826757f60bb.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- . | head -500",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083/clone/packages/tests && timeout 250 ./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | head -20; grep -rn \"Overwrite<\" ../server/src | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083/clone/packages/server/src/core && sed -n 55,80p internals/utils.ts; sed -n 125,140p middleware.ts; grep -n \"UnsetMarker =\" -r . ; sed -n 30,40p internals/procedureBuilder.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083/clone/packages/server/src/core && grep -rn \"_ctx_out\" . | grep -v \"Overwrite\" | head -20"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- . "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-083"
+  ]
+}

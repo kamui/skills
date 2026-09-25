@@ -1,0 +1,37 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-030/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-27-58-01a0d708-e203-7580-9dad-d1a5f0481c37.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-030/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-27-58-01a0d708-e265-7fa2-8f42-0fc3f50f9763.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; cat AGENTS.md; cat .agents/skills/astro-developer/SKILL.md",
+    "find . -name AGENTS.override.md -o -name AGENTS.md -o -name CLAUDE.md | head -60; cat packages/integrations/vercel/src/serverless/entrypoint.ts; cat packages/integrations/vercel/test/path-override-security.test.js; cat packages/integrations/vercel/test/isr.test.js",
+    "rg -n 'x-vercel-isr|ASTRO_PATH|middlewareSecret|_isr' packages/integrations/vercel/src; cat packages/integrations/vercel/src/middleware.ts; cat .agents/skills/astro-developer/debugging.md; cat packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/src/pages/api/'[id].js'",
+    "node --test test/path-override-security.test.js test/isr.test.js",
+    "cat packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/_render.func/.vc-config.json; sed -n '440,505p' packages/integrations/vercel/src/index.ts; sed -n '100,155p' packages/integrations/vercel/src/serverless/middleware.ts; cat packages/integrations/vercel/test/fixtures/isr/astro.config.mjs; sed -n '685,716p' packages/integrations/vercel/src/index.ts",
+    "node --input-type=module -e 'import fs from \"node:fs\"; import {pathToFileURL} from \"node:url\"; const dir=process.cwd()+\"/packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/_render.func/\"; const config=JSON.parse(fs.readFileSync(dir+\".vc-config.json\",\"utf8\")); const {default:handler}=await import(pathToFileURL(dir+config.handler)); for (const headers of [{},{\"x-vercel-isr\":\"1\"}]) { const res=await handler.fetch(new Request(\"https://example.com/api/public?x_astro_path=/api/private\",{headers})); console.log(JSON.stringify(headers),res.status,await res.text()); }'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-030/clone/packages/integrations/vercel",
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/api/private"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-030/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-030"
+  ]
+}

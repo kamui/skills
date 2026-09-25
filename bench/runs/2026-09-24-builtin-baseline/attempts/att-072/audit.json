@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-072-clone/6af1fda3-d3ae-4f7d-ad4f-81811113a215/subagents/agent-ae406468ba3999fe3.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-072-clone/6af1fda3-d3ae-4f7d-ad4f-81811113a215.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- . | head -300",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072/clone/packages/integrations/vercel && sed -n 55,70p src/index.ts; sed -n 695,725p src/index.ts; git log --oneline -3 -- src/serverless/entrypoint.ts; cat test/path-override-security.test.js | head -80; git log -1 --stat 2>/dev/null | head -0; git show HEAD~1 --stat | head -0; grep -rn \"x_astro_path\\|x-vercel-isr\" test src | head"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072/clone/packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072/clone/packages/integrations/vercel"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- . "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-072"
+  ]
+}

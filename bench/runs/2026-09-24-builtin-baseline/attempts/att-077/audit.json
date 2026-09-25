@@ -1,0 +1,39 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-077-clone/18f82da9-aa21-4a6d-864e-a7293e959f3c/subagents/agent-a9871b1ff33e8f9df.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-077-clone/18f82da9-aa21-4a6d-864e-a7293e959f3c.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone-cache && GOMODCACHE=$C/gomodcache GOCACHE=$C/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local timeout 290 go test -race -count=30 -run 'Test/AuthorityRevive' ./xds/internal/xdsclient/tests/ 2>&1 | tail -15; git status --short"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone/clientconn.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone/clientconn.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone/internal/transport/http2_client.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone/clientconn.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone/balancer_wrapper.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone/clientconn.go",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-077"
+  ]
+}

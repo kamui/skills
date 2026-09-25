@@ -1,11 +1,11 @@
 # Built-in reviewer benchmark — `review-code` against Claude Code's `/code-review` and Codex `review`
 
-**Status: frozen 2026-09-24; pilot filed 2026-09-25, four valid attempts.** This is the narrative of the first scored
+**Status: frozen 2026-09-24; grid filed 2026-09-25, all 80 cells valid in 83 attempts; scoring not yet run.** This is the narrative of the first scored
 run of the [reviewer benchmark suite](../../../bench/README.md). The run lives at
 [`bench/runs/2026-09-24-builtin-baseline/`](../../../bench/runs/2026-09-24-builtin-baseline/README.md);
 its `manifest.json` carries `frozen_at` and names its freeze commit, and every chargeable step is in
-[`ledger.md`](ledger.md). §10 records how the open items were closed. Dispatch of the rest of the
-grid waits for the maintainer's go.
+[`ledger.md`](ledger.md). §10 records how the open items were closed. Scoring, which opens the
+sealed registers, waits for the maintainer's go.
 
 The mechanism this file used to describe has moved into `bench/`: the arms are data in
 [`bench/arms/`](../../../bench/arms/), the targets and their sealed registers in

@@ -1,0 +1,44 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-082-clone/f409edc3-0f2f-4ce6-a41b-55890bf8891a.jsonl"
+  ],
+  "prompt_headers": [],
+  "report_findings_calls": 0,
+  "commands": [
+    "ls -R /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code | head -50",
+    "git rev-parse --verify main^{commit} review-head^{commit} && git merge-base main review-head && git status --short | head; PD=$(mktemp -d /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone-work/rc.XXXXXX); echo $PD; S=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code; MB=$(git merge-base main review-head); H=$(git rev-parse review-head); python3 $S/scripts/review_context.py --merge-base $MB --head $H --store $PD/review-context.json 2>&1 | tail -80; git log --reverse --format='%H%n%B' $MB..$H | head -60; ls docs/agents 2>&1 | head -3",
+    "git rev-parse main review-head; git diff main...review-head -- packages/server; sed -n 1,60p packages/server/src/core/internals/utils.ts; rg -n \"Overwrite<|Overwrite\\b\" packages --glob '!node_modules' --glob '!dist' | head -30",
+    "rg -n \"Overwrite\\b\" packages www/docs -g '!node_modules' -g '!dist' | head -30; cd packages/tests && timeout 280 ./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | tail -15; echo exit $?",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone-work && mkdir -p sc && cat > sc/a.ts <<'EOF'\ntype Old<TType, TWith> = TType extends any ? TWith extends any ? { [K in keyof TType | keyof TWith]: K extends keyof TWith ? TWith[K] : K extends keyof TType ? TType[K] : never } : never : never;\ntype New<TType, TWith> = TType extends object ? TWith extends object ? { [K in keyof TType | keyof TWith]: K extends keyof TWith ? TWith[K] : K extends keyof TType ? TType[K] : never } : TWith extends any ? TWith : never : TType extends any ? TWith extends any ? TWith : TType : never;\ntype Eq<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;\nconst t1: Eq<Old<string,string>, string> = false as any as false;\nconst t2: Eq<New<string,string>, string> = true;\nconst t3: Eq<New<{a:1},{b:2}>, {a:1;b:2}> = true;\nconst t4: Eq<New<{a:1}|{c:3},{b:2}>, {a:1;b:2}|{c:3;b:2}> = true;\nconst t5: Eq<New<{a:1},never>, never> = true;\nconst t6: Eq<New<string,never>, never> = true;\nconst t7: Eq<New<{a:1},undefined>, undefined> = true;\nconst t8: Eq<New<undefined,{a:1}>, {a:1}> = true;\nconst t9: Eq<New<{a:1},any>, any> = true;\nEOF\n/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone/packages/tests/node_modules/.bin/tsc --noEmit --strict a.ts 2>&1 | head; cd sc && ../../clone/packages/tests/node_modules/.bin/tsc --noEmit --strict a.ts 2>&1 | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code && python3 scripts/render_review.py --example; cat /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone-work/rc.Hdl8p3/review-context.json | python3 -c \"import json,sys;d=json.load(sys.stdin);print(list(d));print(json.dumps({k:v for k,v in d.items() if k in('run','manifest','identity')},indent=1)[:2500])\"",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone-work/rc.Hdl8p3 && S=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code && python3 - <<EOF\nimport json,subprocess\nmsgs=subprocess.check_output(['git','log','--reverse','--format=%H%n%B','2abb2d5cd19740be37272dac6ad7fdd36244ae54..7dc04a7e94654dfad6ef1289dfe01a0a206fff3b'],text=True)\nc={\n\"run\":{\"coverage\":\"complete\",\"specs\":[],\"target_kind\":\"range\",\"target\":\"main...review-head\",\"base_ref\":\"main\",\"base_sha\":\"2abb2d5cd19740be37272dac6ad7fdd36244ae54\",\"issues\":[],\"change_description\":msgs},\n\"summary\":{\"status\":\"Approved\",\n\"intent\":\"Fix inference of procedure inputs after .use() middleware by making Overwrite replace non-object types instead of key-mapping them (commit 7dc04a7e; the supplied PR body is an unfilled template and adds no intent).\",\n\"issue_fit\":\"Met - no originating issue exists, so issue alignment was unavailable; the commit message's stated outcomes are implemented and regression-tested.\",\n\"coverage\":\"Complete merge-base diff of both changed files reviewed with Overwrite's call sites in procedureBuilder.ts and middleware.ts. Reviewer-executed: tsc --noEmit in packages/tests at the head, clean. A scratch type-level check outside the clone confirmed the old Overwrite mangles string but the new one yields string, unions still distribute, and never, undefined and any behave sensibly. The runtime suite was not run; the target is type-only.\"},\n\"findings\":[],\"questions\":[],\"observations\":[],\"prior_items\":[],\n\"record\":{\"repository\":\"trpc/trpc\",\n\"requirements\":[\n{\"source\":'commit-7dc04a7/\"Overwrite<string,string> resulted in a mangled object type\"',\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"packages/server/src/core/internals/utils.ts:11-30 routes non-object TType to TWith; scratch check gave string for Overwrite<string,string>.\"},\n{\"source\":'commit-7dc04a7/\"keys are only iterated and overwritten in the case of objects\"',\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"utils.ts:11-20 key-wise mapping only when both TType and TWith extend object.\"},\n{\"source\":'commit-7dc04a7/\"Overwrite<string, number> results in \\'number\\'\"',\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"utils.ts:21-30 fallback branches return TWith.\"}],\n\"files\":[\n{\"path\":\"packages/server/src/core/internals/utils.ts\",\"state\":\"reviewed\"},\n{\"path\":\"packages/tests/server/regression/issue-5020-inference-middleware.test.ts\",\"state\":\"reviewed\"}],\n\"check_evidence\":[{\"check\":\"cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json\",\"head\":\"7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\",\"outcome\":\"reviewer-executed\",\"reason\":\"no diagnostics; run by the reviewer offline at the reviewed head\"}],\n\"verification\":{\"tasks\":[],\"batches\":[],\"outstanding\":[]},\n\"routed\":{\"unresolved\":[],\"disputed\":[],\"unrecoverable_inputs\":[]}}}\njson.dump(c,open(\"$PD/composition.json\",\"w\"),indent=1)\nEOF\npython3 $S/scripts/render_review.py --store $PD/review-context.json $PD 2>&1 | tail -40",
+    "PD=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone-work/rc.Hdl8p3; A=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/artifacts; mkdir -p $A && cp $PD/composition.json $PD/payload.json $PD/report.md $A/ && ls $A; cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone && git status --short | head -3"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone/packages/tests",
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code/references/targets.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code/references/rubric.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code/references/output.md",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/home/.claude/skills/review-code/references/verification.md"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- packages/server"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-082"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-075/home/.codex/sessions/2026/09/25/rollout-2026-09-25T02-10-39-01a0d72f-f46d-7113-8cc7-0f1c9691e1d6.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-075/home/.codex/sessions/2026/09/25/rollout-2026-09-25T02-10-39-01a0d72f-f4e6-7091-a84c-310f4aed451a.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; cat AGENTS.md; cat .agents/skills/astro-developer/SKILL.md",
+    "find . -name AGENTS.override.md -o -name AGENTS.md | head -60; cat packages/integrations/vercel/src/serverless/entrypoint.ts; cat packages/integrations/vercel/test/path-override-security.test.js; cat packages/integrations/vercel/test/isr.test.js",
+    "rg -n 'x-vercel-isr|ASTRO_PATH_PARAM|ASTRO_PATH_HEADER|middlewareSecret' packages/integrations/vercel/src; cat packages/integrations/vercel/src/serverless/middleware.ts; sed -n '350,590p' packages/integrations/vercel/src/index.ts; cat packages/integrations/vercel/test/fixtures/isr/astro.config.*",
+    "node --test test/path-override-security.test.js test/isr.test.js",
+    "cat packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/_render.func/.vc-config.json; cat packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/src/pages/api/'[id].ts'; cat packages/integrations/vercel/src/vite-plugin-config.ts; git status --short",
+    "text(await tools.exec_command({cmd:`node --input-type=module -e 'import fs from \"node:fs\";import {pathToFileURL} from \"node:url\"; const dir=process.cwd()+\"/packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/_render.func/\";const cfg=JSON.parse(fs.readFileSync(dir+\".vc-config.json\"));const {default:handler}=await import(pathToFileURL(dir+cfg.handler));for(const headers of [{},{\"x-vercel-isr\":\"1\"}]){const r=await handler.fetch(new Request(\"https://example.com/api/public?x_astro_path=/api/private\",{headers}));console.log(headers,r.status,await r.text());}'`,max_output_tokens:1000}));\n"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-075/clone/packages/integrations/vercel",
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/api/private"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-075/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-075"
+  ]
+}

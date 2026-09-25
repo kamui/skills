@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-044-clone/3bad36fd-108b-4fa2-b431-5654d56f5f86/subagents/agent-a34bbf79867daa7bf.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-044-clone/3bad36fd-108b-4fa2-b431-5654d56f5f86.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head --stat && echo \"---\" && git diff main...review-head > /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/clone-work/diff.patch && wc -l /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/clone-work/diff.patch",
+    "grep -n \"\\bjob\\b\" internal/*.go | head -20; sed -n 395,425p internal/backup.go; sed -n 480,500p internal/backup.go"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/clone-work/diff.patch"
+  ],
+  "diff_commands": [
+    "git diff main...review-head --stat ",
+    "git diff main...review-head > /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/clone-work/diff.patch "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-044"
+  ]
+}

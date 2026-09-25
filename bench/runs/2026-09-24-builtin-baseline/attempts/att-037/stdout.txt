@@ -1,0 +1,1 @@
+Both callers now retain the mutex until resetTransportAndUnlock transitions the connection state, preventing concurrent connection attempts. All return paths release the mutex, and the asynchronous call safely transfers responsibility for unlocking.

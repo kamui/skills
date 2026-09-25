@@ -19,7 +19,7 @@ freeze; the pilot ran on 2026-09-25 (below).
 | `manifest.json` | the frozen run: arms resolved with file hashes, the `review-code` tree, the pinned CLI versions and expected prompt hashes; the cohort with register versions and packet, diff and provisioning identities; the 80 planned cells; the caps; the sealed order; the rates used; the execution policy |
 | `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
-| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (the pilot's att-001 to att-004 so far; att-002 and att-004 re-filed with `--replay`) |
+| `attempts/att-NNN/` | one record per dispatched attempt, written by `run_cell.py`: att-001 to att-083 for the 80 cells; the attempts re-filed with `--replay` are listed in the manifest's deviations and the ledger |
 | `scoring/<target>/mapping.v<M>.json` | blind adjudication per target (none yet) |
 | `results.v<M>.json` | `score.py` output (none yet) |
 
@@ -203,4 +203,27 @@ are known blind spots, not defects to repair during this run; the manifest's six
 records the decision and invalidates nothing. Quoted regular expressions that look like paths,
 such as `sed 's|.*/.*/||'` or `awk '$1 ~ /[0-9]+/'`, still read as reads outside the roots and
 would file an attempt harness-invalid; none of the pilot's attempts has one.
+
+## Grid (2026-09-25)
+
+Every planned cell is filed `valid completed`: 80 cells in 83 attempts, dispatched 05:02Z to 06:20Z
+after the pilot, two in flight. Three attempts were harness-invalid and replaced (3 of 4
+replacements): att-006 and att-042, the Sonnet built-in on (q), wrote the diff to a file in `/tmp`,
+and att-071, arm A on (o), kept its scratch path in `/tmp/pd071`; the policy sends scratch files to
+the work directory, where each reviewer's `TMPDIR` pointed. The operator's block gate never bound.
+Spend: $32.48 for the attempts, $60.79 with the charges, $164.21 of room left.
+
+The read audit misread legitimate reviewer work seven times on shapes the pilot never exercised: a
+Go file name or the allowed offline `go test` as a network command, a URL as a path, route strings
+and JSX in scratch code as absolute paths, the provisioned venv's interpreter symlink, a `cd`
+carried between Claude Bash calls, a fallback `cd` that never ran, and a `|` inside a quoted
+pattern. Each fix has a test, was re-run over every filed attempt, and is a manifest deviation
+(the seventh to the thirteenth) that invalidates nothing; the eight attempts it misfiled were
+re-audited with `file_attempt.py --replay`, with no replacement. Review of the grid then closed two
+gaps in the new network rule, a script handed to `zsh -fc` or `bash -lc` and Go's offline settings
+carried past the command they prefix; the fourteenth to seventeenth deviations record it, and no
+filed attempt's audit changes. The audit's scope is the sixth deviation's: accidental reads, not disguised ones.
+
+Scoring is next and waits for the maintainer: it opens the sealed registers with `seal.py` and
+runs `score.py --opened`, as the Dispatching section says.
 

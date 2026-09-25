@@ -1,0 +1,42 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-057-clone/7a11923c-72b7-4f29-9094-020a125c4e79/subagents/agent-a6cd365c555371003.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-057-clone/7a11923c-72b7-4f29-9094-020a125c4e79.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone-cache && ls venv/lib/*/site-packages | grep -i -E \"urllib3|certifi\"; f=$(ls -d venv/lib/*/site-packages/urllib3); grep -n \"load_cert_chain\\|load_default_certs\\|load_verify_locations\\|ssl_context is None\" $f/util/ssl_.py; grep -n \"ssl_context\\b\" $f/poolmanager.py | head -30",
+    "grep -n \"pyopenssl\\|import\\b\" src/requests/__init__.py | head -40; grep -n \"DEFAULT_CA_BUNDLE_PATH\\|def extract_zipped_paths\" -A3 src/requests/utils.py | head -30; grep -rn \"ssl_context\\|init_poolmanager\\|cert_verify\" tests/ docs/ | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone-cache && f=$(ls -d venv/lib/*/site-packages/urllib3); grep -n \"context is None\\|verify_mode\\|ssl_version\\|ssl_minimum_version\\|ciphers\\|load_default_certs\\|ssl_context=\" $f/connection.py | head -40; grep -n \"_merge_pool_kwargs\" -A20 $f/poolmanager.py | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone-cache && f=$(ls -d venv/lib/*/site-packages/urllib3); sed -n 1025,1095p $f/connection.py; sed -n 405,440p $f/util/ssl_.py",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone-cache && f=$(ls -d venv/lib/*/site-packages/urllib3); sed -n 940,990p $f/connection.py"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone/docs/user/advanced.rst"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-057"
+  ]
+}

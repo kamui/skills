@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-058/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-54-51-01a0d721-7f82-7a10-832b-84db38c4170f.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-058/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-54-52-01a0d721-7ff0-7442-877c-514ff5082722.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md; sed -n '1,160p' src/requests/adapters.py",
+    "sed -n '1,170p' src/requests/__init__.py; sed -n '350,420p' src/requests/adapters.py; rg -n 'ssl_context|SSLContext|ssl unavailable|without ssl|client.cert' tests docs | head -70; rg -n 'load_cert_chain|ssl_context|load_verify_locations' ../clone-cache/venv/lib/python*/site-packages/urllib3/util/ssl_.py | tail -30; ls -a | head -35; find src -iname '*agents*' -o -name CLAUDE.md",
+    "find .agents .codex -type f; sed -n '45,80p' tests/test_requests.py; sed -n '2900,2980p' tests/test_requests.py; sed -n '400,440p' ../clone-cache/venv/lib/python*/site-packages/urllib3/util/ssl_.py; rg -n 'ssl_version|init_poolmanager|ssl_context' docs/user/advanced.rst tests/test_lowlevel.py tests/test_requests.py; sed -n '315,345p' ../clone-cache/venv/lib/python*/site-packages/urllib3/poolmanager.py; nl -ba src/requests/adapters.py | sed -n '69,110p'; cat pyproject.toml",
+    "rg -n 'SSLContext is None|ssl module|def _merge_pool_kwargs|ssl_context is None|ssl_minimum_version' ../clone-cache/venv/lib/python*/site-packages/urllib3/{util/ssl_.py,connection.py,poolmanager.py}; sed -n '1007,1040p' docs/user/advanced.rst; sed -n '245,275p' ../clone-cache/venv/lib/python*/site-packages/urllib3/util/ssl_.py; sed -n '365,395p' ../clone-cache/venv/lib/python*/site-packages/urllib3/poolmanager.py; git status --short"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-058/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-058"
+  ]
+}

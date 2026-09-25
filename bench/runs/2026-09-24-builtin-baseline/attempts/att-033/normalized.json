@@ -1,0 +1,129 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 24,
+      "line_end": 24,
+      "claim": "The fix trusts the client-controllable `x-vercel-isr: 1` request header to decide whether `x_astro_path` may override the path. The same entrypoint is built into both `_render` and `_isr`, so this reopens the path-override bypass that #15959 closed.",
+      "consequence": "Reproduced in-process against the built `serverless-with-dynamic-routes` fixture. `_render.fetch(new Request('https://example.com/api/public?x_astro_path=/api/private', { headers: { 'x-vercel-isr': '1' } }))` returns `{ id: 'private' }`. The same request without the header returns `public`. Any client that adds this header can route a request to any route (for example, one hidden behind a WAF or edge-middleware path rule), which is exactly what `test/path-override-security.test.js` is meant to prevent.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 25,
+      "line_end": 25,
+      "claim": "Inside the real `_isr` function, `x_astro_path` is still an unauthenticated, attacker-chosen path. A request to `/_isr?x_astro_path=<any route>` renders that route through ISR and caches it, including routes the user listed in `isr.exclude` and routes that are not ISR routes at all.",
+      "consequence": "A user excludes `/excluded/[slug]` from ISR because the page depends on the requester. An attacker requests `/_isr?x_astro_path=/excluded/me`. Vercel invokes `_isr` with a genuine `x-vercel-isr: 1`, the handler rewrites to `/excluded/me`, and the response is stored in the shared ISR cache keyed by `x_astro_path`, so it can be served to other users. This bypasses both the exclude list and the fix from #15959.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 22,
+      "line_end": 22,
+      "claim": "Wrong level of fix: whether the ISR query param is allowed is decided per request from a header, when it should be decided per function at build time.",
+      "consequence": "`buildISRFolder` and `buildServerlessFolder` both bundle the same `entryFile`, so `_render` inherits the ISR code path. A build-time flag (for example, a virtual-config value or a separate ISR entry) that enables the param only in `_isr` would remove the bypass on `_render` entirely. With the current approach, every function honours the query override when a spoofed header is present.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 22,
+      "line_end": 22,
+      "claim": "When the middleware secret is valid, the ISR query param is never considered. With a valid secret but no `x-astro-path` header, `realPath` is `null` and no rewrite happens.",
+      "consequence": "An `_isr` request that arrives with a valid secret header (for example, a middleware-forwarded request carrying `x-vercel-isr`) and without `x-astro-path` renders the literal `/_isr` path. The result is a 404 instead of the page named by `x_astro_path`.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 26,
+      "line_end": 26,
+      "claim": "After the ISR rewrite, only `url.pathname` is replaced. The internal `x_astro_path` search param stays on the request URL passed to user code.",
+      "consequence": "An ISR page that reads `Astro.url.search` or `Astro.url.searchParams` sees `?x_astro_path=/one`. Canonical URLs, pagination links or query-based logic built from `Astro.url` then leak the internal routing param into rendered HTML, and that HTML is cached.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 27,
+      "line_end": 27,
+      "claim": "`realPath` is assigned directly to `url.pathname`. If the override value contains `?` or already-encoded characters, they end up percent-encoded in the path instead of being parsed as a query string.",
+      "consequence": "Verified in-process: `x_astro_path=/api/public%3Fa%3Db` with `x-vercel-isr: 1` renders the route with param `public%3Fa=b`. The middleware path header is built from `request.url.replace(origin, '')` and includes the query, so the secret branch can also produce paths like `/page%3Fq=1`, which match the wrong route or return 404.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 21,
+      "line_end": 21,
+      "claim": "No regression test was added for either the ISR rewrite or the new header gate. `isr.test.js` only checks the generated config, and `path-override-security.test.js` has no case with `x-vercel-isr`.",
+      "consequence": "The 404 regression from #15959 shipped because no test called the built `_isr` handler. This PR also has no test showing that `_render` rejects `x-vercel-isr: 1` combined with `x_astro_path`, which is why the bypass in finding 1 went unnoticed.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 21,
+      "line_end": 21,
+      "claim": "`let realPath = undefined` has no type annotation. TypeScript's evolving-`any` inference makes its type `string | null | undefined`, and the code relies on a `typeof === 'string'` check. The previous `const` ternary was simpler and had a clear type.",
+      "consequence": "The mutable variable plus if/else chain is harder to read than the previous form. Something like `const realPath = hasValidMiddlewareSecret ? headers.get(ASTRO_PATH_HEADER) : isIsr ? url.searchParams.get(ASTRO_PATH_PARAM) : null` would do the same job, and a later edit is less likely to widen the type by accident.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 22,
+      "line_end": 22,
+      "claim": "The new lines break the repo's Biome formatting: `if(` and `} else if(` have no space before the parenthesis, and line 23 is missing its semicolon.",
+      "consequence": "AGENTS.md says: \"Keep formatting consistent. Our rules are defined in our biome.jsonc file, enforced by Biome.\" The lines `if(hasValidMiddlewareSecret) {`, `realPath = request.headers.get(ASTRO_PATH_HEADER)` (no semicolon) and `} else if(request.headers.get('x-vercel-isr') === '1') {` do not match Biome output, so `pnpm lint`/`pnpm format` will flag or rewrite them.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+      "line_start": 24,
+      "line_end": 24,
+      "claim": "The `'x-vercel-isr'` header name is a magic string written inline, while every other header this adapter uses is an exported constant in `src/index.ts`.",
+      "consequence": "Other adapter headers such as `ASTRO_PATH_HEADER` and `ASTRO_MIDDLEWARE_SECRET_HEADER` live as constants in `src/index.ts`. This one is a hard-coded string for undocumented Vercel behaviour, so it can't be found or reused alongside them, and tests can't import it.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

@@ -1,0 +1,48 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-073-clone/42f81116-4e72-4db8-9bc9-1a46a25fc828/subagents/agent-a5a3664654f20aa47.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-073-clone/42f81116-4e72-4db8-9bc9-1a46a25fc828.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && grep -rn \"ASTRO_PATH_PARAM\\|x-vercel-isr\\|ASTRO_PATH_HEADER\\|x_astro_path\" src test | grep -v fixtures/.*/dist | head -40; git log --oneline -5 main -- src/serverless/entrypoint.ts; ls test | head -80",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && grep -rn \"ASTRO_PATH_PARAM\\|x-vercel-isr\\|ASTRO_PATH_HEADER\\|x_astro_path\" src test --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.vercel | head -40; git show 335a20416 --stat; git show 335a20416 -- src | head -200",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && sed -n 35,75p src/index.ts; grep -n \"ISR_PATH\\|_isr\\|isr\\b\\|bypassToken\\|exclude\\|expiration\\|NODE_PATH\\|_render\" src/index.ts | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && sed -n 445,560p src/index.ts; sed -n 695,730p src/index.ts; cat test/path-override-security.test.js",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && grep -n \"x-vercel-isr\" dist/serverless/entrypoint.js; timeout 280 node --test test/path-override-security.test.js test/isr.test.js 2>&1 | tail -15; ls test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/_render.func && cat .vc-config.json; W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone-work; mkdir -p $W; H=$(node -e 'console.log(require(\"./.vc-config.json\").handler)'); cat > $W/probe.mjs <<EOF\nconst m = await import('$PWD/' + '$H');\nconst f = m.default.fetch;\nconst show = async (label, req) => { const r = await f(req); console.log(label, r.status, (await r.text()).slice(0,100)); };\nawait show('no header', new Request('https://example.com/api/public?x_astro_path=/api/private'));\nawait show('spoofed isr', new Request('https://example.com/api/public?x_astro_path=/api/private', {headers:{'x-vercel-isr':'1'}}));\nawait show('spoofed isr + locals', new Request('https://example.com/api/public?x_astro_path=/api/private', {headers:{'x-vercel-isr':'1','x-astro-locals':'{}'}}));\nawait show('isr empty param', new Request('https://example.com/api/public?x_astro_path=', {headers:{'x-vercel-isr':'1'}}));\nawait show('isr path with query', new Request('https://example.com/_isr?x_astro_path=/api/public%3Ffoo%3Dbar', {headers:{'x-vercel-isr':'1'}}));\nawait show('isr no-leading-slash', new Request('https://example.com/_isr?x_astro_path=api/private', {headers:{'x-vercel-isr':'1'}}));\nEOF\ncd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && PRERENDER=true node $W/probe.mjs",
+    "cat AGENTS.md | head -120; grep -n -i \"changeset\" CONTRIBUTING.md | head -20",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/.vercel/output/functions/_render.func && W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone-work; cat > $W/probe2.mjs <<EOF\nconst m = await import('$PWD/packages/integrations/vercel/test/fixtures/serverless-with-dynamic-routes/dist/server/entry.mjs');\nconst f = m.default.fetch;\nconst show = async (label, req) => { const r = await f(req); console.log(label, r.status, (await r.text()).slice(0,80)); };\nawait show('direct encoded slash', new Request('https://example.com/api/a%2Fb'));\nawait show('isr encoded slash', new Request('https://example.com/_isr?x_astro_path=/api/a%2Fb', {headers:{'x-vercel-isr':'1'}}));\nawait show('direct', new Request('https://example.com/api/public?foo=1'));\nEOF\ncd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone/packages/integrations/vercel && PRERENDER=true node $W/probe2.mjs; ls test/fixtures/serverless-with-dynamic-routes/src/pages -R | head"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/api/a",
+    "/api/private",
+    "/api/public"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-073"
+  ]
+}

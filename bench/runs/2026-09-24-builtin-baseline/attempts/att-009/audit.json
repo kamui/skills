@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-009/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-08-35-01a0d6f7-2286-7d21-bcc6-357229a7cfc9.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-009/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-08-35-01a0d6f7-2304-7933-8c39-c96c88821efe.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "pwd; find .. -name AGENTS.md -o -name AGENTS.override.md; git diff main...review-head",
+    "git status --short; sed -n '660,740p' internal/backup.go; rg 'func GetEnvOrFile|compareTypeClone|func TestMain' internal; ls -a; GOMODCACHE=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-009/clone-cache/gomodcache GOCACHE=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-009/clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test ./internal/ -count=1",
+    "find .agents .codex -type f; cat internal/envfile.go; git diff --check main...review-head; git status --short; sed -n '1,95p' internal/backup.go; cat docker/Dockerfile"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head",
+    "git diff --check main...review-head"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-009/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-009"
+  ]
+}
