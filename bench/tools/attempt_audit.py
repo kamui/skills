@@ -15,7 +15,9 @@ for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 ``subagents/agent-*.jsonl``), for ``codex`` the ``home/.codex/sessions/**/rollout-*.jsonl``
 files. Every shell command and every file-tool path is listed; a path outside the
 clone, the attempt directory and the fresh home that names something on disk when the audit
-runs (a glob by any match; absent ones are listed as ``absent_outside_paths``), or a command that runs a
+runs (a glob by any match; absent ones are listed as ``absent_outside_paths``; a symlink inside the
+roots that was made before ``timing.json``'s dispatch instant may lead out of them, as a provisioned
+venv's interpreter does), or a command that runs a
 network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
 ``git fetch``/``pull``/``push``/``clone``; ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
 that reaches a registry; ``go`` unless the command sets ``GOPROXY=off`` and ``GOTOOLCHAIN=local``
@@ -42,9 +44,10 @@ Exit codes: 0 no violation; 1 one or more violations (listed on stdout);
 from __future__ import annotations
 
 import argparse
+import datetime
 import fnmatch
-import json
 import glob
+import json
 import os
 from pathlib import Path
 import re
@@ -108,6 +111,9 @@ def load_lines(path: Path):
 
 
 HOME_DIR = None
+# The reviewer's dispatch instant (epoch seconds) from the attempt's timing.json, one second late
+# because the stamp is truncated to the second.
+DISPATCHED = None
 
 
 SPLIT = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
@@ -181,7 +187,22 @@ def inside(path: str, roots) -> bool:
     real = os.path.realpath(path)
     if any(real.startswith(pre) for pre in PREFIXES):
         return True
-    return any(real == r or real.startswith(r + os.sep) for r in roots)
+    return any(real == r or real.startswith(r + os.sep) for r in roots) or provisioned(path, roots)
+
+
+def provisioned(path: str, roots) -> bool:
+    """Whether ``path`` is inside the roots as written and leaves them only through symlinks made
+    before the reviewer was dispatched, such as a provisioned venv's ``bin/python``. A symlink's
+    ctime is set when it is made, so a link the reviewer plants is later than the dispatch instant."""
+    lexical = os.path.normpath(path)
+    if DISPATCHED is None or not any(lexical == r or lexical.startswith(r + os.sep) for r in roots):
+        return False
+    prefix = os.sep
+    for part in lexical.split(os.sep)[1:]:
+        prefix = os.path.join(prefix, part)
+        if os.path.islink(prefix) and os.lstat(prefix).st_ctime >= DISPATCHED:
+            return False
+    return True
 
 
 def audit_claude(attempt: Path, roots):
@@ -296,8 +317,14 @@ def main() -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     attempt = Path(args.attempt_dir)
-    global HOME_DIR
+    global HOME_DIR, DISPATCHED
     HOME_DIR = os.path.realpath(str(attempt / "home"))
+    try:
+        stamp = json.loads((attempt / "timing.json").read_text(encoding="utf-8"))["root_dispatched_at"]
+        DISPATCHED = datetime.datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=datetime.timezone.utc).timestamp() + 1
+    except (OSError, ValueError, KeyError, TypeError):
+        DISPATCHED = None
     roots = [os.path.realpath(p) for p in [args.clone, str(attempt), *args.allowed]]
     PREFIXES[:] = list(args.allowed_prefix)
     violations = []
