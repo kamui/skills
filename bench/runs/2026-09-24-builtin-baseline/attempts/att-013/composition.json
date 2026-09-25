@@ -1,0 +1,122 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [
+      "honojs/hono#5060"
+    ],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Make Content-Type media-type matching case-insensitive in parseBody() and validator() while leaving parameters such as the multipart boundary intact (issue #5060, PR title and body).",
+    "issue_fit": "Partial \u2014 mixed-case JSON, urlencoded and multipart are now matched and boundaries preserved, but parseBody now fails after c.req.formData() has cached the body, a case that worked before.",
+    "coverage": "Complete merge-base diff of 6 files reviewed with callers in src/request.ts and src/validator/validator.ts; reviewer ran body, buffer, validator and request test files once at the head (144 passed, 1 skipped) plus a scratch probe against head and base sources; the 'unreviewed uncommitted changes' clause does not apply (clean tree)."
+  },
+  "findings": [
+    {
+      "id": "utils/body/parsebody-after-formdata",
+      "title": "Keep parseBody working after c.req.formData()",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A handler awaits `c.req.formData()` on a multipart request and then calls `c.req.parseBody()`.",
+      "impact": "`parseFormData` now reads `arrayBuffer()`, which for a formData-only cache re-serializes the FormData with a new boundary and then parses it with the original Content-Type boundary. It rejects with `TypeError: Failed to parse body as FormData.` (a 500) where the base returned the fields.",
+      "change": "In `parseFormData`, reuse the cached form data when the request is a HonoRequest, for example by calling `request.formData()`, and normalize the media type only when parsing raw bytes.",
+      "anchor": {
+        "type": "line",
+        "path": "src/utils/body.ts",
+        "start_line": 126,
+        "end_line": 132,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "issue-5060/expected-behavior",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:99 lowercases the media type before matching; src/validator/validator.ts:24-26 regexes gain /i"
+      },
+      {
+        "source": "issue-5060/expected-behavior/\"Parameter values such as multipart boundaries should remain intact\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/buffer.ts:113 lowercases only the text before the first ';'; buffer.test.ts mixed-case boundary test passes"
+      },
+      {
+        "source": "issue-5060/suggested-tests",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "body.test.ts, validator.test.ts and buffer.test.ts add mixed-case urlencoded, JSON and multipart cases; run once at head, all pass"
+      },
+      {
+        "source": "pr-body/\"Fixes #5060\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "Issue behavior implemented, but parseBody regresses after c.req.formData() (utils/body/parsebody-after-formdata)"
+      }
+    ],
+    "files": [
+      {
+        "path": "src/utils/body.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/body.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "utils/body/parsebody-after-formdata",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-013/clone-work/rc.SsYjAq/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-013/clone-work/rc.SsYjAq/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "honojs/hono"
+  }
+}
