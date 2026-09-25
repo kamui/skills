@@ -81,7 +81,9 @@ class AttemptAudit(unittest.TestCase):
                     "cd src && npm run test", "pnpm --version",
                     "python3 - <<'EOF'\nimport sys\nprint('ran `go vet`; go test ./src/ passes')\nEOF\necho done",
                     'rg -n -A12 "func \\(ac \\*addrConn\\) resetTransport|go ac.resetTransport" src',
-                    "grep -E 'x|curl y' src/a.py", 'rg "then go test" src', "echo 'a; npm install b'"):
+                    "grep -E 'x|curl y' src/a.py", 'rg "then go test" src', "echo 'a; npm install b'",
+                    "rg -c 'go test' src", f"export {offline}; go test ./src/ && go vet ./src/",
+                    'GOPROXY="off" GOTOOLCHAIN=\'local\' go test ./src/'):
             with self.subTest(cmd=cmd):
                 self.assertEqual(self.bash(cmd), (0, []))
 
@@ -153,7 +155,11 @@ class AttemptAudit(unittest.TestCase):
                     "pnpm dlx x", "pip install requests", "cargo test", "bash -c 'curl x'",
                     "for p in a b; do curl $p; done", "x=$(curl -s y)", "bash <<'EOF'\ncurl x\nEOF",
                     "python3 - <<'EOF'\nprint(1)\nEOF\ncurl x", 'echo "$(curl -s y)"', 'sh -c "cd src && go test ./..."',
-                    "echo 'ok'; curl x"):
+                    "echo 'ok'; curl x", 'zsh -fc "curl https://example.com"', "bash -lc 'curl x'",
+                    "bash --norc -c 'curl x'", "GOPROXY=off GOTOOLCHAIN=local go test ./...; go mod download",
+                    "export GOPROXY=off GOTOOLCHAIN=local; unset GOPROXY; go test ./...",
+                    "export GOPROXY=off GOTOOLCHAIN=local; GOPROXY=direct go get x",
+                    "GOPROXY=off; GOTOOLCHAIN=local; go test ./..."):
             with self.subTest(cmd=cmd):
                 rc, violations = self.bash(cmd)
                 self.assertEqual(rc, 1)
