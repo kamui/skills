@@ -83,7 +83,10 @@ class AttemptAudit(unittest.TestCase):
                     'rg -n -A12 "func \\(ac \\*addrConn\\) resetTransport|go ac.resetTransport" src',
                     "grep -E 'x|curl y' src/a.py", 'rg "then go test" src', "echo 'a; npm install b'",
                     "rg -c 'go test' src", f"export {offline}; go test ./src/ && go vet ./src/",
-                    'GOPROXY="off" GOTOOLCHAIN=\'local\' go test ./src/'):
+                    'GOPROXY="off" GOTOOLCHAIN=\'local\' go test ./src/', "GOPROXY=off \\\n  GOTOOLCHAIN=local go test ./src/",
+                    "export GOMODCACHE=$(pwd)/m GOPROXY=off GOTOOLCHAIN=local; go test ./src/",
+                    'export GOMODCACHE="$C/my dir" GOPROXY=off GOTOOLCHAIN=local; go test ./src/',
+                    "zsh -fc 'echo a'; rg -c 'go test' src"):
             with self.subTest(cmd=cmd):
                 self.assertEqual(self.bash(cmd), (0, []))
 
@@ -159,7 +162,13 @@ class AttemptAudit(unittest.TestCase):
                     "bash --norc -c 'curl x'", "GOPROXY=off GOTOOLCHAIN=local go test ./...; go mod download",
                     "export GOPROXY=off GOTOOLCHAIN=local; unset GOPROXY; go test ./...",
                     "export GOPROXY=off GOTOOLCHAIN=local; GOPROXY=direct go get x",
-                    "GOPROXY=off; GOTOOLCHAIN=local; go test ./..."):
+                    "GOPROXY=off; GOTOOLCHAIN=local; go test ./...", "zsh -fc 'echo a'; curl x",
+                    "bash -lc 'echo a'\ncurl x", "zsh -fc 'echo a'; zsh -fc 'curl x'", 'bash -lc "echo \'x\'"; curl y',
+                    "bash -o pipefail -c 'curl x'", "bash -euo pipefail -c 'curl x'",
+                    "GOMODCACHE=$(pwd)/m GOPROXY=direct go mod download",
+                    "echo 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download",
+                    "export GOPROXY=off GOTOOLCHAIN=local; unset -v GOPROXY; go test ./...",
+                    "export GOPROXY=off GOTOOLCHAIN=local; export -n GOTOOLCHAIN; go test ./..."):
             with self.subTest(cmd=cmd):
                 rc, violations = self.bash(cmd)
                 self.assertEqual(rc, 1)
