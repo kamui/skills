@@ -236,7 +236,7 @@ G=~/.t3/bench-runs/2026-09-24-builtin-baseline/grading
 python3 bench/tools/grade.py prepare --run bench/runs/2026-09-24-builtin-baseline --target <id> \
     --work $G/<id>/work --key $G/keys/<id>.json \
     --template docs/research/builtin-review-benchmark-2026-09-24/prompts/grader-template.md [--opened <dir>]
-python3 bench/tools/grade.py dispatch --work $G/<id>/work --model <model> --effort high --max-budget-usd 10 \
+python3 bench/tools/grade.py dispatch --work $G/<id>/work --model claude-opus-5-5 --effort high --max-budget-usd 10 \
     --run bench/runs/2026-09-24-builtin-baseline --step "ledger G<n>: grading <id>"
 python3 bench/tools/grade.py map --run bench/runs/2026-09-24-builtin-baseline --target <id> \
     --work $G/<id>/work --key $G/keys/<id>.json --version 1 [--opened <dir>]
