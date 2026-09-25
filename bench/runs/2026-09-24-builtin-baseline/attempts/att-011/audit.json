@@ -1,0 +1,46 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-011-clone/dd0cb3f5-2618-4547-99f3-b79ef2871131/subagents/agent-a912ae79ef6749b47.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-011-clone/dd0cb3f5-2618-4547-99f3-b79ef2871131.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts src/utils/buffer.test.ts",
+    "mkdir -p /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone-work && cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone && cat > ../clone-work/t.ts <<'EOF'\nimport { Hono } from '../clone/src/hono'\nimport { validator } from '../clone/src/validator'\nconst mk = () => {\n  const app = new Hono()\n  app.post('/v', validator('form', (v) => v), async (c) => {\n    try { return c.json({ ok: await c.req.parseBody() }) } catch (e) { return c.json({ err: String(e) }) }\n  })\n  app.post('/f', async (c) => {\n    await c.req.formData()\n    try { return c.json({ ok: await c.req.parseBody() }) } catch (e) { return c.json({ err: String(e) }) }\n  })\n  app.post('/p', async (c) => {\n    const a = await c.req.parseBody()\n    const t = await c.req.text()\n    return c.json({ a, t })\n  })\n  return app\n}\nconst app = mk()\nconst fd = () => { const f = new FormData(); f.append('a', '1'); return f }\nconsole.log('multipart validator->parseBody', await (await app.request('/v', { method: 'POST', body: fd() })).text())\nconsole.log('urlenc validator->parseBody', await (await app.request('/v', { method: 'POST', body: new URLSearchParams({a:'1'}) })).text())\nconsole.log('formData->parseBody', await (await app.request('/f', { method: 'POST', body: fd() })).text())\nconsole.log('parseBody->text', await (await app.request('/p', { method: 'POST', body: new URLSearchParams({a:'1'}) })).text())\nEOF\n./node_modules/.bin/esbuild ../clone-work/t.ts --bundle --platform=node --format=esm --outfile=../clone-work/t.mjs --log-level=warning && node ../clone-work/t.mjs; git status --short",
+    "W=../clone-work && mkdir -p $W/base && git archive main src | tar -x -C $W/base && cat >> $W/t.ts <<'EOF'\napp.post('/fu', async (c) => { await c.req.formData(); try { return c.json({ ok: await c.req.parseBody() }) } catch (e) { return c.json({ err: String(e) }) } })\nconsole.log('urlenc formData->parseBody', await (await app.request('/fu', { method: 'POST', body: new URLSearchParams({a:'1',b:'2'}) })).text())\nconst raw = new Request('http://x/', { method: 'POST', body: fd() })\nEOF\nsed \"s#../clone/src#./base/src#\" $W/t.ts > $W/tb.ts && ./node_modules/.bin/esbuild $W/t.ts --bundle --platform=node --format=esm --outfile=$W/t.mjs --log-level=error && ./node_modules/.bin/esbuild $W/tb.ts --bundle --platform=node --format=esm --outfile=$W/tb.mjs --log-level=error && echo HEAD && node $W/t.mjs; echo BASE && node $W/tb.mjs; git status --short",
+    "W=../clone-work && cat > $W/u.ts <<'EOF'\nimport { Hono } from '../clone/src/hono'\nconst app = new Hono()\napp.post('/fu', async (c) => { await c.req.formData(); try { return c.json({ ok: await c.req.parseBody() }) } catch (e) { return c.json({ err: String(e) }) } })\napp.post('/twice', async (c) => { const a = await c.req.parseBody(); const b = await c.req.parseBody({all:true}); const f = await c.req.formData(); return c.json({ a, b, f: [...f.keys()] }) })\nconsole.log('urlenc formData->parseBody', await (await app.request('/fu', { method: 'POST', body: new URLSearchParams({a:'1',b:'2'}) })).text())\nconst f = new FormData(); f.append('a','1')\nconsole.log('twice', await (await app.request('/twice', { method: 'POST', body: f })).text())\nEOF\nsed \"s#../clone/src#./base/src#\" $W/u.ts > $W/ub.ts && for x in u ub; do ./node_modules/.bin/esbuild $W/$x.ts --bundle --platform=node --format=esm --outfile=$W/$x.mjs --log-level=error && echo $x && node $W/$x.mjs; done; git status --short",
+    "git diff main...review-head -- src/utils/body.test.ts src/validator/validator.test.ts"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src/utils/body.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src/validator/validator.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src/request.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src/request.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src/request.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src/middleware/method-override/index.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone/src"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts src/utils/buffer.test.ts",
+    "git diff main...review-head -- src/utils/body.test.ts src/validator/validator.test.ts"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-011"
+  ]
+}

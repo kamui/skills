@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-007",
+  "run_id": "2026-09-24-builtin-baseline",
+  "cell": {
+    "target": "q-soba-195",
+    "arm": "claude-builtin-sonnet-high",
+    "replicate": 1
+  },
+  "predecessor": "att-006",
+  "retry_reason": "harness-invalid: read and wrote /tmp/pr.diff outside the attempt's roots (method §3 item 4)",
+  "replacement_index": 1,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-25T05:08:02Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": "665e2e510c91fdd577b75239ee22b3aa51347cb1cb81dcd1adc791ef2e6b6bd9",
+    "prompt_header": "`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings`",
+    "prompt_registry_match": "claude-code 2.1.282 / session --effort high, model claude-sonnet-5",
+    "skill_tree": null,
+    "diff_commands": [
+      "git diff main...review-head --stat ",
+      "git diff main...review-head > /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-007/clone-work/diff.patch "
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "fe02fc5781cbf312fbf8ae92ada73bfcedcfa61bb4f3b17dfabdeca43e40ca13",
+    "tree_identity_after": "fe02fc5781cbf312fbf8ae92ada73bfcedcfa61bb4f3b17dfabdeca43e40ca13"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": null,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.196097,
+    "cost_bounds_usd": {
+      "low": 0.196097,
+      "high": 0.196097
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-25T05:08:02Z",
+    "payload_validated_at": "2026-09-25T05:08:24Z",
+    "completed_at": "2026-09-25T05:08:24Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "payload.json",
+    "sha256": "eb880f943af57eb47cc62cbb9975129fac64a6b400023f3cde6deecc11d66c6d"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-24-builtin-baseline/att-007.tar.gz",
+    "sha256": "f65e165b7aed3a28f3eaafed5c1da9f68ca8fa8566b39b503a7231504d036d0c",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 1b6e4a0dbfd487a7a0536538221aca4ba0181dead6cc0f0b5c72bdcbad7834d7; run policy sha256 caf9b5fa47d3de9d4dda126e6566c7866afe02c5ae041de1eea4377446b4ff25 (before path substitution)"
+  ]
+}
