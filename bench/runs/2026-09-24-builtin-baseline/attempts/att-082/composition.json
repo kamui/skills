@@ -1,0 +1,73 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix inference of procedure inputs after .use() middleware by making Overwrite replace non-object types instead of key-mapping them (commit 7dc04a7e; the supplied PR body is an unfilled template and adds no intent).",
+  "issue_fit": "Met - no originating issue exists, so issue alignment was unavailable; the commit message's stated outcomes are implemented and regression-tested.",
+  "coverage": "Complete merge-base diff of both changed files reviewed with Overwrite's call sites in procedureBuilder.ts and middleware.ts. Reviewer-executed: tsc --noEmit in packages/tests at the head, clean. A scratch type-level check outside the clone confirmed the old Overwrite mangles string but the new one yields string, unions still distribute, and never, undefined and any behave sensibly. The runtime suite was not run; the target is type-only."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [],
+ "prior_items": [],
+ "record": {
+  "repository": "trpc/trpc",
+  "requirements": [
+   {
+    "source": "commit-7dc04a7/\"Overwrite<string,string> resulted in a mangled object type\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "packages/server/src/core/internals/utils.ts:11-30 routes non-object TType to TWith; scratch check gave string for Overwrite<string,string>."
+   },
+   {
+    "source": "commit-7dc04a7/\"keys are only iterated and overwritten in the case of objects\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "utils.ts:11-20 key-wise mapping only when both TType and TWith extend object."
+   },
+   {
+    "source": "commit-7dc04a7/\"Overwrite<string, number> results in 'number'\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "utils.ts:21-30 fallback branches return TWith."
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "no diagnostics; run by the reviewer offline at the reviewed head"
+   }
+  ],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}
