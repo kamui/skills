@@ -1,0 +1,8 @@
+{
+  "arm": "codex",
+  "parse_status": "empty",
+  "native_verdict": "patch is correct",
+  "verdict_source": "rollout overall_correctness",
+  "items": [],
+  "parse_notes": []
+}

@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-040/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-37-29-01a0d711-95e8-7fc3-b5b4-e7702d8092c8.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-040/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-37-29-01a0d711-9660-7c12-b6ea-c684d1239666.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md; cat CONTRIBUTING.md",
+    "rg 'Overwrite<' packages/server/src; cat packages/server/src/core/internals/utils.ts; cat packages/server/src/core/internals/procedureBuilder.ts",
+    "./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "cat packages/server/src/core/middleware.ts | head -240; cat packages/server/src/core/initTRPC.ts | head -95; cat packages/tests/tsconfig.json"
+  ],
+  "workdirs": [
+    null,
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-040/clone/packages/tests",
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-040/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-040"
+  ]
+}

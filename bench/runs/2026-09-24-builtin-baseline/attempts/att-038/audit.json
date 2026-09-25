@@ -1,0 +1,34 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-038-clone/827db4ff-ad64-4a43-864a-80bc04262646/subagents/agent-a694190bf4432d71b.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-038-clone/827db4ff-ad64-4a43-864a-80bc04262646.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- . | head -300",
+    "grep -rn \"Overwrite<\" packages --include=*.ts --include=*.tsx -l | grep -v node_modules; grep -n \"Overwrite<\" -B3 -A3 packages/server/src/core/internals/utils.ts | head -5; cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | head -20",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/clone-work && cat > t.ts <<'EOF'\nimport type { Overwrite } from '/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/clone/packages/server/src/core/internals/utils';\ntype Eq<A,B> = [A] extends [B] ? [B] extends [A] ? true : false : false;\nconst a: Eq<Overwrite<{a:1}, never>, {a:1}> = true;\nconst b: Eq<Overwrite<string, never>, string> = true;\nconst c: Eq<Overwrite<{a:1}, unknown>, {}> = true;\nconst d: Eq<Overwrite<{a:1}, {b:2}|string>, never> = true;\nEOF\n/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/clone/packages/tests/node_modules/.bin/tsc --noEmit --strict t.ts 2>&1 | head"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/clone/packages"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- . "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-038"
+  ]
+}
