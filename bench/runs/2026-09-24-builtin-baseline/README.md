@@ -9,8 +9,8 @@ every chargeable step is in its [`ledger.md`](../../../docs/research/builtin-rev
 
 **Frozen 2026-09-24.** `manifest.json` carries `frozen_at`; `freeze_commit` names the commit that
 introduced it. Nothing in the manifest changes after the first dispatch except by an appended
-deviation naming the cells it invalidates (design §4). No scored cell has been dispatched at the
-freeze.
+deviation naming the cells it invalidates (design §4). No scored cell had been dispatched at the
+freeze; the pilot ran on 2026-09-25 (below).
 
 ## Files
 
@@ -19,7 +19,7 @@ freeze.
 | `manifest.json` | the frozen run: arms resolved with file hashes, the `review-code` tree, the pinned CLI versions and expected prompt hashes; the cohort with register versions and packet, diff and provisioning identities; the 80 planned cells; the caps; the sealed order; the rates used; the execution policy |
 | `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
-| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (none yet) |
+| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (the pilot's att-001 to att-004 so far) |
 | `scoring/<target>/mapping.v<M>.json` | blind adjudication per target (none yet) |
 | `results.v<M>.json` | `score.py` output (none yet) |
 
@@ -134,3 +134,48 @@ a test run ((i) runs pytest from its provisioned virtualenv; (n) runs scratch zs
 §10 left open at the freeze. Scoring waits for every planned attempt to be filed: the sealed
 registers are then opened with `seal.py` (`docs/research/builtin-review-benchmark-2026-09-24/sealed/README.md`)
 and `score.py` runs with `--opened`.
+
+## Pilot (2026-09-25)
+
+The first four cells of the sealed order, (i) and (n) under B and D, ran on 2026-09-25 between
+00:33Z and 00:36Z, two in flight, with the pinned `bin/` on `PATH`. Each finished in under a
+minute. The ledger has a row per attempt.
+
+| Attempt | Cell | Disposition as filed | Metered ($) | What the reviewer did |
+| --- | --- | --- | --- | --- |
+| att-001 | (i) / B / 1 | valid completed | 0.19 | one `git diff`; 7 items |
+| att-002 | (i) / D / 1 | stopped: normalization exit 1 | 0.26 list | read the change, the clone and its own dependency cache's urllib3 sources; 3 findings, verdict `patch is incorrect` |
+| att-003 | (n) / B / 1 | valid completed | 0.08 | one `git diff`; 4 items |
+| att-004 | (n) / D / 1 | stopped: normalization exit 1 | 0.20 list | ran offline zsh checks of the completion script; no finding, verdict `patch is correct` |
+
+**Focused execution.** The Codex arm ran commands under the target's allowance on (n), so the D
+adapter's execution path works on a suite target. The Sonnet built-in ran nothing beyond one
+`git diff` on either target, though its adapter allows `Bash`; that is the arm's own choice and
+is recorded, not repaired.
+
+**Harness defects.** Both Codex reviews ran to completion and exited 0, and both were stopped by
+post-processing. `normalize_review.py` knew only Codex's single-finding marker, `Review comment:`.
+With several findings Codex CLI 0.156.1 writes `Full review comments:`, and with none it prints its
+summary alone; both came back `unresolved`, which `dispatch.sh` turns into a stop. The read audit
+also read the slash after a glob, as in `python*/site-packages/...`, as the start of an absolute
+path and flagged att-002's reads of its own cache. The toy fixture had one finding per review, so
+none of these paths had run before. Commit `0200519` fixes all three with tests, and the manifest
+records the move of `bench/tools` as a deviation that invalidates nothing: the change touches no
+reviewer input or execution condition, and att-001 and att-003 re-audit and re-normalize
+identically. Re-processed into scratch files with the fixed tools, att-002 parses to three items
+with no audit violation, and att-004 to an empty review.
+
+**Open decision: how att-002 and att-004 count.** Their filed records still say `stopped`. The
+method reruns a cell, consuming a replacement, when a harness repair changes inputs or execution
+conditions (method §3); this repair changed neither. Two readings:
+
+1. **Re-file both from their own outputs** with the fixed tools, recording the superseded stop and
+   that validation came after the wrapper's end. No replacement is used and no reviewer reruns.
+   The toy run's re-filing with `file_attempt.py --replay` is the precedent, though it did not
+   supersede a stop.
+2. **Replace both** with `run_cell.py --replace --stopped-by-harness`, keeping the stopped records.
+   That spends two of the run's four replacements on a harness defect in the pilot and about $0.46
+   of list-price quota, and discards two complete reviews.
+
+The sealed order does not continue until this is decided and written as a deviation.
+
