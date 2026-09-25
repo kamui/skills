@@ -20,8 +20,8 @@ roots that was made before ``timing.json``'s dispatch instant may lead out of th
 venv's interpreter does), or a command that runs a
 network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
 ``git fetch``/``pull``/``push``/``clone``; ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
-that reaches a registry; ``go`` unless the command sets ``GOPROXY=off`` and ``GOTOOLCHAIN=local``
-before it), is a violation. Every relative path with a ``..`` segment, or
+that reaches a registry; ``go`` unless it runs with ``GOPROXY=off`` and ``GOTOOLCHAIN=local``, from
+its own prefix assignments or an earlier ``export``), is a violation. Every relative path with a ``..`` segment, or
 with a dot-led glob segment such as ``.*`` that bash can expand to ``..`` (a whole word, or a run
 inside one after whitespace, a redirection, ``=``, ``:``, a quote or a bracket), and every
 relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the clone, is resolved
@@ -55,15 +55,18 @@ import shlex
 import sys
 
 # A tool counts only in command position: at the start, after a separator, a ``do``/``then``-style
-# keyword or a wrapper such as ``env``/``xargs``/``timeout N``, or opening a ``-c`` script, past any
-# ``NAME=value`` assignments.
-# A shell given a script: ``sh -c``, ``bash -lc``, ``zsh -fc``, ``bash --norc -c``.
-SHELL_C = r"\b(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-[A-Za-z]*c[A-Za-z]*\s+"
+# keyword or a wrapper such as ``env``/``xargs``/``timeout N``, or opening a shell's ``-c`` script,
+# past any ``NAME=value`` assignments.
+SHELL_SCRIPT = r"\b(?:ba|z|da|k)?sh\s+(?:[^\s;&|]+\s+)*?-[A-Za-z]*c[A-Za-z]*\s+"
+VALUE = r"(?:\$\([^()]*\)|[^\s;&|()])*"
+ASSIGNMENT = re.compile(r"([A-Za-z_]\w*)=(" + VALUE + ")")
 NETWORK = re.compile(
-    r"(?:^|[;&|(){}\n`]|\$\(|" + SHELL_C + r"['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
-    r"\s*(?P<assign>(?:[A-Za-z_]\w*=[^\s;&|()]*\s+)*)(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
+    r"(?:^|[;&|(){}\n`]|\$\(|" + SHELL_SCRIPT + r"['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
+    r"\s*(?P<assign>(?:[A-Za-z_]\w*=" + VALUE + r"\s+)*)(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
     r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>\S*)"
     r"|git\s+(?:fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
+EXPORTS = re.compile(r"\bexport\s+((?:[A-Za-z_]\w*=" + VALUE + r"[ \t]*)+)"
+                     r"|\b(?:unset(?:\s+-[fv])?|export\s+-n)\s+((?:[A-Za-z_]\w*[ \t]*)+)")
 # The package managers reach a registry only through these subcommands; the rest (a build, a script
 # run, ``--version``) work offline, as target (o)'s allowance uses pnpm.
 FETCHING = {"npm": {"install", "i", "add", "ci", "update", "upgrade", "up", "dlx", "exec", "x", "fetch", "publish",
@@ -92,14 +95,22 @@ def unquoted(cmd: str) -> str:
     """``cmd`` with quoted text masked, since a quoted pattern or message is data (``rg "a|go b"``),
     except a script handed to a shell's ``-c`` and a ``$(...)`` inside double quotes, which run.
     Every character keeps its position, so a match in the result indexes the original."""
-    out, i, quote, depth = [], 0, None, 0
+    out, i, quote, script, depth = [], 0, None, None, 0
     while i < len(cmd):
         c = cmd[i]
-        if quote is None:
+        if script:
+            if c == "\\" and script == '"':
+                out.append(cmd[i:i + 2]); i += 2; continue
+            script = None if c == script else script
+            out.append(c)
+        elif quote is None:
             if c == "\\":
                 out.append(cmd[i:i + 2]); i += 2; continue
-            if c in "'\"" and not re.search(SHELL_C + "$", cmd[:i]):
-                quote = c
+            if c in "'\"":
+                if re.search(SHELL_SCRIPT + "$", cmd[:i]):
+                    script = c
+                else:
+                    quote = c
             out.append(c)
         elif c == quote and depth == 0 and not (quote == '"' and cmd[i - 1] == "\\"):
             quote = None
@@ -116,30 +127,34 @@ def unquoted(cmd: str) -> str:
     return "".join(out)
 
 
-def go_env(text: str, m) -> dict:
-    """The environment a ``go`` match runs with: variables exported earlier in ``text`` and not
-    unset since, then the match's own prefix assignments, which reach that one command only."""
+def go_env(text: str, masked: str, m) -> dict:
+    """The environment a ``go`` match runs with: variables exported earlier and not unset since,
+    then the match's own prefix assignments, which reach that one command only. ``masked`` is
+    ``unquoted(text)``, so an ``export`` inside quoted text does not count; values come from ``text``."""
     env = {}
-    assignment = re.compile(r"([A-Za-z_]\w*)=([^\s;&|()]*)")
-    for e in re.finditer(r"\bexport\s+((?:[A-Za-z_]\w*=[^\s;&|()]*[ \t]*)+)|\bunset\s+((?:[A-Za-z_]\w*[ \t]*)+)",
-                         text[:m.start()]):
+
+    def values(start, end):
+        for a in ASSIGNMENT.finditer(masked, start, end):
+            yield a.group(1), text[a.start(2):a.end(2)].strip("'\"")
+    for e in EXPORTS.finditer(masked, 0, m.start()):
         if e.group(1):
-            env.update(assignment.findall(e.group(1)))
+            env.update(values(e.start(1), e.end(1)))
         else:
             for name in e.group(2).split():
                 env.pop(name, None)
-    env.update(assignment.findall(text[m.start("assign"):m.end("assign")]))
-    return {k: v.strip("'\"") for k, v in env.items()}
+    env.update(values(m.start("assign"), m.end("assign")))
+    return env
 
 
 def network_use(cmd: str) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when it runs with ``GOPROXY=off``
     and ``GOTOOLCHAIN=local``, as the Go targets' allowances do."""
-    text = commands_only(cmd)
-    for m in NETWORK.finditer(unquoted(text)):
+    text = commands_only(cmd).replace("\\\n", "  ")
+    masked = unquoted(text)
+    for m in NETWORK.finditer(masked):
         tool, sub = m.group("tool"), m.group("sub")
         if tool == "go":
-            env = go_env(text, m)
+            env = go_env(text, masked, m)
             if env.get("GOPROXY") == "off" and env.get("GOTOOLCHAIN") == "local":
                 continue
         elif tool in ("npm", "pnpm", "yarn", "pip", "pip3"):
