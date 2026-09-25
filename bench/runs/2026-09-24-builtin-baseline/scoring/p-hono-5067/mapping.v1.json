@@ -1,0 +1,349 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-24-builtin-baseline",
+  "target": "p-hono-5067",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "d0fe3517872a2ba6c5a0d564b1f4e19f31c6407bad5c0f22e2b70fe51e6b0357"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 53eef5048a2f1cd0c80bb1eda8b30dae4c9fa6cda7181cd4611bee2c5973f5d4; session 3663c2d6-c732-45ee-9e82-14ddad33c68f; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (8 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-25T20:52:50Z",
+  "attempts": [
+    {
+      "attempt_id": "att-010",
+      "blind_token": "blind-35ec92",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'When a HonoRequest already has formData cached but not arrayBuffer, arrayBuffer() re-serializes the cached FormData with a new boundary, which no longer matches the original Content-Type header'; 'multipart requests throw `TypeError: Failed to parse body as FormData.` Urlencoded requests return garbage keys'. Exactly GT-p1's mechanism and both manifestations, matching the register's demonstration. Fix line is '—' and the text proposes no change, so fix_sufficiency is absent."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'overwrites request.bodyCache.formData with a promise cast to FormData'; 'if the body is malformed, a rejected promise is cached, so later c.req.formData() calls see the same rejection'. True that a promise is stored (body.ts:130), but at the merge-base HonoRequest.#cachedBody also stores the raw.formData() promise (src/request.ts:238), so a malformed body caches a rejection there too; register non_defects rule the Promise-in-cache cast as type hygiene outside the GT-p1 order. The 'goes beyond what the fix needs' remark is a design opinion. Below threshold; the real overwrite harm is GT-p1, covered in item 1."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'lack test coverage for the branches added (codecov reports 76% patch coverage, with 4 lines uncovered)'; 'That is why the formData-then-parseBody regression went unnoticed.' Test-coverage observation; register non_defects rule Codecov patch coverage non-material. It points at item 1's regression but asserts no new defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-011",
+      "blind_token": "blind-8e7416",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": "blind-8e7416:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'parseFormData now reads the body with `request.arrayBuffer()` and ignores an existing `bodyCache.formData`. If the handler has already called `c.req.formData()`, HonoRequest rebuilds the arrayBuffer by re-serializing that FormData, which gets a new undici boundary ... Multipart parsing therefore throws'; 'At HEAD this throws `TypeError: Failed to parse body as FormData.` On main it returned `{a:'1'}`.' Recovers GT-p1 (multipart manifestation). Fix '—' and no concrete change is proposed, so absent."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": "blind-8e7416:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'The same cache path breaks urlencoded bodies without any error ... parseBody returns garbage keys'; 'At HEAD the result is `{\"------formdata-undici-…Content-Disposition: form-data; name\": ...}`. On main it is `{a:'1', b:'2'}`.' This is GT-p1's urlencoded manifestation of the same mechanism as item 1, so it is the same claim (g1). No fix proposed: absent."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'validator('form', …) runs, then the handler calls `c.req.parseBody()`. The multipart body ... is parsed a second time from the cached arrayBuffer, and the validator's cached FormData is replaced with a new object. That costs extra CPU and memory'. True (the validator caches arrayBuffer via c.req.arrayBuffer(), so parseBody re-parses and overwrites body.ts:130), but the register non_defects confirm validator->parseBody returns correct fields; the cost and object-identity change are inconsequential. Efficiency remark, below threshold."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "false-finding",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'A 50 MB multipart upload handled with `c.req.parseBody()` now holds about 50 MB of arrayBuffer plus about 50 MB of File data in bodyCache ... peak memory roughly doubles on upload endpoints.' Register non_defects: arrayBuffer() instead of formData() 'doubles memory' is not a defect: 'Request.formData() also buffers the whole body ... No demonstrated performance consequence.' The 'native streaming request.formData()' premise is also wrong: formData() buffers the full body. Unsupported material consequence."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'When parsing fails, a rejected promise stays cached, and the validator awaits it outside its try/catch'; 'client gets a raw TypeError and a 500 instead of the 400'. The mechanics are real (validator.ts:115-116 awaits bodyCache.formData outside the try), but the merge-base behaves identically: base parseBody called c.req.formData(), and #cachedBody stored the rejected raw.formData() promise in bodyCache.formData (src/request.ts:238), which a later validator also awaited outside the try. It also needs the parseBody error to be swallowed first. Not introduced by this PR; register rules the promise-in-cache cast as hygiene. Below threshold."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'method-override still uses case-sensitive `startsWith('multipart/form-data')` and `startsWith('application/x-www-form-urlencoded')` checks'. Accurate (src/middleware/method-override/index.ts:74,92), but that file is untouched by the PR and behaves identically at the merge-base, so this is a pre-existing gap/scope suggestion, not a defect introduced by the change. Non-material for this PR."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'Three different ways of matching the media type were added ... The validator's multipart regex also still rejects valid headers that parseBody accepts' e.g. 'multipart/form-data; charset=utf-8; boundary=x'. The duplication is hygiene. The validator/parseBody divergence for these lowercase headers is pre-existing: base parseBody startsWith accepted them and the base multipartRegex rejected them; the PR only added /i. Non-material."
+        },
+        {
+          "item_id": "item-7",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The `if (formData)` check and the `return {} as T` fallback are now dead code, because `bufferToFormData` always resolves to a FormData or throws.' True (body.ts:134-138), and it was equally dead at the base where formData() always resolved to FormData. Dead-code/coverage hygiene; non-material."
+        },
+        {
+          "item_id": "item-8",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'parseFormData repeats the `request instanceof HonoRequest ? request.raw.headers : request.headers` lookup'. Accurate duplication (body.ts:101 and 125); cleanup suggestion, non-material."
+        },
+        {
+          "item_id": "item-9",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The test changes do not cover calling `c.req.formData()` ... before `parseBody()` on a HonoRequest.' Test-coverage observation pointing at items 1-2; no new defect claim. Non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-012",
+      "blind_token": "blind-d53fdf",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'If middleware calls `c.req.formData()` before a handler calls `c.req.parseBody()`, `HonoRequest.arrayBuffer()` reconstructs bytes from the cached FormData ... newly generated multipart boundary ... multipart requests throw and URL-encoded requests return corrupted field names and values'; 'Check and reuse `bodyCache.formData` before taking the buffer conversion path.' Full GT-p1 mechanism and both manifestations. The proposed change is the register's sufficient reuse-cached-FormData approach, and it preserves the other orders."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "patch is incorrect",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-013",
+      "blind_token": "blind-f6f870",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quotes: 'A handler awaits `c.req.formData()` on a multipart request and then calls `c.req.parseBody()`'; '`parseFormData` now reads `arrayBuffer()`, which for a formData-only cache re-serializes the FormData with a new boundary ... rejects with `TypeError`'. Recovers GT-p1. Fix: 'reuse the cached form data when the request is a HonoRequest, for example by calling `request.formData()`, and normalize the media type only when parsing raw bytes.' Taken as written (call request.formData() for every HonoRequest), this fixes formData()->parseBody. But it routes text()/arrayBuffer()->parseBody back through #cachedBody's `new Response(text).formData()` (src/request.ts:234), which has no form Content-Type. Those orders fail again as at the merge-base (register non_defects note they work at head and the required outcome says they must keep working). A HonoRequest first read would also depend on the runtime's own mixed-case handling. So the fix is partial."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-047",
+      "blind_token": "blind-4aebae",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'On a HonoRequest whose bodyCache already holds `formData`, `#cachedBody('arrayBuffer')` rebuilds the body with `new Response(formData).arrayBuffer()`, which writes a new multipart body with a new boundary, and then parses it using the original Content-Type header'; multipart 'throws ... 500'; urlencoded returns garbled key. Exact GT-p1 mechanism with both manifestations. Fix '—'; the item only notes 'on main the cached FormData was returned directly' and proposes no change, so absent."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The fix is at the wrong level: the platform's `Request.formData()` already matches the media type case-insensitively ... Keeping the original `request.formData()` call ... would have fixed issue #5060'. A design/approach remark about how the PR could have been written; it asserts no new defect beyond item 1. Whether every runtime's formData() is case-insensitive is not settled here (and keeping request.formData() would regress the text()/arrayBuffer()->parseBody orders that work at head, per register non_defects), but as an opinion it is below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'every parseBody call re-parses the buffered body into a fresh FormData and overwrites the cache'; 'gives new File objects, so object identity differs between calls. If bufferToFormData rejects, the rejected promise stays in the cache'. Re-parsing on a repeated parseBody is true (arrayBuffer cached, body.ts:126-130) but the results are correct; object-identity change is inconsequential. Rejection caching also happens at the merge-base via #cachedBody (src/request.ts:238). The promise-cast is ruled type hygiene in register non_defects. Below threshold."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "false-finding",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'A 100 MB multipart file upload parsed with `c.req.parseBody()` now holds about 200 MB ... roughly doubling peak memory on upload endpoints compared with main.' Register non_defects: 'Reading arrayBuffer() instead of formData() doubles memory or breaks streaming' — 'Request.formData() also buffers the whole body; on a first read the raw body is consumed exactly once, as before. No demonstrated performance consequence.' The validator('form') path at the merge-base already caches both arrayBuffer and formData (validator.ts:118-120). The quantified peak-memory doubling versus main is unsupported, a material consequence attached to a true caching fact."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: '`Content-Type: application/x-www-form-urlencoded ; charset=UTF-8` is parsed by `c.req.parseBody()` but skipped by `validator('form')`'; '`Multipart/Form-Data; charset=utf-8; boundary=abc` is also skipped'. The parseBody/validator divergence is pre-existing: at main parseBody used startsWith('application/x-www-form-urlencoded') / startsWith('multipart/form-data'), which already accepted these lowercase headers, while the unchanged validator regexes (only /i added) already rejected them. Not introduced by this PR; an accurate consistency observation below the threshold."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'Media-type normalization is now written three different ways ... There is no shared helper.' Consequence 'Maintenance cost and drift'. Refactoring/hygiene suggestion; non-material."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'No test covers the new HonoRequest caching branch in parseFormData, or parseBody after an earlier `c.req.formData()`'. Test-coverage observation (Codecov non_defect ruling: coverage hygiene is non-material); references item 1's regression without making a new claim."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-048",
+      "blind_token": "blind-12a0a0",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'If middleware calls `c.req.formData()` before `c.req.parseBody()`, the new array-buffer path reconstructs the cached FormData through `new Response(body)` ... generates a new boundary ... parsing throws'; 'URL-encoded requests are also reconstructed as multipart and then parsed with the wrong content type'; claim 'Reuse cached FormData before reading the array buffer'. Names the GT-p1 mechanism (src/utils/body.ts:124-132 arrayBuffer() + #cachedBody re-serialization at src/request.ts:234) and both multipart and urlencoded manifestations. Proposed change (reuse cached FormData before the buffer path, as the base did) is the upstream approach the register names as sufficient; it also prevents overwriting bodyCache.formData and leaves first-read/text/arrayBuffer orders on the arrayBuffer path."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "patch is incorrect",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-049",
+      "blind_token": "blind-476a1e",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'A handler or middleware awaits `c.req.formData()` and then calls `c.req.parseBody()` on a multipart/form-data request'; 'arrayBuffer() re-serializes the cached FormData with a new boundary that no longer matches the Content-Type header'; Fix: 'when the request is a HonoRequest with `bodyCache.formData` set, await and use that value. Otherwise read `arrayBuffer()`, call `bufferToFormData` and cache the result'. Recovers GT-p1 (multipart manifestation). The fix reuses the cached FormData, which also restores urlencoded and avoids overwriting the cache, while keeping first-read/text/arrayBuffer orders on the buffer path with media-type normalization: this is the register's sufficient upstream approach."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-050",
+      "blind_token": "blind-cd00cf",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'A handler calls `await c.req.formData()` and then `await c.req.parseBody()`. bodyCache holds only `formData`. parseFormData calls request.arrayBuffer(), which goes through #cachedBody and returns `new Response(formData).arrayBuffer()`. That body carries a freshly generated boundary ... throws a TypeError'; 'Fix: check `request.bodyCache.formData` first, as validator.ts does.' Recovers GT-p1 with the exact mechanism. The proposed fix (reuse cached FormData first) is the register's sufficient approach and also restores urlencoded and stops the cache overwrite. Caveat: the side remark 'The same path breaks a second parseBody() after the validator has cached formData' is wrong, since the validator also caches arrayBuffer (validator.ts:118) so parseBody gets the original bytes (register non_defect). That extra sentence does not cancel the recovery."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'If parsing rejects because the multipart body is malformed, the rejected promise stays cached. Later c.req.formData() or validator('form') calls await the same rejection ... surfaces raw and not as the 400'. At the merge-base, parseBody -> c.req.formData() -> #cachedBody already stored the rejected raw.formData() promise in bodyCache.formData (src/request.ts:238), and the validator awaited it outside its try, so the behaviour is unchanged. The cast is type hygiene per register non_defects. Below threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'parseBody now buffers the whole body via arrayBuffer() and then re-wraps it in a Response ... peak memory is higher than with the native formData()'; 'the PR removed that mock from the dot-notation test'; 'A cheaper fix would normalize only the media-type check'. This is mainly a scope/design remark. The mock removal is true (body.test.ts diff) but harmless. The unquantified memory remark is covered by the register non_defect ('No demonstrated performance consequence') and is not asserted as material harm. Non-material."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'method-override still uses case-sensitive `startsWith(...)` checks, so the same class of bug remains there.' Accurate (method-override/index.ts:74,92), but the file is untouched and behaves the same at the merge-base. It is a pre-existing gap or scope suggestion, not a defect this PR introduced. Non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    }
+  ]
+}

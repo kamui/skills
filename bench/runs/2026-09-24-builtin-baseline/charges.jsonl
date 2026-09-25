@@ -19,3 +19,7 @@
 {"at": "2026-09-25T20:46:18Z", "step": "ledger G6: grading n-ripgrep-2957 (claude-opus-5-5 at high)", "usd": 0.64279, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "0cdfe2fd"}
 {"at": "2026-09-25T20:48:24Z", "step": "ledger G8: grading n-ripgrep-2957 again after G6's read-audit violation (claude-opus-5-5 at high)", "usd": 0.557745, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "7733bf50"}
 {"at": "2026-09-25T20:49:28Z", "step": "ledger G7: grading i-requests-6667 again after G1's malformed verdicts (claude-opus-5-5 at high)", "usd": 0.990657, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "4aa1d91a"}
+{"at": "2026-09-25T20:52:48Z", "step": "ledger G9: grading o-astro-16079 (claude-opus-5-5 at high)", "usd": 0.621727, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "d6d7f9d4"}
+{"at": "2026-09-25T20:52:50Z", "step": "ledger G10: grading p-hono-5067 (claude-opus-5-5 at high)", "usd": 0.644961, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "3663c2d6"}
+{"at": "2026-09-25T20:54:07Z", "step": "ledger G11: grading q-soba-195 (claude-opus-5-5 at high)", "usd": 0.583144, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "7f0fc6b3"}
+{"at": "2026-09-25T20:54:51Z", "step": "ledger G12: grading r-base-ui-5460 (claude-opus-5-5 at high)", "usd": 0.621193, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "95be9165"}
