@@ -1,0 +1,4 @@
+codex-cli 0.156.1
+model=<default> effort=<default>
+stopped: normalization exit 1: unresolved: the native input lacks the arm's expected review markers or has a region that did not parse; adjudication required 
+exit=0

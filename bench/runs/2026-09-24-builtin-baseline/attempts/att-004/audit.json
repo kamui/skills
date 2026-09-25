@@ -1,0 +1,28 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-004/home/.codex/sessions/2026/09/24/rollout-2026-09-24T20-35-11-01a0d5fc-d2ac-78c3-b92e-ff357f1b31f6.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-004/home/.codex/sessions/2026/09/24/rollout-2026-09-24T20-35-11-01a0d5fc-d30d-7e61-975e-9794b5729ae0.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md; sed -n '1,90p' crates/core/flags/complete/rg.zsh; tail -65 crates/core/flags/complete/rg.zsh",
+    "sed -n '295,370p' crates/core/flags/complete/rg.zsh; cat ci/test-complete | head -110; git status --short; zsh -fc 'autoload -Uz compinit; compinit -D; source crates/core/flags/complete/rg.zsh; print -r -- $_comps[rg]; print -r -- ${+functions[_rg]}'",
+    "zsh -fc 'autoload -Uz compinit; compinit -D; functions[_rg]=\"$(< crates/core/flags/complete/rg.zsh)\"; _RG_COMPLETE_LIST_ARGS=1; output=$(_rg); print -r -- \"autoload-body option lines: ${#${(f)output}}\"'; zsh -fc '_RG_COMPLETE_LIST_ARGS=1; output=$(source crates/core/flags/complete/rg.zsh); print -r -- \"standalone option lines: ${#${(f)output}}\"'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-004/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-004"
+  ]
+}

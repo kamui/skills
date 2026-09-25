@@ -315,7 +315,10 @@ The four items open at the first draft, and how each closed:
    therefore carries this demonstration; if either arm cannot run the target's allowed command,
    the record shows it and the deviation is written before the sealed order continues. The
    shakedown's clean-home Codex probes confirmed the fixture defect statically, and the pinned D
-   adapter honoured `workspace-write` there (§9).
+   adapter honoured `workspace-write` there (§9). The pilot ran on 2026-09-25: D ran offline zsh
+   checks under (n)'s allowance, and B ran nothing beyond one `git diff` on either target. It also
+   surfaced three harness defects in the Codex post-processing, fixed in `0200519`; the run
+   README's pilot section has the details and the open decision on the two affected attempts.
 3. **The run manifest.** Written and frozen at
    [`bench/runs/2026-09-24-builtin-baseline/manifest.json`](../../../bench/runs/2026-09-24-builtin-baseline/manifest.json):
    arms with file hashes, the `review-code` tree `c3c53da5…`, the CLI versions and prompt hashes
