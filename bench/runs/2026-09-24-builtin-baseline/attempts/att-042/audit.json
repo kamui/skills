@@ -1,0 +1,35 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-042/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-042-clone/90dfc155-616f-45db-b3c0-151dc94487df/subagents/agent-a286fd6cca2502ae0.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-042/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-042-clone/90dfc155-616f-45db-b3c0-151dc94487df.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head > /tmp/pr_diff.txt && wc -l /tmp/pr_diff.txt && git log --oneline -5",
+    "sed -n 545,570p internal/backup_test.go; grep -n \"job\\b\" internal/*.go | head -20; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-042/clone-cache; GOMODCACHE=$C/gomodcache GOCACHE=$C/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go vet ./internal/ 2>&1 | tail"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/tmp/pr_diff.txt"
+  ],
+  "diff_commands": [
+    "git diff main...review-head > /tmp/pr_diff.txt "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [
+    "path outside allowed roots in command: /tmp/pr_diff.txt",
+    "file tool read outside allowed roots: /tmp/pr_diff.txt"
+  ],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-042/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-042"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-053/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-053-clone/9e04887b-c9e8-4d4a-8d2d-8fdfd12f485d/subagents/agent-a0fd2f00f45fc60f4.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-053/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-053-clone/9e04887b-c9e8-4d4a-8d2d-8fdfd12f485d.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx | head -300",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-053/clone/packages/react/src && cat internals/useValueChanged.ts*; grep -n \"initialValue\\|useRegisterFieldControl\" -r field/useRegisterFieldControl* internals/field-register* 2>/dev/null | head -30"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-053/clone/packages/react/src/field/control/FieldControl.tsx"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-053/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-053"
+  ]
+}

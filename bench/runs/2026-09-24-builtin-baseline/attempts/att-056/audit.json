@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-056-clone/293be1d8-a7af-44e4-97bf-f1607607ae08/subagents/agent-abcbfb0d6dca77797.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-056-clone/293be1d8-a7af-44e4-97bf-f1607607ae08.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git status && echo ---BRANCHES--- && git branch -a && echo ---DIFF--- && git diff main...review-head -- . | head -500",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056/clone-cache && f=$(ls venv/lib/python*/site-packages/urllib3/util/ssl_.py) && grep -n \"load_cert_chain\\|ca_certs or\\|default_ssl_context\\|verify_mode\\|check_hostname\" $f venv/lib/python*/site-packages/urllib3/connection.py | head -40"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056/clone/src/requests"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- . "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-056"
+  ]
+}

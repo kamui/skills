@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-051/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-47-16-01a0d71a-8b8e-7351-96c0-bde22b7e8e42.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-051/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-47-16-01a0d71a-8be1-7521-8f24-943fdd4c2d97.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "cat .agents/skills/base-ui-review/SKILL.md; cat CONTRIBUTING.md; git diff main...review-head; find .. -name AGENTS.override.md -o -name AGENTS.md",
+    "cat AGENTS.md; cat packages/react/src/field/control/FieldControl.tsx; cat packages/react/src/internals/useValueChanged.ts; cat packages/react/src/field/useRegisterFieldControl.ts; cat packages/react/src/field/root/FieldRoot.tsx",
+    "cat packages/react/src/internals/field-register-control/{useRegisterFieldControl,useFieldControlRegistration}.ts; cat packages/react/src/field/root/useFieldValidation.ts; sed -n '200,360p' packages/react/src/field/control/FieldControl.test.tsx",
+    "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+    "ls -ld /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-051/clone-work; nl -ba packages/react/src/field/control/FieldControl.tsx | sed -n '102,163p'; git status --short"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-051/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-051"
+  ]
+}

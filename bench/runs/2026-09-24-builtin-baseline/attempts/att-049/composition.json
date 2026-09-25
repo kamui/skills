@@ -1,0 +1,125 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "issue-5060"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [
+      "honojs/hono#5060"
+    ],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Make parseBody() and validator() match Content-Type media types case-insensitively (issue #5060) while leaving parameters such as multipart boundaries untouched.",
+    "issue_fit": "Partial: mixed-case JSON, urlencoded and multipart are now accepted with boundaries intact, but the switch to arrayBuffer() in parseBody's form path regresses parseBody after an earlier c.req.formData().",
+    "coverage": "Complete merge-base diff (6 files) read; HonoRequest body caching and the validator form path inspected. Reviewer-executed at the head: vitest on body, buffer and validator tests, 106 passed and 1 skipped; scratch esbuild probe comparing main and head, which reproduced the regression. Unused: Deno, Bun, Workers and Lambda runtime suites (unavailable offline); the Codecov and benchmark comments were not used. The change description and originating issue #5060 came from the caller-supplied packet, not a forge fetch."
+  },
+  "findings": [
+    {
+      "id": "utils/body/parsebody-after-formdata-regression",
+      "title": "Reuse cached FormData in parseBody instead of re-serializing it",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A handler or middleware awaits `c.req.formData()` and then calls `c.req.parseBody()` on a multipart/form-data request.",
+      "impact": "parseBody now rejects with `TypeError: Failed to parse body as FormData.` because arrayBuffer() re-serializes the cached FormData with a new boundary that no longer matches the Content-Type header; the base returned the fields.",
+      "change": "In `parseFormData` in `src/utils/body.ts`, when the request is a HonoRequest with `bodyCache.formData` set, await and use that value. Otherwise read `arrayBuffer()`, call `bufferToFormData` and cache the result, as the form case in `src/validator/validator.ts` does.",
+      "anchor": {
+        "type": "line",
+        "path": "src/utils/body.ts",
+        "start_line": 125,
+        "end_line": 131,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "issue-5060/expected-behavior/\"case-insensitive for the media type portion\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:104-106 lowercases the media type; src/validator/validator.ts:24-26 adds the i flag; new tests pass"
+      },
+      {
+        "source": "issue-5060/expected-behavior/\"multipart boundaries should remain intact\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/buffer.ts:112 lowercases only the text before the first semicolon; buffer.test.ts mixed-case boundary test passes"
+      },
+      {
+        "source": "issue-5060/suggested-tests",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "body.test.ts, buffer.test.ts and validator.test.ts add mixed-case urlencoded, multipart and JSON cases; 106 tests passed at the head"
+      }
+    ],
+    "files": [
+      {
+        "path": "src/utils/body.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/body.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "Ran once offline at the head: 3 files passed, 106 tests passed, 1 skipped"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "utils/body/parsebody-after-formdata-regression",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-049/clone-work/rc.fDwkal/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-049/clone-work/rc.fDwkal/initial/accounting.json",
+          "operation": "Agent general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "honojs/hono"
+  }
+}

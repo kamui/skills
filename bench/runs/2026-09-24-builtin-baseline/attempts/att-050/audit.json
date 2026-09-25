@@ -1,0 +1,36 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-050/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-050-clone/f8337b77-ed44-4353-a95b-154566b56abc/subagents/agent-a93cda0f42b43629c.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-050/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-050-clone/f8337b77-ed44-4353-a95b-154566b56abc.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "sed -n 90,150p src/utils/body.ts; grep -n \"bodyCache\\|cachedBody\\|formData\" src/request.ts | head -40; sed -n 85,125p src/validator/validator.ts",
+    "sed -n 215,240p src/request.ts; sed -n 470,500p src/request.ts",
+    "grep -rnE \"startsWith\\(['\\\"](application|multipart|text)/|includes\\(['\\\"]application/|multipart/form-data\" src --include=*.ts --exclude=*.test.ts | grep -v \"^src/utils/body.ts\\|^src/validator/validator.ts\" | head -20"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-050/clone/src"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-050/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-050"
+  ]
+}

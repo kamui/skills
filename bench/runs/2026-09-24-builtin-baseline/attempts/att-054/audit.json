@@ -1,0 +1,68 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-054-clone/e7b99418-6750-4b14-bd15-08d6a9677919/subagents/agent-adff4a20ca01557e1.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-054-clone/e7b99418-6750-4b14-bd15-08d6a9677919.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx && cat packages/react/src/field/control/FieldControl.tsx",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && cat internals/useValueChanged.ts; cat internals/field-register-control/useRegisterFieldControl.ts; grep -n \"useValueChanged\" -r --include=*.tsx . | grep -v test | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && ls internals/field-root-context internals/ field/root; grep -rn \"change(\\|const change\\|markedDirtyRef\\|initialValue\" internals/field* field/root | grep -v test | head -40",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && cat internals/field-register-control/useFieldControlRegistration.ts; sed -n 50,140p field/root/FieldRoot.tsx; sed -n 80,360p field/root/useFieldValidation.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && grep -rn \"useValueChanged(\" --include=*.tsx --include=*.ts . | grep -v test; grep -n -A15 \"useValueChanged(\" number-field/root/NumberFieldRoot.tsx; grep -n -B3 -A20 \"clearErrors\" form/Form.tsx | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && grep -rn \"useValueChanged(\" . | grep -v test; sed -n 100,145p form/Form.tsx",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && sed -n 60,100p form/Form.tsx; sed -n 60,200p number-field/input/NumberFieldInput.tsx",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && grep -rn -A14 \"useValueChanged(\" select/root/SelectRoot.tsx checkbox/root/CheckboxRoot.tsx otp-field/root/OTPFieldRoot.tsx | head -70",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx",
+    "sed -n 200,260p packages/react/src/field/control/FieldControl.test.tsx; git grep -n \"9023\" main -- packages | head",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone; mkdir -p $W && cd $W && ln -sfn $C/packages/react/node_modules node_modules && ls $C/packages/utils/src | head -50 && cat > vitest.config.mts <<EOF\nimport * as path from 'node:path';\nconst C = '$C';\nconst names = ['field','form'];\nconst alias: any[] = [\n  { find: /^@base-ui\\/react\\/(.*)$/, replacement: C + '/packages/react/src/\\$1/index.ts' },\n  { find: /^@base-ui\\/utils\\/(.*)$/, replacement: C + '/packages/utils/src/\\$1' },\n];\nexport default { test: { environment: 'jsdom', include: ['*.test.tsx'] }, resolve: { alias } };\nEOF\ncat > probe.test.tsx <<'EOF'\nimport * as React from 'react';\nimport { expect, it, vi } from 'vitest';\nimport { render, fireEvent, screen, act } from '@testing-library/react';\nimport { Field } from '@base-ui/react/field';\nimport { Form } from '@base-ui/react/form';\n\nit('controlled preventDefault still clears errors/validates', () => {\n  const validate = vi.fn(() => null);\n  function App() {\n    const [v, setV] = React.useState('');\n    return (\n      <Form errors={{ message: 'Server error' }}>\n        <Field.Root name=\"message\" validationMode=\"onChange\" validate={validate}>\n          <Field.Control value={v} onValueChange={setV} />\n          <Field.Error />\n        </Field.Root>\n      </Form>\n    );\n  }\n  render(<App />);\n  const control = screen.getByRole<HTMLInputElement>('textbox');\n  control.addEventListener('input', (e) => e.preventDefault(), { capture: true, once: true });\n  fireEvent.input(control, { cancelable: true, target: { value: 'a' } });\n  console.log('PD validate calls', validate.mock.calls.length, 'server error present', !!screen.queryByText('Server error'));\n});\n\nit('reset of required controlled field in onChange mode', () => {\n  let setOuter: any;\n  function App() {\n    const [v, setV] = React.useState('init');\n    setOuter = setV;\n    return (\n      <Field.Root data-testid=\"root\" validationMode=\"onChange\">\n        <Field.Control required value={v} onValueChange={setV} />\n        <Field.Error match=\"valueMissing\">Required</Field.Error>\n      </Field.Root>\n    );\n  }\n  render(<App />);\n  act(() => setOuter(''));\n  console.log('reset-from-init: invalid', screen.getByTestId('root').getAttribute('data-invalid'), 'Required shown', !!screen.queryByText('Required'));\n});\n\nit('async load of initial value marks dirty', () => {\n  let setOuter: any;\n  const validate = vi.fn(() => 'err');\n  function App() {\n    const [v, setV] = React.useState('');\n    setOuter = setV;\n    return (\n      <Field.Root data-testid=\"root\" validationMode=\"onChange\" validate={validate}>\n        <Field.Control value={v} onValueChange={setV} />\n        <Field.Error />\n      </Field.Root>\n    );\n  }\n  render(<App />);\n  act(() => setOuter('loaded'));\n  const r = screen.getByTestId('root');\n  console.log('async load: dirty', r.getAttribute('data-dirty'), 'invalid', r.getAttribute('data-invalid'), 'validate calls', validate.mock.calls.length);\n});\n\nit('uncontrolled cancel', () => {\n  const validate = vi.fn((v: any) => (v === 'a' ? null : 'bad'));\n  render(\n    <Field.Root data-testid=\"root\" validationMode=\"onChange\" validate={validate}>\n      <Field.Control defaultValue=\"\" onValueChange={(v, d) => { if (v === 'a') d.cancel(); }} />\n      <Field.Error />\n    </Field.Root>,\n  );\n  const c = screen.getByRole<HTMLInputElement>('textbox');\n  fireEvent.change(c, { target: { value: 'x' } });\n  fireEvent.change(c, { target: { value: 'a' } });\n  const r = screen.getByTestId('root');\n  console.log('cancel: dom', c.value, 'dirty', r.getAttribute('data-dirty'), 'filled', r.getAttribute('data-filled'), 'invalid', r.getAttribute('data-invalid'), 'err', screen.queryByText('bad') ? 'bad shown' : 'none');\n});\n\nit('controlled rejected keystroke with stale onChange validation', () => {\n  const validate = vi.fn(() => null);\n  function App() {\n    const [v, setV] = React.useState('abc');\n    return (\n      <Form errors={{ message: 'Server error' }}>\n        <Field.Root name=\"message\" validationMode=\"onChange\" validate={validate}>\n          <Field.Control value={v} onValueChange={(n) => setV(n.toUpperCase())} />\n          <Field.Error />\n        </Field.Root>\n      </Form>\n    );\n  }\n  render(<App />);\n  const c = screen.getByRole<HTMLInputElement>('textbox');\n  fireEvent.change(c, { target: { value: 'abC' } });\n  console.log('uppercase same: validate', validate.mock.calls.length, 'server err', !!screen.queryByText('Server error'), c.value);\n});\nEOF\nTZ=UTC timeout 280 $C/node_modules/.bin/vitest run --root $W 2>&1 | grep -v \"^$\" | head -60",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone; cd $W && sed -i \"s/import { expect, it, vi } from 'vitest';/import { expect, it, vi, afterEach } from 'vitest';/; s/import { render, fireEvent, screen, act } from '@testing-library\\/react';/import { render, fireEvent, screen, act, cleanup } from '@testing-library\\/react';\\nafterEach(cleanup);/\" probe.test.tsx && sed -i \"s/const \\[v, setV\\] = React.useState('init');/const [v, setV] = React.useState('');/; s/act(() => setOuter(''));/act(() => setOuter('typed')); act(() => setOuter(''));/\" probe.test.tsx && TZ=UTC timeout 280 $C/node_modules/.bin/vitest run --root $W 2>&1 | grep -E \"PD|reset|async|cancel|uppercase|\u2713|\u00d7|Error\" | head -30",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone; cd $W && head -8 probe.test.tsx; TZ=UTC timeout 280 $C/node_modules/.bin/vitest run --root $W 2>&1 | tail -40",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone; cd $W && TZ=UTC timeout 280 $C/node_modules/.bin/vitest run --root $W --reporter=verbose --silent=false 2>&1 | grep -E \"PD|reset|async|cancel:|uppercase\" ",
+    "cat CLAUDE.md; cat AGENTS.md | head -120; ls ~/.claude/CLAUDE.md 2>/dev/null",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone/packages/react/src && grep -rn \"initialValue\" field/validity/*.tsx field/utils/*.ts 2>/dev/null | head; grep -rln \"initialValue\" --include=*.tsx . 2>/dev/null | head; grep -rl \"initialValue\" field | head"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx ",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/Field.Error",
+    "/Field.Root",
+    "/Form",
+    "/act",
+    "/const",
+    "/import",
+    "/react",
+    "/utils"
+  ],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-054"
+  ]
+}
