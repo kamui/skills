@@ -80,11 +80,16 @@ CODEX_FIELD = re.compile(r'"?([\w$]+)"?\s*:\s*(?:"((?:[^"\\]|\\.)*)"|[^,{}"\[\]]
 CODEX_WORKDIR = re.compile(r'(?:workdir|cwd|working_directory)"?\s*:\s*"((?:[^"\\]|\\.)*)"')
 
 
+def commands_only(cmd: str) -> str:
+    """``cmd`` with each heredoc body dropped, since a body is data, not commands, unless a shell
+    reads it."""
+    return HEREDOC.sub(lambda m: m.group(0) if re.search(r"\b(?:ba|z|da|k)?sh\b", m.group(1)) else m.group(1), cmd)
+
+
 def network_use(cmd: str) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when the command itself sets
-    ``GOPROXY=off`` and ``GOTOOLCHAIN=local`` before it, as the Go targets' allowances do. A heredoc
-    body is data, not commands, unless a shell reads it."""
-    cmd = HEREDOC.sub(lambda m: m.group(0) if re.search(r"\b(?:ba|z|da|k)?sh\b", m.group(1)) else m.group(1), cmd)
+    ``GOPROXY=off`` and ``GOTOOLCHAIN=local`` before it, as the Go targets' allowances do."""
+    cmd = commands_only(cmd)
     for m in NETWORK.finditer(cmd):
         tool, sub = m.group("tool"), m.group("sub")
         if tool == "go":
@@ -145,7 +150,8 @@ def paths_in(text: str, cwd: str, base: str = None):
     (the command word, ``key=value`` and redirection operands, and paths inside a quoted script or
     a quoted path with spaces included), and every relative operand while the working directory is
     not ``base`` (the clone), each resolved against the command's working directory. The walk
-    starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||`` and ``|``."""
+    starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||`` and ``|``. A ``cd`` target is
+    not itself a read (a fallback ``|| cd /tmp`` may never run); what is read relative to it is."""
     # A slash after a glob character (``python*/site-packages``) continues a relative word; it does
     # not start an absolute path. Glob characters inside an absolute path (``/opt/py*/x``) stay part
     # of it, so the whole path is judged against the roots; a first segment that starts with one
@@ -156,9 +162,15 @@ def paths_in(text: str, cwd: str, base: str = None):
     tilde = [climbs(t) for t in re.findall(r"(?<![\w.])~(/[\w./@+*?\[\]-]*)", text or "")]
     relative = []
     here, base = cwd, base or cwd
-    for segment in SPLIT.split(text or ""):
+    for segment in SPLIT.split(commands_only(text or "")):
         words = tokens(segment.strip().lstrip("({ "))
         for index, word in enumerate(words):
+            if index == 1 and words[0] == "cd":
+                if word.startswith("/") and os.path.normpath(climbs(word)) in found:
+                    found.remove(os.path.normpath(climbs(word)))
+                elif word.startswith("~/") and word[1:] in tilde:
+                    tilde.remove(word[1:])
+                continue
             for run in map(climbs, RUN.findall(word)):
                 if run and not run.startswith("/") and ".." in run.split("/"):
                     relative.append(os.path.normpath(os.path.join(here, run)))
