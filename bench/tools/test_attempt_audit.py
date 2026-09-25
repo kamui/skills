@@ -89,7 +89,8 @@ class AttemptAudit(unittest.TestCase):
         rc, violations = self.bash("cat src/.*/a.py", "ls src/.[a-z]*", "cat .x*/a.py", "rg -n 'x.*/y' src")
         self.assertEqual((rc, violations), (0, []))
         for command in ("cat .*/outside/x", "cat .?/outside/x", "cat .[.]/outside/x", "cat src/.*/.*/outside/x",
-                        f"cat {self.clone}/.*/outside/x", "bash -c 'cat .*/outside/x'", "cd .? && cat outside/x"):
+                        f"cat {self.clone}/.*/outside/x", "bash -c 'cat .*/outside/x'", "cd .? && cat outside/x",
+                        "cat ~/.*/.*/outside/x"):
             with self.subTest(command=command):
                 rc, violations = self.bash(command)
                 self.assertEqual(rc, 1, violations)

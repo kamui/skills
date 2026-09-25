@@ -16,10 +16,10 @@ for ``claude-builtin`` the ``home/.claude/projects/**/*.jsonl`` files (root and
 files. Every shell command and every file-tool path is listed; a path outside the
 clone, the attempt directory and the fresh home, or a command that names a
 network tool (``curl``, ``wget``, ``gh``, ``git fetch``/``pull``/``push``/``clone``,
-``pip``, ``npm install``, ``ssh``), is a violation. Every relative path with a ``..`` segment (a
-whole word, or a run inside one after whitespace, a redirection, ``=``, ``:``, a quote or a
-bracket), and every relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the
-clone, is resolved
+``pip``, ``npm install``, ``ssh``), is a violation. Every relative path with a ``..`` segment, or
+with a dot-led glob segment such as ``.*`` that bash can expand to ``..`` (a whole word, or a run
+inside one after whitespace, a redirection, ``=``, ``:``, a quote or a bracket), and every
+relative operand once a ``cd`` or a Codex call's ``workdir`` has moved off the clone, is resolved
 against the command's working directory (the clone or that ``workdir``, following ``cd`` across
 ``;``, ``&&``, ``||`` and ``|``) and judged like an absolute path; a ``workdir`` outside the
 allowed roots is itself a violation. Codex walks up the directory tree
@@ -99,18 +99,18 @@ def tokens(segment: str) -> list:
 
 def paths_in(text: str, cwd: str, base: str = None):
     """Absolute paths, ``~`` paths expanded against the fresh home, every relative word or path
-    run with a ``..`` segment (the command word, ``key=value`` and redirection operands, and paths
-    inside a quoted script or a quoted path with spaces included), and every relative operand
-    while the working directory is not ``base`` (the clone), each resolved against the command's
-    working directory. The walk starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||``
-    and ``|``."""
+    run with a ``..`` segment, a dot-led glob segment that can expand to ``..`` counting as one
+    (the command word, ``key=value`` and redirection operands, and paths inside a quoted script or
+    a quoted path with spaces included), and every relative operand while the working directory is
+    not ``base`` (the clone), each resolved against the command's working directory. The walk
+    starts at ``cwd`` and tracks ``cd`` across ``;``, ``&&``, ``||`` and ``|``."""
     # A slash after a glob character (``python*/site-packages``) continues a relative word; it does
     # not start an absolute path. Glob characters inside an absolute path (``/opt/py*/x``) stay part
     # of it, so the whole path is judged against the roots; a first segment that starts with one
     # (``/*/x``) counts once another slash follows, so a regex class such as ``/[a-z]+`` does not.
     found = [os.path.normpath(climbs(p)) for p in re.findall(
         r"(?<![\w.~}\)\"'*?\]])(/(?:[\w.@+-]|[*?\[][\w.@+*?\[\]-]*/)[\w./@+*?\[\]-]*)", text or "")]
-    tilde = re.findall(r"(?<![\w.])~(/[\w./@+-]*)", text or "")
+    tilde = [climbs(t) for t in re.findall(r"(?<![\w.])~(/[\w./@+*?\[\]-]*)", text or "")]
     relative = []
     here, base = cwd, base or cwd
     for segment in SPLIT.split(text or ""):
@@ -128,7 +128,7 @@ def paths_in(text: str, cwd: str, base: str = None):
             if target != "-":
                 target = HOME_DIR + target[1:] if target.startswith("~") and HOME_DIR else target
                 here = os.path.normpath(os.path.join(here, climbs(target)))
-    return list(dict.fromkeys(found + [HOME_DIR + t for t in tilde if HOME_DIR] + relative))
+    return list(dict.fromkeys(found + [os.path.normpath(HOME_DIR + t) for t in tilde if HOME_DIR] + relative))
 
 
 PREFIXES: list = []
