@@ -665,6 +665,11 @@
       "at": "2026-09-25T03:34:57Z",
       "what": "bench/tools moved to 552a6f827dae7dc05ec8a951941f49437faf11fe, which corrects the glob fix of the first deviation: at 02005197f6b4df4d6a1471d548ca9f00d69112e9 attempt_audit.py no longer read a word that starts with a slash and then a glob character (/*/x, /*/*/.config/bench) as an absolute path, so such a read outside the allowed roots went unflagged. Glob characters now stay part of an absolute path and the whole path is judged against the roots; a first segment that starts with a glob counts once another slash follows, and a slash after a glob in a relative word still continues that word. The change touches no reviewer input or execution condition. The paths extracted from the commands recorded in the audit.json of att-001 to att-004 are identical at 6f61765dbfd07d70539ffea90779f671be0af5f4 and at the new revision, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T04:12:22Z",
+      "what": "bench/tools moved to f1a4343038f5d182231f83e9bb8328060dd8cdce, which restores a flag the first deviation's glob fix dropped: bash 5.1 expands a path segment such as .*, .? or .[.] to .., so cat .*/.*/<path> reads above the attempt directory, and at 02005197f6b4df4d6a1471d548ca9f00d69112e9 attempt_audit.py no longer flagged it, where the frozen revision had, by misreading the slash after the glob as an absolute path. A segment that starts with a literal dot and can match .. is now judged as .., in absolute paths, relative operands, runs inside quoted scripts and cd targets, and path-like runs inside a word now include glob characters. The change touches no reviewer input or execution condition. Over the commands recorded in the audit.json of att-001 to att-004, the paths extracted at 552a6f827dae7dc05ec8a951941f49437faf11fe and at the new revision differ only in att-002, whose two commands through ../clone-cache/venv/lib/python*/site-packages no longer also yield the truncated run ending at python; every path extracted is inside the attempt directory at both revisions, so no filed attempt's audit or disposition changes and none is re-filed. Every later attempt is filed with the corrected tools.",
+      "invalidates": []
     }
   ]
 }

@@ -106,4 +106,6 @@ replacement, since the repair changed no reviewer input or execution condition; 
 `file_attempt.py --replay` supersede a normalization-only stop, and the manifest's second deviation
 records the re-filing. `552a6f8` keeps a leading glob (`/*/x`) inside an absolute path, which the
 glob fix had stopped flagging; the third deviation records it, and no filed attempt's audit
-changes. No charge: nothing was dispatched. Replacements used: 0 of 4.
+changes. `f1a4343` judges a dot-led glob that bash expands to `..` (`.*/.*/<path>`) as a climb,
+which the glob fix had also stopped flagging; the fourth deviation records it, and no filed
+attempt's audit changes. No charge: nothing was dispatched. Replacements used: 0 of 4.
