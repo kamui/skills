@@ -715,6 +715,11 @@
       "at": "2026-09-25T06:17:25Z",
       "what": "bench/tools moved to 645607ee460db2e2f03ab38069cdfd3f5300e992: attempt_audit.py's network rule read inside quoted text, so the alternation in att-079's search pattern, rg -n -A12 \"func \\(ac \\*addrConn\\) resetTransport|...|go ac.resetTransport\", read as a pipe into a go command. Quoted text is now masked before the rule runs, except a script opened right after -c and a $(...) inside double quotes, which the shell runs. att-079 ((m) / A / 2) was filed harness-invalid on that one flag alone and is re-audited with file_attempt.py --replay to valid completed, with no replacement. Running the new audit over every other filed attempt (att-001 to att-080) changes no violation list. The change touches no reviewer input or execution condition.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T06:43:19Z",
+      "what": "bench/tools moved to 503aba4933483b0c3db9f23ad60a696cbba029fa, closing two gaps the thirteenth deviation's network rule left, both found in review of the grid: a script handed to a shell through a combined option (zsh -fc \"curl ...\", bash -lc '...') was masked as quoted data, and a go command was judged offline whenever GOPROXY=off and GOTOOLCHAIN=local appeared anywhere earlier in the command, so in `GOPROXY=off GOTOOLCHAIN=local go test ./...; go mod download` the second go passed. The rule now recognizes any shell's -c option, combined or not, and judges each go invocation by its own prefix assignments over the variables exported earlier and not unset or overridden since; a bare NAME=value statement, which go does not inherit, no longer counts. Re-running the audit over all 83 filed attempts changes no violation list, so no attempt is re-filed. The change touches no reviewer input or execution condition.",
+      "invalidates": []
     }
   ]
 }
