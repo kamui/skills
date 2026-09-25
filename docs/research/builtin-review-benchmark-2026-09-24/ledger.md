@@ -289,3 +289,20 @@ the run is closed to dispatch from then on. Same configuration as G1–G8.
 
 Grading in all: $8.54 for twelve sessions. Five new candidates, three on (i) and one each on (j)
 and (l), are `unresolved` in mapping v1 and go to adjudication.
+
+### Adjudication of new candidates
+
+Each row is one headless Claude Code 2.1.282 session under a fresh home, `claude-opus-5-5` at
+`high`, single-threaded, run through `grade.py dispatch` from `prompts/candidate-adjudication-template.md`
+with the target's candidates (claim and the scorer's notes, arm, attempt and cost labels removed),
+its register and the rubric, an offline provisioned clone, and network, `gh` and `git` for upstream
+history. The read audit flagged only the allowed network commands. Rulings are in
+[`adjudication/`](adjudication/).
+
+| # | Target | Session | Time (Z) | Rulings | Billed ($) |
+| --- | --- | --- | --- | --- | --- |
+| A1 | (i) | `6ef3f56c…` | 20:53–20:59 | NC-1 true but below the bar (a non-defect); NC-2 and NC-3 one new material defect, GT-i3 | 1.68 |
+| A2 | (j) | `0d24ddf2…` | 20:59–21:02 | NC-1 a new material defect, GT-j2 | 0.74 |
+| A3 | (l) | `00d55259…` | 21:02–21:03 | NC-1 a duplicate of GT-l1 | 0.41 |
+
+Registers (i) and (j) move to version 2; (l)'s stays at version 1.

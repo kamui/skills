@@ -23,3 +23,6 @@
 {"at": "2026-09-25T20:52:50Z", "step": "ledger G10: grading p-hono-5067 (claude-opus-5-5 at high)", "usd": 0.644961, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "3663c2d6"}
 {"at": "2026-09-25T20:54:07Z", "step": "ledger G11: grading q-soba-195 (claude-opus-5-5 at high)", "usd": 0.583144, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "7f0fc6b3"}
 {"at": "2026-09-25T20:54:51Z", "step": "ledger G12: grading r-base-ui-5460 (claude-opus-5-5 at high)", "usd": 0.621193, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "95be9165"}
+{"at": "2026-09-25T20:59:33Z", "step": "ledger A1: adjudication of i-requests-6667's new candidates (claude-opus-5-5 at high)", "usd": 1.684096, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "6ef3f56c"}
+{"at": "2026-09-25T21:02:00Z", "step": "ledger A2: adjudication of j-trpc-5017's new candidates (claude-opus-5-5 at high)", "usd": 0.742796, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "0d24ddf2"}
+{"at": "2026-09-25T21:03:18Z", "step": "ledger A3: adjudication of l-bokeh-9232's new candidates (claude-opus-5-5 at high)", "usd": 0.410741, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "00d55259"}
