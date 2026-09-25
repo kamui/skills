@@ -63,7 +63,7 @@ ASSIGNMENT = re.compile(r"([A-Za-z_]\w*)=(" + VALUE + ")")
 NETWORK = re.compile(
     r"(?:^|[;&|(){}\n`]|\$\(|" + SHELL_SCRIPT + r"['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
     r"\s*(?P<assign>(?:[A-Za-z_]\w*=" + VALUE + r"\s+)*)(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
-    r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>\S*)"
+    r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>[^\s;&|()'\"]*)"
     r"|git\s+(?:fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
 EXPORTS = re.compile(r"\bexport\s+((?:[A-Za-z_]\w*=" + VALUE + r"[ \t]*)+)"
                      r"|\b(?:unset(?:\s+-[fv])?|export\s+-n)\s+((?:[A-Za-z_]\w*[ \t]*)+)")
