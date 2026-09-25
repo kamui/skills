@@ -110,3 +110,67 @@ changes. `f1a4343` judges a dot-led glob that bash expands to `..` (`.*/.*/<path
 which the glob fix had also stopped flagging; the fourth deviation records it, and no filed
 attempt's audit changes. `a49dd79` does the same for a `~` path (`~/.*/.*/<path>`); the fifth
 deviation records it, and no filed attempt's commands contain `~`. No charge: nothing was dispatched. Replacements used: 0 of 4.
+
+### Replicate 1 (2026-09-25)
+
+The sealed order's remaining 36 replicate-1 cells ran from 05:02Z to 05:40Z, two in flight, each
+claimed with the Codex quota the newest rollout reported. Notes count the normalized items and the
+audited commands; the dispositions are the filed ones after the re-audits the manifest's seventh to
+eleventh deviations record.
+
+| Attempt | Cell | Dispatched | Disposition | Billed / list ($) | Quota after (D) | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| att-005 | (q) / A / 1 | 05:02:17Z | valid completed 05:04:09Z | 0.74 | — | 2 items; 13 commands; re-audited to valid (seventh deviation): first filed harness-invalid on false network flags (`.go` file names, the allowed offline `go test`) |
+| att-006 | (q) / B / 1 | 05:02:22Z | harness-invalid 05:02:43Z | 0.20 | — | 3 items; 2 commands; 1 subagent; harness-invalid: wrote and read `/tmp/pr.diff`, outside the roots; replaced by att-007 |
+| att-007 | (q) / B / 1 | 05:08:02Z | valid completed 05:08:24Z | 0.20 | — | 2 items; 3 commands; 1 subagent; replacement 1 of 4, for att-006 |
+| att-008 | (q) / C / 1 | 05:08:29Z | valid completed 05:09:32Z | 0.36 | — | 9 items; 6 commands; 1 subagent |
+| att-009 | (q) / D / 1 | 05:08:34Z | valid completed 05:08:58Z | 0.27 list | 63% | empty review; 3 commands; 1 subagent |
+| att-010 | (p) / B / 1 | 05:09:07Z | valid completed 05:09:38Z | 0.13 | — | 3 items; 4 commands; 1 subagent |
+| att-011 | (p) / C / 1 | 05:09:42Z | valid completed 05:11:10Z | 0.40 | — | 10 items; 5 commands; 1 subagent; re-audited, unchanged (eighth deviation) |
+| att-012 | (p) / D / 1 | 05:09:49Z | valid completed 05:10:21Z | 0.23 list | 63% | 1 item; 4 commands; 1 subagent; re-audited to valid (eighth deviation): first filed harness-invalid on `http://localhost/` read as a path |
+| att-013 | (p) / A / 1 | 05:11:55Z | valid completed 05:14:14Z | 0.86 | — | 1 item; 19 commands; 1 subagent; re-audited to valid (ninth deviation): first filed harness-invalid on absent paths from scratch code (`'/a'`, a sed pattern) |
+| att-014 | (r) / C / 1 | 05:12:07Z | valid completed 05:14:14Z | 0.54 | — | 10 items; 12 commands; 1 subagent; re-audited to valid (ninth deviation): first filed harness-invalid on absent paths from JSX and imports (`</Form>`, `/react`) |
+| att-015 | (r) / D / 1 | 05:16:48Z | valid completed 05:17:25Z | 0.41 list | 63% | 1 item; 4 commands; 1 subagent |
+| att-016 | (r) / A / 1 | 05:16:53Z | valid completed 05:19:03Z | 0.77 | — | 2 items; 16 commands |
+| att-017 | (r) / B / 1 | 05:17:40Z | valid completed 05:18:08Z | 0.15 | — | 4 items; 4 commands; 1 subagent |
+| att-018 | (i) / A / 1 | 05:18:09Z | valid completed 05:21:53Z | 1.03 | — | 2 items; 20 commands; 1 subagent; re-audited to valid (tenth deviation): first filed harness-invalid on the provisioned venv interpreter's symlink |
+| att-019 | (i) / C / 1 | 05:19:04Z | valid completed 05:20:45Z | 0.45 | — | 10 items; 7 commands; 1 subagent |
+| att-020 | (l) / A / 1 | 05:20:47Z | valid completed 05:23:42Z | 0.91 | — | 3 items; 23 commands; 1 subagent |
+| att-021 | (l) / B / 1 | 05:24:25Z | valid completed 05:24:55Z | 0.15 | — | 5 items; 3 commands; 1 subagent |
+| att-022 | (l) / C / 1 | 05:24:30Z | valid completed 05:25:26Z | 0.25 | — | 8 items; 3 commands; 1 subagent |
+| att-023 | (l) / D / 1 | 05:24:57Z | valid completed 05:25:23Z | 0.22 list | 63% | 1 item; 3 commands; 1 subagent |
+| att-024 | (k) / B / 1 | 05:25:32Z | valid completed 05:25:49Z | 0.09 | — | 3 items; 3 commands; 1 subagent |
+| att-025 | (k) / C / 1 | 05:25:35Z | valid completed 05:26:26Z | 0.23 | — | 7 items; 3 commands; 1 subagent |
+| att-026 | (k) / D / 1 | 05:25:58Z | valid completed 05:26:23Z | 0.20 list | 63% | 1 item; 3 commands; 1 subagent |
+| att-027 | (k) / A / 1 | 05:26:31Z | valid completed 05:27:37Z | 0.45 | — | 1 item; 11 commands |
+| att-028 | (n) / C / 1 | 05:26:27Z | valid completed 05:27:29Z | 0.22 | — | 8 items; 3 commands; 1 subagent |
+| att-029 | (n) / A / 1 | 05:27:30Z | valid completed 05:29:02Z | 0.45 | — | 2 items; 9 commands |
+| att-030 | (o) / D / 1 | 05:27:58Z | valid completed 05:28:53Z | 0.37 list | 63% | 1 item; 6 commands; 1 subagent |
+| att-031 | (o) / A / 1 | 05:29:14Z | valid completed 05:31:54Z | 0.80 | — | 2 items; 14 commands; 1 subagent; re-audited to valid (eleventh deviation): first filed harness-invalid on `cd ../../..` resolved from the clone, not its recorded cwd |
+| att-032 | (o) / B / 1 | 05:29:22Z | valid completed 05:29:46Z | 0.09 | — | 4 items; 3 commands; 1 subagent |
+| att-033 | (o) / C / 1 | 05:30:07Z | valid completed 05:31:17Z | 0.30 | — | 10 items; 8 commands; 1 subagent |
+| att-034 | (m) / A / 1 | 05:31:20Z | valid completed 05:34:18Z | 0.97 | — | 1 item; 20 commands; 1 subagent |
+| att-035 | (m) / B / 1 | 05:35:04Z | valid completed 05:35:34Z | 0.17 | — | 1 item; 1 commands; 1 subagent |
+| att-036 | (m) / C / 1 | 05:35:09Z | valid completed 05:36:09Z | 0.29 | — | 8 items; 2 commands; 1 subagent |
+| att-037 | (m) / D / 1 | 05:35:37Z | valid completed 05:35:57Z | 0.25 list | 63% | empty review; 3 commands; 1 subagent |
+| att-038 | (j) / B / 1 | 05:36:22Z | valid completed 05:37:02Z | 0.13 | — | 3 items; 3 commands; 1 subagent |
+| att-039 | (j) / C / 1 | 05:36:35Z | valid completed 05:38:55Z | 0.55 | — | 9 items; 7 commands; 1 subagent |
+| att-040 | (j) / D / 1 | 05:37:28Z | valid completed 05:38:10Z | 0.43 list | 63% | 1 item; 4 commands; 1 subagent |
+| att-041 | (j) / A / 1 | 05:38:37Z | valid completed 05:40:35Z | 0.58 | — | 3 items; 12 commands |
+
+All times 2026-09-25. Replicate-1 spend after the pilot: $14.83 (A $7.56, B $1.30, C $3.58, D $2.38
+list), 37 attempts for 36 cells. Run spend, charges included: $43.86; room under the cap after the
+reserve: $181.14. Replacements used: 1 of 4. The Codex plan stayed at 63% of its weekly window.
+
+**Replicate-1 finding: the read audit misread legitimate reviewer work five ways, fixed in
+`33b0c25`, `f563ef2`, `eb8cad3`, `2da77b4` and `fd5d2e9`.** The pilot's targets never ran a Go
+command, a URL, TypeScript scratch code, a provisioned venv or a `cd` that carried across Claude
+Bash calls, and each first appearance filed an attempt harness-invalid: a `.go` file name read as
+the `go` tool and the allowed offline `go test` as a network command (att-005); `http://localhost/`
+read as a path (att-012); route strings, JSX closing tags and import specifiers read as absolute
+paths (att-013, att-014); the venv interpreter's provisioned symlink followed out of the roots
+(att-018); and a `cd ../../..` resolved from the clone rather than the directory the transcript
+records (att-031). Each fix has a test, each re-audit ran over every filed attempt, and each of the
+six affected attempts was re-filed with `file_attempt.py --replay` with no replacement. One
+violation was real: att-006 wrote the diff to `/tmp/pr.diff` although the policy sends scratch
+files to the work directory and its `TMPDIR` was there, and it was replaced by att-007.

@@ -19,7 +19,7 @@ freeze; the pilot ran on 2026-09-25 (below).
 | `manifest.json` | the frozen run: arms resolved with file hashes, the `review-code` tree, the pinned CLI versions and expected prompt hashes; the cohort with register versions and packet, diff and provisioning identities; the 80 planned cells; the caps; the sealed order; the rates used; the execution policy |
 | `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
-| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (the pilot's att-001 to att-004 so far; att-002 and att-004 re-filed with `--replay`) |
+| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py`; replicate 1 is att-001 to att-041, and the attempts re-filed with `--replay` are listed in the manifest's deviations and the ledger |
 | `scoring/<target>/mapping.v<M>.json` | blind adjudication per target (none yet) |
 | `results.v<M>.json` | `score.py` output (none yet) |
 
