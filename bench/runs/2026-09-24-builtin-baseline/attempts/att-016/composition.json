@@ -1,0 +1,102 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-5460-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "change_description": "[field] Sync controlled value changes with field state\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Make Field.Control sync controlled value changes with field state through useValueChanged (controlled) and onChange (uncontrolled), fix dirty state for non-string values, honor details.cancel(), and stop rejected controlled values from reaching field state (caller-supplied PR #5460 text; no originating issue).",
+    "issue_fit": "Met \u2014 every stated outcome is implemented; issue alignment unavailable beyond the supplied PR text and commit message. The uncontrolled cancel path still updates dirty and filled, which follows the DOM and is noted as an observation.",
+    "coverage": "Complete merge-base diff of both changed files reviewed with useValueChanged, useRegisterFieldControl, useFieldControlRegistration and useFieldValidation read; existing `FieldControl.test.tsx` run once at the head under jsdom: 26 passed, 1 skipped, exit 0. Chromium and rendered-output checks unavailable. Supplied CI bot comments (bundle size +88B, benchmarks on unrelated components) were not used as evidence. No risk area is touched, so no verifier was dispatched."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "In uncontrolled mode a canceled change still updates dirty and filled before the cancel check, so only clearErrors and validation are skipped; this tracks the DOM value, which React cannot revert.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:149-156`."
+    },
+    {
+      "fact": "No added test asserts that a rejected or rewritten controlled value leaves dirty, filled and validity untouched, though the PR body promises it.",
+      "evidence": "`packages/react/src/field/control/FieldControl.test.tsx` added tests; `FieldControl.tsx:105-115`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "pr-body/\"Dirty state never cleared for non-string values\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:86-97 registers String(value); test 'clears dirty state when a numeric controlled value returns to its initial value' passes"
+      },
+      {
+        "source": "pr-body/\"Programmatic changes left the field stale\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 useValueChanged updates errors, dirty, filled and validation; test 'syncs state and validates when the controlled value changes programmatically' passes"
+      },
+      {
+        "source": "pr-body/\"onChange returns early when controlled\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:144-146; test 'validates once when a controlled value is changed by the user' passes"
+      },
+      {
+        "source": "pr-body/\"details.cancel() in onValueChange now stops the internal handling\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:153 gates clearErrors/validation on !details.isCanceled; controlled mode is decided by the consumer's value; test 'does not validate when the change is canceled' passes"
+      },
+      {
+        "source": "pr-body/\"A controlled value the consumer rejects or rewrites no longer reaches the field state\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 fires only on the serialized value prop changing; no dedicated test"
+      },
+      {
+        "source": "pr-body/\"Renders per keystroke for a controlled input\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "onSubmit steady state asserted by test 'renders once per keystroke for controlled input changes'; onChange extra render traced to setValidityData in commit, not run"
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/react/src/field/control/FieldControl.test.tsx",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "run once at the head, exit 0, 26 passed and 1 skipped"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "mui/base-ui"
+  }
+}

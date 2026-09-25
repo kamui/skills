@@ -1,0 +1,125 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "bokeh-pr-9232-packet"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+  "issues": [
+   "bokeh/bokeh#9129"
+  ],
+  "change_description": "Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\nRemoved usage of var keyword.  Replaced with const.\n\nRemoved .idea/vcs.xml.\n\nMade a shell for the integration test for DatePicker displayed/selected dates.\n\nupdate tests\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Stop the DatePicker from showing a day early for users in UTC+ timezones (issue #9129) by offsetting the date in `_unlocal_date`, and add DatePicker integration tests.",
+  "issue_fit": "Partial. A picked or `toDateString()` value now displays correctly in UTC+ zones, but the same change makes dates supplied from Python display a day early in UTC- zones, which displayed correctly before.",
+  "coverage": "Complete merge-base diff reviewed (2 of 2 files). Reviewer-executed: scratch node script (`clone-work/tz.js`) run under six TZ values at the head; the Selenium suite, browser and project build were unavailable, so the changed tests were inspected by trace only. One verifier batch: the must-fix candidate was confirmed after an encoding-only repair of its return. No forge access; the PR text was supplied as a spec."
+ },
+ "findings": [
+  {
+   "id": "date_picker/unlocal-date-utc-minus",
+   "title": "Do not shift UTC-midnight dates back a day in UTC- zones",
+   "priority": "P1",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "A DatePicker whose `value`, `min_date` or `max_date` is set from Python as a date or datetime, which serializes to UTC-midnight milliseconds, opened in a browser with a UTC- system timezone such as America/Los_Angeles.",
+   "impact": "The picker shows and selects the previous day and the min/max bounds move a day early. Node under `TZ=America/Los_Angeles` gives `Thu Sep 19 2019` for 2019-09-20, where the base code gave `Fri Sep 20 2019`.",
+   "change": "In `_unlocal_date`, apply the offset only to a local-midnight input such as the `toDateString()` string, and read UTC-midnight numeric inputs by their UTC day as before; or keep one canonical form in the model.",
+   "source": "commit-472e477, issue #9129 (worked in 1.2.0).",
+   "anchor": {
+    "type": "line",
+    "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+    "start_line": 82,
+    "end_line": 83,
+    "side": "RIGHT"
+   }
+  },
+  {
+   "id": "tests/datepicker-no-timezone-coverage",
+   "title": "Add a test that fixes the timezone and checks the initial display",
+   "priority": "P3",
+   "action": "consider",
+   "kind": "maintainability",
+   "trigger": "The tests run in whatever timezone the CI host uses and never assert the initially displayed date; `test_js_on_change_executes` only checks the value after a click.",
+   "impact": "Neither the UTC+ bug this PR fixes nor the UTC- regression above would fail in a UTC CI environment.",
+   "change": "Set the browser timezone (or run under several `TZ` values) and assert the input text for a Python-supplied `value` before any click.",
+   "anchor": {
+    "type": "line",
+    "path": "tests/integration/widgets/test_datepicker.py",
+    "start_line": 52,
+    "end_line": 70,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "`_unlocal_date` now mutates its `Date` argument via `setTime`; current callers pass fresh `Date` objects, so nothing is affected.",
+   "evidence": "`bokehjs/src/lib/models/widgets/date_picker.ts:68-83`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "bokeh/bokeh",
+  "requirements": [
+   {
+    "source": "issue-9129/body",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "UTC+ picked-string case fixed (tz.js Europe/Paris picked: new Fri Sep 20); UTC- Python-supplied case regresses (America/Los_Angeles pyMs: new Thu Sep 19)"
+   },
+   {
+    "source": "commit-472e477/\"Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "tz.js Europe/Paris, Asia/Kolkata, Pacific/Auckland picked input show Fri Sep 20 2019"
+   },
+   {
+    "source": "issue-9129/body",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Claim that 1.2.0 did not have the problem is not checkable offline"
+   }
+  ],
+  "files": [
+   {
+    "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "tests/integration/widgets/test_datepicker.py",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "date_picker/unlocal-date-utc-minus",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-020/clone-work/priv.P0i7/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-020/clone-work/priv.P0i7/initial/accounting-repaired.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}
