@@ -273,3 +273,19 @@ session's assistant lines are `claude-opus-5-5` and none started a sub-agent.
 Regression grading: $6.07 for eight sessions, two of them failed and graded again from a new
 `prepare` with new tokens. All six regression mappings were committed before any sealed register
 was opened.
+
+### Grading, fresh targets (o)–(r)
+
+The four sealed registers were opened at 20:50:13Z with `seal.py open`, one file at a time into a
+directory outside the repository, each matching the `plaintext_sha256` its `target.json` recorded;
+the run is closed to dispatch from then on. Same configuration as G1–G8.
+
+| # | Target | Session | Time (Z) | Result | Billed ($) |
+| --- | --- | --- | --- | --- | --- |
+| G9 | (o) | `d6d7f9d4…` | 20:50–20:52 | mapped: 16 recoveries, 2 false findings, 17 non-material | 0.62 |
+| G10 | (p) | `3663c2d6…` | 20:50–20:52 | mapped: 9 recoveries, 2 false findings, 17 non-material | 0.64 |
+| G11 | (q) | `7f0fc6b3…` | 20:52–20:54 | mapped: 33 non-material | 0.58 |
+| G12 | (r) | `95be9165…` | 20:53–20:54 | mapped: 1 recovery (GT-r2), 30 non-material | 0.62 |
+
+Grading in all: $8.54 for twelve sessions. Five new candidates, three on (i) and one each on (j)
+and (l), are `unresolved` in mapping v1 and go to adjudication.
