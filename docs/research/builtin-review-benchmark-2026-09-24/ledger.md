@@ -179,7 +179,7 @@ files to the work directory and its `TMPDIR` was there, and it was replaced by a
 
 The replicate-2 blocks ran in the sealed target order from 05:41Z to 06:20Z, two in flight. Before
 each block's first cell the operator's gate (the run README's stopping rule) compared `room_usd`
-with the block's $15.50 bound; it never bound, the lowest room at a block start being $165.08.
+with the block's $15.50 bound; it never bound, and the room never fell below $164.21.
 
 | Attempt | Cell | Dispatched | Disposition | Billed / list ($) | Quota after (D) | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
