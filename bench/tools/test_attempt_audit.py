@@ -73,9 +73,13 @@ class AttemptAudit(unittest.TestCase):
                 self.assertTrue(any(str(self.outside) in v for v in violations), violations)
 
     def test_glob_segments_do_not_start_absolute_paths(self):
-        rc, violations = self.bash("sed -n 1p src/python*/site-packages/x.py", "cat src/[ab]/lib/x.py src/a?/b/x.py")
+        rc, violations = self.bash("sed -n 1p src/python*/site-packages/x.py", "cat src/[ab]/lib/x.py src/a?/b/x.py",
+                                   f"cat {self.clone}/src/*/x.py", "rg -o '[^/]*\\.py' src", "grep -E '^[^/]+/' src/a.py",
+                                   "tr '[/]' '_' <src/a.py", "sed 's|/[^/]*$||' src/a.py", "rg -n ' /[a-z]+' src",
+                                   "rg -n ' /*' src")
         self.assertEqual((rc, violations), (0, []))
-        for command in ("cat ../outside/py*/x", "cat /opt/py*/site-packages/x", f"cat {self.outside}/p*/x"):
+        for command in ("cat ../outside/py*/x", "cat /opt/py*/site-packages/x", f"cat {self.outside}/p*/x",
+                        "cat /*/x", "ls /*/*/.config/bench", f"cat {self.clone}/*/../../outside/x"):
             with self.subTest(command=command):
                 rc, violations = self.bash(command)
                 self.assertEqual(rc, 1, violations)
