@@ -26,3 +26,6 @@
 {"at": "2026-09-25T20:59:33Z", "step": "ledger A1: adjudication of i-requests-6667's new candidates (claude-opus-5-5 at high)", "usd": 1.684096, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "6ef3f56c"}
 {"at": "2026-09-25T21:02:00Z", "step": "ledger A2: adjudication of j-trpc-5017's new candidates (claude-opus-5-5 at high)", "usd": 0.742796, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "0d24ddf2"}
 {"at": "2026-09-25T21:03:18Z", "step": "ledger A3: adjudication of l-bokeh-9232's new candidates (claude-opus-5-5 at high)", "usd": 0.410741, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "00d55259"}
+{"at": "2026-09-25T21:27:17Z", "step": "ledger R1: re-grade of i-requests-6667 for GT-i3 alone (claude-opus-5-5 at high)", "usd": 0.475664, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "86f7bde2"}
+{"at": "2026-09-25T21:27:36Z", "step": "ledger R2: re-grade of j-trpc-5017 for GT-j2 alone (claude-opus-5-5 at high)", "usd": 0.340808, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "5b7fd66d"}
+{"at": "2026-09-25T21:28:27Z", "step": "ledger R3: re-grade of l-bokeh-9232 for GT-l1 alone (claude-opus-5-5 at high)", "usd": 0.445545, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "6c0d4e3d"}
