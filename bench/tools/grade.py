@@ -189,6 +189,7 @@ def prepare(args) -> list:
     if problems:
         raise Inconsistent("\n".join(problems))
 
+    key_path.parent.mkdir(parents=True, exist_ok=True)
     work.mkdir(parents=True, exist_ok=True)
     command = [sys.executable, str(args.provision), "prepare", "--target", str(directory), "--out", str(work / "clone")]
     if args.cache_root:
@@ -568,6 +569,12 @@ def map_verdicts(args) -> list:
     if not (work / "dispatch.json").is_file():
         raise Inconsistent("\n".join(problems + [f"no {work}/dispatch.json: the grader has not been dispatched"]))
     record = read_json(work / "dispatch.json")
+    if record["exit_code"] != 0:
+        problems.append(f"dispatch session exit {record['exit_code']}: a failed dispatch is graded again from a new prepare")
+    if not record["verdicts_present"]:
+        problems.append("dispatch wrote no verdicts.json: a failed dispatch is graded again from a new prepare")
+    if record["usage"]["priced_total_usd"] is None:
+        problems.append("dispatch usage was not priced: a failed dispatch is graded again from a new prepare")
     problems.extend(f"dispatch read audit: {v}" for v in record["audit_violations"])
     if record["prompt_sha256"] != key["prompt_sha256"]:
         problems.append(f"dispatch ran prompt {record['prompt_sha256'][:12]}, the key's is {key['prompt_sha256'][:12]}")
