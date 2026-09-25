@@ -86,7 +86,7 @@ class AttemptAudit(unittest.TestCase):
                     'GOPROXY="off" GOTOOLCHAIN=\'local\' go test ./src/', "GOPROXY=off \\\n  GOTOOLCHAIN=local go test ./src/",
                     "export GOMODCACHE=$(pwd)/m GOPROXY=off GOTOOLCHAIN=local; go test ./src/",
                     'export GOMODCACHE="$C/my dir" GOPROXY=off GOTOOLCHAIN=local; go test ./src/',
-                    "zsh -fc 'echo a'; rg -c 'go test' src"):
+                    "zsh -fc 'echo a'; rg -c 'go test' src", "zsh -fc 'export GOPROXY=off GOTOOLCHAIN=local; go test ./src/'"):
             with self.subTest(cmd=cmd):
                 self.assertEqual(self.bash(cmd), (0, []))
 
@@ -168,7 +168,9 @@ class AttemptAudit(unittest.TestCase):
                     "GOMODCACHE=$(pwd)/m GOPROXY=direct go mod download",
                     "echo 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download",
                     "export GOPROXY=off GOTOOLCHAIN=local; unset -v GOPROXY; go test ./...",
-                    "export GOPROXY=off GOTOOLCHAIN=local; export -n GOTOOLCHAIN; go test ./..."):
+                    "export GOPROXY=off GOTOOLCHAIN=local; export -n GOTOOLCHAIN; go test ./...",
+                    "zsh -fc 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download",
+                    "bash -c 'export GOPROXY=off GOTOOLCHAIN=local'; go mod download"):
             with self.subTest(cmd=cmd):
                 rc, violations = self.bash(cmd)
                 self.assertEqual(rc, 1)
