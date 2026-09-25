@@ -705,6 +705,11 @@
       "at": "2026-09-25T05:35:00Z",
       "what": "bench/tools moved to fd5d2e9aa009f6dad1d5fbd3ba661408a0089f2c: attempt_audit.py resolved every Claude Bash call from the clone root, but Claude Code keeps a cd between calls and records the directory each call ran in as the transcript line's cwd. att-031 ((o) / A / 1) had cd'd into packages/integrations/vercel in an earlier call and then ran `C=$(cd ../../.. && pwd)`, which is the clone root; resolved from the clone it read as /home/jack/.t3/bench-runs, and the attempt was filed harness-invalid on that alone. The audit now treats a Claude call's recorded cwd as its working directory, as it treats a Codex call's workdir; att-031 is re-audited with file_attempt.py --replay to valid completed, with no replacement. The same resolution also catches a climb it used to miss (cat ../../<outside> from a subdirectory). Running the new audit over every other filed attempt (att-001 to att-034) changes no violation list; att-016's recorded working directories change. The change touches no reviewer input or execution condition.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T05:58:32Z",
+      "what": "bench/tools moved to 216e50710b7df769e0e2b0323d4dfa15da8c6574: attempt_audit.py counted a cd target as a read, and tokenized heredoc bodies as command operands in its relative-path walk. att-059 ((l) / B / 2) ran `cd <attempt>/clone-work 2>/dev/null || cd /tmp; cat > t.js <<'E' ...`; the work directory existed, so the fallback never ran, and t.js was written there (no /tmp/t.js exists), but /tmp was flagged and the attempt filed harness-invalid on that alone. A cd target is no longer itself a read; what is read relative to it still is (cd <outside> && cat <file> is flagged when the file exists), and a heredoc body is skipped by the relative walk unless a shell reads it, as the network rule already did; absolute paths inside a body are still judged. att-059 is re-audited with file_attempt.py --replay to valid completed, with no replacement. Running the new audit over every other filed attempt (att-001 to att-060) changes no violation list. A bare listing after a cd outside the roots (cd <dir> && ls) is a blind spot of the kind the sixth deviation records. The change touches no reviewer input or execution condition.",
+      "invalidates": []
     }
   ]
 }

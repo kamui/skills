@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/utils/body.ts",
+      "line_start": 125,
+      "line_end": 131,
+      "claim": "Reuse cached FormData in parseBody instead of re-serializing it. A handler or middleware awaits `c.req.formData()` and then calls `c.req.parseBody()` on a multipart/form-data request.",
+      "consequence": "parseBody now rejects with `TypeError: Failed to parse body as FormData.` because arrayBuffer() re-serializes the cached FormData with a new boundary that no longer matches the Content-Type header; the base returned the fields.",
+      "proposed_fix": "In `parseFormData` in `src/utils/body.ts`, when the request is a HonoRequest with `bodyCache.formData` set, await and use that value. Otherwise read `arrayBuffer()`, call `bufferToFormData` and cache the result, as the form case in `src/validator/validator.ts` does.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

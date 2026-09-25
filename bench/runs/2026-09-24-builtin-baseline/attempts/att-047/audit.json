@@ -1,0 +1,44 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-047-clone/7e690366-fe27-49be-af6b-27debb401cb0/subagents/agent-aeef5be473da20700.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-047-clone/7e690366-fe27-49be-af6b-27debb401cb0.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts src/utils/buffer.test.ts",
+    "git diff main...review-head -- src/utils/body.test.ts | head -80; node --version",
+    "W=../clone-work && mkdir -p $W && cat > $W/t.ts <<'EOF'\nimport { Hono } from '/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src/hono'\nconst app = new Hono()\napp.post('/a', async (c) => { await c.req.formData(); return c.json(await c.req.parseBody()) })\napp.post('/b', async (c) => { await c.req.text(); return c.json(await c.req.parseBody()) })\napp.post('/c', async (c) => { await c.req.parseBody(); const t = await c.req.text(); return c.text(t) })\nconst fd = new FormData(); fd.append('message', 'hello')\nfor (const p of ['/a','/b']) {\n  const r1 = await app.request(p, { method: 'POST', body: fd })\n  console.log(p, 'multipart', r1.status, await r1.text())\n  const r2 = await app.request(p, { method: 'POST', body: new URLSearchParams({message:'hello'}) })\n  console.log(p, 'urlenc', r2.status, await r2.text())\n}\nconst r3 = await app.request('/c', { method: 'POST', body: new URLSearchParams({message:'hello'}) })\nconsole.log('/c', r3.status, await r3.text())\nEOF\n./node_modules/.bin/esbuild $W/t.ts --bundle --platform=node --format=esm --outfile=$W/t.mjs --log-level=warning && node $W/t.mjs; git stash list | head -1; git status --short | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone-work && cat > n.mjs <<'EOF'\nconst body='--x\\r\\nContent-Disposition: form-data; name=\"t\"\\r\\n\\r\\nHello\\r\\n--x--'\nconsole.log((await new Response(body,{headers:{'Content-Type':'Multipart/Form-Data; boundary=x'}}).formData()).get('t'))\nconsole.log((await new Request('http://a',{method:'POST',body:'a=1',headers:{'Content-Type':'Application/X-WWW-Form-Urlencoded'}}).formData()).get('a'))\nEOF\nnode n.mjs"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src/utils/body.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src/validator/validator.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src/request.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src/request.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src/request.ts",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone/src"
+  ],
+  "diff_commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts src/utils/buffer.test.ts",
+    "git diff main...review-head -- src/utils/body.test.ts "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-047"
+  ]
+}

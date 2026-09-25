@@ -1,0 +1,100 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+  "issues": [],
+  "change_description": "[field] Sync controlled value changes with field state\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Make `Field.Control` sync controlled value changes through `useValueChanged` (one owner per mode), register the serialized value so dirty state clears for non-string values, and honor `details.cancel()`. Source: the supplied pull-request text; the single commit message only restates the title.",
+  "issue_fit": "Issue alignment unavailable: no originating issue. Every ledger row from the PR text is met, except that `details.cancel()` stops validation and error-clearing but not dirty/filled updates in uncontrolled mode (a note, not a defect).",
+  "coverage": "Complete merge-base diff (2 files) reviewed with `useValueChanged`, the field registration and validation code, and sibling controls read. Reviewer-executed at the head, offline jsdom: `packages/react/src/field` (10 files, 240 passed, 9 skipped) and a scratch probe of edge cases. Chromium and rendered output were unavailable. No must-fix or risk-area candidate survived, so no verification batch was dispatched. Recorded PR performance figures were not re-measured."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "In controlled mode `onChange` now returns before the `defaultPrevented` guard, so a controlled value that changes despite a prevented `input` event still clears errors and validates; the uncontrolled path still skips both (the existing prevented-change test covers only the uncontrolled path).",
+   "evidence": "`packages/react/src/field/control/FieldControl.tsx:105-113` and `:143-154`; a scratch probe with a canceled-capture `input` listener counted 1 validate call."
+  },
+  {
+   "fact": "In uncontrolled mode a canceled `onValueChange` skips validation and error clearing, but `setDirty` and `setFilled` still run, which matches the DOM text that stays in the input.",
+   "evidence": "`packages/react/src/field/control/FieldControl.tsx:143-151`; scratch probe: dirty and filled true after cancel."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "pr-body/\"The control now registers the serialized value\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "FieldControl.tsx:57-58,67-74; numeric-value dirty test passes"
+   },
+   {
+    "source": "pr-body/\"Programmatic changes left the field stale\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "FieldControl.tsx:105-113 syncs errors, dirty, filled and validation; programmatic-change test passes"
+   },
+   {
+    "source": "pr-body/\"`useValueChanged` owns the controlled path, `onChange` owns the uncontrolled path\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "FieldControl.tsx:105-113 and :143-154 (early return when controlled); validate-once test passes"
+   },
+   {
+    "source": "pr-body/\"`details.cancel()` in `onValueChange` now stops the internal handling\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "FieldControl.tsx:151 gates validation on `!details.isCanceled`; cancel test passes; dirty/filled still update (observation)"
+   },
+   {
+    "source": "pr-body/\"A controlled value the consumer rejects or rewrites no longer reaches the field state\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "controlled onChange returns early; sync runs from the `value` prop only"
+   },
+   {
+    "source": "pr-body/\"2 on the first, then 1\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "The added render-count test passes for onSubmit mode; the onChange-mode figure and Number Field comparison were not re-measured."
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/react/src/field/control/FieldControl.tsx",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/react/src/field/control/FieldControl.test.tsx",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "TZ=UTC VITEST_ENV=jsdom vitest run --project @base-ui/react packages/react/src/field",
+    "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+    "outcome": "reviewer-executed",
+    "reason": "10 files, 240 passed, 9 skipped, exit 0"
+   }
+  ],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "mui/base-ui"
+ }
+}

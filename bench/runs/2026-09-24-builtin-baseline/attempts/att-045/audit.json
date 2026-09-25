@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-045/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-44-10-01a0d717-b484-7c41-8bcf-ee7affd58d03.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-045/home/.codex/sessions/2026/09/25/rollout-2026-09-25T01-44-10-01a0d717-b502-7240-92e3-d8218f0c0b8d.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md",
+    "git status --short; sed -n '1,100p' internal/backup.go; sed -n '650,750p' internal/backup.go; rg 'func GetEnvOrFile|enabledProviderAuth|compareTypeClone' internal -n | head -35; ls -a; cat go.mod | head -15; find docker internal -iname '*agents*' -o -name CLAUDE.md",
+    "cat internal/envfile.go; rg 'func TestMain|func preflight|func resetBackups' -n internal; find .agents .codex -type f -maxdepth 3; sed -n '1,100p' internal/backup_test.go; sed -n '110,150p' internal/constants.go"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-045/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-045"
+  ]
+}

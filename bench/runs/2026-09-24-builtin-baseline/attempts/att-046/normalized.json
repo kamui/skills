@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "Provider ordering, log strings (including the pre-existing 'Organistations' spelling) and notification title bytes are preserved exactly by the refactor.",
+      "consequence": "`internal/backup.go:135`, `internal/backup.go:210`, `internal/notify.go:26`.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}
