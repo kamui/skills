@@ -167,7 +167,10 @@ with no audit violation, and att-004 to an empty review. The glob fix also stopp
 reading a word that starts with a slash and then a glob, such as `/*/x`, as an absolute path.
 Commit `552a6f8` keeps glob characters inside an absolute path, and the manifest's third deviation
 records it; the paths extracted from the four attempts' recorded commands are unchanged, so no
-filed attempt changes.
+filed attempt changes. The same fix dropped the flag on a dot-led glob that bash expands to `..`,
+such as `cat .*/.*/<path>`. Commit `f1a4343` judges such a segment as `..`, and the fourth
+deviation records it; every path extracted from the four attempts' commands stays inside the
+attempt directory, so no filed attempt changes.
 
 **How att-002 and att-004 count: re-filed, no replacement.** The method reruns a cell, consuming
 a replacement, when a harness repair changes inputs or execution conditions (method §3); this
