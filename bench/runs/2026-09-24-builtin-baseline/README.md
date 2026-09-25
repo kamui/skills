@@ -221,7 +221,7 @@ pattern. Each fix has a test, was re-run over every filed attempt, and is a mani
 (the seventh to the thirteenth) that invalidates nothing; the eight attempts it misfiled were
 re-audited with `file_attempt.py --replay`, with no replacement. Review of the grid then closed two
 gaps in the new network rule, a script handed to `zsh -fc` or `bash -lc` and Go's offline settings
-carried past the command they prefix; the fourteenth to sixteenth deviations record it, and no
+carried past the command they prefix; the fourteenth to seventeenth deviations record it, and no
 filed attempt's audit changes. The audit's scope is the sixth deviation's: accidental reads, not disguised ones.
 
 Scoring is next and waits for the maintainer: it opens the sealed registers with `seal.py` and
