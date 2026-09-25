@@ -690,6 +690,11 @@
       "at": "2026-09-25T05:11:44Z",
       "what": "bench/tools moved to f563ef22a3df3ea3d367c619dbb3bafe45561f4f: attempt_audit.py no longer starts an absolute path at a slash that follows ':/', so a URL's authority inside a command (`new Request('http://localhost/')` in att-012's scratch script) is not read as the path /localhost; `file:///<path>` still yields the path. att-012 ((p) / D / 1) was filed harness-invalid on that one flag alone and is re-audited with file_attempt.py --replay to valid completed, with no replacement. att-011 ((p) / C / 1) finished while the fix was being tested and is re-audited the same way; its audit is unchanged and it stays valid completed. No filed attempt other than att-012 has a command containing ':/'. The change touches no reviewer input or execution condition.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T05:16:28Z",
+      "what": "bench/tools moved to eb8cad3720f4adb4e175145769b85f61eaa8846c: a path outside the allowed roots is now a read-audit violation only when it names something on disk when the audit runs (a glob by any match), the rule method §3 item 4 already applies to ancestor guidance files; the absent ones are listed in audit.json as absent_outside_paths. The text audit extracts slash-led words from scratch code, and on the TypeScript targets it read route strings ('/a', '/i'), JSX closing tags (</Form>, </button>, </Field.Root>), import specifiers (/react, /utils) and a sed pattern (s#/clone/src/hono#...) as absolute paths; none exists, so nothing was read. att-013 ((p) / A / 1) and att-014 ((r) / C / 1) were filed harness-invalid on such paths alone and are re-audited with file_attempt.py --replay to valid completed, with no replacement. Running the new audit over every other filed attempt changes nothing: att-006 stays flagged because /tmp/pr.diff, which it wrote, exists (it is already replaced by att-007). Under the scope the sixth deviation records, a read of a path that does not exist reveals nothing; a file an attempt deletes before the audit runs is a further blind spot of the same kind. The change touches no reviewer input or execution condition.",
+      "invalidates": []
     }
   ]
 }
