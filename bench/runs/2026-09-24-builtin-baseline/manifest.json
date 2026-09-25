@@ -710,6 +710,11 @@
       "at": "2026-09-25T05:58:32Z",
       "what": "bench/tools moved to 216e50710b7df769e0e2b0323d4dfa15da8c6574: attempt_audit.py counted a cd target as a read, and tokenized heredoc bodies as command operands in its relative-path walk. att-059 ((l) / B / 2) ran `cd <attempt>/clone-work 2>/dev/null || cd /tmp; cat > t.js <<'E' ...`; the work directory existed, so the fallback never ran, and t.js was written there (no /tmp/t.js exists), but /tmp was flagged and the attempt filed harness-invalid on that alone. A cd target is no longer itself a read; what is read relative to it still is (cd <outside> && cat <file> is flagged when the file exists), and a heredoc body is skipped by the relative walk unless a shell reads it, as the network rule already did; absolute paths inside a body are still judged. att-059 is re-audited with file_attempt.py --replay to valid completed, with no replacement. Running the new audit over every other filed attempt (att-001 to att-060) changes no violation list. A bare listing after a cd outside the roots (cd <dir> && ls) is a blind spot of the kind the sixth deviation records. The change touches no reviewer input or execution condition.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-25T06:17:25Z",
+      "what": "bench/tools moved to 645607ee460db2e2f03ab38069cdfd3f5300e992: attempt_audit.py's network rule read inside quoted text, so the alternation in att-079's search pattern, rg -n -A12 \"func \\(ac \\*addrConn\\) resetTransport|...|go ac.resetTransport\", read as a pipe into a go command. Quoted text is now masked before the rule runs, except a script opened right after -c and a $(...) inside double quotes, which the shell runs. att-079 ((m) / A / 2) was filed harness-invalid on that one flag alone and is re-audited with file_attempt.py --replay to valid completed, with no replacement. Running the new audit over every other filed attempt (att-001 to att-080) changes no violation list. The change touches no reviewer input or execution condition.",
+      "invalidates": []
     }
   ]
 }

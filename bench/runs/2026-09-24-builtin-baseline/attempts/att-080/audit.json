@@ -1,0 +1,52 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-080-clone/7a8abf37-85ea-4d9b-979a-5b1a91c72e27/subagents/agent-a95fd0998aa0cdc70.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-080-clone/7a8abf37-85ea-4d9b-979a-5b1a91c72e27.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone/packages/server/src && sed -n 1,120p core/internals/procedureBuilder.ts; sed -n 50,160p core/middleware.ts; sed -n 55,80p core/internals/utils.ts; sed -n 1,40p types.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone/packages/tests && cat tsconfig.json; ls node_modules/.bin | grep tsc; ls node_modules/@trpc; grep -n \"context<\" -A8 ../server/src/core/initTRPC.ts | head -30",
+    "cat tsconfig.json; grep -rn \"ctx:\" packages/server/src/core/internals/config.ts | head; ls -la packages/tests/node_modules/@trpc/server; cat packages/server/package.json | grep -n '\"types\"\\|\"main\"\\|exports' | head",
+    "ls -d node_modules/zod packages/tests/node_modules/zod packages/server/node_modules/zod 2>&1; ls /home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone-work",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone\nmkdir -p $W/t && cd $W/t\ncat > tsconfig.json <<EOF\n{\n  \"extends\": \"$C/tsconfig.json\",\n  \"include\": [\"./*.ts\"],\n  \"compilerOptions\": {\n    \"baseUrl\": \"$C\",\n    \"typeRoots\": [\"$C/node_modules/@types\"],\n    \"types\": [\"node\"],\n    \"skipLibCheck\": true,\n    \"noEmit\": true,\n    \"noUnusedLocals\": false,\n    \"paths\": {\n      \"@trpc/server\": [\"packages/server/src\"],\n      \"@trpc/server/*\": [\"packages/server/src/*\"],\n      \"zod\": [\"node_modules/zod\"]\n    }\n  }\n}\nEOF\ncat > a.ts <<'EOF'\nimport { initTRPC, inferRouterInputs } from '@trpc/server';\nimport { Overwrite } from '@trpc/server/core/internals/utils';\nimport { z } from 'zod';\n\ntype Eq<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;\ndeclare function ok<T extends true>(): void;\n\n// 1. ctx any\nconst tAny = initTRPC.context<any>().create();\ntAny.procedure.query(({ ctx }) => ctx.foo);\ntAny.procedure.use(({ ctx, next }) => next({ ctx: { user: 1 } })).query(({ ctx }) => { ctx.user; return ctx.foo; });\n\n// 2. array input w/ middleware\nconst t = initTRPC.create();\nconst r = t.router({\n  arr: t.procedure.input(z.array(z.string())).use((o) => o.next()).query(({ input }) => input),\n  num: t.procedure.input(z.number()).use((o) => o.next()).query(({ input }) => input),\n  du: t.procedure.input(z.discriminatedUnion('type', [z.object({ type: z.literal('a'), a: z.string() }), z.object({ type: z.literal('b'), b: z.number() })])).use((o) => o.next()).query(({ input }) => input),\n  date: t.procedure.input(z.date()).use((o) => o.next()).query(({ input }) => input),\n  opt: t.procedure.input(z.object({ a: z.string() }).optional()).use((o) => o.next()).query(({ input }) => input),\n});\ntype I = inferRouterInputs<typeof r>;\nok<Eq<I['arr'], string[]>>();\nok<Eq<I['num'], number>>();\nok<Eq<I['du'], { type: 'a'; a: string } | { type: 'b'; b: number }>>();\nok<Eq<I['date'], Date>>();\nok<Eq<I['opt'], { a: string } | undefined>>();\n\n// 3. direct\nok<Eq<Overwrite<{ a: 1 }, never>, { a: 1 }>>();\nok<Eq<Overwrite<{ a: 1 }, undefined>, { a: 1 }>>();\nok<Eq<Overwrite<string, string>, string>>();\ntype X1 = Overwrite<any, { user: 1 }>;\nok<Eq<X1, { [x: string]: any; user: 1 }>>();\nEOF\ntimeout 290 $C/packages/tests/node_modules/.bin/tsc -p tsconfig.json 2>&1 | head -40",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone\ncd $W/t && mv a.ts a.ts.bak\ncat > b.ts <<'EOF'\nimport { initTRPC, inferRouterInputs } from '@trpc/server';\nimport { Overwrite } from '@trpc/server/core/internals/utils';\nimport { z } from 'zod';\ntype Old<TType, TWith> = TType extends any\n  ? TWith extends any\n    ? { [K in keyof TType | keyof TWith]: K extends keyof TWith ? TWith[K] : K extends keyof TType ? TType[K] : never; }\n    : never\n  : never;\ntype Show<T> = { __: T };\nconst t = initTRPC.create();\nconst r = t.router({\n  arr: t.procedure.input(z.array(z.string())).use((o) => o.next()).query(({ input }) => input),\n  du: t.procedure.input(z.discriminatedUnion('type', [z.object({ type: z.literal('a'), a: z.string() }), z.object({ type: z.literal('b'), b: z.number() })])).use((o) => o.next()).query(({ input }) => input),\n  opt: t.procedure.input(z.object({ a: z.string() }).optional()).use((o) => o.next()).query(({ input }) => input),\n});\ntype I = inferRouterInputs<typeof r>;\nexport const s1: Show<I['arr']> = 1 as any as 0;\nexport const s2: Show<I['du']> = 1 as any as 0;\nexport const s3: Show<I['opt']> = 1 as any as 0;\nexport const n1: Show<Overwrite<{ a: 1 }, never>> = 0;\nexport const n2: Show<Old<{ a: 1 }, never>> = 0;\nexport const u1: Show<Overwrite<{ a: 1 }, undefined>> = 0;\nexport const u2: Show<Old<{ a: 1 }, undefined>> = 0;\nexport const a1: Show<Overwrite<any, { user: 1 }>> = 0;\nexport const a2: Show<Old<any, { user: 1 }>> = 0;\nexport const b1: Show<Overwrite<any, {}>> = 0;\nexport const b2: Show<Old<any, {}>> = 0;\nexport const c1: Show<Overwrite<{a:1}, unknown>> = 0;\nexport const c2: Show<Old<{a:1}, unknown>> = 0;\nexport const d1: Show<Overwrite<unknown, {a:1}>> = 0;\nexport const d2: Show<Old<unknown, {a:1}>> = 0;\nEOF\ntimeout 290 $C/packages/tests/node_modules/.bin/tsc -p tsconfig.json 2>&1 | grep -o \"Type '[^']*' is not assignable to type 'Show<.*\" | head -40",
+    "grep -rn \"context<any>\\|standaloneMiddleware\\|ctx: any\" packages --include=*.ts | grep -v node_modules | head; grep -rn \"Overwrite\" packages/server/src/core/internals/utils.ts",
+    "sed -n 190,260p packages/server/src/core/middleware.ts; sed -n 1,60p packages/tests/server/regression/issue-4947-merged-middleware-inputs.test.ts",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone\ncd $W/t && mv b.ts b.ts.bak\ncat > c.ts <<'EOF'\nimport { initTRPC, inferRouterInputs, experimental_standaloneMiddleware } from '@trpc/server';\nimport { z } from 'zod';\ntype Show<T> = { __: T };\nconst t = initTRPC.create();\nconst mw = experimental_standaloneMiddleware<{ input: { id: string } | undefined }>().create((opts) => opts.next({ ctx: { x: 1 } }));\nconst r = t.router({\n  p: t.procedure.input(z.object({ id: z.string(), name: z.string() })).use(mw).query(({ input }) => input.name),\n});\ntype I = inferRouterInputs<typeof r>;\nexport const s1: Show<I['p']> = 0;\n\nconst tAny = initTRPC.context<any>().create();\nexport const q1 = tAny.procedure.query(({ ctx }) => ctx.foo);\nexport const q2 = tAny.procedure.use(({ next }) => next({ ctx: { user: 1 } })).query(({ ctx }) => ctx.foo);\nexport const q3 = tAny.procedure.use(({ next }) => next()).query(({ ctx }) => ctx.foo);\nEOF\ntimeout 290 $C/packages/tests/node_modules/.bin/tsc -p tsconfig.json 2>&1 | head -20",
+    "W=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone-work; C=/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone\nmkdir -p $W/old && cd $C && git archive main packages/server/src | tar -x -C $W/old\nmkdir -p $W/t2 && cd $W/t2 && cp $W/t/c.ts . \nsed \"s#\\\"@trpc/server\\\": \\[\\\"packages/server/src\\\"\\]#\\\"@trpc/server\\\": [\\\"$W/old/packages/server/src\\\"]#; s#\\\"@trpc/server/\\*\\\": \\[\\\"packages/server/src/\\*\\\"\\]#\\\"@trpc/server/*\\\": [\\\"$W/old/packages/server/src/*\\\"]#\" $W/t/tsconfig.json > tsconfig.json\ngrep trpc tsconfig.json\ntimeout 290 $C/packages/tests/node_modules/.bin/tsc -p tsconfig.json 2>&1 | head -20"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone/packages",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone/packages",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone/packages/server/src/core/internals/utils.ts"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-080"
+  ]
+}
