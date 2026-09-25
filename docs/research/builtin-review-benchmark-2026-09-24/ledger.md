@@ -251,3 +251,25 @@ Scoring steps are charges in `charges.jsonl`, metered from each session's own tr
 | S25 | independent review of the scoring plan: `claude -p --model claude-fable-5-1 --effort high`, read-only tools, no sub-agents, 18:23–18:31Z | `dc19ec16…` | 14 findings, all adopted; on its advice to grade with Fable 5.1, the maintainer kept Opus 5.5; every assistant line `claude-fable-5-1` | 5.47 |
 
 Run spend after S25: $66.26; room under the cap after the reserve: $158.74.
+
+### Grading, regression targets (i)–(n)
+
+Each row is one `grade.py dispatch`: a fresh headless Claude Code 2.1.282 session, `--safe-mode`,
+`claude-opus-5-5` at `high`, single-threaded, `--max-budget-usd 10`, from
+`prompts/grader-template.md` (SHA-256 `e39af464…`), metered from its own transcript. Every
+session's assistant lines are `claude-opus-5-5` and none started a sub-agent.
+
+| # | Target | Session | Time (Z) | Result | Billed ($) |
+| --- | --- | --- | --- | --- | --- |
+| G1 | (i) | `fc3bf4c9…` | 20:38–20:42 | failed: `verdicts.json` left out each review's `items` wrapper, so `map` refused it; graded again as G7, not repaired | 1.23 |
+| G2 | (j) | `6a8b1251…` | 20:39–20:42 | mapped: 4 recoveries, 1 false finding, 22 non-material, 1 unresolved (1 new candidate) | 0.92 |
+| G3 | (k) | `cd6f7bb9…` | 20:42–20:44 | mapped: 8 recoveries, 1 false finding, 17 non-material | 0.49 |
+| G4 | (l) | `d710b325…` | 20:42–20:44 | mapped: 13 recoveries, 17 non-material, 1 unresolved (1 new candidate) | 0.57 |
+| G5 | (m) | `62b6e582…` | 20:44–20:46 | mapped: 2 false findings, 17 non-material | 0.67 |
+| G6 | (n) | `0cdfe2fd…` | 20:44–20:46 | failed the read audit: it wrote `verdicts.json` one level above its directory (which holds nothing else) and moved it in; graded again as G8 | 0.64 |
+| G7 | (i) | `4aa1d91a…` | 20:46–20:49 | mapped: 22 recoveries (GT-i1 15, GT-i2 7), 12 non-material, 9 unresolved (3 new candidates) | 0.99 |
+| G8 | (n) | `7733bf50…` | 20:46–20:48 | mapped: 6 recoveries, 1 false finding, 20 non-material | 0.56 |
+
+Regression grading: $6.07 for eight sessions, two of them failed and graded again from a new
+`prepare` with new tokens. All six regression mappings were committed before any sealed register
+was opened.
