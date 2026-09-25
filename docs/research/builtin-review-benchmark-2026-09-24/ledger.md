@@ -174,3 +174,67 @@ records (att-031). Each fix has a test, each re-audit ran over every filed attem
 six affected attempts was re-filed with `file_attempt.py --replay` with no replacement. One
 violation was real: att-006 wrote the diff to `/tmp/pr.diff` although the policy sends scratch
 files to the work directory and its `TMPDIR` was there, and it was replaced by att-007.
+
+### Replicate 2 (2026-09-25)
+
+The replicate-2 blocks ran in the sealed target order from 05:41Z to 06:20Z, two in flight. Before
+each block's first cell the operator's gate (the run README's stopping rule) compared `room_usd`
+with the block's $15.50 bound; it never bound, the lowest room at a block start being $165.08.
+
+| Attempt | Cell | Dispatched | Disposition | Billed / list ($) | Quota after (D) | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| att-042 | (q) / B / 2 | 05:41:57Z | harness-invalid 05:42:19Z | 0.17 | — | 3 items; 2 commands; 1 subagent; harness-invalid: wrote and read `/tmp/pr_diff.txt`, outside the roots; replaced by att-044 |
+| att-043 | (q) / C / 2 | 05:42:02Z | valid completed 05:43:16Z | 0.35 | — | 10 items; 7 commands; 1 subagent |
+| att-044 | (q) / B / 2 | 05:43:40Z | valid completed 05:44:01Z | 0.13 | — | 3 items; 2 commands; 1 subagent; replacement 2 of 4, for att-042 |
+| att-045 | (q) / D / 2 | 05:44:09Z | valid completed 05:44:28Z | 0.28 list | 63% | empty review; 3 commands; 1 subagent |
+| att-046 | (q) / A / 2 | 05:44:14Z | valid completed 05:45:41Z | 0.60 | — | 1 item; 9 commands |
+| att-047 | (p) / C / 2 | 05:44:37Z | valid completed 05:46:04Z | 0.35 | — | 7 items; 4 commands; 1 subagent |
+| att-048 | (p) / D / 2 | 05:45:51Z | valid completed 05:46:22Z | 0.22 list | 63% | 1 item; 3 commands; 1 subagent |
+| att-049 | (p) / A / 2 | 05:46:13Z | valid completed 05:48:39Z | 0.87 | — | 1 item; 20 commands; 1 subagent |
+| att-050 | (p) / B / 2 | 05:46:31Z | valid completed 05:47:01Z | 0.14 | — | 4 items; 4 commands; 1 subagent |
+| att-051 | (r) / D / 2 | 05:47:15Z | valid completed 05:47:59Z | 0.51 list | 64% | 1 item; 5 commands; 1 subagent |
+| att-052 | (r) / A / 2 | 05:48:13Z | valid completed 05:50:24Z | 0.67 | — | 2 items; 19 commands |
+| att-053 | (r) / B / 2 | 05:48:53Z | valid completed 05:49:24Z | 0.12 | — | 5 items; 3 commands; 1 subagent |
+| att-054 | (r) / C / 2 | 05:49:37Z | valid completed 05:52:12Z | 0.68 | — | 6 items; 16 commands; 1 subagent |
+| att-055 | (i) / A / 2 | 05:50:25Z | valid completed 05:55:22Z | 1.33 | — | 3 items; 27 commands; 1 subagent |
+| att-056 | (i) / B / 2 | 05:52:13Z | valid completed 05:52:55Z | 0.14 | — | 6 items; 2 commands; 1 subagent |
+| att-057 | (i) / C / 2 | 05:52:56Z | valid completed 05:54:49Z | 0.47 | — | 9 items; 6 commands; 1 subagent |
+| att-058 | (i) / D / 2 | 05:54:51Z | valid completed 05:55:40Z | 0.32 list | 64% | 3 items; 4 commands; 1 subagent |
+| att-059 | (l) / B / 2 | 05:55:24Z | valid completed 05:55:52Z | 0.13 | — | 5 items; 2 commands; 1 subagent; re-audited to valid (twelfth deviation): first filed harness-invalid on a fallback `|| cd /tmp` that never ran |
+| att-060 | (l) / C / 2 | 05:55:42Z | valid completed 05:56:38Z | 0.26 | — | 6 items; 5 commands; 1 subagent |
+| att-061 | (l) / D / 2 | 05:58:34Z | valid completed 05:59:05Z | 0.22 list | 64% | 1 item; 3 commands; 1 subagent |
+| att-062 | (l) / A / 2 | 05:58:39Z | valid completed 06:00:55Z | 0.68 | — | 2 items; 17 commands; 1 subagent |
+| att-063 | (k) / C / 2 | 05:59:13Z | valid completed 06:00:00Z | 0.20 | — | 9 items; 2 commands; 1 subagent |
+| att-064 | (k) / D / 2 | 06:00:07Z | valid completed 06:00:31Z | 0.20 list | 64% | 1 item; 3 commands; 1 subagent |
+| att-065 | (k) / A / 2 | 06:00:39Z | valid completed 06:02:39Z | 0.69 | — | 2 items; 16 commands |
+| att-066 | (k) / B / 2 | 06:01:02Z | valid completed 06:01:21Z | 0.15 | — | 2 items; 3 commands; 1 subagent |
+| att-067 | (n) / D / 2 | 06:01:22Z | valid completed 06:01:47Z | 0.30 list | 64% | empty review; 4 commands; 1 subagent |
+| att-068 | (n) / A / 2 | 06:01:48Z | valid completed 06:02:59Z | 0.39 | — | 2 items; 10 commands |
+| att-069 | (n) / B / 2 | 06:02:40Z | valid completed 06:02:58Z | 0.08 | — | 4 items; 1 commands; 1 subagent |
+| att-070 | (n) / C / 2 | 06:02:59Z | valid completed 06:04:35Z | 0.34 | — | 7 items; 9 commands; 1 subagent |
+| att-071 | (o) / A / 2 | 06:03:19Z | harness-invalid 06:05:57Z | 0.90 | — | 1 item; 19 commands; 1 subagent; harness-invalid: stored its scratch path in `/tmp/pd071` and read it back; replaced by att-074 |
+| att-072 | (o) / B / 2 | 06:04:54Z | valid completed 06:05:18Z | 0.10 | — | 5 items; 2 commands; 1 subagent |
+| att-073 | (o) / C / 2 | 06:05:38Z | valid completed 06:07:01Z | 0.34 | — | 9 items; 9 commands; 1 subagent |
+| att-074 | (o) / A / 2 | 06:07:38Z | valid completed 06:10:11Z | 0.84 | — | 2 items; 20 commands; 1 subagent; replacement 3 of 4, for att-071 |
+| att-075 | (o) / D / 2 | 06:10:38Z | valid completed 06:11:34Z | 0.51 list | 64% | 1 item; 6 commands; 1 subagent |
+| att-076 | (m) / B / 2 | 06:10:26Z | valid completed 06:10:49Z | 0.16 | — | 2 items; 1 commands; 1 subagent |
+| att-077 | (m) / C / 2 | 06:10:53Z | valid completed 06:12:34Z | 0.38 | — | 6 items; 2 commands; 1 subagent |
+| att-078 | (m) / D / 2 | 06:11:38Z | valid completed 06:12:02Z | 0.25 list | 64% | empty review; 3 commands; 1 subagent |
+| att-079 | (m) / A / 2 | 06:12:05Z | valid completed 06:15:05Z | 1.00 | — | 1 item; 25 commands; 1 subagent; re-audited to valid (thirteenth deviation): first filed harness-invalid on `|go ...` inside a quoted rg pattern |
+| att-080 | (j) / C / 2 | 06:13:01Z | valid completed 06:15:28Z | 0.57 | — | 9 items; 11 commands; 1 subagent |
+| att-081 | (j) / D / 2 | 06:17:54Z | valid completed 06:18:40Z | 0.26 list | 64% | empty review; 4 commands; 1 subagent |
+| att-082 | (j) / A / 2 | 06:17:59Z | valid completed 06:19:19Z | 0.46 | — | empty review; 8 commands |
+| att-083 | (j) / B / 2 | 06:19:09Z | valid completed 06:19:53Z | 0.16 | — | 3 items; 4 commands; 1 subagent |
+
+All times 2026-09-25. Replicate-2 spend: $16.93 (A $8.43, B $1.47, C $3.94, D $3.09 list), 42
+attempts for 40 cells. Grid spend, pilot included: $32.48 for 83 attempts. Run spend, charges
+included: $60.79; room under the cap after the reserve: $164.21. Replacements used: 3 of 4. The
+Codex plan ended at 64% of its weekly window, resetting 2026-09-26T09:19:52Z.
+
+**Replicate-2 finding.** Two more audit misreadings, fixed in `216e507` (a fallback `|| cd /tmp`
+that never ran counted as a read) and `645607e` (a `|` inside a quoted `rg` pattern read as a pipe
+into `go`), re-filed att-059 and att-079 with no replacement. Two real violations were replaced:
+att-042 wrote the diff to `/tmp/pr_diff.txt`, as att-006 had on the same target and arm, and
+att-071 (arm A) kept its scratch path in `/tmp/pd071`. The three `/tmp` files are left in place,
+because a re-audit judges a path by whether it exists.
+
