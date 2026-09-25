@@ -1,0 +1,3548 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-24-builtin-baseline",
+  "computed_at": "2026-09-25T21:05:58Z",
+  "metric_code_revision": "367229249b0deccd789d043c910e591356a64d5a",
+  "rubric_version": 1,
+  "inputs": [
+    {
+      "target": "i-requests-6667",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "j-trpc-5017",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "l-bokeh-9232",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "mapping_version": 1,
+      "register_version": 2
+    },
+    {
+      "target": "o-astro-16079",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "p-hono-5067",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "q-soba-195",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "r-base-ui-5460",
+      "mapping_version": 1,
+      "register_version": 1
+    }
+  ],
+  "cells": [
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-018"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-001"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-019"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-002"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-041"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-038"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-039"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-040"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-027"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-024"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-025"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-026"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-020"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-021"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-022"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-023"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-034"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-035"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-036"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-037"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-029"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-003"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-028"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-004"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-031"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-032"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-033"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-030"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-013"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-010"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-011"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-012"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-005"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-006",
+        "att-007"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-008"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-009"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-016"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-017"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-014"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "codex-default",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-015"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-055"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-056"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-057"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-058"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-082"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-083"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-080"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-081"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-065"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-066"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-063"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-064"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-062"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-059"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-060"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-061"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-079"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-076"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-077"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-078"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-068"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-069"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-070"
+      ]
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-067"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-071",
+        "att-074"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-072"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-073"
+      ]
+    },
+    {
+      "target": "o-astro-16079",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-075"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-049"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-050"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-047"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-048"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-046"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-042",
+        "att-044"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-043"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-045"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-052"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "claude-builtin-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-053"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "claude-builtin-opus-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-054"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "codex-default",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-051"
+      ]
+    }
+  ],
+  "by_target_arm": [
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 5,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 2
+      },
+      "priority_errors": 2,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 0.914755,
+      "cost_common_rate_usd": 0.914755,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 107.0,
+      "elapsed_to_completion_s": 107.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "j-trpc-5017"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 1,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 2
+      },
+      "priority_errors": 0,
+      "noise_items": 14,
+      "cost_contemporaneous_usd": 1.115941,
+      "cost_common_rate_usd": 1.115941,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 143.5,
+      "elapsed_to_completion_s": 143.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "k-graphql-js-1582"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 13,
+      "cost_contemporaneous_usd": 0.433883,
+      "cost_common_rate_usd": 0.433883,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 49.0,
+      "elapsed_to_completion_s": 49.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "l-bokeh-9232"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 1,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 7,
+      "cost_contemporaneous_usd": 0.510816,
+      "cost_common_rate_usd": 0.510816,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 56.0,
+      "elapsed_to_completion_s": 56.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 2,
+      "false_findings_unique": 2,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 12,
+      "cost_contemporaneous_usd": 0.665715,
+      "cost_common_rate_usd": 0.665715,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 80.5,
+      "elapsed_to_completion_s": 80.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "n-ripgrep-2957"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 13,
+      "cost_contemporaneous_usd": 0.560263,
+      "cost_common_rate_usd": 0.560263,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 79.0,
+      "elapsed_to_completion_s": 79.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "o-astro-16079"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 11,
+      "cost_contemporaneous_usd": 0.636199,
+      "cost_common_rate_usd": 0.636199,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 76.5,
+      "elapsed_to_completion_s": 76.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 2,
+      "false_findings_unique": 2,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 2
+      },
+      "priority_errors": 0,
+      "noise_items": 12,
+      "cost_contemporaneous_usd": 0.750661,
+      "cost_common_rate_usd": 0.75066,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 87.5,
+      "elapsed_to_completion_s": 87.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 19,
+      "cost_contemporaneous_usd": 0.714556,
+      "cost_common_rate_usd": 0.714556,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 68.5,
+      "elapsed_to_completion_s": 68.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "target": "r-base-ui-5460"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 16,
+      "cost_contemporaneous_usd": 1.219042,
+      "cost_common_rate_usd": 1.219042,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 141.0,
+      "elapsed_to_completion_s": 141.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 3,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 2
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.327503,
+      "cost_common_rate_usd": 0.327503,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 39.5,
+      "elapsed_to_completion_s": 39.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "j-trpc-5017"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.5,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.286461,
+      "cost_common_rate_usd": 0.286461,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 42.0,
+      "elapsed_to_completion_s": 42.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "k-graphql-js-1582"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 0.234583,
+      "cost_common_rate_usd": 0.234584,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 18.0,
+      "elapsed_to_completion_s": 18.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "l-bokeh-9232"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 7,
+      "cost_contemporaneous_usd": 0.277951,
+      "cost_common_rate_usd": 0.277951,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 29.0,
+      "elapsed_to_completion_s": 29.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 0.336461,
+      "cost_common_rate_usd": 0.336461,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 26.5,
+      "elapsed_to_completion_s": 26.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "n-ripgrep-2957"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.161682,
+      "cost_common_rate_usd": 0.161682,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 18.5,
+      "elapsed_to_completion_s": 18.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "o-astro-16079"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 2,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 0.18857,
+      "cost_common_rate_usd": 0.18857,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 24.0,
+      "elapsed_to_completion_s": 24.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.266865,
+      "cost_common_rate_usd": 0.266864,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 30.5,
+      "elapsed_to_completion_s": 30.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 4,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 2,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 11,
+      "cost_contemporaneous_usd": 0.696115,
+      "cost_common_rate_usd": 0.696115,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 21.5,
+      "elapsed_to_completion_s": 21.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "target": "r-base-ui-5460"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.25,
+      "recall_completed_only": 0.25,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 8,
+      "cost_contemporaneous_usd": 0.265271,
+      "cost_common_rate_usd": 0.265271,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 29.5,
+      "elapsed_to_completion_s": 29.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.5,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 2,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 0.581044,
+      "cost_common_rate_usd": 0.581044,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 49.0,
+      "elapsed_to_completion_s": 47.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "j-trpc-5017"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.5,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 1,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.69041,
+      "cost_common_rate_usd": 0.69041,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 44.0,
+      "elapsed_to_completion_s": 44.0
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "k-graphql-js-1582"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.401198,
+      "cost_common_rate_usd": 0.401198,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 24.5,
+      "elapsed_to_completion_s": 24.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "l-bokeh-9232"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.444124,
+      "cost_common_rate_usd": 0.444124,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 28.5,
+      "elapsed_to_completion_s": 28.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.503676,
+      "cost_common_rate_usd": 0.503676,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 22.0,
+      "elapsed_to_completion_s": 22.0
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "n-ripgrep-2957"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.503208,
+      "cost_common_rate_usd": 0.503208,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 25.0,
+      "elapsed_to_completion_s": 33.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "o-astro-16079"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.881396,
+      "cost_common_rate_usd": 0.881396,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 55.5,
+      "elapsed_to_completion_s": 55.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.451028,
+      "cost_common_rate_usd": 0.451028,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 31.5,
+      "elapsed_to_completion_s": 31.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.552416,
+      "cost_common_rate_usd": 0.552416,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 21.5,
+      "elapsed_to_completion_s": 21.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "target": "r-base-ui-5460"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 0.916444,
+      "cost_common_rate_usd": 0.916444,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 40.5,
+      "elapsed_to_completion_s": 40.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.75,
+      "recall_completed_only": 0.75,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 1,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 2,
+        "absent": 1
+      },
+      "priority_errors": 0,
+      "noise_items": 1,
+      "cost_contemporaneous_usd": 2.359833,
+      "cost_common_rate_usd": 2.359833,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 260.5,
+      "elapsed_to_completion_s": 260.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "j-trpc-5017"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 1.037518,
+      "cost_common_rate_usd": 1.037518,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 99.0,
+      "elapsed_to_completion_s": 99.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "k-graphql-js-1582"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 1,
+      "cost_contemporaneous_usd": 1.138243,
+      "cost_common_rate_usd": 1.138243,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 93.0,
+      "elapsed_to_completion_s": 93.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "l-bokeh-9232"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 1.587655,
+      "cost_common_rate_usd": 1.587655,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 155.5,
+      "elapsed_to_completion_s": 155.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 1.971911,
+      "cost_common_rate_usd": 1.97191,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 179.0,
+      "elapsed_to_completion_s": 179.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "n-ripgrep-2957"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 0.838644,
+      "cost_common_rate_usd": 0.838645,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 81.5,
+      "elapsed_to_completion_s": 81.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "o-astro-16079"
+      },
+      "attempts_included": 3,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.666667,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 2.544184,
+      "cost_common_rate_usd": 2.544184,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 158.0,
+      "elapsed_to_completion_s": 156.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 1.726624,
+      "cost_common_rate_usd": 1.726624,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 142.5,
+      "elapsed_to_completion_s": 142.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 1.344002,
+      "cost_common_rate_usd": 1.344002,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 99.5,
+      "elapsed_to_completion_s": 99.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "r-base-ui-5460"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 1.43925,
+      "cost_common_rate_usd": 1.439249,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 130.5,
+      "elapsed_to_completion_s": 130.5
+    }
+  ],
+  "by_arm": [
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high"
+      },
+      "attempts_included": 20,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.875,
+      "recall_completed_only": 0.875,
+      "false_findings_raw": 7,
+      "false_findings_unique": 7,
+      "unresolved_items": 7,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 9,
+        "partial": 1,
+        "absent": 6
+      },
+      "priority_errors": 6,
+      "noise_items": 121,
+      "cost_contemporaneous_usd": 7.521831,
+      "cost_common_rate_usd": 7.52183,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 85.0,
+      "elapsed_to_completion_s": 85.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high"
+      },
+      "attempts_included": 22,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 2,
+      "recall_attempt_level": 0.84375,
+      "recall_completed_only": 0.84375,
+      "false_findings_raw": 2,
+      "false_findings_unique": 2,
+      "unresolved_items": 3,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 7,
+        "partial": 4,
+        "absent": 5
+      },
+      "priority_errors": null,
+      "noise_items": 56,
+      "cost_contemporaneous_usd": 3.041462,
+      "cost_common_rate_usd": 3.041463,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 26.0,
+      "elapsed_to_completion_s": 28.0
+    },
+    {
+      "key": {
+        "arm": "codex-default"
+      },
+      "attempts_included": 20,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.625,
+      "recall_completed_only": 0.625,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 5,
+      "false_clean": 3,
+      "fix_sufficient": {
+        "sufficient": 8,
+        "partial": 3,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 5.924944,
+      "cost_common_rate_usd": 5.924944,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 31.0,
+      "elapsed_to_completion_s": 31.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high"
+      },
+      "attempts_included": 21,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.677083,
+      "recall_completed_only": 0.71875,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 1,
+      "approved_on_buggy": 8,
+      "zero_recovery": 4,
+      "false_clean": 4,
+      "fix_sufficient": {
+        "sufficient": 9,
+        "partial": 3,
+        "absent": 1
+      },
+      "priority_errors": 4,
+      "noise_items": 21,
+      "cost_contemporaneous_usd": 15.987864,
+      "cost_common_rate_usd": 15.987863,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 136.0,
+      "elapsed_to_completion_s": 133.5
+    }
+  ],
+  "by_shape": [
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "changed-test correctness"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 13,
+      "cost_contemporaneous_usd": 0.433883,
+      "cost_common_rate_usd": 0.433883,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 49.0,
+      "elapsed_to_completion_s": 49.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 2,
+      "false_findings_unique": 2,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 12,
+      "cost_contemporaneous_usd": 0.665715,
+      "cost_common_rate_usd": 0.665715,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 80.5,
+      "elapsed_to_completion_s": 80.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 5,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 2
+      },
+      "priority_errors": 2,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 0.914755,
+      "cost_common_rate_usd": 0.914755,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 107.0,
+      "elapsed_to_completion_s": 107.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "cross-file type obligation outside the diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 1,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 2
+      },
+      "priority_errors": 0,
+      "noise_items": 14,
+      "cost_contemporaneous_usd": 1.115941,
+      "cost_common_rate_usd": 1.115941,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 143.5,
+      "elapsed_to_completion_s": 143.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "frontend component logic, React"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 16,
+      "cost_contemporaneous_usd": 1.219042,
+      "cost_common_rate_usd": 1.219042,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 141.0,
+      "elapsed_to_completion_s": 141.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "ordinary behavioural change"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 1,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 7,
+      "cost_contemporaneous_usd": 0.510816,
+      "cost_common_rate_usd": 0.510816,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 56.0,
+      "elapsed_to_completion_s": 56.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "promised change that does not work as pasted (documentation, shell surface)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 13,
+      "cost_contemporaneous_usd": 0.560263,
+      "cost_common_rate_usd": 0.560263,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 79.0,
+      "elapsed_to_completion_s": 79.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 19,
+      "cost_contemporaneous_usd": 0.714556,
+      "cost_common_rate_usd": 0.714556,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 68.5,
+      "elapsed_to_completion_s": 68.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 2,
+      "false_findings_unique": 2,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 2
+      },
+      "priority_errors": 0,
+      "noise_items": 12,
+      "cost_contemporaneous_usd": 0.750661,
+      "cost_common_rate_usd": 0.75066,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 87.5,
+      "elapsed_to_completion_s": 87.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "shape": "security: authorization or injection, web backend"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 11,
+      "cost_contemporaneous_usd": 0.636199,
+      "cost_common_rate_usd": 0.636199,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 76.5,
+      "elapsed_to_completion_s": 76.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "changed-test correctness"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 0.234583,
+      "cost_common_rate_usd": 0.234584,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 18.0,
+      "elapsed_to_completion_s": 18.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 0.336461,
+      "cost_common_rate_usd": 0.336461,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 26.5,
+      "elapsed_to_completion_s": 26.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 3,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 2
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.327503,
+      "cost_common_rate_usd": 0.327503,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 39.5,
+      "elapsed_to_completion_s": 39.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "cross-file type obligation outside the diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.5,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.286461,
+      "cost_common_rate_usd": 0.286461,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 42.0,
+      "elapsed_to_completion_s": 42.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "frontend component logic, React"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.25,
+      "recall_completed_only": 0.25,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 8,
+      "cost_contemporaneous_usd": 0.265271,
+      "cost_common_rate_usd": 0.265271,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 29.5,
+      "elapsed_to_completion_s": 29.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "ordinary behavioural change"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 7,
+      "cost_contemporaneous_usd": 0.277951,
+      "cost_common_rate_usd": 0.277951,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 29.0,
+      "elapsed_to_completion_s": 29.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "promised change that does not work as pasted (documentation, shell surface)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.161682,
+      "cost_common_rate_usd": 0.161682,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 18.5,
+      "elapsed_to_completion_s": 18.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 4,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 2,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 11,
+      "cost_contemporaneous_usd": 0.696115,
+      "cost_common_rate_usd": 0.696115,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 21.5,
+      "elapsed_to_completion_s": 21.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 5,
+      "cost_contemporaneous_usd": 0.266865,
+      "cost_common_rate_usd": 0.266864,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 30.5,
+      "elapsed_to_completion_s": 30.5
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "shape": "security: authorization or injection, web backend"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 2,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 0.18857,
+      "cost_common_rate_usd": 0.18857,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 24.0,
+      "elapsed_to_completion_s": 24.0
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "changed-test correctness"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.401198,
+      "cost_common_rate_usd": 0.401198,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 24.5,
+      "elapsed_to_completion_s": 24.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.503676,
+      "cost_common_rate_usd": 0.503676,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 22.0,
+      "elapsed_to_completion_s": 22.0
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.5,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 2,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 0.581044,
+      "cost_common_rate_usd": 0.581044,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 49.0,
+      "elapsed_to_completion_s": 47.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "cross-file type obligation outside the diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.5,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 1,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.69041,
+      "cost_common_rate_usd": 0.69041,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 44.0,
+      "elapsed_to_completion_s": 44.0
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "frontend component logic, React"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 0.916444,
+      "cost_common_rate_usd": 0.916444,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 40.5,
+      "elapsed_to_completion_s": 40.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "ordinary behavioural change"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.444124,
+      "cost_common_rate_usd": 0.444124,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 28.5,
+      "elapsed_to_completion_s": 28.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "promised change that does not work as pasted (documentation, shell surface)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.503208,
+      "cost_common_rate_usd": 0.503208,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 25.0,
+      "elapsed_to_completion_s": 33.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.552416,
+      "cost_common_rate_usd": 0.552416,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 21.5,
+      "elapsed_to_completion_s": 21.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.451028,
+      "cost_common_rate_usd": 0.451028,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 31.5,
+      "elapsed_to_completion_s": 31.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "shape": "security: authorization or injection, web backend"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 0.881396,
+      "cost_common_rate_usd": 0.881396,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 55.5,
+      "elapsed_to_completion_s": 55.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "changed-test correctness"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 1,
+      "cost_contemporaneous_usd": 1.138243,
+      "cost_common_rate_usd": 1.138243,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 93.0,
+      "elapsed_to_completion_s": 93.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 1.971911,
+      "cost_common_rate_usd": 1.97191,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 179.0,
+      "elapsed_to_completion_s": 179.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.75,
+      "recall_completed_only": 0.75,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 1,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 2,
+        "absent": 1
+      },
+      "priority_errors": 0,
+      "noise_items": 1,
+      "cost_contemporaneous_usd": 2.359833,
+      "cost_common_rate_usd": 2.359833,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 260.5,
+      "elapsed_to_completion_s": 260.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "cross-file type obligation outside the diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 1.037518,
+      "cost_common_rate_usd": 1.037518,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 99.0,
+      "elapsed_to_completion_s": 99.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "frontend component logic, React"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 1.43925,
+      "cost_common_rate_usd": 1.439249,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 130.5,
+      "elapsed_to_completion_s": 130.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "ordinary behavioural change"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 1.587655,
+      "cost_common_rate_usd": 1.587655,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 155.5,
+      "elapsed_to_completion_s": 155.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "promised change that does not work as pasted (documentation, shell surface)"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 0.838644,
+      "cost_common_rate_usd": 0.838645,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 81.5,
+      "elapsed_to_completion_s": 81.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 1.344002,
+      "cost_common_rate_usd": 1.344002,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 99.5,
+      "elapsed_to_completion_s": 99.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 2,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": 1.726624,
+      "cost_common_rate_usd": 1.726624,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 142.5,
+      "elapsed_to_completion_s": 142.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "security: authorization or injection, web backend"
+      },
+      "attempts_included": 3,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.666667,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 2.544184,
+      "cost_common_rate_usd": 2.544184,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 158.0,
+      "elapsed_to_completion_s": 156.5
+    }
+  ],
+  "by_cohort": [
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 8,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.666667,
+      "recall_completed_only": 0.666667,
+      "false_findings_raw": 3,
+      "false_findings_unique": 3,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 1,
+        "absent": 2
+      },
+      "priority_errors": 1,
+      "noise_items": 58,
+      "cost_contemporaneous_usd": 3.320458,
+      "cost_common_rate_usd": 3.320457,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 85.0,
+      "elapsed_to_completion_s": 85.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-opus-high",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 12,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 4,
+      "false_findings_unique": 4,
+      "unresolved_items": 7,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 8,
+        "partial": 0,
+        "absent": 4
+      },
+      "priority_errors": 5,
+      "noise_items": 63,
+      "cost_contemporaneous_usd": 4.201373,
+      "cost_common_rate_usd": 4.201373,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 79.0,
+      "elapsed_to_completion_s": 79.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 10,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 2,
+      "recall_attempt_level": 0.75,
+      "recall_completed_only": 0.75,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 3,
+        "absent": 1
+      },
+      "priority_errors": null,
+      "noise_items": 28,
+      "cost_contemporaneous_usd": 1.416821,
+      "cost_common_rate_usd": 1.416821,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 24.0,
+      "elapsed_to_completion_s": 26.0
+    },
+    {
+      "key": {
+        "arm": "claude-builtin-sonnet-high",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 12,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.9,
+      "recall_completed_only": 0.9,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 3,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 6,
+        "partial": 1,
+        "absent": 4
+      },
+      "priority_errors": null,
+      "noise_items": 28,
+      "cost_contemporaneous_usd": 1.624641,
+      "cost_common_rate_usd": 1.624642,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 29.0,
+      "elapsed_to_completion_s": 29.0
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 8,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.666667,
+      "recall_completed_only": 0.666667,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 2,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 4,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 2.801284,
+      "cost_common_rate_usd": 2.801284,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 34.5,
+      "elapsed_to_completion_s": 34.5
+    },
+    {
+      "key": {
+        "arm": "codex-default",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 12,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.6,
+      "recall_completed_only": 0.6,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 3,
+      "false_clean": 3,
+      "fix_sufficient": {
+        "sufficient": 4,
+        "partial": 3,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 3.12366,
+      "cost_common_rate_usd": 3.12366,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 25.5,
+      "elapsed_to_completion_s": 28.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 9,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.555556,
+      "recall_completed_only": 0.666667,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 9,
+      "cost_contemporaneous_usd": 7.05406,
+      "cost_common_rate_usd": 7.054059,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 139.0,
+      "elapsed_to_completion_s": 135.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 12,
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.75,
+      "recall_completed_only": 0.75,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 1,
+      "approved_on_buggy": 6,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 6,
+        "partial": 2,
+        "absent": 1
+      },
+      "priority_errors": 4,
+      "noise_items": 12,
+      "cost_contemporaneous_usd": 8.933804,
+      "cost_common_rate_usd": 8.933803,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 128.0,
+      "elapsed_to_completion_s": 128.0
+    }
+  ]
+}
