@@ -20,7 +20,9 @@ else), ``register.json`` (the register's bytes; a sealed one from ``--opened DIR
 against ``target.json``'s ``plaintext_sha256``), ``rubric.md``, ``packet.md`` (checked against the
 manifest's hash), ``clone/`` with ``clone-cache/`` and ``clone-work/`` from ``provision.py prepare``
 (``--provision`` substitutes another script with its interface), and ``prompt.md``, the template with
-``{TARGET}``, ``{DEFECT_IDS}`` and ``{REVIEWS}`` substituted. A prompt or review that names an attempt
+``{TARGET}``, ``{DEFECT_IDS}``, ``{REVIEWS}`` and ``{ALLOWANCE}`` (the manifest's ``execution_policy``
+allowance and the target's ``provisioning`` allowance and unavailability, which the reviewers were
+given, with ``<clone>``, ``<cache>`` and the work directory mapped to WORK's) substituted. A prompt or review that names an attempt
 id, an arm id, the run id or the run path, or a prompt that names WORK, the home directory or the
 repository, is refused. KEYFILE (mode 0600) records ``run_id``, ``target``, ``register``
 (``version``, ``sha256``), ``template_sha256``, ``prompt_sha256``, ``created_at`` and ``reviews``
@@ -78,7 +80,7 @@ import check_manifest  # noqa: E402
 from normalize_review import render  # noqa: E402
 from score import Inconsistent, InputError, load_register, read_json, target_dir  # noqa: E402
 
-PLACEHOLDERS = ("{TARGET}", "{DEFECT_IDS}", "{REVIEWS}")
+PLACEHOLDERS = ("{TARGET}", "{DEFECT_IDS}", "{REVIEWS}", "{ALLOWANCE}")
 ITEM_FIELDS = {"assignment", "duplicate_group", "fix_sufficiency", "candidate", "notes"}
 CANDIDATE_FIELDS = {"id", "claim", "evidence", "confidence", "would_settle", "items"}
 OTHER_ASSIGNMENTS = ("false-finding", "non-material", "unresolved")
@@ -166,11 +168,17 @@ def prepare(args) -> list:
         reviews.append({"token": token, "attempt_id": attempt_id, "items": len(doc["items"]),
                         "text": f"# Review {token}\n\n{render(doc)}"})
     defect_ids = [d["id"] for d in register["defects"]]
+    provisioning = read_json(directory / "target.json")["provisioning"]
+    allowance = (f"{manifest['execution_policy']['allowance'].strip()} {provisioning['allowance'].strip()}\n\n"
+                 f"Unavailable: {provisioning['unavailable'].strip()}\n\n"
+                 "Here `<clone>` is `clone/`, `<cache>` is `clone-cache/` and the work directory is `clone-work/`, "
+                 "all in your working directory; from inside `clone/` they are `.`, `../clone-cache` and `../clone-work`.")
     listing = "\n".join(f"- `reviews/{r['token']}.md`: {r['items']} item{'' if r['items'] == 1 else 's'}"
                         for r in sorted(reviews, key=lambda r: r["token"]))
     prompt = (template.replace("{TARGET}", args.target)
               .replace("{DEFECT_IDS}", ", ".join(defect_ids) or "none: the register records this target as clean")
-              .replace("{REVIEWS}", listing))
+              .replace("{REVIEWS}", listing)
+              .replace("{ALLOWANCE}", allowance))
     problems = [f"prompt.md keeps the placeholder {p}" for p in sorted(set(re.findall(r"\{[A-Z_]+\}", prompt)))]
     identifying = ({*records, *(r["cell"]["arm"] for r in records.values()), manifest["run_id"],
                     str(run_dir.resolve())} - {""})

@@ -17,6 +17,12 @@ Every path below is relative to your working directory. Stay inside it: do not r
 
 Registered defects: {DEFECT_IDS}.
 
+## Execution allowance
+
+The reviewers were given this allowance, and it is yours too.
+
+{ALLOWANCE}
+
 ## Reviews to grade
 
 {REVIEWS}
@@ -47,11 +53,11 @@ Do not judge priority, ordering or the review's overall verdict; those are deriv
 ## Rules
 
 - Quote before you judge. Every item's `notes` quote the words the verdict rests on, then give the reasoning: for a recovery, why it clears the bar and how the proposed change measures up; for a `false-finding`, the evidence that refutes it (file and line in `clone/`, or the register or packet passage); for `non-material`, why it is below the threshold; for `unresolved`, what would settle it.
-- Check claims against `clone/` and `packet.md`. You may read anything in the clone and run focused checks when they help, offline only: no network, no package installs, no fetches. Run commands from `clone/` using the cache in `clone-cache/`; a `go` command needs `GOMODCACHE="$PWD/../clone-cache/gomodcache" GOCACHE="$PWD/../clone-cache/gocache" GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local` on the same line, and tool shims the cache provides are in `clone-cache/bin`. Keep each command under five minutes, put scratch files only under `clone-work/`, and add or change nothing in `clone/`.
+- Check claims against `clone/` and `packet.md`. You may read anything in the clone, and run focused checks when they help, but only as the execution allowance above permits the reviewers: offline, with no package installs or fetches.
 - Be strict about `false-finding`: say what refutes the claim.
 - Do not reward a review for being longer, more confident or better formatted. Recovery and truth are what you are measuring.
 - If you notice something that looks like an identifier of the reviewer, ignore it.
-- Write only `verdicts.json`, in the working directory. Create no other file.
+- Write `verdicts.json` in the working directory. Scratch files for a focused check go under `clone-work/`; create no other file.
 
 ## `verdicts.json`
 
