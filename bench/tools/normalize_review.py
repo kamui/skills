@@ -21,9 +21,12 @@ Native shapes:
   final message; the ``high`` variant embeds a fenced JSON array of ``file``/``line``/``summary``/
   ``failure_scenario``) and ``report_findings`` (``ReportFindings`` call inputs, used by the
   ``low`` variant, with ``verdict`` and ``level``).
-* ``codex``: the review's stdout, a summary paragraph then ``Review comment:`` bullets of the form
+* ``codex``: the review's stdout, a summary paragraph then a marker line (``Review comment:`` for
+  one finding, ``Full review comments:`` for several; Codex CLI 0.156.1) and bullets of the form
   ``- [P<n>] <title> — <path>:<start>-<end>`` followed by an indented body; when ``--sessions-dir``
-  is given, the child rollout's final JSON with ``overall_correctness`` supplies the verdict.
+  is given, the child rollout's final JSON with ``overall_correctness`` supplies the verdict. A
+  review with no finding prints the summary alone, with no marker and no bullet: that is ``empty``
+  only when the rollout's verdict is ``patch is correct``, and ``unresolved`` otherwise.
 
 Output schema: ``{"arm", "parse_status", "native_verdict", "verdict_source", "items": [...],
 "parse_notes": [...]}``; ``parse_status`` is ``parsed`` (a recognized review with items),
@@ -55,6 +58,7 @@ import re
 import sys
 import tempfile
 
+CODEX_MARKER = re.compile(r"^(?:Review comment|Review comments|Full review comments):\s*$")
 CODEX_BULLET = re.compile(r"^- \[(P\d)\] (.+?) — (\S+?):(\d+)(?:-(\d+))?\s*$")
 FENCE = re.compile(r"```(?:json)?\s*(\[.*?\])\s*```", re.S)
 
@@ -155,7 +159,7 @@ def from_codex(text: str, clone, sessions_dir) -> dict:
     items, notes = [], []
     lines = text.splitlines()
     summary_lines, i = [], 0
-    while i < len(lines) and not lines[i].startswith("Review comment"):
+    while i < len(lines) and not CODEX_MARKER.match(lines[i].strip()):
         if lines[i].strip():
             summary_lines.append(lines[i].strip())
         i += 1
@@ -185,8 +189,12 @@ def from_codex(text: str, clone, sessions_dir) -> dict:
     if overall is None:
         overall = " ".join(summary_lines) or None
         source = "stdout summary" if overall else None
-    if not has_marker and not items:
-        notes.append("unresolved: no 'Review comment:' marker and no bullets; stdout kept raw")
+    bullets = any(CODEX_BULLET.match(line) for line in lines)
+    if not has_marker and not bullets and source == "rollout overall_correctness" and overall == "patch is correct":
+        # Codex prints only its summary when it has nothing to report; the rollout verdict confirms it.
+        status = "empty"
+    elif not has_marker and not items:
+        notes.append("unresolved: no review-comments marker and no bullets; stdout kept raw")
         items.append(item(claim=text.strip()))
         status = "unresolved"
     else:
@@ -245,10 +253,22 @@ def self_test() -> int:
     later = from_codex("S.\n\nReview comment:\n\n- [P2] A — /c/a.py:1\n  Body.\n* [P1] B — /c/b.py:2\n  More.\n", "/c", None)
     assert later["parse_status"] == "unresolved" and [i["claim"] for i in later["items"]] == ["A", "* [P1] B — /c/b.py:2"], later
     assert later["items"][1]["consequence"] == "More.", later
+    full = from_codex("Summary.\n\nFull review comments:\n\n- [P1] A — /c/a.py:1-2\n  Body.\n\n- [P2] B — /c/b.py:3\n  More.\n", "/c", None)
+    assert full["parse_status"] == "parsed" and [i["claim"] for i in full["items"]] == ["A", "B"] and not full["parse_notes"], full
+    assert full["native_verdict"] == "Summary.", full
     with tempfile.TemporaryDirectory() as temp:
         p = Path(temp) / "rollout-x.jsonl"
         p.write_text(json.dumps({"payload": {"text": '{"overall_correctness": "patch is incorrect"}'}}) + "\n", encoding="utf-8")
         assert codex_overall(temp) == ("patch is incorrect", "rollout overall_correctness")
+        # A summary alone is not a clean review when the rollout says the patch is incorrect.
+        bare = from_codex("The change looks risky.\n", "/c", temp)
+        assert bare["parse_status"] == "unresolved" and bare["items"][0]["claim"] == "The change looks risky.", bare
+        p.write_text(json.dumps({"payload": {"text": '{"overall_correctness": "patch is correct"}'}}) + "\n", encoding="utf-8")
+        clean = from_codex("No actionable regressions were identified.\n", "/c", temp)
+        assert clean["parse_status"] == "empty" and clean["items"] == [] and clean["native_verdict"] == "patch is correct", clean
+    # Without a rollout verdict, a summary alone stays unresolved.
+    alone = from_codex("No actionable regressions were identified.\n", "/c", None)
+    assert alone["parse_status"] == "unresolved", alone
     assert "Location: pricing.py:17" in render(cx) and "P2" not in render(cx)
     print("self-test ok")
     return 0

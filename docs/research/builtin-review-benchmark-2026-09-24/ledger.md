@@ -86,5 +86,27 @@ replicate each) runs first; its valid rows count.
 
 | Attempt | Cell | Dispatched | Disposition | Billed / list ($) | Quota after (D) | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| att-001 | (i) / B / 1 | 00:33:55Z | valid completed 00:34:32Z | 0.19 | — | pilot; one `git diff`, no test run; 7 items |
+| att-002 | (i) / D / 1 | 00:34:29Z | valid completed 00:35:15Z (re-filed; first filed stopped: normalization exit 1) | 0.26 list | 62% | pilot; 3 findings, verdict `patch is incorrect`; stopped by the normalizer defect below, re-filed from its own output; the old audit also flagged three reads of its own dependency cache |
+| att-003 | (n) / B / 1 | 00:34:45Z | valid completed 00:35:04Z | 0.08 | — | pilot; one `git diff`, no scratch zsh; 4 items |
+| att-004 | (n) / D / 1 | 00:35:10Z | valid completed 00:35:52Z (re-filed; first filed stopped: normalization exit 1) | 0.20 list | 63% | pilot; no finding (verdict `patch is correct`) after offline zsh checks; stopped by the normalizer defect below, re-filed from its own output |
 
-No scored cell has been dispatched.
+All times 2026-09-25. Pilot spend $0.72 (Claude $0.27 billed, Codex $0.46 list). Run spend after the
+pilot, charges included: $29.04; room under the cap after the reserve: $195.96.
+
+**Pilot finding: three harness defects on Codex output, fixed in `0200519`.** Both Codex reviews ran
+to completion and exited 0, but `normalize_review.py` knew only the single-finding marker
+`Review comment:`. With several findings Codex CLI 0.156.1 writes `Full review comments:`, and with
+none it prints its summary alone; both came back `unresolved`, so `dispatch.sh` wrote a stop. The
+read audit also took the slash after a glob (`python*/site-packages/...`) as an absolute path.
+The toy fixture had exactly one finding per review, so none of these paths had run. Re-normalized
+and re-audited with the fixed tools, att-002 parses to three items with no violation and att-004
+to an empty review. The maintainer chose to re-file both from their own outputs with no
+replacement, since the repair changed no reviewer input or execution condition; `6f61765` lets
+`file_attempt.py --replay` supersede a normalization-only stop, and the manifest's second deviation
+records the re-filing. `552a6f8` keeps a leading glob (`/*/x`) inside an absolute path, which the
+glob fix had stopped flagging; the third deviation records it, and no filed attempt's audit
+changes. `f1a4343` judges a dot-led glob that bash expands to `..` (`.*/.*/<path>`) as a climb,
+which the glob fix had also stopped flagging; the fourth deviation records it, and no filed
+attempt's audit changes. `a49dd79` does the same for a `~` path (`~/.*/.*/<path>`); the fifth
+deviation records it, and no filed attempt's commands contain `~`. No charge: nothing was dispatched. Replacements used: 0 of 4.

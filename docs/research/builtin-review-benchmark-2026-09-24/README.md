@@ -1,10 +1,10 @@
 # Built-in reviewer benchmark — `review-code` against Claude Code's `/code-review` and Codex `review`
 
-**Status: frozen 2026-09-24; no scored cell dispatched.** This is the narrative of the first scored
+**Status: frozen 2026-09-24; pilot filed 2026-09-25, four valid attempts.** This is the narrative of the first scored
 run of the [reviewer benchmark suite](../../../bench/README.md). The run lives at
 [`bench/runs/2026-09-24-builtin-baseline/`](../../../bench/runs/2026-09-24-builtin-baseline/README.md);
 its `manifest.json` carries `frozen_at` and names its freeze commit, and every chargeable step is in
-[`ledger.md`](ledger.md). §10 records how the open items were closed. Dispatch of the pilot and the
+[`ledger.md`](ledger.md). §10 records how the open items were closed. Dispatch of the rest of the
 grid waits for the maintainer's go.
 
 The mechanism this file used to describe has moved into `bench/`: the arms are data in
@@ -315,7 +315,11 @@ The four items open at the first draft, and how each closed:
    therefore carries this demonstration; if either arm cannot run the target's allowed command,
    the record shows it and the deviation is written before the sealed order continues. The
    shakedown's clean-home Codex probes confirmed the fixture defect statically, and the pinned D
-   adapter honoured `workspace-write` there (§9).
+   adapter honoured `workspace-write` there (§9). The pilot ran on 2026-09-25: D ran offline zsh
+   checks under (n)'s allowance, and B ran nothing beyond one `git diff` on either target. It also
+   surfaced three harness defects in the Codex post-processing, fixed in `0200519`; the run
+   README's pilot section has the details. The two affected Codex attempts were re-filed from their
+   own outputs with no replacement (the manifest's second deviation).
 3. **The run manifest.** Written and frozen at
    [`bench/runs/2026-09-24-builtin-baseline/manifest.json`](../../../bench/runs/2026-09-24-builtin-baseline/manifest.json):
    arms with file hashes, the `review-code` tree `c3c53da5…`, the CLI versions and prompt hashes

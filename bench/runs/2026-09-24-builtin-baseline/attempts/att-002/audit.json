@@ -1,0 +1,28 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-002/home/.codex/sessions/2026/09/24/rollout-2026-09-24T20-34-31-01a0d5fc-361c-7160-b187-5cb8fd8fe947.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-002/home/.codex/sessions/2026/09/24/rollout-2026-09-24T20-34-31-01a0d5fc-3695-7e52-aaf1-0581d73f06a3.jsonl"
+  ],
+  "rubric_markers": 1,
+  "commands": [
+    "git diff main...review-head; find .. -name AGENTS.md -o -name AGENTS.override.md; ",
+    "sed -n '1,160p' src/requests/__init__.py; sed -n '180,285p' src/requests/adapters.py; sed -n '370,465p' src/requests/adapters.py; rg -n 'ssl_context|client_cert|cert=' tests/test_requests.py | tail -40; cat setup.py | grep -A12 install_requires; rg -n 'load_cert_chain|ssl_context|def create_urllib3_context' ../clone-cache/venv/lib/python*/site-packages/urllib3/util/ssl_.py",
+    "rg -n 'ssl_context|SSLContext|without SSL|without ssl' tests docs src; sed -n '235,250p' ../clone-cache/venv/lib/python*/site-packages/urllib3/util/ssl_.py; sed -n '401,442p' ../clone-cache/venv/lib/python*/site-packages/urllib3/util/ssl_.py; rg -n -A30 'def _merge_pool_kwargs' ../clone-cache/venv/lib/python*/site-packages/urllib3/poolmanager.py; nl -ba src/requests/adapters.py | sed -n '65,115p'; ls -a | head -35"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-002/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-002"
+  ]
+}

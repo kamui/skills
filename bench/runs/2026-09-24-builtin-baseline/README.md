@@ -9,8 +9,8 @@ every chargeable step is in its [`ledger.md`](../../../docs/research/builtin-rev
 
 **Frozen 2026-09-24.** `manifest.json` carries `frozen_at`; `freeze_commit` names the commit that
 introduced it. Nothing in the manifest changes after the first dispatch except by an appended
-deviation naming the cells it invalidates (design §4). No scored cell has been dispatched at the
-freeze.
+deviation naming the cells it invalidates (design §4). No scored cell had been dispatched at the
+freeze; the pilot ran on 2026-09-25 (below).
 
 ## Files
 
@@ -19,7 +19,7 @@ freeze.
 | `manifest.json` | the frozen run: arms resolved with file hashes, the `review-code` tree, the pinned CLI versions and expected prompt hashes; the cohort with register versions and packet, diff and provisioning identities; the 80 planned cells; the caps; the sealed order; the rates used; the execution policy |
 | `charges.jsonl` | every charge that is not an attempt (the shakedown, the hunts, the adjudications, the probes), counted against the cap by `run_cell.py` |
 | `probes/att-00N/` | the three pre-dispatch probes on the toy fixture, filed by `file_attempt.py` under run id `2026-09-24-builtin-baseline-probe` |
-| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (none yet) |
+| `attempts/att-NNN/` | one record per dispatched cell, written by `run_cell.py` (the pilot's att-001 to att-004 so far; att-002 and att-004 re-filed with `--replay`) |
 | `scoring/<target>/mapping.v<M>.json` | blind adjudication per target (none yet) |
 | `results.v<M>.json` | `score.py` output (none yet) |
 
@@ -134,3 +134,73 @@ a test run ((i) runs pytest from its provisioned virtualenv; (n) runs scratch zs
 §10 left open at the freeze. Scoring waits for every planned attempt to be filed: the sealed
 registers are then opened with `seal.py` (`docs/research/builtin-review-benchmark-2026-09-24/sealed/README.md`)
 and `score.py` runs with `--opened`.
+
+## Pilot (2026-09-25)
+
+The first four cells of the sealed order, (i) and (n) under B and D, ran on 2026-09-25 between
+00:33Z and 00:36Z, two in flight, with the pinned `bin/` on `PATH`. Each finished in under a
+minute. The ledger has a row per attempt.
+
+| Attempt | Cell | Disposition | Metered ($) | What the reviewer did |
+| --- | --- | --- | --- | --- |
+| att-001 | (i) / B / 1 | valid completed | 0.19 | one `git diff`; 7 items |
+| att-002 | (i) / D / 1 | valid completed (re-filed; first filed stopped) | 0.26 list | read the change, the clone and its own dependency cache's urllib3 sources; 3 findings, verdict `patch is incorrect` |
+| att-003 | (n) / B / 1 | valid completed | 0.08 | one `git diff`; 4 items |
+| att-004 | (n) / D / 1 | valid completed, empty (re-filed; first filed stopped) | 0.20 list | ran offline zsh checks of the completion script; no finding, verdict `patch is correct` |
+
+**Focused execution.** The Codex arm ran commands under the target's allowance on (n), so the D
+adapter's execution path works on a suite target. The Sonnet built-in ran nothing beyond one
+`git diff` on either target, though its adapter allows `Bash`; that is the arm's own choice and
+is recorded, not repaired.
+
+**Harness defects.** Both Codex reviews ran to completion and exited 0, and both were stopped by
+post-processing. `normalize_review.py` knew only Codex's single-finding marker, `Review comment:`.
+With several findings Codex CLI 0.156.1 writes `Full review comments:`, and with none it prints its
+summary alone; both came back `unresolved`, which `dispatch.sh` turns into a stop. The read audit
+also read the slash after a glob, as in `python*/site-packages/...`, as the start of an absolute
+path and flagged att-002's reads of its own cache. The toy fixture had one finding per review, so
+none of these paths had run before. Commit `0200519` fixes all three with tests, and the manifest
+records the move of `bench/tools` as a deviation that invalidates nothing: the change touches no
+reviewer input or execution condition, and att-001 and att-003 re-audit and re-normalize
+identically. Re-processed into scratch files with the fixed tools, att-002 parses to three items
+with no audit violation, and att-004 to an empty review. The glob fix also stopped the audit
+reading a word that starts with a slash and then a glob, such as `/*/x`, as an absolute path.
+Commit `552a6f8` keeps glob characters inside an absolute path, and the manifest's third deviation
+records it; the paths extracted from the four attempts' recorded commands are unchanged, so no
+filed attempt changes. The glob fix in `0200519` also dropped the flag on a dot-led glob that bash
+expands to `..`, such as `cat .*/.*/<path>` or `cat ~/.*/.*/<path>`. Commits `f1a4343` and
+`a49dd79` judge such a segment as `..`, and the fourth and fifth deviations record them; every
+path extracted from the four attempts' commands stays inside the attempt directory, so no filed
+attempt changes.
+
+**How att-002 and att-004 count: re-filed, no replacement.** The method reruns a cell, consuming
+a replacement, when a harness repair changes inputs or execution conditions (method §3); this
+repair changed neither, so the maintainer chose to re-file both from their own outputs rather than
+spend two of the four replacements discarding two complete reviews. Commit `6f61765` lets
+`file_attempt.py --replay` supersede a stop the wrapper wrote only because its normalizer failed
+after a zero exit, once the replayed normalizer parses; the stop is kept as `stop.recorded.json`
+and noted in the record. Re-filed at that revision, att-002 is valid with three parsed items and a
+clean audit, and att-004 is valid and empty. Each takes its stop instant as `completed_at` and keeps
+a null `payload_validated_at`, because the replay stamps no validation time. Usage is unchanged; the
+transcript archives were rewritten, with new hashes, and passed the restoration check. The
+manifest's second deviation records this and invalidates nothing. The pilot therefore closes with
+four valid attempts and no replacement used, and the sealed order continues at
+`q-soba-195/review-code-sonnet-high/1` on the maintainer's go.
+
+**What the read audit guards against: accidental reads, not deliberate evasion.** Every reviewer
+runs as the maintainer's user, so method §3 item 5 makes the read audit the control on what it
+reads. The audit judges each command by its text, and the shell rewrites that text before it
+runs, so some spellings read outside the allowed roots without naming the path: a variable
+(`x=..; cat $x/$x/<path>`), a quoted or escaped dot glob (`cat "$HOME"/.*/.*/<path>`,
+`cat ~/\.*/\.*/<path>`), brace expansion, `~user`, and a symlink the reviewer plants in the clone
+or its fresh home and reads through, including `cat ~/<link>/../<path>`, which main caught by
+following the link and `a49dd79` no longer does. The reviewers are code reviewers with no reason
+to hide a read, and each runs with a fresh `HOME`, so a stray read shows its path (`find ..`,
+`../`, an absolute path) and the audit catches it. The maintainer decided on 2026-09-25 that the
+audit guards against that and not against a reviewer disguising its reads on purpose, which only
+real isolation (a separate Unix user, recorded in §3 as not done) would stop. The spellings above
+are known blind spots, not defects to repair during this run; the manifest's sixth deviation
+records the decision and invalidates nothing. Quoted regular expressions that look like paths,
+such as `sed 's|.*/.*/||'` or `awk '$1 ~ /[0-9]+/'`, still read as reads outside the roots and
+would file an attempt harness-invalid; none of the pilot's attempts has one.
+

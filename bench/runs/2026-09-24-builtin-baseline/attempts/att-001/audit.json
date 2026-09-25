@@ -1,0 +1,30 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-001/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-001-clone/ace2e0ec-9e63-46b0-97ea-3479a3b59cfb/subagents/agent-aaaeb91267a67049b.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-001/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-001-clone/ace2e0ec-9e63-46b0-97ea-3479a3b59cfb.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git status && echo ---- && git diff main...HEAD -- src/requests/adapters.py"
+  ],
+  "workdirs": [
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-001/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-001/clone/src/requests/adapters.py"
+  ],
+  "diff_commands": [
+    "git diff main...HEAD -- src/requests/adapters.py"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-001/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-001"
+  ]
+}

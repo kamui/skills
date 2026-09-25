@@ -1,0 +1,27 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-003/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-003-clone/244b7908-80f9-4f06-91a2-573a3ed0c863/subagents/agent-a904180ff6e24b934.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-003/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-24-builtin-baseline-att-003-clone/244b7908-80f9-4f06-91a2-573a3ed0c863.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD -- FAQ.md crates/core/flags/complete/rg.zsh"
+  ],
+  "workdirs": [
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD -- FAQ.md crates/core/flags/complete/rg.zsh"
+  ],
+  "guidance_probes": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-003/clone",
+    "/home/jack/.t3/bench-runs/2026-09-24-builtin-baseline/att-003"
+  ]
+}
