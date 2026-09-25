@@ -135,6 +135,15 @@ class AttemptAudit(unittest.TestCase):
         self.assertEqual(rc, 1, violations)
         self.assertIn(f"path outside allowed roots in command: {self.outside}/x", violations)
 
+    def test_a_cd_is_not_a_read_but_what_follows_it_is(self):
+        # att-059: a fallback cd that never ran; the scratch file went to the work directory.
+        fallback = f"cd {self.clone}/src 2>/dev/null || cd {self.outside}; cat > t.js <<'E'\nx\nE"
+        self.assertEqual(self.bash(fallback, f"cd {self.outside}", "cd ../outside"), (0, []))
+        for command in (f"cd {self.outside} && cat secret", "cd ../outside && cat x", f"cd {self.outside}; cat *"):
+            with self.subTest(command=command):
+                rc, violations = self.bash(command)
+                self.assertEqual(rc, 1, violations)
+
     def test_network_commands_are_violations(self):
         for cmd in ("curl https://example.com", "cd src && wget x", "gh pr view 1", "git fetch origin",
                     "go test ./...", "GOPROXY=off go test ./...", "timeout 30 go get example.com/m",
