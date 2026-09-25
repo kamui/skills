@@ -138,7 +138,8 @@ violation, a model, effort or prompt the arm does not expect, or a wrong range, 
 `valid completed`. It meters usage at the `rates.json` entry for the observed model, writes
 per-request records, and archives the transcripts outside the repository with a hash and a
 restoration check. `--replay` re-runs the audit and the normalizer first, for attempts filed after
-the tools changed.
+the tools changed; a stop the wrapper wrote only because its normalizer failed is superseded when
+the replayed normalizer parses, and kept as `stop.recorded.json`.
 
 [`runs/2026-09-24-toy/`](runs/2026-09-24-toy/README.md) is the first run: the four-arm shakedown
 on a two-commit fixture, seven attempts, filed after the fact with its deviations stated.
