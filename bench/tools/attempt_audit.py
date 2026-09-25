@@ -142,8 +142,9 @@ def paths_in(text: str, cwd: str, base: str = None):
     # not start an absolute path. Glob characters inside an absolute path (``/opt/py*/x``) stay part
     # of it, so the whole path is judged against the roots; a first segment that starts with one
     # (``/*/x``) counts once another slash follows, so a regex class such as ``/[a-z]+`` does not.
+    # A URL's authority (``http://localhost/``) is not a path: no match starts at a slash after ``:/``.
     found = [os.path.normpath(climbs(p)) for p in re.findall(
-        r"(?<![\w.~}\)\"'*?\]])(/(?:[\w.@+-]|[*?\[][\w.@+*?\[\]-]*/)[\w./@+*?\[\]-]*)", text or "")]
+        r"(?<![\w.~}\)\"'*?\]])(?<!:/)(/(?:[\w.@+-]|[*?\[][\w.@+*?\[\]-]*/)[\w./@+*?\[\]-]*)", text or "")]
     tilde = [climbs(t) for t in re.findall(r"(?<![\w.])~(/[\w./@+*?\[\]-]*)", text or "")]
     relative = []
     here, base = cwd, base or cwd
