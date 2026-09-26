@@ -1,0 +1,12 @@
+diff --git a/references/rubric.md b/references/rubric.md
+index ee85500..24b4c1c 100644
+--- a/references/rubric.md
++++ b/references/rubric.md
+@@ -54,6 +54,7 @@ Establish the released contract from versioned documentation and examples, exist
+ - A setup, network, or toolchain failure is unavailable evidence, not a test failure: decide by trace.
+ - A failure also present at the merge-base (run the command there once, or read base CI, only when needed) is pre-existing unless the change materially worsens it or a requirement owns it.
+ - A test that cannot fail, asserts nothing on the call, or as a regression test passes at the merge-base supports at most a `maintainability` `consider` candidate meeting the ordinary bar; otherwise it is an observation or dropped.
++- An existing test that could catch its defect at the merge-base but no longer can at head is a correctness `must-fix` gap, not hygiene, until the change or an authorized person explicitly accepts losing that protection.
+ - A pass is evidence about the test, never proof the product change suffices; dispositions and falsification rest on the product code.
+ 
+ ## Supplied checks

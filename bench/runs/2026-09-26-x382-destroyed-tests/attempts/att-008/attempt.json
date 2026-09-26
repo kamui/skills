@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-008",
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "cell": {
+    "target": "l-bokeh-9232",
+    "arm": "review-code-sonnet-high",
+    "replicate": 2
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-26T08:40:25Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "8af0e1af8868e5e46f825acd76a3c8ce9740e0e3",
+    "diff_commands": [
+      "git diff ccb4bcb4c..HEAD --stat "
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4773f046a46769572ded78e4961e1603d086807df40902a7dcd4ca2a2b0b72c5",
+    "tree_identity_after": "4773f046a46769572ded78e4961e1603d086807df40902a7dcd4ca2a2b0b72c5"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.789333,
+    "cost_bounds_usd": {
+      "low": 0.789333,
+      "high": 0.789333
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-26T08:40:25Z",
+    "payload_validated_at": "2026-09-26T08:43:01Z",
+    "completed_at": "2026-09-26T08:43:01Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "f800b30c92235fa1c22a36b63aa17832a3e902ec59dec84474f73583b853a47e"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-26-x382-destroyed-tests/att-008.tar.gz",
+    "sha256": "1e1c25e6f528f5745a93e90dac28141868bfc9e4b05db5e439167579bb24168a",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 99af8100f6b0b1d9e038cc9cdf8e330d26c27d09d217918f231bc9274d278551; run policy sha256 8583051388e855b78fd486a2245f8df42ffe0759e8bc55711cfe562f68a22710 (before path substitution)"
+  ]
+}

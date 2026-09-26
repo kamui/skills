@@ -1,0 +1,104 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-195"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Behaviour-preserving refactor that clears 13 SonarQube findings: split complex functions in internal/backup.go, share backup status titles in internal/notify.go, drop a duplicate GitLab test, and tidy docker/Dockerfile.",
+    "issue_fit": "Issue alignment unavailable (no originating issue); intent taken from the caller-supplied pull-request text and the commit message. All requirement rows are met.",
+    "coverage": "Complete merge-base diff reviewed (4 of 4 files). Startup log order and text, provider order, credential counting, scheduling and error paths compared old versus new. ok  \tgithub.com/jonhadfield/soba/internal\t5.223s at the head passed; live provider tests skip without credentials. The Dockerfile could not be built (no Docker), so it was read only. No candidate survived falsification, so no verifier batch was needed."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The 'Organistations' log typo flagged by the earlier automated review already exists at the merge-base; the refactor keeps it, still emitted for exactly the GitHub, Gitea and Azure DevOps startup lines.",
+      "evidence": "`internal/backup.go:207`; base `internal/backup.go:179-290`."
+    },
+    {
+      "fact": "The doubled `resetBackups()` in `TestGiteaOrgsRepositoryBackup` (inside each case and after the switch) is carried over unchanged from the merge-base.",
+      "evidence": "`internal/backup_test.go:600-683`; base `internal/backup_test.go:619-710`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "spec-pr-195/\"Behaviour and log output are unchanged\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go:190-296 and :322-545 keep log order and text (including 'Gitlab backup LFS'), credential counting and error paths; `go test ./internal/` passes"
+      },
+      {
+        "source": "spec-pr-195/\"backup status titles extracted into constants with a shared backupStatusTitle helper\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:18-44; the three title strings are byte-identical to the merge-base and now appear once each"
+      },
+      {
+        "source": "spec-pr-195/\"removed TestPublicGitLabRepositoryBackup2, an exact duplicate\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "merge-base internal/backup_test.go:567-591 shows both tests with identical bodies; no coverage lost"
+      },
+      {
+        "source": "spec-pr-195/\"merged consecutive RUN instructions, sorted apk package names, quoted ${TAG}\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:3-18 at head"
+      },
+      {
+        "source": "spec-pr-195/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "golangci-lint and the full suite were not rerun; `go test ./internal/ -count=1` (includes vet) passed at the head"
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test ./internal/ -count=1",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline, clean tree; ok github.com/jonhadfield/soba/internal 5.199s; live provider tests skip without credentials"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "jonhadfield/soba"
+  }
+}
