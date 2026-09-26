@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x383-consumer-comparison",
+  "target": "m-grpc-go-7390",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "5a40b59e0c384c5df8da169e4f42962ca2dcf9e28a6df4e1cbbf7423016f912e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 2bf76a8e685cbb81fd4290cb0e2e620e6858f4cbbedea25b4555bff37e74544d; session a6f02354-e3f9-4071-bfce-e60661c0968e; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (4 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-26T10:51:28Z",
+  "attempts": [
+    {
+      "attempt_id": "att-004",
+      "blind_token": "blind-baafe2",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The change adds no deterministic regression test; the only evidence for the race fix is the statistical flake rate of an unrelated xDS test.\" The absence of a test is true (only clientconn.go changed), and the register's non_defects classify it as coverage hygiene rather than a defect. Calling the xDS test 'unrelated' overstates things: per packet section 4, Test/AuthorityRevive is the test that exposed the race (issue #7365 root cause). The wording is loose, but the item attaches no material consequence, so it stays a non-material hygiene observation."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-009",
+      "blind_token": "blind-d6b31c",
+      "items": [],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-014",
+      "blind_token": "blind-5b8025",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The change adds no regression test for the concurrent-connect race; the PR relies on repeated runs of Test/AuthorityRevive.\" True: `git diff main...review-head --stat` shows only clientconn.go (+6/-7), and the packet's PR body cites the 100000-run validation of Test/AuthorityRevive. The register's non_defects rule on exactly this point: 'No new unit test was added for the concurrency fix' is a coverage-hygiene observation, and correctness is established by path-by-path inspection. The item states no material consequence, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-017",
+      "blind_token": "blind-30d026",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The second commit is titled 'Make callers of resetBackoff() lock the mutex' but it performs the resetTransport to resetTransportAndUnlock lock-ownership change; the message names the wrong function.\" Accurate: `git show 6214c9dd` in clone/ renames resetTransport to resetTransportAndUnlock and changes the call sites (now clientconn.go:922 and :996); it does not touch resetBackoff (packet section 5 confirms the title). But a mislabelled intermediate commit message is commit hygiene with no effect on the code's behaviour, so it is below the finding threshold. The register lists no defects for this target."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}
