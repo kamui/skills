@@ -1,0 +1,180 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-psf-requests-6667/pr-text"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+  "issues": [],
+  "change_description": "Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\nRename default SSLContext to make it private by convention\n\nWrap line to comply with CI lint\n\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Stop re-running the slow load_verify_locations() on every verify=True request by loading the default CA bundle once into a module-level SSLContext that _urllib3_request_context() hands to the pool, and by no longer setting ca_certs/ca_cert_dir on the connection.",
+  "issue_fit": "Partial. Issue alignment was unavailable (no originating issue); intent comes from the supplied pull-request text (psf/requests#6667) and the four commit messages. The performance goal is implemented, but the claim that verify=True still behaves as expected does not hold for adapter-level TLS settings, client certificates, or import.",
+  "coverage": "Complete merge-base diff of src/requests/adapters.py reviewed with docs, tests and urllib3 2.8.0 callers. Focused run at the head: pytest tests/test_requests.py -k 'verify or cert or ssl or tls' gave 15 passed, 3 failed; test_pyopenssl_redirect and test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert are the known merge-base failures, and test_different_connection_pool_for_mtls_settings also fails at the merge-base (expired fixture certificate). Two scratch probes reproduced the findings. The reported speed-up was not measured (offline; needs a live host). The forge state (merged) is context only; this is a local range review and nothing was published."
+ },
+ "findings": [
+  {
+   "id": "adapters/shared-context-overrides-adapter-ssl-context",
+   "title": "Do not override adapter-configured TLS settings with the shared context",
+   "priority": "P1",
+   "action": "must-fix",
+   "kind": "compatibility",
+   "trigger": "An `HTTPAdapter` subclass sets ssl_context, ssl_version or ssl_minimum_version through `init_poolmanager` (the pattern in docs/user/advanced.rst) and makes a default verify=True HTTPS request.",
+   "impact": "urllib3 merges the per-request ssl_context over the pool manager's settings and reads ssl_version and the min/max versions only when ssl_context is None, so custom ciphers, TLS version bounds and extra trust roots are silently ignored. A probe showed the custom context unused for verify=True and used for a bundle path.",
+   "change": "In `_urllib3_request_context`, set the shared context only when the adapter has configured no TLS context or version settings of its own, or create the default context inside `init_poolmanager` so overrides win.",
+   "source": "Released init_poolmanager subclassing contract (docs/user/advanced.rst:1015-1035); PR text: verify=True must still behave as expected.",
+   "anchor": {
+    "type": "line",
+    "path": "src/requests/adapters.py",
+    "start_line": 94,
+    "end_line": 95,
+    "side": "RIGHT"
+   }
+  },
+  {
+   "id": "adapters/shared-context-client-cert-mutation",
+   "title": "Do not load per-request client certificates into the process-wide context",
+   "priority": "P1",
+   "action": "must-fix",
+   "kind": "security",
+   "trigger": "One session or thread calls `requests.get(url_a, cert=(cert, key))` with verify=True; later another calls `requests.get(url_b)` with verify=True and no cert, or a different cert, to a server that asks for a client certificate.",
+   "impact": "urllib3's `ssl_wrap_socket` calls `load_cert_chain` on the supplied context, and every verify=True pool now shares the one module-level context, so the first caller's client identity persists and can be presented on other callers' connections, and concurrent loads race. At base each pool had its own context. The verifier traced this but did not run a handshake against a server requesting a certificate.",
+   "change": "In `_urllib3_request_context`, where `client_cert` is handled, drop the shared `ssl_context` (or copy it per pool before `load_cert_chain` runs) whenever a client certificate is supplied, so urllib3 builds a private context.",
+   "source": "PR text: verify=True must still behave as expected.",
+   "anchor": {
+    "type": "line",
+    "path": "src/requests/adapters.py",
+    "start_line": 98,
+    "end_line": 104,
+    "side": "RIGHT"
+   }
+  },
+  {
+   "id": "adapters/import-time-default-bundle-load",
+   "title": "Do not load the default CA bundle at import time",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "`certs.where()` points to a missing or unreadable file, and the program uses only verify=False or an explicit verify path.",
+   "impact": "`import requests` now raises FileNotFoundError, where at base only default-verify requests failed, with the descriptive 'Could not find a suitable TLS CA certificate bundle' OSError that this change also removed for the default bundle. Every import also pays the bundle load and zip extraction.",
+   "change": "Build the default context lazily on first verify=True use (cached), and keep the existence check and OSError for the default bundle.",
+   "source": "Commit 8f95456: default context loaded when verify=True.",
+   "anchor": {
+    "type": "line",
+    "path": "src/requests/adapters.py",
+    "start_line": 75,
+    "end_line": 78,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The change adds no tests for the shared-context path; the author noted the loaded certificates cannot be inspected through the public API.",
+   "evidence": "git diff main...review-head touches only src/requests/adapters.py."
+  },
+  {
+   "fact": "Reviewers on the pull request accepted a global context; the adapter-level override and client-certificate paths were not discussed there.",
+   "evidence": "Prior review threads in the supplied pull-request text cover the removed bundle handling, thread safety and public naming only."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "commit-ec0e33b/\"Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/requests/adapters.py:298-316 (cert_verify sets no ca_certs for verify=True)"
+   },
+   {
+    "source": "commit-8f95456/\"Use a default SSLContext with the default CA bundle loaded when `verify=True`\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "src/requests/adapters.py:75-95 loads and injects the context, but at import time (adapters/import-time-default-bundle-load) and over adapter settings (adapters/shared-context-overrides-adapter-ssl-context)"
+   },
+   {
+    "source": "commit-f21e70b/\"Rename default SSLContext to make it private by convention\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/requests/adapters.py:75 _preloaded_ssl_context"
+   },
+   {
+    "source": "spec-psf-requests-6667/pr-text/\"verify=True and verify=False still behave as expected\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "Adapter TLS settings, client certificates and import behaviour regress for verify=True; see the three findings",
+    "compliance": "partial",
+    "compatibility": "violated",
+    "compatibility_ids": [
+     "adapters/shared-context-overrides-adapter-ssl-context"
+    ]
+   },
+   {
+    "source": "spec-psf-requests-6667/pr-text/\"_urllib3_request_context() now sets ca_cert_dir\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/requests/adapters.py:96-101 sets ca_cert_dir for a directory verify path"
+   },
+   {
+    "source": "spec-psf-requests-6667/pr-text/\"now equally fast\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Offline run; the timing needs a live host and was not repeated"
+   }
+  ],
+  "files": [
+   {
+    "path": "src/requests/adapters.py",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "adapters/shared-context-overrides-adapter-ssl-context",
+     "type": "candidate",
+     "trigger": "compatibility",
+     "batch": "initial",
+     "ruling": "confirmed"
+    },
+    {
+     "id": "adapters/shared-context-client-cert-mutation",
+     "type": "candidate",
+     "trigger": "security",
+     "batch": "initial",
+     "ruling": "confirmed"
+    },
+    {
+     "id": "adapters/import-time-default-bundle-load",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-007/tmp/tmp.fqBcqFR3nk/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-007/tmp/tmp.fqBcqFR3nk/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-007/clone",
+  "paths": {}
+ }
+}

@@ -1,0 +1,3 @@
+claude 2.1.282 (Claude Code)
+model=claude-sonnet-5 effort=high session=bce9997d-52a5-459b-9830-71622dff98ac skill_tree=207b72c5bc1e7ec5c85ebfe43bfc6c3354df9805
+exit=0

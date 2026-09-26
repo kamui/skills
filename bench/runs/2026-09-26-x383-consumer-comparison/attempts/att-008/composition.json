@@ -1,0 +1,144 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-5067-packet",
+      "issue-5060"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [
+      "honojs/hono#5060"
+    ],
+    "change_description": "5226d4165d48643586152614cbd07422a0ab7a22\nfix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Make parseBody() and validator() match form/JSON Content-Type media types case-insensitively while leaving parameters such as multipart boundaries intact (issue #5060, `Fixes #5060`).",
+    "issue_fit": "Partial \u2014 mixed-case JSON, urlencoded and multipart requests are now recognised, but parseBody() now fails after a handler has already called `c.req.formData()`, a case that worked at the base.",
+    "coverage": "All six changed files reviewed against the complete merge-base diff; callers in `src/request.ts` inspected. Focused vitest run once at the head for body, buffer, validator and request tests: 144 passed, 1 skipped. Reviewer probes of a `formData()`-then-`parseBody()` handler ran at the head (fails) and at the merge-base (works). One fresh-context verifier batch confirmed the finding. The run was offline; no forge state or CI was available beyond the supplied packet."
+  },
+  "findings": [
+    {
+      "id": "utils/body/parsebody-after-cached-formdata",
+      "title": "Keep parseBody working after c.req.formData() has cached the body",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A handler awaits `c.req.formData()` and then `c.req.parseBody()` on a multipart or urlencoded POST, leaving only `bodyCache.formData` populated.",
+      "impact": "`parseFormData()` now calls `arrayBuffer()`, which re-serializes the cached FormData with a new boundary; it is then parsed with the original Content-Type. Multipart throws `Failed to parse body as FormData.` (500); urlencoded returns a garbage key holding the boundary text. The base returned `{a:'1'}` for both.",
+      "change": "In `parseFormData` in `src/utils/body.ts`, reuse `request.bodyCache.formData` when it is already set, and only take the `arrayBuffer()` and `bufferToFormData` path when it is not. Add a regression test for `formData()` followed by `parseBody()`.",
+      "source": "PR body `Fixes #5060`; base behavior of `parseFormData` calling `request.formData()`.",
+      "anchor": {
+        "type": "line",
+        "path": "src/utils/body.ts",
+        "start_line": 126,
+        "end_line": 130,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Codecov reported 76.47% patch coverage, with three uncovered lines in `src/utils/body.ts` and one in `src/utils/buffer.ts`.",
+      "evidence": "Supplied Codecov comment in the review packet (section 6)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "honojs/hono",
+    "requirements": [
+      {
+        "source": "issue-5060/expected-behavior",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "src/validator/validator.ts:24-26 (`i` flag) and src/utils/body.ts:100 lower-case the media type only; but src/utils/body.ts:126-130 regresses parseBody after a cached formData()"
+      },
+      {
+        "source": "issue-5060/suggested-tests",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.test.ts, src/validator/validator.test.ts and src/utils/buffer.test.ts add mixed-case urlencoded, JSON and multipart cases; vitest 144 passed"
+      },
+      {
+        "source": "pr-title",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:100, src/utils/buffer.ts:112, src/validator/validator.ts:24-26"
+      }
+    ],
+    "files": [
+      {
+        "path": "src/utils/body.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/body.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.test.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts src/request.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "focused run at the pinned head, clean tree: 144 passed, 1 skipped"
+      },
+      {
+        "check": "HTTP Performance Benchmark comment",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "unavailable",
+        "reason": "packet summary only; no readable output and not relevant to the defect"
+      },
+      {
+        "check": "Codecov patch report",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "unavailable",
+        "reason": "coverage summary only; reported as an observation"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "utils/body/parsebody-after-cached-formdata",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-008/clone-work/rc.b1NBUg/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-008/clone-work/rc.b1NBUg/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
