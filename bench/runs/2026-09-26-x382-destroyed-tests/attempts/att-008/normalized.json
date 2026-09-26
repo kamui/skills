@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "bokehjs/src/lib/models/widgets/date_picker.ts",
+      "line_start": 82,
+      "line_end": 83,
+      "claim": "Stop shifting UTC-midnight values back a day in UTC- zones. A browser west of UTC (e.g. America/Los_Angeles, America/New_York) renders DatePicker(value=date(2019,9,20), min_date=date(2019,9,1)). Python serializes these as UTC-midnight milliseconds, and _unlocal_date now subtracts getTimezoneOffset() before reading the UTC date.",
+      "consequence": "Initial date, min_date and max_date display one day early (Thu Sep 19 instead of Fri Sep 20 in Los Angeles; the minimum becomes Aug 31). The base showed these correctly in every zone, so this trades the UTC+ bug for a new one for UTC- users, on the widget's most common input path. Only local-midnight toDateString() values from _on_select need the offset shift.",
+      "proposed_fix": "In `_unlocal_date`, do not shift UTC-midnight timestamps; normalise the two encodings (UTC-midnight ms from Python, local-midnight toDateString() strings from _on_select and the JS default) in one place, and cover initial display under a UTC- and a UTC+ TZ.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "tests/integration/widgets/test_datepicker.py",
+      "line_start": 42,
+      "line_end": 50,
+      "claim": "Assert the initial display and vary TZ in the DatePicker tests. The tests run in the runner's single TZ (typically UTC) and only assert the label text and the value after a click; none reads the input's displayed initial date.",
+      "consequence": "They pass at the merge-base in UTC and cannot detect either the original UTC+ bug or the UTC- regression above.",
+      "proposed_fix": "In `tests/integration/widgets/test_datepicker.py`, assert the input's initial displayed value and run it under at least one UTC- and one UTC+ TZ (or a bokehjs unit test for `_unlocal_date` with TZ set).",
+      "native_priority": "P3",
+      "native_action": "consider",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

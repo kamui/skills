@@ -1,0 +1,98 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+  "issues": [],
+  "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Behaviour-preserving refactor resolving SonarQube findings: decompose complex functions in internal/backup.go, extract notification title constants, remove a duplicate test, tidy the Dockerfile.",
+  "issue_fit": "Issue alignment unavailable (no originating issue); intent taken from the commit message and supplied PR text, and each stated promise is met.",
+  "coverage": "Complete merge-base diff (4 files) read. Titles in notify.go compared byte-for-byte with base; startup-config log order, wording and conditions traced against base; removed GitLab test confirmed identical to its twin. ok  \tgithub.com/jonhadfield/soba/internal\t5.202s at the head: pass (credential-gated live tests skip, so refactored Run/scheduling paths are not exercised end-to-end here). Dockerfile not built (Docker unavailable); reviewed by reading. The two Copilot threads (double resetBackups, 'Organistations' typo) both pre-date this change and were preserved deliberately, so nothing is admitted from them. No verification batch was needed: no candidate survived falsification."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The 'Organistations' log typo and the duplicated resetBackups() call in TestGiteaOrgsRepositoryBackup already existed at the merge-base and are carried over unchanged, as the 'log output unchanged' promise requires.",
+   "evidence": "internal/backup.go:207 (head), internal/backup_test.go:629 (head), both present in main."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "jonhadfield/soba",
+  "requirements": [
+   {
+    "source": "commit-136a485/\"behaviour and log output unchanged\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "displayStartupConfig helpers keep order and messages (incl. 'Gitlab backup LFS'); Run split preserves step order; scheduleBackups/runScheduledJob keep job assignment and shutdown wait; go test ./internal/ passes"
+   },
+   {
+    "source": "commit-136a485/\"Extract duplicated backup status titles into constants\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "internal/notify.go:18-44; strings byte-identical to base, three senders use backupStatusTitle"
+   },
+   {
+    "source": "commit-136a485/\"Remove TestPublicGitLabRepositoryBackup2 (identical duplicate\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "base internal/backup_test.go body identical to TestPublicGitLabRepositoryBackup"
+   },
+   {
+    "source": "commit-136a485/\"simplify TestGiteaOrgsRepositoryBackup with assertion helpers\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "internal/backup_test.go:600-683; assertions moved verbatim into helpers"
+   },
+   {
+    "source": "commit-136a485/\"merge consecutive RUN instructions, sort apk packages, quote the TAG variable\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "docker/Dockerfile:5-18; package set unchanged, URL quoted"
+   }
+  ],
+  "files": [
+   {
+    "path": "docker/Dockerfile",
+    "state": "reviewed"
+   },
+   {
+    "path": "internal/backup.go",
+    "state": "reviewed"
+   },
+   {
+    "path": "internal/backup_test.go",
+    "state": "reviewed"
+   },
+   {
+    "path": "internal/notify.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "go test ./internal/ -count=1",
+    "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+    "outcome": "reviewer-executed",
+    "reason": "offline, focused package run; live provider tests skipped without credentials"
+   }
+  ],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

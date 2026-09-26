@@ -1,0 +1,106 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "specs": ["pr-graphql/graphql-js#1582-text"],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Turn on `@flow strict` for the error and inspect tests and widen the `GraphQLError` constructor's `nodes` type to accept `null`; the PR text also states the no-stack test now takes the original-stack branch and that this coverage loss is accepted.",
+    "issue_fit": "Met. No originating issue; intent comes from the PR text and the commit message. The changed-test disclosure in the PR body is accurate.",
+    "coverage": "All 5 changed files reviewed. Focused mocha run once at the head over the four changed test files: 27 passing. Two scratch-copy mutation runs (outside the clone) checked what the rewritten no-stack test can still catch. Flow itself was not run (outside the execution allowance), so the type-check claim rests on inspection. The author's own review thread on `nodes` accepting `null` is answered by the `| null` added at `src/error/GraphQLError.js:25`. No verifier batch was required: nothing is `must-fix`, security, or another risk area."
+  },
+  "findings": [
+    {
+      "id": "error-tests/no-stack-test-vacuous",
+      "title": "Keep the no-stack test exercising a stackless original error",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "`original` is now `new Error('original')`, which always has a `stack`, so `new GraphQLError('msg', null, null, null, null, original)` takes the `originalError.stack` branch, the same one `uses the stack of an original error` already covers.",
+      "impact": "The test named `creates new stack if original error has no stack` no longer tests that. In a scratch copy at the head, changing the guard `if (originalError && originalError.stack)` to `if (originalError)` leaves all 13 tests passing; the base version of the test fails on the same change. The author accepts the lost coverage in the PR body, so this is advisory, but the name now misdescribes the test.",
+      "change": "Keep a stackless original and satisfy Flow with a cast, as `locatedError-test.js` does with `: any`, for example `const original: any = { message: 'original' };`. Otherwise rename or remove the test so its name matches what it checks.",
+      "source": "PR body: \"restoring it is out of scope here\".",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The author's thread asking why `nodes` accepts `undefined` but not `null` is resolved by the head: the constructor type now reads `| void | null`.",
+      "evidence": "`src/error/GraphQLError.js:25`; tests such as `new GraphQLError('msg', null, source, [6])` rely on it."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`@noflow` replaced by `@flow strict` in GraphQLError-test.js, locatedError-test.js, printError-test.js and inspect-test.js"
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`src/error/GraphQLError.js:25` adds `| null` to `nodes`, matching the `null` arguments the tests pass"
+      },
+      {
+        "source": "pr-body/\"so the file type-checks\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Flow was not run: it is outside the execution allowance, and no CI output was supplied"
+      },
+      {
+        "source": "pr-body/\"no longer exercises `GraphQLError`'s no-stack fallback\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Confirmed by the guard mutation in a scratch copy: head test passes, base test fails (see error-tests/no-stack-test-vacuous)"
+      }
+    ],
+    "files": [
+      {"path": "src/error/GraphQLError.js", "state": "reviewed"},
+      {"path": "src/error/__tests__/GraphQLError-test.js", "state": "reviewed"},
+      {"path": "src/error/__tests__/locatedError-test.js", "state": "reviewed"},
+      {"path": "src/error/__tests__/printError-test.js", "state": "reviewed"},
+      {"path": "src/jsutils/__tests__/inspect-test.js", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill on the four changed test files",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "run once in the clone at the head: 27 passing, 0 failing"
+      },
+      {
+        "check": "mocha on GraphQLError-test.js in a scratch copy, with the stack fallback branches removed and, separately, with the guard changed to `if (originalError)`, using the head and base versions of the test",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "scratch copy under the work directory, not the clone; head test passes the guard mutation and base test fails it"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+    "issues": [],
+    "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Retrospective review of merged trpc#5017: make `Overwrite` in `packages/server/src/core/internals/utils.ts` replace non-object operands instead of key-merging them, fixing mangled input inference for `.input(z.string()).use(...)`. Intent source is the commit messages; the PR body is an unfilled template and no originating issue exists.",
+    "issue_fit": "Issue alignment unavailable (no originating issue). Against the commit-message promises: met.",
+    "coverage": "Complete merge-base diff of both files reviewed; all `Overwrite` consumers read. Reviewer-executed `tsc --noEmit` on `packages/tests` at the head: clean. Scratch type assertions confirm `Overwrite<string,string>` is `string`, `Overwrite<string,number>` is `number`, and union, never, any, unknown and undefined operands behave as intended. The new regression test fails to type-check at the merge-base `utils.ts` (TS2554 at test lines 36 and 37) and passes with the head `utils.ts`. The vitest runtime suite was not run, per policy."
+  },
+  "findings": [
+    {
+      "id": "utils/overwrite-unreachable-tail-branch",
+      "title": "Remove the unreachable `TType` branch and fix the never comment",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "`Overwrite<TType, TWith>` with a non-object `TType` reaches `TWith extends any ? TWith : TType`, where `TWith` is a naked type parameter.",
+      "impact": "The conditional distributes, so `never` yields `never` and every other type takes the true arm; `: TType` never executes. The doc comment says a never `TWith` is exempt from overwriting, but `Overwrite<string, never>` is `never`, which misleads maintainers about the contract.",
+      "change": "Return `TWith` directly in the non-object `TType` arm, and reword the doc comment to say a never `TWith` yields never.",
+      "anchor": {
+        "type": "line",
+        "path": "packages/server/src/core/internals/utils.ts",
+        "start_line": 25,
+        "end_line": 29,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "commit-7dc04a7/\"Overwrite<string,string> resulted in a mangled object type\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Scratch tsc assertion: Overwrite<string,string> equals string; regression test type-checks at head and fails at base."
+      },
+      {
+        "source": "commit-7dc04a7/\"Overwrite<string, number> results in 'number'\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Scratch tsc assertion: Overwrite<string,number> equals number; utils.ts:25-29."
+      },
+      {
+        "source": "commit-7dc04a7/\"keys are only iterated and overwritten in the case of objects\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "utils.ts:11-20 merges keys only when both operands extend object; Overwrite<{a:1}|{b:2},{c:3}> still distributes over unions."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/server/src/core/internals/utils.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "trpc/trpc"
+  }
+}

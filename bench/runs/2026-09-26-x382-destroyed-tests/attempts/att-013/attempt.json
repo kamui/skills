@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-013",
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "cell": {
+    "target": "l-bokeh-9232",
+    "arm": "review-code-sonnet-high",
+    "replicate": 3
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-26T08:48:19Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "8af0e1af8868e5e46f825acd76a3c8ce9740e0e3",
+    "diff_commands": [
+      "git diff ccb4bcb4c..36549bca3 -- bokehjs/src/lib/models/widgets/date_picker.ts"
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4773f046a46769572ded78e4961e1603d086807df40902a7dcd4ca2a2b0b72c5",
+    "tree_identity_after": "4773f046a46769572ded78e4961e1603d086807df40902a7dcd4ca2a2b0b72c5"
+  },
+  "phase_reached": "result",
+  "disposition": "harness-invalid: read audit: 6 violation(s), first path outside allowed roots in command: /tmp/pd_att013",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [
+      "path outside allowed roots in command: /tmp/pd_att013",
+      "path outside allowed roots in command: /tmp/pd_att013",
+      "path outside allowed roots in command: /tmp/pd_att013",
+      "path outside allowed roots in command: /tmp/pd_att013",
+      "path outside allowed roots in command: /tmp/pd_att013",
+      "path outside allowed roots in command: /tmp/pd_att013"
+    ],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.821554,
+    "cost_bounds_usd": {
+      "low": 0.821554,
+      "high": 0.821554
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-26T08:48:19Z",
+    "payload_validated_at": "2026-09-26T08:51:19Z",
+    "completed_at": null,
+    "stopped_at": "2026-09-26T08:51:19Z"
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "87cb9d05633fe7bede84fd622a48ad7190c98e69a9856c7eb2c92afa1e2642db"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-26-x382-destroyed-tests/att-013.tar.gz",
+    "sha256": "1d051565be6282ff418a53f27584d95508d136c899f42a3830125e55e52e778b",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 aed397423230ec99b6ff86b6530b4c32e0407e1e24113c0d31e92d6539362e99; run policy sha256 8583051388e855b78fd486a2245f8df42ffe0759e8bc55711cfe562f68a22710 (before path substitution)"
+  ]
+}

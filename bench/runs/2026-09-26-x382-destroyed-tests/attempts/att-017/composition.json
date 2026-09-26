@@ -1,0 +1,123 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": [
+      "grpc/grpc-go#7365"
+    ],
+    "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close the race in grpc-go#7365 where two concurrent addrConn.connect() calls both observed Idle and both started tryAllAddrs, orphaning a transport, by keeping ac.mu held from the Idle check through the move to Connecting (resetTransport becomes resetTransportAndUnlock). Intent sources: the supplied PR text, issue 7365, and four real commit messages.",
+    "issue_fit": "Met: the Idle check and the Connecting transition now share one critical section in connect() and updateAddrs(); no path found that starts a second attempt or double-unlocks.",
+    "coverage": "Complete merge-base diff (clientconn.go) reviewed with callers, onClose/GracefulClose, and the callback serializer. Reviewer-executed at head: root package Test/UpdateAddresses_NoopIfCalledWithSameAddresses and Test/ResetConnectBackoff, and xdsclient Test/AuthorityRevive, all with -race, all pass. No test was added or changed; the 0.4% flake cannot be reproduced deterministically in the allowance, so the fix rests on the trace and the verifier's three premise rulings, not on the passing runs."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "grpc/grpc-go",
+    "requirements": [
+      {
+        "source": "pr-body/\"no concurrent requests are able to start once caller of `resetTransport` does some validation and calls `resetTransport`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:918-922 connect() keeps ac.mu from the Idle check to resetTransportAndUnlock, which sets Connecting at :1261 before Unlock at :1262; updateAddrs hands the held lock to the goroutine at :996."
+      },
+      {
+        "source": "issue-7365/root-cause",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The window between connect()'s Unlock and resetTransport's Lock is gone; a second connect() sees state Connecting and returns (clientconn.go:912-919)."
+      },
+      {
+        "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "A 100000-run measurement was not repeated; Test/AuthorityRevive passed once with -race at the head."
+      },
+      {
+        "source": "commit-ff977b3/\"Add doc comment for resetTransportAndUnlock\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1231-1233 carries the doc comment stating the lock contract."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -race -count=1 -run 'Test/(UpdateAddresses|ResetConnectBackoff|TestUpdateAddresses)' . (root package)",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "run once at the head in the clone, exit 0; ok google.golang.org/grpc 1.141s"
+      },
+      {
+        "check": "go test -race -count=1 -v -run 'Test/(UpdateAddresses|ResetConnectBackoff)' . (root package, second flag set)",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "exit 0; PASS Test/ResetConnectBackoff, Test/UpdateAddresses_NoopIfCalledWithSameAddresses"
+      },
+      {
+        "check": "go test -race -count=1 -v -run 'Test/AuthorityRevive' ./xds/internal/xdsclient/tests/",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "exit 0; PASS Test/AuthorityRevive (0.13s); a single pass cannot show a 0.4% flake is gone"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-1",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Every caller of resetTransportAndUnlock holds ac.mu and every return path releases it exactly once; at most one attempt starts per Idle-to-Connecting transition.",
+          "evidence": "clientconn.go:918-922; clientconn.go:1234-1262",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-2",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Handing the locked ac.mu to the goroutine in updateAddrs cannot deadlock with the deferred GracefulClose/onClose, which only waits for the goroutine's Unlock.",
+          "evidence": "clientconn.go:983-997; clientconn.go:1351-1356; internal/transport/http2_client.go:1045-1064",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-3",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Keeping ac.mu held across the updateAddrs restart allows no duplicate or stale attempt and no path other than resetTransportAndUnlock moves Idle into an attempt.",
+          "evidence": "clientconn.go:968-996",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-017/clone-work/rc.oVb1zV/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-017/clone-work/rc.oVb1zV/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

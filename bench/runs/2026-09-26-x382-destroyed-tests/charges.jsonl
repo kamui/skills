@@ -1,0 +1,7 @@
+{"at": "2026-09-26T08:54:27Z", "step": "G3: grading q-soba-195 (claude-opus-5-5 at high)", "usd": 0.21959, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "6c56bf98"}
+{"at": "2026-09-26T08:54:27Z", "step": "G1: grading k-graphql-js-1582 (claude-opus-5-5 at high)", "usd": 0.200878, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "8ab0e999"}
+{"at": "2026-09-26T08:55:18Z", "step": "G2: grading j-trpc-5017 (claude-opus-5-5 at high)", "usd": 0.344957, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "815167e8"}
+{"at": "2026-09-26T08:56:17Z", "step": "G4: grading l-bokeh-9232 (claude-opus-5-5 at high)", "usd": 0.339507, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "f93cb38d"}
+{"at": "2026-09-26T08:59:19Z", "step": "G5: grading m-grpc-go-7390 (claude-opus-5-5 at high)", "usd": 0.129937, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "3eef04e8"}
+{"at": "2026-09-26T08:59:40Z", "step": "D1: acceptance-path diagnostic att-901 on k-graphql-js-1582, accept body (claude-sonnet-5 at high, candidate tree)", "usd": 0.600114, "model": "claude-sonnet-5", "billing": "api-dollars", "session": "bc131cfe"}
+{"at": "2026-09-26T09:00:06Z", "step": "D2: acceptance-path diagnostic att-902 on k-graphql-js-1582, swap body (claude-sonnet-5 at high, candidate tree)", "usd": 0.771205, "model": "claude-sonnet-5", "billing": "api-dollars", "session": "d556d84e"}

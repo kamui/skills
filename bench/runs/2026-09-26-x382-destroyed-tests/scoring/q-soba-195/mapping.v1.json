@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "target": "q-soba-195",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "e54d5cbf17ad2aa15e1ce523215d6cb304a89cc1301fcb8ef35f04a6b48527f5"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 9fa445290a5a2b27859377c4a1dad4afb09de98addcf7b912bb5ea69bf485eac; session 6c56bf98-e115-477d-ab47-0caae1cdc8da; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (3 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-26T08:54:27Z",
+  "attempts": [
+    {
+      "attempt_id": "att-005",
+      "blind_token": "blind-9c7b26",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The 'Organistations' log typo ... already exists at the merge-base; the refactor keeps it, still emitted for exactly the GitHub, Gitea and Azure DevOps startup lines.\" Verified: base backup.go:187 (GitHub), :209 (Gitea), :275 (Azure DevOps); head logProviderOrgs at backup.go:203-207 preserves the text. The register lists the typo as a non-defect preserved verbatim. This is an accurate observation with no defect claimed, so non-material."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The doubled `resetBackups()` in `TestGiteaOrgsRepositoryBackup` (inside each case and after the switch) is carried over unchanged from the merge-base.\" Verified: head backup_test.go:629/632/635 and base :669/:703/:706. The register non_defect says it is test-only, pre-existing and idempotent. This is an accurate observation, so non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-010",
+      "blind_token": "blind-04e7d4",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The 'Organistations' log typo and the duplicated resetBackups() call in TestGiteaOrgsRepositoryBackup already existed at the merge-base and are carried over unchanged, as the 'log output unchanged' promise requires.\" Accurate observation, no defect asserted. Verified: head internal/backup.go:205 logs \"%s Organistations: %s\" (base :187/:209/:275); head backup_test.go:629/632/635 vs base :669/:703/:706 show the doubled resetBackups(). Register non_defects rule both are pre-existing and not defects; the cited line 207 is off by two (Copilot's anchor) but the fact is right. Non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-015",
+      "blind_token": "blind-b4cb84",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The 'Organistations' log typo is carried verbatim into the new logProviderOrgs helper, which keeps the log output unchanged as the PR promises; it existed at the merge-base for GitHub, Gitea and Azure DevOps.\" Verified at head backup.go:203-207 (logProviderOrgs) and base :187/:209/:275. It matches the register's non-defect ruling that the typo is preserved verbatim. This is an accurate observation, so non-material."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"TestGiteaOrgsRepositoryBackup still calls resetBackups() inside each switch case and again after the switch, exactly as at the merge-base.\" Verified: head backup_test.go:629/632/635, base :669/:703/:706. The register rules this as pre-existing, test-only and idempotent. This is an accurate observation, so non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

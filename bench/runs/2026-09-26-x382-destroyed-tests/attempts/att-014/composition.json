@@ -1,0 +1,105 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "pr-text-grpc-grpc-go-7390"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "issues": [
+   "grpc/grpc-go#7365"
+  ],
+  "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix a race in addrConn where connect() released ac.mu after the Idle check and resetTransport re-acquired it, letting two concurrent connect() calls both start connection attempts (issue #7365, flaky AuthorityRevive; orphaned transports).",
+  "issue_fit": "Met. The state moves to Connecting inside the same critical section as the Idle check, so a second connect() sees non-Idle. No regression test was added; the author reports 100000 clean runs of Test/AuthorityRevive, which this review could not repeat.",
+  "coverage": "Complete merge-base diff (`clientconn.go`) reviewed with callers, `onClose` and `GracefulClose` paths. Focused run at head: `go test -race ./test/ -run 'Test/(StateTransitions|UpdateAddresses|PickFirst)'` passed (exit 0); a root-package focused run matched no tests. Three concurrency safety premises were verified in one awaited batch and all held."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The PR adds no regression test for the concurrent-connect race; it relies on the existing flaky Test/AuthorityRevive.",
+   "evidence": "`clientconn.go` is the only file in the range."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "grpc/grpc-go",
+  "requirements": [
+   {
+    "source": "pr-body/\"ensures that no concurrent requests are able to start\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:914-922 keeps ac.mu from the Idle check through resetTransportAndUnlock, which sets Connecting (1261) before Unlock (1262); premise-3 holds"
+   },
+   {
+    "source": "issue-7365/root-cause",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "connect() no longer unlocks between the Idle check and the Connecting transition; updateAddrs hands the lock to the goroutine (clientconn.go:996)"
+   },
+   {
+    "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Author-run measurement on forge; not repeatable offline and not needed for the product-code judgment"
+   }
+  ],
+  "files": [
+   {
+    "path": "clientconn.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "premise-1",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "Every path through resetTransportAndUnlock releases ac.mu exactly once and both callers hold it on entry.",
+     "evidence": "clientconn.go:906-922, 948-996, 1234-1303",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-2",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "Handing ac.mu from updateAddrs to the spawned goroutine cannot deadlock with the deferred GracefulClose/onClose.",
+     "evidence": "clientconn.go:986-996, 1351-1362; internal/transport/http2_client.go:1045-1058",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-3",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "State becomes Connecting before ac.mu is released after the Idle check, so no second concurrent attempt starts.",
+     "evidence": "clientconn.go:914-922, 1261-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-014/clone-work/rc.fIj4bZ/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-014/clone-work/rc.fIj4bZ/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}
