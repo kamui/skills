@@ -44,7 +44,7 @@ no-stack coverage) is a diagnostic outside the planned cells and outside this de
 
 ## Results (2026-09-26)
 
-**Disposition: inconclusive by the frozen rule. Every measured threshold and guardrail holds.**
+**Disposition: inconclusive by the frozen rule. Every measured threshold holds, and every guardrail holds over valid reviews.**
 (m) finished with 2 of its 3 planned valid reviews. Its third cell was harness-invalid twice: the
 first attempt, att-014, and the replacement, att-017, both wrote the review's private directory
 under `/tmp`, outside the attempt's roots. The same happened once on (l), att-013, whose
@@ -62,14 +62,14 @@ candidates. "Frozen A" is the control's two valid reviews per target, from `resu
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | (k) GraphQL | 3, one incomplete | GT-k1 3/3 | `must-fix` P2 3/3 | sufficient 3/3 | 0/3 | 0 | GT-k1 2/2 sufficient, `consider` with priority errors 2/2, approved 2/2 |
 | (j) tRPC | 3 | 0/3 | — | — | 3/3 | 0 | 0/2, approved 2/2 |
-| (l) Bokeh | 3 | GT-l1 3/3 | `must-fix` (P2, P2, P1) | sufficient 3/3 | 0/3 | 0 | GT-l1 2/2 sufficient, approved 0/2 |
+| (l) Bokeh | 3 | GT-l1 3/3 valid, 3/4 with the invalid att-013 | `must-fix` (P2, P2, P1) | sufficient 3/3 | 0/3 | 0 | GT-l1 2/2 sufficient, approved 0/2 |
 | (m) gRPC, clean | 2 of 3 | — | — | — | — | 0 (also 0 on both invalid attempts) | 0 |
 | (q) Soba, clean | 3 | — | — | — | — | 0 | 0 |
 
 - **Thresholds:** GT-k1 is recovered with a sufficient remedy and `must-fix` in 3/3, and GraphQL approvals fall from 2/2 to 0/3.
 - **Negative cases:** the unasserted tRPC `voidWithMiddleware` fixture stays an observation (att-007) under an Approved verdict. The Bokeh timezone-coverage finding stays `consider` P3 in all four (l) reviews. Neither is promoted.
-- **Guardrails:** (k) and (l) recall stay 3/3, and no target has a false finding or a non-material blocker. The only `must-fix` items are the GT-k1 and GT-l1 recoveries.
-- **Action, fixes and validity:** priority errors fall from 2 to 0, and every recovery is `must-fix` with a sufficient fix. Invalid attempts rose to 3 of 17, from frozen A's 1 of 21; every one is the `/tmp` private directory. On (k), att-006 is valid and graded, but its review reported incomplete coverage because Flow was not run offline, so `results.v1.json` scores that cell `incomplete` and counts 2 completed valid reviews on (k). Under scoring v1 its GT-k1 recovery still counts.
+- **Guardrails:** (k) and (l) recall stay 3/3 over valid reviews. At attempt level, where the invalid att-013 counts as zero, `results.v1.json` gives (l) 0.75 against frozen A's 1.0. No target has a false finding or a non-material blocker. The only `must-fix` items are the GT-k1 and GT-l1 recoveries.
+- **Action, fixes and validity:** priority errors fall from 2 to 0, and every recovery is `must-fix` with a sufficient fix. Invalid attempts rose to 3 of 17, from frozen A's 1 of 21; every one is the `/tmp` private directory. On (k), att-006 is valid and graded, but its review reported incomplete coverage because the run allowance permits only mocha, so Flow was not run, so `results.v1.json` scores that cell `incomplete` and counts 2 completed valid reviews on (k). Under scoring v1 its GT-k1 recovery still counts.
 - **Dollars:** $13.97 for 17 reviewer attempts, $0.79 mean per valid review ($0.82 per attempt) against frozen A's $0.71 on these targets. Grading was $1.23 and the two diagnostics $1.37, so the run total is $16.57 against the $40 cap. That is above the issue's $10.62 review-only estimate: the three invalid attempts cost $2.89.
 - **Latency:** median elapsed-to-payload over valid reviews is 158 s (14 reviews), against frozen A's 119 s on the same targets (10 reviews). The per-target medians rise most on (j), 99 → 179 s, and (k), 93 → 154 s.
 
