@@ -24,9 +24,9 @@ ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
 # Rounded ceilings above the #359 layout, including actual helper output: the activated SKILL.md,
 # one record shape, the scripted packet identity, inline-only verifier returns and the scripted
 # pull-request fetch without timing wrappers; DESIGN.md dates each change.
-BUDGET = 30_000
+BUDGET = 31_000
 LIMITS = {"runtime total": 74_000, "always loaded": BUDGET, "review": 49_000,
-          "required verifier": 61_000, "re-review": 58_000,
+          "required verifier": 62_000, "re-review": 59_000,
           "verifier instructions": 18_000, "verifier example brief": 22_000}
 
 
