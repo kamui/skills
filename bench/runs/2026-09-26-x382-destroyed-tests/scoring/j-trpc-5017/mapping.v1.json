@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "target": "j-trpc-5017",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 2,
+    "sha256": "f4c3bc6e55ed54ee251b41de84a69c236270e5dc8df4b5cc7a43827f3fd56861"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 96c8cdbd049580a2f2c5de02a5e904367133a86e2232317da6e0bafc2cbe4c84; session 815167e8-1275-4ad5-bae4-4e5a690c78ba; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v2), rubric.md, packet.md, reviews/ (3 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-26T08:55:18Z",
+  "attempts": [
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-a780c7",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Remove the unreachable TType fallback and fix the never comment ... a tsc probe shows Overwrite<{a:1}, never> is never, so readers are misled about the contract.\" True: my tsc probe (clone-work/g2/probe.ts) confirms Overwrite<{a:1}, never> and Overwrite<string, never> are never, so the `: TType` arm at utils.ts:29 can't be reached. The merge-base type also gave never here, so no behaviour changed. This is cleanup plus a comment clarification, covered by the non_defects entries on the redundant `TWith extends any` branches. It recovers neither registered defect."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Overwrite now returns TWith unchanged when it is unknown or any (Overwrite<{a:1}, unknown> is unknown, was {a:1}), a behavior change from the merge-base that existing callers and the full packages/tests tsc do not exercise.\" Verified by tsc probe: head gives unknown and the merge-base Overwrite gives {a:1}. The item states only that the behaviour changed and names no failing caller or user-visible consequence; it even says existing callers don't exercise it. It concerns TWith being unknown/any, not TType being any (GT-j2) or unconstrained generic middleware params dropping context (GT-j1), so it recovers neither. An accurate observation below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The new test file is named issue-5020 although the PR is #5017 ... and the fixture voidWithMiddleware is never asserted.\" Both facts are true: the file is packages/tests/server/regression/issue-5020-inference-middleware.test.ts, the packet thread cites issue-5017-inference-middleware.test.ts, and voidWithMiddleware has no expectTypeOf. The naming point is hygiene. The missing assertion is listed in the register's non_defects (\"No test covers voidWithMiddleware's inferred input\" is a coverage gap, not a defect)."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-b01404",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The `: TType` arm of `TWith extends any ? TWith : TType` in the non-object branch of `Overwrite` is unreachable, since `X extends any` is true for every non-never `TWith` and distributes to never otherwise.\" Accurate, and confirmed by tsc probe (Overwrite<string, never> = never). This is a dead-code observation with no consequence, and it matches the register's non_defects on the `TWith extends any` check and the redundant branches. It recovers neither defect."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The regression test declares `voidWithMiddleware` on the router but makes no assertion about its input or output types, so that case only guards against compile errors.\" True (issue-5020-inference-middleware.test.ts:13-17 has no expectTypeOf for it). The register's non_defects explicitly rule this a coverage gap, not a defect."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Some non-object `TWith` cases now replace rather than merge: `Overwrite<{a:1}, {b:2}|undefined>` is `{a:1;b:2}|undefined` (was `{a:1}|{a:1;b:2}`) and `Overwrite<{a:1}, unknown>` is `unknown` (was `{a:1}`); the whole `packages/tests` project still type-checks.\" Both before/after results were confirmed with tsc in clone-work/g2/probe.ts. The item names no broken caller or consequence and reports that the tests still type-check, so it is an accurate behaviour-change observation. It doesn't identify GT-j1's unconstrained generic middleware context drop or GT-j2's any-context union."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-012",
+      "blind_token": "blind-7b128b",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Remove the unreachable `TType` branch and fix the never comment ... `: TType` never executes ... `Overwrite<string, never>` is `never`, which misleads maintainers about the contract.\" Accurate: in clone/packages/server/src/core/internals/utils.ts the non-object arm `TWith extends any ? TWith : TType` distributes over the naked TWith, so never gives never; a tsc probe in clone-work/g2 confirms Overwrite<string, never> = never. But this is dead-branch cleanup and a doc-comment wording fix; the register's non_defects rule that the `TWith extends any` check and the duplicated branches are working as intended or a factoring preference. No behavioural consequence is claimed. It names neither GT-j1 (dropped context with unconstrained generic middleware params) nor GT-j2 (any context turned into a union)."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

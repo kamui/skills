@@ -1,0 +1,103 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-pr-7390"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "issues": [],
+  "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Close the race in which two goroutines both see an addrConn as Idle and start parallel connection attempts (grpc-go#7365, per the supplied PR text): connect() and updateAddrs() now hand ac.mu directly to resetTransportAndUnlock() so the Idle check and the transition to Connecting share one critical section.",
+  "issue_fit": "Met against the supplied spec (PR text for grpc-go#7365); no issue was fetched offline, so the spec's quoted issue thread was the intent source. The 100000-run flake-free claim is a supporting assertion that could not be repeated here.",
+  "coverage": "Complete merge-base diff of clientconn.go reviewed (single file, +6/-7, 4 commits); callers of resetTransportAndUnlock, addrConn.onClose, http2Client.GracefulClose and the balancer-wrapper serializer read. Three concurrency safety premises were verified in one initial batch and hold; the verifier's return needed an encoding-only repair (two JSON objects, second used verbatim). No tests were run: the changed code has no changed tests, and the xDS flake test named in the spec is outside the focused-test allowance. Uncommitted changes: none."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The change adds no regression test for the connect()/connect() race; the only evidence is the author's reported 100000-run Test/AuthorityRevive loop.",
+   "evidence": "git diff main...review-head touches only clientconn.go; spec-pr-7390/\"Verified that Test/AuthorityRevive no longer flakes\"."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "local clone of grpc/grpc-go",
+  "requirements": [
+   {
+    "source": "spec-pr-7390/\"no concurrent requests are able to start once caller of resetTransport does some validation\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:914-922 keeps ac.mu held from the Idle check into resetTransportAndUnlock, which sets Connecting (clientconn.go:1261) before unlocking; verifier ruled premise-1 holds"
+   },
+   {
+    "source": "spec-pr-7390/\"caller of resetTransport() keep holding the mutex\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:996 go ac.resetTransportAndUnlock() in updateAddrs, with the prior ac.mu.Unlock() removed; clientconn.go:1231-1234 documents the contract"
+   },
+   {
+    "source": "spec-pr-7390/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Author-reported measurement; the xDS test and repeated-run harness are outside the offline focused-test allowance, and nothing material depends on it beyond the traced mechanism"
+   }
+  ],
+  "files": [
+   {
+    "path": "clientconn.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "premise-1",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "connect() cannot let two goroutines both pass the Idle check and start attempts: ac.mu is held from the Idle check until resetTransportAndUnlock sets Connecting.",
+     "evidence": "clientconn.go:914-922, clientconn.go:1234-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-2",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "updateAddrs returning with ac.mu held by the spawned goroutine cannot deadlock: the deferred GracefulClose/onClose only waits for resetTransportAndUnlock to release ac.mu.",
+     "evidence": "clientconn.go:985-996, internal/transport/http2_client.go:1045-1058",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-3",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "Every path through resetTransportAndUnlock releases ac.mu exactly once before blocking or returning.",
+     "evidence": "clientconn.go:1231-1303",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-004/clone-work/tmp.S6SX0Ic9FP/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-004/clone-work/tmp.S6SX0Ic9FP/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

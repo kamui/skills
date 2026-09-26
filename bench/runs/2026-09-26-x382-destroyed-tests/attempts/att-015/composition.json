@@ -1,0 +1,116 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-195"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Behaviour-preserving refactor that resolves 13 SonarQube findings: split high-complexity backup/config functions into helpers, hoist the duplicated status titles into constants plus backupStatusTitle, drop an identical duplicate test, and tidy the Dockerfile (source: supplied PR 195 text and commit 136a485).",
+    "issue_fit": "Met \u2014 no originating issue existed, so alignment was judged against the PR text and commit message; every stated behaviour-preservation promise held under a line-by-line comparison of base and head, and the removed test is byte-identical to its twin.",
+    "coverage": "All four changed files reviewed against the complete merge-base diff. Reviewer ran `go build ./...`, `go vet ./internal/` and `go test ./internal/ -count=1` at the head offline: all pass (live provider tests skip without credentials). The Dockerfile could not be built (no Docker) and golangci-lint was not run; both were judged by reading. The two earlier Copilot comments (duplicate resetBackups call in the Gitea test, 'Organistations' log typo) both predate the change and are carried over unchanged, so they are recorded as observations, not findings. No verification batch was required."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The 'Organistations' log typo is carried verbatim into the new logProviderOrgs helper, which keeps the log output unchanged as the PR promises; it existed at the merge-base for GitHub, Gitea and Azure DevOps.",
+      "evidence": "`internal/backup.go:207` at head; `internal/backup.go` merge-base lines 190-196 (`GitHub Organistations`)."
+    },
+    {
+      "fact": "TestGiteaOrgsRepositoryBackup still calls resetBackups() inside each switch case and again after the switch, exactly as at the merge-base.",
+      "evidence": "`internal/backup_test.go:600-625` at head versus merge-base lines 619-710."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "jonhadfield/soba",
+    "requirements": [
+      {
+        "source": "pr-body/\"Behaviour and log output are unchanged\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go displayStartupConfig helpers keep message text, order and gating per provider; checkProvider, Run and checkProvidersDefined keep control flow (map contains both Bitbucket keys so the eager bitbucketAPITokenComplete only removes a count>1 nondeterminism)"
+      },
+      {
+        "source": "pr-body/\"backup status titles extracted into constants with a shared backupStatusTitle helper\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:18-44 and three call sites use backupStatusTitle; the case conditions and title strings match the base"
+      },
+      {
+        "source": "pr-body/\"an exact duplicate of TestPublicGitLabRepositoryBackup\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "merge-base internal/backup_test.go:554-585: both tests have identical bodies"
+      },
+      {
+        "source": "pr-body/\"merged consecutive RUN instructions, sorted apk package names, quoted ${TAG}\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:5-16 at head; same package set, quoted URL"
+      },
+      {
+        "source": "pr-body/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "go build, go vet and go test ./internal/ reproduced passing; golangci-lint not run in this environment"
+      },
+      {
+        "source": "commit-136a485/\"simplify TestGiteaOrgsRepositoryBackup with assertion helpers\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup_test.go:600-683: helper assertions match the removed inline assertions one for one"
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test ./internal/ -count=1",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "ran once offline at the head with the run's Go environment; ok in 5.19s; live-provider tests skip"
+      },
+      {
+        "check": "go build ./... and go vet ./internal/",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "ran offline at the head; no output, exit 0"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

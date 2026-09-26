@@ -1,0 +1,106 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-1582-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Turn on Flow typing (@flow strict) for the errors tests and inspect-test, and widen the GraphQLError constructor's declared `nodes` parameter to accept `null` so the tests type-check (commit-7e39a12; PR body empty).",
+    "issue_fit": "Issue alignment unavailable: no originating issue; intent taken from the commit message and the supplied PR text. Both ledger rows are met, but the retyping of one test silently drops its stack-less-original scenario.",
+    "coverage": "Complete merge-base diff of all 5 files reviewed. Focused mocha run once at head on src/error/__tests__/*-test.js and src/jsutils/__tests__/inspect-test.js in a scratch export: 27 passing. Flow itself was not run (not permitted by the run allowance). The prior thread by IvanGoncharov on GraphQLError.js:25 (nodes accepts undefined but not null) is addressed by the head's added `| null`; the supplied packet has no later state. Uncommitted changes: none. One verification batch (initial) confirmed the finding; the verifier's narrower trigger is used."
+  },
+  "findings": [
+    {
+      "id": "error-tests/no-stack-fallback-test-lost",
+      "title": "Restore a stack-less original error in the 'no stack' test",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "The test now builds `original` with `new Error('original')`, which always has a truthy `stack`, so it takes only the `originalError.stack` branch. Removing the `&& originalError.stack` guard at src/error/GraphQLError.js:195 (a truthy but stack-less original, e.g. a non-Error thrown value wrapped by locatedError, then gets `stack` undefined) fails the merge-base test but passes every head test.",
+      "impact": "The regression protection this test gave for wrapping a stack-less original error is lost; the test's title still claims it.",
+      "change": "In src/error/__tests__/GraphQLError-test.js keep a stack-less original, typed for Flow: `const original: any = { message: 'original' };`.",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "@noflow replaced by @flow strict in GraphQLError-test.js, locatedError-test.js, printError-test.js and inspect-test.js; 27 tests pass at head"
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/error/GraphQLError.js:25 now accepts null for nodes; tests pass null"
+      }
+    ],
+    "files": [
+      {
+        "path": "src/error/GraphQLError.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/locatedError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/printError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/jsutils/__tests__/inspect-test.js",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "error-tests/no-stack-fallback-test-lost",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-011/clone-work/rc.1PxtRq/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-011/clone-work/rc.1PxtRq/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

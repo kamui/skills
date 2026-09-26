@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 58,
+      "line_end": 58,
+      "claim": "Keep the no-stack test on an error without a stack. `creates new stack if original error has no stack` now passes `new Error('original')`, which has a stack, so `GraphQLError` takes the `originalError.stack` branch instead of the no-stack case.",
+      "consequence": "The falsy-`originalError.stack` case has no test; for example, changing the condition at `GraphQLError.js:195` to `if (originalError)` would leave the suite green (the test at head duplicates `uses the stack of an original error`).",
+      "proposed_fix": "In `src/error/__tests__/GraphQLError-test.js`, keep an original without a stack, e.g. `const original: any = { message: 'original' };` (the `: any` pattern the PR uses in `locatedError-test.js`).",
+      "native_priority": "P3",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "The declared constructor now accepts `null` nodes, but the implementation signature `nodes?: $ReadOnlyArray<ASTNode> | ASTNode | void` still omits `null`.",
+      "consequence": "`src/error/GraphQLError.js:26`, `src/error/GraphQLError.js:92`.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

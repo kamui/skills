@@ -1,0 +1,127 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "pr-9232-text"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+  "issues": [
+   "bokeh/bokeh#9129"
+  ],
+  "change_description": "472e4770d363b3914bb478f0a6c3a83787b20c0d\nFixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\n7aae927cf09820e74a58108ea45facc0f6aa695c\nRemoved usage of var keyword.  Replaced with const.\n\ne92066d593fa2c88ffe732dbaeb3303fff996a15\nRemoved .idea/vcs.xml.\n\n4215c2d0b956eca3dc714b6c11c7fedb440013c9\nMade a shell for the integration test for DatePicker displayed/selected dates.\n\n36549bca3a63d581f7b68d08054a7813c1e6a499\nupdate tests\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Fix bokeh#9129: DatePicker showed the picked day minus one for UTC+ users, by offsetting the date in `_unlocal_date`; add Selenium integration tests for the widget.",
+  "issue_fit": "Partial \u2014 the UTC+ report after picking a date is fixed for string values, but the same edit makes numeric (Python-supplied) dates render one day early in UTC- zones, a regression from released behavior.",
+  "coverage": "Complete merge-base diff (2 files) read. `_unlocal_date` behavior checked with scratch node scripts under TZ=UTC, Europe/Paris, Europe/London, America/Los_Angeles, America/New_York, Pacific/Auckland, Pacific/Pago_Pago (output in clone-work/tz-results.txt). The Selenium integration tests could not be run (no browser); they were traced instead. One verification batch (initial) confirmed the must-fix; no follow-up needed."
+ },
+ "findings": [
+  {
+   "id": "date_picker/unlocal-date-utc-minus-regression",
+   "title": "Do not shift Python-supplied UTC-midnight dates back a day in UTC- zones",
+   "priority": "P1",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "`DatePicker(value=datetime.date(2019, 9, 20))` reaches the browser as epoch-ms UTC midnight (`convert_datetime_type`) and is rendered in America/Los_Angeles, America/New_York or Pacific/Pago_Pago; `min_date`/`max_date` take the same path.",
+   "impact": "`_unlocal_date` now subtracts `getTimezoneOffset()*60000` from every input, which moves UTC midnight into the previous UTC day in UTC- zones. Node under `TZ=America/Los_Angeles` gives base `Fri Sep 20 2019`, head `Thu Sep 19 2019`. The initial value and bounds render a day early for all UTC- users, who were correct before this change.",
+   "change": "In `_unlocal_date`, branch on input form: for a numeric epoch-ms value build the local Date from `getUTCFullYear/getUTCMonth/getUTCDate`, and apply the offset conversion only to `toDateString()` strings (or normalise the value representation at one point) so both forms yield the same day in every timezone.",
+   "source": "PR title and issue #9129 (correct displayed date across timezones).",
+   "anchor": {
+    "type": "line",
+    "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+    "start_line": 79,
+    "end_line": 83,
+    "side": "RIGHT"
+   }
+  },
+  {
+   "id": "tests/datepicker-no-timezone-coverage",
+   "title": "Add a test that fails without the timezone fix",
+   "priority": "P3",
+   "action": "consider",
+   "kind": "maintainability",
+   "trigger": "The new tests run in the runner's single timezone and never assert the initially displayed date; in UTC they behave identically at the merge-base and the head.",
+   "impact": "The suite cannot catch the #9129 bug or the UTC- regression above, so the fix is unprotected.",
+   "change": "Run a case with a non-UTC timezone (e.g. a browser TZ override) and assert the selected day shown in the calendar, `.bk-input` value and recorded value right after load and after a pick.",
+   "source": "Maintainer comment asking for timezone-varied integration tests.",
+   "anchor": {
+    "type": "line",
+    "path": "tests/integration/widgets/test_datepicker.py",
+    "start_line": 52,
+    "end_line": 70,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [],
+ "prior_items": [],
+ "record": {
+  "repository": "bokeh/bokeh",
+  "requirements": [
+   {
+    "source": "pr-title",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "bokehjs/src/lib/models/widgets/date_picker.ts:82-83 fixes string input in UTC+ but shifts numeric input a day early in UTC- (tz-results.txt)"
+   },
+   {
+    "source": "issue-9129/report",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "After a pick the value is a toDateString() string; head gives Fri Sep 20 2019 under Europe/Paris and Europe/London (tz-results.txt)"
+   },
+   {
+    "source": "issue-9129/report/\"1.2.0 did not have the issue\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "UTC- users regress on the initial display (see date_picker/unlocal-date-utc-minus-regression)"
+   },
+   {
+    "source": "pr-body/\"tests added / passed\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Selenium suite and browser unavailable; tests traced only, and do not vary timezone"
+   }
+  ],
+  "files": [
+   {
+    "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "tests/integration/widgets/test_datepicker.py",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "date_picker/unlocal-date-utc-minus-regression",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-016/clone-work/rc.tmhokR/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-016/clone-work/rc.tmhokR/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

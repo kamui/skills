@@ -1,0 +1,111 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Turn on `@flow strict` for the error and inspect tests and widen the `GraphQLError` constructor typing to accept `null` for `nodes` (commit message; the PR body was empty and no issue exists).",
+    "issue_fit": "Unavailable \u2014 no originating issue; the commit message was the intent source. Both promises are met, but one test was weakened while being retyped.",
+    "coverage": "Complete merge-base diff of 5 files reviewed against the base tree; local range only (no forge access, so the packet's earlier review comment on `nodes` accepting `null` was not carried as a prior item; the head adds `| null`, which matches it). Focused mocha run of the error and inspect tests at head: 27 passing. A scratch-copy mutation of the stack guard in `GraphQLError.js` was run under the work directory; the reviewed tree was not modified. One must-fix candidate was confirmed by a fresh-context verifier."
+  },
+  "findings": [
+    {
+      "id": "error/no-stack-test-lost-branch",
+      "title": "Keep the stackless original error in the stack-fallback test",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "Change the guard in `GraphQLError.js:195` from `if (originalError && originalError.stack)` to `if (originalError)`. The merge-base test fails with `expected undefined to be a string`; the head test still passes.",
+      "impact": "`creates new stack if original error has no stack` now passes `new Error('original')`, which has a stack, so it takes the same branch as the previous test. Nothing tests the `Error.captureStackTrace` fallback any more, and a GraphQLError wrapping a stackless error could end up with `stack === undefined` unnoticed.",
+      "change": "In `src/error/__tests__/GraphQLError-test.js`, build the stackless original explicitly: `const original: any = new Error('original'); original.stack = undefined;`, keeping the other assertions. In a scratch copy this passes on the real code and fails on the mutant.",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "local clone of graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "The four test files switch to `@flow strict` (`GraphQLError-test.js:9`, `locatedError-test.js:9`, `printError-test.js:9`, `inspect-test.js:9`), but the retyping changed `GraphQLError-test.js:58` so that test no longer covers the stackless-original branch (error/no-stack-test-lost-branch)."
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`src/error/GraphQLError.js:25` now accepts `| null` for `nodes`; the implementation at `GraphQLError.js:99-107` already treats a falsy `nodes` as absent."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/error/GraphQLError.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/locatedError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/printError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/jsutils/__tests__/inspect-test.js",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "mocha src/error/__tests__/*-test.js src/jsutils/__tests__/inspect-test.js (27 passing)",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "no supplied checks; ran the focused command once at the pinned head, offline, clean tree"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "error/no-stack-test-lost-branch",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-001/clone-work/rc.BufsmT/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-001/clone-work/rc.BufsmT/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

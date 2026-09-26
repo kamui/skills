@@ -1,0 +1,91 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "pull-request-text"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "issues": [
+   "grpc/grpc-go#7365"
+  ],
+  "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Make addrConn.connect and updateAddrs hand ac.mu to resetTransportAndUnlock so the Idle-to-Connecting transition is atomic with the idleness check, preventing two concurrent connection attempts (issue #7365, flaky Test/AuthorityRevive).",
+  "issue_fit": "Met \u2014 issue #7365's root cause (connect() released ac.mu between the idle check and resetTransport re-acquiring it) is closed at both call sites; the PR-text release note (orphaned connections) matches the fixed behavior.",
+  "coverage": "Complete merge-base diff of clientconn.go reviewed with callers (balancer_wrapper.go). Two concurrency safety premises (lock released exactly once with no deadlock; state is Connecting before the lock is released) were checked by a fresh verifier: both hold. Focused root-package test runs (-race, two name filters) matched no tests, so no execution evidence is claimed. The change adds no test; the PR reports 100000 clean runs of Test/AuthorityRevive, which was not repeatable here."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [],
+ "prior_items": [],
+ "record": {
+  "repository": "grpc/grpc-go",
+  "requirements": [
+   {
+    "source": "pr-body/\"no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:906-922 connect() keeps ac.mu from the Idle check through resetTransportAndUnlock; clientconn.go:1261-1262 sets Connecting before unlocking; verifier premise-2 holds"
+   },
+   {
+    "source": "issue-7365/root-cause: duplicate tryAllAddrs from parallel connect()",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:922 and :996 no longer release ac.mu before the state moves to Connecting"
+   },
+   {
+    "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Author-reported measurement; not repeated here. Nothing material depends on it given the static trace."
+   }
+  ],
+  "files": [
+   {
+    "path": "clientconn.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "premise-1",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "Every path through resetTransportAndUnlock releases ac.mu exactly once, and neither call site (including the goroutine handoff in updateAddrs and its deferred GracefulClose) can deadlock.",
+     "evidence": "clientconn.go:1231-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-2",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "ac.state is non-Idle before ac.mu is released after connect() or updateAddrs, so a second connect() cannot start a second attempt.",
+     "evidence": "clientconn.go:905-924,1234-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-009/clone-work/review.sjvts3/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-009/clone-work/review.sjvts3/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

@@ -1,0 +1,116 @@
+{
+ "run": {
+  "coverage": "incomplete",
+  "specs": [
+   "pr-1582-text"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+  "issues": [],
+  "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Enable `@flow strict` on the error and inspect tests and widen the `GraphQLError` constructor typing so `nodes` accepts `null`, as the supplied PR text's review thread asks.",
+  "issue_fit": "Partial. No originating issue exists; the intent source is the commit message and the supplied PR text. The `null` typing is met; the Flow enablement is not verifiable offline, and the rewrite of one test loses its stackless-error coverage.",
+  "coverage": "All five changed files reviewed against the complete merge-base diff. The four changed test files pass at head (27 passing, mocha run once). A scratch-copy mutation showed the merge-base no-stack test fails and the head version passes. Flow was not run: the run allowance permits only mocha, so whether the new annotations, `any` casts and the `$FlowFixMe` type-check is unverified.",
+  "coverage_gaps": [
+   "Flow type-check of the five changed files was not run (allowance permits only mocha); supplying a Flow run at head would settle whether the new annotations, `any` casts and `$FlowFixMe` are accepted and closes requirement `commit-7e39a12/\"Enable Flow typings on errors tests\"`."
+  ]
+ },
+ "findings": [
+  {
+   "id": "error/graphqlerror-test-stackless-original",
+   "title": "Keep the stackless originalError case in the no-stack test",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "Change `if (originalError && originalError.stack)` in `src/error/GraphQLError.js` to `if (originalError)`, so a stackless `originalError` yields `stack` undefined.",
+   "impact": "The test `creates new stack if original error has no stack` now builds `new Error('original')`, which always has a stack, so it takes the `originalError.stack` branch. It still passes on that mutation (13 passing) where the merge-base fixture `{ message: 'original' }` failed it, so the regression protection its name claims is gone.",
+   "change": "In that test, use a stackless original, for example `const original: any = new Error('original'); original.stack = undefined;`, and keep the assertions unchanged. Confirm Flow accepts the fixture.",
+   "anchor": {
+    "type": "line",
+    "path": "src/error/__tests__/GraphQLError-test.js",
+    "start_line": 58,
+    "end_line": 58,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The `GraphQLError` function implementation still declares `nodes?: $ReadOnlyArray<ASTNode> | ASTNode | void`; only the `declare class` signature gained `| null`, and the runtime already handles null.",
+   "evidence": "`src/error/GraphQLError.js:25`, `src/error/GraphQLError.js:93`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+    "class": "acceptance",
+    "disposition": "not-verifiable",
+    "evidence": "src/error/__tests__/GraphQLError-test.js:9, locatedError-test.js:9, printError-test.js:7 and inspect-test.js:7 switch @noflow to @flow strict; Flow was not run offline."
+   },
+   {
+    "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/error/GraphQLError.js:25 adds `| null` to the declared `nodes` parameter; tests pass null at runtime."
+   }
+  ],
+  "files": [
+   {
+    "path": "src/error/GraphQLError.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/error/__tests__/GraphQLError-test.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/error/__tests__/locatedError-test.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/error/__tests__/printError-test.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/jsutils/__tests__/inspect-test.js",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "error/graphqlerror-test-stackless-original",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-006/clone-work/priv.4c52/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/att-006/clone-work/priv.4c52/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": [
+    "Flow type-check of the changed files (offline allowance permits only mocha); could change whether the new annotations, `any` casts and `$FlowFixMe` are accepted."
+   ]
+  },
+  "repository": "graphql/graphql-js"
+ }
+}
