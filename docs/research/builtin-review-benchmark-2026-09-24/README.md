@@ -6,6 +6,9 @@ run of the [reviewer benchmark suite](../../../bench/README.md). The run lives a
 its `manifest.json` carries `frozen_at` and names its freeze commit, and every chargeable step is in
 [`ledger.md`](ledger.md). §10 records how the open items were closed, and §12 gives the results.
 
+The [A-only phase audit](a-phase-audit.md) reconciles all 20 valid A reviews and the separate
+invalid attempt, with verifier costs, elapsed-time overlap, and the limits on primary-phase attribution.
+
 The mechanism this file used to describe has moved into `bench/`: the arms are data in
 [`bench/arms/`](../../../bench/arms/), the targets and their sealed registers in
 [`bench/targets/`](../../../bench/targets/), the scoring definitions in
