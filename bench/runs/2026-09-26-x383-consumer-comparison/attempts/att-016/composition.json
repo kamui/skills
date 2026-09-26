@@ -1,0 +1,108 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-trpc-pr-5017-packet"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "wip\n\nwip\n\nok\n\nnah\n\nrevert\n\ncol\n\nrename\n\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix `Overwrite` so chained procedure inputs no longer mangle non-object types (e.g. `.input(z.string()).use(...)` inferring a garbled object instead of `string`), per the packet's PR title and commit 7dc04a7.",
+  "issue_fit": "Met. No originating issue exists; alignment was judged against commit 7dc04a7's stated behavior and the supplied packet, which restates the same intent (the PR body is an unfilled template).",
+  "coverage": "Complete merge-base diff of both changed files read; all `Overwrite` consumers in `packages/server/src` inspected. Reviewer ran the clone's `tsc --noEmit -p tsconfig.json` in `packages/tests` at the head: exit 0, no diagnostics. The new regression test, type-checked against a scratch copy of the merge-base `utils.ts`, fails at its two `strWithMiddleware` assertions (lines 37-38) and passes at the head, so it discriminates. The runtime vitest suite was unavailable by policy. One safety premise (object operands unchanged) was verified: holds."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The `: TType` fallback in the second branch of `Overwrite` is unreachable, so `Overwrite<X, never>` resolves to `never` rather than `X`, which the doc comment's \"unless TWith is never\" leaves ambiguous.",
+   "evidence": "`packages/server/src/core/internals/utils.ts:26-31`; scratch probe of the head type: `Overwrite<{a:1}, never>` and `Overwrite<string, never>` both resolve to `never`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "commit-7dc04a7/\"Overwrite<string,string> resulted in a mangled object type\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "Scratch probe of the head type: a non-object TType (unique symbol) with `string` resolves to `string`; the regression test's `strWithMiddleware` assertions fail at the merge-base and pass at the head (`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:37-38`)."
+   },
+   {
+    "source": "commit-7dc04a7/\"keys are only iterated and overwritten in the case of objects\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "`packages/server/src/core/internals/utils.ts:11-14`: the key-by-key mapped type is reachable only when both `TType` and `TWith` extend `object`."
+   },
+   {
+    "source": "commit-7dc04a7/\"a non-never TWith type will entirely replace TType\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "`packages/server/src/core/internals/utils.ts:21-22, 26-30`: non-object `TWith` and non-object `TType` both yield `TWith`; probe confirmed `Overwrite<unique symbol, string>` is `string`."
+   },
+   {
+    "source": "spec-trpc-pr-5017-packet/pr-title",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "\"inference fix for inputs with middleware\": `strWithMiddleware` input and output infer `string` at the head (tsc exit 0)."
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "clean tree at the reviewed head; exit 0 with empty output"
+   },
+   {
+    "check": "scratch tsc of the new regression test against a copy of the merge-base utils.ts (clone-work/base)",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "head test file type-checked against a scratch copy of the merge-base `utils.ts`: TS2554 at test lines 37 and 38; with the head `utils.ts` copy: no diagnostics"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "overwrite/object-operands-unchanged",
+     "type": "safety-premise",
+     "area": "compatibility",
+     "premise": "For object-typed operands (including unions), every in-repo `Overwrite` consumer resolves to the same type at the head as at the merge-base; head differs only for non-object operands, none of which reach an in-repo consumer in a way that breaks supported typed usage.",
+     "evidence": "packages/server/src/core/internals/utils.ts:11-30; packages/server/src/core/internals/procedureBuilder.ts:38-44",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-016/clone-work/rc.965SLV/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-016/clone-work/rc.965SLV/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "trpc/trpc"
+ }
+}

@@ -1,0 +1,45 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/requests/adapters.py",
+      "line_start": 94,
+      "line_end": 94,
+      "claim": "Do not load client certificates into the process-wide default SSLContext. In one process, `requests.get(url_a, verify=True, cert=(certA, keyA))` runs and then `requests.get(url_b, verify=True)` (or a call with a different cert on another thread) runs against a server that asks for a client certificate.",
+      "consequence": "urllib3 calls `context.load_cert_chain()` on the supplied `_preloaded_ssl_context`, so client A's identity stays installed and is presented on later verify=True requests that pass no cert, and concurrent requests with different certs race on one context. Against a local mTLS server the head shows `['clientA', 'clientA', 'clientB', 'clientB']` where the merge-base shows `['clientA', None, 'clientB', None]`.",
+      "proposed_fix": "In `_urllib3_request_context`, pass the shared context only when `client_cert is None`; otherwise set `pool_kwargs[\"ca_certs\"] = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)` so urllib3 builds a private context for that pool as before.",
+      "native_priority": "P1",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/requests/adapters.py",
+      "line_start": 95,
+      "line_end": 95,
+      "claim": "Keep an adapter's own TLS context and settings when verify=True. An `HTTPAdapter` subclass whose `init_poolmanager` passes `ssl_context=` (or `ssl_version=`, as in `docs/user/advanced.rst`) to `PoolManager` is mounted and used with the default verify=True.",
+      "consequence": "Per-request `pool_kwargs[\"ssl_context\"]` overrides the manager's `connection_pool_kw`, so the custom context is never used; cipher or protocol restrictions and legacy-server workarounds silently stop applying. `adapterctx.py` shows `uses custom ctx: False` at the head and `True` at the merge-base.",
+      "proposed_fix": "In `_get_connection`/`_urllib3_request_context`, skip adding `ssl_context` when the adapter's pool or proxy manager already defines one in `connection_pool_kw`, and keep the previous CA-bundle handling in that case.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/requests/adapters.py",
+      "line_start": 75,
+      "line_end": 78,
+      "claim": "Load the default CA bundle lazily, not when requests.adapters is imported. The certifi bundle path is missing or unreadable, for example a distro-patched certifi in a minimal container or a frozen app without `cacert.pem`.",
+      "consequence": "`import requests` raises `FileNotFoundError`, so programs that only use http, verify=False or an explicit bundle break, and the 'Could not find a suitable TLS CA certificate bundle' message is lost; at the merge-base import succeeded and the error appeared on the first verify=True request. Every import also pays the bundle-parsing cost.",
+      "proposed_fix": "Build and cache the default context on the first verify=True request, guarded by a lock, instead of at module level.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

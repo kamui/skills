@@ -1,0 +1,130 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-5067-packet"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [
+      "honojs/hono#5060"
+    ],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Make parseBody() and validator() match form/JSON Content-Type media types case-insensitively while leaving parameters such as multipart boundaries intact (issue #5060).",
+    "issue_fit": "Partial: mixed-case media types are now accepted for parseBody and validator, but the new parseFormData path breaks parseBody after c.req.formData() has cached the body.",
+    "coverage": "Complete merge-base diff (6 files) reviewed. Reviewer-executed at head: vitest on body, buffer, validator, request, method-override and hono test files all pass; scratch probes showed the confirmed regression at head against correct output at the merge-base. Runtime suites for Deno, Bun and Workers were unavailable. Repository guidance: only .github/pull_request_template.md exists at the merge-base; it adds no review rule."
+  },
+  "findings": [
+    {
+      "id": "utils-body/parsebody-after-cached-formdata",
+      "title": "Keep parseBody working after c.req.formData() has cached the body",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A handler or middleware awaits `c.req.formData()` and then `c.req.parseBody()` on a multipart or urlencoded POST.",
+      "impact": "Multipart: parseBody throws 'no boundary found in multipart body' and the route returns 500. Urlencoded: it returns an object keyed by a generated multipart boundary. At the merge-base the same sequence returned the correct fields.",
+      "change": "In `parseFormData`, when the request is a `HonoRequest`, reuse `request.formData()` (which honours `bodyCache.formData`) and apply the media-type normalization only when parsing raw bytes, instead of always calling `arrayBuffer()`, which re-serializes a cached FormData with a new boundary.",
+      "source": "Issue #5060, expected behavior (no regression to form parsing).",
+      "anchor": {
+        "type": "line",
+        "path": "src/utils/body.ts",
+        "start_line": 126,
+        "end_line": 132,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`methodOverride` still guards its form parsing with case-sensitive `startsWith('multipart/form-data')` and `startsWith('application/x-www-form-urlencoded')`, so mixed-case media types skip the override; the issue names only parseBody and validator.",
+      "evidence": "`src/middleware/method-override/index.ts:74`, `src/middleware/method-override/index.ts:92`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "honojs/hono",
+    "requirements": [
+      {
+        "source": "issue-5060/expected-behavior/media-type-case-insensitive",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "src/utils/body.ts:104-106 and src/validator/validator.ts:24-26 match case-insensitively; parseFormData regresses the cached-formData path (src/utils/body.ts:126)."
+      },
+      {
+        "source": "issue-5060/expected-behavior/parameters-intact",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/buffer.ts:113 lowercases only /^[^;]+/; src/utils/buffer.test.ts mixed-case boundary test passes."
+      },
+      {
+        "source": "issue-5060/suggested-tests",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.test.ts, src/validator/validator.test.ts add mixed-case urlencoded, multipart and JSON cases; all pass at head."
+      },
+      {
+        "source": "commit-5226d41/\"normalize Content-Type media type for case-insensitive matching\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "Same as the first row; see finding utils-body/parsebody-after-cached-formdata."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/utils/body.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/body.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.test.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "utils-body/parsebody-after-cached-formdata",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-003/clone-work/priv.Ti48/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-003/clone-work/priv.Ti48/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

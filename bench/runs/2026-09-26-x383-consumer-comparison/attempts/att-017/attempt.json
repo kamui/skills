@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-017",
+  "run_id": "2026-09-26-x383-consumer-comparison",
+  "cell": {
+    "target": "m-grpc-go-7390",
+    "arm": "review-code-sonnet-high",
+    "replicate": 2
+  },
+  "predecessor": "att-009",
+  "retry_reason": "harness-invalid: read audit, scratch files under /tmp outside the attempt's roots",
+  "replacement_index": 2,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-26T10:45:07Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "207b72c5bc1e7ec5c85ebfe43bfc6c3354df9805",
+    "diff_commands": [
+      "git diff --stat main...review-head",
+      "git diff --stat $MB $H",
+      "git diff daab5634 76ef33f4 "
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4906d0cee892be918981bd2a82dfeebcc3b10aa0d596e5d745484130dd0af451",
+    "tree_identity_after": "4906d0cee892be918981bd2a82dfeebcc3b10aa0d596e5d745484130dd0af451"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.956958,
+    "cost_bounds_usd": {
+      "low": 0.956958,
+      "high": 0.956958
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-26T10:45:07Z",
+    "payload_validated_at": "2026-09-26T10:48:43Z",
+    "completed_at": "2026-09-26T10:48:43Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "c384fb1ad21273ba6085c326b08e199c1b225355761b65dee56a3afe193f0076"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-26-x383-consumer-comparison/att-017.tar.gz",
+    "sha256": "dc7420264f3bd61bcd0ba593759c37a045ee769511ffd573cf1d0981883b2d5a",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 58b315e9444b9cfcda82fa596552515d197d70f37f08045e9706a6955f36fd38; run policy sha256 4319fcc047dc9cb5a39f8adc7a9416544eb17df4d68cbf3a7d27eab57845dd35 (before path substitution)"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-26-x383-consumer-comparison-att-015-clone/43c157ce-c926-4e23-9c74-9a92fe50f99b.jsonl"
+  ],
+  "prompt_headers": [],
+  "report_findings_calls": 0,
+  "commands": [
+    "ls -R /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code | head -50",
+    "git rev-parse --verify main^{commit} review-head^{commit} && git merge-base main review-head && git status --short | head; PD=$(mktemp -d /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.XXXXXX); echo $PD; git log --reverse --format='%H%n%B' main..review-head > $PD/commit-136a485.txt; cd /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code && python3 scripts/review_context.py --help | head -30",
+    "git rev-parse --verify 'main^{commit}'; git rev-parse --verify 'review-head^{commit}'; git merge-base main review-head; git log --oneline main..review-head; cat ../clone-work/pd.UeLjqs/commit-136a485.txt | head -3",
+    "PD=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs && git log --reverse --format='%B' main..review-head > $PD/commit-136a485.txt && S=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code && python3 $S/scripts/review_context.py --merge-base c77f548cbd340d2e744da7c6d92a54372b4b900b --head 136a4850df9aec8cf8813b27ba1533d4a17bc642 --store $PD/review-context.json 2>&1 | head -80",
+    "S=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code; ST=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs/review-context.json; for p in docker/Dockerfile internal/notify.go internal/backup_test.go; do python3 $S/scripts/review_context.py --from $ST --path $p --chunk 1; done",
+    "S=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code; ST=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs/review-context.json; python3 $S/scripts/review_context.py --from $ST --path internal/backup.go --chunk 1",
+    "rg -n 'compareTypeClone|compareTypeRefs|enabledProviderAuth|providerNameBitBucket|justTokenProviders|userAndPasswordProviders' internal/*.go | rg -v _test | head -30; git show main:internal/backup_test.go | rg -n -A18 'func TestPublicGitLabRepositoryBackup\\(' ; rg -n 'func (Gitea|GitHub|Gitlab|AzureDevOps|Sourcehut|Bitbucket)\\(' internal/",
+    "C=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-cache; export GOMODCACHE=$C/gomodcache GOCACHE=$C/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local; go build ./... 2>&1 | tail -5; echo build=$?; go vet ./internal/ 2>&1 | tail -5; timeout 280 go test ./internal/ -count=1 2>&1 | tail -15; git status --short",
+    "cd /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code && python3 scripts/render_review.py --example",
+    "cd /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs && python3 - <<'EOF'\nimport json\nmsg=open('commit-136a485.txt').read()\nc={\n\"run\":{\"coverage\":\"complete\",\"specs\":[\"pr-195-text\"],\"target_kind\":\"range\",\"target\":\"main...review-head\",\"base_ref\":\"main\",\"base_sha\":\"c77f548cbd340d2e744da7c6d92a54372b4b900b\",\"issues\":[],\"change_description\":msg},\n\"summary\":{\"status\":\"Approved\",\n\"intent\":\"Resolve 13 SonarQube findings by extracting helpers, constants and Dockerfile tidying, with behaviour and log output unchanged (pr-195-text, commit-136a485).\",\n\"issue_fit\":\"Unavailable as an issue; no originating issue exists. The supplied PR text and commit message are the intent source, and every ledger row is met or not-verifiable.\",\n\"coverage\":\"Complete merge-base diff of all 4 files reviewed. `go build ./...` and `go vet ./internal/` were clean, and `go test ./internal/ -count=1` passed once at the head (live provider tests skip without credentials). The Dockerfile was not built (no Docker) and was judged by trace. No candidate survived falsification, so no verification batch was needed. Prior Copilot comments (double `resetBackups()`, 'Organistations' typo) both predate this change and were dropped.\"},\n\"findings\":[],\n\"questions\":[],\n\"observations\":[\n{\"fact\":\"`checkProvidersDefined` now computes the Bitbucket API-token state before the map loop, so OAuth counting no longer depends on random map iteration order.\",\"evidence\":\"`internal/backup.go:680-717` at head versus `internal/backup.go:625-672` at the merge-base.\"}],\n\"prior_items\":[],\n\"record\":{\"repository\":\"jonhadfield/soba\",\n\"requirements\":[\n{\"source\":\"pr-body/\\\"Behaviour and log output are unchanged\\\"\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"Helper-by-helper comparison of runProviderBackups, displayStartupConfig, checkProvider, Run and checkProvidersDefined shows the same call order, log strings and errors; provider order preserved at internal/backup.go:322-345.\"},\n{\"source\":\"pr-body/\\\"backup status titles extracted into constants with a shared `backupStatusTitle` helper\\\"\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"internal/notify.go:18-44 and its three call sites; title strings are byte-identical.\"},\n{\"source\":\"pr-body/\\\"removed `TestPublicGitLabRepositoryBackup2`, an exact duplicate\\\"\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"Merge-base bodies of both tests are identical apart from the name (internal/backup_test.go:551-585 at base).\"},\n{\"source\":\"pr-body/\\\"Dockerfile (docker:S7031, S7018, S6570)\\\"\",\"class\":\"acceptance\",\"disposition\":\"met\",\"evidence\":\"docker/Dockerfile:5-15 merges RUNs, sorts apk names and quotes the URL.\"},\n{\"source\":\"pr-body/\\\"`go build`, `go vet`, `golangci-lint run` (0 issues) and the full test suite pass locally\\\"\",\"class\":\"supporting\",\"disposition\":\"not-verifiable\",\"evidence\":\"Build, vet and internal tests were re-run and passed; golangci-lint was not run and the Sonar count of 13 was not checkable offline.\"}],\n\"files\":[\n{\"path\":\"docker/Dockerfile\",\"state\":\"reviewed\"},\n{\"path\":\"internal/backup.go\",\"state\":\"reviewed\"},\n{\"path\":\"internal/backup_test.go\",\"state\":\"reviewed\"},\n{\"path\":\"internal/notify.go\",\"state\":\"reviewed\"}],\n\"check_evidence\":[],\n\"verification\":{\"tasks\":[],\"batches\":[],\"outstanding\":[]},\n\"routed\":{\"unresolved\":[],\"disputed\":[],\"unrecoverable_inputs\":[]}}}\njson.dump(c,open('composition.json','w'),indent=2)\nEOF\ncd /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone && python3 /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code/scripts/render_review.py --store /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs/review-context.json /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs 2>&1 | tail -40",
+    "A=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/artifacts; P=/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone-work/pd.UeLjqs; mkdir -p $A && cp $P/composition.json $P/payload.json $P/report.md $A/ && ls $A; cd /home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone && git status --short"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code/references/targets.md",
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code/references/rubric.md",
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code/references/output.md",
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/home/.claude/skills/review-code/references/verification.md"
+  ],
+  "diff_commands": [],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015/clone",
+    "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-015"
+  ]
+}
