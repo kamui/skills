@@ -182,5 +182,11 @@
     "allowance": "Reading the clone is always permitted. Commands may be run only as the target's allowance below states, offline, with a five-minute limit per command; scratch files go under the work directory; nothing may be added to or changed in the clone, whose tree identity is checked before and after the review.",
     "unprivileged_user": null
   },
-  "deviations": []
+  "deviations": [
+    {
+      "at": "2026-09-26T20:32:51Z",
+      "what": "After dispatch began, file_attempt.py at 53950685d342929c93ac67c17372aedc199f722c was corrected to collapse line breaks in the disposition summary. A multiline audit violation in x381 att-001 exposed a schema failure after the attempt record was written. The full audit evidence, review outputs, validity decision, metered charges and timestamps are unchanged. x381 att-001 was refiled without a model rerun. Future filings use this serialization fix; the frozen reviewer tree, prompt, allowances and scoring rules are unchanged.",
+      "invalidates": []
+    }
+  ]
 }
