@@ -73,10 +73,14 @@ not each hold exactly the run's attempts on the target with their item counts, v
 K1's, a verdict file fails its shape check, a candidate of W1 has no ruling or a ruling names none of
 W1's, or a ``material`` or ``duplicate`` ruling lacks a re-grade for its defect (the register
 version's one added defect, or ``duplicate_of``), and when the rulings need re-grades for more than
-one defect. Each item, in order of precedence: a v<N> ``defect:`` item is kept whole; an item the
+one defect. Each item, in order of precedence: a v<N> ``defect:`` item is kept whole; an unresolved
+item ruled duplicate becomes ``defect:<duplicate_of>`` with the positive re-grade's fix quality,
+or the ruling's explicit ``fix_sufficiency`` when the re-grade disagrees. A supplied duplicate
+fix quality must be ``sufficient``, ``partial`` or ``absent``; a disagreement without it is refused.
+Next, an item the
 re-grade says recovers X becomes ``defect:X`` with the re-grade's fix sufficiency and notes
 ``regrade: <notes>``; an ``unresolved`` item whose candidate has a ruling becomes ``non-material``
-(not-material true-sub-threshold, or material or duplicate without a recovery), ``false-finding``
+(not-material true-sub-threshold, or material without a recovery), ``false-finding``
 (not-material false) or stays ``unresolved``, its notes prefixed ``<candidate> ruled <ruling>: ``;
 any other item is kept whole. ``priority_error`` and the review level are derived again as ``map``
 derives them. ``scored_by`` packs v<N>'s adjudicator, the re-grade's session and the rulings file's
@@ -728,7 +732,8 @@ def map_verdicts(args) -> list:
 
 # What a ruling makes of an unresolved candidate item the re-grade does not turn into a recovery.
 RULED = {("not-material", "true-sub-threshold"): "non-material", ("not-material", "false"): "false-finding",
-         ("material", None): "non-material", ("duplicate", None): "non-material", ("unresolved", None): "unresolved"}
+         ("material", None): "non-material", ("unresolved", None): "unresolved"}
+VALID_RULINGS = set(RULED) | {("duplicate", None)}
 REGRADE_FIELDS = {"recovers", "fix_sufficiency", "notes"}
 CARRIED = ("assignment", "duplicate_group", "fix_sufficiency", "notes")
 
@@ -757,11 +762,14 @@ def check_rulings(doc, candidates: set, defect_ids: set) -> tuple:
         if not isinstance(name, str) or name in rulings:
             problems.append(f"rulings[{index}]: candidate {name!r} is missing or repeated")
             continue
-        if (ruling.get("ruling"), ruling.get("classification")) not in RULED:
+        if (ruling.get("ruling"), ruling.get("classification")) not in VALID_RULINGS:
             problems.append(f"{name}: ruling {ruling.get('ruling')!r} with classification {ruling.get('classification')!r} "
-                            f"is not one of {', '.join(f'{r}/{c}' for r, c in RULED)}")
+                            f"is not one of {', '.join(f'{r}/{c}' for r, c in sorted(VALID_RULINGS))}")
         elif ruling["ruling"] == "duplicate" and ruling.get("duplicate_of") not in defect_ids:
             problems.append(f"{name}: duplicate_of {ruling.get('duplicate_of')!r} is not a defect in the register")
+        if ruling.get("ruling") == "duplicate" and "fix_sufficiency" in ruling and ruling["fix_sufficiency"] not in (
+                "sufficient", "partial", "absent"):
+            problems.append(f"{name}: duplicate fix_sufficiency must be sufficient, partial or absent")
         rulings[name] = ruling
     problems += [f"{c}: a candidate of the base grading with no ruling" for c in sorted(candidates - set(rulings))]
     problems += [f"{c}: ruled on, but the base grading has no such candidate" for c in sorted(set(rulings) - candidates)]
@@ -773,13 +781,20 @@ def revised(item: dict, candidate, again, ruling, defect) -> tuple:
     kept = {field: item[field] for field in CARRIED}
     if is_recovery(item["assignment"]):
         return kept, None
+    if item["assignment"] == "unresolved" and ruling and ruling["ruling"] == "duplicate":
+        fix = again["fix_sufficiency"] if again and again["recovers"] else ruling.get("fix_sufficiency")
+        if fix not in ("sufficient", "partial", "absent"):
+            raise Inconsistent(f"{candidate}: duplicate recovery needs adjudicated fix_sufficiency")
+        return (dict(kept, assignment=f"defect:{ruling['duplicate_of']}", fix_sufficiency=fix,
+                     notes=f"{candidate} ruled duplicate: {item['notes']}"),
+                f"{candidate} ruled duplicate of {ruling['duplicate_of']}")
     if again and again["recovers"]:
         return (dict(kept, assignment=f"defect:{defect}", fix_sufficiency=again["fix_sufficiency"],
                      notes=f"regrade: {again['notes']}"), f"the re-grade recovers {defect}")
     if item["assignment"] == "unresolved" and ruling:
         classification = ruling.get("classification")
         why = f"{candidate} ruled {ruling['ruling']}" + (f" ({classification})" if classification else "")
-        if ruling["ruling"] in ("material", "duplicate"):
+        if ruling["ruling"] == "material":
             why += f", and the re-grade does not recover {defect}"
         return (dict(kept, assignment=RULED[(ruling["ruling"], classification)],
                      notes=f"{candidate} ruled {ruling['ruling']}: {item['notes']}"), why)
@@ -865,7 +880,7 @@ def revise(args) -> list:
     added = [d["id"] for d in register["defects"] if d["added_in_version"] == register["version"]]
     needed = set()
     for name, ruling in sorted(rulings.items()):
-        if ruling["ruling"] not in ("material", "duplicate") or (ruling["ruling"], ruling.get("classification")) not in RULED:
+        if ruling["ruling"] not in ("material", "duplicate") or (ruling["ruling"], ruling.get("classification")) not in VALID_RULINGS:
             continue
         if not regrade_key:
             problems.append(f"{name}: ruled {ruling['ruling']}, which needs a re-grade for its defect (--work, --key)")

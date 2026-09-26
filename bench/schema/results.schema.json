@@ -26,6 +26,21 @@
       "properties": {
         "key": {"type": "object", "additionalProperties": {"type": "string"}},
         "attempts_included": {"type": "integer"},
+        "valid_reviews": {
+          "type": "object",
+          "required": ["count", "buggy_count", "false_findings_raw", "false_findings_unique", "approved_on_buggy", "zero_recovery", "false_clean", "noise_items"],
+          "additionalProperties": false,
+          "properties": {
+            "count": {"type": "integer"},
+            "buggy_count": {"type": "integer"},
+            "false_findings_raw": {"type": "integer"},
+            "false_findings_unique": {"type": "integer"},
+            "approved_on_buggy": {"type": "integer"},
+            "zero_recovery": {"type": "integer"},
+            "false_clean": {"type": "integer"},
+            "noise_items": {"type": "integer"}
+          }
+        },
         "cells_unattempted": {"type": "integer"},
         "cells_invalid": {"type": "integer"},
         "replacements_used": {"type": "integer"},
