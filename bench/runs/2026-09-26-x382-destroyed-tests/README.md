@@ -8,7 +8,9 @@ coverage-inclusive policy on 2026-09-26 and approved the billed runs and the acc
 the same day, against the issue's $10.62 review-only estimate.
 
 **Frozen 2026-09-26.** `manifest.json` carries `frozen_at`; `freeze_commit` names the commit that
-introduced it. After the first dispatch, the manifest changes only by an appended deviation.
+introduced it. After the first dispatch, the manifest changes only by an appended deviation. That
+commit was never pushed; the branch carries a rebased copy, `e6953b6`, committed after the runs,
+as the manifest's first deviation records.
 
 ## Pins
 
@@ -58,7 +60,7 @@ candidates. "Frozen A" is the control's two valid reviews per target, from `resu
 
 | Target | Candidate valid reviews | Recovery (attempt level) | Native action on the recovery | Fix | Approved on buggy | False findings | Frozen A |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| (k) GraphQL | 3 | GT-k1 3/3 | `must-fix` P2 3/3 | sufficient 3/3 | 0/3 | 0 | GT-k1 2/2 sufficient, `consider` with priority errors 2/2, approved 2/2 |
+| (k) GraphQL | 3, one incomplete | GT-k1 3/3 | `must-fix` P2 3/3 | sufficient 3/3 | 0/3 | 0 | GT-k1 2/2 sufficient, `consider` with priority errors 2/2, approved 2/2 |
 | (j) tRPC | 3 | 0/3 | — | — | 3/3 | 0 | 0/2, approved 2/2 |
 | (l) Bokeh | 3 | GT-l1 3/3 | `must-fix` (P2, P2, P1) | sufficient 3/3 | 0/3 | 0 | GT-l1 2/2 sufficient, approved 0/2 |
 | (m) gRPC, clean | 2 of 3 | — | — | — | — | 0 (also 0 on both invalid attempts) | 0 |
@@ -67,8 +69,8 @@ candidates. "Frozen A" is the control's two valid reviews per target, from `resu
 - **Thresholds:** GT-k1 is recovered with a sufficient remedy and `must-fix` in 3/3, and GraphQL approvals fall from 2/2 to 0/3.
 - **Negative cases:** the unasserted tRPC `voidWithMiddleware` fixture stays an observation (att-007) under an Approved verdict. The Bokeh timezone-coverage finding stays `consider` P3 in all four (l) reviews. Neither is promoted.
 - **Guardrails:** (k) and (l) recall stay 3/3, and no target has a false finding or a non-material blocker. The only `must-fix` items are the GT-k1 and GT-l1 recoveries.
-- **Action, fixes and validity:** priority errors fall from 2 to 0, and every recovery is `must-fix` with a sufficient fix. Invalid attempts rose to 3 of 17, from frozen A's 1 of 21; every one is the `/tmp` private directory.
-- **Dollars:** $13.97 for 17 reviewer attempts, $0.82 mean per valid review against frozen A's $0.71 on these targets. Grading was $1.23 and the two diagnostics $1.37, so the run total is $16.57 against the $40 cap. That is above the issue's $10.62 review-only estimate: the three invalid attempts cost $2.89.
+- **Action, fixes and validity:** priority errors fall from 2 to 0, and every recovery is `must-fix` with a sufficient fix. Invalid attempts rose to 3 of 17, from frozen A's 1 of 21; every one is the `/tmp` private directory. On (k), att-006 is valid and graded, but its review reported incomplete coverage because Flow was not run offline, so `results.v1.json` scores that cell `incomplete` and counts 2 completed valid reviews on (k). Under scoring v1 its GT-k1 recovery still counts.
+- **Dollars:** $13.97 for 17 reviewer attempts, $0.79 mean per valid review ($0.82 per attempt) against frozen A's $0.71 on these targets. Grading was $1.23 and the two diagnostics $1.37, so the run total is $16.57 against the $40 cap. That is above the issue's $10.62 review-only estimate: the three invalid attempts cost $2.89.
 - **Latency:** median elapsed-to-payload over valid reviews is 158 s (14 reviews), against frozen A's 119 s on the same targets (10 reviews). The per-target medians rise most on (j), 99 → 179 s, and (k), 93 → 154 s.
 
 ## Acceptance-path diagnostic
