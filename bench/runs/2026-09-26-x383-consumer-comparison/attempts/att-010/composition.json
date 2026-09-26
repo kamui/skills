@@ -1,0 +1,108 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Resolve 13 SonarQube findings by decomposing complex functions, extracting notification title constants, removing a duplicate test and tidying the Dockerfile, with behaviour and log output unchanged.",
+    "issue_fit": "Issue alignment unavailable: no originating issue; the supplied pull-request text and the commit message were the intent sources. All ledger rows are met or not-verifiable.",
+    "coverage": "Complete merge-base diff of four files read; base and head compared function by function (provider selection order, startup log lines, credential checks, scheduling, notification titles byte for byte). Reviewer ran go build, go vet and go test ./internal/ once at the head: pass (live provider tests skip without credentials). The Dockerfile could not be built (no Docker) and golangci-lint and SonarQube were not run; the Dockerfile was judged by reading. No defects survived falsification."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The 'Organistations' typo in the organisation log line is carried unchanged into the new logProviderOrgs helper, so it already existed at the merge-base.",
+      "evidence": "`internal/backup.go:207`, base `internal/backup.go:196`."
+    },
+    {
+      "fact": "The double resetBackups() call per loop iteration in TestGiteaOrgsRepositoryBackup already existed at the merge-base and is preserved by the refactor.",
+      "evidence": "`internal/backup_test.go:629`, base `internal/backup_test.go:646`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "pr-body/\"Behaviour and log output are unchanged\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go:190-296 vs base 179-290: same log lines and order per provider; internal/notify.go:18-44 titles byte-identical to base; scheduling and validation order unchanged in Run."
+      },
+      {
+        "source": "pr-body/\"backup status titles extracted into constants with a shared backupStatusTitle helper\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:18-44 and its three call sites in sendTelegramMessage, sendNtfy, sendSlackMessage."
+      },
+      {
+        "source": "pr-body/\"removed TestPublicGitLabRepositoryBackup2, an exact duplicate\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "base internal/backup_test.go:548-588: removed body is identical to TestPublicGitLabRepositoryBackup apart from the name."
+      },
+      {
+        "source": "pr-body/\"merged consecutive RUN instructions, sorted apk package names, quoted ${TAG}\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:5-15 at head."
+      },
+      {
+        "source": "pr-body/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "Reviewer reproduced go build, go vet and go test ./internal/ passing; golangci-lint not run, and the Sonar 'all 13 findings' claim is not verifiable offline."
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build ./...; go vet ./internal/; go test ./internal/ -count=1 (offline)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "clean tree at the reviewed head; go test printed ok in 5.2s, build and vet silent; credential tests skip"
+      },
+      {
+        "check": "docker build of docker/Dockerfile",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "unavailable",
+        "reason": "Docker is unavailable in this environment"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "jonhadfield/soba"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-text/psf-requests-6667"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "change_description": "ec0e33b330f479e6ea1f4afb866522bd268b9d3e\nAvoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\n8f954567bdfb7fa2bd638b7021b0a156e3f71787\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\nf21e70bf7a3430f219de00557817d23bfdd62dbd\nRename default SSLContext to make it private by convention\n\n4089f3dc65f783beaa53cc032958ab625440d0ac\nWrap line to comply with CI lint\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Cut per-request `load_verify_locations()` cost for `verify=True` by loading the certifi bundle once into a module-level `SSLContext` that pools reuse, and by no longer setting `ca_certs` on the connection.",
+    "issue_fit": "Partial. The performance goal is met for plain `verify=True`, but the PR body's promise that `verify=True` keeps behaving as before does not hold once a client certificate is also passed. No originating issue exists; the supplied PR text and commit messages are the intent sources.",
+    "coverage": "Complete: the single changed file was reviewed against the full merge-base diff, urllib3 2.8.0 callers were read, and one focused pytest selection ran at the head. One candidate and one safety premise were independently verified."
+  },
+  "findings": [
+    {
+      "id": "adapters/shared-context-client-cert",
+      "title": "Stop loading client certs into the shared default SSLContext",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "A `verify=True` request with `cert=('client.pem','client.key')` to one host, then any later `verify=True` request to another host in the same process.",
+      "impact": "`_urllib3_request_context()` passes the module-level `_preloaded_ssl_context` together with `cert_file`/`key_file`, and urllib3's `ssl_wrap_socket` calls `context.load_cert_chain()` on that shared object. The client identity then stays on the context every later `verify=True` connection uses, so it can be offered to unrelated servers that request client auth, and a different cert later replaces it for handshakes on other threads. At base each pool built its own context, so certs never crossed pools.",
+      "change": "In `_urllib3_request_context()`, use the shared context only when `client_cert is None`; otherwise set `pool_kwargs[\"ca_certs\"] = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)` so urllib3 builds a per-pool context and still trusts certifi rather than the OS store.",
+      "source": "PR body: \"verify=True and verify=False still behave as expected\".",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 94,
+        "end_line": 95,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The shared context is built at import time, so a missing or unreadable certifi bundle now raises when `requests.adapters` is imported, even for `verify=False` users, instead of an `OSError` at request time.",
+      "evidence": "`src/requests/adapters.py:75-78`; base check in `cert_verify` raised `OSError` per request."
+    },
+    {
+      "fact": "The diff adds no test asserting which certificates the shared context holds or covering `verify=True` together with `cert=`; the author noted they found no way to inspect this.",
+      "evidence": "`git diff main...review-head --stat` lists only `src/requests/adapters.py`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "pr-body/\"there is no need to trigger a call to `load_verify_locations()` again\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`src/requests/adapters.py:94-95` passes the preloaded context and `cert_verify` (line 298 onward) no longer sets `ca_certs` for `verify=True`."
+      },
+      {
+        "source": "pr-body/\"check that `verify=True` and `verify=False` still behave as expected\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "Plain verify=True keeps CERT_REQUIRED and hostname checking (verified premise), but with `cert=` the shared context receives `load_cert_chain` (`urllib3/util/ssl_.py:430-433`); see adapters/shared-context-client-cert."
+      },
+      {
+        "source": "pr-body/\"sets `ca_cert_dir` instead of `ca_certs`\" for a directory `verify`",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`src/requests/adapters.py:96-100`."
+      },
+      {
+        "source": "pr-title/\"improve concurrent performance\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Author's timings need network access to a live host and were not repeatable offline; code removes the per-request load_verify_locations call."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "pytest tests/test_requests.py tests/test_adapters.py -k \"verify or cert or ssl or tls or adapter\" (PYTHONPATH=clone/src, cache venv)",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "20 passed, 3 failed: test_pyopenssl_redirect and ..._verify_bundle_unexpired_cert (known fixture failures) and test_different_connection_pool_for_mtls_settings, which also fails at the merge-base export with SSLV3_ALERT_CERTIFICATE_EXPIRED, so none is introduced here."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "adapters/shared-context-client-cert",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        },
+        {
+          "id": "premise-verify-true-still-verifies",
+          "type": "safety-premise",
+          "area": "security",
+          "premise": "With verify=True and no client cert, every HTTPS connection is still made with CERT_REQUIRED and hostname checking against the certifi bundle.",
+          "evidence": "src/requests/adapters.py:94-95, 298; urllib3 connection.py:1042",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-012/clone-work/rc.1IIMmw/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-012/clone-work/rc.1IIMmw/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-012/clone"
+  }
+}

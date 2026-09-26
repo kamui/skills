@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x383-consumer-comparison",
+  "target": "i-requests-6667",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 2,
+    "sha256": "af11241069d2ac6169de9228de7a61f3116d17221cfc09269e130715d9ac178e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 c89b92d8a488c42565233999a05400cfaba0b9a43d051cd2fc2e309aa2733a1b; session adf5dec0-22b8-4375-8e02-ab28328a83a3; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v2), rubric.md, packet.md, reviews/ (3 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-26T10:52:00Z",
+  "attempts": [
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-cb6d2b",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-i1",
+          "duplicate_group": "blind-cb6d2b:g1",
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quotes: \"urllib3 calls `context.load_cert_chain()` on the supplied `_preloaded_ssl_context`, so client A's identity stays installed and is presented on later verify=True requests ... and concurrent requests with different certs race on one context\", with a head/merge-base mTLS reproduction. This is GT-i1's shared-mutation manifestation. Fix (shared context only when client_cert is None, else ca_certs=certifi) confines mutation but leaves the init_poolmanager override manifestation; partial. Grouped g1 with item 2 as both recover GT-i1."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-i1",
+          "duplicate_group": "blind-cb6d2b:g1",
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quotes: \"Per-request `pool_kwargs[\\\"ssl_context\\\"]` overrides the manager's `connection_pool_kw`, so the custom context is never used ... `uses custom ctx: False` at the head and `True` at the merge-base.\" This matches GT-i1's override manifestation and the register's own reproduction. Fix (skip adding ssl_context when the manager already defines one, keep previous CA-bundle handling) restores per-adapter context identity but does not address shared-context mutation under cert=; partial for GT-i1. Same defect as item 1 (g1)."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "defect:GT-i2",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: \"Load the default CA bundle lazily, not when requests.adapters is imported ... `import requests` raises `FileNotFoundError` ... Every import also pays the bundle-parsing cost.\" Verified: adapters.py:75-78 runs load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)) at import; merge-base did it in cert_verify(). Names GT-i2's mechanism with import-failure and import-cost symptoms. Fix: \"Build and cache the default context on the first verify=True request, guarded by a lock\" defers the work to use, meeting the required outcome; sufficient."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-587da1",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-i1",
+          "duplicate_group": "blind-587da1:g1",
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quotes: \"An `HTTPAdapter` subclass sets ssl_context ... through `init_poolmanager` ... urllib3 merges the per-request ssl_context over the pool manager's settings ... so custom ciphers, TLS version bounds and extra trust roots are silently ignored. A probe showed the custom context unused for verify=True\". This is GT-i1's override manifestation exactly (register: _merge_pool_kwargs lets the per-request ssl_context beat init_poolmanager's). Fix (set the shared context only when the adapter configured none, or create it inside init_poolmanager) restores the override manifestation but not the shared-mutation one (cert= loading into the global context), so partial for this item. Grouped g1 with item 2 because both recover the same registered defect GT-i1 (one shared, forced context)."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-i1",
+          "duplicate_group": "blind-587da1:g1",
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quotes: \"urllib3's `ssl_wrap_socket` calls `load_cert_chain` on the supplied context, and every verify=True pool now shares the one module-level context, so the first caller's client identity persists ... and concurrent loads race. At base each pool had its own context.\" This is GT-i1's shared-mutation manifestation. Fix (drop the shared ssl_context or copy it per pool when a client cert is supplied) confines mutation but does not address the init_poolmanager override, so partial. Same registered defect as item 1 (g1)."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "defect:GT-i2",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: \"Do not load the default CA bundle at import time ... `import requests` now raises FileNotFoundError ... Every import also pays the bundle load and zip extraction.\" Verified in diff: module-level load at adapters.py:75-78, and cert_verify no longer runs the existence check/OSError for verify=True. Names GT-i2's mechanism and both flavors (import-time failure, import-time cost). Fix: \"Build the default context lazily on first verify=True use (cached)\" moves the trigger from import to use, which is exactly the required outcome; sufficient."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The change adds no tests for the shared-context path\". True (diff touches only adapters.py) but a test-coverage observation without consequence; below threshold."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Reviewers on the pull request accepted a global context; the adapter-level override and client-certificate paths were not discussed there.\" An accurate observation about the packet's prior review (threads cover bundle handling, thread safety, naming); no defect asserted."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-012",
+      "blind_token": "blind-17dd65",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-i1",
+          "duplicate_group": null,
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quotes: \"passes the module-level `_preloaded_ssl_context` together with `cert_file`/`key_file`, and urllib3's `ssl_wrap_socket` calls `context.load_cert_chain()` on that shared object ... a different cert later replaces it for handshakes on other threads. At base each pool built its own context\". This is GT-i1's shared-context-mutation manifestation: the diff sets pool_kwargs['ssl_context']=_preloaded_ssl_context for verify=True (adapters.py:94-95) and client_cert is added to the same pool_kwargs, and urllib3 loads the chain into the supplied context. Clears the bar. Fix (\"use the shared context only when `client_cert is None`; otherwise ... ca_certs = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)\") confines mutation but leaves the other GT-i1 manifestation, the override of a subclass's init_poolmanager ssl_context, untouched, so partial."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-i2",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "Quotes: \"The shared context is built at import time, so a missing or unreadable certifi bundle now raises when `requests.adapters` is imported, even for `verify=False` users, instead of an `OSError` at request time\" citing adapters.py:75-78. Verified: the module-level create_urllib3_context()/load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)) runs at import, and at the merge-base the same load sat in cert_verify(). This names GT-i2's mechanism (eager, unconditional import-time CA loading) with an import-time failure symptom analogous to #6764's PermissionError; the corrective reading (defer to use) follows directly. Fix line is '—' and no change is proposed, so absent."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The diff adds no test asserting which certificates the shared context holds or covering `verify=True` together with `cert=`\". True (diff touches only src/requests/adapters.py), but a test-coverage observation with no consequence of its own; below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    }
+  ]
+}

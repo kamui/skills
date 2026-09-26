@@ -1,0 +1,112 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-pr-7390-text"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "issues": [],
+  "change_description": "Update conn state to prevent concurrent connection attempts\n\nMake callers of resetBackoff() lock the mutex\n\nAdd doc comment for resetTransportAndUnlock\n\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Close the window in addrConn.connect() and updateAddrs() where ac.mu was released before resetTransport re-acquired it, so two goroutines could both see Idle and start parallel connection attempts (grpc-go#7365, orphaned transports); resetTransport becomes resetTransportAndUnlock, called with ac.mu held.",
+  "issue_fit": "Met. Issue #7365 and the PR text were supplied as a spec (no forge access); the described root cause is closed on both callers, with the requested doc comment present.",
+  "coverage": "Complete merge-base diff (clientconn.go) reviewed with callers, onClose, tearDown and the balancer serializer path. Focused tests at the head, once each: `go test -race -run 'Test/(ResetConnectBackoff|UpdateAddresses|BackoffCancel|BackoffWhenNoServerPrefaceReceived|TestDial_OneBackoffPerRetryGroup)' .` passed; `go test -race -count=20 -run Test/AuthorityRevive ./xds/internal/xdsclient/tests` passed 20/20. Two concurrency safety premises were verified in one awaited batch and both hold. No regression test was added by the change, and the reported 100000-run result was not reproduced. The PR review history was supplied as text only and is not a prior review by this reviewer."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The second commit is titled 'Make callers of resetBackoff() lock the mutex' but it performs the resetTransport to resetTransportAndUnlock lock-ownership change; the message names the wrong function.",
+   "evidence": "`commit-6214c9dd`, `clientconn.go:922`, `clientconn.go:996`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "grpc/grpc-go",
+  "requirements": [
+   {
+    "source": "pr-body/\"caller of `resetTransport()` keep holding the mutex\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:922 and clientconn.go:996 call resetTransportAndUnlock with ac.mu held; verified premises premise-connect-atomic and premise-updateaddrs-handoff hold"
+   },
+   {
+    "source": "pr-body/\"no concurrent requests are able to start\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "state becomes Connecting under the same ac.mu hold as the Idle check (clientconn.go:914-1261); premise-connect-atomic holds"
+   },
+   {
+    "source": "issue-7365/root-cause: two connect() calls both see Idle",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "Test/AuthorityRevive passed 20/20 with -race at the head; the unlock-before-reset window is removed in connect() and updateAddrs()"
+   },
+   {
+    "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Measurement not repeatable within the run allowance; 20 focused runs passed, which is compatible but not proof of a 0.4% flake fix"
+   },
+   {
+    "source": "pr-body/RELEASE NOTES: client: fix race that could lead to orphaned connections",
+    "class": "supporting",
+    "disposition": "met",
+    "evidence": "Orphaned transport path (createTransport's late-close branch) is no longer reachable by two concurrent attempts started via connect()"
+   },
+   {
+    "source": "commit-ff977b39/\"Add doc comment for resetTransportAndUnlock\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:1231-1233 documents the lock contract"
+   }
+  ],
+  "files": [
+   {
+    "path": "clientconn.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "premise-connect-atomic",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "ac.mu is held from connect()'s Idle check through setting Connecting, so no two goroutines can both start a connection attempt from Idle.",
+     "evidence": "clientconn.go:906-923, clientconn.go:1234-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-updateaddrs-handoff",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "Handing ac.mu to the goroutine in updateAddrs cannot deadlock or leave the mutex locked, including with the deferred GracefulClose to onClose.",
+     "evidence": "clientconn.go:940-997, balancer_wrapper.go:255-265, clientconn.go:1351-1352",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-017/tmp/tmp.TC88npSLk2/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-017/tmp/tmp.TC88npSLk2/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

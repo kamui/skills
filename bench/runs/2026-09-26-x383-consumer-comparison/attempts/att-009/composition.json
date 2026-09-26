@@ -1,0 +1,99 @@
+{
+ "run": {
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+  "issues": [],
+  "specs": [
+   "grpc/grpc-go#7390",
+   "grpc/grpc-go#7365"
+  ],
+  "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n",
+  "coverage": "complete"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Make addrConn.connect and updateAddrs hand ac.mu to resetTransportAndUnlock, so the Idle check and the Connecting transition happen in one critical section and two connection attempts cannot run in parallel (issue 7365).",
+  "issue_fit": "Met \u2014 the supplied spec (PR text and issue 7365 root cause) is fully implemented by the +6/-7 change in clientconn.go; no defect found.",
+  "coverage": "Complete merge-base diff of clientconn.go reviewed, with callers and onClose/updateState paths inspected. Reviewer ran root-package tests once at the head with -race: pass (14.2s). Three concurrency premises checked by a fresh-context verifier: all hold. Not verifiable here: the PR's 100000-run flake claim and Test/AuthorityRevive (xds tests outside the focused-test allowance). The change adds no regression test."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [],
+ "prior_items": [],
+ "record": {
+  "repository": "grpc/grpc-go",
+  "requirements": [
+   {
+    "source": "pr-body/\"no concurrent requests are able to start once caller of resetTransport does some validation\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:906-924 and 1231-1262: the lock is held from the Idle check through updateConnectivityState(Connecting); premise-3 holds"
+   },
+   {
+    "source": "issue-7365/root-cause: parallel connect() both see Idle",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "clientconn.go:912-922; a second connect() sees Connecting and returns"
+   },
+   {
+    "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "xds test and the 100000-run harness are outside the focused-test allowance; nothing material depends on it, since the code trace settles the mechanism"
+   }
+  ],
+  "files": [
+   {
+    "path": "clientconn.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "premise-1",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "resetTransportAndUnlock releases ac.mu exactly once on every path from connect() and the updateAddrs goroutine.",
+     "evidence": "clientconn.go:906-924,990-997,1231-1300",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-2",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "The deferred GracefulClose in updateAddrs cannot deadlock against the ownerless ac.mu held for the spawned goroutine.",
+     "evidence": "clientconn.go:975-997,1351-1357; balancer_wrapper.go:255-265",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-3",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "Concurrent connect() calls cannot both start tryAllAddrs for one ac.ctx.",
+     "evidence": "clientconn.go:906-924,1231-1262",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-009/clone-work/rc-3giv/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-009/clone-work/rc-3giv/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

@@ -1,0 +1,118 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix inference of procedure inputs after `.use()` middleware, where `Overwrite<string, string>` produced a mangled string-keyed object; `Overwrite` now merges key-wise only for two objects and otherwise lets `TWith` replace `TType`.",
+  "issue_fit": "Unavailable as issue alignment: no originating issue exists and the PR body is the unfilled template. The intent source is the PR title and the final commit message.",
+  "coverage": "Both changed files reviewed. Reviewer-executed at the head: `tsc --noEmit -p packages/tests/tsconfig.json`, exit 0, including the added regression test and the ctx-union regression test. A scratch copy of base and head `Overwrite` showed base garbling `Overwrite<string,string>` and head returning `string`. Runtime vitest was not run and the test was not run at the merge-base tree. Prior human review threads (on an earlier head, `1c98bdbd7`) were read as context; their proposed `Overwrite` semantics match the head. One compatibility candidate was refuted by verification as intended behavior."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "For an object `TType` and a non-object `TWith` (`undefined`, `unknown`, `T | undefined`), `Overwrite` now returns `TWith` where the base returned an object shaped like `TType`; this is the behavior the head commit message states.",
+   "evidence": "`packages/server/src/core/internals/utils.ts:21-23`; scratch tsc: `Overwrite<{a:1}, undefined>` was `{ a: 1 }` at base, `undefined` at head; `next({ ctx: cond ? {a:1} : undefined })` types ctx as `{ user; a } | undefined`."
+  },
+  {
+   "fact": "The `: TType` fallback in the non-object branch is unreachable because `TWith extends any` is always true, so `Overwrite<string, never>` and `Overwrite<{a:1}, never>` both evaluate to `never`, which the doc comment's \"unless TWith is never\" does not say.",
+   "evidence": "`packages/server/src/core/internals/utils.ts:9`, `packages/server/src/core/internals/utils.ts:25-29`; scratch tsc on `Overwrite<string, never>` and `Overwrite<{a:1}, never>` compiled as `never`."
+  },
+  {
+   "fact": "`voidWithMiddleware` in the added test is declared but never asserted, and the test keeps `// ^?` twoslash markers.",
+   "evidence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:12-16`, `packages/tests/server/regression/issue-5020-inference-middleware.test.ts:8`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/clone",
+  "paths": {
+   "private_dir": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/clone-work/rc-puneih",
+   "store": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/clone-work/rc-puneih/review-context.json",
+   "composition": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/clone-work/rc-puneih/composition.json",
+   "skill_root": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/home/.claude/skills/review-code"
+  },
+  "requirements": [
+   {
+    "source": "pr-title",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:32-38` asserts `strWithMiddleware` input and output are `string`; tsc at head exits 0 while base `Overwrite<string,string>` is a mangled object (scratch tsc)."
+   },
+   {
+    "source": "commit-7dc04a7/\"Otherwise, a non-never TWith type will entirely replace TType, e.g. Overwrite<string, number> results in 'number'.\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "`packages/server/src/core/internals/utils.ts:11-30`; scratch tsc: `Overwrite<string, number>` is `number`, `Overwrite<string, string>` is `string`. Compatibility: object/object behavior preserved (premise holds); non-object `TWith` replacement is the stated behavior (see observations)."
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "exit 0, no diagnostics; run once at the pinned head"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "server/overwrite-nonobject-with-replaces-ctx",
+     "type": "candidate",
+     "trigger": "compatibility",
+     "batch": "initial",
+     "ruling": "refuted"
+    },
+    {
+     "id": "premise-object-paths-unchanged",
+     "type": "safety-premise",
+     "area": "compatibility",
+     "premise": "For object TType and object TWith (including unions of objects), head Overwrite yields the same key-wise mapped type as the base.",
+     "evidence": "packages/server/src/core/internals/utils.ts:11-20; tsc exit 0",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-input-paths-guarded",
+     "type": "safety-premise",
+     "area": "compatibility",
+     "premise": "For _input_in/_input_out, Overwrite runs only when TNext's input is set and replacing a non-object TPrev with it is the intended result.",
+     "evidence": "packages/server/src/core/internals/procedureBuilder.ts:39-44",
+     "batch": "initial",
+     "ruling": "holds"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/clone-work/rc-puneih/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-006/clone-work/rc-puneih/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}
