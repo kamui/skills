@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-25` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-26` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **One record.** Every run writes `record.json`, `payload.json`, `batch.json` and, last, `report.md`, whatever the target and whoever the caller. `render_review.py` derives the mechanical fields a saved input owns (run identity from the store and packet, `packet_context` from the packet, `supplied_inputs` from the caller's specs, the record's own paths, the spent allowance, the lineage, and each batch's name, phase and raw return from its bundle and accounting report), refuses an explicit copy that disagrees, composes and validates the payload, projects the advisory batch, and promotes the report last as the success marker. `--check` reads a record read-only and, with `--head` and `--lineage`, checks it against a caller's expectations. `--emit-batch --event` is the gating projection `review-code-publish` runs. A private directory has one writer at a time.
 
