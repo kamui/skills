@@ -402,6 +402,7 @@ def dispatch(run: Run, attempt_id: str, claim: dict) -> None:
         arm = read_json(run.arm_file(cell["arm"]))
         entry = run.arm_entry(cell["arm"])
         env = dict(os.environ)
+        env["ATTEMPT_BUDGET_USD"] = str(run.attempt_bound(cell["arm"]))
         if arm["kind"] == "review-code":
             tree = entry["resolved_skill_tree"]
             if not tree:
@@ -607,13 +608,14 @@ def self_test() -> int:
             calls.append(Path(argv[1] if argv[0] == sys.executable else argv[0]).name)
             if calls[-1] == "provision.py":
                 return subprocess.CompletedProcess(argv, 0, "{}", "")
+            assert env["ATTEMPT_BUDGET_USD"] == "5.0", env.get("ATTEMPT_BUDGET_USD")
             if started:
                 (Path(argv[2]) / "timing.json").write_text("{}", encoding="utf-8")
                 return subprocess.CompletedProcess(argv, 1, "", "")
             return subprocess.CompletedProcess(argv, 2, "", "no packet\n")
 
         def claimed(attempt_id, kind):
-            arm_path.write_text(json.dumps({"id": "arm-a", "kind": kind}), encoding="utf-8")
+            arm_path.write_text(json.dumps({"id": "arm-a", "kind": kind, "budget_usd_per_attempt": 2.0}), encoding="utf-8")
             (work / attempt_id).mkdir()
             (work / attempt_id / "cell.json").write_text(json.dumps({"cell": parse_key("t1/arm-a/3")}), encoding="utf-8")
             run = fresh()
