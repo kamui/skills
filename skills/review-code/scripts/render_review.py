@@ -127,7 +127,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-27"
+WORKFLOW = "v5b-28"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -145,10 +145,6 @@ SIDES = ("LEFT", "RIGHT")
 MAX_OBSERVATIONS = 3
 PERMISSION_SENTENCE = "Closing this without action is a correct response."
 QUESTION_FRAMING = "Change no code for this"
-# An ordinary finding's prose fields, in the order the review record states them;
-# the first three are required and `Source` is optional.
-FIELD_LABELS = ("Triggers when", "Impact", "Change", "Source")
-FIELD_REQUIRED = ("Triggers when", "Impact", "Change")
 
 COMMIT_SHA_KEYS = ("head", "base-sha", "merge-base")
 RUN_REQUIRED = (
@@ -187,7 +183,6 @@ BLOB_LINK_RE = re.compile(r"https?://[^\s()<>]+?/blob/(?P<revision>[^/\s()]+)/")
 REPOSITORY_URL_RE = re.compile(r"\Ahttps?://[^\s/]+(?:/[^\s]*)?\Z")
 SUMMARY_REFERENCE = "summary-reference"
 WORD_SHOULD_MUST_RE = re.compile(r"\b(should|must)\b", re.IGNORECASE)
-FIELD_LABEL_RE = re.compile(r"\*\*(?P<label>Triggers when|Impact|Change|Source):\*\*")
 # A code span opens with a backtick run and closes with a run of the same length;
 # it never crosses a blank line.
 INLINE_CODE_RE = re.compile(r"(?<!`)(`+)(?!`)(?:(?!\n\n)[\s\S])+?(?<!`)\1(?!`)")
@@ -631,59 +626,12 @@ def mask_code(markdown: str) -> str:
     return INLINE_CODE_RE.sub(lambda match: " " * len(match.group(0)), masked)
 
 
-def finding_fields(markdown: str) -> list[tuple[str, str]]:
-    """The finding's labelled prose fields as ``(label, text)`` pairs in document order.
-
-    Labels are located in the code-masked text, so a label quoted inside a code
-    block or code span is not a field; each field's text is the original text
-    from its label to the next label or the end, with a trailing permission
-    sentence removed from the last field, so a suggestion block inside ``Change``
-    is that field's text.
-    """
-    masked = mask_code(markdown)
-    labels = [(match.group("label"), match.start(), match.end()) for match in FIELD_LABEL_RE.finditer(masked)]
-    fields: list[tuple[str, str]] = []
-    for index, (label, _start, end) in enumerate(labels):
-        next_start = labels[index + 1][1] if index + 1 < len(labels) else len(markdown)
-        text = markdown[end:next_start]
-        if index + 1 == len(labels):
-            trailing = text.rstrip()
-            if trailing.endswith(PERMISSION_SENTENCE):
-                text = trailing[: -len(PERMISSION_SENTENCE)]
-        fields.append((label, text))
-    return fields
-
-
-def check_finding_fields(report: Report, location: str, markdown: str) -> None:
-    """Exactly one non-empty ``Triggers when``, ``Impact``, and ``Change``, in that order, then optional ``Source``."""
-    fields = finding_fields(markdown)
-    counts = {label: sum(1 for name, _text in fields if name == label) for label in FIELD_LABELS}
-    for label in FIELD_REQUIRED:
-        if counts[label] == 0:
-            report.add(
-                location,
-                "finding-fields",
-                f"a finding states `**{label}:**` once; it is missing "
-                "(a label inside a code block or code span is example text and does not count)",
-            )
-    for label in FIELD_LABELS:
-        if counts[label] > 1:
-            report.add(location, "finding-fields", f"`**{label}:**` appears {counts[label]} times; a finding states it once")
-    for label, text in fields:
-        if not text.strip():
-            report.add(location, "finding-fields", f"`**{label}:**` is empty; a field carries its text after the label")
-    first_seen: list[str] = []
-    for label, _text in fields:
-        if label not in first_seen:
-            first_seen.append(label)
-    expected = [label for label in FIELD_LABELS if label in first_seen]
-    if first_seen != expected:
-        actual = ", ".join(f"`{label}`" for label in first_seen)
-        report.add(
-            location,
-            "field-order",
-            f"fields appear as {actual}; the order is `Triggers when`, `Impact`, `Change`, then optional `Source`",
-        )
+def check_finding_prose(report: Report, location: str, markdown: str) -> None:
+    body = markdown.partition("\n\n")[2].rstrip()
+    if body.endswith(PERMISSION_SENTENCE):
+        body = body[:-len(PERMISSION_SENTENCE)]
+    if not mask_code(body).strip():
+        report.add(location, "finding-prose", "a finding needs explanatory prose after its title, beyond code or permission text")
 
 
 def check_finding(report: Report, location: str, item: dict[str, Any]) -> None:
@@ -712,7 +660,7 @@ def check_finding(report: Report, location: str, item: dict[str, Any]) -> None:
     if action == "consider" and blocking is not False:
         report.add(location, "priority-action", "`consider` requires `blocking=false`")
 
-    check_finding_fields(report, location, markdown)
+    check_finding_prose(report, location, markdown)
     trailing = markdown.rstrip()
     if action == "consider":
         if not trailing.endswith(PERMISSION_SENTENCE):
@@ -1068,6 +1016,34 @@ def compose_fix(report: Report, location: str, fix: Any) -> str | None:
     return coordinate
 
 
+def render_finding_prose(prose: dict[str, str | None]) -> str:
+    """Keep the explanation together and preserve suggested code verbatim after it."""
+    words: list[str] = []
+    blocks: list[str] = []
+    for value in prose.values():
+        if value is None:
+            continue
+        block: list[str] = []
+        fence: tuple[str, int] | None = None
+        for line in value.splitlines():
+            if fence is not None:
+                block.append(line)
+                char, length = fence
+                if re.fullmatch(r" {0,3}" + re.escape(char) + "{" + str(length) + r",}\s*", line):
+                    blocks.append("\n".join(block))
+                    block, fence = [], None
+            else:
+                opening = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+                if opening and not (opening[1][0] == "`" and "`" in opening[2]):
+                    fence = (opening[1][0], len(opening[1]))
+                    block.append(line)
+                elif line.strip():
+                    words.append(line.strip())
+        if block:
+            blocks.append("\n".join(block))
+    return "\n\n".join([" ".join(words), *blocks])
+
+
 def compose_finding(report: Report, location: str, finding: Any, head: str) -> dict[str, Any] | None:
     if not isinstance(finding, dict):
         report.add(location, "schema", "a finding must be an object")
@@ -1120,14 +1096,7 @@ def compose_finding(report: Report, location: str, finding: Any, head: str) -> d
         return None
     if priority not in PRIORITIES or action not in ACTIONS or kind not in KINDS or not isinstance(blocking, bool):
         return None
-    paragraphs = [
-        f"**[{priority}] [{action}] {title}**",
-        f"**Triggers when:** {prose['trigger']}",
-        f"**Impact:** {prose['impact']}",
-        f"**Change:** {prose['change']}",
-    ]
-    if prose["source"] is not None:
-        paragraphs.append(f"**Source:** {prose['source']}")
+    paragraphs = [f"**[{priority}] [{action}] {title}**", render_finding_prose(prose)]
     if action == "consider":
         paragraphs.append(PERMISSION_SENTENCE)
     trailer = (
@@ -1356,6 +1325,7 @@ def read_summary(report: Report, summary: Any, coverage: Any) -> dict[str, Any] 
     if coverage == "complete" and gaps:
         report.add("summary.coverage_gaps", "coverage-gaps", "`coverage_gaps` is non-empty, which contradicts `run.coverage=complete`")
     fields["coverage_gaps"] = gaps
+    fields["check_details"] = read_lines(report, "summary.check_details", summary.get("check_details", []))
     return fields
 
 
@@ -1511,8 +1481,8 @@ def index_entry(item: dict[str, Any], title: str, fragment: str) -> str:
     return f"- [Question] {title} — {fragment}"
 
 
-def body_carried(item: dict[str, Any], title: str, fragment: str) -> str:
-    return f"{index_entry(item, title, fragment)}\n\n{item['markdown']}\n\n{item['trailer']}"
+def body_carried(item: dict[str, Any], fragment: str) -> str:
+    return f"{item['markdown']}\n\n{fragment}\n\n{item['trailer']}"
 
 
 def compose_body(
@@ -1552,7 +1522,7 @@ def compose_body(
     if must_fix:
         counts.append(plural(must_fix, "must-fix finding"))
     if consider:
-        counts.append(plural(consider, "consider finding"))
+        counts.append(plural(consider, "optional improvement"))
     if questions:
         counts.append(plural(len(questions), "open question"))
     if open_priors:
@@ -1562,7 +1532,10 @@ def compose_body(
     status = summary["status"]
     if status in ADVISORY_STATUSES:
         status += " (advisory)"
-    first = f"**{status}** — {', '.join(counts) if counts else 'no findings'}."
+    count_text = ", ".join(counts) if counts else "no findings"
+    if summary["status"] == "Approved" and consider:
+        count_text = "no must-fix findings; " + count_text
+    first = f"**{status}** — {count_text}."
     if run["prior_head"] is not None:
         first += f" Delta review of `{abbreviate(run['prior_head'])}..{abbreviate(run['head'])}`."
     paragraphs = [first]
@@ -1584,14 +1557,9 @@ def compose_body(
             sources.append("commit messages in the range")
         source = "; ".join(sources) if sources else "no source (no issue, spec, or commit messages)"
         issue_fit += f" Source: {source}."
-    paragraphs.extend(
-        [
-            f"**Intent:** {summary['intent']}",
-            f"**Issue fit:** {issue_fit}",
-            f"**Coverage:** {summary['coverage']}",
-            f"**Reviewed:** {reviewed}",
-        ]
-    )
+    details = [f"**Intent:** {summary['intent']}", f"**Issue fit:** {issue_fit}", f"**Reviewed:** {reviewed}"]
+    if summary["check_details"]:
+        details.append("**Checks:**\n\n" + "\n".join(f"- {check}" for check in summary["check_details"]))
 
     inline = [(l, f, t) for l, f, t in findings if f["anchor"].get("type") == "line"]
     unanchored = [(l, f, t) for l, f, t in findings if f["anchor"].get("type") != "line"]
@@ -1599,12 +1567,12 @@ def compose_body(
         paragraphs.append("## Findings\n\n" + "\n".join(index_entry(f, t, fragments[l]) for l, f, t in inline))
     if questions:
         entries = [
-            index_entry(q, t, fragments[l]) if q["anchor"].get("type") == "line" else body_carried(q, t, fragments[l])
+            index_entry(q, t, fragments[l]) if q["anchor"].get("type") == "line" else body_carried(q, fragments[l])
             for l, q, t in questions
         ]
         paragraphs.append("## Open questions\n\n" + "\n\n".join(entries))
     if observations:
-        paragraphs.append("## Observations\n\n" + "\n".join(f"- {o['markdown']}" for o in observations))
+        details.append("## Observations\n\n" + "\n".join(f"- {o['markdown']}" for o in observations))
     if summary["ambiguities"]:
         lines = []
         for entry in summary["ambiguities"]:
@@ -1612,14 +1580,22 @@ def compose_body(
             lines.append(f"- **{entry['term']}** — {readings}. Applied: {entry['applied']}")
         paragraphs.append("## Ambiguities\n\n" + "\n".join(lines))
     if unanchored:
-        paragraphs.append(f"## Unanchored findings\n\n{UNANCHORED_NOTE}\n\n" + "\n\n".join(body_carried(f, t, fragments[l]) for l, f, t in unanchored))
+        paragraphs.append(f"## Unanchored findings\n\n{UNANCHORED_NOTE}\n\n" + "\n\n".join(body_carried(f, fragments[l]) for l, f, t in unanchored))
     if disputed:
         paragraphs.append("## Disputed\n\n" + "\n".join(f"- `{p['id']}` — disputed: {p['note']}" for p in disputed))
-    accounted = [p for p in priors if p["classification"] != "disputed"]
-    if accounted:
-        paragraphs.append("## Prior findings\n\n" + "\n".join(f"- `{p['id']}` — {p['classification']}: {p['note']}" for p in accounted))
+    if open_priors:
+        paragraphs.append("## Prior findings\n\n" + "\n".join(f"- `{p['id']}` — {p['classification']}: {p['note']}" for p in open_priors))
+    settled = [p for p in priors if p["classification"] in ("fixed", "accepted", "obsolete")]
+    if settled:
+        details.append("## Settled findings\n\n" + "\n".join(f"- `{p['id']}` — {p['classification']}: {p['note']}" for p in settled))
     if summary["coverage_gaps"]:
         paragraphs.append("## Coverage gaps\n\n" + "\n".join(f"- {gap}" for gap in summary["coverage_gaps"]))
+    if run["target_kind"] == "worktree":
+        target = f"working tree `{run['head']}`"
+    else:
+        target = f"`{abbreviate(run['head'])}`"
+    paragraphs.append(f"Reviewed {target}. {summary['coverage']}")
+    paragraphs.append("<details>\n<summary>Review details</summary>\n\n" + "\n\n".join(details) + "\n\n</details>")
     paragraphs.append(trailer)
     return "\n\n".join(paragraphs) + "\n"
 
@@ -2259,7 +2235,8 @@ def example_composition() -> dict[str, Any]:
         "summary": {"status": "Changes Requested",
                     "intent": "Add retries for charge submission without changing payment semantics.",
                     "issue_fit": "Partial — retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open.",
-                    "coverage": "Complete merge-base diff reviewed; payment callers inspected; focused `retry-policy` test run once at the head: pass."},
+                    "coverage": "Full diff and payment callers reviewed; focused retry-policy test passed.",
+                    "check_details": ["Reviewer ran the focused retry-policy test at the reviewed head: pass."]},
         "findings": [finding],
         "questions": [{"id": "queue/retry-order", "title": "Must retries preserve request order?",
                        "evidence": "The new queue retries at the tail, while existing callers consume it as FIFO. The issue, tests, and history do not establish whether reordering is allowed.",
@@ -2854,15 +2831,7 @@ SUMMARY_BODY = f"""**Changes Requested (advisory)** — 1 must-fix finding, 1 op
 
 FINDING_MARKDOWN = """**[P1] [must-fix] Preserve the idempotency key across retries**
 
-**Triggers when:** The server commits a charge but its response times out and the
-client retries.
-
-**Impact:** The retry uses a new idempotency key and can submit a second charge.
-
-**Change:** In `src/retry-policy.ts`, reuse one idempotency key across every attempt
-for the same logical charge.
-
-**Source:** Issue #123, acceptance criterion 2."""
+The server commits a charge but its response times out and the client retries. The retry uses a new idempotency key and can submit a second charge. In `src/retry-policy.ts`, reuse one idempotency key across every attempt for the same logical charge. Issue #123, acceptance criterion 2."""
 
 QUESTION_MARKDOWN = """**[Question] Must retries preserve request order?**
 
@@ -2942,7 +2911,7 @@ def deleted_file_payload() -> dict[str, Any]:
 
 
 def consider_payload() -> dict[str, Any]:
-    """A `consider` finding with a `Source`, exercising the F1.5 field order."""
+    """An optional finding with the closing permission sentence."""
     payload = valid_payload()
     finding = payload["items"][0]
     finding["priority"] = "P3"
@@ -2965,13 +2934,7 @@ UNANCHORED_FRAGMENT = f"anchor [`scripts/__pycache__/validate_review.cpython-314
 
 UNANCHORED_FINDING_MARKDOWN = """**[P2] [must-fix] Remove the committed bytecode cache**
 
-**Triggers when:** The change is merged: the diff adds a CPython bytecode cache
-as a tracked file, and nothing ignores it. The file anchor is lost on GitHub's
-batch endpoint, so this finding lives in the body.
-
-**Impact:** Every self-test run rewrites the file and dirties the working tree.
-
-**Change:** Delete the file and ignore `__pycache__/`."""
+The change is merged: the diff adds a CPython bytecode cache as a tracked file, and nothing ignores it. The file anchor is lost on GitHub's batch endpoint, so this finding lives in the body. Every self-test run rewrites the file and dirties the working tree. Delete the file and ignore `__pycache__/`."""
 
 
 def unanchored_payload() -> dict[str, Any]:
@@ -3027,59 +2990,11 @@ def abbreviation_payload() -> dict[str, Any]:
     return payload
 
 
-def reproduced_payload() -> dict[str, Any]:
-    """Issue #134's reproduction: the contract finding with its `Triggers when` and `Impact` labels removed."""
-    payload = valid_payload()
-    payload["items"][0]["markdown"] = FINDING_MARKDOWN.replace("**Triggers when:** ", "").replace("**Impact:** ", "")
-    return payload
-
-
-def _paragraphs(markdown: str) -> list[str]:
-    return markdown.split("\n\n")
-
-
-def _field_paragraph(markdown: str, label: str) -> int:
-    return next(index for index, paragraph in enumerate(_paragraphs(markdown)) if paragraph.startswith(f"**{label}:**"))
-
-
-def without_field(markdown: str, label: str) -> str:
-    """The finding prose with the labelled paragraph removed."""
-    paragraphs = _paragraphs(markdown)
-    del paragraphs[_field_paragraph(markdown, label)]
-    return "\n\n".join(paragraphs)
-
-
-def with_empty_field(markdown: str, label: str) -> str:
-    """The finding prose with the labelled paragraph reduced to its bare label."""
-    paragraphs = _paragraphs(markdown)
-    paragraphs[_field_paragraph(markdown, label)] = f"**{label}:**"
-    return "\n\n".join(paragraphs)
-
-
-def with_swapped_fields(markdown: str, first: str, second: str) -> str:
-    """The finding prose with two labelled paragraphs exchanged."""
-    paragraphs = _paragraphs(markdown)
-    one, two = _field_paragraph(markdown, first), _field_paragraph(markdown, second)
-    paragraphs[one], paragraphs[two] = paragraphs[two], paragraphs[one]
-    return "\n\n".join(paragraphs)
-
-
-def with_duplicated_field(markdown: str, label: str) -> str:
-    """The finding prose with the labelled paragraph stated twice in a row."""
-    paragraphs = _paragraphs(markdown)
-    index = _field_paragraph(markdown, label)
-    paragraphs.insert(index, paragraphs[index])
-    return "\n\n".join(paragraphs)
-
-
 SUGGESTION_BLOCK = """```suggestion
 const key = attempt.idempotencyKey; // **Impact:** and **Change:** here are code, not fields
 ```"""
 
-# The contract finding whose `Change` carries a suggestion block quoting field labels.
-SUGGESTION_MARKDOWN = without_field(FINDING_MARKDOWN, "Source").replace(
-    "for the same logical charge.", f"for the same logical charge.\n\n{SUGGESTION_BLOCK}"
-)
+SUGGESTION_MARKDOWN = FINDING_MARKDOWN + f"\n\n{SUGGESTION_BLOCK}"
 
 
 def finding_payload(markdown: str) -> dict[str, Any]:
@@ -3341,14 +3256,6 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
     def bad_repository_url(payload):
         payload["summary"]["repository_url"] = "github.com/acme/payments"
 
-    def source_before_change(payload):
-        finding = payload["items"][0]
-        finding["markdown"] = (
-            "**[P1] [must-fix] Preserve the idempotency key across retries**\n\n"
-            "**Source:** Issue #123, acceptance criterion 2.\n\n"
-            "**Change:** Reuse one idempotency key across every attempt."
-        )
-
     def consider_without_permission(payload):
         finding = payload["items"][0]
         finding["priority"] = "P3"
@@ -3468,47 +3375,13 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
     def trailer_disagreement(payload):
         payload["items"][0]["trailer"] = payload["items"][0]["trailer"].replace("priority=P1", "priority=P2")
 
-    # Issue #134: every finding carries exactly one non-empty `Triggers when`, `Impact`, and `Change`, in order.
-    field_cases: list[tuple[str, dict[str, Any], str]] = [
-        ("issue #134 reproduction: Triggers when and Impact labels removed", reproduced_payload(), "finding-fields"),
+    title = FINDING_MARKDOWN.split("\n\n", 1)[0]
+    prose_cases = [
+        ("finding with only a title", finding_payload(title), "finding-prose"),
+        ("finding with only code", finding_payload(title + "\n\n" + SUGGESTION_BLOCK), "finding-prose"),
+        ("consider with only permission", consider_finding_payload(title), "finding-prose"),
+        ("unanchored finding with only a title", unanchored_finding_payload(UNANCHORED_FINDING_MARKDOWN.split("\n\n", 1)[0]), "finding-prose"),
     ]
-    for label in FIELD_REQUIRED:
-        field_cases.append((f"missing {label}", finding_payload(without_field(FINDING_MARKDOWN, label)), "finding-fields"))
-    for label in FIELD_LABELS:
-        field_cases.append((f"empty {label}", finding_payload(with_empty_field(FINDING_MARKDOWN, label)), "finding-fields"))
-    field_cases.extend(
-        [
-            ("Impact before Triggers when", finding_payload(with_swapped_fields(FINDING_MARKDOWN, "Triggers when", "Impact")), "field-order"),
-            ("Change before Impact", finding_payload(with_swapped_fields(FINDING_MARKDOWN, "Impact", "Change")), "field-order"),
-            ("Impact stated twice", finding_payload(with_duplicated_field(FINDING_MARKDOWN, "Impact")), "finding-fields"),
-            ("Change stated twice", finding_payload(with_duplicated_field(FINDING_MARKDOWN, "Change")), "finding-fields"),
-            (
-                "Impact only inside a suggestion block",
-                finding_payload(without_field(SUGGESTION_MARKDOWN, "Impact")),
-                "finding-fields",
-            ),
-            (
-                "Impact only inside a code span",
-                finding_payload(without_field(FINDING_MARKDOWN, "Impact").replace("**Change:** In", "**Change:** See `**Impact:**` above. In")),
-                "finding-fields",
-            ),
-            (
-                "consider finding whose Change is only the permission sentence",
-                consider_finding_payload(with_empty_field(without_field(FINDING_MARKDOWN, "Source"), "Change")),
-                "finding-fields",
-            ),
-            (
-                "unanchored finding without Impact",
-                unanchored_finding_payload(without_field(UNANCHORED_FINDING_MARKDOWN, "Impact")),
-                "finding-fields",
-            ),
-            (
-                "unanchored finding with Change before Triggers when",
-                unanchored_finding_payload(with_swapped_fields(UNANCHORED_FINDING_MARKDOWN, "Triggers when", "Change")),
-                "field-order",
-            ),
-        ]
-    )
 
     percent_anchor = line_anchor("docs/100%.md", 7)
     injection_path = "src/a](https://evil.example)b.ts"
@@ -3555,7 +3428,6 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
         ("deleted file anchor linked at the head", _mutate(deleted_file_linked_at_head), SUMMARY_REFERENCE),
         ("deleted file anchor as a bare code span with repository_url", _mutate(deleted_file_as_code_span), SUMMARY_REFERENCE),
         ("repository_url is not a web URL", _mutate(bad_repository_url), "schema"),
-        ("Source before Change", _mutate(source_before_change), "field-order"),
         ("consider without permission sentence", _mutate(consider_without_permission), "field-order"),
         ("permission sentence not last", _mutate(consider_permission_not_last), "field-order"),
         ("P0 marked consider", _mutate(p0_consider), "priority-action"),
@@ -3582,7 +3454,7 @@ def failing_cases() -> list[tuple[str, dict[str, Any], str]]:
         ("equal fix range", _mutate(equal_fix_range), "fix-coordinate"),
         ("trailer priority disagreement", _mutate(trailer_disagreement), "trailer-agreement"),
         ("payload is not an object", [], "schema"),
-        *field_cases,
+        *prose_cases,
     ]
 
 
@@ -3658,14 +3530,6 @@ def emit_batch_cases() -> list[str]:
     invalid = subprocess.run(command, input=json.dumps(invalid_payload), capture_output=True, text=True, encoding="utf-8")
     if invalid.returncode != 1 or invalid.stdout != "".join(f"{line}\n" for line in violations):
         failures.append(f"--emit-batch on one violation: exit {invalid.returncode}, stdout {invalid.stdout!r}")
-    reproduced = reproduced_payload()
-    violations = validate(reproduced)
-    missing = [line for line in violations if ": finding-fields: " in line and "is missing" in line]
-    if len(violations) != 2 or len(missing) != 2 or "Triggers when" not in missing[0] or "Impact" not in missing[1]:
-        failures.append(f"issue #134 reproduction: expected two field-specific `finding-fields` violations, got: {'; '.join(violations)}")
-    refused = subprocess.run(command, input=json.dumps(reproduced), capture_output=True, text=True, encoding="utf-8")
-    if refused.returncode != 1 or refused.stdout != "".join(f"{line}\n" for line in violations) or "commit_id" in refused.stdout:
-        failures.append(f"--emit-batch on the issue #134 reproduction: exit {refused.returncode}, stdout {refused.stdout!r}")
     # The status is a model judgment; these cases exercise only transport grammar.
     for status, event, expected_rule in [
         ("Changes Requested (advisory)", "REQUEST_CHANGES", None),
@@ -3732,16 +3596,9 @@ def self_test() -> int:
         ("observation with abbreviation", abbreviation_payload()),
         ("file-anchored finding laid out in Unanchored findings", unanchored_payload()),
         ("deleted file anchor at the merge-base beside an ordinary RIGHT link", deleted_file_payload()),
-        ("finding without the optional Source", finding_payload(without_field(FINDING_MARKDOWN, "Source"))),
-        ("Change carrying a suggestion block that quotes field labels", finding_payload(SUGGESTION_MARKDOWN)),
-        (
-            "Change that is one suggestion block",
-            finding_payload(with_empty_field(without_field(FINDING_MARKDOWN, "Source"), "Change") + f"\n\n{SUGGESTION_BLOCK}"),
-        ),
-        (
-            "Change quoting a field label in a code span",
-            finding_payload(FINDING_MARKDOWN.replace("**Change:** In", "**Change:** Keep the `**Impact:**` label. In")),
-        ),
+        ("finding without the optional source", finding_payload(FINDING_MARKDOWN.replace(" Issue #123, acceptance criterion 2.", ""))),
+        ("suggestion block quoting field labels", finding_payload(SUGGESTION_MARKDOWN)),
+        ("prose quoting a field label in a code span", finding_payload(FINDING_MARKDOWN + " Keep the `**Impact:**` label.")),
         ("consider finding with a suggestion block before the permission sentence", consider_finding_payload(SUGGESTION_MARKDOWN)),
     ]
     for name, anchor, fix, fragment in render_cases():
