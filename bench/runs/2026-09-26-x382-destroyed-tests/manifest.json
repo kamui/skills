@@ -192,6 +192,11 @@
       "at": "2026-09-26T09:42:13Z",
       "what": "The pull-request branch was rebased onto main b6e58314b9d2d20ec46e0f7f20ee80cf6124cf82 after #398 and #400 merged. The manifest now enters the branch in acc2bb0 and its freeze_commit edit in c4e4371, replacing e6953b6 and dfa01a8 named above. The rebase dropped the #397 merge commit 47c2d0e and linearized its change. The frozen manifest is still blob 733cfcaa45112ff338c5122af7ec40b7fbbfa219, and freeze_commit still names the unpushed 61b659b.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-26T10:05:59Z",
+      "what": "The pull-request branch was rebased again, onto main efdaf476cc372ec02114e6b007dec65de8db6dca after #401 merged. The manifest now enters the branch in ec207ff and its freeze_commit edit in f37269b, replacing the copies named in the previous deviation. The frozen manifest is still blob 733cfcaa45112ff338c5122af7ec40b7fbbfa219.",
+      "invalidates": []
     }
   ]
 }
