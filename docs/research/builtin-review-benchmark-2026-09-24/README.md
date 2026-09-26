@@ -291,6 +291,14 @@ eighteenth deviation records it.
   removed and the register. Every ruling versions the register (a defect or a non-defect) and
   produces mapping v2; a new defect also means a blind re-grade of every attempt on that target
   for that defect alone. `results.v1.json` pins mapping v1 and `results.v2.json` uses v2.
+- **Duplicate precedence, corrected in v3.** A duplicate ruling on an unresolved item recovers
+  the named registered defect even when the blind re-grade says `recovers=false`. A positive
+  re-grade supplies its fix quality; a disagreement requires an explicit adjudicated
+  `sufficient`, `partial` or `absent` value. Existing recoveries retain their assignments and
+  fix quality. The [versioned ruling supplement](../../../bench/runs/2026-09-24-builtin-baseline/scoring/l-bokeh-9232/rulings.v3.json)
+  records `absent` for att-060 item-2 because its saved normalized item proposes no fix.
+  Mapping v3 on (l) replays mapping v1 with the same saved R3 verdicts and this supplement.
+  It replaces the v2 result without rewriting v1/v2 artifacts or registers.
 - **The reveal.** The fresh registers are opened one at a time, only after the tests pass and all
   six regression targets are mapped. Once a plaintext register exists on disk, the run is closed
   to dispatch.
@@ -405,22 +413,51 @@ of each item of the first review:
 
 Scored as §8 settles it: twelve blind grading sessions, three candidate adjudications and three
 one-defect re-grades, all Opus 5.5 at `high` ($18.11 with the plan review; ledger "Scoring").
-[`results.v2.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v2.json) is the
-answer: mapping v2 on (i), (j) and (l), v1 elsewhere, no unresolved item.
-[`results.v1.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v1.json) pins mapping
-v1 everywhere, leaving unresolved the 11 items that raised the five candidates. The tables below
-are printed by [`answers.py`](answers.py) from results v2, the attempt records and the mappings; a
-ratio is the median over the 20 cells matched to A's by target and replicate, a cell's cost
-counting every attempt it took.
+[`results.v3.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v3.json) contains the
+corrected accounting from [#388](https://github.com/kamui/skills/issues/388). It uses mapping v3
+on (l), v2 on (i) and (j), and v1 elsewhere, with no unresolved item.
+[`results.v2.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v2.json) and all v1/v2
+mappings remain historical data. [`results.v1.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v1.json)
+pins mapping v1 everywhere, leaving unresolved the 11 items that raised the five candidates.
+The tables below are printed by [`answers.py`](answers.py) from results v3, the attempt records
+and the mappings. Each arm has 20 valid completed reviews. Review-level counts, false findings
+and noise use that subset; attempt-level recall and the separate all-attempt counts retain
+invalid attempts. Each ratio states its own sample count. Cost includes every replacement
+attempt, and timing uses the final attempt's recorded payload timestamp. D's att-002 and att-004
+have no payload timestamp, leaving 18 timing pairs and 20 cost pairs.
 
-| Arm | Reviews | Recall, completed-only (attempt-level) | False findings raw / unique per review | Approved on buggy | Zero recovery | False clean | Noise per review |
+The correction used saved normalized items, rulings and re-grade verdicts, with no new model
+calls and $0 additional model spend. B's invalid att-006 and att-042 contribute six noise items,
+excluded from its 52 valid-review noise items. On C, att-060 item-2 now recovers GT-l1 with an
+absent fix, and item-3's ordering error clears. C's noise falls from 124 to 123 and priority
+errors from 9 to 8. Recall and best-fix counts are unchanged on every arm; no other target's
+assignments changed.
+
+Recompute all arms and the tables locally:
+
+```sh
+python3 -B bench/tools/score.py --run bench/runs/2026-09-24-builtin-baseline \
+  --out /tmp/builtin-results.v3.json --opened ~/.t3/bench-runs/2026-09-24-builtin-baseline/opened
+python3 -B docs/research/builtin-review-benchmark-2026-09-24/answers.py --results /tmp/builtin-results.v3.json
+```
+
+| Arm | Attempts | Valid reviews | Recall, completed-only (attempt-level) | False findings raw / unique per valid review | Approved on valid buggy | Zero recovery on valid buggy | False clean on valid buggy | Noise per valid review |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A review-code | 21 | 20 | 0.708 (0.667) | 0.00 / 0.00 (0 / 0) | 8/16 | 4/16 | 4/16 | 1.1 (21 items) |
+| B built-in Sonnet 5 | 22 | 20 | 0.792 (0.792) | 0.10 / 0.10 (2 / 2) | 0/16 | 2/16 | 0/16 | 2.6 (52 items) |
+| C built-in Opus 5.5 | 20 | 20 | 0.844 (0.844) | 0.35 / 0.35 (7 / 7) | 0/16 | 2/16 | 0/16 | 6.2 (123 items) |
+| D codex review | 20 | 20 | 0.573 (0.573) | 0.00 / 0.00 (0 / 0) | 3/16 | 5/16 | 3/16 | 0.2 (4 items) |
+
+All-attempt counts include invalid and incomplete attempts; valid-review counts above exclude them.
+
+| Arm | Attempts | False findings raw / unique per attempt | Approved on buggy | Zero recovery | False clean | All-attempt noise | Noise excluded from valid reviews |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| A review-code | 21 | 0.708 (0.667) | 0.00 / 0.00 (0 / 0) | 8/17 | 4/17 | 4/17 | 1.0 |
-| B built-in Sonnet 5 | 22 | 0.792 (0.792) | 0.09 / 0.09 (2 / 2) | 0/16 | 2/16 | 0/16 | 2.6 |
-| C built-in Opus 5.5 | 20 | 0.844 (0.844) | 0.35 / 0.35 (7 / 7) | 0/16 | 2/16 | 0/16 | 6.2 |
-| D codex review | 20 | 0.573 (0.573) | 0.00 / 0.00 (0 / 0) | 3/16 | 5/16 | 3/16 | 0.2 |
+| A review-code | 21 | 0.00 / 0.00 (0 / 0) | 8 | 4 | 4 | 21 | 0 |
+| B built-in Sonnet 5 | 22 | 0.09 / 0.09 (2 / 2) | 0 | 2 | 0 | 58 | 6 |
+| C built-in Opus 5.5 | 20 | 0.35 / 0.35 (7 / 7) | 0 | 2 | 0 | 123 | 0 |
+| D codex review | 20 | 0.00 / 0.00 (0 / 0) | 3 | 5 | 3 | 4 | 0 |
 
-Per target: attempt-level recall (`-` on a clean target), then raw false findings and zero-recovery reviews.
+Per target: attempt-level recall (`-` on a clean target), then valid-review raw false findings and zero-recovery counts.
 
 | Target | A review-code | B built-in Sonnet 5 | C built-in Opus 5.5 | D codex review |
 | --- | --- | --- | --- | --- |
@@ -435,12 +472,12 @@ Per target: attempt-level recall (`-` on a clean target), then raw false finding
 | q-soba-195 | -; ff 0; zr 0 | -; ff 0; zr 0 | -; ff 0; zr 0 | -; ff 0; zr 0 |
 | r-base-ui-5460 | 0.00; ff 0; zr 2 | 0.25; ff 0; zr 1 | 0.00; ff 0; zr 2 | 0.00; ff 0; zr 2 |
 
-| Arm | Matched cells | Median cost ratio to A | Arm total cost ($) | Median elapsed-to-payload ratio to A | Median elapsed to payload (s) |
-| --- | --- | --- | --- | --- | --- |
-| A review-code | 20 | 1.00 | 15.99 | 1.00 | 134 |
-| B built-in Sonnet 5 | 20 | 0.18 | 3.04 | 0.21 | 28 |
-| C built-in Opus 5.5 | 20 | 0.45 | 7.52 | 0.58 | 85 |
-| D codex review | 20 | 0.35 | 5.92 | 0.23 | 31 |
+| Arm | Cost pairs | Timing pairs | Median cost ratio to A | Arm total cost ($) | Median elapsed-to-payload ratio to A | Median elapsed to payload (s) |
+| --- | --- | --- | --- | --- | --- | --- |
+| A review-code | 20 | 20 | 1.00 | 15.99 | 1.00 | 134 |
+| B built-in Sonnet 5 | 20 | 20 | 0.18 | 3.04 | 0.21 | 28 |
+| C built-in Opus 5.5 | 20 | 20 | 0.45 | 7.52 | 0.58 | 85 |
+| D codex review | 20 | 18 | 0.35 | 5.92 | 0.23 | 31 |
 
 | Target | Register | Defect | Recovered by |
 | --- | --- | --- | --- |
@@ -457,16 +494,36 @@ Per target: attempt-level recall (`-` on a clean target), then raw false finding
 | r-base-ui-5460 | v1 | GT-r1 | **none** |
 | r-base-ui-5460 | v1 | GT-r2 | B |
 
+Historical v2 figures, retained for comparison. The first table used all attempts as its
+population and originally labelled them "Reviews". Its buggy denominators include invalid
+attempts. C had 124 noise items before the duplicate correction, displayed as 6.2 per attempt.
+The historical "Matched cells" column counted cost pairs; D's timing ratio used only 18 pairs.
+
+| Arm | Attempts | Recall, completed-only (attempt-level) | False findings raw / unique per attempt | Approved on buggy | Zero recovery | False clean | Noise per attempt |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A review-code | 21 | 0.708 (0.667) | 0.00 / 0.00 (0 / 0) | 8/17 | 4/17 | 4/17 | 1.0 |
+| B built-in Sonnet 5 | 22 | 0.792 (0.792) | 0.09 / 0.09 (2 / 2) | 0/16 | 2/16 | 0/16 | 2.6 |
+| C built-in Opus 5.5 | 20 | 0.844 (0.844) | 0.35 / 0.35 (7 / 7) | 0/16 | 2/16 | 0/16 | 6.2 |
+| D codex review | 20 | 0.573 (0.573) | 0.00 / 0.00 (0 / 0) | 3/16 | 5/16 | 3/16 | 0.2 |
+
+| Arm | Matched cells | Median cost ratio to A | Arm total cost ($) | Median elapsed-to-payload ratio to A | Median elapsed to payload (s) |
+| --- | --- | --- | --- | --- | --- |
+| A review-code | 20 | 1.00 | 15.99 | 1.00 | 134 |
+| B built-in Sonnet 5 | 20 | 0.18 | 3.04 | 0.21 | 28 |
+| C built-in Opus 5.5 | 20 | 0.45 | 7.52 | 0.58 | 85 |
+| D codex review | 20 | 0.35 | 5.92 | 0.23 | 31 |
+
 Answers to the preregistered questions, per arm against A:
 
 - **Material recall per completed review.** C 0.84, B 0.79, A 0.71, D 0.57. Attempt-level, with
   harness-invalid attempts at zero: C 0.84, B 0.79, A 0.67, D 0.57. Attempt-level by cohort: on the
   regression targets C reaches 0.95 and A 0.73; on the fresh four, B leads with 0.75 and A has
   0.56.
-- **False findings per review.** A and D none in 21 and 20 reviews; B 2 in 22 (0.09 per review); C
-  7 in 20 (0.35), two of them on the clean control (m). Unique counts equal raw counts: no
+- **False findings per valid review.** A and D none in 20 valid reviews each; B 2 in 20
+  (0.10 per valid review, with the historical all-attempt rate still 2/22 = 0.09); C 7 in 20
+  (0.35), two of them on the clean control (m). Unique counts equal raw counts: no
   review repeated a false claim.
-- **Review-level rates on buggy targets.** A approved 8 of its 17 reviews on buggy targets and
+- **Review-level rates on buggy targets.** A approved 8 of its 16 valid reviews on buggy targets and
   4 of those recovered nothing (false clean); D approved 3 of 16, all false clean; B and C never
   approve, because an empty findings array is their only approving form and neither produced one.
   Zero recovery: D 5, A 4, B 2, C 2. A's approvals follow §8's rule that `Approved` approves
@@ -476,7 +533,7 @@ Answers to the preregistered questions, per arm against A:
 - **Matched median cost ratio.** B 0.18, D 0.35, C 0.45 of A's cost; A spent $15.99 on its
   cells, C $7.52, D $5.92 (list price; D consumed ChatGPT-plan quota), B $3.04.
 - **Elapsed-to-payload ratio.** B 0.21, D 0.23, C 0.58 of A's; median elapsed to payload B 28 s,
-  D 31 s, C 85 s, A 134 s.
+  D 31 s, C 85 s, A 134 s. D uses 18 timing pairs; the other arms use 20.
 - **Registered defects no arm recovered:** GT-r1 (a controlled value normalized during blur
   discards the blur validation result). GT-j2 was recovered only by C and GT-r2 only by B.
 
@@ -489,8 +546,8 @@ What these numbers rest on, and do not show:
   blind rendering could not hide.
 - **Registers grew during scoring.** (i) gained GT-i3, raised by A, B and C reviews, and (j)
   GT-j2, raised by one C review; GT-i3 is confirmed upstream by the later revert, GT-j2 by the
-  adjudicator's reproduction. One item on (l), which the adjudicator ruled a duplicate of GT-l1,
-  did not recover it on the blind re-grade and counts as non-material.
+  adjudicator's reproduction. One item on (l) recovers GT-l1 under the duplicate ruling despite the negative blind
+  re-grade. Its absent fix does not change the review's best sufficient fix for GT-l1.
 - **This is a benchmark, not an adoption screen.** It preregistered questions, not thresholds, and
   nothing here authorizes a change to any skill.
 
