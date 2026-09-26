@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "created_at": "2026-09-26T08:29:59Z",
+  "frozen_at": "2026-09-26T08:31:04Z",
+  "freeze_commit": null,
+  "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
+  "rubric_version": 1,
+  "metric_code_revision": "8073b48c57dcec598ddb30e076c30bcc8d41d2b0",
+  "arms": [
+    {
+      "id": "review-code-sonnet-high",
+      "arm_file_sha256": "b1e566c1cf1e55977b9d61ed39e2db4eeab18392ced4fa9506c93f14740b8a44",
+      "resolved_skill_tree": "8af0e1af8868e5e46f825acd76a3c8ce9740e0e3",
+      "expected_cli_version": "claude-code 2.1.282",
+      "expected_prompt_hashes": [],
+      "probe_attempt": null
+    }
+  ],
+  "cohort": [
+    {
+      "target": "k-graphql-js-1582",
+      "register_version": 1,
+      "packet_sha256": "0473e248e7a759a30cab6c84abace66ecf2a04349764f18b9deaa6234c5d5258",
+      "diff_manifest_sha256": "ffb09c3239a9b09fbe3b0544994d3fecbe5fe3779848ce1ab6557e0733a98e44",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "a8f082ed7eb23ad0edfe554161c412a3a142240daffc819b44d923db90d805b2"
+    },
+    {
+      "target": "j-trpc-5017",
+      "register_version": 2,
+      "packet_sha256": "b2702c19c9050b06ac0ab2959e2f941fa0497fde7959456ec3a1be1b23ca695c",
+      "diff_manifest_sha256": "3745aceb1adbcb424674be1b91175ea4ffc1da82179979d25b75ed873299a41b",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "05f310d1034389a7bb22a3d898a289a96ea4620a2cda744255cc95a002538027"
+    },
+    {
+      "target": "l-bokeh-9232",
+      "register_version": 1,
+      "packet_sha256": "f39a26a189faf259a9cda8f51db376c16a215e2c7ca1662752037d9f902ee36b",
+      "diff_manifest_sha256": "b3476ac5a902a0b5178472bbd8915714ea52e11d00067f0515ee6ffe7e569bd6",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "513072c3743db2674baee73f5e1014cd1d58173121fb58d488d8d28c07fb0b31"
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "register_version": 1,
+      "packet_sha256": "e1c06473d9983ce6644841501ecbeb0f0976164c1703ef3f9282460458e43299",
+      "diff_manifest_sha256": "adb972f66328b4ce030c4e4b0ebed60f482611eb86f26e681dd6fbe02f701c4f",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "37bd6ccf46c5e46f5ff33f02348c0ab5173fd2cd8edfa4cdd18c5e1eb6dbac06"
+    },
+    {
+      "target": "q-soba-195",
+      "register_version": 1,
+      "packet_sha256": "57d65e01a6d224b248823f69422de1d3d6099bf527d70c3fbde82ae7a9ec757d",
+      "diff_manifest_sha256": "7235f4573902842b222c6a7cf738f2e038208cf034fee4b0439eb6864eddc088",
+      "cohort_group": "fresh",
+      "execution_available": true,
+      "provisioning_sha256": "f720aaf93423211c02fad078dab4610ffb16f6bf9def296cbe4c5640a2485fc7"
+    }
+  ],
+  "exclusions": [],
+  "planned_cells": [
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    }
+  ],
+  "caps": {
+    "max_attempts": 17,
+    "replacements": 2,
+    "spend_usd": 40.0,
+    "closeout_reserve_usd": 5.0,
+    "max_in_flight": 2,
+    "attempt_usd": 5.0
+  },
+  "sealed_order": [
+    "k-graphql-js-1582/review-code-sonnet-high/1",
+    "j-trpc-5017/review-code-sonnet-high/1",
+    "l-bokeh-9232/review-code-sonnet-high/1",
+    "m-grpc-go-7390/review-code-sonnet-high/1",
+    "q-soba-195/review-code-sonnet-high/1",
+    "k-graphql-js-1582/review-code-sonnet-high/2",
+    "j-trpc-5017/review-code-sonnet-high/2",
+    "l-bokeh-9232/review-code-sonnet-high/2",
+    "m-grpc-go-7390/review-code-sonnet-high/2",
+    "q-soba-195/review-code-sonnet-high/2",
+    "k-graphql-js-1582/review-code-sonnet-high/3",
+    "j-trpc-5017/review-code-sonnet-high/3",
+    "l-bokeh-9232/review-code-sonnet-high/3",
+    "m-grpc-go-7390/review-code-sonnet-high/3",
+    "q-soba-195/review-code-sonnet-high/3"
+  ],
+  "rates": [
+    {
+      "model": "claude-sonnet-5",
+      "as_of": "2026-09-24"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "as_of": "2026-09-24"
+    }
+  ],
+  "execution_policy": {
+    "branch_layout": "The working directory is an offline export of the pull request's repository. Local branch `main` is the merge-base and local branch `review-head`, which is checked out, is the head under review; the change under review is the committed range `main...review-head`. There is no remote, no network, and nothing outside this attempt's directories is available.",
+    "allowance": "Reading the clone is always permitted. Commands may be run only as the target's allowance below states, offline, with a five-minute limit per command; scratch files go under the work directory; nothing may be added to or changed in the clone, whose tree identity is checked before and after the review.",
+    "unprivileged_user": null
+  },
+  "deviations": []
+}
