@@ -563,6 +563,9 @@ candidate changes are the exact substitutions in [#381](https://github.com/kamui
 and [#387](https://github.com/kamui/skills/issues/387), each tested alone before any combination.
 #382 first needs its stated policy decision; #387 first needs #386's measured attribution. A
 deferred child has no run and no pass. A failed child is reverted and cannot enter the combination.
+#387 closed unrun on 2026-09-26: [#386's audit](a-phase-audit.md#reading-overhead-and-the-decision-for-387)
+measured no removable reading cost, and its [sizing estimate](https://github.com/kamui/skills/issues/387#issuecomment-5844777962)
+puts the worker-reference reads near 1% of valid A cost, far from the 0.80 cost-ratio threshold.
 
 ### Frozen comparator and run identity
 
@@ -612,7 +615,7 @@ the attempt cap allows at most two invalid replacements. These are hard limits, 
 | [#383](https://github.com/kamui/skills/issues/383) shared inputs | j, i, p, m, q; 15; 17; **$45** | GT-j1 and GT-j2 each recovered in at least 2/3; Requests recall at least 2/3 with GT-i1 in 3/3; Hono GT-p1 in 3/3. Input-matrix coverage is diagnostic, not recovery. |
 | [#384](https://github.com/kamui/skills/issues/384) lifecycle | r, m, q; 9; 11; **$30** | GT-r1 and GT-r2 each recovered in at least 2/3; each target's median elapsed-to-payload at most 1.25× its frozen A median. Do not count the ruled non-material control-mode, cancellation, render or remount claims. |
 | [#385](https://github.com/kamui/skills/issues/385) remedy completeness | i, p, l, m, q; 15; 17; **$45** | GT-i1 sufficient in 3/3; GT-i3 recovered in at least 2/3 and sufficient on every recovery; Requests recall at least 2/3; Hono and Bokeh recovered in 3/3 with sufficient fixes in at least 2/3 and 3/3 respectively. |
-| [#387](https://github.com/kamui/skills/issues/387) measured reading cut, only if #386 supports it | all ten; 30; 32; **$75** | Median per-target cost ratio at most 0.80 and elapsed-to-payload ratio at most 0.90 against frozen A medians, with the measured phase's cost lower. Completed recall at least 0.708; invalid-attempt rate no higher than historical A's 1/21. |
+| [#387](https://github.com/kamui/skills/issues/387) measured reading cut, only if #386 supports it; **closed unrun** | all ten; 30; 32; **$75** | Median per-target cost ratio at most 0.80 and elapsed-to-payload ratio at most 0.90 against frozen A medians, with the measured phase's cost lower. Completed recall at least 0.708; invalid-attempt rate no higher than historical A's 1/21. |
 
 For every child, require no loss of historical A per-target recall on its exercised buggy
 targets: (i) at least 2/3, (k), (l), (n) and (p) 3/3, and (o) at least 2/3 when exercised;
