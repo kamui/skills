@@ -1,0 +1,148 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "pr-5067-review-packet"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+  "issues": [
+   "honojs/hono#5060"
+  ],
+  "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Make Content-Type media-type matching case-insensitive in parseBody(), validator() and bufferToFormData() while keeping parameters such as the multipart boundary intact (issue #5060).",
+  "issue_fit": "Mostly met: mixed-case JSON, urlencoded and multipart now match and the boundary is preserved. Separately, the rewritten parseFormData regresses parseBody() after a prior c.req.formData().",
+  "coverage": "Complete merge-base diff (6 files) read; callers in src/request.ts and src/validator/validator.ts inspected. Focused vitest run once at the head over body, buffer, validator and request tests: 144 passed, 1 skipped. Scratch probe compared head with base extracted by git archive; the regression reproduces at head only."
+ },
+ "findings": [
+  {
+   "id": "utils-body/parse-after-formdata-regression",
+   "title": "Reuse cached FormData in parseBody instead of re-reading the body",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "A handler or middleware calls `await c.req.formData()` and then `await c.req.parseBody()` on the same request. `parseFormData` now calls `arrayBuffer()`; with no arrayBuffer cached, `HonoRequest#cachedBody` re-serializes the cached FormData into a new multipart body with a fresh boundary, which is parsed against the original Content-Type.",
+   "impact": "Multipart requests make `parseBody()` reject with `TypeError: Failed to parse body as FormData.`; urlencoded requests silently return garbage keys such as `------formdata-undici-...`. At base both returned `{ foo: 'bar' }`.",
+   "change": "In `parseFormData`, when the request is a `HonoRequest` with `bodyCache.formData` set, await that value (as `src/validator/validator.ts` does) before falling back to `arrayBuffer()` and `bufferToFormData`.",
+   "anchor": {
+    "type": "line",
+    "path": "src/utils/body.ts",
+    "start_line": 126,
+    "end_line": 132,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "After `parseBody()` the first `bodyCache` key is now `arrayBuffer` rather than `formData`, so `c.req.text()`, `c.req.json()` and `cloneRawRequest` read the raw bytes afterwards, and the multipart bytes stay cached for the request lifetime.",
+   "evidence": "`src/utils/body.ts:126-130`, `src/request.ts:220-238`, `src/request.ts:481`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "honojs/hono",
+  "requirements": [
+   {
+    "source": "issue-5060/expected-behavior/media-type-case-insensitive",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/utils/body.ts:99 lowercases the media type; src/validator/validator.ts:24-26 regexes gain the `i` flag; src/utils/buffer.ts:113 lowercases the media type before Response.formData()."
+   },
+   {
+    "source": "issue-5060/expected-behavior/parameters-intact",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/utils/buffer.ts:113 replaces only /^[^;]+/; test 'Should parse mixed-case multipart/form-data media type while keeping the boundary' in src/utils/buffer.test.ts passes."
+   },
+   {
+    "source": "issue-5060/suggested-tests",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "Added parseBody urlencoded and multipart, validator json, urlencoded and multipart mixed-case tests; vitest run at head passed."
+   },
+   {
+    "source": "pr-body/\"Run tests\"",
+    "class": "supporting",
+    "disposition": "met",
+    "evidence": "Reviewer-executed vitest at head: 4 files, 144 passed, 1 skipped."
+   }
+  ],
+  "files": [
+   {
+    "path": "src/utils/body.test.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/utils/body.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/utils/buffer.test.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/utils/buffer.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/validator/validator.test.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/validator/validator.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "vitest --run --project main src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts src/request.test.ts",
+    "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+    "outcome": "reviewer-executed",
+    "reason": "4 files passed, 144 tests passed, 1 skipped; none covers formData() followed by parseBody()"
+   },
+   {
+    "check": "Codecov patch report (supplied comment)",
+    "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+    "outcome": "unavailable",
+    "reason": "coverage summary comment, not a test run with readable output"
+   },
+   {
+    "check": "HTTP performance benchmark (supplied comment)",
+    "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+    "outcome": "unavailable",
+    "reason": "benchmark summary on a runtime not available offline; not repeatable here"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "utils-body/parse-after-formdata-regression",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-013/clone-work/rc.UCpVnJ/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x383-consumer-comparison/att-013/clone-work/rc.UCpVnJ/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

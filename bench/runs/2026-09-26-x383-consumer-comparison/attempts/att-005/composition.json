@@ -1,0 +1,118 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "136a4850df9aec8cf8813b27ba1533d4a17bc642\nrefactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Resolve SonarQube findings without behaviour change: split high-complexity functions into helpers, extract duplicated notification titles, drop an identical duplicate test, and tidy the Dockerfile (source: PR text and commit 136a485 message; no originating issue).",
+    "issue_fit": "Unavailable — no originating issue or spec; the requirements ledger comes from the PR body and commit message, and the stated 'behaviour and log output unchanged' promise holds on inspection.",
+    "coverage": "Complete merge-base diff of all 4 files reviewed. Refactors traced against base for call order, log text and error paths; notification title strings compared byte-for-byte with base; removed GitLab test confirmed identical to its twin. Reviewer-executed at the head: `go vet ./internal/` pass; `go test ./internal/ -count=1` pass (provider-credential tests skip). Dockerfile not built (Docker unavailable); reviewed by trace. SonarQube findings and the 'fixes all 13' count could not be checked offline. No verification batch was needed: no candidate survived falsification and no risk area is touched."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The Sonar bot comment on the pull request reports 1 new issue while the body says all 13 open findings are fixed; the issue itself is not identified in the packet.",
+      "evidence": "pull-request conversation, sonarqubecloud comment 2026-07-28T21:07:02Z."
+    },
+    {
+      "fact": "The 'Organistations' log typo is unchanged from the base and now lives once in the shared helper, matching the 'log output unchanged' promise.",
+      "evidence": "`internal/backup.go:205`; base `internal/backup.go:187`, `:209`, `:275`."
+    },
+    {
+      "fact": "The doubled resetBackups() call in TestGiteaOrgsRepositoryBackup exists at the base too, so the refactor carries it over rather than adding it.",
+      "evidence": "`internal/backup_test.go:629`, `:632`, `:635`; base test body at `internal/backup_test.go:619-710`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "jonhadfield/soba",
+    "requirements": [
+      {
+        "source": "pr-body/\"Behaviour and log output are unchanged\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go helper extractions keep provider order, log strings and error paths; internal/notify.go title bytes identical to base"
+      },
+      {
+        "source": "pr-body/\"backup status titles extracted into constants with a shared `backupStatusTitle` helper\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:21-44; three senders call backupStatusTitle"
+      },
+      {
+        "source": "pr-body/\"removed `TestPublicGitLabRepositoryBackup2`, an exact duplicate\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "base internal/backup_test.go:548-588 shows both bodies identical"
+      },
+      {
+        "source": "pr-body/\"merged consecutive `RUN` instructions, sorted apk package names, quoted `${TAG}`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:5-14 in the diff; not built (Docker unavailable)"
+      },
+      {
+        "source": "pr-body/\"Fixes all 13 open SonarQube findings\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "SonarQube unavailable offline; bot comment reports 1 new issue, unidentified"
+      },
+      {
+        "source": "pr-body/\"`go build`, `go vet`, `golangci-lint run` (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "go vet and go test ./internal/ reproduced passing; golangci-lint not run"
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go vet ./internal/",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline, clean tree, exit 0"
+      },
+      {
+        "check": "go test ./internal/ -count=1",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline, clean tree, 'ok' in 5.2s; credentialed live tests skip"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

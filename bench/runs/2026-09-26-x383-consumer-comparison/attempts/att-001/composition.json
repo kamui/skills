@@ -1,0 +1,88 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "user-supplied-pr-packet-trpc-5017"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix input/output inference for procedures that combine .input() with middleware by making the internal Overwrite type overwrite key-by-key only when both sides are objects and otherwise let TWith replace TType (user-supplied PR text of trpc/trpc#5017 and commit 7dc04a7e).",
+  "issue_fit": "Met. No originating issue exists, so issue alignment was unavailable; intent comes from the supplied PR text and commit messages. Overwrite<string,string> no longer yields a mangled object type.",
+  "coverage": "Both changed files reviewed against the complete merge-base diff; Overwrite callers in middleware.ts, procedureBuilder.ts and utils.ts inspected. Reviewer-executed at head: tsc --noEmit -p packages/tests/tsconfig.json exit 0, including the new regression test. A scratch type replica confirmed the old Overwrite<string,string> is mangled and the new one is not; the test was not run at the merge-base, so it is not shown to fail there. The runtime vitest suite was out of policy. Merged PR reviewed as a local range, so no forge state was fetched. No verification batch was needed: no must-fix, risk-area, or premise-bearing candidate survived."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The trailing `: TType` branch of Overwrite is unreachable because the conditional on TWith is distributive, so Overwrite<string, never> is never, not string; the doc comment's 'unless TWith is never' does not describe a fallback.",
+   "evidence": "packages/server/src/core/internals/utils.ts:24-29; scratch check of Overwrite<string, never> under tsc --strict."
+  },
+  {
+   "fact": "The new regression test declares voidWithMiddleware but asserts nothing about it, and keeps `// ^?` twoslash markers.",
+   "evidence": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts:13-17, 7 and 33."
+  },
+  {
+   "fact": "Object/object merging of array types still yields a mangled key-mapped type, as at the merge-base.",
+   "evidence": "Scratch check: Overwrite<string[], string[]> is not string[] under both the old and new definitions."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "trpc/trpc",
+  "requirements": [
+   {
+    "source": "pr-title",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts:35-38 asserts string input and output through .input().use(); tsc at head exit 0; utils.ts:11-30"
+   },
+   {
+    "source": "commit-7dc04a7/\"Overwrite<string,string> resulted in a mangled object type\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "utils.ts:11-30 routes non-object TType to TWith; scratch Old<string,string> is not string, New<string,string> is string"
+   },
+   {
+    "source": "commit-7dc04a7/\"a non-never TWith type will entirely replace TType\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "utils.ts:16-18 and 22-26; scratch New<string,{a:1}> is {a:1}, New<{a:1},string> is string"
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "tsc --noEmit -p packages/tests/tsconfig.json",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "run offline at the reviewed head with the clone's own binary; exit 0, no output"
+   }
+  ],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

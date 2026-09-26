@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "The change adds no deterministic regression test; the only evidence for the race fix is the statistical flake rate of an unrelated xDS test.",
+      "consequence": "`clientconn.go` is the only file in the merge-base manifest.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}
