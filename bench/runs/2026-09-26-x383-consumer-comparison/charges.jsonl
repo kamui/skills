@@ -3,3 +3,5 @@
 {"at": "2026-09-26T10:51:59Z", "step": "G3: grading p-hono-5067 (claude-opus-5-5 at high)", "usd": 0.378127, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "b5d4c7e6"}
 {"at": "2026-09-26T10:52:00Z", "step": "G2: grading i-requests-6667 (claude-opus-5-5 at high)", "usd": 0.421388, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "adf5dec0"}
 {"at": "2026-09-26T10:52:44Z", "step": "G1: grading j-trpc-5017 (claude-opus-5-5 at high)", "usd": 0.587698, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "c210fa39"}
+{"at": "2026-09-26T10:56:58Z", "step": "A1: candidate adjudication j-trpc-5017 NC-1 (claude-opus-5-5 at high)", "usd": 0.818906, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "0904b762"}
+{"at": "2026-09-26T10:59:14Z", "step": "R1: re-grade j-trpc-5017 for GT-j3, register v3 (claude-opus-5-5 at high)", "usd": 0.256649, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "123fa0f4"}
