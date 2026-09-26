@@ -58,11 +58,17 @@ Require review of the final committed head with no blocking defects or material 
 
 ### 5. Open the pull request
 
-Using the resolved forge's tools, push the reviewed head and find an open pull request matching both source and target repositories and branches. Update its body if found; otherwise create one with a title and body. Finish with exactly one pull request at the reviewed head. Its body must:
+Using the resolved forge's tools, push the reviewed head and find an open pull request matching both source and target repositories and branches. Update its body if found; otherwise create one with a title and body. Finish with exactly one pull request at the reviewed head.
 
-- summarize the change;
-- link every issue from step 1 as **closes**, **partially implements** with remaining work, or **affects** with its impact. For closure, use supported automatic closure on merge or note its unavailability. Name and link external specs;
-- summarize step 3's verification results and gaps, identifying acceptance criteria and preserving each result's head and input state, shared where they match.
+Write its body as a briefing that a reviewer with the diff can read in under a minute. Use these sections in order, in place of `## Summary` and `## Test plan`:
+
+- `## Why`: the intent and approach in one or two short paragraphs. Link every issue from step 1 as **closes**, **partially implements** with remaining work, or **affects** with its impact, and link any other related ticket as context. For closure, use supported automatic closure on merge or note its unavailability. Name and link external specs.
+- `## Scope`: bullets naming real symbols and paths.
+- `## Tradeoffs`: rejected alternatives a reviewer would ask about.
+- `## Blast Radius`: what the change touches and why it is safe or risky, in one to three sentences.
+- `## Verification`: step 3's verification results and gaps, identifying acceptance criteria and preserving each result's head and input state, shared where they match. Report a performance change as one `before → after` number.
+
+Drop `## Scope`, `## Tradeoffs`, or `## Blast Radius` when it has nothing to say. Link logs, metric tables, and other bulky evidence. Attach screenshots or video only when they prove a claim.
 
 Leave issue status, labels and assignees alone.
 
