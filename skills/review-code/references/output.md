@@ -16,7 +16,7 @@ Retain every prior item exactly once with classification and evidence, disputes 
 
 ## Identity
 
-`workflow=v5b-26-x382` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change.
+`workflow=v5b-26-x382-x383` versions this package's review behavior. Increment it whenever admission, verification, rendering, or state semantics change.
 
 The run trailer carries `packet_context=` and `supplied_inputs=`. A pull request's `packet_context` is the digest `forge_packet.py` computes from the saved packet's intent, and the finalizer derives it; never write or copy one. A local target has none and its trailer reads `packet_context=none`. List the identities of the caller-supplied issues and specs in `run.specs`, empty when there were none; the finalizer derives `supplied_inputs=yes|no` from that list.
 
