@@ -182,5 +182,11 @@
     "allowance": "Reading the clone is always permitted. Commands may be run only as the target's allowance below states, offline, with a five-minute limit per command; scratch files go under the work directory; nothing may be added to or changed in the clone, whose tree identity is checked before and after the review.",
     "unprivileged_user": null
   },
-  "deviations": []
+  "deviations": [
+    {
+      "at": "2026-09-26T11:01:32Z",
+      "what": "Blind grading of j-trpc-5017 (G1) left one new candidate unresolved, NC-1 on att-006. As in the baseline's scoring, an independent adjudicator (A1, prompts/candidate-adjudication-template.md, claude-opus-5-5 at high, session 0904b762) ruled it a new material defect, so the target's register moves to version 3, adding GT-j3 (a nullable ctx override replaces an object context); defects GT-j1 and GT-j2 and every non-defect carry forward unchanged. A blind re-grade for GT-j3 alone (R1, session 123fa0f4) found one recovery, and grade.py revise wrote mapping v2 from mapping v1. results.v1.json therefore scores (j) at register v3, not the frozen cohort's v2. The #383 thresholds name GT-j1 and GT-j2 only, and their recoveries are identical under both versions; frozen A's (j) reviews stay scored at v2, so (j)'s aggregate recall is not comparable across the two runs.",
+      "invalidates": []
+    }
+  ]
 }
