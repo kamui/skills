@@ -183,7 +183,7 @@ def local_targets() -> None:
         assert "repository_url" not in payload["summary"] and "](http" not in body, body
         assert "anchor `src/payments.ts:42`; fix `src/retry-policy.ts:18`" in body, body
         assert "anchor `src/queue.ts (file)`" in body, body
-        assert '**Source:** commit-abcdef0/"Keep the key"' in payload["items"][0]["markdown"]
+        assert 'commit-abcdef0/"Keep the key"' in payload["items"][0]["markdown"]
         assert "Source: originating issues; user-supplied spec; commit messages in the range." in body, body
         assert "**Mode:**" not in body, body
         if kind == "worktree":
@@ -570,14 +570,78 @@ def record_accounting() -> None:
     print("ok record: deleted and renamed evidence, file accounting against the pinned manifest")
 
 
+def compact_reviews() -> None:
+    for optional in (False, True):
+        value = base_composition()
+        value.update(findings=[consider()] if optional else [], questions=[], observations=[])
+        value["summary"].update(status="Approved", issue_fit="Issue #123: requirements met.",
+                                coverage="Full diff covered; focused retry-policy test passed.",
+                                check_details=["Reviewer ran retry-policy at the reviewed head; output: saved-check.log"])
+        payload, batch, raw = composed(value, "compact approval")
+        body = payload["summary"]["body"]
+        visible, opening, detail = body.partition("<details>\n<summary>Review details</summary>\n")
+        assert opening and "<details open" not in body and body.count("</details>") == 1, body
+        assert f"Reviewed `{HEAD[:7]}`. Full diff covered; focused retry-policy test passed." in visible
+        assert value["summary"]["intent"] in detail and value["summary"]["intent"] not in visible
+        assert value["summary"]["issue_fit"] in detail and "saved-check.log" in detail
+        assert "saved-check.log" not in visible and payload["summary"]["trailer"] in detail.split("</details>")[1]
+        if optional:
+            assert visible.startswith("**Approved (advisory)** — no must-fix findings; 1 optional improvement."), visible
+            assert "[P3] [consider] Name the retry budget constant" in visible
+            comment = batch["comments"][0]["body"]
+            assert vr.PERMISSION_SENTENCE in comment and "blocking=false" in comment
+        else:
+            assert visible.startswith("**Approved (advisory)** — no findings."), visible
+            assert "## Findings" not in visible and not batch["comments"]
+        gated = run(VALIDATOR, raw, "--emit-batch", "--event", "APPROVE")
+        assert gated.returncode == 0, gated.stdout
+        published = json.loads(gated.stdout)
+        assert published["event"] == "APPROVE" and published["body"].startswith("**Approved** — ")
+        assert published["comments"] == batch["comments"]
+
+    for key in ("trigger", "impact", "change"):
+        for empty in (None, "", " "):
+            value = base_composition()
+            if empty is None:
+                del value["findings"][0][key]
+            else:
+                value["findings"][0][key] = empty
+            refused(value, "schema", f"missing structured {key}", needle=key)
+    value = base_composition()
+    value["run"]["coverage"] = "incomplete"
+    value["summary"]["coverage_gaps"] = ["src/queue.ts: execution unavailable; supply the queue fixture."]
+    payload, _, _ = composed(value, "visible question and coverage gap")
+    visible = payload["summary"]["body"].split("<details>", 1)[0]
+    assert "## Open questions" in visible and "## Coverage gaps" in visible
+    assert value["questions"][0]["why_it_matters"] in visible
+    assert value["summary"]["coverage_gaps"][0] in visible
+
+    value = base_composition()
+    value["summary"]["check_details"] = "not a list"
+    refused(value, "schema", "malformed check details", needle="check_details")
+
+    value = base_composition()
+    value["findings"][0]["change"] += "\n\n~~~~suggestion\n  const key = attempt.idempotencyKey;\n\n~~~~"
+    payload, _, _ = composed(value, "fenced suggestion with blank line")
+    markdown = payload["items"][0]["markdown"]
+    explanation, block = markdown.split("\n\n", 2)[1:]
+    for key in ("trigger", "impact", "source"):
+        assert " ".join(value["findings"][0][key].splitlines()) in explanation
+    assert block == "~~~~suggestion\n  const key = attempt.idempotencyKey;\n\n~~~~", block
+    assert "**Triggers when:**" not in markdown and "**Impact:**" not in markdown and "**Change:**" not in markdown
+    print("ok compact reviews: approvals, optional findings, disclosures, structured evidence and suggestion bytes")
+
+
 def main() -> int:
+    compact_reviews()
     # Ordinary finding, whole-change question, observation: the contract example, byte for byte where the contract renders it.
     contract = base_composition()
     payload, batch, stdout = composed(contract, "contract example")
     body = payload["summary"]["body"]
-    assert body.startswith("**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.\n\n**Intent:**"), body
+    assert body.startswith("**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.\n\n## Findings"), body
     assert f"## Findings\n\n- [P1] [must-fix] Preserve the idempotency key across retries — {FINDING_FRAGMENT}\n\n" in body
-    assert f"## Open questions\n\n- [Question] Must retries preserve request order? — {QUESTION_FRAGMENT}\n\n**[Question]" in body
+    assert "## Open questions\n\n**[Question] Must retries preserve request order?**" in body
+    assert f"\n\n{QUESTION_FRAGMENT}\n\n" in body
     assert "## Observations\n\n- The first configuration sentence" in body
     assert f"**Reviewed:** `{HEAD[:7]}` against merge-base `{MERGE_BASE[:7]}`." in body
     assert payload["items"][0]["markdown"] == vr.FINDING_MARKDOWN and payload["items"][1]["markdown"] == vr.QUESTION_MARKDOWN
@@ -598,12 +662,12 @@ def main() -> int:
     payload, batch, _ = composed(optional, "consider finding")
     item = payload["items"][1]
     assert item["markdown"].startswith("**[P3] [consider] Name the retry budget constant**") and item["blocking"] is False
-    assert item["markdown"].endswith(f"**Source:** Issue #123, acceptance criterion 2.\n\n{vr.PERMISSION_SENTENCE}"), item["markdown"]
+    assert item["markdown"].endswith(f"Issue #123, acceptance criterion 2.\n\n{vr.PERMISSION_SENTENCE}"), item["markdown"]
     assert item["trailer"].endswith("blocking=false kind=maintainability -->") and len(batch["comments"]) == 2
     shared = base_composition()
     shared["findings"].append(consider(anchor=finding()["anchor"], fix=finding()["fix"], change=finding()["change"]))
     refused(shared, "summary-reference", "two findings sharing one anchor and fix", needle="findings[1]")
-    assert "— 1 must-fix finding, 1 consider finding, 1 open question." in payload["summary"]["body"]
+    assert "— 1 must-fix finding, 1 optional improvement, 1 open question." in payload["summary"]["body"]
     assert "- [P3] [consider] Name the retry budget constant — " in payload["summary"]["body"]
     refused({**optional, "findings": [finding(), consider(blocking=True)]}, "priority-action", "consider marked blocking")
     refused({**optional, "findings": [finding(blocking=False)]}, "priority-action", "must-fix marked non-blocking")
@@ -669,8 +733,9 @@ def main() -> int:
         "const key = attempt.idempotencyKey; // **Impact:** and **Change:** here are code, not fields\n```"
     )
     payload, batch, _ = composed(suggestion, "suggestion block")
-    assert suggestion["findings"][0]["change"] in payload["items"][0]["markdown"]
-    assert suggestion["findings"][0]["change"] in batch["comments"][0]["body"]
+    patch = suggestion["findings"][0]["change"].split("\n\n", 1)[1]
+    assert payload["items"][0]["markdown"].endswith(patch)
+    assert patch in batch["comments"][0]["body"]
     span = base_composition()
     span["findings"][0]["change"] = "Keep the `**Impact:**` label in `src/retry-policy.ts`. Reuse one key."
     composed(span, "label inside a code span")
@@ -771,7 +836,7 @@ def main() -> int:
     unknown = base_composition()
     unknown["questions"][0]["anchor"] = {"type": "file", "path": "reported/path.ts", "side": "UNKNOWN"}
     payload, _, _ = composed(unknown, "UNKNOWN provenance")
-    assert "— anchor `reported/path.ts` (file)\n" in payload["summary"]["body"] and f"{BLOB}/reported" not in payload["summary"]["body"]
+    assert "\nanchor `reported/path.ts` (file)\n" in payload["summary"]["body"] and f"{BLOB}/reported" not in payload["summary"]["body"]
     legacy = base_composition()
     legacy["questions"][0]["anchor"] = {"type": "file", "path": "src/queue.ts"}
     refused(legacy, "anchor-provenance", "file anchor without side or store", needle="questions[0].anchor")
@@ -885,7 +950,7 @@ def main() -> int:
                     needle="does not establish one revision")
             unestablished["questions"][0]["anchor"]["side"] = "UNKNOWN"
             payload, _, _ = composed(pinned(unestablished), f"explicit UNKNOWN for {path}", "--store", str(ambiguous_store))
-            assert f"— anchor `{path}` (file)\n" in payload["summary"]["body"], path
+            assert f"\nanchor `{path}` (file)\n" in payload["summary"]["body"], path
         print("ok manifest derivation: deleted, present, renamed, and added file sides; unestablished revisions need an explicit side")
         stale = base_composition()
         stale["run"]["head"] = PRIOR
@@ -955,7 +1020,7 @@ def main() -> int:
     needs_info["findings"] = [consider()]
     needs_info["summary"]["status"] = "Needs Information"
     payload, _, _ = composed(needs_info, "Needs Information")
-    assert payload["summary"]["body"].startswith("**Needs Information** — 1 consider finding, 1 open question.")
+    assert payload["summary"]["body"].startswith("**Needs Information** — 1 optional improvement, 1 open question.")
     needs_info["questions"] = []
     refused(needs_info, "status-consistency", "Needs Information without a question")
     incomplete_marked_complete = base_composition()
@@ -972,7 +1037,7 @@ def main() -> int:
         "Verification of `payments/retry-budget` did not finish; it stays unpublished.",
     ]
     payload, batch, _ = composed(incomplete, "incomplete coverage with a verified unrelated finding")
-    assert payload["summary"]["body"].startswith("**Incomplete** — 1 consider finding.") and len(batch["comments"]) == 1
+    assert payload["summary"]["body"].startswith("**Incomplete** — 1 optional improvement.") and len(batch["comments"]) == 1
     assert "## Coverage gaps\n\n- `reviewThreads` continuation 2 failed" in payload["summary"]["body"]
     assert "coverage=incomplete -->" in payload["summary"]["trailer"]
     approved_incomplete = copy.deepcopy(incomplete)
@@ -1006,12 +1071,15 @@ def main() -> int:
     payload, batch, _ = composed(rereview, "re-review with prior items")
     body = payload["summary"]["body"]
     assert body.startswith(
-        "**Changes Requested (advisory)** — 1 consider finding, 1 open question, 2 prior items still open, 1 disputed prior finding. "
+        "**Changes Requested (advisory)** — 1 optional improvement, 1 open question, 2 prior items still open, 1 disputed prior finding. "
         f"Delta review of `{PRIOR[:7]}..{HEAD[:7]}`.\n"
     ), body
     assert "## Disputed\n\n- `payments/retry-idempotency` — disputed: declined twice" in body
-    assert "## Prior findings\n\n- `payments/retry-logging` — fixed: implemented" in body
+    assert "## Settled findings\n\n- `payments/retry-logging` — fixed: implemented" in body
     assert "- `payments/retry-budget` — still-open:" in body and "- `queue/ordering` — not-verifiable:" in body
+    visible, _, details = body.partition("<details>")
+    assert "## Disputed" in visible and "## Prior findings" in visible
+    assert "payments/retry-logging" not in visible and "payments/retry-logging" in details
     for prior in rereview["prior_items"]:
         assert body.count(f"`{prior['id']}`") == 1, prior["id"]
         assert not any(prior["id"] in comment["body"] for comment in batch["comments"]), prior["id"]
@@ -1064,7 +1132,8 @@ def main() -> int:
     payload, batch, _ = composed(fallback, "file fallback")
     body = payload["summary"]["body"]
     file_fragment = f"anchor [`src/payments.ts`]({BLOB}/src/payments.ts) (file); fix [`src/retry-policy.ts:18`]({BLOB}/src/retry-policy.ts?plain=1#L18)"
-    assert "## Findings" not in body and f"## Unanchored findings\n\n{vr_note()}\n\n- [P1] [must-fix] Preserve the idempotency key across retries — {file_fragment}\n\n**[P1] [must-fix]" in body
+    assert body.count("Preserve the idempotency key across retries") == 1
+    assert "## Findings" not in body and f"## Unanchored findings\n\n{vr_note()}\n\n**[P1] [must-fix]" in body
     assert body.count(file_fragment) == 1 and batch["comments"] == []
     assert "— 1 must-fix finding, 1 open question." in body
     print("ok file fallback: body-carried finding with prose, trailer, and fragment once")
