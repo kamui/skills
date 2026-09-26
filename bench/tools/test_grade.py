@@ -591,14 +591,27 @@ class Revise(Mapped):
         self.regrade_doc = self.prepared(self.regrade_work, self.regrade_key, REGRADE_TEMPLATE, "--only-defect", "GT-t1")
         self.regrade_token = {r["attempt_id"]: r["token"] for r in self.regrade_doc["reviews"]}
         self.regrade_dispatch["prompt_sha256"] = self.regrade_doc["prompt_sha256"]
-        done = self.revise(self.rulings(**{"NC-1": ("duplicate", "GT-t1", None)}))
+        rulings = self.rulings(**{"NC-1": ("duplicate", "GT-t1", None)})
+        duplicate = next(r for r in rulings["rulings"] if r["candidate"] == "NC-1")
+        for fix in (None, "n/a", "invented"):
+            with self.subTest(fix=fix):
+                if fix is not None:
+                    duplicate["fix_sufficiency"] = fix
+                done = self.revise(rulings)
+                self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+                self.assertIn("fix_sufficiency", done.stdout)
+                self.assertFalse(self.mapping_path(2).exists())
+        duplicate["fix_sufficiency"] = "absent"
+        done = self.revise(rulings)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         mapping = json.loads(self.mapping_path(2).read_text(encoding="utf-8"))
         self.assertEqual(mapping["register"]["version"], 1)
         by_id = {a["attempt_id"]: a for a in mapping["attempts"]}
         self.assertEqual(by_id["att-002"]["items"][1]["assignment"], "defect:GT-t1")
         self.assertEqual(by_id["att-001"]["items"][1]["assignment"], "defect:GT-t1")
-        self.assertEqual(by_id["att-003"]["items"][3]["assignment"], "non-material")
+        self.assertEqual(by_id["att-003"]["items"][3]["assignment"], "defect:GT-t1")
+        self.assertEqual(by_id["att-003"]["items"][3]["fix_sufficiency"], "absent")
+        self.assertEqual(by_id["att-002"]["items"][1]["fix_sufficiency"], "sufficient")
         self.assertTrue(by_id["att-003"]["items"][3]["notes"].startswith("NC-1 ruled duplicate: NC-1: "))
 
     def test_rulings_alone_revise_and_a_revision_of_a_revision_keeps_ruled_items(self):
