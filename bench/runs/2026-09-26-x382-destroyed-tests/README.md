@@ -9,7 +9,7 @@ the same day, against the issue's $10.62 review-only estimate.
 
 **Frozen 2026-09-26.** `manifest.json` carries `frozen_at`; `freeze_commit` names the commit that
 introduced it. After the first dispatch, the manifest changes only by an appended deviation. That
-commit was never pushed. The branch carries a rebased copy, `acc2bb0`, committed after the runs,
+commit was never pushed. The branch carries a rebased copy, `ec207ff`, committed after the runs,
 with the same manifest blob, as the manifest's deviations record.
 
 ## Pins
@@ -49,6 +49,8 @@ failure.** Every measured threshold holds, and the recall, false-finding, action
 hold over valid reviews. Validity among (l)'s recoveries fell from frozen A's 2/2 to 3/4, because
 att-013 recovered GT-l1 but was harness-invalid. The rule does not say whether a harness failure
 counts against validity. If it does, the disposition is reject. That reading is the maintainer's.
+
+**Decision (2026-09-26):** the maintainer kept the bullet and merged it with #383 in #396.
 
 (m) finished with 2 of its 3 planned valid reviews. Its third cell was harness-invalid twice: the
 first attempt, att-014, and the replacement, att-017, both wrote the review's private directory
