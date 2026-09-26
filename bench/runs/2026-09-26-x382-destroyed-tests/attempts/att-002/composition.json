@@ -1,0 +1,87 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix input/output inference for procedures that combine .input() with .use() middleware by making Overwrite replace non-object types instead of key-mapping them (PR title; commit 7dc04a7e).",
+  "issue_fit": "Unavailable \u2014 no originating issue; the PR body is an unfilled template, so intent comes from the PR title and commit messages. Both stated outcomes are met.",
+  "coverage": "Both changed files reviewed against the complete merge-base diff. Reviewer-executed tsc (packages/tests, head): clean. The added test's type assertions fail at the merge-base (scratch copy of base sources in the work directory: TS2554 at lines 36-37) and pass with the head Overwrite. Scratch type probes of Overwrite on string, object, union, unknown, any and never inputs. Runtime vitest not run (unavailable by policy). No verifier dispatched: no must-fix or risk-area candidate survived."
+ },
+ "findings": [
+  {
+   "id": "server-utils/overwrite-dead-tail-branch",
+   "title": "Remove the unreachable TType fallback and fix the never comment",
+   "priority": "P3",
+   "action": "consider",
+   "kind": "maintainability",
+   "trigger": "Overwrite<TType, TWith> is evaluated with TWith = never, e.g. Overwrite<{a:1}, never> or Overwrite<string, never>.",
+   "impact": "TWith is a naked type parameter, so the conditional distributes and never yields never; the `: TType` arm at utils.ts:29 can never be selected. The doc comment 'unless TWith is never' suggests TType is kept, but a tsc probe shows Overwrite<{a:1}, never> is never, so readers are misled about the contract.",
+   "change": "In `packages/server/src/core/internals/utils.ts`, drop the `TWith extends any ? TWith : TType` wrapper in the non-object arm (use `TWith`) and reword the doc comment to say a never TWith yields never.",
+   "anchor": {
+    "type": "line",
+    "path": "packages/server/src/core/internals/utils.ts",
+    "start_line": 25,
+    "end_line": 30,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "Overwrite now returns TWith unchanged when it is unknown or any (Overwrite<{a:1}, unknown> is unknown, was {a:1}), a behavior change from the merge-base that existing callers and the full packages/tests tsc do not exercise.",
+   "evidence": "scratch type probe in the work directory; `packages/server/src/core/internals/utils.ts:11-30`."
+  },
+  {
+   "fact": "The new test file is named issue-5020 although the PR is #5017 and the review thread cites issue-5017-inference-middleware.test.ts, and the fixture voidWithMiddleware is never asserted.",
+   "evidence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:14-19`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "local clone (no remote)",
+  "requirements": [
+   {
+    "source": "pr-title/\"inference fix for inputs with middleware\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "issue-5020 test assertions fail at merge-base (TS2554, lines 36-37) and tsc is clean at head"
+   },
+   {
+    "source": "commit-7dc04a7e/\"Overwrite<string, number> results in 'number'\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "scratch probe: Overwrite<string,string>=string, Overwrite<string,number>=number, object+object merges key-wise"
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

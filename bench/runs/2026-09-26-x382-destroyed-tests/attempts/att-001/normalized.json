@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 58,
+      "line_end": 58,
+      "claim": "Keep the stackless original error in the stack-fallback test. Change the guard in `GraphQLError.js:195` from `if (originalError && originalError.stack)` to `if (originalError)`. The merge-base test fails with `expected undefined to be a string`; the head test still passes.",
+      "consequence": "`creates new stack if original error has no stack` now passes `new Error('original')`, which has a stack, so it takes the same branch as the previous test. Nothing tests the `Error.captureStackTrace` fallback any more, and a GraphQLError wrapping a stackless error could end up with `stack === undefined` unnoticed.",
+      "proposed_fix": "In `src/error/__tests__/GraphQLError-test.js`, build the stackless original explicitly: `const original: any = new Error('original'); original.stack = undefined;`, keeping the other assertions. In a scratch copy this passes on the real code and fails on the mutant.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 58,
+      "line_end": 58,
+      "claim": "Keep the no-stack test exercising a stackless original error. `original` is now `new Error('original')`, which always has a `stack`, so `new GraphQLError('msg', null, null, null, null, original)` takes the `originalError.stack` branch, the same one `uses the stack of an original error` already covers.",
+      "consequence": "The test named `creates new stack if original error has no stack` no longer tests that. In a scratch copy at the head, changing the guard `if (originalError && originalError.stack)` to `if (originalError)` leaves all 13 tests passing; the base version of the test fails on the same change. The author accepts the lost coverage in the PR body, so this is advisory, but the name now misdescribes the test.",
+      "proposed_fix": "Keep a stackless original and satisfy Flow with a cast, as `locatedError-test.js` does with `: any`, for example `const original: any = { message: 'original' };`. Otherwise rename or remove the test so its name matches what it checks.",
+      "native_priority": "P3",
+      "native_action": "consider",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "The author's thread asking why `nodes` accepts `undefined` but not `null` is resolved by the head: the constructor type now reads `| void | null`.",
+      "consequence": "`src/error/GraphQLError.js:25`; tests such as `new GraphQLError('msg', null, source, [6])` rely on it.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

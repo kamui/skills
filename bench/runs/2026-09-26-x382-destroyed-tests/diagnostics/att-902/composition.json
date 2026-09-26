@@ -1,0 +1,135 @@
+{
+ "run": {
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+  "issues": [],
+  "specs": [
+   "pr-text/graphql-js#1582"
+  ],
+  "change_description": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd\nEnable Flow typings on errors tests + Fix typing for Error constructor\n\n",
+  "coverage": "incomplete"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Turn Flow on for the error tests and jsutils inspect test, and let the `GraphQLError` constructor declaration accept `null` nodes (spec: PR text for graphql-js#1582).",
+  "issue_fit": "Issue alignment unavailable (no originating issue); judged against the supplied PR text and the commit message. Typing goals met by the diff; the test rewrite in the PR body drops coverage of one case.",
+  "coverage": "All 5 changed files read in full from the merge-base diff. `GraphQLError-test.js` run once at head: 13 passing. Mutation check in a scratch copy (fallback stack branches removed): base test file fails the no-stack test, head file passes it. `flow check` and lint were not run (outside the run allowance).",
+  "ambiguities": [],
+  "coverage_gaps": [
+   "`flow check` was not run (not within the execution allowance), so whether the newly `@flow strict` test files type-check is unverified; a Flow run at head could surface type errors in any of the four test files."
+  ]
+ },
+ "findings": [
+  {
+   "id": "error/no-stack-test-untested",
+   "title": "Keep the no-stack test on an error without a stack",
+   "priority": "P3",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "`creates new stack if original error has no stack` now passes `new Error('original')`, which has a stack, so `GraphQLError` takes the `originalError.stack` branch instead of the no-stack case.",
+   "impact": "The falsy-`originalError.stack` case has no test; for example, changing the condition at `GraphQLError.js:195` to `if (originalError)` would leave the suite green (the test at head duplicates `uses the stack of an original error`).",
+   "change": "In `src/error/__tests__/GraphQLError-test.js`, keep an original without a stack, e.g. `const original: any = { message: 'original' };` (the `: any` pattern the PR uses in `locatedError-test.js`).",
+   "source": "PR body: the change is made only \"so the file type-checks\".",
+   "anchor": {
+    "type": "line",
+    "path": "src/error/__tests__/GraphQLError-test.js",
+    "start_line": 58,
+    "end_line": 58,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The declared constructor now accepts `null` nodes, but the implementation signature `nodes?: $ReadOnlyArray<ASTNode> | ASTNode | void` still omits `null`.",
+   "evidence": "`src/error/GraphQLError.js:26`, `src/error/GraphQLError.js:92`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/diag-swap/clone",
+  "requirements": [
+   {
+    "source": "pr-title/\"Fix typing for Error constructor\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/error/GraphQLError.js:26 adds `| null` to `nodes`; the run-time code already handles null (`nodes ? [nodes] : undefined`). Reviewer comment on nodes/null is addressed by this line."
+   },
+   {
+    "source": "pr-title/\"Enable Flow typings on errors tests\"",
+    "class": "acceptance",
+    "disposition": "not-verifiable",
+    "evidence": "The four test files switch to `@flow strict`; `flow check` was not runnable within the allowance. Mocha at head: 13 passing for GraphQLError-test.js."
+   },
+   {
+    "source": "pr-body/\"so the file type-checks\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "The `new Error('original')` swap serves type-checking but removes the no-stack case from the test named for it (error/no-stack-test-untested)."
+   }
+  ],
+  "files": [
+   {
+    "path": "src/error/GraphQLError.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/error/__tests__/GraphQLError-test.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/error/__tests__/locatedError-test.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/error/__tests__/printError-test.js",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/jsutils/__tests__/inspect-test.js",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "mocha src/error/__tests__/GraphQLError-test.js",
+    "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+    "outcome": "reviewer-executed",
+    "reason": "13 passing at head, clone tree clean"
+   },
+   {
+    "check": "flow check",
+    "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+    "outcome": "unavailable",
+    "reason": "outside the execution allowance (only focused mocha permitted)"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "error/no-stack-test-untested",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/diag-swap/clone-work/rc.ymsJ90/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x382-destroyed-tests/diag-swap/clone-work/rc.ymsJ90/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

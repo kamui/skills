@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "target": "m-grpc-go-7390",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "5a40b59e0c384c5df8da169e4f42962ca2dcf9e28a6df4e1cbbf7423016f912e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 fdefb8294964ca4c0a025c986fc9786617e5f16b5dee1fc53ea7f155cfbebabd; session 3eef04e8-f1a2-40b9-abdf-59ce4f8348be; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (4 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-26T08:59:19Z",
+  "attempts": [
+    {
+      "attempt_id": "att-004",
+      "blind_token": "blind-720129",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The change adds no regression test for the connect()/connect() race; the only evidence is the author's reported 100000-run Test/AuthorityRevive loop.\" The fact is accurate: `git diff --stat main...review-head` shows only clientconn.go changed (6+/7-). But the register's non_defects list rules exactly this out as a defect: \"No new unit test was added for the concurrency fix\" is \"a coverage-hygiene observation\", with correctness established by path-by-path inspection. The item asserts no incorrect behaviour, so it is a true observation below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-009",
+      "blind_token": "blind-9fda24",
+      "items": [],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-014",
+      "blind_token": "blind-f8a7ed",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The PR adds no regression test for the concurrent-connect race; it relies on the existing flaky Test/AuthorityRevive.\" The fact is accurate: `git diff --stat main...review-head` touches only clientconn.go. The register's non_defects list rules this exact claim (\"No new unit test was added for the concurrency fix\") a coverage-hygiene observation, not a material defect. No incorrect behaviour is asserted, so the item is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-017",
+      "blind_token": "blind-0b4d3e",
+      "items": [],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x382-destroyed-tests",
+  "target": "l-bokeh-9232",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "f5b761a87af400f19e1c3493ffe1af6461476c8fad738e341c6de4733314116b"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 e2ae6e56a618b0fcccc172165a5a34a05e31cc1e578e2b63f5f85c1cf2f00b76; session f93cb38d-36c1-4061-8366-f2a889fc4737; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (4 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-26T08:56:17Z",
+  "attempts": [
+    {
+      "attempt_id": "att-003",
+      "blind_token": "blind-c5adf6",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"`_unlocal_date` subtracts the offset from every input, so the numeric UTC-midnight timestamp lands on the previous UTC day: node under TZ=America/Los_Angeles gives Thu Sep 19 2019 at head against Fri Sep 20 2019 at the merge-base. The initial date and the min/max bounds show a day early for UTC- users\". Same mechanism as GT-l1. Fix: \"for a numeric timestamp build new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); use local date parts only for the toDateString() string that _on_select writes\". This is an anchor-aware correction that meets the required outcome in every timezone. Sufficient."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"nothing asserts the initially displayed .bk-input value ... no runner timezone makes them fail on the UTC- regression above\". This matches the register's non_defect ruling that the tests could not catch GT-l1. Register non_defects list 'The added Selenium integration tests are wrong' (they don't cover the defect and couldn't catch it) and 'No JS unit test was added' as coverage gaps, not separate defects. The facts here are accurate: the tests in tests/integration/widgets/test_datepicker.py only assert the label text and the value after a click, and never the initially displayed date. But this is a test-coverage observation below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-008",
+      "blind_token": "blind-6ed86d",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"Python serializes these as UTC-midnight milliseconds, and _unlocal_date now subtracts getTimezoneOffset() before reading the UTC date ... Initial date, min_date and max_date display one day early (Thu Sep 19 instead of Fri Sep 20 in Los Angeles ...). Only local-midnight toDateString() values from _on_select need the offset shift.\" Same mechanism and trigger as GT-l1. Fix: \"do not shift UTC-midnight timestamps; normalise the two encodings ... in one place\", i.e. an anchor-aware correction that leaves _on_select strings shifted. That meets the register's required outcome without bringing back the east-of-UTC bug. Sufficient."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Assert the initial display and vary TZ in the DatePicker tests ... none reads the input's displayed initial date.\" Register non_defects list 'The added Selenium integration tests are wrong' (they don't cover the defect and couldn't catch it) and 'No JS unit test was added' as coverage gaps, not separate defects. The facts here are accurate: the tests in tests/integration/widgets/test_datepicker.py only assert the label text and the value after a click, and never the initially displayed date. But this is a test-coverage observation below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-013",
+      "blind_token": "blind-73aa04",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"The input, highlighted day, and min/max bounds show Sep 19 instead of Sep 20 on first render ... (node: TZ=America/Los_Angeles base Fri Sep 20, head Thu Sep 19; same in America/Sao_Paulo)\". This matches GT-l1's mechanism and manifestation; Sao_Paulo is UTC-3, so it is also west of UTC. Fix: \"read a numeric timestamp by its UTC calendar components ... and a string from onSelect's toDateString() by its local components, rather than applying one getTimezoneOffset() shift to both\". That is anchor-aware and restores the correct day in every zone for both input forms. Sufficient."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"test_js_on_change_executes ... passes at the merge-base there, so it cannot catch #9129; no test asserts the initially rendered date\". The claim holds: under UTC or UTC-, a locally picked Sep 16 midnight has UTC date Sep 16, so the base code also passes. Register non_defects list 'The added Selenium integration tests are wrong' (they don't cover the defect and couldn't catch it) and 'No JS unit test was added' as coverage gaps, not separate defects. The facts here are accurate: the tests in tests/integration/widgets/test_datepicker.py only assert the label text and the value after a click, and never the initially displayed date. But this is a test-coverage observation below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-016",
+      "blind_token": "blind-5e9b54",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"`_unlocal_date` now subtracts `getTimezoneOffset()*60000` from every input, which moves UTC midnight into the previous UTC day in UTC- zones ... The initial value and bounds render a day early for all UTC- users\". This is the same mechanism as GT-l1: Python sends UTC-midnight ms through convert_datetime_type, and the unconditional offset subtraction (date_picker.ts:82-83) shifts value/min_date/max_date back a day west of UTC. Fix: \"for a numeric epoch-ms value build the local Date from getUTCFullYear/getUTCMonth/getUTCDate, and apply the offset conversion only to toDateString() strings\". That makes the correction anchor-aware, which is one of the register's accepted required outcomes, and it keeps the east-of-UTC fix for picked dates. Sufficient."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Add a test that fails without the timezone fix. The new tests run in the runner's single timezone and never assert the initially displayed date\". Register non_defects list 'The added Selenium integration tests are wrong' (they don't cover the defect and couldn't catch it) and 'No JS unit test was added' as coverage gaps, not separate defects. The facts here are accurate: the tests in tests/integration/widgets/test_datepicker.py only assert the label text and the value after a click, and never the initially displayed date. But this is a test-coverage observation below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    }
+  ]
+}

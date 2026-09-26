@@ -1,0 +1,94 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "trpc-5017-packet"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Approved",
+  "intent": "Fix inferred input/output types for procedures that combine an input parser with middleware (`.input(z.string()).use(...)`), by making `Overwrite` replace key-wise only when both sides are objects and otherwise let a non-never `TWith` replace `TType`. Source: the supplied packet text and commit-7dc04a7e; the PR body is an unfilled template and no issue is linked, so issue alignment is unavailable.",
+  "issue_fit": "Met: the intent reconstructed from the commit message and review thread is implemented, and the added regression test fails on the base and passes at head.",
+  "coverage": "Complete merge-base diff (2 files) reviewed; every `Overwrite` consumer in `packages/server/src` inspected. Reviewer-executed `tsc --noEmit -p packages/tests/tsconfig.json` at head: no diagnostics. Scratch tsc of the new test against base server sources: TS2554 at lines 36 and 37, so the test discriminates; the same scratch config against head sources is clean. A scratch probe compared old and new `Overwrite` on any, unknown, undefined-union, never and void. Runtime vitest was not run (unavailable by policy). No verification batch was required: no must-fix or risk-area candidate survived."
+ },
+ "findings": [],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The `: TType` arm of `TWith extends any ? TWith : TType` in the non-object branch of `Overwrite` is unreachable, since `X extends any` is true for every non-never `TWith` and distributes to never otherwise.",
+   "evidence": "`packages/server/src/core/internals/utils.ts:24-30`."
+  },
+  {
+   "fact": "The regression test declares `voidWithMiddleware` on the router but makes no assertion about its input or output types, so that case only guards against compile errors.",
+   "evidence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:13-17` versus assertions at lines 27-38."
+  },
+  {
+   "fact": "Some non-object `TWith` cases now replace rather than merge: `Overwrite<{a:1}, {b:2}|undefined>` is `{a:1;b:2}|undefined` (was `{a:1}|{a:1;b:2}`) and `Overwrite<{a:1}, unknown>` is `unknown` (was `{a:1}`); the whole `packages/tests` project still type-checks.",
+   "evidence": "Scratch probe in the work directory; consumers at `packages/server/src/core/internals/procedureBuilder.ts:38-44`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "trpc/trpc",
+  "requirements": [
+   {
+    "source": "commit-7dc04a7e/\"only overwrite keys of objects\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "utils.ts:11-30 tests `TType extends object` and `TWith extends object` before the key-wise mapped type; probe: Overwrite<string,number> resolves to number."
+   },
+   {
+    "source": "commit-7dc04a7e/\"a non-never TWith type will entirely replace TType\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "utils.ts:19-30; probe: {a:1} with void gives void, {a:1} with never gives never, unknown with {a:1} gives {a:1}."
+   },
+   {
+    "source": "spec-trpc-5017-packet/pr-title",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "Regression test assertions on strWithMiddleware fail at base (TS2554 at lines 36-37) and pass at head."
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "tsc --noEmit -p packages/tests/tsconfig.json",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "run in the clone at the pinned head, no diagnostics"
+   },
+   {
+    "check": "scratch tsc of the new test against base and head server sources",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "base sources report TS2554 at lines 36 and 37, head sources report none"
+   }
+  ],
+  "verification": {
+   "tasks": [],
+   "batches": [],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}
