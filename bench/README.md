@@ -77,7 +77,8 @@ backend), `p-hono-5067` (released-compatibility break), `q-soba-195` (clean refa
 mechanical diff) and `r-base-ui-5460` (React component logic). Each was chosen by a vetting hunt
 and ruled on by an independent adjudicator that saw no reviewer output
 ([narrative](../docs/research/builtin-review-benchmark-2026-09-24/README.md#5-targets)). Their
-directories hold the same files, except that the register is sealed:
+directories hold the same files, except that the register was sealed until the first run was
+scored (2026-09-25), when its plaintext joined the ciphertext:
 
 - `register.v1.json.enc` is the adjudicator's register encrypted by `seal.py`, and `target.json`'s
   `sealed` block records the plaintext's SHA-256, so the register opened at scoring is provably the

@@ -1,0 +1,373 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-24-builtin-baseline",
+  "target": "l-bokeh-9232",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "f5b761a87af400f19e1c3493ffe1af6461476c8fad738e341c6de4733314116b"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 05feb6b2e112dbe490831379f819d0f83acfd053b9f7874a02c408fb35671cbf; session d710b325-be30-4a87-a2aa-eeb69fa3a910; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (8 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-25T20:44:00Z",
+  "attempts": [
+    {
+      "attempt_id": "att-020",
+      "blind_token": "blind-002758",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'Do not shift UTC-midnight dates back a day in UTC- zones ... value, min_date or max_date is set from Python ... serializes to UTC-midnight milliseconds'; 'Node under TZ=America/Los_Angeles gives Thu Sep 19 2019 for 2019-09-20'. Same mechanism as GT-l1 (unconditional getTimezoneOffset subtraction at date_picker.ts:82-83 wrong for UTC-midnight anchor), covers value/min/max. Fix 'apply the offset only to a local-midnight input such as the toDateString() string, and read UTC-midnight numeric inputs by their UTC day as before; or keep one canonical form in the model' is anchor-aware and keeps the east-of-UTC fix: sufficient. Reproduced in clone-work/ul.js."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'Add a test that fixes the timezone and checks the initial display ... never assert the initially displayed date'. Register non_defects: missing timezone-varied / initial-value test coverage is 'a real coverage gap ... but not a separately demonstrated defect', and the Selenium tests are internally correct. Accurate but below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: '_unlocal_date now mutates its Date argument via setTime; current callers pass fresh Date objects, so nothing is affected.' Register non_defects: '_unlocal_date mutates its date argument in place' is style only; every call site (date_picker.ts:68,70,71) passes a fresh new Date(...). The item itself concedes nothing breaks today."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-021",
+      "blind_token": "blind-102e0c",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'subtracts the local UTC offset from every input, but value/min_date/max_date from Python arrive as UTC-midnight epoch timestamps ... moves them to the previous day in UTC- timezones'; 'The function needs to tell the two cases apart, or _on_select should store a UTC-based value so render() always receives one format.' Exactly GT-l1's mechanism and both remedies the register accepts. Minor slip: LA offset in September is 420 not 480 (checked with node), but the conclusion (Sep 19) holds. Fix sufficient."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'The offset is taken at the input instant and then applied to a shifted instant. At DST boundaries ... the result can land on the wrong calendar day.' Register non_defects: DST-edge claims are 'plausible in theory, but no report, test or reproduction shows a wrong output; treat ... as part of GT-l1's mechanism, not a second item.' For local-midnight inputs a single offset read at that instant is exactly correct (node: 'Mon Sep 16 2019' correct in all zones), so no separate demonstrated defect; not graded as a second recovery."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'mutates its argument with date.setTime(...) ... All current callers pass a fresh new Date(...), so nothing breaks today.' Register non_defects: '_unlocal_date mutates its date argument in place' is style only; every call site (date_picker.ts:68,70,71) passes a fresh new Date(...). The item itself concedes nothing breaks today."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'The tests never assert that the displayed value matches the initial value ... run in one timezone only.' Register non_defects: missing timezone-varied / initial-value test coverage is 'a real coverage gap ... but not a separately demonstrated defect', and the Selenium tests are internally correct. Accurate but below the finding threshold."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'The click selector button[data-pika-day=\"16\"] can match days from adjacent months ... max_date=datetime.utcnow() ... fragile.' A conditional test-robustness remark ('If the initial value were rendered ... in an adjacent month'); register holds the tests internally correct and no concrete failure is shown. Hygiene, below threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-022",
+      "blind_token": "blind-ceb822",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-ceb822:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'Subtracting getTimezoneOffset() before toISOString() breaks every UTC-negative timezone when the value arrives as a UTC-midnight timestamp or ISO string ... shows the day before on first render'; LA 'old code shows Fri Sep 20 2019 and the new code shows Thu Sep 19 2019'. GT-l1, verified in node (also ISO string). No change proposed in this item: absent; the fix is in item 4."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-ceb822:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'min_date and max_date go through the same _unlocal_date, so in UTC- zones both limits move one day earlier'. The min/max manifestation of GT-l1; same claim as item 1; no fix proposed: absent."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'No test checks the date shown in the input on first render, and all tests run in the CI machine's single timezone.' Register non_defects: missing timezone-varied / initial-value test coverage is 'a real coverage gap ... but not a separately demonstrated defect', and the Selenium tests are internally correct. Accurate but below the finding threshold."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-ceb822:g1",
+          "fix_sufficiency": "sufficient",
+          "priority_error": true,
+          "notes": "Quotes: 'model.value holds two formats: a UTC-midnight number or ISO string from Python, and a local-midnight toDateString() string from _on_select. No single offset shift can be correct for both'; 'have _on_select write a timezone-free YYYY-MM-DD (or a UTC-midnight timestamp) and have _unlocal_date always read UTC fields'. GT-l1 root mechanism with a canonical-form fix matching the register's accepted remedy: sufficient."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: '_unlocal_date changes its argument in place with date.setTime() ... Current callers pass a fresh new Date(...), so nothing breaks today.' Register non_defects: '_unlocal_date mutates its date argument in place' is style only; every call site (date_picker.ts:68,70,71) passes a fresh new Date(...). The item itself concedes nothing breaks today."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The PR deletes the comment explaining that the input is a UTC timestamp ... The new comment says the result is agnostic to their local systems's timezone, which is not true.' Register non_defects: the comment replacement is documentation style, not material. The comment text is accurately quoted (date_picker.ts:79-81)."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The tests use max_date=datetime.utcnow() ... pass datetime objects to a Date property that is documented as Accept Date (but not DateTime) values.' True (bokeh/core/property/datetime.py:52 docstring; validate accepts datetime.date subclasses), but a test-determinism/hygiene remark with a hypothetical failure; below threshold."
+        },
+        {
+          "item_id": "item-7",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The new file's header is copied from an old one (Copyright (c) 2012 - 2017, Anaconda, Inc.)'. Verified: tests/integration/widgets/test_datepicker.py:2 vs bokeh/core/property/datetime.py:2 '2012 - 2019, Anaconda, Inc., and Bokeh Contributors'. Accurate, cosmetic."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-023",
+      "blind_token": "blind-74fa0a",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'For users west of UTC, this adjustment shifts Python-provided dates back one day. Python serializes DatePicker dates as UTC-midnight timestamps ... datetime(2019, 9, 20) now displays September 19 in America/Los_Angeles ... also shifts min_date and max_date'; 'Distinguish UTC server values from the local date strings produced by _on_select rather than applying the offset to both.' GT-l1 mechanism and an anchor-aware fix: sufficient."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "patch is incorrect",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-059",
+      "blind_token": "blind-f0ed2a",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-f0ed2a:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'The unconditional offset shift fixes UTC+ users but shifts UTC- users' initial Python-supplied dates back one day'; 'The picker's initial display, and min_date/max_date, are one day early for every UTC- user.' GT-l1 mechanism and manifestations; states offset 480 for LA (actually 420 in September) but the result Sep 19 is right. No change proposed in this item: absent; the fix appears in item 2."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-f0ed2a:g1",
+          "fix_sufficiency": "sufficient",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'model.value holds two different representations, and the shift only suits one of them'; 'A more robust fix would parse the value explicitly (UTC parts for timestamps and ISO strings, local parts for toDateString strings) instead of applying an offset.' Same GT-l1 claim as item 1 at root-cause level; anchor-aware parsing restores the right day in every timezone for both arrival paths: sufficient."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'The tests do not cover the bug and cannot detect the timezone regression.' Register non_defects: missing timezone-varied / initial-value test coverage is 'a real coverage gap ... but not a separately demonstrated defect', and the Selenium tests are internally correct. Accurate but below the finding threshold."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: 'Tests depend on the current date and clock. max_date is datetime.utcnow() ... boundary handling could become flaky.' Speculative test-robustness remark; the item itself says 'this is stable today'. Below threshold."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quotes: '_unlocal_date mutates its argument with date.setTime ... The current callers pass fresh Date objects, so nothing breaks today'; comment 'hides that the correction is only valid for UTC-midnight inputs in UTC+ zones'. Mutation is a register non_defect; comment wording is documentation style (register non_defect). Below threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-060",
+      "blind_token": "blind-a6b3cf",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-a6b3cf:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'Shifting every date by the local UTC offset breaks the dates Python sends (UTC-midnight milliseconds): in timezones west of UTC the picker now shows the day before'; 'shows Thu Sep 19 2019 where the old code showed Fri Sep 20 2019'. GT-l1 mechanism, verified in node (offset 420 correct). No change proposed in this item ('Fix: —'), so absent; the remedy is in item 4 of the same group."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-a6b3cf:g1",
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quotes: 'min_date and max_date go through the same shifted _unlocal_date, so west of UTC both limits move back a day'. The min/max manifestation of GT-l1 (date_picker.ts:70-71). Same underlying claim as item 1; no change proposed: absent."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "unresolved",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "NC-1: Quotes: 'East of UTC, a non-midnight Python datetime is pushed forward by the positive offset and can roll over to the next day ... max_date=datetime(2019,9,20,23,30) (or datetime.utcnow() ...) ... maxDate becomes Sat Sep 21 2019 where the old code gave Sep 20.' Checked: Python Date property validate accepts datetime (bokeh/core/property/datetime.py:74) and transform does not truncate it; convert_datetime_type (bokeh/util/serialization.py:178-180) keeps time of day; the PR's own tests use max_date=datetime.utcnow(). Node re-implementation under Europe/Paris and Asia/Tokyo gives Fri Sep 20 (old) -> Sat Sep 21 (new) for Date.UTC(2019,8,20,23,30). Not in the register (GT-l1's manifestations are west-of-UTC only) and not refuted; routed as a new candidate."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": "blind-a6b3cf:g1",
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: '_unlocal_date guesses one conversion for values that come in two formats (UTC-midnight ms from Python, local-midnight strings from _on_select's toDateString())'; 'make _on_select store a UTC-anchored value (a YYYY-MM-DD string, or Date.UTC of the picked y/m/d), then build the Pikaday date from getUTCFullYear/getUTCMonth/getUTCDate.' Names GT-l1's root mechanism and a canonical-UTC/ISO remedy equivalent to what the register accepts (#9509); preserves the east-of-UTC fix: sufficient."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'The new tests never check the date shown for a Python-set value, and they run only in the CI machine's timezone.' Register non_defects: missing timezone-varied / initial-value test coverage is 'a real coverage gap ... but not a separately demonstrated defect', and the Selenium tests are internally correct. Accurate but below the finding threshold."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: '_unlocal_date changes its argument in place with date.setTime() ... Today every caller passes a fresh new Date(...), so nothing breaks yet.' Register non_defects: '_unlocal_date mutates its date argument in place' is style only; every call site (date_picker.ts:68,70,71) passes a fresh new Date(...). The item itself concedes nothing breaks today."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-061",
+      "blind_token": "blind-3c82d4",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'For browsers west of UTC, this adjustment shifts Python-provided dates back one day. Python date values are serialized as UTC-midnight timestamps by convert_datetime_type ... displays September 19 in America/Los_Angeles ... also shifts min_date and max_date'; 'Distinguish UTC timestamps from the local date strings produced by _on_select rather than applying the offset to both.' Matches GT-l1 mechanism, all three properties; the anchor-aware remedy restores the required outcome while keeping the east-of-UTC fix: sufficient."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "patch is incorrect",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-062",
+      "blind_token": "blind-78126e",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-l1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quotes: 'Do not shift UTC-midnight timestamps by the local offset ... render() calls _unlocal_date(new Date(<ms>))'; 'initial displayed date and the min/max bounds are one day early (Sep 19 for a model value of Sep 20)'; Fix 'apply the offset correction only to local-midnight string values (the toDateString() values from _on_select) and keep the UTC-component path for numeric UTC-midnight inputs.' GT-l1 exactly; anchor-aware fix sufficient. Node reproduction matches clone-work/ul.js."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quotes: 'Assert the initially displayed date in the DatePicker tests ... the CI timezone is not varied.' Register non_defects: missing timezone-varied / initial-value test coverage is 'a real coverage gap ... but not a separately demonstrated defect', and the Selenium tests are internally correct. Accurate but below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    }
+  ]
+}
