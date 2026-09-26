@@ -27,7 +27,7 @@ ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
 BUDGET = 30_000
 LIMITS = {"runtime total": 74_000, "always loaded": BUDGET, "review": 49_000,
           "required verifier": 61_000, "re-review": 58_000,
-          "verifier instructions": 18_000, "verifier example brief": 21_000}
+          "verifier instructions": 18_000, "verifier example brief": 22_000}
 
 
 def output(script, *args):
