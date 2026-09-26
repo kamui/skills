@@ -9,8 +9,8 @@ the same day, against the issue's $10.62 review-only estimate.
 
 **Frozen 2026-09-26.** `manifest.json` carries `frozen_at`; `freeze_commit` names the commit that
 introduced it. After the first dispatch, the manifest changes only by an appended deviation. That
-commit was never pushed; the branch carries a rebased copy, `e6953b6`, committed after the runs,
-as the manifest's first deviation records.
+commit was never pushed. The branch carries a rebased copy, `acc2bb0`, committed after the runs,
+with the same manifest blob, as the manifest's deviations record.
 
 ## Pins
 
