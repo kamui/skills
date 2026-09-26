@@ -554,3 +554,107 @@ What these numbers rest on, and do not show:
 - **This is a benchmark, not an adoption screen.** It preregistered questions, not thresholds, and
   nothing here authorizes a change to any skill.
 
+## 13. Preregistered follow-up: isolated A changes (2026-09-25)
+
+This section is the protocol for [#389](https://github.com/kamui/skills/issues/389), before any
+follow-up dispatch. It does not change the frozen run above, authorize a skill edit, or spend money.
+[#380](https://github.com/kamui/skills/issues/380) owns the eventual adoption decision. The six
+candidate changes are the exact substitutions in [#381](https://github.com/kamui/skills/issues/381)–[#385](https://github.com/kamui/skills/issues/385)
+and [#387](https://github.com/kamui/skills/issues/387), each tested alone before any combination.
+#382 first needs its stated policy decision; #387 first needs #386's measured attribution. A
+deferred child has no run and no pass. A failed child is reverted and cannot enter the combination.
+
+### Frozen comparator and run identity
+
+The comparator is arm A's **original two valid replicates per target**, plus its one invalid
+attempt, from [`manifest.json`](../../../bench/runs/2026-09-24-builtin-baseline/manifest.json)
+at freeze commit `339356370942429075935b2c2507dbd88d3ea984`. Its resolved skill tree is
+`c3c53da5381dace16876b0f5b7abe4bccc6bc58b`; arm file SHA-256 is
+`b1e566c1cf1e55977b9d61ed39e2db4eeab18392ced4fa9506c93f14740b8a44`.
+Use [#388's corrected `results.v3.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v3.json):
+mapping v3 for (l), v2 for (i) and (j), v1 elsewhere, and the final versioned registers (v2
+for (i), (j) and (n), v1 elsewhere). In this historical A data, completed recall is 0.708,
+attempt-level recall is 0.667, false findings are 0/20 valid reviews, buggy approvals 8/16,
+and total billed A cost is $15.99 including the invalid attempt. Keep these denominator labels. The
+old five action errors and `by_action: n/a` for GT-i2 observations are **not** an exhaustive
+actionability measure; count recovered observations separately.
+
+Each future experiment gets its own `bench/schema/run-manifest.schema.json`-conforming manifest,
+frozen before dispatch, with the baseline tree above as the control identity and an isolated
+candidate tree and patch hash for that child only. The child issue's exact replacement text is
+the proposed patch, not a license to revise it after results. Freeze the tree/patch hashes,
+`review-code-sonnet-high.json` identity and SHA-256, `mode: one-shot`, `profile: publishable`,
+`return_format: artifacts`, Claude Code version and observed prompt hashes, Sonnet 5 at `high`
+for both primary and verifiers, method/rubric/metric revisions, rates, and the sealed cell order.
+Use the original manifest's target IDs, register versions, packet and diff hashes, provisioning
+hashes, merge-base/head pins, offline clone layout, tool list, five-minute command limit, and
+per-target execution allowances without expansion. The reviewer receives the original factual
+packet and diff only: no discovery question, child issue, success threshold, register, mapping,
+prior review, or ground truth. Audit tree, range, model, effort, prompt, tools, path reads and
+network on every attempt; a changed pin invalidates that attempt. File invalid attempts and all
+charges, and replace only within the fixed cap. Freeze each manifest's `planned_cells` as three
+candidate A replicates for every named target, with replicate 1 across targets before replicate 2
+and then 3. No baseline rerun is part of these six child experiments. A fresh frozen-A
+confirmation, if later justified, needs its own preregistration and bill and never replaces the
+original two-replicate evidence.
+
+### Isolated decisions
+
+The target column uses (i)–(r) from §5. Every row includes both clean controls (m) and (q), has
+exactly three valid planned A reviews per target, and is judged against the corrected historical
+A data above. The dollar cap covers reviewer attempts, replacements, grading and adjudication;
+the attempt cap allows at most two invalid replacements. These are hard limits, not forecasts.
+
+| Child | Targets; planned cells; maximum attempts; total cap | Pass threshold beyond the common guardrails |
+| --- | --- | --- |
+| [#381](https://github.com/kamui/skills/issues/381) action | i, n, m, q; 12; 14; **$35** | GT-n1 recovered and `must-fix` in 3/3, with 0/3 approvals. Each recovered GT-i2 and GT-i3 is `must-fix` with a remedy; recover each at least once. Requests recall at least 2/3. |
+| [#382](https://github.com/kamui/skills/issues/382) destroyed tests, only if coverage-inclusive policy chosen | k, j, l, m, q; 15; 17; **$40** | GT-k1 recovered with sufficient remedy and `must-fix` in 3/3; GraphQL approvals 0/3. Do not promote the adjudicated non-material tRPC assertion or Bokeh timezone coverage. |
+| [#383](https://github.com/kamui/skills/issues/383) shared inputs | j, i, p, m, q; 15; 17; **$45** | GT-j1 and GT-j2 each recovered in at least 2/3; Requests recall at least 2/3 with GT-i1 in 3/3; Hono GT-p1 in 3/3. Input-matrix coverage is diagnostic, not recovery. |
+| [#384](https://github.com/kamui/skills/issues/384) lifecycle | r, m, q; 9; 11; **$30** | GT-r1 and GT-r2 each recovered in at least 2/3; each target's median elapsed-to-payload at most 1.25× its frozen A median. Do not count the ruled non-material control-mode, cancellation, render or remount claims. |
+| [#385](https://github.com/kamui/skills/issues/385) remedy completeness | i, p, l, m, q; 15; 17; **$45** | GT-i1 sufficient in 3/3; GT-i3 recovered in at least 2/3 and sufficient on every recovery; Requests recall at least 2/3; Hono and Bokeh recovered in 3/3 with sufficient fixes in at least 2/3 and 3/3 respectively. |
+| [#387](https://github.com/kamui/skills/issues/387) measured reading cut, only if #386 supports it | all ten; 30; 32; **$75** | Median per-target cost ratio at most 0.80 and elapsed-to-payload ratio at most 0.90 against frozen A medians, with the measured phase's cost lower. Completed recall at least 0.708; invalid-attempt rate no higher than historical A's 1/21. |
+
+For every child, require no loss of historical A per-target recall on its exercised buggy
+targets: (i) at least 2/3, (k), (l), (n) and (p) 3/3, and (o) at least 2/3 when exercised;
+(j) and (r) have historical zero recall but their row's new defect thresholds apply. Require
+zero false findings on (m) and (q), no new false finding or non-material blocker on any target,
+and no worse correct-action rate, sufficient-remedy rate or validity among comparable recovered
+defects. A recovered observation, especially GT-i2, cannot silently count as an actionable
+finding. Grade uniformly rendered items under the corrected scoring rules with arm, tree,
+attempt, cost, native action and native verdict hidden; an independent adjudicator settles
+plausible new defects before opening arm identity. Report per-defect recovery, `must-fix` on
+recoveries, observations, sufficient/partial/absent fixes, raw and unique false findings,
+non-material blockers, valid and invalid attempts, total billed cost including retries and
+grading, and elapsed-to-payload with its actual sample count. Keep review-level approvals,
+zero recovery and false clean on valid buggy reviews separate from all-attempt counts.
+
+At the fixed stopping point, **pass** only if every row threshold and common guardrail holds;
+**reject** for a measured failure; **inconclusive** if the cap or missing valid/gradable cells
+prevents that decision. Before each dispatch, require room for that attempt's $5 arm limit and
+the remaining grading reserve ($5 per child, $10 for #387). Stop on a guardrail failure, when
+the remaining cap cannot fund the next attempt, or when the fixed cells and allowed replacements
+are exhausted. A miss is never replaced. Do not extend a run or change a threshold after seeing
+results. Keep passing patches isolated until the combined screen.
+
+### Combined and unseen adoption gate
+
+After child dispositions, [#380](https://github.com/kamui/skills/issues/380) must preregister
+the exact combination of passing patches, its new tree, all pins and a sealed order **before**
+dispatch. Run candidate A on all ten original targets, three valid replicates each. Select at
+least two previously unseen targets, one buggy and one clean, without consulting variant outputs;
+pin their packets, diff hashes, independent ground truth and execution allowances before any
+review is revealed. On each unseen target run both the frozen A tree and candidate A, three
+valid replicates each, in sealed balanced order. Thus the minimum adoption screen has 36
+candidate and 6 fresh frozen-A planned reviews; allow at most four invalid replacements and cap
+all reviewer, retry, target-preparation, grading and adjudication charges at **$125**, with a
+$15 closeout reserve. This is a separate future bill, not part of #389's $0 spend.
+
+Adopt only if every original target's recall meets or exceeds its corrected historical A
+per-target rate, each included child retains its focused gain, and the unseen buggy target's
+candidate recall is at least its fresh frozen-A recall. False findings remain zero on (m), (q)
+and the unseen clean target, with no new false findings elsewhere. Correct action, fix
+sufficiency and validity must not regress on comparable recoveries. Use the same blind grading,
+attempt accounting and separately labelled observation/action counts. Stop and reject on a
+guardrail failure or missed threshold after the fixed cells; stop inconclusive if the spend cap
+or missing ground truth prevents a verdict. No extension follows observed outcomes. The screen
+is evidence for #380's decision, not automatic adoption.
