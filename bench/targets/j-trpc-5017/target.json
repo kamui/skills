@@ -94,5 +94,5 @@
     "register_published": "2026-09-07T04:52:01Z (commit 588edce in the public kamui/skills repository)",
     "notes": "All four #137 cells traced the Overwrite call sites and acquitted; the miss is in reasoning about unresolved generic parameters (README §3 deviation 8)."
   },
-  "current_register": 1
+  "current_register": 2
 }

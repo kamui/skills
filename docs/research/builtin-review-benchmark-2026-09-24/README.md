@@ -1,11 +1,10 @@
 # Built-in reviewer benchmark — `review-code` against Claude Code's `/code-review` and Codex `review`
 
-**Status: frozen 2026-09-24; grid filed 2026-09-25, all 80 cells valid in 83 attempts; scoring not yet run.** This is the narrative of the first scored
+**Status: frozen 2026-09-24; grid filed 2026-09-25, all 80 cells valid in 83 attempts; scored 2026-09-25 (§12).** This is the narrative of the first scored
 run of the [reviewer benchmark suite](../../../bench/README.md). The run lives at
 [`bench/runs/2026-09-24-builtin-baseline/`](../../../bench/runs/2026-09-24-builtin-baseline/README.md);
 its `manifest.json` carries `frozen_at` and names its freeze commit, and every chargeable step is in
-[`ledger.md`](ledger.md). §10 records how the open items were closed. Scoring, which opens the
-sealed registers, waits for the maintainer's go.
+[`ledger.md`](ledger.md). §10 records how the open items were closed, and §12 gives the results.
 
 The mechanism this file used to describe has moved into `bench/`: the arms are data in
 [`bench/arms/`](../../../bench/arms/), the targets and their sealed registers in
@@ -401,3 +400,97 @@ of each item of the first review:
 | D1 | "shape not language" stated as causation | **accepted**: shape is a sampling rationale |
 | D2 | dropping only C's fresh replicate 2 was a poor fallback | **accepted**: replicate 1 first, then balanced blocks |
 | D3 | omitting the effort argument does not select a factory default | **accepted in substance**: the fresh home removes typed history; the observed default was `low`, so C now pins `high` and the default is recorded, not run |
+
+## 12. Results (2026-09-25)
+
+Scored as §8 settles it: twelve blind grading sessions, three candidate adjudications and three
+one-defect re-grades, all Opus 5.5 at `high` ($18.11 with the plan review; ledger "Scoring").
+[`results.v2.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v2.json) is the
+answer: mapping v2 on (i), (j) and (l), v1 elsewhere, no unresolved item.
+[`results.v1.json`](../../../bench/runs/2026-09-24-builtin-baseline/results.v1.json) pins mapping
+v1 everywhere, leaving unresolved the 11 items that raised the five candidates. The tables below
+are printed by [`answers.py`](answers.py) from results v2, the attempt records and the mappings; a
+ratio is the median over the 20 cells matched to A's by target and replicate, a cell's cost
+counting every attempt it took.
+
+| Arm | Reviews | Recall, completed-only (attempt-level) | False findings raw / unique per review | Approved on buggy | Zero recovery | False clean | Noise per review |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A review-code | 21 | 0.708 (0.667) | 0.00 / 0.00 (0 / 0) | 8/17 | 4/17 | 4/17 | 1.0 |
+| B built-in Sonnet 5 | 22 | 0.792 (0.792) | 0.09 / 0.09 (2 / 2) | 0/16 | 2/16 | 0/16 | 2.6 |
+| C built-in Opus 5.5 | 20 | 0.844 (0.844) | 0.35 / 0.35 (7 / 7) | 0/16 | 2/16 | 0/16 | 6.2 |
+| D codex review | 20 | 0.573 (0.573) | 0.00 / 0.00 (0 / 0) | 3/16 | 5/16 | 3/16 | 0.2 |
+
+Per target: attempt-level recall (`-` on a clean target), then raw false findings and zero-recovery reviews.
+
+| Target | A review-code | B built-in Sonnet 5 | C built-in Opus 5.5 | D codex review |
+| --- | --- | --- | --- | --- |
+| i-requests-6667 | 0.67; ff 0; zr 0 | 0.83; ff 0; zr 0 | 1.00; ff 0; zr 0 | 0.33; ff 0; zr 0 |
+| j-trpc-5017 | 0.00; ff 0; zr 2 | 0.25; ff 0; zr 1 | 0.75; ff 1; zr 0 | 0.25; ff 0; zr 1 |
+| k-graphql-js-1582 | 1.00; ff 0; zr 0 | 1.00; ff 0; zr 0 | 1.00; ff 1; zr 0 | 1.00; ff 0; zr 0 |
+| l-bokeh-9232 | 1.00; ff 0; zr 0 | 1.00; ff 0; zr 0 | 1.00; ff 0; zr 0 | 1.00; ff 0; zr 0 |
+| m-grpc-go-7390 | -; ff 0; zr 0 | -; ff 0; zr 0 | -; ff 2; zr 0 | -; ff 0; zr 0 |
+| n-ripgrep-2957 | 1.00; ff 0; zr 0 | 1.00; ff 1; zr 0 | 1.00; ff 0; zr 0 | 0.00; ff 0; zr 2 |
+| o-astro-16079 | 0.67; ff 0; zr 0 | 1.00; ff 1; zr 0 | 1.00; ff 1; zr 0 | 1.00; ff 0; zr 0 |
+| p-hono-5067 | 1.00; ff 0; zr 0 | 1.00; ff 0; zr 0 | 1.00; ff 2; zr 0 | 1.00; ff 0; zr 0 |
+| q-soba-195 | -; ff 0; zr 0 | -; ff 0; zr 0 | -; ff 0; zr 0 | -; ff 0; zr 0 |
+| r-base-ui-5460 | 0.00; ff 0; zr 2 | 0.25; ff 0; zr 1 | 0.00; ff 0; zr 2 | 0.00; ff 0; zr 2 |
+
+| Arm | Matched cells | Median cost ratio to A | Arm total cost ($) | Median elapsed-to-payload ratio to A | Median elapsed to payload (s) |
+| --- | --- | --- | --- | --- | --- |
+| A review-code | 20 | 1.00 | 15.99 | 1.00 | 134 |
+| B built-in Sonnet 5 | 20 | 0.18 | 3.04 | 0.21 | 28 |
+| C built-in Opus 5.5 | 20 | 0.45 | 7.52 | 0.58 | 85 |
+| D codex review | 20 | 0.35 | 5.92 | 0.23 | 31 |
+
+| Target | Register | Defect | Recovered by |
+| --- | --- | --- | --- |
+| i-requests-6667 | v2 | GT-i1 | A, B, C, D |
+| i-requests-6667 | v2 | GT-i2 | A, B, C |
+| i-requests-6667 | v2 | GT-i3 | A, B, C |
+| j-trpc-5017 | v2 | GT-j1 | B, C, D |
+| j-trpc-5017 | v2 | GT-j2 | C |
+| k-graphql-js-1582 | v1 | GT-k1 | A, B, C, D |
+| l-bokeh-9232 | v1 | GT-l1 | A, B, C, D |
+| n-ripgrep-2957 | v2 | GT-n1 | A, B, C |
+| o-astro-16079 | v1 | GT-o1 | A, B, C, D |
+| p-hono-5067 | v1 | GT-p1 | A, B, C, D |
+| r-base-ui-5460 | v1 | GT-r1 | **none** |
+| r-base-ui-5460 | v1 | GT-r2 | B |
+
+Answers to the preregistered questions, per arm against A:
+
+- **Material recall per completed review.** C 0.84, B 0.79, A 0.71, D 0.57. Attempt-level, with
+  harness-invalid attempts at zero: C 0.84, B 0.79, A 0.67, D 0.57. Attempt-level by cohort: on the
+  regression targets C reaches 0.95 and A 0.73; on the fresh four, B leads with 0.75 and A has
+  0.56.
+- **False findings per review.** A and D none in 21 and 20 reviews; B 2 in 22 (0.09 per review); C
+  7 in 20 (0.35), two of them on the clean control (m). Unique counts equal raw counts: no
+  review repeated a false claim.
+- **Review-level rates on buggy targets.** A approved 8 of its 17 reviews on buggy targets and
+  4 of those recovered nothing (false clean); D approved 3 of 16, all false clean; B and C never
+  approve, because an empty findings array is their only approving form and neither produced one.
+  Zero recovery: D 5, A 4, B 2, C 2. A's approvals follow §8's rule that `Approved` approves
+  whatever the items say: four of A's eight approvals carried a recovered defect at `consider`,
+  and those four recoveries are four of A's five priority errors. The fifth is att-055's GT-i3
+  recovery, not marked `must-fix`, in a `Changes Requested` review.
+- **Matched median cost ratio.** B 0.18, D 0.35, C 0.45 of A's cost; A spent $15.99 on its
+  cells, C $7.52, D $5.92 (list price; D consumed ChatGPT-plan quota), B $3.04.
+- **Elapsed-to-payload ratio.** B 0.21, D 0.23, C 0.58 of A's; median elapsed to payload B 28 s,
+  D 31 s, C 85 s, A 134 s.
+- **Registered defects no arm recovered:** GT-r1 (a controlled value normalized during blur
+  discards the blur validation result). GT-j2 was recovered only by C and GT-r2 only by B.
+
+What these numbers rest on, and do not show:
+
+- **Two replicates per cell.** Each arm's per-target figure rests on two valid reviews, and the
+  fresh cohort is four targets; differences of one review are within noise.
+- **The grader is Opus 5.5, arm C's model** (§8), so a preference for C's reviews is possible and
+  uncontrolled. C also writes the most items per review (8.3; A 1.7, B 3.7, D 0.9), which the
+  blind rendering could not hide.
+- **Registers grew during scoring.** (i) gained GT-i3, raised by A, B and C reviews, and (j)
+  GT-j2, raised by one C review; GT-i3 is confirmed upstream by the later revert, GT-j2 by the
+  adjudicator's reproduction. One item on (l), which the adjudicator ruled a duplicate of GT-l1,
+  did not recover it on the blind re-grade and counts as non-material.
+- **This is a benchmark, not an adoption screen.** It preregistered questions, not thresholds, and
+  nothing here authorizes a change to any skill.
+

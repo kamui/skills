@@ -1,0 +1,70 @@
+# Scorecard: m-grpc-go-7390, mapping v1
+
+Register v1 (5a40b59e0c38), rubric v1, scored at 2026-09-25T20:46:01Z.
+
+Adjudicator: headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 6dad18e8ee04fc8ffd8fe7300c01b49fb6bb51db55e9b9fc8b39f59300134434; session 62b6e582-1269-4d72-baa8-0bf9eb1fb461; read audit clean.
+
+## att-034 (review-code-sonnet-high), blind-3c9113
+
+Verdict 'Approved'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+- item-0: `non-material`, fix n/a, priority error n/a, group none. Quote: "updateAddrs' deferred GracefulClose now runs while the spawned goroutine may still hold ac.mu, but the old transport's onClose only blocks briefly and then returns early because its ctx was cancelled." Accurate: clientconn.go:986 defers GracefulClose while ac.mu is held until the goroutine at :996 unlocks at :1262; http2_client.go:1055 calls t.onClose, which locks ac.mu (clientconn.go:1352) and returns early at :1356 because ac.cancel() at :980 cancelled ctx. The item itself calls the wait brief and asserts no defect; a true observation below the finding threshold. The target is clean (register defects: []).
+
+## att-035 (claude-builtin-sonnet-high), blind-607865
+
+Verdict 'findings'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+- item-0: `non-material`, fix n/a, priority error n/a, group none. Quote: "The PR adds no regression test for the concurrent-connect race it fixes." Register non_defects #3: the missing unit test is a coverage-hygiene observation. Correctness rests on path-by-path inspection and the author's 100,000-iteration validation. True, but non-material.
+
+## att-036 (claude-builtin-opus-high), blind-e4e6ca
+
+Verdict 'findings'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+- item-0: `non-material`, fix n/a, priority error False, group blind-e4e6ca:g1. Quote: "The deferred ac.transport.GracefulClose() therefore runs while ac.mu is held ... It is not a permanent deadlock today, but it depends on nothing in resetTransportAndUnlock's locked prefix ever needing t.mu or the serializer to make progress." The mechanism is accurate (clientconn.go:983-996; http2_client.go:1046-1055; onClose locks ac.mu at clientconn.go:1352). The item itself concedes no deadlock, and the wait is bounded: the locked prefix :1235-1262 needs no t.mu, and serializer.Schedule does not block (balancer_wrapper.go:256). What remains is a transient wait plus a hypothetical future risk, part of the lock-handoff surface that register non_defects #1/#2/#5 rule non-material. True but inconsequential.
+- item-1: `false-finding`, fix n/a, priority error n/a, group none. Quote: "Under a heavily loaded scheduler ... every RPC calling ac.getReadyTransport/getTransport, every channelz query and every tearDown on this addrConn blocks until the runtime schedules the new goroutine. That adds latency to unrelated RPCs." This asserts the cross-goroutine lock handoff at clientconn.go:996 as a material defect. The register's clean_basis names that surface as one a correct review must not assert. Non_defect #1 rules the handoff safe and intended; non_defect #5 rules the lock-extension effect the disclosed, intended one, covering only cheap bookkeeping (:1235-1262) and released before tryAllAddrs. The early-return/panic fragility is non_defect #2. The claimed latency harm to unrelated RPCs is unsupported.
+- item-2: `non-material`, fix n/a, priority error False, group none. Quote: "When updateAddrs gets an empty address list while Connecting or Ready, it sets Idle and then immediately starts resetTransportAndUnlock ... the subchannel stays Connecting forever with no transport ... this path is not fixed." The path exists (clientconn.go:990-996, tryAllAddrs :1310-1341 returning nil for zero addrs), but the pre-image (main: Idle; Unlock; go resetTransport(), which relocked and set Connecting) behaves identically. The PR neither introduces nor worsens it; the item itself only says it is 'not fixed'. Pre-existing, so not a defect of this change.
+- item-3: `non-material`, fix n/a, priority error False, group blind-e4e6ca:g1. Quote: "The comment justifying the deferred GracefulClose is now wrong. The defer no longer runs after ac.mu is released." True: the comment at clientconn.go:983-984 assumed the pre-image's Unlock before return. The consequence offered is hypothetical future code. The stale comment is doc hygiene, and the behavior is a bounded transient wait (see item 1). Same underlying claim as item 1.
+- item-4: `non-material`, fix n/a, priority error False, group none. Quote: "The simpler root-cause fix is to move the Idle-to-Connecting transition, plus the capture of ctx, addrs and backoff, into connect()/updateAddrs while they hold the lock." This is a design-alternative suggestion. Register non_defects #1/#2 rule the lock handoff and its unenforced contract acceptable; the trade-off was discussed and accepted on the PR (packet threads 6, 11-17). Not a defect in the merged code.
+- item-5: `non-material`, fix n/a, priority error False, group none. Quote: "No regression test was added for the concurrent connect() race." Register non_defects #3: coverage hygiene. Non-material.
+- item-6: `non-material`, fix n/a, priority error False, group none. Quote: "resetTransportAndUnlock's early return on acCtx.Err() leaves the addrConn in its current state without logging." True (clientconn.go:1236-1239), but the pre-image resetTransport had the identical silent early return, so this is unchanged behavior. The rest is an observability/logging suggestion below the threshold.
+- item-7: `non-material`, fix n/a, priority error False, group none. Quote: "Test log-ignore strings and error text still mention 'addrConn.resetTransport', which has been renamed." Present at test/goaway_test.go:271,345,434,473 and test/end2end_test.go:3597,3637. No non-test code emits 'failed to create client transport' at all, so these strings were already stale before the PR. Test-string hygiene with no effect on behavior.
+
+## att-037 (codex-default), blind-545c42
+
+Verdict 'patch is correct'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+(no items)
+
+## att-076 (claude-builtin-sonnet-high), blind-43da26
+
+Verdict 'findings'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+- item-0: `non-material`, fix n/a, priority error n/a, group none. Quote: "The pattern is legal in Go but fragile. A future early return or panic added between the Lock and the `go` statement leaks the lock ... this needs a comment or a test." The item concedes the handoff is correct today and raises a hypothetical future-edit risk. That is register non_defects #1 (handing the locked mutex to a goroutine is intended; sync.Mutex has no goroutine affinity) and #2 (unenforced contract is an accepted design trade-off). The transient blocking of other ac.mu users until the goroutine is scheduled is the disclosed, intended effect (non_defect #5); the locked prefix at clientconn.go:1235-1262 is cheap bookkeeping. Below the threshold.
+- item-1: `non-material`, fix n/a, priority error n/a, group none. Quote: "The Locked-to-Unlock contract of resetTransportAndUnlock is enforced only by a doc comment, and no regression test was added for the race." Both points are listed as register non_defects: #2 (contract enforced only by name and comment, discussed and accepted on the PR thread, packet threads 11-17) and #3 (no new unit test; coverage hygiene). True, but not material.
+
+## att-077 (claude-builtin-opus-high), blind-8afcf8
+
+Verdict 'findings'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+- item-0: `non-material`, fix n/a, priority error False, group none. Quote: "the deferred ac.transport.GracefulClose() runs while ac.mu is locked. The existing comment says this defer exists so GracefulClose runs after ac.mu is released ... onClose calls ac.mu.Lock(), which blocks until the spawned goroutine gets scheduled and reaches ac.mu.Unlock() at line 1262." The mechanism is accurate: clientconn.go:983-986 defer, :996 go, http2_client.go:1046/1055 GracefulClose holds t.mu and calls onClose, which locks ac.mu at clientconn.go:1352. The wait is bounded, though. The spawned goroutine's locked prefix (:1235-1262) needs only ac.mu, and updateConnectivityState -> acbw.updateState uses serializer.Schedule (balancer_wrapper.go:256), which does not block, so it cannot wait on t.mu or the serializer and always unlocks promptly. No deadlock and no lasting stall. The pre-image also required onClose to contend with the resetTransport goroutine for ac.mu. This is a transient scheduling wait on a transport already being closed, plus a now-stale comment. It is part of the lock-handoff surface that the register's clean_basis and non_defects #1/#5 rule non-material. An accurate fact with an inconsequential effect.
+- item-1: `false-finding`, fix n/a, priority error n/a, group none. Quote: "the lock stays held for an unbounded time after updateAddrs returns, until the scheduler runs the new goroutine ... everything that needs ac.mu blocks." This asserts the lock handoff at clientconn.go:996 as a material defect. Register non_defects #1 rules the handoff safe and intended, and #5 rules the extended critical section the disclosed, intended effect: the lock covers only cheap bookkeeping (:1235-1262) and is released before tryAllAddrs. The clean_basis names this exact surface as one a correct review must not assert as a defect. 'Unbounded' is unsupported: the goroutine is runnable, needs no other lock (serializer.Schedule does not block, balancer_wrapper.go:256), and Go's scheduler is preemptive. The future-edit fragility is non_defect #2. The claimed material consequence is not supported.
+- item-2: `non-material`, fix n/a, priority error False, group none. Quote: "With an empty address list, updateAddrs sets the state to Idle and then immediately calls resetTransportAndUnlock ... the subchannel stays in Connecting forever with no transport ... This bug predates the PR." The path is real (clientconn.go:990-996; tryAllAddrs returns a nil firstConnErr for zero addrs at :1310-1341; success branch :1300-1303). But the item concedes it is pre-existing, and the pre-image (main: updateConnectivityState(Idle); Unlock; go resetTransport(), which locked and set Connecting the same way) behaves identically. The PR neither introduces nor worsens it, so it is not a defect of this change. Non-material with respect to this PR.
+- item-3: `non-material`, fix n/a, priority error False, group none. Quote: "The new doc comment says resetTransportAndUnlock 'unconditionally connects the addrConn', but it returns early ... when ac.ctx is already cancelled." True: clientconn.go:1231 comment vs the early return at :1236-1239. The same early-return behavior existed in the pre-image resetTransport, so connect() returning nil with the state Idle on a cancelled ctx is unchanged by the PR. This is doc-wording imprecision, a hygiene nit below the threshold.
+- item-4: `non-material`, fix n/a, priority error False, group none. Quote: "No regression test covers the fixed race." Register non_defects #3: the missing unit test is coverage hygiene; correctness was established by inspection and the 100,000-iteration validation. Non-material.
+- item-5: `non-material`, fix n/a, priority error False, group none. Quote: "Altitude: the fix works by passing the mutex to an async goroutine. A cleaner fix splits resetTransport into a synchronous locked prep step and an async dial step." This is a design-alternative suggestion, not a defect in the merged code. Register non_defects #1/#2 rule the handoff and its contract acceptable. Non-material.
+
+## att-078 (codex-default), blind-7af26f
+
+Verdict 'patch is correct'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+(no items)
+
+## att-079 (review-code-sonnet-high), blind-830e99
+
+Verdict 'Approved'; completion completed; approved on buggy n/a; zero recovery n/a; false clean n/a.
+
+- item-0: `non-material`, fix n/a, priority error n/a, group none. Quote: "Commit 6214c9dd's message says it makes resetBackoff() callers lock the mutex, but the net range diff contains no such change." Verified: `git show 6214c9dd1` has the message "Make callers of resetBackoff() lock the mutex", and the diff changes the resetTransport callers, not resetBackoff. It is a commit-message misnomer with no effect on code behavior. Non-material hygiene.
+
+## New candidates
+
+None.
