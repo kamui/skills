@@ -586,17 +586,17 @@ the proposed patch, not a license to revise it after results. Freeze the tree/pa
 `review-code-sonnet-high.json` identity and SHA-256, `mode: one-shot`, `profile: publishable`,
 `return_format: artifacts`, Claude Code version and observed prompt hashes, Sonnet 5 at `high`
 for both primary and verifiers, method/rubric/metric revisions, rates, and the sealed cell order.
-Use the original manifest's target IDs, register versions, packet and diff hashes, provisioning
-hashes, merge-base/head pins, offline clone layout, tool list, five-minute command limit, and
-per-target execution allowances without expansion. The reviewer receives the original factual
-packet and diff only: no discovery question, child issue, success threshold, register, mapping,
-prior review, or ground truth. Audit tree, range, model, effort, prompt, tools, path reads and
-network on every attempt; a changed pin invalidates that attempt. File invalid attempts and all
-charges, and replace only within the fixed cap. Freeze each manifest's `planned_cells` as three
-candidate A replicates for every named target, with replicate 1 across targets before replicate 2
-and then 3. No baseline rerun is part of these six child experiments. A fresh frozen-A
-confirmation, if later justified, needs its own preregistration and bill and never replaces the
-original two-replicate evidence.
+Use `results.v3.json`'s final register versions and the original manifest's target IDs, packet
+and diff hashes, provisioning hashes, merge-base/head pins, offline clone layout, tool list,
+five-minute command limit, and per-target execution allowances without expansion. The reviewer
+receives the original factual packet and diff only: no discovery question, child issue, success
+threshold, register, mapping, prior review, or ground truth. Audit tree, range, model, effort,
+prompt, tools, path reads and network on every attempt; a changed pin invalidates that attempt.
+File invalid attempts and all charges, and replace only within the fixed cap. Freeze each
+manifest's `planned_cells` as three candidate A replicates for every named target, with
+replicate 1 across targets before replicate 2 and then 3. No baseline rerun is part of these
+six child experiments. A fresh frozen-A confirmation, if later justified, needs its own
+preregistration and bill and never replaces the original two-replicate evidence.
 
 ### Isolated decisions
 
