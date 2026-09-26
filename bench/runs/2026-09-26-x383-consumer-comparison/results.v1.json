@@ -1,0 +1,700 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x383-consumer-comparison",
+  "computed_at": "2026-09-26T10:59:31Z",
+  "metric_code_revision": "8073b48c57dcec598ddb30e076c30bcc8d41d2b0",
+  "rubric_version": 1,
+  "inputs": [
+    {
+      "target": "j-trpc-5017",
+      "mapping_version": 2,
+      "register_version": 3
+    },
+    {
+      "target": "i-requests-6667",
+      "mapping_version": 1,
+      "register_version": 2
+    },
+    {
+      "target": "p-hono-5067",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "q-soba-195",
+      "mapping_version": 1,
+      "register_version": 1
+    }
+  ],
+  "cells": [
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-001",
+        "att-016"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-002"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-003"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-004"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-005"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-006"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-007"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-008"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-009",
+        "att-017"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-010"
+      ]
+    },
+    {
+      "target": "j-trpc-5017",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-011"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-012"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-013"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3,
+      "status": "harness-invalid",
+      "attempts": [
+        "att-014"
+      ]
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-015"
+      ]
+    }
+  ],
+  "by_target_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.666667,
+      "recall_completed_only": 0.666667,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 3,
+        "absent": 1
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 4.05813,
+      "cost_common_rate_usd": 4.05813,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 291.0,
+      "elapsed_to_completion_s": 291.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "j-trpc-5017"
+      },
+      "attempts_included": 4,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 1,
+        "false_clean": 1,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.166667,
+      "recall_completed_only": 0.222222,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 1
+      },
+      "priority_errors": 0,
+      "noise_items": 9,
+      "cost_contemporaneous_usd": 4.905434,
+      "cost_common_rate_usd": 4.905435,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 291.0,
+      "elapsed_to_completion_s": 325.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 4,
+      "valid_reviews": {
+        "count": 2,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 2
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 1,
+      "replacements_used": 1,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 3.605347,
+      "cost_common_rate_usd": 3.605347,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 208.5,
+      "elapsed_to_completion_s": 215.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 2.811574,
+      "cost_common_rate_usd": 2.811575,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 172.0,
+      "elapsed_to_completion_s": 172.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 2.105545,
+      "cost_common_rate_usd": 2.105546,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 116.0,
+      "elapsed_to_completion_s": 116.0
+    }
+  ],
+  "by_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high"
+      },
+      "attempts_included": 17,
+      "valid_reviews": {
+        "count": 14,
+        "buggy_count": 9,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 1,
+        "false_clean": 1,
+        "noise_items": 20
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 1,
+      "replacements_used": 2,
+      "recall_attempt_level": 0.611111,
+      "recall_completed_only": 0.62963,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 4,
+        "partial": 5,
+        "absent": 2
+      },
+      "priority_errors": 0,
+      "noise_items": 24,
+      "cost_contemporaneous_usd": 17.48603,
+      "cost_common_rate_usd": 17.486032,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 205.0,
+      "elapsed_to_completion_s": 213.0
+    }
+  ],
+  "by_shape": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 4,
+      "valid_reviews": {
+        "count": 2,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 2
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 1,
+      "replacements_used": 1,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 3.605347,
+      "cost_common_rate_usd": 3.605347,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 208.5,
+      "elapsed_to_completion_s": 215.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.666667,
+      "recall_completed_only": 0.666667,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 3,
+        "absent": 1
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 4.05813,
+      "cost_common_rate_usd": 4.05813,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 291.0,
+      "elapsed_to_completion_s": 291.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "cross-file type obligation outside the diff"
+      },
+      "attempts_included": 4,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 1,
+        "false_clean": 1,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.166667,
+      "recall_completed_only": 0.222222,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 1
+      },
+      "priority_errors": 0,
+      "noise_items": 9,
+      "cost_contemporaneous_usd": 4.905434,
+      "cost_common_rate_usd": 4.905435,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 291.0,
+      "elapsed_to_completion_s": 325.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 2.105545,
+      "cost_common_rate_usd": 2.105546,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 116.0,
+      "elapsed_to_completion_s": 116.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 2.811574,
+      "cost_common_rate_usd": 2.811575,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 172.0,
+      "elapsed_to_completion_s": 172.0
+    }
+  ],
+  "by_cohort": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 6,
+      "valid_reviews": {
+        "count": 6,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 9
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 9,
+      "cost_contemporaneous_usd": 4.917119,
+      "cost_common_rate_usd": 4.91712,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 164.5,
+      "elapsed_to_completion_s": 164.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 11,
+      "valid_reviews": {
+        "count": 8,
+        "buggy_count": 6,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 1,
+        "false_clean": 1,
+        "noise_items": 11
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 1,
+      "replacements_used": 2,
+      "recall_attempt_level": 0.416667,
+      "recall_completed_only": 0.444444,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 4,
+        "absent": 2
+      },
+      "priority_errors": 0,
+      "noise_items": 15,
+      "cost_contemporaneous_usd": 12.568911,
+      "cost_common_rate_usd": 12.568912,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 216.0,
+      "elapsed_to_completion_s": 274.0
+    }
+  ]
+}
