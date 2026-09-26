@@ -187,6 +187,11 @@
       "at": "2026-09-26T09:08:16Z",
       "what": "freeze_commit names 61b659b3112604b0eedc305c91991f75f9154fc0, committed at 2026-09-26T08:31:04Z on f297f308ab83217095dd7e804ac324936bafb5c5, before the first dispatch at 08:31:24Z. It was never pushed. After every attempt, the run's commits were rebased onto the #397 merge 47c2d0e2cb5a714dbcd2ec4a70e7974d48009940 at 09:02:46Z, so the pull-request branch carries this manifest in e6953b653e6bc2c536a498c4a55ccc4684e2dd25 and the freeze_commit edit in dfa01a8403ddf9c267bb46c7597786ae6b8413bd, both committed after the runs. The rebase left the manifest byte-identical: the freeze commit's version is blob 733cfcaa45112ff338c5122af7ec40b7fbbfa219 in both 61b659b and e6953b6. frozen_at and the sealed order stand, but the forge history alone does not show that the freeze preceded dispatch.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-26T09:42:13Z",
+      "what": "The pull-request branch was rebased onto main b6e58314b9d2d20ec46e0f7f20ee80cf6124cf82 after #398 and #400 merged. The manifest now enters the branch in acc2bb0 and its freeze_commit edit in c4e4371, replacing e6953b6 and dfa01a8 named above. The rebase dropped the #397 merge commit 47c2d0e and linearized its change. The frozen manifest is still blob 733cfcaa45112ff338c5122af7ec40b7fbbfa219, and freeze_commit still names the unpushed 61b659b.",
+      "invalidates": []
     }
   ]
 }
