@@ -48,7 +48,7 @@ The **risk areas** are security or authorization, data loss or corruption, destr
 
 **Safety premises.** When the review would conclude with no blocker and the change touches a risk area or a concurrency or failover invariant, name the few concrete premises that conclusion rests on, such as "the lookup always succeeds before `updateShardId()` runs." The verifier attacks each through its opposite branch and rules `holds`, `fails`, or `unresolved`. A failed premise reopens as a candidate under full admission and, when mandatory, confirmation. An unresolved premise becomes a material question when its answer could change the decision and otherwise stays outstanding. When refutations remove every blocker, the premises that conclusion now needs go in the follow-up.
 
-**Optional scrutiny.** Add any other candidate or premise whose proof needs a difficult cross-module reconstruction. Optional work never makes coverage incomplete.
+**Optional scrutiny.** Add any other candidate or premise whose proof needs a difficult cross-module reconstruction. Before approving state updates moved between events, effects or callbacks, compare base and head through mount, remount, focus loss and pending results. Optional work never makes coverage incomplete.
 
 **Allowance.** One initial batch and at most one follow-up. A run from a `prior_record` spends from that record's allowance; every other run starts its own. Every batch is awaited: choose an awaited route before dispatch and hand back only after the batch returns. Failed batches, repairs, and new workers grant nothing extra.
 
