@@ -68,7 +68,7 @@ Account for each supplied check by identity, original head, and disposition (acc
 
 A material question names a fact or decision no available static source can settle, who or what measurement can answer it, and how the answer changes correctness, an acceptance criterion, a release obligation, or this merge, and records which candidate reopens or requirement closes. Incomplete research is never a question. A candidate routed to a question keeps its stable id.
 
-An observation is an accurate, non-actionable fact with decisive evidence but no qualifying consequence, or a verifier aside; a proven low-impact defect is a finding. Observations never hold unfinished candidates or safety assertions and never affect status. Publish at most three, one sentence and evidence pointer each; keep the rest privately as `observation (unpublished, cap)`.
+Before verification, recheck `consider` and observations; promote proven failures or requirement gaps through admission and verification. Observations are evidenced, non-actionable facts or verifier asides, never unfinished candidates or safety assertions; they never affect status. Publish up to three, one sentence and evidence pointer each; keep others as `observation (unpublished, cap)`.
 
 For a contestable contract term, record both supportable readings and the safer one applied as an ambiguity, and route a question or gap if it prevents a settled decision. An unavailable input leaves coverage incomplete: name its effect and gated candidate ids and request it from the orchestrator; recovery reruns the affected falsification before the gap closes. A required unresolved verification task ends as a qualifying question or outstanding work, never a private drop.
 
@@ -76,7 +76,7 @@ For a contestable contract term, record both supportable readings and the safer 
 
 Priority measures demonstrated impact, urgency, and reach: `P0` a universal release blocker or critical failure, `P1` a serious urgent defect, `P2` an ordinary material defect, `P3` a low-impact worthwhile defect. Visibility and confirmation never raise it.
 
-Action is independent. A proven correctness, security, or explicit-requirement gap on an authoritative execution path, agent-facing instructions included, is `must-fix` at any priority. Maintainability with canonical behavior intact, test or fixture hygiene, and optional consistency are `consider` absent a correctness or requirement gap; a generated artifact contradicting its source is judged as that gap. P0 is always `must-fix`; otherwise neither artifact type nor repair size decides action.
+Assign action before kind. Proven correctness, security or requirement gaps on authoritative paths are `must-fix` at any priority: documented configuration, supported APIs/subclasses, agent instructions and trust/security changes. Narrow reach lowers priority, not action; artifact and repair size never decide it. Maintainability, test/fixture hygiene and optional consistency with behavior intact are `consider` absent gaps; generated-source contradictions are gaps. P0 is `must-fix`.
 
 A repository-rule finding cites the base-branch rule file and its smallest supporting range, and the rule must add a repository-specific invariant, scope, remedy, or verification requirement beyond generic correctness advice.
 
