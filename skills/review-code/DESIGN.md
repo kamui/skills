@@ -25,7 +25,9 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-27` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-28` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+
+**Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
 **One record.** Every run writes `record.json`, `payload.json`, `batch.json` and, last, `report.md`, whatever the target and whoever the caller. `render_review.py` derives the mechanical fields a saved input owns (run identity from the store and packet, `packet_context` from the packet, `supplied_inputs` from the caller's specs, the record's own paths, the spent allowance, the lineage, and each batch's name, phase and raw return from its bundle and accounting report), refuses an explicit copy that disagrees, composes and validates the payload, projects the advisory batch, and promotes the report last as the success marker. `--check` reads a record read-only and, with `--head` and `--lineage`, checks it against a caller's expectations. `--emit-batch --event` is the gating projection `review-code-publish` runs. A private directory has one writer at a time.
 

@@ -1,6 +1,6 @@
 # Re-review and prior state
 
-Read when target pinning finds prior state from the reviewer identity, or a local target has a `prior_record`: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the `disputed` status input and the `Disputed` and `Prior findings` summary sections.
+Read when target pinning finds prior state from the reviewer identity, or a local target has a `prior_record`: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the `disputed` status input and the visible `Disputed` and `Prior findings` sections and collapsed `Settled findings` history.
 
 ## Prior-state sources
 
