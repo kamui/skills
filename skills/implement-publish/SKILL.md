@@ -62,7 +62,7 @@ Using the resolved forge's tools, push the reviewed head and find an open pull r
 
 Write its body as a briefing that a reviewer with the diff can read in under a minute. Use these sections in order, in place of `## Summary` and `## Test plan`:
 
-- `## Why`: the intent and approach in one or two short paragraphs. Link every issue from step 1 as **closes**, **partially implements** with remaining work, or **affects** with its impact. For closure, use supported automatic closure on merge or note its unavailability. Name and link external specs.
+- `## Why`: the intent and approach in one or two short paragraphs. Link every issue from step 1 as **closes**, **partially implements** with remaining work, or **affects** with its impact, and link any other related ticket as context. For closure, use supported automatic closure on merge or note its unavailability. Name and link external specs.
 - `## Scope`: bullets naming real symbols and paths.
 - `## Tradeoffs`: rejected alternatives a reviewer would ask about.
 - `## Blast Radius`: what the change touches and why it is safe or risky, in one to three sentences.
