@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x381-action",
+  "target": "i-requests-6667",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 2,
+    "sha256": "af11241069d2ac6169de9228de7a61f3116d17221cfc09269e130715d9ac178e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 90931aed49ee2d406fc4d23695edbf96c68ea0c619e0123a44af06e9e56ddb6b; session c9067b71-a02f-431d-ac3a-4f8387864672; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v2), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-27T07:10:13Z",
+  "attempts": [
+    {
+      "attempt_id": "att-001",
+      "blind_token": "blind-6afcdd",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-i1",
+          "duplicate_group": null,
+          "fix_sufficiency": "partial",
+          "priority_error": false,
+          "notes": "Quote: \"_urllib3_request_context() puts the single module-level _preloaded_ssl_context into pool_kwargs[\\\"ssl_context\\\"] for every verify=True request ... urllib3's ssl_wrap_socket() calls context.load_cert_chain(certfile, keyfile) directly on that exact shared object (no copy is made), so the client certificate/private key stays loaded on it\". This is GT-i1's shared-mutation manifestation: the register's consequence names exactly this mechanism (ssl_wrap_socket load_cert_chain on the shared context) and the required outcome says cert= mutation must not be applied to a shared object. Verified in clone: src/requests/adapters.py:75-78 and 94-95 at head; installed urllib3 2.8.0 util/ssl_.py:431-433 calls context.load_cert_chain on the supplied context. The item frames the consequence as a sequential cross-host client-identity leak rather than concurrency, but it is the same mutation of the shared object and leads the reader to the same correction. Fix: only use the shared context when client_cert is None. That confines the cert mutation (mutation manifestation) but leaves the other manifestation untouched: a subclass's init_poolmanager ssl_context is still overridden by the per-request _preloaded_ssl_context for verify=True (urllib3 _merge_pool_kwargs, poolmanager.py:400-410). Hence partial."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-i2",
+          "duplicate_group": null,
+          "fix_sufficiency": "partial",
+          "priority_error": true,
+          "notes": "Quote: \"Loading the default CA bundle at import time turns a lazy per-request failure into a hard import-time crash ... import requests now fails immediately and unconditionally with whatever exception ssl.SSLContext.load_verify_locations() raises, even for callers that only ever use verify=False or plain HTTP. Before this change, the equivalent failure ... surfaced lazily, only on the first verified HTTPS request\". Same mechanism as GT-i2 (extract_zipped_paths + load_verify_locations moved from cert_verify() to module import, adapters.py:75-78) with the import-time exception manifestation matching #6764's PermissionError-from-import (an unreadable bundle). Fix: \"Keep the eager preload for the common case, but guard it (or defer raising)\". The required outcome is that import must not perform CA extraction/context loading unconditionally; guarding keeps the extraction and load_verify_locations at import, so the import-time cost manifestation (#6790) remains and only the crash symptom is addressed. Partial."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The diff also fixes a pre-existing bug where verify=<directory> was always passed to urllib3 as ca_certs ... now checks os.path.isdir() and uses ca_cert_dir\". Accurate per the diff (pre-image `if isinstance(verify, str): pool_kwargs[\"ca_certs\"] = verify`; head adapters.py:96-100 branches on os.path.isdir). It is a positive observation with no defect asserted and no fix proposed, so below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-002",
+  "run_id": "2026-09-26-x385-remedy-completeness",
+  "cell": {
+    "target": "p-hono-5067",
+    "arm": "review-code-sonnet-high",
+    "replicate": 1
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-26T20:31:50Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "8c5b592421d2e9ff528a370c6e95725437425c4b",
+    "diff_commands": [
+      "git diff --stat"
+    ],
+    "sandbox": null,
+    "subagent_count": 0,
+    "tree_identity_before": "2fa9e76f8b7c1a2454e745d2d43f894aaa6b74c16315c743b0a629770cdf0c96",
+    "tree_identity_after": "2fa9e76f8b7c1a2454e745d2d43f894aaa6b74c16315c743b0a629770cdf0c96"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 1.697856,
+    "cost_bounds_usd": {
+      "low": 1.697856,
+      "high": 1.697856
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-26T20:31:50Z",
+    "payload_validated_at": "2026-09-26T20:39:44Z",
+    "completed_at": "2026-09-26T20:39:44Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "9ae1dd46d649b1c33cffe0e839194430aa07c11da88eb3c10e75b6364c015eb3"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-26-x385-remedy-completeness/att-002.tar.gz",
+    "sha256": "1d86c4156a313390f174718d4280591f32a0358d8537cad8fae85584bfd4cb21",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 ec1c87ccbd74570093c6c4a35e9925bfd2be20dae4ab607de4357746f5d1ac48; run policy sha256 028ff00aefea76961fbb6bc8aa319f2b4662a08436b3c175689f27a35679d125 (before path substitution)",
+    "Network-command audit replayed with the local-clone correction; original filesystem audit findings retained. Original record saved under audit-revisions/before-local-clone-fix."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "at": "2026-09-27T07:07:27Z",
+  "reason": "Claude returned success and all artifacts, but the dispatch wrapper did not finish its audit and filing.",
+  "cli_result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 783482,
+    "duration_api_ms": 774365,
+    "total_cost_usd": 1.7455864,
+    "session_id": "42076cf9-3d30-4d99-8907-b93c5227e161"
+  },
+  "tree_identity_verified_at_recovery": "fe02fc5781cbf312fbf8ae92ada73bfcedcfa61bb4f3b17dfabdeca43e40ca13",
+  "timing_policy": "Keep original null payload_validated_at/completed_at and missing wrapper exit; do not substitute recovery time or CLI duration for the frozen elapsed-to-payload metric."
+}

@@ -60,6 +60,25 @@ separately. A focused pass does not complete #380's combined and unseen-target a
 5. Publish the evidence and closure work for review. Close #385 only when its acceptance
    conditions or documented rejection and revert are complete; report an inconclusive blocker.
 
-## Results
+## Results, 2026-09-27
 
-Pending. No reviewer was dispatched before this manifest and decision rule were frozen.
+**Disposition: reject.** The valid Hono review recovered no registered defect and approved. Frozen A recovered GT-p1 in both historical reviews. This loses per-target recall and trips the common stop guardrail. Even perfect remaining replicates could produce only 2/3 recovery, below the required 3/3. This is an early guardrail stop, not completion of the 15-cell screen. The valid Requests review also supplies only partial remedies for GT-i1 and GT-i2; GT-i3 is absent. Revert the completeness sentence. The sufficient Bokeh remedy came from an invalid attempt and does not satisfy its retention threshold.
+
+All existing outputs were blind-graded under the original template by Opus 5.5 high through Claude Code 2.1.282. No grader returned an unresolved new candidate. No additional review was purchased during recovery. Unattempted cells remain visible in `results.v1.json`; no missing cell is an approval or a recovered defect.
+
+| Target | Valid / all attempts | Valid-review recall | Valid false findings | Median elapsed-to-payload |
+| --- | ---: | ---: | ---: | --- |
+| i-requests-6667 | 1/1 | 0.667 | 0 | 1169 s; n=1 |
+| l-bokeh-9232 | 0/1 | n/a | 0 | 718 s; n=0 |
+| m-grpc-go-7390 | 0/1 | n/a | 0 | 900 s; n=0 |
+| p-hono-5067 | 1/1 | 0.000 | 0 | 474 s; n=1 |
+| q-soba-195 | 1/1 | n/a | 0 | unavailable; n=0 |
+
+- Validity: 3/5 attempts are valid. No replacements were dispatched.
+- Costs: reviews $13.455287; blind grading $1.146891; total **$14.602178**, including invalid attempts. No adjudication was required.
+- Action and remedies: the [scorecards](scoring/) grade each recovered defect and its remedy; each attempt's `normalized.json` retains native action and observations. All-attempt score fields can include invalid reviews; use the table's valid-review counts for guardrails.
+- Timing: interrupted wrapper finalization leaves a missing elapsed-to-payload event on recovered outputs. `recovery.json` retains CLI durations separately; they are not substituted into the frozen metric. Medians show their actual valid, timed sample count.
+- Audit correction: [the recovery report](../2026-09-27-audit-recovery.json) records every original and revised disposition. The local-clone correction changes no historical baseline classification across 83 audits. Historical baseline files remain unchanged; prior experiment records are in `audit-revisions/before-local-clone-fix/`. Existing filesystem violations are preserved.
+- Run supervision: the original terminal jobs did not finish wrapper finalization for three completed CLI sessions. Recovery grading ran to completion in detached tmux sessions with logs under `~/.t3/bench-runs/2026-09-26-x385-remedy-completeness/recovery-grading.log`. There are no further eligible review dispatches for this run under its stop decision.
+
+This partial, stopped experiment does not establish an improvement or complete #380's adoption screen. A new attempt to qualify an inconclusive variant needs a separately preregistered run and spending decision; these caps are not extended.

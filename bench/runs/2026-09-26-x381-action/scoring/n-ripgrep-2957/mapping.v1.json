@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x381-action",
+  "target": "n-ripgrep-2957",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 2,
+    "sha256": "1a98c37fb18bda8fc2f9d796525600ca7f0e8e92a8df019c82de22114e41427a"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 2b02a88340b242dce68215aecb969aa319089c84ef317db07d4559d3d44f8ed3; session 33e58001-ae1d-4887-92f8-12e3b7c26cc5; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v2), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-27T07:10:28Z",
+  "attempts": [
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-22c34d",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The clause after the first comma drops its subject (\\\"while this approach is easier to setup, is generally slower...\\\"), so the sentence reads as ungrammatical\". True: the added FAQ.md text at head reads \"Note though that while this approach is easier to setup, is generally slower than the previous method\". But the register's non_defects list rules this exact claim ('There is a redundant or awkward sentence in the FAQ (\"is easier to setup, is generally slower...\")') a cosmetic grammar nit. It does not touch GT-n1, the stray `$ ` prefix on the `source <(rg --generate complete-zsh)` block two lines above, so it is an accurate observation below the threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The diff also fixes an unrelated pre-existing typo in the bash/fish intro sentence (\\\"generate completes\\\" -> \\\"generate completions\\\")\". Confirmed by git diff main...review-head -- FAQ.md at line 97 (-completes / +completions). This is an accurate observation about a benign change, with no defect asserted, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

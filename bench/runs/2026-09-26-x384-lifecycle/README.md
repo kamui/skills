@@ -60,6 +60,23 @@ separately. A focused pass does not complete #380's combined and unseen-target a
 5. Publish the evidence and closure work for review. Close #384 only when its acceptance
    conditions or documented rejection and revert are complete; report an inconclusive blocker.
 
-## Results
+## Results, 2026-09-27
 
-Pending. No reviewer was dispatched before this manifest and decision rule were frozen.
+**Disposition: inconclusive.** Three of the four dispatched attempts are invalid: both Base UI reviews and the gRPC review. Only soba has a valid review. With nine planned valid cells and only two replacements, even perfect remaining attempts cannot complete the matrix: at most eight valid cells fit in eleven attempts. Further paid reviews cannot establish a pass under the frozen cap, so stop and leave #384 open. No valid Base UI review establishes either defect threshold. The false finding in an invalid Base UI review is reported in all-attempt counts and is not used to reject the variant. The one valid soba review took 816 seconds versus the historical 99.5-second median, but the planned three-review median is unavailable; this is not a completed latency test.
+
+All existing outputs were blind-graded under the original template by Opus 5.5 high through Claude Code 2.1.282. No grader returned an unresolved new candidate. No additional review was purchased during recovery. Unattempted cells remain visible in `results.v1.json`; no missing cell is an approval or a recovered defect.
+
+| Target | Valid / all attempts | Valid-review recall | Valid false findings | Median elapsed-to-payload |
+| --- | ---: | ---: | ---: | --- |
+| m-grpc-go-7390 | 0/1 | n/a | 0 | 816 s; n=0 |
+| q-soba-195 | 1/1 | n/a | 0 | 1043 s; n=1 |
+| r-base-ui-5460 | 0/2 | n/a | 0 | 753 s; n=0 |
+
+- Validity: 1/4 attempts are valid. No replacements were dispatched.
+- Costs: reviews $12.361659; blind grading $0.665457; total **$13.027116**, including invalid attempts. No adjudication was required.
+- Action and remedies: the [scorecards](scoring/) grade each recovered defect and its remedy; each attempt's `normalized.json` retains native action and observations. All-attempt score fields can include invalid reviews; use the table's valid-review counts for guardrails.
+- Timing: interrupted wrapper finalization leaves a missing elapsed-to-payload event on recovered outputs. `recovery.json` retains CLI durations separately; they are not substituted into the frozen metric. Medians show their actual valid, timed sample count.
+- Audit correction: [the recovery report](../2026-09-27-audit-recovery.json) records every original and revised disposition. The local-clone correction changes no historical baseline classification across 83 audits. Historical baseline files remain unchanged; prior experiment records are in `audit-revisions/before-local-clone-fix/`. Existing filesystem violations are preserved.
+- Run supervision: the original terminal jobs did not finish wrapper finalization for three completed CLI sessions. Recovery grading ran to completion in detached tmux sessions with logs under `~/.t3/bench-runs/2026-09-26-x384-lifecycle/recovery-grading.log`. There are no further eligible review dispatches for this run under its stop decision.
+
+This partial, stopped experiment does not establish an improvement or complete #380's adoption screen. A new attempt to qualify an inconclusive variant needs a separately preregistered run and spending decision; these caps are not extended.
