@@ -102,6 +102,20 @@ class Boundaries(unittest.TestCase):
         config["sandbox"]["filesystem"]["denyRead"] = []
         self.assertTrue(review_isolation.exposes(str(self.outside), config))
         self.assertTrue(review_isolation.exposes("/", config))
+        self.assertFalse(review_isolation.exposes(str(self.clone / "tracked"), config))
+        (self.clone / "link").symlink_to(self.outside)
+        self.assertTrue(review_isolation.exposes(str(self.clone / "link"), config))
+
+    def test_a_built_in_sandbox_binding_is_exposed_and_stops_setup(self):
+        config = {"sandbox": {"filesystem": {"denyRead": [str(self.root)], "allowRead": [str(self.clone)]}}}
+        bound = self.root / "claude"
+        review_isolation.BUILT_IN = (str(bound),)
+        self.addCleanup(setattr, review_isolation, "BUILT_IN", ("/tmp/claude", "/private/tmp/claude"))
+        self.assertFalse(review_isolation.exposes(str(self.root), config))
+        bound.mkdir()
+        for path in (bound / "other-session", bound, self.root):
+            self.assertTrue(review_isolation.exposes(str(path), config), path)
+        self.assertFalse(review_isolation.exposes(str(self.outside), config))
 
     def test_shell_allowance(self):
         self.assertEqual(self.decision("Bash", command="sleep 1000", timeout=1000000), "deny")
@@ -218,6 +232,13 @@ class NativeIsolation(Boundaries):
             canary.write_text("PRIVATE_CANARY_DO_NOT_READ", encoding="utf-8")
             results = self.run_cli([[call("shared", "Bash", command=f"cat {canary}")]])
         self.assertTrue(results["shared"].get("is_error"), results)
+
+    def test_no_undeclared_file_is_reachable(self):
+        config = review_isolation.settings(self.attempt, self.clone)["sandbox"]["filesystem"]
+        declared = " -o ".join("-path " + shlex.quote(path) for path in config["allowRead"] + [str(self.attempt)])
+        scan = "find " + " ".join(shlex.quote(path) for path in config["denyRead"] if path != "/proc")
+        results = self.run_cli([[call("scan", "Bash", command=f"{scan} \\( {declared} \\) -prune -o -type f -print 2>/dev/null | head -5", timeout=300000)]])
+        self.assertEqual(results["scan"]["content"].strip() or "(Bash completed with no output)", "(Bash completed with no output)", results)
 
     def test_target_environment_reaches_the_shell(self):
         results = self.run_cli([[call("go", "Bash", command="go env GOPROXY GOTOOLCHAIN")]], {"GOPROXY": "off", "GOTOOLCHAIN": "local"})

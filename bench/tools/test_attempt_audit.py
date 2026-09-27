@@ -69,18 +69,20 @@ class AttemptAudit(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPT), "--arm", arm, "--attempt-dir", str(attempt),
                                "--clone", str(self.clone), *enforced, "--json"], capture_output=True, text=True, encoding="utf-8")
 
-    def settings(self, denied=None, domains=(), hooks=({},)) -> dict:
+    def settings(self, denied=None, domains=()) -> dict:
         if denied is None:
             denied = [str(p) for p in Path("/").iterdir() if p.name not in review_isolation.SYSTEM]
         return {"sandbox": {"network": {"allowedDomains": list(domains)},
-                            "filesystem": {"denyRead": denied, "allowRead": [str(self.clone)]}},
-                "hooks": {"PreToolUse": list(hooks)}, "permissions": {"blockReadsOutsideWorkingDirectories": True}}
+                            "filesystem": {"denyRead": denied, "allowRead": [str(self.clone)]}}}
 
-    def enforced(self, settings: dict, *commands: str, read: str = None) -> dict:
+    def enforced(self, settings: dict, *commands: str, read: str = None, result: str = "") -> dict:
         blocks = [{"type": "tool_use", "name": "Bash", "input": {"command": c}} for c in commands]
+        records = [{"type": "assistant", "message": {"content": blocks}}]
         if read:
-            blocks.append({"type": "tool_use", "name": "Read", "input": {"file_path": read}})
-        done = self.audit("review-code", [{"type": "assistant", "message": {"content": blocks}}], settings=settings)
+            blocks.append({"type": "tool_use", "id": "read-1", "name": "Read", "input": {"file_path": read}})
+            records.append({"type": "user", "message": {"content": [
+                {"type": "tool_result", "tool_use_id": "read-1", "content": [{"type": "text", "text": result}]}]}})
+        done = self.audit("review-code", records, settings=settings)
         self.assertIn(done.returncode, (0, 1), done.stderr)
         return json.loads(done.stdout)
 
@@ -193,7 +195,8 @@ class AttemptAudit(unittest.TestCase):
 
     def test_enforced_settings_confine_requests_the_sandbox_denies(self):
         secret = str(self.outside / "secret")
-        report = self.enforced(self.settings(), "find / -name target.py", "go version", f"cat {secret}", read=secret)
+        report = self.enforced(self.settings(), "find / -name target.py", "go version", f"cat {secret}", read=secret,
+                               result=review_isolation.DENIAL + "path is outside the permitted read or write directories")
         self.assertEqual(report["violations"], [])
         self.assertEqual(report["confined_requests"], [
             "path outside allowed roots in command: /", "network-capable command: go version",
@@ -201,11 +204,24 @@ class AttemptAudit(unittest.TestCase):
 
     def test_enforced_settings_keep_reachable_requests_as_violations(self):
         secret = str(self.outside / "secret")
-        open_settings = self.settings(denied=[], domains=["example.com"], hooks=())
+        open_settings = self.settings(denied=[], domains=["example.com"])
         report = self.enforced(open_settings, "find / -name target.py", "go version", f"cat {secret}", read=secret)
         self.assertEqual(report["confined_requests"], [])
         self.assertEqual(len(report["violations"]), 4, report["violations"])
         self.assertEqual(self.bash(f"cat {secret}"), (1, [f"path outside allowed roots in command: {secret}"]))
+
+    def test_a_file_tool_read_the_hook_let_through_is_a_violation(self):
+        secret = str(self.outside / "secret")
+        report = self.enforced(self.settings(), read=secret, result="the file's contents")
+        self.assertEqual(report["violations"], [f"file tool read outside allowed roots: {secret}"])
+
+    def test_a_glob_is_confined_only_when_every_match_is(self):
+        reachable = self.outside.with_name("outside-reachable")
+        reachable.mkdir()
+        (reachable / "secret").write_text("", encoding="utf-8")
+        pattern = f"{self.outside}*/secret"
+        report = self.enforced(self.settings(denied=[str(self.outside)]), f"cat {pattern}")
+        self.assertEqual(report["violations"], [f"path outside allowed roots in command: {pattern}"])
 
     def test_unreadable_isolation_settings_stop_the_audit(self):
         done = self.audit("review-code", [], settings={"sandbox": {}})

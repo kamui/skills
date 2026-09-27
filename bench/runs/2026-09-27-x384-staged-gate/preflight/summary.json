@@ -1,18 +1,18 @@
 {
-  "checked_at": "2026-09-27T19:20:00Z",
+  "checked_at": "2026-09-27T19:50:00Z",
   "paid_model_calls": 0,
   "billed_usd": 0,
   "native_cli": "2.1.282",
   "native_cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
   "bubblewrap_version": "0.6.1",
   "bench_test_suites": {
-    "collected": 144,
-    "passed": 130,
-    "skipped_native_checks": 14
+    "collected": 149,
+    "passed": 133,
+    "skipped_native_checks": 16
   },
   "native_isolation_suite": {
-    "collected": 21,
-    "passed": 21,
+    "collected": 24,
+    "passed": 24,
     "skipped": 0
   },
   "self_tests": {

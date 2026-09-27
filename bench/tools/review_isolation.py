@@ -30,6 +30,9 @@ PROFILES = ("claude-strict-v1", "claude-strict-v2")
 ENFORCED = "claude-strict-v2"
 SYSTEM = ("usr", "bin", "sbin", "lib", "lib64", "etc", "dev", "proc")
 TOOLS = ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "Agent", "Skill"]
+DENIAL = "Benchmark isolation: "
+# Claude's sandbox binds these when they exist on the host, whatever the settings deny.
+BUILT_IN = ("/tmp/claude", "/private/tmp/claude")
 
 
 def prepare_runtime_cache(clone: Path) -> None:
@@ -123,6 +126,8 @@ def exposes(path: str, config: dict) -> bool:
 
     def under(roots) -> bool:
         return any(real == root or real.startswith(root.rstrip("/") + "/") for root in roots)
+    if any(os.path.lexists(bound) and (under([bound]) or bound.startswith(real.rstrip("/") + "/")) for bound in BUILT_IN):
+        return True
     if under(files["allowRead"]) or under(["/" + name for name in SYSTEM]) or under(files["denyRead"]):
         return False
     if real == "/":
@@ -203,7 +208,7 @@ def main() -> int:
         except Exception as error:
             reason = f"cannot verify tool boundaries: {type(error).__name__}"
         if reason:
-            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Benchmark isolation: " + reason}}))
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": DENIAL + reason}}))
         return 0
     try:
         if args.out is None:
@@ -212,6 +217,9 @@ def main() -> int:
             raise ValueError("clone must be a directory beneath the attempt")
         if args.profile == ENFORCED and args.target is None:
             raise ValueError(f"{ENFORCED} requires --target")
+        bound = [path for path in BUILT_IN if os.path.lexists(path)]
+        if args.profile == ENFORCED and bound:
+            raise ValueError(f"the sandbox would expose {', '.join(bound)}; remove it before dispatch")
         config = settings(attempt, clone, target_env(args.target, clone) if args.profile == ENFORCED else None)
         prepare_runtime_cache(clone)
         args.out.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
