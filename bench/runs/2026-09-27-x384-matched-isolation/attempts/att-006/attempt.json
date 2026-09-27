@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-006",
+  "run_id": "2026-09-27-x384-matched-isolation",
+  "cell": {
+    "target": "m-grpc-go-7390",
+    "arm": "review-code-sonnet-high-isolated-lifecycle",
+    "replicate": 1
+  },
+  "predecessor": "att-005",
+  "retry_reason": "Replace the gRPC candidate invalidated by a Go invocation without the frozen offline environment; retain the original audit and charge.",
+  "replacement_index": 3,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-27T11:31:45Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "938f7c80925248cc76943317d6fec243ddac5a08",
+    "diff_commands": [],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4906d0cee892be918981bd2a82dfeebcc3b10aa0d596e5d745484130dd0af451",
+    "tree_identity_after": "4906d0cee892be918981bd2a82dfeebcc3b10aa0d596e5d745484130dd0af451"
+  },
+  "phase_reached": "result",
+  "disposition": "harness-invalid: read audit: 1 violation(s), first network-capable command: go version 2>&1; ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-006/clone-cache 2>&1",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [
+      "network-capable command: go version 2>&1; ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-006/clone-cache 2>&1"
+    ],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 3.325547,
+    "cost_bounds_usd": {
+      "low": 3.325547,
+      "high": 3.325547
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-27T11:31:45Z",
+    "payload_validated_at": "2026-09-27T11:43:54Z",
+    "completed_at": null,
+    "stopped_at": "2026-09-27T11:43:54Z"
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "9859c37f21d04ecfe22536e997630b219444be8ef344712c08669ada35226d47"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-27-x384-matched-isolation/att-006.tar.gz",
+    "sha256": "26918a197474a762f5d47eb5a67a4a49cdfcef48b60169d067af72d79f39ded5",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 91be1843c6e693fce16a1d80b09b77c7ae04777b57e5226a714fcffe91be07d6; run policy sha256 2754576c1506edf8600c8f6db905ad45c48f4c034f3c42062655ba2c171cbfbb (before path substitution)"
+  ]
+}
