@@ -1,0 +1,55 @@
+{
+  "checked_at": "2026-09-27T09:35:48Z",
+  "source_revision": "96208f282d90bae64f01f81fcc96120eddd181d4",
+  "paid_model_calls": 0,
+  "billed_usd": 0,
+  "native_cli": "2.1.282",
+  "native_cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
+  "bubblewrap_version": "0.6.1",
+  "packages_sha256": {
+    "socat_1.7.4.1-3ubuntu4_amd64.deb": "aec6c231f65564cb75c9c2e5c3ce0739482688f373f141471ecf9276fc03df67",
+    "bubblewrap_0.6.1-1ubuntu0.3_amd64.deb": "706763714e5d19fc7ab2572a6418506e3a4a5d5960e99309707b58117e6b40cb",
+    "libwrap0_7.6.q-31build2_amd64.deb": "27eb87c90108a2e53f86efe78f00fcb701248a1b8609c26e52a9c431a41fa006"
+  },
+  "bench_regression_suite": {
+    "collected": 131,
+    "passed": 123,
+    "skipped_native_checks": 8
+  },
+  "final_native_isolation_suite": {
+    "collected": 15,
+    "passed": 15,
+    "skipped": 0
+  },
+  "runner_self_test": "passed",
+  "filing_self_test": "passed",
+  "provisioning_self_test": "passed",
+  "target_smokes": {
+    "m-grpc-go-7390": {
+      "passed": true,
+      "evidence": "m-grpc-go-7390.json"
+    },
+    "r-base-ui-5460": {
+      "passed": true,
+      "evidence": "r-base-ui-5460.json"
+    },
+    "q-soba-195": {
+      "passed": true,
+      "evidence": "q-soba-195.json"
+    }
+  },
+  "limitations": [
+    "A local fake API drives tool calls; no reviewer quality or latency result is established.",
+    "Paid launch requires the new budget approval, an immutable runner revision, manifest freeze, and fresh dependency/version checks.",
+    "Existing access-audit rules remain conservative: denied requests can still invalidate an attempt."
+  ],
+  "candidate_patch_sha256": "da0a42b02fa4d7396457c78c20d8a6307ecb831c266f51e8e39b22679ba26c8f",
+  "isolated_candidate_diff": "1\t1\tSKILL.md",
+  "launch_checks": {
+    "pinned_cli_dry_run": "passed; $5 reservation; no claim",
+    "cli_drift": "refused before dispatch",
+    "unapproved_manifest": "refused because unfrozen",
+    "paid_calls": 0
+  },
+  "frozen_skill_discovery": "passed from fresh attempt home with only user setting source enabled"
+}
