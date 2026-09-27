@@ -117,6 +117,9 @@ class AttemptAudit(unittest.TestCase):
         rc, violations = self.bash('git clone /dev/null scratch')
         self.assertEqual(rc, 1)
         self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
+        rc, violations = self.bash('cd "/dev/shm" && git clone ./source scratch')
+        self.assertEqual(rc, 1)
+        self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
         source_link = self.clone / 'outside-link'
         source_link.symlink_to(self.outside)
         rc, violations = self.bash(f'git clone {source_link} scratch')
