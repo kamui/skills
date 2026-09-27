@@ -121,9 +121,13 @@ The isolated action variant lost ripgrep's registered defect in a valid review, 
 
 The removal subtracts 379 runtime and always-loaded bytes. Runtime total is 73,341 bytes and always loaded is 29,837. The shared runtime limit stays 74,000: the retained lifecycle and destroyed-test rules, identity and presentation changes still exceed the former 73,000 limit. No limit is raised. Workflow advances to `v5b-29-x382` because removing the action recheck changes verification semantics; the #382 policy remains in effect.
 
-## Lifecycle sentence removed pending a valid run, issue #384, 2026-09-27
+## Lifecycle sentence rejected, issue #384, 2026-09-27
 
-`SKILL.md`'s optional-scrutiny rule loses the lifecycle sentence and nothing else changes. Both #384 runs are inconclusive: [the first](../../bench/runs/2026-09-26-x384-lifecycle/README.md) has 0 valid reviews of 4 and [the matched run](../../bench/runs/2026-09-27-x384-matched-isolation/README.md) has 3 of 8. Neither measures a pass or a rejection, so this is not a rejection. #380 adopts only changes that pass an isolated experiment, and the sentence was shipping without one. The experiment reads the frozen candidate tree `938f7c80925248cc76943317d6fec243ddac5a08`, not `main`, so a later run is unaffected; a pass restores the sentence. [HISTORY.md](../../docs/review-code/HISTORY.md#lifecycle-sentence-removed-pending-a-valid-run-2026-09-27) preserves the original design entry.
+[The staged gate run](../../bench/runs/2026-09-27-x384-staged-gate/README.md) rejects the sentence: two valid candidate reviews of r-base-ui-5460 approved the change and recovered neither GT-r1 nor GT-r2, so the 2 of 3 thresholds were unattainable. The removal below stands, and no text or workflow changes with this entry.
+
+### Removed pending a valid run
+
+`SKILL.md`'s optional-scrutiny rule loses the lifecycle sentence and nothing else changes. Both earlier #384 runs are inconclusive: [the first](../../bench/runs/2026-09-26-x384-lifecycle/README.md) has 0 valid reviews of 4 and [the matched run](../../bench/runs/2026-09-27-x384-matched-isolation/README.md) has 3 of 8. Neither measures a pass or a rejection, so this is not a rejection. #380 adopts only changes that pass an isolated experiment, and the sentence was shipping without one. The experiment reads the frozen candidate tree `938f7c80925248cc76943317d6fec243ddac5a08`, not `main`, so a later run is unaffected. [HISTORY.md](../../docs/review-code/HISTORY.md#lifecycle-sentence-removed-pending-a-valid-run-2026-09-27) preserves the original design entry.
 
 The removal subtracts 153 bytes and 22 words from every measured path except the verifier briefs. The always-loaded set falls from 29,837 to 29,684 bytes, a first review from 48,558 to 48,405, the required-verifier path from 60,735 to 60,582, a re-review from 57,751 to 57,598 and the runtime total from 73,341 to 73,188. The runtime total still exceeds the former 73,000 limit, so every limit stands. Workflow advances to `v5b-30-x382` because the removal changes when a review may conclude with no blocker.
 
