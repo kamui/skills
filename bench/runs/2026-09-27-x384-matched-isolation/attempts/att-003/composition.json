@@ -1,0 +1,166 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr5460-packet"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "change_description": "[field] Sync controlled value changes with field state\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Give Field.Control a single sync path for controlled `value` changes (via `useValueChanged`, matching Switch/Checkbox/Select/Combobox/NumberField/OTPField), fixing a dirty-baseline comparison that never cleared for non-string controlled values and a second bug where programmatic value changes left filled/dirty/validity stale, including letting a stale pending async validator publish.",
+    "issue_fit": "No originating issue; intent is drawn from the caller-supplied PR body (spec-pr5460), which is the only intent source. Most stated fixes are implemented and test-covered, but the async-validator-can-still-publish fix (spec-pr5460/pr-body) is not complete: it is verified confirmed to still reproduce for the reachable case where a controlled value becomes `null`.",
+    "coverage": "Both changed files read in full and diffed against the merge-base; useValueChanged.ts, useFieldValidation.ts, useRegisterFieldControl.ts, useFieldControlRegistration.ts, FieldRoot.tsx, Form.tsx, and sibling controls (Switch/Checkbox/OTPField/NumberField) read to establish the pre-existing contract and rule out a plausible form-value-type regression (refuted with a focused jsdom test, see below). Repository guidance (AGENTS.md, CONTRIBUTING.md) checked for applicable conventions; none violated. Ran the diff's own test file plus FieldRoot.test.tsx, Form.test.tsx and useValueChanged.test.tsx at head (all pass). One suspected form-value-serialization regression was written as a focused scratch test and run at both head and merge-base; both produced the identical (pre-existing) string-serialized result, refuting the candidate. One concurrency safety premise (async-validation invalidation) was dispatched to a fresh-context verifier, failed, reopened as a must-fix candidate, and confirmed by a second fresh-context verifier in the one available follow-up batch."
+  },
+  "findings": [
+    {
+      "id": "field-control/stale-validation-on-null-controlled-value",
+      "title": "Controlled sync path skips validation invalidation when the value becomes null/undefined",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "requirement",
+      "trigger": "A controlled `Field.Control`'s `value` prop transitions from a defined value to `null` (the only reachable variant; an `undefined` value flips the field to uncontrolled in the same render, per `isControlled = valueProp !== undefined`) while an earlier async or debounced `validate()` call for the previous value is still pending.",
+      "impact": "`serializedValue` collapses to `undefined` for a `null` value, so the new `useValueChanged` callback's early return (`if (serializedValue === undefined) return;`) skips `validation.change`. `validationCommitIdRef.current` is therefore never incremented for this transition, so the earlier in-flight `commit()`'s stale-id check (`useFieldValidation.ts:269`) still matches when its promise resolves, and `setValidityData` publishes a validation result for the old, no-longer-current value. This is the exact defect class the PR's own body says it fixes (\"a pending async validator for the old value could still publish\"), reintroduced for this one transition by the very guard this diff adds; dirty/filled also never update for it. Confirmed by an independent fresh-context verifier, which also traced that no other effect in FieldRoot.tsx invalidates validation for this transition.",
+      "change": "Don't let the controlled sync path exit before invalidating/re-running validation when the value serializes to `undefined`; for example normalize with `serializedValue ?? ''` before the comparisons and the `validation.change` call, the way the dirty check already does, instead of returning early.",
+      "source": "spec-pr5460/pr-body/\"a resolved error stayed visible and a pending async validator for the old value could still publish\"",
+      "anchor": {
+        "type": "line",
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 105,
+        "end_line": 115,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 106
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The PR body's claim that array-valued controlled inputs failed the dirty-baseline comparison \"by reference\" the same way numeric values did is not exercised by any test in this diff; the `String(value)` normalization would apply the same fix, but this is untested.",
+      "evidence": "packages/react/src/field/control/FieldControl.tsx:86; pr-body/\"Array values failed the same way by reference\"."
+    },
+    {
+      "fact": "The supplied `code-infra-dashboard` CI comment reports double-digit percentage paint regressions in components this diff never touches (Menu, Select, Dialog, Combobox); with no plausible causal path from a two-file Field.Control change, this reads as benchmark noise rather than evidence of a product regression.",
+      "evidence": "packet section 6, comment 2 (code-infra-dashboard, 2026-08-10T13:19:19Z): \"Menu open (500 items) | 84.59 ms \ud83d\udd3a+25.80 ms (+43.9%)\"."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-003/clone",
+    "requirements": [
+      {
+        "source": "spec-pr5460/pr-body/\"Field.Control instead drove every field concern from the DOM change event, so a value set from code had no path at all\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 adds a `useValueChanged`-driven controlled sync path; test \"syncs state and validates when the controlled value changes programmatically\" passes at head (reviewer-executed run)."
+      },
+      {
+        "source": "spec-pr5460/pr-body/\"The control now registers the serialized value, so the baseline and the comparison agree\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:86,93 registers `serializedValue` (String(value)) as the dirty baseline instead of the raw controlled value; test \"clears dirty state when a numeric controlled value returns to its initial value\" passes at head."
+      },
+      {
+        "source": "spec-pr5460/pr-body/\"a resolved error stayed visible and a pending async validator for the old value could still publish\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "Fixed for every controlled transition except one: see finding field-control/stale-validation-on-null-controlled-value (confirmed)."
+      },
+      {
+        "source": "spec-pr5460/pr-body/\"`details.cancel()` in `onValueChange` now stops the internal handling. It was ignored\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:153 gates `clearErrors`/`validation.change` on `!details.isCanceled`; test \"does not validate when the change is canceled\" passes at head."
+      },
+      {
+        "source": "spec-pr5460/pr-body/\"A controlled value the consumer rejects or rewrites no longer reaches the field state, matching Combobox, Number Field and OTP Field\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:144-146: the uncontrolled onChange path returns before touching dirty/filled/validation when `isControlled`, leaving `useValueChanged` (driven only by the synced `value` prop) as the sole owner."
+      },
+      {
+        "source": "spec-pr5460/pr-body performance table (\"This PR: 2 on the first, then 1\" / \"2 per keystroke\")",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Test \"renders once per keystroke for controlled input changes\" (added in this diff) asserts the steady-state 1-render-per-keystroke claim and passes at head (reviewer-executed run); the exact first-keystroke count was not independently re-measured, but nothing depends on that exact figure."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/react/src/field/control/FieldControl.test.tsx",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "Run from the clone root, offline, unmodified tree: 26 passed, 1 skipped (isJSDOM SSR test)."
+      },
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/root/FieldRoot.test.tsx packages/react/src/form/Form.test.tsx packages/react/src/internals/useValueChanged.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "Collateral coverage for shared context (FieldRoot, Form, useValueChanged): 126 passed, 3 skipped, no regressions."
+      },
+      {
+        "check": "code-infra-dashboard CI comment (bundle size and benchmark deltas)",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "unavailable",
+        "reason": "Bundle-size delta (+88 B/+26 B gzip) is proportionate to the diff and violates no stated budget; the reported paint regressions are on unrelated components (Menu, Select, Dialog, Combobox) with no plausible causal link to this two-file diff, so treated as noise rather than applicable evidence (see observation)."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-1",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Every call to `validation.change()` synchronously increments `validationCommitIdRef.current`, so a stale pending async `validate()` result for a superseded controlled value can never publish.",
+          "evidence": "packages/react/src/field/control/FieldControl.tsx:105-115; packages/react/src/field/root/useFieldValidation.ts:117-119,262-271,316-328",
+          "batch": "initial",
+          "ruling": "fails",
+          "reopened_as": "field-control/stale-validation-on-null-controlled-value"
+        },
+        {
+          "id": "field-control/stale-validation-on-null-controlled-value",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "followup",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-003/clone-work/private/tmp.tUo3hios1t/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-003/clone-work/private/tmp.tUo3hios1t/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        },
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-003/clone-work/private/tmp.tUo3hios1t/followup",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-003/clone-work/private/tmp.tUo3hios1t/followup/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

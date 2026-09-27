@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "No test in this diff exercises a controlled array `value`, though the PR body claims the fix also resolves array-value dirty tracking.",
+      "consequence": "FieldControl.tsx:34's `serializedValue = value == null ? undefined : String(value)` is applied uniformly regardless of value type, and the same mechanism is exercised only for a numeric `value` by FieldControl.test.tsx's \"clears dirty state when a numeric controlled value returns to its initial value\".",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

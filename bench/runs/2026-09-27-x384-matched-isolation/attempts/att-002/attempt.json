@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-002",
+  "run_id": "2026-09-27-x384-matched-isolation",
+  "cell": {
+    "target": "r-base-ui-5460",
+    "arm": "review-code-sonnet-high-isolated-control",
+    "replicate": 1
+  },
+  "predecessor": "att-001",
+  "retry_reason": "Replace the first invalid control cell after isolation denied its filesystem-root search; retain the original audit and charge.",
+  "replacement_index": 1,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-27T10:09:26Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "c3c53da5381dace16876b0f5b7abe4bccc6bc58b",
+    "diff_commands": [],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "e9d94115a7b95e0aa4eb7ea5262b1518236aac509887575eacbe6f45bd3cdd5d",
+    "tree_identity_after": "e9d94115a7b95e0aa4eb7ea5262b1518236aac509887575eacbe6f45bd3cdd5d"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 3.553935,
+    "cost_bounds_usd": {
+      "low": 3.553935,
+      "high": 3.553935
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-27T10:09:26Z",
+    "payload_validated_at": "2026-09-27T10:24:38Z",
+    "completed_at": "2026-09-27T10:24:38Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "9a91dabde645dbc7581e68cb1435736bfeb9ea0b2a266de14194d62247b9871e"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-27-x384-matched-isolation/att-002.tar.gz",
+    "sha256": "e9b4643fcd8041e47f6c5d18eb69cd528b8f8cc2cbf340d5990ebbe1a41cf689",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 b0b1b36f9b6a9b41ef929b2a75df7060e1a56453ad5e89ea7d2d5840d4a544d5; run policy sha256 2d0336d4c7f2801a19c5f79c5b311c7b92351506558b155bafec840bcc32367e (before path substitution)"
+  ]
+}

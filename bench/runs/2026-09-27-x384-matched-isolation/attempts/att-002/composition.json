@@ -1,0 +1,141 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-5460-body"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "change_description": "[field] Sync controlled value changes with field state"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Make `Field.Control` sync dirty/filled/validation with controlled `value` changes (mount reads aside, typed updates, and programmatic updates) via `useValueChanged`, matching how Switch, Checkbox, Checkbox Group, Radio Group, Select, Slider, Combobox, Number Field and OTP Field already integrate with field state; and fix two riders: a dirty flag that never cleared for non-string controlled values, and `details.cancel()` being ignored in the uncontrolled `onChange` path.",
+    "issue_fit": "No originating issue; the supplied PR body is the only intent source. Every explicit outcome it names is implemented and covered by a passing added test, except the 'same shape as its siblings' / 'a controlled value the consumer rejects or rewrites no longer reaches the field state, matching Combobox, Number Field and OTP Field' claim: the value FieldControl now hands `useRegisterFieldControl` is the DOM-serialized string instead of the raw typed value every one of those siblings passes, which is the confirmed finding below.",
+    "coverage": "Complete merge-base diff reviewed (2/2 changed files, 2/2 diff chunks, no truncation). FieldControl.test.tsx's full 27-case suite run at the pinned head in the reviewed clone: 26 passed, 1 skipped (isJSDOM-gated SSR autofocus case). One candidate verified by a fresh-context worker plus a focused scratch-vitest reproduction I ran at head and again against the merge-base FieldControl.tsx to confirm the regression is introduced by this diff."
+  },
+  "findings": [
+    {
+      "id": "field-control/registration-value-stringified",
+      "title": "Controlled non-string values reach validate() as strings on submit",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "compatibility",
+      "trigger": "Mount `<Field.Root validate={fn}><Field.Control value={5} onValueChange={setValue} /></Field.Root>` inside `<Form>`, then submit the form (or call `actionsRef.validate()`) without first typing into the control.",
+      "impact": "`validate(value, formValues)` receives the string \"5\" instead of the number 5 (or a stringified array/object for other controlled types) on the submit / `actionsRef.validate()` path, breaking validate logic that relies on the original type (`value === 5`, `Array.isArray(value)`, `Number.isInteger(value)`). Confirmed with a focused jsdom test that fails at head (received value is the string \"5\") and passes unmodified against the merge-base FieldControl.tsx (received value is the number 5), so this is introduced by this diff, not pre-existing. Every sibling that registers a controlled value with the field (NumberFieldInput, SliderRoot, OTPFieldRoot, AriaCombobox, SelectRoot) passes the raw typed value into `useRegisterFieldControl` and uses a separate override argument only for the DOM/form-value string projection; `Field.Control` is now the only one that collapses both into the serialized string, directly contradicting this PR's own 'same shape as its siblings' claim.",
+      "change": "In `packages/react/src/field/control/FieldControl.tsx`, pass the raw controlled `value` (not `serializedValue`) as the third argument to `useRegisterFieldControl`, so `registration.value` (read by `getRegistrationValue`/`commit` for `validate`) keeps its original type; keep `serializedValue` only for the `useValueChanged` dirty/filled comparisons a few lines below. `getValueFromInput` is already the separate `getFormValueOverride` argument, so `onFormSubmit`'s DOM-string projection is unaffected by this change.",
+      "anchor": {
+        "type": "line",
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 90,
+        "end_line": 97,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 93
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "mui/base-ui",
+    "requirements": [
+      {
+        "source": "spec-pr-5460-body/\"Dirty state never cleared for non-string values.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:86 serializes the controlled value before comparison and :111 compares it to `validityData.initialValue`; the added test 'clears dirty state when a numeric controlled value returns to its initial value' passed in the full FieldControl.test.tsx run at head."
+      },
+      {
+        "source": "spec-pr-5460-body/\"Programmatic changes left the field stale.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 wires `useValueChanged(serializedValue, ...)` to update dirty/filled/validation on any prop-driven value change; the added test 'syncs state and validates when the controlled value changes programmatically' passed."
+      },
+      {
+        "source": "spec-pr-5460-body/\"`details.cancel()` in `onValueChange` now stops the internal handling. It was ignored.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:153 adds `!details.isCanceled` to the uncontrolled `onChange` guard; the added test 'does not validate when the change is canceled' passed. Only the uncontrolled path is exercised by a test; the controlled path achieves the same net effect architecturally (a rejected value is simply never written back to the `value` prop, so `useValueChanged` never fires), which is consistent but not separately tested."
+      },
+      {
+        "source": "spec-pr-5460-body/\"A controlled value the consumer rejects or rewrites no longer reaches the field state, matching Combobox, Number Field and OTP Field.\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "The early return at FieldControl.tsx:144-146 does keep a rejected/rewritten controlled value out of dirty/filled state, met on its own terms. The claimed parity with Number Field/Combobox/OTP Field does not hold one layer down: those siblings register the raw typed value with the field for `validate`/`commit`, while Field.Control now registers a stringified copy \u2014 see the confirmed finding `field-control/registration-value-stringified`."
+      },
+      {
+        "source": "spec-pr-5460-body/\"Field.Control now has the same shape as its siblings, with the residual difference being the mount-time DOM read that its uncontrolled mode requires.\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "Contradicted by the confirmed finding: siblings keep the registration value raw and add a separate string-projection override, which Field.Control does not."
+      },
+      {
+        "source": "spec-pr-5460-body/\"Renders per keystroke for a controlled input... This PR: 2 on the first, then 1 (onSubmit); 2 per keystroke (onChange)\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "The added test 'renders once per keystroke for controlled input changes' asserts the steady-state +2-renders-for-2-keystrokes invariant this table implies for the default (onSubmit) validation mode, and it passed. The full cross-mode table (including the `onChange`-mode and Number Field comparison columns) was not independently re-measured; nothing in the diff contradicts it and no reviewed candidate depends on the exact counts, so this is not raised as a question."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/react/src/field/control/FieldControl.test.tsx",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "Run directly in the reviewed clone at the pinned head, clean tree: 26 passed, 1 skipped (isJSDOM-gated SSR autofocus test), 0 failed."
+      },
+      {
+        "check": "Scratch jsdom vitest reproduction of a controlled numeric Field.Control validated via Form submit (aliased to head then to merge-base FieldControl.tsx)",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "Built outside the clone per the run's scratch-test allowance; failed at head (validate received the string \"5\"), passed unmodified against the merge-base FieldControl.tsx (validate received the number 5). Backs the confirmed finding field-control/registration-value-stringified."
+      },
+      {
+        "check": "pkg-pr-new preview-package comment, code-infra-dashboard bundle-size/benchmark comment, netlify deploy-preview comment (supplied PR text, section 6)",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "unavailable",
+        "reason": "Informational forge comments quoted in the supplied PR text (package preview links, a bundle-size delta, synthetic benchmark deltas, a deploy-preview link), not structured pass/fail check results tied to a specific obligation; this is a local-range review without forge/CI access to re-verify them, and none of the reviewed candidates depend on them."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "field-control/registration-value-stringified",
+          "type": "candidate",
+          "trigger": "compatibility",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-002/clone-work/review-private/run.S6SheK/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-002/clone-work/review-private/run.S6SheK/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

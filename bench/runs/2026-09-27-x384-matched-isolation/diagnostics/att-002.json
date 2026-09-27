@@ -1,0 +1,7 @@
+{
+  "attempt": "att-002",
+  "requested_command": "cd /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-002/clone && git show 30b8ea2004fa999bed151204208676c6c0a9d261:packages/react/src/field/control/FieldControl.tsx > /tmp_base_fieldcontrol.txt 2>/dev/null || git show 30b8ea2004fa999bed151204208676c6c0a9d261:packages/react/src/field/control/FieldControl.tsx",
+  "tool_response_excerpt": "(eval):1: read-only file system: /tmp_base_fieldcontrol.txt",
+  "audit_violations": [],
+  "decision": "The outside write failed on the read-only filesystem. The source read through git show succeeded. The frozen read audit records no violation, the source tree is unchanged, and filing classified the completed review as valid. Retain the blocked write as execution evidence; do not alter the audit rule."
+}
