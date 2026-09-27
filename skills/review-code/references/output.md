@@ -12,8 +12,6 @@ Questions state evidence, how the answer changes the decision, and its supplier 
 
 Author intent, issue fit, concise coverage, ambiguities, and gaps. Without an issue, state alignment was unavailable and name the intent source; a required missing issue is a whole-change question. Never present unverifiable claims as established. In `summary.check_details`, distinguish accepted supplied checks, historical checks with original heads, reviewer runs, test failures, environmental failures, and unavailable execution. Group shared head/input context and link saved output. Unmet requirements need findings or questions; `coverage_gaps` names every uncovered file or required check and its recovery input.
 
-Lead with status, counts, and finding index. Keep questions, ambiguities, unanchored findings, disputes, open prior findings, and gaps visible. Follow with reviewed head, coverage, then collapsed `Review details`: intent, issue fit, base, checks, observations, settled prior findings. Retain each prior item once with classification and evidence; draft replies per `prior-state.md`. Merged targets keep the visible retrospective Mode; `review-code-publish` decides publication. Aim below 100 summary words before index/details; retain uncertainty without repeating findings or dropped candidates.
-
 ## Identity
 
 `workflow=v5b-30-x382` versions review behavior; increment for admission, verification, rendering, or state changes.

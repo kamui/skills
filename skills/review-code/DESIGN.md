@@ -142,3 +142,9 @@ The Changed tests section gains one bullet: an existing test that could catch it
 Seven whole paragraphs leave `output.md`, `prior-state.md`, `verification.md` and `targets.md` to offset the text epic #380 added. Each removal is a whole paragraph whose absence changes no review decision: a script builds or refuses what it describes, another file states the same rule, or it concerns housekeeping that bears on no finding, status or coverage. The [removal-candidates note](../../docs/research/review-code-removal-candidates-2026-09-27/README.md) ranks them as its tier A and holds the evidence; its tier B and other candidates are not part of this change. #394's preregistered comparison of the trimmed tree with the tree it trims has not run. If a guardrail fails, the paragraph that caused it is restored when the failure isolates it, and otherwise the change is reverted.
 
 **Workflow identity.** Workflow `v5b-30-x382` is retained. No removal changes admission, verification, rendering or state semantics, and #358 and #359 kept the workflow for changes that left review behavior unchanged.
+
+**Removed paragraphs.** Each row names a removed paragraph and what makes its absence safe.
+
+| Removed | Why it is safe |
+| --- | --- |
+| `output.md`'s report layout: lead with status, counts and finding index, keep open items visible, follow with reviewed head, coverage and collapsed `Review details`, and aim below 100 summary words | The reviewer cannot author the layout. The composition input has no body field (`read_summary`, `render_review.py:1280-1329`), and `compose_body` builds every part the paragraph lists (`render_review.py:1488-1600`), including the merged-target Mode line (`MODE_LINE`, `render_review.py:892`). The 100-word target had no other owner and no check; it governs summary length, not a decision, so only the cost guardrail can see its loss |
