@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-29-x382` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-30-x382` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -121,11 +121,11 @@ The isolated action variant lost ripgrep's registered defect in a valid review, 
 
 The removal subtracts 379 runtime and always-loaded bytes. Runtime total is 73,341 bytes and always loaded is 29,837. The shared runtime limit stays 74,000: the retained lifecycle and destroyed-test rules, identity and presentation changes still exceed the former 73,000 limit. No limit is raised. Workflow advances to `v5b-29-x382` because removing the action recheck changes verification semantics; the #382 policy remains in effect.
 
-## Lifecycle comparison for moved state updates, issue #384, 2026-09-26
+## Lifecycle sentence removed pending a valid run, issue #384, 2026-09-27
 
-`SKILL.md`'s optional-scrutiny rule gains one sentence after "cross-module reconstruction." and nothing else changes: before approving state updates moved between events, effects or callbacks, compare base and head through mount, remount, focus loss and pending results. It targets the frozen A baseline's approvals of r-base-ui-5460, which missed lost controlled filled-state initialization on mount and remount and discarded validation after blur-time normalization. Other cross-module scrutiny stays optional, and the mandatory verification triggers and allowances are unchanged. The change is an experimental candidate under the [#389 preregistration](../../docs/research/builtin-review-benchmark-2026-09-24/README.md); if the focused run misses its thresholds or trips a guardrail, revert the sentence and this entry together. Workflow `v5b-27`, because the comparison changes when a review may conclude with no blocker.
+`SKILL.md`'s optional-scrutiny rule loses the lifecycle sentence and nothing else changes. Both #384 runs are inconclusive: [the first](../../bench/runs/2026-09-26-x384-lifecycle/README.md) has 0 valid reviews of 4 and [the matched run](../../bench/runs/2026-09-27-x384-matched-isolation/README.md) has 3 of 8. Neither measures a pass or a rejection, so this is not a rejection. #380 adopts only changes that pass an isolated experiment, and the sentence was shipping without one. The experiment reads the frozen candidate tree `938f7c80925248cc76943317d6fec243ddac5a08`, not `main`, so a later run is unaffected; a pass restores the sentence. [HISTORY.md](../../docs/review-code/HISTORY.md#lifecycle-sentence-removed-pending-a-valid-run-2026-09-27) preserves the original design entry.
 
-**Budget.** The sentence adds 153 bytes and 22 words to every measured path except the verifier briefs. The always-loaded set rises from 29,847 to 30,000 bytes, exactly its limit, a first review from 48,503 to 48,656, the required-verifier path from 60,680 to 60,833, a re-review from 57,655 to 57,808 and the runtime total from 73,310 to 73,463. Every path stays within its limit, so no limit changes.
+The removal subtracts 153 bytes and 22 words from every measured path except the verifier briefs. The always-loaded set falls from 29,837 to 29,684 bytes, a first review from 48,558 to 48,405, the required-verifier path from 60,735 to 60,582, a re-review from 57,751 to 57,598 and the runtime total from 73,341 to 73,188. The runtime total still exceeds the former 73,000 limit, so every limit stands. Workflow advances to `v5b-30-x382` because the removal changes when a review may conclude with no blocker.
 
 ## Destroyed test protection, issue #382, 2026-09-26
 
