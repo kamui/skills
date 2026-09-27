@@ -32,6 +32,7 @@
 # Exit: the reviewer CLI's exit code; 2 for a usage or setup error.
 set -eu
 ARM=${1:?arm}; DIR=${2:?attempt-dir}; CLONE=${3:?clone}; BASE=${4:?base-branch}; PACKET=${5:?packet}; MODEL=${6:-}; EFFORT=${7:-}
+CLAUDE_BIN=${BENCH_CLAUDE:-claude}
 case "$DIR" in /tmp/*) echo "attempt-dir must not be under /tmp" >&2; exit 2;; esac
 [ -d "$CLONE/.git" ] || { echo "not a clone: $CLONE" >&2; exit 2; }
 [ -f "$PACKET" ] || { echo "no packet: $PACKET" >&2; exit 2; }
@@ -91,16 +92,32 @@ PY
     else (cd "$SKILL_TREE" && git rev-parse "HEAD:$(git rev-parse --show-prefix | sed 's,/$,,')" 2>/dev/null || echo unpinned); fi > "$DIR/skill-tree.txt"
     SID=$(python3 -c 'import uuid; print(uuid.uuid4())'); printf '%s\n' "$SID" > "$DIR/session-id.txt"
     mkdir -p "$DIR/artifacts"
-    PROMPT="Invoke the \`review-code\` skill now with the Skill tool and these caller inputs: mode \`one-shot\`; profile \`publishable\`; return_format \`artifacts\`; target: the committed range from local branch \`$BASE\` (the base) to local branch \`review-head\` (the head) in the current repository, which is an offline clone; user-supplied spec: the pull-request text below; focused-test policy: the skill's defaults; no publication authorization and no forge access (there is no remote; never run gh, curl, or git fetch/pull/push). Dispatch every fresh-context worker the skill's references call for with the Agent tool using subagent_type general-purpose, model \`sonnet\`, and run_in_background false. Never modify the repository tree. When the skill returns, copy its private directory's \`composition.json\`, \`payload.json\`, and \`report.md\` to \`$DIR/artifacts/\` and print the finalizer's compact status and paths.
+    REVIEW_CWD=$CLONE
+    REVIEW_LOCATION="in the current repository"
+    set --
+    case "${BENCH_ISOLATION:-n/a}" in
+      n/a) ;;
+      claude-strict-v1)
+        python3 "$(dirname "$0")/review_isolation.py" settings --attempt "$DIR" --clone "$CLONE" --out "$DIR/isolation-settings.json"
+        chmod 444 "$DIR/isolation-settings.json"
+        REVIEW_CWD="$CLONE-work"
+        REVIEW_LOCATION="in the repository at \`$CLONE\`"
+        CLAUDE_CODE_TMPDIR="$DIR/tmp"; export CLAUDE_CODE_TMPDIR
+        set -- --settings "$DIR/isolation-settings.json" --setting-sources user --permission-mode dontAsk \
+          --tools 'Bash,Read,Write,Edit,Glob,Grep,Agent,Skill' --strict-mcp-config --mcp-config '{"mcpServers":{}}'
+        ;;
+      *) echo "unknown review-code isolation: $BENCH_ISOLATION" >&2; exit 2;;
+    esac
+    PROMPT="Invoke the \`review-code\` skill now with the Skill tool and these caller inputs: mode \`one-shot\`; profile \`publishable\`; return_format \`artifacts\`; target: the committed range from local branch \`$BASE\` (the base) to local branch \`review-head\` (the head) $REVIEW_LOCATION, which is an offline clone; user-supplied spec: the pull-request text below; focused-test policy: the skill's defaults; no publication authorization and no forge access (there is no remote; never run gh, curl, or git fetch/pull/push). Dispatch every fresh-context worker the skill's references call for with the Agent tool using subagent_type general-purpose, model \`sonnet\`, and run_in_background false. Never modify the repository tree. When the skill returns, copy its private directory's \`composition.json\`, \`payload.json\`, and \`report.md\` to \`$DIR/artifacts/\` and print the finalizer's compact status and paths.
 
 Pull-request text:
 
 $(cat "$PACKET")"
     printf '%s\n' "$PROMPT" > "$DIR/prompt.txt"
-    { echo "claude $(claude --version)"; echo "model=${MODEL:-sonnet} effort=${EFFORT:-high} session=$SID skill_tree=$(cat "$DIR/skill-tree.txt")"; } > "$DIR/dispatch.txt"
+    { echo "claude $("$CLAUDE_BIN" --version)"; echo "model=${MODEL:-sonnet} effort=${EFFORT:-high} session=$SID skill_tree=$(cat "$DIR/skill-tree.txt")"; } > "$DIR/dispatch.txt"
     printf '{"completion_mode": "render-only", "root_dispatched_at": "%s", "payload_validated_at": null, "completed_at": null}\n' "$(stamp)" > "$DIR/timing.json"
     set +e
-    ( cd "$CLONE" && HOME="$H" CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 timeout 5400 claude -p --session-id "$SID" \
+    ( cd "$REVIEW_CWD" && HOME="$H" CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 timeout 5400 "$CLAUDE_BIN" -p --session-id "$SID" "$@" \
         --model "${MODEL:-sonnet}" --effort "${EFFORT:-high}" --max-budget-usd "${ATTEMPT_BUDGET_USD:-15}" --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,Skill" \
         --output-format stream-json --verbose "$PROMPT" < /dev/null > "$DIR/stdout.jsonl" 2> "$DIR/stderr.txt" )
     RC=$?; set -e
