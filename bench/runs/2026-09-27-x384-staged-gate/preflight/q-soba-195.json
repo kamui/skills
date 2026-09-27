@@ -1,0 +1,40 @@
+{
+  "target": "q-soba-195",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "restore cache archive sha256:70f114db9d74f7cfe8dbe0d292e437bac7b25ce7cd92681e9423aeb9ed007327",
+    "duration_seconds": 0.96,
+    "tree_clean_after": true,
+    "steps": [
+      {
+        "command": "restore cache archive sha256:70f114db9d74f7cfe8dbe0d292e437bac7b25ce7cd92681e9423aeb9ed007327",
+        "exit_code": 0,
+        "duration_seconds": 0.96
+      }
+    ],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-oah_s460/attempt/clone && GOMODCACHE=/tmp/review-isolation-oah_s460/attempt/clone-cache/gomodcache GOCACHE=/tmp/review-isolation-oah_s460/attempt/clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test ./... -count=1",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": "?   \tgithub.com/jonhadfield/soba\t[no test files]\nok  \tgithub.com/jonhadfield/soba/internal\t5.141s",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": "?   \tgithub.com/jonhadfield/soba\t[no test files]\nok  \tgithub.com/jonhadfield/soba/internal\t5.121s",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}
