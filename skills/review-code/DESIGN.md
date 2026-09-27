@@ -117,7 +117,7 @@ The verifier has one return transport. `--return-file`, `--inline-fallback`, the
 
 ## Rejected action and remedy wording, issues #381 and #385, 2026-09-27
 
-The isolated action variant lost ripgrep's registered defect in a valid review, and the remedy variant lost Hono's. Each baseline target had full recovery, so the protocol's recall-retention guardrail stops both runs. The two action sentences and the completeness sentence are removed. The [run reports](../../bench/runs/2026-09-27-audit-recovery.json) preserve the paid evidence; [HISTORY.md](../../docs/review-code/HISTORY.md#action-and-remedy-experiments-rejected-2026-09-27) preserves the original design entries. The lifecycle experiment #384 is inconclusive and remains open.
+The isolated action variant lost ripgrep's registered defect in a valid review, and the remedy variant lost Hono's. Each baseline target had full recovery, so the protocol's recall-retention guardrail stops both runs. The two action sentences and the completeness sentence are removed. The [run reports](../../bench/runs/2026-09-27-audit-recovery.md) preserve the paid evidence; [HISTORY.md](../../docs/review-code/HISTORY.md#action-and-remedy-experiments-rejected-2026-09-27) preserves the original design entries. The lifecycle experiment #384 is inconclusive and remains open.
 
 The removal subtracts 379 runtime and always-loaded bytes. Runtime total is 73,341 bytes and always loaded is 29,837. The shared runtime limit stays 74,000: the retained lifecycle and destroyed-test rules, identity and presentation changes still exceed the former 73,000 limit. No limit is raised. Workflow advances to `v5b-29-x382` because removing the action recheck changes verification semantics; the #382 policy remains in effect.
 

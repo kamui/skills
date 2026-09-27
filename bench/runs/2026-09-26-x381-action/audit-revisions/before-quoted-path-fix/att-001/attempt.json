@@ -36,12 +36,10 @@
     "tree_identity_after": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f"
   },
   "phase_reached": "result",
-  "disposition": "harness-invalid: read audit: 1 violation(s), first path outside allowed roots in command: /",
+  "disposition": "valid completed",
   "arm_reported_complete": true,
   "audit": {
-    "violations": [
-      "path outside allowed roots in command: /"
-    ],
+    "violations": [],
     "guidance_probes": [],
     "network_commands": [],
     "audit_file": "audit.json"
@@ -61,8 +59,8 @@
   "timing": {
     "dispatched_at": "2026-09-26T20:12:03Z",
     "payload_validated_at": "2026-09-26T20:30:46Z",
-    "completed_at": null,
-    "stopped_at": "2026-09-26T20:30:46Z"
+    "completed_at": "2026-09-26T20:30:46Z",
+    "stopped_at": null
   },
   "native_payload": {
     "path": "composition.json",
@@ -80,7 +78,6 @@
   },
   "notes": [
     "input.md sha256 f204b38c09347e5b8eac18a805eb0ba631faf0d8afb97751e753907ee0614cf9; run policy sha256 b4355b29cd11b55b24f958b339ea068a42994bed76c1a58876da0ebb1b18b25f (before path substitution)",
-    "Network-command audit replayed with the local-clone correction; original filesystem audit findings retained. Original record saved under audit-revisions/before-local-clone-fix.",
-    "Audit replay e2ab0a965d6b28d561a3dd95db6873482e4bb185 detects the existing filesystem root in find /. Prior filed records are preserved under audit-revisions/before-quoted-path-fix. No rerun, metering change or new timestamp; completion is classified as stopped under file_attempt semantics."
+    "Network-command audit replayed with the local-clone correction; original filesystem audit findings retained. Original record saved under audit-revisions/before-local-clone-fix."
   ]
 }

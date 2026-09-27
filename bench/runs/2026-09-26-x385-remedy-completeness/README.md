@@ -66,11 +66,11 @@ separately. A focused pass does not complete #380's combined and unseen-target a
 
 All existing outputs were blind-graded under the original template by Opus 5.5 high through Claude Code 2.1.282. No grader returned an unresolved new candidate. No additional review was purchased during recovery. Unattempted cells remain visible in `results.v1.json`; no missing cell is an approval or a recovered defect.
 
-| Target | Valid / all attempts | Valid-review recall | Valid false findings | Median elapsed-to-payload |
+| Target | Valid / all attempts | Valid-review recall | Valid false findings | Median elapsed-to-payload (valid) |
 | --- | ---: | ---: | ---: | --- |
 | i-requests-6667 | 1/1 | 0.667 | 0 | 1169 s; n=1 |
-| l-bokeh-9232 | 0/1 | n/a | 0 | 718 s; n=0 |
-| m-grpc-go-7390 | 0/1 | n/a | 0 | 900 s; n=0 |
+| l-bokeh-9232 | 0/1 | n/a | 0 | unavailable; n=0 |
+| m-grpc-go-7390 | 0/1 | n/a | 0 | unavailable; n=0 |
 | p-hono-5067 | 1/1 | 0.000 | 0 | 474 s; n=1 |
 | q-soba-195 | 1/1 | n/a | 0 | unavailable; n=0 |
 
@@ -82,3 +82,5 @@ All existing outputs were blind-graded under the original template by Opus 5.5 h
 - Run supervision: the original terminal jobs did not finish wrapper finalization for three completed CLI sessions. Recovery grading ran to completion in detached tmux sessions with logs under `~/.t3/bench-runs/2026-09-26-x385-remedy-completeness/recovery-grading.log`. There are no further eligible review dispatches for this run under its stop decision.
 
 This partial, stopped experiment does not establish an improvement or complete #380's adoption screen. A new attempt to qualify an inconclusive variant needs a separately preregistered run and spending decision; these caps are not extended.
+
+The [complete-path audit replay](../2026-09-27-quoted-path-audit.json) checks all 95 saved audits. It adds two experiment invalidations for filesystem-root scans, preserves prior records, and changes no historical baseline classification.

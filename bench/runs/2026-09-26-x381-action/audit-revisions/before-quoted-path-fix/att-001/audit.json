@@ -181,9 +181,7 @@
     "/src",
     "/venv/bin/python"
   ],
-  "violations": [
-    "path outside allowed roots in command: /"
-  ],
+  "violations": [],
   "allowed_roots": [
     "/home/jack/.t3/bench-runs/2026-09-26-x381-action/att-001/clone",
     "/home/jack/.t3/bench-runs/2026-09-26-x381-action/att-001"

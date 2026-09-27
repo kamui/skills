@@ -163,9 +163,7 @@
   "diff_commands": [],
   "guidance_probes": [],
   "absent_outside_paths": [],
-  "violations": [
-    "path outside allowed roots in command: /"
-  ],
+  "violations": [],
   "allowed_roots": [
     "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-003/clone",
     "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-003"

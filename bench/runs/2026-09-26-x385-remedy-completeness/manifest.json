@@ -192,6 +192,11 @@
       "at": "2026-09-27T07:08:45Z",
       "what": "Audit correction 0384e39bece003f9244793398491b477c27985a3 permits explicit filesystem git clones with local-copy options while retaining path isolation, remote/submodule/configuration restrictions, and Go offline requirements. All 83 historical baseline audits were replayed for this network classification with no changes; baseline files were not rewritten. Existing experiment audits preserve their originally observed filesystem violations. x381 att-001 is restored to valid without a rerun. Three completed CLI outputs whose wrappers stopped before finalization were recovered and metered: x381 att-003, x384 att-004, x385 att-005. Their missing wrapper exit and elapsed-to-payload timestamps remain unavailable; CLI durations are preserved only in recovery.json, not substituted into the metric. Original experiment records are saved under audit-revisions/before-local-clone-fix. See ../2026-09-27-audit-recovery.json. Existing outputs will be graded before further dispatch to check the stop rules; no thresholds, reviewer inputs, trees or spending caps change.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-27T07:38:07Z",
+      "what": "Audit parser correction e2ab0a965d6b28d561a3dd95db6873482e4bb185 keeps quoted path operands intact, including spaces and separators, and checks complete absolute operands. Replaying all 83 baseline and 12 experiment audits changes no baseline classification and invalidates x381 att-001 and x384 att-003 for find /. Their prior records are saved under audit-revisions/before-quoted-path-fix; v2 results supersede v1 for those runs. No reviewer inputs, caps, model outputs, grades or charges change. See ../2026-09-27-quoted-path-audit.json. Valid-timing tables exclude all invalid attempts.",
+      "invalidates": []
     }
   ]
 }

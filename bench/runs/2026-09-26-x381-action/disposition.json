@@ -1,12 +1,13 @@
 {
   "issue": 381,
   "disposition": "reject",
-  "reason": "The valid ripgrep review recovered no registered defect and approved. Frozen A recovered GT-n1 in both historical reviews. The common guardrail requires no loss of per-target recall, so this valid miss is a measured guardrail failure and further dispatch stops. Even perfect remaining replicates could produce only 2/3 recovery, below the required 3/3. This is an early guardrail stop, not a claim that all 12 planned cells ran. The valid Requests review also left recovered GT-i2 as `consider` with a partial remedy, so the action objective is not met. Revert the two action sentences; retain the shared runtime cap only because remaining rules still require it.",
+  "reason": "The valid ripgrep review recovered no registered defect and approved. Frozen A recovered GT-n1 in both historical reviews. The common guardrail requires no loss of per-target recall, so this valid miss is a measured guardrail failure and further dispatch stops. Even perfect remaining replicates could produce only 2/3 recovery, below the required 3/3. This is an early guardrail stop, not a claim that all 12 planned cells ran. The Requests review is invalid after the complete-path audit found a filesystem-root scan; its partial GT-i2 remedy is diagnostic only. Revert the two action sentences; retain the shared runtime cap only because remaining rules still require it.",
   "reviews_usd": 8.908711,
   "grading_usd": 0.778697,
   "total_usd": 9.687408,
-  "valid_attempts": 2,
+  "valid_attempts": 1,
   "attempts": 3,
   "replacements": 0,
-  "new_reviews_after_recovery": 0
+  "new_reviews_after_recovery": 0,
+  "results": "results.v2.json"
 }
