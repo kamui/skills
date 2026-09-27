@@ -127,7 +127,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-29-x382"
+WORKFLOW = "v5b-30-x382"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
