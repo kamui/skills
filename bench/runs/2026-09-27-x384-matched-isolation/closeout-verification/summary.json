@@ -1,0 +1,44 @@
+{
+  "source_revision": "9076ab8bc2b5c5c9db58bd867027f8317a987caa",
+  "input_state": "Source unchanged from source_revision; dirty additions were benchmark output and closeout documentation.",
+  "environment": "Linux/WSL; Python 3; pinned Claude Code 2.1.282; extracted bubblewrap/socat; native tests use a local fake API and dummy credentials.",
+  "paid_calls": 0,
+  "checks": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s bench/tools -p 'test_*.py'",
+      "result": "135 collected; 125 passed; 10 native checks skipped",
+      "output": "unit.log"
+    },
+    {
+      "command": "BENCH_ISOLATION_CLI=.../2.1.282 BENCH_ISOLATION_TARGETS=r-base-ui-5460,m-grpc-go-7390,q-soba-195 python3 -B bench/tools/test_review_isolation.py",
+      "result": "15 passed; no skips",
+      "output": "native.log"
+    },
+    {
+      "command": "python3 -B bench/tools/{run_cell,file_attempt,provision,score}.py --self-test",
+      "result": "All four passed"
+    },
+    {
+      "command": "sh -n bench/tools/dispatch.sh; git diff --check",
+      "result": "Passed"
+    },
+    {
+      "command": "check_manifest.validate against run, attempt, mapping and results schemas",
+      "result": "1 manifest, 8 attempts, 2 mappings and 2 score versions passed"
+    },
+    {
+      "command": "review_isolation.verify_evidence on all archived attempts",
+      "result": "8 passed"
+    },
+    {
+      "command": "python3 -B bench/tools/score.py --run <run> --out /tmp/x384-reproduced-results.json",
+      "result": "Reproduces results.v2.json except computed_at timestamp"
+    }
+  ],
+  "acceptance_observations": [
+    "Five invalid attempts stopped the paid matrix under its approved cap; #384 remains inconclusive.",
+    "All completed outputs were blind-graded; no unresolved candidates remain.",
+    "Native outside-read/write/network and worker restrictions passed free checks; paid outside writes were blocked.",
+    "No valid three-review medians or complete 18-cell matrix are available."
+  ]
+}

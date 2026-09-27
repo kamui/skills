@@ -1,0 +1,9 @@
+{
+  "attempt": "att-005",
+  "audit_violations": [
+    "network-capable command: cd /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone\ncat go.mod | head -5\nls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone-cache 2>/dev/null || echo"
+  ],
+  "requested_command": "cd /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone\ncat go.mod | head -5\nls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone-cache 2>/dev/null || echo \"no cache dir yet\"\ngo env GOCACHE GOMODCACHE GOFLAGS GOPROXY GOTOOLCHAIN 2>&1 | head",
+  "tool_response": "module google.golang.org/grpc\n\ngo 1.21\n\nrequire (\ngocache\ngomodcache\n/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/home/.cache/go-build\n/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/home/go/pkg/mod\n\nhttps://proxy.golang.org,direct\nauto",
+  "decision": "The frozen audit classifies this Go invocation as network-capable because it lacks the required offline environment. Preserve the invalid disposition and charge. Native isolation remained enabled; do not infer an actual network escape from the audit label. Replace the cell under allowance 3/4."
+}

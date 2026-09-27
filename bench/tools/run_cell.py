@@ -235,6 +235,12 @@ def check_frozen(run: Run) -> None:
             raise InputError(f"no arm file {path}")
         if sha256_file(path) != arm["arm_file_sha256"]:
             raise Refused(f"arm file {path.name} no longer hashes to the frozen arm_file_sha256")
+        definition = read_json(path)
+        if definition.get("isolation", {}).get("sandbox") == "claude-strict-v1":
+            version = tool([os.environ.get("BENCH_CLAUDE", "claude"), "--version"])
+            observed = "claude-code " + version.stdout.split(" (", 1)[0].strip()
+            if version.returncode or observed != arm["expected_cli_version"]:
+                raise Refused(f"Claude CLI pin differs before dispatch: {observed!r}; expected {arm['expected_cli_version']!r}")
 
 
 def check_target(run: Run, target_id: str) -> Path:
@@ -403,6 +409,7 @@ def dispatch(run: Run, attempt_id: str, claim: dict) -> None:
         entry = run.arm_entry(cell["arm"])
         env = dict(os.environ)
         env["ATTEMPT_BUDGET_USD"] = str(run.attempt_bound(cell["arm"]))
+        env["BENCH_ISOLATION"] = arm.get("isolation", {}).get("sandbox", "n/a")
         if arm["kind"] == "review-code":
             tree = entry["resolved_skill_tree"]
             if not tree:

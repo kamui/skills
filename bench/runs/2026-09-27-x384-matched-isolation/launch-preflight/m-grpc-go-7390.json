@@ -1,0 +1,34 @@
+{
+  "target": "m-grpc-go-7390",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "restore cache archive sha256:e9d72d6ae4aa73395c2d20d1bf05d549c67c3d0ebc93be3cb1b77461542baf15",
+    "duration_seconds": 2.77,
+    "tree_clean_after": true,
+    "steps": [
+      {
+        "command": "restore cache archive sha256:e9d72d6ae4aa73395c2d20d1bf05d549c67c3d0ebc93be3cb1b77461542baf15",
+        "exit_code": 0,
+        "duration_seconds": 2.77
+      }
+    ],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-nkr_aofq/attempt/clone && GOMODCACHE=/tmp/review-isolation-nkr_aofq/attempt/clone-cache/gomodcache GOCACHE=/tmp/review-isolation-nkr_aofq/attempt/clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": "ok  \tgoogle.golang.org/grpc\t0.163s",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}

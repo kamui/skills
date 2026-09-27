@@ -1,0 +1,9 @@
+{
+  "attempt": "att-008",
+  "audit_violations": [
+    "network-capable command: ls -la xds/internal/xdsclient/tests/ | head -5 && cat go.mod | head -5 && echo \"---\" && ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-cache 2>&1 | head -20 && which go &"
+  ],
+  "requested_command": "ls -la xds/internal/xdsclient/tests/ | head -5 && cat go.mod | head -5 && echo \"---\" && ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-cache 2>&1 | head -20 && which go && go version",
+  "tool_response": "total 296\ndrwxr-xr-x 2 jack jack  4096 Sep 27 08:00 .\ndrwxr-xr-x 7 jack jack  4096 Sep 27 08:00 ..\n-rw-r--r-- 1 jack jack 13766 Sep 27 08:00 authority_test.go\n-rw-r--r-- 1 jack jack 42054 Sep 27 08:00 cds_watchers_test.go\nmodule google.golang.org/grpc\n\ngo 1.21\n\nrequire (\n---\ngocache\ngomodcache\n/home/jack/.local/share/mise/installs/go/1.26.5/bin/go\ngo version go1.26.5 linux/amd64",
+  "decision": "Preserve the fifth invalid attempt and its charge. Stop the review matrix: 3 valid + (22 maximum attempts - 8 used) = 17 maximum possible valid cells, below the 18 required. No replacements remain. Complete grading and accounting only; leave #384 open as inconclusive."
+}

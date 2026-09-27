@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "packages/react/src/field/control/FieldControl.tsx",
+      "line_start": 90,
+      "line_end": 97,
+      "claim": "Controlled non-string values reach validate() as strings on submit. Mount `<Field.Root validate={fn}><Field.Control value={5} onValueChange={setValue} /></Field.Root>` inside `<Form>`, then submit the form (or call `actionsRef.validate()`) without first typing into the control.",
+      "consequence": "`validate(value, formValues)` receives the string \"5\" instead of the number 5 (or a stringified array/object for other controlled types) on the submit / `actionsRef.validate()` path, breaking validate logic that relies on the original type (`value === 5`, `Array.isArray(value)`, `Number.isInteger(value)`). Confirmed with a focused jsdom test that fails at head (received value is the string \"5\") and passes unmodified against the merge-base FieldControl.tsx (received value is the number 5), so this is introduced by this diff, not pre-existing. Every sibling that registers a controlled value with the field (NumberFieldInput, SliderRoot, OTPFieldRoot, AriaCombobox, SelectRoot) passes the raw typed value into `useRegisterFieldControl` and uses a separate override argument only for the DOM/form-value string projection; `Field.Control` is now the only one that collapses both into the serialized string, directly contradicting this PR's own 'same shape as its siblings' claim.",
+      "proposed_fix": "In `packages/react/src/field/control/FieldControl.tsx`, pass the raw controlled `value` (not `serializedValue`) as the third argument to `useRegisterFieldControl`, so `registration.value` (read by `getRegistrationValue`/`commit` for `validate`) keeps its original type; keep `serializedValue` only for the `useValueChanged` dirty/filled comparisons a few lines below. `getValueFromInput` is already the separate `getFormValueOverride` argument, so `onFormSubmit`'s DOM-string projection is unaffected by this change.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

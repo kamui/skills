@@ -1,0 +1,7 @@
+{
+  "attempt": "att-004",
+  "requested_command": "PRIVDIR=/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-004/clone-work/review-private/run.5yJlLf && python3 /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-004/home/.claude/skills/review-code/scripts/review_context.py --from \"$PRIVDIR/review-context.json\" --section diff --path packages/react/src/field/control/FieldControl.test.tsx > /tmp_diff_test.txt 2>&1; wc -l /tmp_diff_test.txt; echo \"---\"; python3 /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-004/home/.claude/skills/review-code/scripts/review_context.py --from \"$PRIVDIR/review-context.json\" --section diff --path packages/react/src/field/control/FieldControl.tsx > /tmp_diff_ctrl.txt 2>&1; wc -l /tmp_diff_ctrl.txt",
+  "tool_response": "Exit code 1\n(eval):1: read-only file system: /tmp_diff_test.txt\nwc: /tmp_diff_test.txt: No such file or directory\n---\n(eval):1: read-only file system: /tmp_diff_ctrl.txt\nwc: /tmp_diff_ctrl.txt: No such file or directory",
+  "audit_violations": [],
+  "decision": "The outside diff-file writes failed on the read-only filesystem. The reviewer used the permitted work directory afterward. Filing classified the completed review as valid under the unchanged audit, with the source tree unchanged."
+}

@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-007",
+  "run_id": "2026-09-27-x384-matched-isolation",
+  "cell": {
+    "target": "m-grpc-go-7390",
+    "arm": "review-code-sonnet-high-isolated-lifecycle",
+    "replicate": 1
+  },
+  "predecessor": "att-006",
+  "retry_reason": "Use the final permitted replacement after a bare go version invocation failed the frozen offline-environment audit.",
+  "replacement_index": 4,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-27T11:44:55Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "938f7c80925248cc76943317d6fec243ddac5a08",
+    "diff_commands": [
+      "git diff --stat main...review-head"
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "4906d0cee892be918981bd2a82dfeebcc3b10aa0d596e5d745484130dd0af451",
+    "tree_identity_after": "4906d0cee892be918981bd2a82dfeebcc3b10aa0d596e5d745484130dd0af451"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 3.282519,
+    "cost_bounds_usd": {
+      "low": 3.282519,
+      "high": 3.282519
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-27T11:44:55Z",
+    "payload_validated_at": "2026-09-27T11:59:55Z",
+    "completed_at": "2026-09-27T11:59:55Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "518ac58f9afbd6e1111bdcddec7b3d733eb8ded8bd5a7250440a189f1a7ebb9e"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-27-x384-matched-isolation/att-007.tar.gz",
+    "sha256": "d8143cd01e382e40376e8bab9b787f277f687f4d3300d476eb8b765ff9e6dbf9",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 5f1ff29d3bb87b743e2bfcf214e4dbc44dd8f6967005ca4670d642889725b0a0; run policy sha256 2754576c1506edf8600c8f6db905ad45c48f4c034f3c42062655ba2c171cbfbb (before path substitution)"
+  ]
+}

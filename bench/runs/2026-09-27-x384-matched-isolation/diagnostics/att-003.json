@@ -1,0 +1,9 @@
+{
+  "attempt": "att-003",
+  "audit_violations": [
+    "path outside allowed roots in command: /"
+  ],
+  "requested_command": "find / -maxdepth 6 -type d -iname \"monorepo-tests\" 2>/dev/null",
+  "tool_response": "(Bash completed with no output)",
+  "decision": "Retain the frozen harness-invalid disposition and all charges. The filesystem-root search yielded no benchmark-valid evidence. Replace the candidate cell immediately under allowance 2/4 without broadening access or changing the audit."
+}
