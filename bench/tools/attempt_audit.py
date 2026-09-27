@@ -155,7 +155,7 @@ def go_env(text: str, masked: str, scripts: list, m) -> dict:
     return env
 
 
-def local_clone(arguments: str) -> bool:
+def local_clone(arguments: str, cwd: str, roots: list) -> bool:
     try:
         words = shlex.split(arguments)
     except ValueError:
@@ -170,10 +170,13 @@ def local_clone(arguments: str) -> bool:
                 return False
         elif source is None:
             source = word
-    return bool(source and source.startswith(("/", "./", "../")) and not any(c in source for c in "$`*?[]"))
+    if not source or not source.startswith(("/", "./", "../")) or any(c in source for c in "$`*?[]"):
+        return False
+    real = os.path.realpath(os.path.join(cwd, source))
+    return any(real == root or real.startswith(root + os.sep) for root in roots)
 
 
-def network_use(cmd: str) -> bool:
+def network_use(cmd: str, cwd: str, roots: list) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when it runs with ``GOPROXY=off``
     and ``GOTOOLCHAIN=local``, as the Go targets' allowances do."""
     text = commands_only(cmd).replace("\\\n", "  ")
@@ -186,7 +189,11 @@ def network_use(cmd: str) -> bool:
             boundary = re.search(r"[;&|\n]", masked[m.end():end])
             if boundary:
                 end = m.end() + boundary.start()
-            if local_clone(text[m.end():end]):
+            clone_cwd = cwd
+            for words in command_words(masked[:m.start()]):
+                if len(words) > 1 and words[0] == "cd":
+                    clone_cwd = os.path.normpath(os.path.join(clone_cwd, words[1]))
+            if local_clone(text[m.end():end], clone_cwd, roots):
                 continue
         elif tool == "go":
             env = go_env(text, masked, scripts, m)
@@ -498,14 +505,14 @@ def main() -> int:
         ancestors.add(d)
     probes, absent = [], []
     for cmd, workdir in list(zip(commands, workdirs)) + [("", w) for w in stray]:
-        if network_use(cmd):
-            violations.append(f"network-capable command: {cmd[:200]}")
         start = clone_real
         if workdir:
             start = os.path.normpath(os.path.join(clone_real, HOME_DIR + workdir[1:] if workdir.startswith("~") else workdir))
             if not inside(start, roots):
                 violations.append(f"working directory outside allowed roots: {workdir}")
             start = os.path.realpath(start)
+        if network_use(cmd, start, roots):
+            violations.append(f"network-capable command: {cmd[:200]}")
         for p in paths_in(cmd, start, clone_real):
             if inside(p, roots) or p.startswith(("/usr/", "/bin/", "/dev/", "/proc/", "/etc/")):
                 continue
