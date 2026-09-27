@@ -14,8 +14,6 @@ Author intent, issue fit, concise coverage, ambiguities, and gaps. Without an is
 
 ## Identity
 
-`workflow=v5b-30-x382` versions review behavior; increment for admission, verification, rendering, or state changes.
-
 The run trailer carries `packet_context=` and `supplied_inputs=`. A pull request's `packet_context` is the digest `forge_packet.py` computes from the saved packet's intent, and the finalizer derives it; never write or copy one. A local target has none and its trailer reads `packet_context=none`. List the identities of the caller-supplied issues and specs in `run.specs`, empty when there were none; the finalizer derives `supplied_inputs=yes|no` from that list.
 
 ## Finalize
