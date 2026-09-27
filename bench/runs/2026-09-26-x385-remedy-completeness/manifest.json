@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x385-remedy-completeness",
+  "created_at": "2026-09-26T20:10:39Z",
+  "frozen_at": "2026-09-26T20:10:39Z",
+  "freeze_commit": "66838d13eab0fb8999a53461c72bc643750173c2",
+  "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
+  "rubric_version": 1,
+  "metric_code_revision": "7e9d2f185b05a8602dc820cbbe080c7a98edc6f7",
+  "arms": [
+    {
+      "id": "review-code-sonnet-high",
+      "arm_file_sha256": "b1e566c1cf1e55977b9d61ed39e2db4eeab18392ced4fa9506c93f14740b8a44",
+      "resolved_skill_tree": "8c5b592421d2e9ff528a370c6e95725437425c4b",
+      "expected_cli_version": "claude-code 2.1.282",
+      "expected_prompt_hashes": [],
+      "probe_attempt": null
+    }
+  ],
+  "cohort": [
+    {
+      "target": "i-requests-6667",
+      "register_version": 2,
+      "packet_sha256": "061c9288a59f02b8dfe575f8a4febf47abfc4daca8894cd477f4b531ee5c321c",
+      "diff_manifest_sha256": "453df0a9556fa8768460058cffeaeff2fe0e856369cbf4118af1572ca1573133",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "d58a1559dc6601dc6db2b99bd78e6df8ddc97c7f2aa500215a8b892690e56923"
+    },
+    {
+      "target": "p-hono-5067",
+      "register_version": 1,
+      "packet_sha256": "b8375c9b86b3e5edee4f1be877b7cd3ddaedcb1b200cd37a635680053b1530cf",
+      "diff_manifest_sha256": "6531bbf4bfa521a092af6778066da35ed32ae05bd4600f33fa161adb317648e7",
+      "cohort_group": "fresh",
+      "execution_available": true,
+      "provisioning_sha256": "6035e5f4cd2d41664e215c2acae0ed3b7780fd18704ef19a6a909786f02872c9"
+    },
+    {
+      "target": "l-bokeh-9232",
+      "register_version": 1,
+      "packet_sha256": "f39a26a189faf259a9cda8f51db376c16a215e2c7ca1662752037d9f902ee36b",
+      "diff_manifest_sha256": "b3476ac5a902a0b5178472bbd8915714ea52e11d00067f0515ee6ffe7e569bd6",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "513072c3743db2674baee73f5e1014cd1d58173121fb58d488d8d28c07fb0b31"
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "register_version": 1,
+      "packet_sha256": "e1c06473d9983ce6644841501ecbeb0f0976164c1703ef3f9282460458e43299",
+      "diff_manifest_sha256": "adb972f66328b4ce030c4e4b0ebed60f482611eb86f26e681dd6fbe02f701c4f",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "37bd6ccf46c5e46f5ff33f02348c0ab5173fd2cd8edfa4cdd18c5e1eb6dbac06"
+    },
+    {
+      "target": "q-soba-195",
+      "register_version": 1,
+      "packet_sha256": "57d65e01a6d224b248823f69422de1d3d6099bf527d70c3fbde82ae7a9ec757d",
+      "diff_manifest_sha256": "7235f4573902842b222c6a7cf738f2e038208cf034fee4b0439eb6864eddc088",
+      "cohort_group": "fresh",
+      "execution_available": true,
+      "provisioning_sha256": "f720aaf93423211c02fad078dab4610ffb16f6bf9def296cbe4c5640a2485fc7"
+    }
+  ],
+  "exclusions": [],
+  "planned_cells": [
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 1
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 2
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high",
+      "replicate": 3
+    }
+  ],
+  "caps": {
+    "max_attempts": 17,
+    "replacements": 2,
+    "spend_usd": 45.0,
+    "closeout_reserve_usd": 5.0,
+    "max_in_flight": 1,
+    "attempt_usd": 5.0
+  },
+  "sealed_order": [
+    "i-requests-6667/review-code-sonnet-high/1",
+    "p-hono-5067/review-code-sonnet-high/1",
+    "l-bokeh-9232/review-code-sonnet-high/1",
+    "m-grpc-go-7390/review-code-sonnet-high/1",
+    "q-soba-195/review-code-sonnet-high/1",
+    "i-requests-6667/review-code-sonnet-high/2",
+    "p-hono-5067/review-code-sonnet-high/2",
+    "l-bokeh-9232/review-code-sonnet-high/2",
+    "m-grpc-go-7390/review-code-sonnet-high/2",
+    "q-soba-195/review-code-sonnet-high/2",
+    "i-requests-6667/review-code-sonnet-high/3",
+    "p-hono-5067/review-code-sonnet-high/3",
+    "l-bokeh-9232/review-code-sonnet-high/3",
+    "m-grpc-go-7390/review-code-sonnet-high/3",
+    "q-soba-195/review-code-sonnet-high/3"
+  ],
+  "rates": [
+    {
+      "model": "claude-sonnet-5",
+      "as_of": "2026-09-24"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "as_of": "2026-09-24"
+    }
+  ],
+  "execution_policy": {
+    "branch_layout": "The working directory is an offline export of the pull request's repository. Local branch `main` is the merge-base and local branch `review-head`, which is checked out, is the head under review; the change under review is the committed range `main...review-head`. There is no remote, no network, and nothing outside this attempt's directories is available.",
+    "allowance": "Reading the clone is always permitted. Commands may be run only as the target's allowance below states, offline, with a five-minute limit per command; scratch files go under the work directory; nothing may be added to or changed in the clone, whose tree identity is checked before and after the review.",
+    "unprivileged_user": null
+  },
+  "deviations": [
+    {
+      "at": "2026-09-26T20:32:51Z",
+      "what": "After dispatch began, file_attempt.py at 53950685d342929c93ac67c17372aedc199f722c was corrected to collapse line breaks in the disposition summary. A multiline audit violation in x381 att-001 exposed a schema failure after the attempt record was written. The full audit evidence, review outputs, validity decision, metered charges and timestamps are unchanged. x381 att-001 was refiled without a model rerun. Future filings use this serialization fix; the frozen reviewer tree, prompt, allowances and scoring rules are unchanged.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-27T07:08:45Z",
+      "what": "Audit correction 0384e39bece003f9244793398491b477c27985a3 permits explicit filesystem git clones with local-copy options while retaining path isolation, remote/submodule/configuration restrictions, and Go offline requirements. All 83 historical baseline audits were replayed for this network classification with no changes; baseline files were not rewritten. Existing experiment audits preserve their originally observed filesystem violations. x381 att-001 is restored to valid without a rerun. Three completed CLI outputs whose wrappers stopped before finalization were recovered and metered: x381 att-003, x384 att-004, x385 att-005. Their missing wrapper exit and elapsed-to-payload timestamps remain unavailable; CLI durations are preserved only in recovery.json, not substituted into the metric. Original experiment records are saved under audit-revisions/before-local-clone-fix. See ../2026-09-27-audit-recovery.json. Existing outputs will be graded before further dispatch to check the stop rules; no thresholds, reviewer inputs, trees or spending caps change.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-27T07:38:07Z",
+      "what": "Audit parser correction e2ab0a965d6b28d561a3dd95db6873482e4bb185 keeps quoted path operands intact, including spaces and separators, and checks complete absolute operands. Replaying all 83 baseline and 12 experiment audits changes no baseline classification and invalidates x381 att-001 and x384 att-003 for find /. Their prior records are saved under audit-revisions/before-quoted-path-fix; v2 results supersede v1 for those runs. No reviewer inputs, caps, model outputs, grades or charges change. See ../2026-09-27-quoted-path-audit.json. Valid-timing tables exclude all invalid attempts.",
+      "invalidates": []
+    }
+  ]
+}

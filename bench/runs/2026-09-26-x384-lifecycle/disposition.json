@@ -1,0 +1,13 @@
+{
+  "issue": 384,
+  "disposition": "inconclusive",
+  "reason": "All four dispatched attempts are invalid: both Base UI reviews, gRPC and soba. The repaired path audit detects soba's filesystem-root scan. With nine planned valid cells and only two replacements, at most seven valid cells fit within eleven attempts after four invalid cells. Further paid reviews cannot establish a pass under the frozen cap, so stop and leave #384 open. No valid Base UI review establishes either defect threshold. Invalid reviews do not establish a precision or latency failure. The soba output took 1,043 seconds, but is invalid and excluded from valid timing; the planned three-review median is unavailable.",
+  "reviews_usd": 12.361659,
+  "grading_usd": 0.665457,
+  "total_usd": 13.027116,
+  "valid_attempts": 0,
+  "attempts": 4,
+  "replacements": 0,
+  "new_reviews_after_recovery": 0,
+  "results": "results.v2.json"
+}

@@ -1,0 +1,45 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/requests/adapters.py",
+      "line_start": 94,
+      "line_end": 95,
+      "claim": "Don't hand the shared preloaded SSLContext to connections that also set a client certificate. Two HTTPS requests in one process use the default `verify=True` together with a per-request client certificate (`cert=(certfile, keyfile)`), whether concurrently from different threads/Sessions or sequentially one after another.",
+      "consequence": "`_urllib3_request_context()` puts the module-level singleton `_preloaded_ssl_context` into `pool_kwargs['ssl_context']` for every `verify=True` connection, and urllib3's `ssl_wrap_socket()` calls `context.load_cert_chain(certfile, keyfile)` directly on whatever `ssl_context` object it is given (installed urllib3==2.8.0, util/ssl_.py:429-433) before `wrap_socket()`. Because the singleton is shared process-wide, loading one connection's client certificate onto it can leak into, race with, or overwrite another connection's handshake -- including a later cert-less verify=True request silently inheriting a previous request's client identity, and the TLS-in-TLS/proxy path, which reaches the same code. Confirmed independently: two connections built via `HTTPAdapter._get_connection()` with different `cert=` tuples share the identical `.ssl_context` object (`is` identity) while their own `.cert_file` correctly differs. At the merge-base, `verify=True` never set `ssl_context`, so urllib3 always built a private, per-connection context (installed urllib3==2.8.0, connection.py:1031-1034), making this cross-connection mutation structurally impossible.",
+      "proposed_fix": "In `_urllib3_request_context()`, only reuse `_preloaded_ssl_context` when there is no client certificate, e.g. change `elif verify is True:` to `elif verify is True and client_cert is None:` (src/requests/adapters.py:94), so any request supplying `cert=` gets a private context the way it did before this change, for both the direct-connect and TLS-in-TLS/proxy paths.",
+      "native_priority": "P1",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/requests/adapters.py",
+      "line_start": 75,
+      "line_end": 78,
+      "claim": "Loading the default CA bundle at import time can crash `import requests`. `DEFAULT_CA_BUNDLE_PATH` (certifi's bundle path, sometimes patched by Linux distributions to a system trust-store path) is missing, unreadable, or malformed at the moment `requests`/`requests.adapters` is imported -- even in a process that never issues a `verify=True` request.",
+      "consequence": "The module now calls `_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))` unconditionally at import time (src/requests/adapters.py:75-78). At the merge-base, the equivalent CA-bundle existence check ran lazily inside `cert_verify()`, guarded by `if url.lower().startswith(\"https\") and verify:`, and only fired when an actual HTTPS request was sent, raising a deliberate, actionable `OSError` (\"Could not find a suitable TLS CA certificate bundle, invalid path: ...\"). At head, that check was rewritten to only run `if verify is not True:`, so the friendly error is unreachable for the default `verify=True` case, while the new eager module-level call raises a raw, unhandled `FileNotFoundError`/`ssl.SSLError` at `import requests` time instead -- confirmed by an independently executed scratch test that monkeypatches the bundle path and observes the import itself fail.",
+      "proposed_fix": "Guard the module-level `load_verify_locations()` call so a missing or broken default bundle does not crash import (e.g. try/except around it), and reproduce the historical friendly `OSError` lazily on the first `verify=True` request if the preload failed.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "Neither this PR nor the existing suite adds a test exercising `verify=True` together with a client certificate (`cert=`), which is exactly the untested combination `adapters/shared-ssl-context-mtls` is anchored on; `test_different_connection_pool_for_mtls_settings` only exercises `verify=False` plus `cert=`.",
+      "consequence": "tests/test_requests.py:2929-2966 (`test_different_connection_pool_for_mtls_settings`); PR body: \"I tried to write corresponding tests ... but I couldn't find a way to access such low-level information about a request.\"",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

@@ -1,0 +1,3 @@
+{"at": "2026-09-27T07:10:13Z", "step": "blind-grade-i-requests-6667-2567378af86d", "usd": 0.319114, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "c9067b71"}
+{"at": "2026-09-27T07:10:28Z", "step": "blind-grade-n-ripgrep-2957-c87541cb486c", "usd": 0.172797, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "33e58001"}
+{"at": "2026-09-27T07:10:57Z", "step": "blind-grade-m-grpc-go-7390-3c9c9082dc49", "usd": 0.286786, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "4eb3e724"}

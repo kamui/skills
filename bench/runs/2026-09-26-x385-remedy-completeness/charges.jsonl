@@ -1,0 +1,5 @@
+{"at": "2026-09-27T07:10:14Z", "step": "blind-grade-i-requests-6667-1d1449ea1b94", "usd": 0.329163, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "9f897b2c"}
+{"at": "2026-09-27T07:10:43Z", "step": "blind-grade-p-hono-5067-70db081a30c0", "usd": 0.212414, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "5c4afdc2"}
+{"at": "2026-09-27T07:11:04Z", "step": "blind-grade-l-bokeh-9232-79b37696a48b", "usd": 0.212605, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "d60d44fe"}
+{"at": "2026-09-27T07:11:42Z", "step": "blind-grade-m-grpc-go-7390-5dfabd9abd41", "usd": 0.184082, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "7f256aa0"}
+{"at": "2026-09-27T07:12:05Z", "step": "blind-grade-q-soba-195-46e939f7dcd2", "usd": 0.208627, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "b54e16e1"}

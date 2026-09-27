@@ -497,6 +497,7 @@ def file_attempt(args) -> tuple:
     else:
         disposition = "valid completed"
         phase = "result"
+    disposition = " ".join(disposition.splitlines())
     if kind != "review-code" and not checked:
         notes.append("no range-bearing diff command observed; the executed range could not be checked")
 
@@ -657,6 +658,13 @@ def self_test() -> int:
         done = run("o7", "--expect-cli-version", "9.9.8")
         disp = json.loads((temp / "o7" / "attempt.json").read_text(encoding="utf-8"))["disposition"]
         assert disp == "harness-invalid: CLI version '9.9.9', the run pinned '9.9.8'", disp
+        violation = "network-capable command: set -e\ngit clone example"
+        (att / "audit.json").write_text(json.dumps({"violations": [violation], "diff_commands": ["git diff main...HEAD"]}), encoding="utf-8")
+        done = run("multiline-audit")
+        assert done.returncode == 0, done
+        rec = json.loads((temp / "multiline-audit" / "attempt.json").read_text(encoding="utf-8"))
+        assert rec["disposition"] == "harness-invalid: read audit: 1 violation(s), first network-capable command: set -e git clone example", rec
+        assert rec["audit"]["violations"] == [violation], rec
         # Wrong prompt variant, wrong effort, mutated tree, and a range that is not the pinned one.
         arm["adapter"]["expected_prompt_variants"] = ["0" * 64]
         arm["effort"] = "low"

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x385-remedy-completeness",
+  "target": "p-hono-5067",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "d0fe3517872a2ba6c5a0d564b1f4e19f31c6407bad5c0f22e2b70fe51e6b0357"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 531d26dde33560c55bc6014a295e258492bc80016db91c2b6b702fe4a6492c8e; session 5c4afdc2-cca1-422d-81fd-8b34fbcd4a66; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-27T07:10:43Z",
+  "attempts": [
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-123970",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The supplied Codecov comment reports patch coverage of 76.47% for this diff (4 lines missing ...), below the repository's 80% patch target, though the added tests directly exercise every mixed-case behavior the change introduces.\" This restates the codecov bot comment in packet section 6 accurately. The register's non_defects say coverage hygiene is non-material by itself, and the item never names the formData()-then-parseBody() failure, so it does not recover GT-p1. It is a true observation below the finding threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"parseFormData now buffers the request body into an ArrayBuffer and reparses it ... which is the same arrayBuffer+bufferToFormData+bodyCache pattern validator.ts's 'form' branch already used ... so the two entry points are now symmetric rather than one being newly speculative.\" This is a reassuring observation, not a defect claim. It looks at the exact code behind GT-p1 (clone/src/utils/body.ts:124-131) but misses the asymmetry that causes it: validator.ts:115-116 checks `c.req.bodyCache.formData` first and reuses it, while parseFormData unconditionally calls request.arrayBuffer(). After an earlier formData(), that call gets re-serialized multipart bytes with a new boundary and parses them against the original Content-Type. So the 'symmetric' framing is imprecise. It asserts no defect or material consequence, though, so it is not a false finding. It also gives no trigger, consequence or corrective outcome, so it does not recover GT-p1."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}
