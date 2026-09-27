@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-005",
+  "run_id": "2026-09-26-x385-remedy-completeness",
+  "cell": {
+    "target": "q-soba-195",
+    "arm": "review-code-sonnet-high",
+    "replicate": 1
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-26T21:06:46Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "8c5b592421d2e9ff528a370c6e95725437425c4b",
+    "diff_commands": [
+      "git diff --stat main review-head -- internal/backup.go "
+    ],
+    "sandbox": null,
+    "subagent_count": 0,
+    "tree_identity_before": "fe02fc5781cbf312fbf8ae92ada73bfcedcfa61bb4f3b17dfabdeca43e40ca13",
+    "tree_identity_after": "fe02fc5781cbf312fbf8ae92ada73bfcedcfa61bb4f3b17dfabdeca43e40ca13"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 1.741177,
+    "cost_bounds_usd": {
+      "low": 1.741177,
+      "high": 1.741177
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-26T21:06:46Z",
+    "payload_validated_at": null,
+    "completed_at": null,
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "4b58b929546244be27a804ec90ae35f8a1c011b2ab2932acad464046ccf78d9a"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-26-x385-remedy-completeness/att-005.tar.gz",
+    "sha256": "8f271e29fd92eed8aeafeed4c60e1d9d675411d31cfb74c647858f0f419a7425",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "Recovered completed CLI output after interrupted wrapper finalization. CLI success and returned artifacts are recorded in recovery.json; tree identity rechecked at recovery. Wrapper exit and elapsed-to-payload are unavailable, not fabricated. Timing-dependent acceptance remains unproven for this cell.",
+    "input.md sha256 7679fc79fbac3fb15faf70cdb5caa2291aac2643f53517f0c3c0472537407e1d; run policy sha256 caf9b5fa47d3de9d4dda126e6566c7866afe02c5ae041de1eea4377446b4ff25 (before path substitution)"
+  ]
+}

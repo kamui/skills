@@ -1,0 +1,3 @@
+{"at": "2026-09-27T07:10:27Z", "step": "blind-grade-r-base-ui-5460-ca7d4d47f9cd", "usd": 0.286929, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "aeb9803b"}
+{"at": "2026-09-27T07:10:50Z", "step": "blind-grade-m-grpc-go-7390-9ce0af6dc22a", "usd": 0.169991, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "e3e8d177"}
+{"at": "2026-09-27T07:11:13Z", "step": "blind-grade-q-soba-195-45346cc6cac3", "usd": 0.208537, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "c16eb036"}

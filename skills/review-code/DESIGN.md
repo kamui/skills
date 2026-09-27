@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-28-x382` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-29-x382` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -115,17 +115,11 @@ The verifier has one return transport. `--return-file`, `--inline-fallback`, the
 
 **Budget.** `targets.md` falls from 14,438 to 11,488 bytes, `SKILL.md` from 9,520 to 9,091, `review-code-publish`'s `SKILL.md` from 5,507 to 5,301 and `publication.md` from 33,621 to 30,643. The always-loaded set falls from 29,873 to 29,444 bytes, the runtime total from 76,286 to 72,907, a first review from 51,479 to 48,100, the required-verifier path from 63,656 to 60,277 and a re-review from 60,631 to 57,252. The runtime total, review, required-verifier and re-review limits fall to the next thousand; the always-loaded limit stays at 30,000.
 
-## Action from demonstrated consequence, issue #381, 2026-09-26
+## Rejected action and remedy wording, issues #381 and #385, 2026-09-27
 
-`rubric.md`'s action rule gains two sentences and nothing else changes. The first names documented configuration, supported APIs and subclasses, and trust or security settings as authoritative paths, where narrow reach lowers priority, never action. The second rechecks each `consider` candidate and observation before verification, and makes one proving such a gap `must-fix`. They target the frozen A baseline's action errors, where reviews recovered a proven defect but approved it as `consider` or left it as an observation. The change is an experimental candidate under the [#389 preregistration](../../docs/research/builtin-review-benchmark-2026-09-24/README.md), which settles whether it buys that result. If the focused run fails, revert the sentences and this limit together. Workflow `v5b-26`, because the recheck changes verification semantics.
+The isolated action variant lost ripgrep's registered defect in a valid review, and the remedy variant lost Hono's. Each baseline target had full recovery, so the protocol's recall-retention guardrail stops both runs. The two action sentences and the completeness sentence are removed. The [run reports](../../bench/runs/2026-09-27-audit-recovery.md) preserve the paid evidence; [HISTORY.md](../../docs/review-code/HISTORY.md#action-and-remedy-experiments-rejected-2026-09-27) preserves the original design entries. The lifecycle experiment #384 is inconclusive and remains open.
 
-**Budget.** The two sentences add 272 bytes and 35 words to every measured path except the verifier briefs. The always-loaded set rises from 29,444 to 29,716 bytes, a first review from 48,100 to 48,372, the required-verifier path from 60,277 to 60,549, a re-review from 57,252 to 57,524 and the runtime total from 72,907 to 73,179. The runtime total had 93 bytes of headroom, so its limit rises from 73,000 to 74,000. The other limits stand.
-
-## Complete fixes across sibling consumers, issue #385, 2026-09-26
-
-`output.md`'s authoring contract gains one sentence after the suggestion rule and nothing else changes: before claiming a complete fix, check the broken guarantee's other supported consumers and cover every demonstrated manifestation. It targets the frozen A baseline's partial Requests remedies, which repaired client-certificate mutation but left adapter-context overrides and the HTTPS-proxy trust path broken. The rule governs fix sufficiency, not recall: verifier scope and findings admission are unchanged, so no workflow bump. The change is an experimental candidate under the [#389 preregistration](../../docs/research/builtin-review-benchmark-2026-09-24/README.md); if the focused run misses its threshold or trips a guardrail, revert the sentence and this entry together.
-
-**Budget.** The sentence adds 131 bytes and 17 words to every measured path except the verifier briefs. The always-loaded set rises from 29,716 to 29,847 bytes, a first review from 48,372 to 48,503, the required-verifier path from 60,549 to 60,680, a re-review from 57,524 to 57,655 and the runtime total from 73,179 to 73,310. Every path stays within its limit, so no limit changes.
+The removal subtracts 379 runtime and always-loaded bytes. Runtime total is 73,341 bytes and always loaded is 29,837. The shared runtime limit stays 74,000: the retained lifecycle and destroyed-test rules, identity and presentation changes still exceed the former 73,000 limit. No limit is raised. Workflow advances to `v5b-29-x382` because removing the action recheck changes verification semantics; the #382 policy remains in effect.
 
 ## Lifecycle comparison for moved state updates, issue #384, 2026-09-26
 

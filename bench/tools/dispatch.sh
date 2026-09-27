@@ -61,7 +61,7 @@ $(cat "$PACKET")"
     printf '{"completion_mode": "render-only", "root_dispatched_at": "%s", "payload_validated_at": null, "completed_at": null}\n' "$(stamp)" > "$DIR/timing.json"
     set +e
     ( cd "$CLONE" && HOME="$H" CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 timeout 5400 claude -p --safe-mode --session-id "$SID" \
-        ${MODEL:+--model "$MODEL"} ${EFFORT:+--effort "$EFFORT"} --max-budget-usd 15 --allowedTools "Bash,Read,Glob,Grep,Agent" \
+        ${MODEL:+--model "$MODEL"} ${EFFORT:+--effort "$EFFORT"} --max-budget-usd "${ATTEMPT_BUDGET_USD:-15}" --allowedTools "Bash,Read,Glob,Grep,Agent" \
         --output-format stream-json --verbose "$PROMPT" < /dev/null > "$DIR/stdout.jsonl" 2> "$DIR/stderr.txt" )
     RC=$?; set -e
     ;;
@@ -101,7 +101,7 @@ $(cat "$PACKET")"
     printf '{"completion_mode": "render-only", "root_dispatched_at": "%s", "payload_validated_at": null, "completed_at": null}\n' "$(stamp)" > "$DIR/timing.json"
     set +e
     ( cd "$CLONE" && HOME="$H" CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 timeout 5400 claude -p --session-id "$SID" \
-        --model "${MODEL:-sonnet}" --effort "${EFFORT:-high}" --max-budget-usd 15 --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,Skill" \
+        --model "${MODEL:-sonnet}" --effort "${EFFORT:-high}" --max-budget-usd "${ATTEMPT_BUDGET_USD:-15}" --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,Skill" \
         --output-format stream-json --verbose "$PROMPT" < /dev/null > "$DIR/stdout.jsonl" 2> "$DIR/stderr.txt" )
     RC=$?; set -e
     ;;

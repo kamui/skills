@@ -19,7 +19,9 @@ runs (a glob by any match; absent ones are listed as ``absent_outside_paths``; a
 roots that was made before ``timing.json``'s dispatch instant may lead out of them, as a provisioned
 venv's interpreter does), or a command that runs a
 network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
-``git fetch``/``pull``/``push``/``clone``; ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
+``git fetch``/``pull``/``push``/``clone`` (except a clone from an explicit filesystem path
+inside the allowed roots with only local-copy options; a relative source also requires
+the clone to be the first command); ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
 that reaches a registry; ``go`` unless it runs with ``GOPROXY=off`` and ``GOTOOLCHAIN=local``, from
 its own prefix assignments or an earlier ``export``), is a violation. Every relative path with a ``..`` segment, or
 with a dot-led glob segment such as ``.*`` that bash can expand to ``..`` (a whole word, or a run
@@ -64,7 +66,7 @@ NETWORK = re.compile(
     r"(?:^|[;&|(){}\n`]|\$\(|" + SHELL_SCRIPT + r"['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
     r"\s*(?P<assign>(?:[A-Za-z_]\w*=" + VALUE + r"\s+)*)(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
     r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>[^\s;&|()'\"]*)"
-    r"|git\s+(?:fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
+    r"|git\s+(?P<git>fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
 EXPORTS = re.compile(r"\bexport\s+((?:[A-Za-z_]\w*=" + VALUE + r"[ \t]*)+)"
                      r"|\b(?:unset(?:\s+-[fv])?|export\s+-n)\s+((?:[A-Za-z_]\w*[ \t]*)+)")
 # The package managers reach a registry only through these subcommands; the rest (a build, a script
@@ -154,7 +156,30 @@ def go_env(text: str, masked: str, scripts: list, m) -> dict:
     return env
 
 
-def network_use(cmd: str) -> bool:
+def local_clone(arguments: str, cwd: str, roots: list, allow_relative: bool) -> bool:
+    try:
+        words = shlex.split(arguments)
+    except ValueError:
+        return False
+    source, options = None, True
+    for word in words:
+        if options and word == "--":
+            options = False
+        elif options and word.startswith("-"):
+            if word not in {"-q", "--quiet", "-l", "--local", "--no-hardlinks", "-s", "--shared",
+                            "--bare", "--mirror", "-n", "--no-checkout"}:
+                return False
+        elif source is None:
+            source = word
+    if not source or not source.startswith(("/", "./", "../")) or any(c in source for c in "$`*?[]"):
+        return False
+    if not source.startswith("/") and not allow_relative:
+        return False
+    real = os.path.realpath(os.path.join(cwd, source))
+    return any(real == root or real.startswith(root + os.sep) for root in roots)
+
+
+def network_use(cmd: str, cwd: str, roots: list) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when it runs with ``GOPROXY=off``
     and ``GOTOOLCHAIN=local``, as the Go targets' allowances do."""
     text = commands_only(cmd).replace("\\\n", "  ")
@@ -162,7 +187,14 @@ def network_use(cmd: str) -> bool:
     masked = unquoted(text, scripts)
     for m in NETWORK.finditer(masked):
         tool, sub = m.group("tool"), m.group("sub")
-        if tool == "go":
+        if m.group("git") == "clone":
+            end = min((b for a, b in scripts if a < m.start() < b), default=len(text))
+            boundary = re.search(r"[;&|\n]", masked[m.end():end])
+            if boundary:
+                end = m.end() + boundary.start()
+            if local_clone(text[m.end():end], cwd, roots, not text[:m.start()].strip()):
+                continue
+        elif tool == "go":
             env = go_env(text, masked, scripts, m)
             if env.get("GOPROXY") == "off" and env.get("GOTOOLCHAIN") == "local":
                 continue
@@ -214,6 +246,22 @@ def tokens(segment: str) -> list:
         return [t.strip("'\"") for t in segment.split()]
 
 
+def command_words(text: str) -> list:
+    lexer = shlex.shlex(text, posix=True, punctuation_chars=";&|")
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    groups = [[]]
+    try:
+        for word in lexer:
+            if word and all(c in ";&|" for c in word):
+                groups.append([])
+            else:
+                groups[-1].append(word)
+    except ValueError:
+        return [tokens(segment.strip().lstrip("({ ")) for segment in SPLIT.split(text)]
+    return groups
+
+
 def paths_in(text: str, cwd: str, base: str = None):
     """Absolute paths, ``~`` paths expanded against the fresh home, every relative word or path
     run with a ``..`` segment, a dot-led glob segment that can expand to ``..`` counting as one
@@ -232,8 +280,12 @@ def paths_in(text: str, cwd: str, base: str = None):
     tilde = [climbs(t) for t in re.findall(r"(?<![\w.])~(/[\w./@+*?\[\]-]*)", text or "")]
     relative = []
     here, base = cwd, base or cwd
-    for segment in SPLIT.split(commands_only(text or "")):
-        words = tokens(segment.strip().lstrip("({ "))
+    commands = commands_only(text or "")
+    scripts = []
+    unquoted(commands, scripts)
+    for start, end in scripts:
+        found.extend(paths_in(commands[start + 1:end], cwd, base))
+    for words in command_words(commands):
         for index, word in enumerate(words):
             if index == 1 and words[0] == "cd":
                 if word.startswith("/") and os.path.normpath(climbs(word)) in found:
@@ -245,7 +297,11 @@ def paths_in(text: str, cwd: str, base: str = None):
                 if run and not run.startswith("/") and ".." in run.split("/"):
                     relative.append(os.path.normpath(os.path.join(here, run)))
             operand = climbs(word.split("=", 1)[1] if word.startswith("-") and "=" in word else word)
-            if operand and not operand.startswith(("/", "~", "-")) and (
+            if operand.startswith("/"):
+                found.append(os.path.normpath(operand))
+            elif operand.startswith("~/"):
+                tilde.append(operand[1:])
+            elif operand and not operand.startswith(("~", "-")) and (
                     ".." in operand.split("/") or (index and here != base)):
                 relative.append(os.path.normpath(os.path.join(here, operand)))
         if words and words[0] == "cd":
@@ -448,14 +504,14 @@ def main() -> int:
         ancestors.add(d)
     probes, absent = [], []
     for cmd, workdir in list(zip(commands, workdirs)) + [("", w) for w in stray]:
-        if network_use(cmd):
-            violations.append(f"network-capable command: {cmd[:200]}")
         start = clone_real
         if workdir:
             start = os.path.normpath(os.path.join(clone_real, HOME_DIR + workdir[1:] if workdir.startswith("~") else workdir))
             if not inside(start, roots):
                 violations.append(f"working directory outside allowed roots: {workdir}")
             start = os.path.realpath(start)
+        if network_use(cmd, start, roots):
+            violations.append(f"network-capable command: {cmd[:200]}")
         for p in paths_in(cmd, start, clone_real):
             if inside(p, roots) or p.startswith(("/usr/", "/bin/", "/dev/", "/proc/", "/etc/")):
                 continue

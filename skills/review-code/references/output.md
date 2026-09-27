@@ -4,7 +4,7 @@ After verification, author judgments, fields, and prose; the finalizer handles p
 
 ## Authoring contract
 
-Use one defect and a short imperative title. Supply concrete `trigger`, `impact`, and attainable `change` sentences that form one actionable paragraph; cite a material rule as `source`. The finalizer joins them without labels, preserves fenced code after the prose, and closes `consider` findings with permission to decline. Name a different repair site in both `fix` and change prose. Stable ids name path and defect, never lines; preserve across heads. Aim for 50-90 words and two decisive facts; exceed only to prevent a wrong fix. Suggestions must completely fix the defect with small exact replacements. Check other supported consumers and cover every demonstrated manifestation before claiming a complete fix.
+Use one defect and a short imperative title. Supply concrete `trigger`, `impact`, and attainable `change` sentences that form one actionable paragraph; cite a material rule as `source`. The finalizer joins them without labels, preserves fenced code after the prose, and closes `consider` findings with permission to decline. Name a different repair site in both `fix` and change prose. Stable ids name path and defect, never lines; preserve across heads. Aim for 50-90 words and two decisive facts; exceed only to prevent a wrong fix. Suggestions must completely fix the defect with small exact replacements.
 
 Anchor on the smallest honest changed range or file, never unrelated code. Break drift-anchor ties by rule-defining line, lexicographic path, then smallest range. Line anchors require manifest path and `LEFT`/`RIGHT` hunk side. File sides use the full pinned merge-base manifest even on delta reviews: deleted `LEFT`, present `RIGHT`. Use `UNKNOWN` only for unestablished provenance and explain the gap.
 
@@ -16,7 +16,7 @@ Lead with status, counts, and finding index. Keep questions, ambiguities, unanch
 
 ## Identity
 
-`workflow=v5b-28-x382` versions review behavior; increment for admission, verification, rendering, or state changes.
+`workflow=v5b-29-x382` versions review behavior; increment for admission, verification, rendering, or state changes.
 
 The run trailer carries `packet_context=` and `supplied_inputs=`. A pull request's `packet_context` is the digest `forge_packet.py` computes from the saved packet's intent, and the finalizer derives it; never write or copy one. A local target has none and its trailer reads `packet_context=none`. List the identities of the caller-supplied issues and specs in `run.specs`, empty when there were none; the finalizer derives `supplied_inputs=yes|no` from that list.
 

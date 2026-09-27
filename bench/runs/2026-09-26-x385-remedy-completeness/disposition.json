@@ -1,0 +1,13 @@
+{
+  "issue": 385,
+  "disposition": "reject",
+  "reason": "The valid Hono review recovered no registered defect and approved. Frozen A recovered GT-p1 in both historical reviews. This loses per-target recall and trips the common stop guardrail. Even perfect remaining replicates could produce only 2/3 recovery, below the required 3/3. This is an early guardrail stop, not completion of the 15-cell screen. The valid Requests review also supplies only partial remedies for GT-i1 and GT-i2; GT-i3 is absent. Revert the completeness sentence. The sufficient Bokeh remedy came from an invalid attempt and does not satisfy its retention threshold.",
+  "reviews_usd": 13.455287,
+  "grading_usd": 1.1468909999999999,
+  "total_usd": 14.602178,
+  "valid_attempts": 3,
+  "attempts": 5,
+  "replacements": 0,
+  "new_reviews_after_recovery": 0,
+  "results": "results.v1.json"
+}

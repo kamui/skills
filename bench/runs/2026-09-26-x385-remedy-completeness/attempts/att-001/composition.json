@@ -1,0 +1,164 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "spec-pr6667-packet"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "change_description": "ec0e33b330f479e6ea1f4afb866522bd268b9d3e\nAvoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\n8f954567bdfb7fa2bd638b7021b0a156e3f71787\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\nf21e70bf7a3430f219de00557817d23bfdd62dbd\nRename default SSLContext to make it private by convention\n\n4089f3dc65f783beaa53cc032958ab625440d0ac\nWrap line to comply with CI lint\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Skip urllib3's per-request `load_verify_locations()` CA-bundle reload for the default `verify=True` path by sharing one module-level, pre-loaded `SSLContext` across all such connections, since that reload was measured as the dominant cost under highly concurrent HTTPS traffic.",
+    "issue_fit": "No originating issue; intent taken from the PR title/body and the four commit messages (spec-pr6667-packet). The stated goal (avoid redundant `load_verify_locations()` calls for verify=True) is met at the code level, but the same sharing mechanism introduces two independent regressions.",
+    "coverage": "Complete merge-base diff reviewed (the only changed file, src/requests/adapters.py, in full, including unchanged surrounding lines for context); the installed urllib3==2.8.0 dependency's connection/SSL-context code was read to establish base-vs-head guarantees. Two scratch pytest checks were run at the pinned head (test_shared_ssl_context_cert.py, test_import_crash_repro.py); both mandatory candidates were independently verified by a fresh-context worker and confirmed. Existing focused SSL/TLS tests were run once (`-k \"different_connection_pool or mtls\"`); `test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert` failed as pre-declared (fixture/OpenSSL mismatch, pre-existing). `test_different_connection_pool_for_mtls_settings` also failed, on its very first, unmodified `verify=False` line, before any code this diff touches runs; this is consistent with the same pre-existing fixture-certificate/OpenSSL-version mismatch and is not attributed to this change, though it was not one of the two failures pre-declared by the run policy."
+  },
+  "findings": [
+    {
+      "id": "adapters/shared-ssl-context-mtls",
+      "title": "Don't hand the shared preloaded SSLContext to connections that also set a client certificate",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "concurrency",
+      "trigger": "Two HTTPS requests in one process use the default `verify=True` together with a per-request client certificate (`cert=(certfile, keyfile)`), whether concurrently from different threads/Sessions or sequentially one after another.",
+      "impact": "`_urllib3_request_context()` puts the module-level singleton `_preloaded_ssl_context` into `pool_kwargs['ssl_context']` for every `verify=True` connection, and urllib3's `ssl_wrap_socket()` calls `context.load_cert_chain(certfile, keyfile)` directly on whatever `ssl_context` object it is given (installed urllib3==2.8.0, util/ssl_.py:429-433) before `wrap_socket()`. Because the singleton is shared process-wide, loading one connection's client certificate onto it can leak into, race with, or overwrite another connection's handshake -- including a later cert-less verify=True request silently inheriting a previous request's client identity, and the TLS-in-TLS/proxy path, which reaches the same code. Confirmed independently: two connections built via `HTTPAdapter._get_connection()` with different `cert=` tuples share the identical `.ssl_context` object (`is` identity) while their own `.cert_file` correctly differs. At the merge-base, `verify=True` never set `ssl_context`, so urllib3 always built a private, per-connection context (installed urllib3==2.8.0, connection.py:1031-1034), making this cross-connection mutation structurally impossible.",
+      "change": "In `_urllib3_request_context()`, only reuse `_preloaded_ssl_context` when there is no client certificate, e.g. change `elif verify is True:` to `elif verify is True and client_cert is None:` (src/requests/adapters.py:94), so any request supplying `cert=` gets a private context the way it did before this change, for both the direct-connect and TLS-in-TLS/proxy paths.",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 94,
+        "end_line": 95,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/requests/adapters.py",
+        "start_line": 94
+      }
+    },
+    {
+      "id": "adapters/eager-ca-bundle-import-crash",
+      "title": "Loading the default CA bundle at import time can crash `import requests`",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "compatibility",
+      "trigger": "`DEFAULT_CA_BUNDLE_PATH` (certifi's bundle path, sometimes patched by Linux distributions to a system trust-store path) is missing, unreadable, or malformed at the moment `requests`/`requests.adapters` is imported -- even in a process that never issues a `verify=True` request.",
+      "impact": "The module now calls `_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))` unconditionally at import time (src/requests/adapters.py:75-78). At the merge-base, the equivalent CA-bundle existence check ran lazily inside `cert_verify()`, guarded by `if url.lower().startswith(\"https\") and verify:`, and only fired when an actual HTTPS request was sent, raising a deliberate, actionable `OSError` (\"Could not find a suitable TLS CA certificate bundle, invalid path: ...\"). At head, that check was rewritten to only run `if verify is not True:`, so the friendly error is unreachable for the default `verify=True` case, while the new eager module-level call raises a raw, unhandled `FileNotFoundError`/`ssl.SSLError` at `import requests` time instead -- confirmed by an independently executed scratch test that monkeypatches the bundle path and observes the import itself fail.",
+      "change": "Guard the module-level `load_verify_locations()` call so a missing or broken default bundle does not crash import (e.g. try/except around it), and reproduce the historical friendly `OSError` lazily on the first `verify=True` request if the preload failed.",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 75,
+        "end_line": 78,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/requests/adapters.py",
+        "start_line": 75
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Neither this PR nor the existing suite adds a test exercising `verify=True` together with a client certificate (`cert=`), which is exactly the untested combination `adapters/shared-ssl-context-mtls` is anchored on; `test_different_connection_pool_for_mtls_settings` only exercises `verify=False` plus `cert=`.",
+      "evidence": "tests/test_requests.py:2929-2966 (`test_different_connection_pool_for_mtls_settings`); PR body: \"I tried to write corresponding tests ... but I couldn't find a way to access such low-level information about a request.\""
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-26-x385-remedy-completeness/att-001/clone",
+    "requirements": [
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:75-78 (CA bundle loaded once, at import) and :92-100 (`verify=True` sets a preloaded `ssl_context` instead of `ca_certs`/`ca_cert_dir`, so urllib3 never re-runs `load_verify_locations()` per request)"
+      },
+      {
+        "source": "pr-body/\"there is no need to trigger a call to load_verify_locations() again\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:94-95 -- `verify=True` sets `ssl_context` and never `ca_certs`/`ca_cert_dir`, so urllib3's `ssl_wrap_socket()` (`if ca_certs or ca_cert_dir or ca_cert_data: context.load_verify_locations(...)`) is skipped for that path"
+      },
+      {
+        "source": "pr-body/\"verify=True and verify=False still behave as expected and are now equally fast\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No network or live host is available in this sandbox (run policy: network and live-host tests unavailable), so the timing claim against https://invalid.badssl.com cannot be reproduced; nothing in the merge decision hinges on the exact figure given that the code-level mechanism (shared preloaded context, no per-request reload) is independently established"
+      },
+      {
+        "source": "commit-ec0e33b/\"Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:297-317 (`cert_verify`) -- CA-bundle-path handling for `verify=True` is now driven by the preloaded context rather than `conn.ca_certs`/`conn.ca_cert_dir`, addressing sigmavirus24's \"critical behavior you're removing\" review comment on commit ec0e33b"
+      },
+      {
+        "source": "commit-8f95456/\"Use a default SSLContext with the default CA bundle loaded when `verify=True`\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "The default SSLContext is created and loaded (src/requests/adapters.py:75-78), but doing so unconditionally at import time -- rather than the first verify=True use -- is itself `adapters/eager-ca-bundle-import-crash`; and using that same context unconditionally, including when a client cert is also supplied, is `adapters/shared-ssl-context-mtls`"
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest tests/test_requests.py -k \"different_connection_pool or mtls\" -v",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "2 passed (test_different_connection_pool_for_tls_settings_verify_True, test_different_connection_pool_for_tls_settings_verify_bundle_expired_cert), 2 failed (test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert -- pre-declared known failure; test_different_connection_pool_for_mtls_settings -- fails on its first, unmodified verify=False line, consistent with the same pre-existing fixture/OpenSSL mismatch, not attributed to this change"
+      },
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest <work-dir>/test_shared_ssl_context_cert.py -v",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "1 passed -- scratch test proving two HTTPAdapter connections with different client certs share the identical `.ssl_context` object; re-run independently by the verifier with the same result"
+      },
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest <work-dir>/test_import_crash_repro.py -v",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "1 passed -- scratch test proving `import requests.adapters` raises FileNotFoundError when the default CA bundle path is missing, before any request is made; re-run independently by the verifier with the same result"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "adapters/shared-ssl-context-mtls",
+          "type": "candidate",
+          "trigger": "security",
+          "batch": "initial",
+          "ruling": "confirmed"
+        },
+        {
+          "id": "adapters/eager-ca-bundle-import-crash",
+          "type": "candidate",
+          "trigger": "compatibility",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x385-remedy-completeness/att-001/clone-work/review-code-priv.944SGD/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x385-remedy-completeness/att-001/clone-work/review-code-priv.944SGD/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

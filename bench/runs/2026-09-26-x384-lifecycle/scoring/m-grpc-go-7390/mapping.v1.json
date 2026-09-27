@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x384-lifecycle",
+  "target": "m-grpc-go-7390",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "5a40b59e0c384c5df8da169e4f42962ca2dcf9e28a6df4e1cbbf7423016f912e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 4fcba555031e6bd66acd4623bbbc95d11a2f2c156d76ad69b7ea65bf50354212; session e3e8d177-9d3d-447d-8723-0929dad5c7ea; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-27T07:10:50Z",
+  "attempts": [
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-0f3aec",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Both review threads on the pull request are still marked unresolved in the forge state even though each was explicitly settled by comment before merge (`arjan-bal` on 2024-07-08T11:45:38Z; `dfawley` on 2024-07-09T20:26:47Z).\" This is a process/forge-hygiene observation, not a claim of any defect in the code. packet.md section 6 does mark every comment in both threads 'thread unresolved' (lines 194-327), and both threads end with settling comments: comment 9 (line 265-269, 'Discussed offline: it doesn't matter...') and comment 17 (line 327-331, dfawley 'the name of the function and the comment should be sufficient'). One detail is wrong: comment 9 at 2024-07-08T11:45:38Z is by `purnesh42H`, not `arjan-bal`, but the misattribution does not create a material consequence. The register records the target as clean (defects: []), and the preexisting_hints confirm the trade-offs were disclosed and accepted. A thread's resolved flag has no effect on the merged code, so the item is an accurate-in-substance observation below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

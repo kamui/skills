@@ -1,0 +1,17 @@
+# Scorecard: i-requests-6667, mapping v1
+
+Register v2 (af11241069d2), rubric v1, scored at 2026-09-27T07:10:13Z.
+
+Adjudicator: headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 90931aed49ee2d406fc4d23695edbf96c68ea0c619e0123a44af06e9e56ddb6b; session c9067b71-a02f-431d-ac3a-4f8387864672; read audit clean.
+
+## att-001 (review-code-sonnet-high), blind-6afcdd
+
+Verdict 'Changes Requested'; completion completed; approved on buggy False; zero recovery False; false clean False.
+
+- item-0: `defect:GT-i1`, fix partial, priority error False, group none. Quote: "_urllib3_request_context() puts the single module-level _preloaded_ssl_context into pool_kwargs[\"ssl_context\"] for every verify=True request ... urllib3's ssl_wrap_socket() calls context.load_cert_chain(certfile, keyfile) directly on that exact shared object (no copy is made), so the client certificate/private key stays loaded on it". This is GT-i1's shared-mutation manifestation: the register's consequence names exactly this mechanism (ssl_wrap_socket load_cert_chain on the shared context) and the required outcome says cert= mutation must not be applied to a shared object. Verified in clone: src/requests/adapters.py:75-78 and 94-95 at head; installed urllib3 2.8.0 util/ssl_.py:431-433 calls context.load_cert_chain on the supplied context. The item frames the consequence as a sequential cross-host client-identity leak rather than concurrency, but it is the same mutation of the shared object and leads the reader to the same correction. Fix: only use the shared context when client_cert is None. That confines the cert mutation (mutation manifestation) but leaves the other manifestation untouched: a subclass's init_poolmanager ssl_context is still overridden by the per-request _preloaded_ssl_context for verify=True (urllib3 _merge_pool_kwargs, poolmanager.py:400-410). Hence partial.
+- item-1: `defect:GT-i2`, fix partial, priority error True, group none. Quote: "Loading the default CA bundle at import time turns a lazy per-request failure into a hard import-time crash ... import requests now fails immediately and unconditionally with whatever exception ssl.SSLContext.load_verify_locations() raises, even for callers that only ever use verify=False or plain HTTP. Before this change, the equivalent failure ... surfaced lazily, only on the first verified HTTPS request". Same mechanism as GT-i2 (extract_zipped_paths + load_verify_locations moved from cert_verify() to module import, adapters.py:75-78) with the import-time exception manifestation matching #6764's PermissionError-from-import (an unreadable bundle). Fix: "Keep the eager preload for the common case, but guard it (or defer raising)". The required outcome is that import must not perform CA extraction/context loading unconditionally; guarding keeps the extraction and load_verify_locations at import, so the import-time cost manifestation (#6790) remains and only the crash symptom is addressed. Partial.
+- item-2: `non-material`, fix n/a, priority error n/a, group none. Quote: "The diff also fixes a pre-existing bug where verify=<directory> was always passed to urllib3 as ca_certs ... now checks os.path.isdir() and uses ca_cert_dir". Accurate per the diff (pre-image `if isinstance(verify, str): pool_kwargs["ca_certs"] = verify`; head adapters.py:96-100 branches on os.path.isdir). It is a positive observation with no defect asserted and no fix proposed, so below the finding threshold.
+
+## New candidates
+
+None.
