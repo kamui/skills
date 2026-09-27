@@ -19,7 +19,8 @@ runs (a glob by any match; absent ones are listed as ``absent_outside_paths``; a
 roots that was made before ``timing.json``'s dispatch instant may lead out of them, as a provisioned
 venv's interpreter does), or a command that runs a
 network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
-``git fetch``/``pull``/``push``/``clone``; ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
+``git fetch``/``pull``/``push``/``clone`` (except a clone from an explicit filesystem path
+with only local-copy options); ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
 that reaches a registry; ``go`` unless it runs with ``GOPROXY=off`` and ``GOTOOLCHAIN=local``, from
 its own prefix assignments or an earlier ``export``), is a violation. Every relative path with a ``..`` segment, or
 with a dot-led glob segment such as ``.*`` that bash can expand to ``..`` (a whole word, or a run
@@ -64,7 +65,7 @@ NETWORK = re.compile(
     r"(?:^|[;&|(){}\n`]|\$\(|" + SHELL_SCRIPT + r"['\"]|\b(?:do|then|else|exec|xargs|env|nohup|time|command|sudo)\s)"
     r"\s*(?P<assign>(?:[A-Za-z_]\w*=" + VALUE + r"\s+)*)(?:timeout\s+(?:-\S+\s+)*\S+\s+)?"
     r"(?:(?P<tool>curl|wget|gh|ssh|scp|pip3?|npm|pnpm|yarn|cargo|go)\s+(?P<sub>[^\s;&|()'\"]*)"
-    r"|git\s+(?:fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
+    r"|git\s+(?P<git>fetch|pull|push|clone|ls-remote|remote\s+add)\b)")
 EXPORTS = re.compile(r"\bexport\s+((?:[A-Za-z_]\w*=" + VALUE + r"[ \t]*)+)"
                      r"|\b(?:unset(?:\s+-[fv])?|export\s+-n)\s+((?:[A-Za-z_]\w*[ \t]*)+)")
 # The package managers reach a registry only through these subcommands; the rest (a build, a script
@@ -154,6 +155,24 @@ def go_env(text: str, masked: str, scripts: list, m) -> dict:
     return env
 
 
+def local_clone(arguments: str) -> bool:
+    try:
+        words = shlex.split(arguments)
+    except ValueError:
+        return False
+    source, options = None, True
+    for word in words:
+        if options and word == "--":
+            options = False
+        elif options and word.startswith("-"):
+            if word not in {"-q", "--quiet", "-l", "--local", "--no-hardlinks", "-s", "--shared",
+                            "--bare", "--mirror", "-n", "--no-checkout"}:
+                return False
+        elif source is None:
+            source = word
+    return bool(source and source.startswith(("/", "./", "../")) and not any(c in source for c in "$`*?[]"))
+
+
 def network_use(cmd: str) -> bool:
     """True when ``cmd`` runs a network tool; ``go`` is offline when it runs with ``GOPROXY=off``
     and ``GOTOOLCHAIN=local``, as the Go targets' allowances do."""
@@ -162,7 +181,14 @@ def network_use(cmd: str) -> bool:
     masked = unquoted(text, scripts)
     for m in NETWORK.finditer(masked):
         tool, sub = m.group("tool"), m.group("sub")
-        if tool == "go":
+        if m.group("git") == "clone":
+            end = min((b for a, b in scripts if a < m.start() < b), default=len(text))
+            boundary = re.search(r"[;&|\n]", masked[m.end():end])
+            if boundary:
+                end = m.end() + boundary.start()
+            if local_clone(text[m.end():end]):
+                continue
+        elif tool == "go":
             env = go_env(text, masked, scripts, m)
             if env.get("GOPROXY") == "off" and env.get("GOTOOLCHAIN") == "local":
                 continue
