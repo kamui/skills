@@ -104,6 +104,7 @@ class AttemptAudit(unittest.TestCase):
         for source in (str(self.clone), './src', '../clone', f'"{self.clone}/with spaces"'):
             with self.subTest(source=source):
                 self.assertEqual(self.bash(f'git clone --quiet --no-hardlinks {source} scratch 2>&1 | tail -5'), (0, []))
+        self.assertEqual(self.bash('cd src && git clone ../src scratch'), (0, []))
         for source in ('https://example.com/repo', 'git@example.com:repo', 'host:repo', '$SOURCE', 'repo'):
             with self.subTest(source=source):
                 rc, violations = self.bash(f'git clone {source} scratch')
@@ -113,6 +114,14 @@ class AttemptAudit(unittest.TestCase):
             with self.subTest(flags=flags):
                 self.assertEqual(self.bash(f'git clone {flags} {self.clone} scratch')[0], 1)
         self.assertEqual(self.bash(f'git clone {self.outside} scratch')[0], 1)
+        rc, violations = self.bash('git clone /dev/null scratch')
+        self.assertEqual(rc, 1)
+        self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
+        source_link = self.clone / 'outside-link'
+        source_link.symlink_to(self.outside)
+        rc, violations = self.bash(f'git clone {source_link} scratch')
+        self.assertEqual(rc, 1)
+        self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
         self.assertEqual(self.bash(f'git clone {self.clone} scratch; git fetch origin')[0], 1)
 
     def test_go_version_still_requires_offline_toolchain_selection(self):
