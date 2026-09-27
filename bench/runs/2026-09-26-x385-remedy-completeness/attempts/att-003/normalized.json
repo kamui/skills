@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "bokehjs/src/lib/models/widgets/date_picker.ts",
+      "line_start": 79,
+      "line_end": 83,
+      "claim": "_unlocal_date shifts epoch-based dates back a day for negative-UTC-offset users. Triggers when a DatePicker's `value`, `min_date`, or `max_date` is set from the Python/server side (e.g. `DatePicker(value=datetime.date(2019, 9, 20))`) and rendered in a browser whose local timezone has a negative UTC offset (any zone in the Americas, e.g. America/New_York at UTC-4 in September).",
+      "consequence": "Bokeh serializes a Python `date`/`datetime` to milliseconds since the UTC epoch representing true UTC midnight of that date (`bokeh/util/serialization.py` `convert_datetime_type`). `_unlocal_date` now unconditionally subtracts `date.getTimezoneOffset() * 60000` from that instant; for a negative offset this is a positive subtraction that rolls a true UTC-midnight timestamp back into the previous UTC calendar day before `toISOString().substr(0,10)` reads it. The widget then displays the wrong initial date and enforces min/max navigation bounds shifted one day earlier than configured, for the whole lifetime of the widget (`min_date`/`max_date` are re-read from the model on every `render()`). This reintroduces the exact class of defect bokeh/bokeh#9129 reports, just for the opposite hemisphere of timezones \u2014 confirmed by reproducing both the merge-base and head behavior for the same UTC-midnight input under `TZ=America/New_York`: head returns `Thu Sep 19 2019`, merge-base correctly returns `Fri Sep 20 2019`.",
+      "proposed_fix": "Do not apply the `getTimezoneOffset()` compensation to inputs that are already true UTC-midnight epoch timestamps (the initial `value`, `min_date`, `max_date`); only the client-only round trip through `_on_select`'s `date.toDateString()` needs it, or compute the compensation so it is a no-op for genuine UTC-midnight inputs.",
+      "native_priority": "P1",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

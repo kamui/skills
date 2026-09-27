@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-26-x385-remedy-completeness",
+  "target": "m-grpc-go-7390",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "5a40b59e0c384c5df8da169e4f42962ca2dcf9e28a6df4e1cbbf7423016f912e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 cd780daecfe66f9b61e20f60bf0053a6163e1eb15bacb577d61526844ba8dbf8; session 7f256aa0-9165-409c-8506-5e4ebe084b26; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-27T07:11:42Z",
+  "attempts": [
+    {
+      "attempt_id": "att-004",
+      "blind_token": "blind-03fd8e",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"now briefly blocks the `updateAddrs` goroutine on `ac.mu` until the spawned goroutine reaches `ac.mu.Unlock()`\" ... \"Verified deadlock-free ... and exercised by a passing `-race` test.\" Fix: \"—\". At head clientconn.go updateAddrs defers ac.transport.GracefulClose() (whose onClose locks ac.mu) and then runs `go ac.resetTransportAndUnlock()` still holding ac.mu, so the deferred close can wait until the spawned goroutine releases the lock after updateConnectivityState(Connecting) (clientconn.go ~1262). That is accurate. The item itself says it is deadlock-free and proposes no change. The register lists the lock handoff (non_defects[0]) and the longer critical section (non_defects[4]) as intended, not defects. An accurate observation with no material consequence."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The second commit's message, 'Make callers of resetBackoff() lock the mutex,' does not describe its actual diff ... no functional effect on the merged diff.\" Confirmed: `git show 6214c9dd` renames resetTransport to resetTransportAndUnlock and moves the Lock/Unlock to the callers, but it never touches resetBackoff. This is commit-message hygiene on an intermediate commit and has no effect on the code, so it is below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Prior reviewer discussion about mechanically enforcing the new caller-holds-ac.mu contract ... was explicitly settled by the merging maintainer in favor of the function name plus doc comment\". This restates the disclosed, accepted trade-off (register non_defects[1] and the preexisting_hints about purnesh42H and dfawley). The doc comment is present at head ('ac.mu must be held by the caller, and this function will guarantee it is released'). It is an observation that asserts no defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

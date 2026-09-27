@@ -1,0 +1,129 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "specs": ["spec-pr195"],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Decompose six SonarQube-flagged high-complexity functions into focused helpers, centralize duplicated backup-status-title literals behind one constant/helper, delete an exact-duplicate test, and tidy the Dockerfile (merge RUN layers, sort apk packages, quote ${TAG}), while preserving existing behaviour and log output.",
+    "issue_fit": "No originating issue; intent drawn from the caller-supplied PR body (jonhadfield/soba#195, spec-pr195) and the single commit's message, which match this diff. All four claimed outcomes are met. The supporting go build/vet/test claim is reproduced; golangci-lint's \"0 issues\" claim is not independently verifiable offline, but nothing material depends on it given clean build/vet/test.",
+    "coverage": "Complete merge-base diff (c77f548..136a4850d) read across all 4 changed files (docker/Dockerfile, internal/backup.go, internal/backup_test.go, internal/notify.go). `go build ./...`, `go vet ./...`, and `go test ./internal/ -count=1` (full package suite, 5.257s) ran once at head 136a4850d: all pass; the two GitLab/Gitea live-backup tests skip for missing credentials, as expected offline. One concurrency safety premise about signal-driven-shutdown ordering across the Run()->scheduleBackups()->runScheduledJob() decomposition was verified via a fresh-context worker: holds."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The pre-existing \"Organistations\" typo in startup-config logging (already present for GitHub, Gitea, and Azure DevOps at the merge-base) is preserved verbatim by the new shared logProviderOrgs helper rather than fixed.",
+      "evidence": "internal/backup.go:183-186 (`logProviderOrgs`); identical wording existed per-provider at c77f548:internal/backup.go (e.g. \"GitHub Organistations: %s\", \"Gitea Organistations: %s\")."
+    },
+    {
+      "fact": "TestGiteaOrgsRepositoryBackup calls resetBackups() once inside each switch case and once more unconditionally after the switch on every loop iteration; this pre-existing double reset is preserved unchanged by the refactor.",
+      "evidence": "internal/backup_test.go:627-635 (head); the same double-call pattern exists at c77f548:internal/backup_test.go:670-707 (merge-base)."
+    },
+    {
+      "fact": "The Dockerfile's `rm -f \"/var/cache/apk/*\"` quotes the glob, which (pre-existing, unchanged by this diff) prevents shell expansion and leaves apk's cache directory contents on the image.",
+      "evidence": "docker/Dockerfile:8, unchanged text now folded into the merged RUN instruction."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "jonhadfield/soba",
+    "requirements": [
+      {
+        "source": "spec-pr195/\"Cognitive complexity (go:S3776): runProviderBackups, displayStartupConfig, checkProvider, Run and checkProvidersDefined and TestGiteaOrgsRepositoryBackup decomposed into focused helpers. Behaviour and log output are unchanged.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go: collectProviderBackupResults/bitbucketAPITokenDefined/bitbucketOAuthDefined (runProviderBackups, lines 40-149); displayGitHubStartupConfig/displayGiteaStartupConfig/displayGitLabStartupConfig/displayBitBucketStartupConfig/displayAzureDevOpsStartupConfig/logProviderOrgs/logProviderBackupsToKeep/logProviderCompareMethod/logProviderBackupLFS (displayStartupConfig, lines 155-341); checkJustTokenProvider/checkUserAndPasswordProvider (checkProvider, lines 349-448); logRequestTimeout/validateStartupConfig/createWorkingDir/scheduleBackups/runScheduledJob (Run, lines 397-541); reused bitbucketAPITokenDefined/bitbucketOAuthDefined (checkProvidersDefined, lines 680-717 at head); assertGiteaOrgTwoOnlyBackedUp/assertGiteaAllOrgsBackedUp/dirHasEntryWithPrefix (TestGiteaOrgsRepositoryBackup, backup_test.go:600-676). `go build`, `go vet`, and `go test ./internal/ -count=1` all pass at head 136a4850d, corroborating unchanged behaviour and log output."
+      },
+      {
+        "source": "spec-pr195/\"Duplicated literals (go:S1192): backup status titles extracted into constants with a shared backupStatusTitle helper.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:24-38 defines titleBackupsSucceeded/titleBackupsErrors/titleBackupsFailed and backupStatusTitle(); reused at the Telegram, ntfy, and Slack senders in the same file, replacing three duplicated inline switch statements."
+      },
+      {
+        "source": "spec-pr195/\"Identical test (go:S4144): removed TestPublicGitLabRepositoryBackup2, an exact duplicate of TestPublicGitLabRepositoryBackup.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "c77f548:internal/backup_test.go:551-586 shows TestPublicGitLabRepositoryBackup2 byte-identical to TestPublicGitLabRepositoryBackup except its name; internal/backup_test.go diff at head removes it (lines 567-591 at merge-base)."
+      },
+      {
+        "source": "spec-pr195/\"Dockerfile (docker:S7031, S7018, S6570): merged consecutive RUN instructions, sorted apk package names, quoted ${TAG} in the download URL.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:5-9 merges the addgroup/adduser/apk-add RUN instructions into one, sorts the package list to bash,ca-certificates,curl,git,git-lfs,grep,jq, and docker/Dockerfile:16 quotes \"${TAG}\" in the release download URL."
+      },
+      {
+        "source": "spec-pr195/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "`go build ./...` and `go vet ./...` exit 0 with no output, and `go test ./internal/ -count=1` passes (`ok ... 5.257s`) at head 136a4850d, reproducing the build/vet/test-suite portion. golangci-lint was not run — it falls outside this run's offline go-only execution allowance — so its \"0 issues\" claim is unverified; nothing material depends on it given the clean build/vet/test results."
+      }
+    ],
+    "files": [
+      {"path": "docker/Dockerfile", "state": "reviewed"},
+      {"path": "internal/backup.go", "state": "reviewed"},
+      {"path": "internal/backup_test.go", "state": "reviewed"},
+      {"path": "internal/notify.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go build ./... (GOPROXY=off GOTOOLCHAIN=local, offline module/build caches)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "exit 0, no output"
+      },
+      {
+        "check": "go vet ./... (GOPROXY=off GOTOOLCHAIN=local, offline module/build caches)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "exit 0, no output"
+      },
+      {
+        "check": "go test ./internal/ -count=1 (GOPROXY=off GOTOOLCHAIN=local, offline module/build caches)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "`ok github.com/jonhadfield/soba/internal 5.257s`; TestPublicGitLabRepositoryBackup and TestGiteaOrgsRepositoryBackup skip for missing GITLAB_TOKEN/GITEA_TOKEN, as expected offline"
+      },
+      {
+        "check": "golangci-lint run (claimed 0 issues in the PR body)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "unavailable",
+        "reason": "golangci-lint is not a go command and falls outside this run's offline execution allowance, so the author's claim was not independently reproduced"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "scheduler-shutdown-sync",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Run()'s scheduling code was decomposed into scheduleBackups()/runScheduledJob(), but the call chain from Run() through s.Start(); waitForShutdown(s) stays fully synchronous, so the deferred cleanupWorkingDir in runProviderBackups still completes before process exit on SIGINT/SIGTERM, exactly as before.",
+          "evidence": "internal/backup.go:421,500-521,525-541,546-556,54-57",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-003/clone-work/review-code-priv.mAgblC/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-003/clone-work/review-code-priv.mAgblC/initial/accounting.json",
+          "operation": "Agent(subagent_type=general-purpose, model=sonnet, run_in_background=false)"
+        }
+      ],
+      "allowance": {"initial_spent": true, "follow_up_spent": false},
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

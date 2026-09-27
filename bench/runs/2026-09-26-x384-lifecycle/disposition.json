@@ -1,0 +1,12 @@
+{
+  "issue": 384,
+  "disposition": "inconclusive",
+  "reason": "Three of the four dispatched attempts are invalid: both Base UI reviews and the gRPC review. Only soba has a valid review. With nine planned valid cells and only two replacements, even perfect remaining attempts cannot complete the matrix: at most eight valid cells fit in eleven attempts. Further paid reviews cannot establish a pass under the frozen cap, so stop and leave #384 open. No valid Base UI review establishes either defect threshold. The false finding in an invalid Base UI review is reported in all-attempt counts and is not used to reject the variant. The one valid soba review took 816 seconds versus the historical 99.5-second median, but the planned three-review median is unavailable; this is not a completed latency test.",
+  "reviews_usd": 12.361659,
+  "grading_usd": 0.665457,
+  "total_usd": 13.027116,
+  "valid_attempts": 1,
+  "attempts": 4,
+  "replacements": 0,
+  "new_reviews_after_recovery": 0
+}

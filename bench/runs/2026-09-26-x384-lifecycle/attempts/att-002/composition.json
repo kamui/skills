@@ -1,0 +1,116 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+    "merge_base": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": ["grpc/grpc-go#7365"],
+    "specs": ["spec/grpc-go-pr-7390-packet"],
+    "supplied_inputs": "yes",
+    "change_description": "grpc: hold ac.mu while calling resetTransport to prevent concurrent connection attempts\n\nThis change ensures that caller of resetTransport() keep holding the mutex instead of releasing it and having resetTransport() re-acquire it. This ensures that no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport.\n\nSee https://github.com/grpc/grpc-go/issues/7365#issuecomment-2208258873 for more details.\n\nTested: Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\n\nFixes: https://github.com/grpc/grpc-go/issues/7365\n\nRELEASE NOTES:\n- client: fix race that could lead to orphaned connections and associated resources.",
+    "coverage": "complete",
+    "merged": false
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Hold `ac.mu` across the Idle-to-Connecting transition (rename `resetTransport` to `resetTransportAndUnlock`) so `addrConn.connect()` and `addrConn.updateAddrs()` can no longer race into two concurrent connection attempts, fixing the flaky `Test/AuthorityRevive` and the underlying orphaned-transport leak described in grpc/grpc-go#7365.",
+    "issue_fit": "Met — the race window between the Idle check and the Connecting state transition is closed by keeping ac.mu locked across both; a fresh-context verifier confirmed both the atomicity of that transition and that every return path of resetTransportAndUnlock() still releases the lock. Source: originating issues; user-supplied spec; commit messages in the range.",
+    "coverage": "Complete merge-base diff reviewed (clientconn.go, +6/-7, the only changed file); both call sites of resetTransport/resetTransportAndUnlock (connect(), updateAddrs()) and their single caller (balancer_wrapper.go) inspected at base and head; focused test `go test -race -run 'Test/^AuthorityRevive$' -count=100 ./xds/internal/xdsclient/tests/` run once at the reviewed head: pass (13.8s)."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Both review threads on the pull request are still marked unresolved in the forge state even though each was explicitly settled by comment before merge (`arjan-bal` on 2024-07-08T11:45:38Z; `dfawley` on 2024-07-09T20:26:47Z).",
+      "evidence": "Supplied packet section 6, review threads 9 and 17."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone",
+    "paths": {
+      "private_dir": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9",
+      "store": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9/review-context.json",
+      "composition": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9/composition.json",
+      "skill_root": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/home/.claude/skills/review-code",
+      "evidence_packet": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9/supplied-packet.md"
+    },
+    "requirements": [
+      {
+        "source": "pr-body/\"This change ensures that caller of resetTransport() keep holding the mutex instead of releasing it and having resetTransport() re-acquire it. This ensures that no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 (connect() keeps ac.mu locked from the Idle check straight into resetTransportAndUnlock()); clientconn.go:1231-1262 (resetTransportAndUnlock() only unlocks after ac.updateConnectivityState(Connecting, nil)); fresh-context verifier confirmed premise clientconn/idle-to-connecting-atomicity holds."
+      },
+      {
+        "source": "grpc/grpc-go#7365 (issue title: flaky Test/AuthorityRevive caused by two parallel connection attempts)",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The identified root cause (unlock-then-relock window between the Idle check and the Connecting transition) is closed by this diff; `go test -race -run 'Test/^AuthorityRevive$' -count=100 ./xds/internal/xdsclient/tests/` passed at head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6 (13.8s, no failures, no race reports)."
+      },
+      {
+        "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The bounded five-minute focused-test allowance permits at most ~100 iterations under -race (100 ran cleanly in 13.8s); reproducing the author's 100000-attempt count is outside this run's execution allowance. Nothing material depends on the exact count: the code-level fix (closing the unlock/re-lock race window) is independently confirmed, and this assertion only corroborates the flakiness magnitude, not the fix's correctness."
+      },
+      {
+        "source": "pr-body/\"RELEASE NOTES: client: fix race that could lead to orphaned connections and associated resources.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Consistent with the code shape (ac.transport is a single field; a losing racer's transport is never assigned to it) per arjan-bal's 2024-07-09T06:38:44Z comment, but reproducing the orphaned-transport leak itself is outside this run's bounded scope; nothing material depends on it since the fix's correctness rests on the confirmed premises, not on this description."
+      }
+    ],
+    "files": [
+      {"path": "clientconn.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -race -run 'Test/^AuthorityRevive$' -count=100 ./xds/internal/xdsclient/tests/",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Offline focused run within the granted allowance (GOMODCACHE/GOCACHE from the attempt's cache, GOPROXY=off); corroborates the PR's flake-fix claim at reduced scale since the full 100000-count run does not fit the five-minute bound. Result: ok, 13.812s, no failures or race reports."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "clientconn/idle-to-connecting-atomicity",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "ac.mu is held continuously from the Idle check in connect() (clientconn.go:906-921) through the Connecting transition inside resetTransportAndUnlock() (clientconn.go:1234-1262), so no second call to connect() can observe ac.state == Idle and start a duplicate resetTransportAndUnlock() while the first caller's transition to Connecting is still pending.",
+          "evidence": "clientconn.go:905-923; clientconn.go:1231-1262; balancer_wrapper.go:276",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "clientconn/reset-transport-unlock-guarantee",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "resetTransportAndUnlock() unlocks ac.mu on every return path, and updateAddrs() (clientconn.go:996) hands off the already-locked ac.mu to a new goroutine running resetTransportAndUnlock() without an intervening unlock, so this handoff never leaves ac.mu permanently locked or produces a double-unlock/unlock-of-unlocked-mutex panic.",
+          "evidence": "clientconn.go:990-996; clientconn.go:1236-1238; clientconn.go:1261-1262; clientconn.go:1266-1270; clientconn.go:1293-1298; clientconn.go:1301-1303",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9/initial",
+          "raw_return": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9/initial-return.json",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-work/review-code-priv-f5tMf9/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

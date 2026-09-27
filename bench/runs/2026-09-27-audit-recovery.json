@@ -1,0 +1,110 @@
+{
+  "at": "2026-09-27T07:07:27Z",
+  "audit_revision": "0384e39bece003f9244793398491b477c27985a3",
+  "baseline_attempts_checked": 83,
+  "baseline_changes": [],
+  "experiments": [
+    {
+      "issue": 381,
+      "run": "2026-09-26-x381-action",
+      "attempts": [
+        {
+          "attempt": "att-001",
+          "before": "harness-invalid: read audit: 1 violation(s), first network-capable command: set -e WORK=/home/jack/.t3/bench-runs/2026-09-26-x381-action/att-001/clone-work rm -rf \"$WORK/basecheck\" git -C /home/jack/.t3/bench-runs/2026-09-26-x381-action/att-001/clone worktree list git clone -",
+          "after": "valid completed",
+          "usd": 3.243479,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-002",
+          "before": "valid completed",
+          "after": "valid completed",
+          "usd": 1.662889,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-003",
+          "before": "unfiled",
+          "after": "harness-invalid: read audit: 3 violation(s), first path outside allowed roots in command: /tmp/6214.go",
+          "usd": 4.002343,
+          "elapsed_to_payload_available": false
+        }
+      ]
+    },
+    {
+      "issue": 384,
+      "run": "2026-09-26-x384-lifecycle",
+      "attempts": [
+        {
+          "attempt": "att-001",
+          "before": "harness-invalid: read audit: 13 violation(s), first path outside allowed roots in command: /tmp/priv_dir_path.txt",
+          "after": "harness-invalid: read audit: 13 violation(s), first path outside allowed roots in command: /tmp/priv_dir_path.txt",
+          "usd": 3.142761,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-002",
+          "before": "harness-invalid: read audit: 1 violation(s), first network-capable command: ls /home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-cache/ 2>&1 echo \"---gomodcache---\" ls /home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-cache/gomodcache 2>&1 | he",
+          "after": "harness-invalid: read audit: 1 violation(s), first network-capable command: ls /home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-cache/ 2>&1 echo \"---gomodcache---\" ls /home/jack/.t3/bench-runs/2026-09-26-x384-lifecycle/att-002/clone-cache/gomodcache 2>&1 | he",
+          "usd": 3.067525,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-003",
+          "before": "valid completed",
+          "after": "valid completed",
+          "usd": 2.834788,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-004",
+          "before": "unfiled",
+          "after": "harness-invalid: read audit: 4 violation(s), first path outside allowed roots in command: /tmp/verify-work",
+          "usd": 3.316585,
+          "elapsed_to_payload_available": false
+        }
+      ]
+    },
+    {
+      "issue": 385,
+      "run": "2026-09-26-x385-remedy-completeness",
+      "attempts": [
+        {
+          "attempt": "att-001",
+          "before": "valid completed",
+          "after": "valid completed",
+          "usd": 4.120045,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-002",
+          "before": "valid completed",
+          "after": "valid completed",
+          "usd": 1.697856,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-003",
+          "before": "harness-invalid: read audit: 1 violation(s), first path outside allowed roots in command: /tmp/att003_privdir.txt",
+          "after": "harness-invalid: read audit: 1 violation(s), first path outside allowed roots in command: /tmp/att003_privdir.txt",
+          "usd": 2.140346,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-004",
+          "before": "harness-invalid: read audit: 12 violation(s), first path outside allowed roots in command: /tmp/priv_dir_path.txt",
+          "after": "harness-invalid: read audit: 12 violation(s), first path outside allowed roots in command: /tmp/priv_dir_path.txt",
+          "usd": 3.755863,
+          "elapsed_to_payload_available": true
+        },
+        {
+          "attempt": "att-005",
+          "before": "unfiled",
+          "after": "valid completed",
+          "usd": 1.741177,
+          "elapsed_to_payload_available": false
+        }
+      ]
+    }
+  ]
+}
