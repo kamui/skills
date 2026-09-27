@@ -1,0 +1,45 @@
+{
+  "target": "r-base-ui-5460",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "restore cache archive sha256:3c3e3d5e5d22443c1267f1f8f456725eb60c888e0921f1f2565c859f3a24be6c; mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+    "duration_seconds": 17.67,
+    "tree_clean_after": true,
+    "steps": [
+      {
+        "command": "restore cache archive sha256:3c3e3d5e5d22443c1267f1f8f456725eb60c888e0921f1f2565c859f3a24be6c",
+        "exit_code": 0,
+        "duration_seconds": 12.28
+      },
+      {
+        "command": "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+        "exit_code": 0,
+        "duration_seconds": 5.39
+      }
+    ],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-xgybn7ey/attempt/clone && COREPACK_HOME=/tmp/review-isolation-xgybn7ey/attempt/clone-cache/corepack PNPM_HOME=/tmp/review-isolation-xgybn7ey/attempt/clone-cache/pnpm-home COREPACK_ENABLE_STRICT=0 COREPACK_ENABLE_DOWNLOAD_PROMPT=0 TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": " RUN  v4.1.8 /tmp/review-isolation-xgybn7ey/attempt/clone\n\n \u2713 |@base-ui/react| src/field/control/FieldControl.test.tsx (27 tests | 1 skipped) 236ms\n\n Test Files  1 passed (1)\n      Tests  26 passed | 1 skipped (27)\n   Start at  19:24:27\n   Duration  1.34s (transform 399ms, setup 185ms, import 461ms, tests 236ms, environment 338ms)",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": " RUN  v4.1.8 /tmp/review-isolation-xgybn7ey/attempt/clone\n\n \u2713 |@base-ui/react| src/field/control/FieldControl.test.tsx (27 tests | 1 skipped) 236ms\n\n Test Files  1 passed (1)\n      Tests  26 passed | 1 skipped (27)\n   Start at  19:24:29\n   Duration  1.18s (transform 357ms, setup 137ms, import 409ms, tests 236ms, environment 307ms)",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}

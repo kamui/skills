@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x384-staged-gate",
+  "created_at": "2026-09-27T19:27:52Z",
+  "frozen_at": null,
+  "freeze_commit": null,
+  "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
+  "rubric_version": 1,
+  "metric_code_revision": "0000000000000000000000000000000000000000",
+  "arms": [
+    {
+      "id": "review-code-sonnet-high-enforced-lifecycle",
+      "arm_file_sha256": "eda207f80a587482e057efbd5146212fd53af95711698f0eb0d926930647fe02",
+      "resolved_skill_tree": "938f7c80925248cc76943317d6fec243ddac5a08",
+      "expected_cli_version": "claude-code 2.1.282",
+      "expected_prompt_hashes": [],
+      "probe_attempt": null
+    }
+  ],
+  "cohort": [
+    {
+      "target": "r-base-ui-5460",
+      "register_version": 1,
+      "packet_sha256": "930dc4fa176d00386009597298b20c64c877676dac24e8b5a033d722be0f8f3f",
+      "diff_manifest_sha256": "e3f30cd11e3c9fbd1a3bba2828cf72c03cdae720e6ed68d4b5c7f8a0a45b6e3f",
+      "cohort_group": "fresh",
+      "execution_available": true,
+      "provisioning_sha256": "b805f69d6863b88ee8429d5f969e26d4a9ca5a8100830ebe7bc2024cc6ab252a"
+    }
+  ],
+  "exclusions": [],
+  "planned_cells": [
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-enforced-lifecycle",
+      "replicate": 1
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-enforced-lifecycle",
+      "replicate": 2
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-enforced-lifecycle",
+      "replicate": 3
+    }
+  ],
+  "caps": {
+    "max_attempts": 5,
+    "replacements": 2,
+    "spend_usd": 30.0,
+    "closeout_reserve_usd": 5.0,
+    "max_in_flight": 1,
+    "attempt_usd": 5.0
+  },
+  "sealed_order": [
+    "r-base-ui-5460/review-code-sonnet-high-enforced-lifecycle/1",
+    "r-base-ui-5460/review-code-sonnet-high-enforced-lifecycle/2",
+    "r-base-ui-5460/review-code-sonnet-high-enforced-lifecycle/3"
+  ],
+  "rates": [
+    {
+      "model": "claude-sonnet-5",
+      "as_of": "2026-09-24"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "as_of": "2026-09-24"
+    }
+  ],
+  "execution_policy": {
+    "branch_layout": "The review target is the explicitly named offline clone. Local branch main is the merge-base and review-head is the checked-out head; review the committed main...review-head range. The CLI starts in the attempt work directory. The clone is read-only. Shell tools run in an enforced filesystem and network sandbox; direct file tools are restricted before execution. External network access is disabled; loopback listeners inside the sandbox are available for focused tests.",
+    "allowance": "Read the clone and the pinned skill. Focused commands may run only as the target allowance states, offline, with a five-minute limit per command. Put scratch files in the attempt work directory or its private temporary directory. Dependency-cache and artifact writes remain inside the attempt. Never change the clone or request access to another attempt or the host filesystem. Unavailable paths and connections stay unavailable; do not retry outside the sandbox.",
+    "unprivileged_user": null
+  },
+  "deviations": []
+}
