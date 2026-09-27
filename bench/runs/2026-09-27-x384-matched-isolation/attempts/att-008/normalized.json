@@ -1,0 +1,8 @@
+{
+  "arm": "review-code",
+  "parse_status": "empty",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [],
+  "parse_notes": []
+}

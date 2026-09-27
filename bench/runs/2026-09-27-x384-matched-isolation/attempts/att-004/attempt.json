@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-004",
+  "run_id": "2026-09-27-x384-matched-isolation",
+  "cell": {
+    "target": "r-base-ui-5460",
+    "arm": "review-code-sonnet-high-isolated-lifecycle",
+    "replicate": 1
+  },
+  "predecessor": "att-003",
+  "retry_reason": "Replace the candidate cell invalidated by a filesystem-root search inside the restricted filesystem; preserve all original evidence and charges.",
+  "replacement_index": 2,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-27T10:50:33Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "938f7c80925248cc76943317d6fec243ddac5a08",
+    "diff_commands": [
+      "git diff of head vs base for field control file---\"",
+      "git diff 30b8ea2004fa999bed151204208676c6c0a9d261 14d39e5d1ad6b7aca2fb067415dba09c6bea219b -- packages/react/src/field/control/FieldControl.tsx "
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "e9d94115a7b95e0aa4eb7ea5262b1518236aac509887575eacbe6f45bd3cdd5d",
+    "tree_identity_after": "e9d94115a7b95e0aa4eb7ea5262b1518236aac509887575eacbe6f45bd3cdd5d"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 3.480678,
+    "cost_bounds_usd": {
+      "low": 3.480678,
+      "high": 3.480678
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-27T10:50:33Z",
+    "payload_validated_at": "2026-09-27T11:03:09Z",
+    "completed_at": "2026-09-27T11:03:09Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "675748c46210bd28a0a9cf55978fcc81215288ef2f82d3a7c34c06eae75649c6"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-27-x384-matched-isolation/att-004.tar.gz",
+    "sha256": "7fcfe6e675faa1ec3409131230ce5eede09a9f65ae85f73bbce91aebb0e1ea2f",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 761633385e1d107142f73892af6c8d8c7ee7abefc2bd904e8f8927df876b34a0; run policy sha256 2d0336d4c7f2801a19c5f79c5b311c7b92351506558b155bafec840bcc32367e (before path substitution)"
+  ]
+}

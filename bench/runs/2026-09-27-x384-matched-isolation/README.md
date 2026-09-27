@@ -12,6 +12,63 @@ Its attempts, charges and original comparison with historical A are not reused a
 new cells. This experiment changes the execution setup in both arms, so historical
 A is context only. Its original two-replicate evidence remains intact.
 
+## Results, 2026-09-27
+
+**Inconclusive. Stop; leave #384 open.** Eight attempts produced three valid reviews
+and five invalid reviews. All four replacements were used. Even if all remaining
+attempts were valid, `3 + (22 - 8) = 17` cannot reach the 18 required cells. Soba and
+replicates 2 and 3 were never dispatched. No valid-review guardrail failure was
+established, so this is neither acceptance nor a rejection of the lifecycle rule.
+
+| Target | Valid control / planned | Valid candidate / planned | Valid evidence |
+| --- | ---: | ---: | --- |
+| Base UI | 1/3 | 1/3 | Control recovers neither defect; candidate recovers GT-r2 with a partial remedy and misses GT-r1 |
+| gRPC | 0/3 | 1/3 | Candidate has no false finding or blocker; control comparison unavailable |
+| soba | 0/3 | 0/3 | Unattempted |
+
+The candidate's GT-r2 finding demonstrates the introduced controlled-remount failure.
+Its proposed DOM-only fix does not restore filled state for a non-input rendered
+element, so the blind grader rates the remedy partial. The valid Base UI control
+raises a non-material blocker. Invalid candidate outputs contain false findings,
+but the frozen decision rule excludes them from measured guardrail failures.
+
+Valid elapsed-to-payload samples are 912 seconds for Base UI control, 756 seconds
+for Base UI candidate, and 900 seconds for gRPC candidate. No target has the
+required three timed valid reviews per arm, so no latency guardrail is measurable.
+
+Reviews cost $28.801134; blind grading cost $0.762059; total **$29.563193** against
+the separately approved $120 cap. The earlier stopped run's $13.027116 is excluded.
+Both closeout grading audits passed, and neither grader proposed a new defect.
+All eight outputs are graded in [results.v2.json](results.v2.json), with the
+[attempt and charge ledger](ledger.md), [scorecards](scoring/),
+[blind grading evidence](grading/), and [closeout record](closeout.json).
+`results.v1.json` is the first pair's intermediate snapshot.
+
+## Why attempts were invalid
+
+The access audit was frozen before dispatch and was not relaxed after outcomes.
+[Per-attempt diagnoses](diagnostics/) preserve the commands and tool responses.
+
+- `att-001` and `att-003` requested filesystem-root searches. They ran inside the
+  restricted filesystem and returned only an allowed clone path or no output.
+  The audit rejects requesting `/` regardless of what the sandbox exposed.
+- `att-005` ran `go env` and `att-006` and `att-008` ran `go version` without
+  `GOPROXY=off` and `GOTOOLCHAIN=local`. The audit treats every such Go invocation
+  as network-capable. These outputs report configuration or the installed version;
+  the label does not prove an actual network request or escape.
+- `att-002` and `att-004` also attempted outside scratch writes. The OS refused them
+  on the read-only filesystem. They remained valid under the unchanged read audit,
+  and their source clones stayed clean.
+
+Enforced isolation worked on the observed blocked operations; it did not make
+reviewers obey every request-level audit rule. Before another paid experiment,
+resolve how isolated toolchain metadata queries and denied operations should be
+classified, and test that policy for both arms without model inference. That is a
+new protocol decision, not a reason to reclassify these attempts or extend this run.
+The runner also needs explicit support for early cancellation and filing of an
+already-invalid attempt before such a stopping strategy is used. No such early
+cancellation occurred in this run.
+
 ## Question and frozen inputs
 
 Does the exact lifecycle sentence proposed in #384 improve defect recovery when
@@ -190,3 +247,12 @@ python3 -B bench/tools/test_review_isolation.py
 
 These tests use a localhost fake model API and dummy credentials. Their timings and
 synthetic token counters are not benchmark outcomes or charges.
+
+## Closeout verification
+
+[Verification evidence](closeout-verification/summary.json) records 125 passing
+regression tests with 10 optional native checks skipped, plus all 15 native checks
+passing separately with the local fake API. Runner, filing, provisioning and scoring
+self-tests passed. All filed schemas and isolation sidecars validate. Recomputed
+scores match `results.v2.json` except its computation timestamp. These checks used
+no additional paid model calls.

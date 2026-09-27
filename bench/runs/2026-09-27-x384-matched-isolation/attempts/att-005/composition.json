@@ -1,0 +1,92 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr7390"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": [],
+    "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Hold ac.mu continuously from the Idle check through the transition to Connecting in addrConn.connect(), instead of releasing and re-acquiring it around resetTransport(), to close a race where two concurrent connect() calls could both observe Idle and start duplicate connection attempts (grpc/grpc-go#7365); resetTransport is renamed resetTransportAndUnlock and documented to require the caller to already hold ac.mu, and updateAddrs's async reconnect call is updated to match.",
+    "issue_fit": "Met for the specific race the change description and issue #7365 describe: connect() now holds ac.mu continuously into resetTransportAndUnlock, which sets Connecting before unlocking, so a concurrent connect() can no longer observe Idle in the gap. The same lock-holding refactor in updateAddrs, however, introduces a distinct, previously-absent concurrency regression (see finding below) as a side effect of the fix.",
+    "coverage": "Complete merge-base diff reviewed (clientconn.go, the only changed file, +6/-7 across 3 hunks); both call sites of the renamed function inspected; the interaction with tearDown()'s and createTransport()'s pre-existing ac.mu/GracefulClose ordering inspected. Focused tests run once at head 76ef33f4 offline: `go test .` (root package, race) pass; `go test ./test -run Test/SubConnEmpty$` (race) pass, and traced to confirm it exercises updateAddrs from a Ready addrConn with a live transport; `go test ./xds/internal/xdsclient/tests -run Test/AuthorityRevive$` (race, count=20) pass, partial corroboration of the PR's reported 100000-iteration flake fix. One must-fix concurrency candidate verified by an independent fresh-context worker and confirmed."
+  },
+  "findings": [
+    {
+      "id": "clientconn/updateaddrs-gracefulclose-lock-contention",
+      "title": "Unlock ac.mu before updateAddrs's deferred GracefulClose call",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "concurrency",
+      "trigger": "addrConn.updateAddrs is called with a changed address list while the addrConn already has a live ac.transport (e.g. state Ready, or reconnecting to a since-superseded address) -- a routine reconnection path, not a shutdown or error path.",
+      "impact": "updateAddrs no longer unlocks ac.mu before returning. Its deferred `ac.transport.GracefulClose()` -- which synchronously calls the transport's onClose closure, which does `ac.mu.Lock()` -- now runs while ac.mu is still logically locked by this same goroutine, so the goroutine that called updateAddrs blocks until the independently scheduled `go ac.resetTransportAndUnlock()` goroutine happens to reach its own `ac.mu.Unlock()`. At the merge-base this deferred call always ran after an explicit `ac.mu.Unlock()`, so the caller never blocked here; grpc's own tearDown() still documents and follows exactly this ac.mu/GracefulClose ordering requirement (clientconn.go:1573-1575: \"We have to release the lock before the call to GracefulClose/Close here because both of them call onClose(), which requires locking ac.mu.\"). The block is bounded -- resetTransportAndUnlock's pre-unlock work is pure computation, no I/O -- but it is a genuine, previously nonexistent synchronization dependency on the shared address-update path.",
+      "change": "Before updateAddrs returns, unlock ac.mu explicitly (as at the merge-base) so the deferred GracefulClose always runs unlocked, and have the spawned reconnect goroutine acquire ac.mu itself at entry instead of assuming the caller's lock carries over; do not rely on the spawned goroutine's own unlock as the release mechanism for this goroutine's deferred call.",
+      "anchor": {"type": "line", "path": "clientconn.go", "start_line": 983, "end_line": 996, "side": "RIGHT"},
+      "fix": {"path": "clientconn.go", "start_line": 983}
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone",
+    "requirements": [
+      {
+        "source": "spec-pr7390/body",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:904-919 (RIGHT): connect() holds ac.mu continuously from the Idle check into resetTransportAndUnlock(), which sets Connecting (clientconn.go:1259-1261) before unlocking, closing the double-connect-attempt race issue #7365's comment 3 describes."
+      },
+      {
+        "source": "spec-pr7390/body",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The PR's \"Tested\" claim (100000 attempts of Test/AuthorityRevive without flaking) cannot be reproduced offline within the 5-minute focused-command bound. Ran `go test google.golang.org/grpc/xds/internal/xdsclient/tests -run 'Test/AuthorityRevive$' -race -count=20` at head 76ef33f4: 20/20 pass, consistent with but not independently conclusive corroboration of the reported flake elimination at ~0.4% baseline flake rate."
+      },
+      {
+        "source": "spec-pr7390/release-notes",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "The orphaned-transport race the release note describes (arjan-bal's comment: only one transport closed on subConn update, the other orphaned until server shutdown) is fixed for connect() by the continuous-lock change (clientconn.go:904-919). The same refactor, applied to updateAddrs, introduces a related but distinct new concurrency issue -- finding clientconn/updateaddrs-gracefulclose-lock-contention -- so the release note's implicit promise of a clean fix with no new synchronization side effects is only partially met."
+      }
+    ],
+    "files": [
+      {"path": "clientconn.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {"check": "go test . -race -count=1", "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6", "outcome": "reviewer-executed", "reason": "root package (clientconn_test.go, clientconn_state_transition_test.go, pickfirst_test.go, etc.) passes with the race detector at head; ok google.golang.org/grpc 13.6s"},
+      {"check": "go test google.golang.org/grpc/test -run 'Test/SubConnEmpty$' -race -v -count=1", "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6", "outcome": "reviewer-executed", "reason": "drives updateAddrs from a Ready addrConn with a live transport to an empty then a new address list; passes, confirming the concurrency finding's trigger path is real and reached"},
+      {"check": "go test google.golang.org/grpc/xds/internal/xdsclient/tests -run 'Test/AuthorityRevive$' -race -v -count=20", "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6", "outcome": "reviewer-executed", "reason": "20/20 pass; partial corroboration of the PR's reported 100000-iteration flake fix (see requirements row above), not independently conclusive at that scale"}
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "clientconn/updateaddrs-gracefulclose-lock-contention",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone-work/.review-priv-D9u6eC/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone-work/.review-priv-D9u6eC/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
