@@ -344,6 +344,21 @@ class Mapped(Grade):
 
 
 class Map(Mapped):
+    def test_isolated_arms_keep_review_code_scoring(self):
+        for arm in ("review-code-sonnet-high-isolated-control", "review-code-sonnet-high-isolated-lifecycle"):
+            with self.subTest(arm=arm):
+                path = self.run_dir / "attempts" / "att-001" / "attempt.json"
+                record = json.loads(path.read_text(encoding="utf-8"))
+                record["cell"]["arm"] = arm
+                write_json(path, record)
+                done = self.map(self.verdicts())
+                self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+                mapping = json.loads(self.mapping_path().read_text(encoding="utf-8"))
+                attempt = mapping["attempts"][0]
+                self.assertEqual([i["priority_error"] for i in attempt["items"]], self.attempts["att-001"][6])
+                self.assertEqual(attempt["review_level"]["completion"], "completed")
+                shutil.rmtree(self.run_dir / "scoring")
+
     def test_valid_verdicts_unblind_to_a_scorable_mapping(self):
         done = self.map(self.verdicts())
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)

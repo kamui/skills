@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "clientconn.go",
+      "line_start": 983,
+      "line_end": 996,
+      "claim": "Unlock ac.mu before updateAddrs's deferred GracefulClose call. addrConn.updateAddrs is called with a changed address list while the addrConn already has a live ac.transport (e.g. state Ready, or reconnecting to a since-superseded address) -- a routine reconnection path, not a shutdown or error path.",
+      "consequence": "updateAddrs no longer unlocks ac.mu before returning. Its deferred `ac.transport.GracefulClose()` -- which synchronously calls the transport's onClose closure, which does `ac.mu.Lock()` -- now runs while ac.mu is still logically locked by this same goroutine, so the goroutine that called updateAddrs blocks until the independently scheduled `go ac.resetTransportAndUnlock()` goroutine happens to reach its own `ac.mu.Unlock()`. At the merge-base this deferred call always ran after an explicit `ac.mu.Unlock()`, so the caller never blocked here; grpc's own tearDown() still documents and follows exactly this ac.mu/GracefulClose ordering requirement (clientconn.go:1573-1575: \"We have to release the lock before the call to GracefulClose/Close here because both of them call onClose(), which requires locking ac.mu.\"). The block is bounded -- resetTransportAndUnlock's pre-unlock work is pure computation, no I/O -- but it is a genuine, previously nonexistent synchronization dependency on the shared address-update path.",
+      "proposed_fix": "Before updateAddrs returns, unlock ac.mu explicitly (as at the merge-base) so the deferred GracefulClose always runs unlocked, and have the spawned reconnect goroutine acquire ac.mu itself at entry instead of assuming the caller's lock carries over; do not rely on the spawned goroutine's own unlock as the release mechanism for this goroutine's deferred call.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

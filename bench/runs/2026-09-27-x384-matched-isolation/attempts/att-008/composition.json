@@ -1,0 +1,112 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["grpc-go-pr7390"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": ["grpc/grpc-go#7365"],
+    "change_description": "Update conn state to prevent concurrent connection attempts\n\nMake callers of resetBackoff() lock the mutex\n\nAdd doc comment for resetTransportAndUnlock\n\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Hold `ac.mu` continuously across the Idle-state check and the call into `resetTransport` so a second, concurrent `connect()`/`updateAddrs()` cannot also observe `Idle` and start a parallel connection attempt, fixing the flaky `Test/AuthorityRevive` and the orphaned-transport race analyzed in grpc/grpc-go#7365.",
+    "issue_fit": "Met — the fix matches the root cause the issue's investigation established (a released-then-reacquired lock let two callers both observe `Idle` and both call `resetTransport`) and the remedy the reviewers agreed on (transition to `Connecting` before releasing `ac.mu`, via a renamed `resetTransportAndUnlock` that assumes the lock and unconditionally releases it).",
+    "coverage": "Complete merge-base diff reviewed (clientconn.go, 1/1 diff chunk); balancer_wrapper.go read for the sole external callers of `connect()`/`updateAddrs()`; two concurrency safety premises (continuous lock-holding across the Idle check, and guaranteed unlock on every `resetTransportAndUnlock` exit path) verified by a fresh-context worker — both `holds`; `Test/AuthorityRevive` run 20x with `-race` at the reviewed head: all passed."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone",
+    "requirements": [
+      {
+        "source": "spec-grpc-go-pr7390/pr-body/\"caller of resetTransport() keep holding the mutex instead of releasing it and having resetTransport() re-acquire it\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 (connect) and clientconn.go:940-996 (updateAddrs) hold ac.mu across the state check and the call into resetTransportAndUnlock (clientconn.go:1234-1262), which releases the lock only after transitioning state to Connecting at 1261-1262."
+      },
+      {
+        "source": "issue-grpc/grpc-go#7365/comment-2208258873/\"A simple fix it to set the state to connecting while addrConn.connect has the mutex locked\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1261-1262 sets Connecting before unlocking, closing the window the issue's root-cause comment identified; verifier premise-1 and premise-2 both ruled holds (see record.verification.tasks)."
+      },
+      {
+        "source": "spec-grpc-go-pr7390/pr-body/\"Fixes: https://github.com/grpc/grpc-go/issues/7365\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The double resetTransport invocation the issue traced to a released-then-reacquired lock is eliminated by the single critical section in connect()/updateAddrs(); Test/AuthorityRevive passed 20/20 with -race at head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6."
+      },
+      {
+        "source": "spec-grpc-go-pr7390/release-notes/\"client: fix race that could lead to orphaned connections and associated resources\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "arjan-bal's issue comment traces the orphaned-transport symptom to the same double-connect race (only one of two parallel transports gets recorded in ac.transport); the fix removes that race's only trigger."
+      },
+      {
+        "source": "spec-grpc-go-pr7390/tested/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "100000 iterations exceed this review's five-minute focused-execution bound; 20 local iterations with -race at head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6 passed, consistent with but not independent proof of the reported rate."
+      }
+    ],
+    "files": [
+      {"path": "clientconn.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "codecov coverage diff on grpc/grpc-go#7390 (supplied)",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "accepted",
+        "reason": "Ran on the exact reviewed head; reports all modified/coverable lines in clientconn.go covered by tests (92.40% file coverage, -0.99pp), matching this diff's scope."
+      },
+      {
+        "check": "go test ./xds/internal/xdsclient/tests/ -run 'Test/AuthorityRevive$' -race -count=20 -timeout 280s",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Bounded sanity check of the author's flake-fix claim on the checked-out head; all 20 iterations passed under the race detector, offline with cached modules."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-1",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "ac.mu stays continuously locked from the Idle/non-terminal-state check in connect()/updateAddrs() until resetTransportAndUnlock transitions ac.state to Connecting and unlocks, so no concurrent caller can observe Idle in that window.",
+          "evidence": "clientconn.go:905-923,940-996,1234-1262; balancer_wrapper.go:271-277",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-2",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "resetTransportAndUnlock unlocks ac.mu on every reachable exit path, whether run synchronously in connect()'s goroutine or in the goroutine updateAddrs() spawns, so the lock is never left permanently held.",
+          "evidence": "clientconn.go:1234-1239,1261-1310",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-work/private/initial",
+          "raw_return": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-work/private/initial-return.json",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-work/private/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

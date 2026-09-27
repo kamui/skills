@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "review-code-sonnet-high-isolated-control",
+  "kind": "review-code",
+  "label": "review-code, Sonnet 5 high, strict isolation, control",
+  "model": "claude-sonnet-5",
+  "effort": "high",
+  "requested_workers": {
+    "model": "claude-sonnet-5",
+    "effort": "high"
+  },
+  "skill_tree": "c3c53da5381dace16876b0f5b7abe4bccc6bc58b",
+  "isolation": {
+    "fresh_home": true,
+    "safe_mode": false,
+    "allowed_tools": [
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Agent",
+      "Skill"
+    ],
+    "sandbox": "claude-strict-v1",
+    "network": "off",
+    "unprivileged_user": null
+  },
+  "adapter": {
+    "range_transport": "caller input: the committed main...review-head range in the explicitly named read-only clone; CLI starts in the attempt work directory",
+    "packet_transport": "caller input: the user-supplied spec is the packet text; mode one-shot, profile publishable, return_format artifacts",
+    "output_capture": "the skill's composition.json, payload.json and report.md copied from its private directory to artifacts/",
+    "expected_prompt_variants": []
+  },
+  "budget_usd_per_attempt": 5.0
+}

@@ -1,0 +1,121 @@
+{
+  "run": {
+    "coverage": "complete",
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "specs": ["spec-pr-5460"],
+    "change_description": "[field] Sync controlled value changes with field state\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Give Field.Control one owner per value-source: `useValueChanged` drives dirty/filled/validity for the controlled path (mirroring Combobox, Number Field, Select, and OTP Field), and the DOM `onChange` handler drives them only when uncontrolled, replacing the two sync paths that previously both ran. This fixes a numeric/array dirty-state comparison bug (string DOM value vs. non-string captured baseline), makes programmatic controlled-value changes update filled/dirty/validity, honors `details.cancel()` from `onValueChange` on the uncontrolled path, and keeps a controlled value the consumer rejects or rewrites from reaching field state. Intent source: the caller-supplied PR description (`spec-pr-5460`); the single commit message carries no further detail.",
+    "issue_fit": "No originating issue; the supplied PR description is the only intent source. Its four described fixes (numeric/array dirty baseline, programmatic-change staleness, `details.cancel()`, rejected/rewritten controlled values) are each implemented and covered by a passing added test, or directly evident from the diff. The performance table's `onSubmit` render count is confirmed by an added test; its `onChange`-mode number is a plausible but untested supporting assertion.",
+    "coverage": "Both changed files reviewed in full (`FieldControl.tsx` +48/-20, `FieldControl.test.tsx` +149/-6); no other file in the 2-file diff. Ran the full existing suite at head (`FieldControl.test.tsx`, 26 passed/1 skipped) and, to falsify a suspected regression, an independent scratch jsdom test comparing head against the merge-base version of the one changed source file (everything else identical) — see finding `field-control/filled-not-cleared-on-remount`, confirmed by an independent fresh-context verifier. No other candidates survived falsification."
+  },
+  "findings": [
+    {
+      "id": "field-control/filled-not-cleared-on-remount",
+      "title": "Mount effect never clears data-filled when a Field.Control remounts empty",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A Field.Root stays mounted while its Field.Control child is swapped for a different control instance (a different `key`, or a conditionally rendered different control) whose initial value is empty, after the previous control instance had left the field filled.",
+      "impact": "`data-filled` (and the `filled` field of Field.Root's public state) stays stuck `true` on the new, empty control. Reproduced directly: mounting `Field.Root` > `Field.Control key=\"a\" value=\"foo\"` then swapping to `Field.Control key=\"b\" value=\"\"` leaves `data-filled` present at head, where the merge-base's version of the same file clears it. `filled` is documented public field state (`FieldRootState.filled`, \"Whether the field has a value\"), so this is user-visible, e.g. through floating-label or empty-state styling driven by `data-filled`.",
+      "change": "Make the mount-time effect symmetric so it also clears `filled` to `false` when the current DOM value is empty, matching the effect it replaced (`else if (hasExternalValue && valueProp === '') setFilled(false)`), e.g. `setFilled(!!validation.inputRef.current?.value)` unconditionally instead of only inside the truthy branch.",
+      "anchor": {
+        "type": "line",
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 99,
+        "end_line": 103,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 99
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-004/clone",
+    "requirements": [
+      {
+        "source": "spec-pr-5460/\"With value={5} the baseline was the number 5, so \\\"5\\\" !== 5 held forever...The control now registers the serialized value\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx computes `serializedValue = value == null ? undefined : String(value)` and registers/compares that string consistently; test `clears dirty state when a numeric controlled value returns to its initial value` passes at head (part of the 26-passed run below)."
+      },
+      {
+        "source": "spec-pr-5460/\"Programmatic changes left the field stale...updated the input text but not filled, dirty, or validity\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`useValueChanged(serializedValue, ...)` now runs `clearErrors`, `setDirty`, `setFilled`, and `validation.change` on every controlled value change regardless of source; test `syncs state and validates when the controlled value changes programmatically` passes at head."
+      },
+      {
+        "source": "spec-pr-5460/\"details.cancel() in onValueChange now stops the internal handling. It was ignored.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The uncontrolled `onChange` handler now guards with `!details.isCanceled` before `clearErrors`/`validation.change`; test `does not validate when the change is canceled` passes at head."
+      },
+      {
+        "source": "spec-pr-5460/\"A controlled value the consumer rejects or rewrites no longer reaches the field state, matching Combobox, Number Field and OTP Field.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`onChange` returns immediately after calling `onValueChange` when `isControlled`, before any `setDirty`/`setFilled`/`validation.change`, so field state only ever reflects what the consumer feeds back through the `value` prop."
+      },
+      {
+        "source": "spec-pr-5460/\"Renders per keystroke...onSubmit: 1 per keystroke (Base) vs 2 on the first, then 1 (This PR)\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Test `renders once per keystroke for controlled input changes` (default `onSubmit` validation mode) asserts exactly one extra render per keystroke after the first, matching the claimed steady state; passes at head."
+      },
+      {
+        "source": "spec-pr-5460/\"onChange: 1 per keystroke (Base) vs 2 per keystroke (This PR)\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No added test exercises `validationMode=\"onChange\"` render counts for a controlled input; the mechanism described (an extra render from the layout-effect-driven state update) is plausible and consistent with the `onSubmit` measurement that was verified, but the specific number is not independently confirmed here."
+      }
+    ],
+    "files": [
+      {"path": "packages/react/src/field/control/FieldControl.tsx", "state": "reviewed"},
+      {"path": "packages/react/src/field/control/FieldControl.test.tsx", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "run from the clone root against a clean checked-out tree at the pinned head; 26 passed, 1 skipped, 0 failed"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "field-control/filled-not-cleared-on-remount",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-004/clone-work/review-private/run.5yJlLf/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-004/clone-work/review-private/run.5yJlLf/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false, awaited"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

@@ -468,6 +468,9 @@ def file_attempt(args) -> tuple:
     arm_model, arm_effort = arm.get("model"), arm.get("effort")
     expected = arm.get("adapter", {}).get("expected_prompt_variants") or []
     problems = []
+    if arm.get("isolation", {}).get("sandbox") == "claude-strict-v1":
+        import review_isolation
+        problems.extend(review_isolation.verify_evidence(Path(attempt_dir)))
     if trees[0] != trees[1]:
         problems.append("tree identity changed during the attempt")
     if audit.get("violations"):
@@ -517,7 +520,7 @@ def file_attempt(args) -> tuple:
     # Output directory.
     out = os.path.abspath(args.out)
     os.makedirs(out, exist_ok=True)
-    for name in ("dispatch.txt", "timing.json", "audit.json", "normalized.json", "stop.json", "stop.recorded.json"):
+    for name in ("dispatch.txt", "timing.json", "audit.json", "normalized.json", "stop.json", "stop.recorded.json", "isolation.json", "isolation-settings.json"):
         src, dest = os.path.join(attempt_dir, name), os.path.join(out, name)
         if os.path.exists(src):
             shutil.copy2(src, dest)

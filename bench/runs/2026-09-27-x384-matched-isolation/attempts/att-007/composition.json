@@ -1,0 +1,148 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "spec-pr7390"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": [
+      "grpc/grpc-go#7365"
+    ],
+    "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a race in `addrConn` connection establishment (grpc/grpc-go#7365): hold `ac.mu` continuously from the idle-state check in `connect()`/`updateAddrs()` through `resetTransportAndUnlock()` setting `Connecting`, so two overlapping callers can no longer both start a transport for the same `addrConn` and leak an orphaned connection.",
+    "issue_fit": "Met \u2014 the described race window (two `tryAllAddrs` invocations racing past the idle check) is closed by construction; the regression test `Test/AuthorityRevive` that exposed it passes at head (single run, race-detector clean). The PR's specific claim of zero flakes over 100000 attempts is not independently reproduced given this run's five-minute focused-test bound, but the closed race window (confirmed by verification) makes repeating that measurement immaterial to the decision.",
+    "coverage": "Complete merge-base diff reviewed (clientconn.go, the only changed file, +6/-7 across 3 hunks). Traced `connect()`, `updateAddrs()`, `resetTransportAndUnlock()`, and the `updateAddrs()` -> `GracefulClose()` -> `onClose()` interaction across base and head. Ran `go build .`, the full root-package test suite, a race-detector run of the three unit tests closest to the changed paths (`BackoffCancel`, `ResetConnectBackoff`, `UpdateAddresses_NoopIfCalledWithSameAddresses`), and a race-detector run of `Test/AuthorityRevive` itself, all at head 76ef33f4 \u2014 all pass. Three concurrency safety premises verified by an independent fresh-context worker, all `holds`."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The deferred `ac.transport.GracefulClose()` in `updateAddrs()` (clientconn.go:986) now runs while `ac.mu` is still logically held (ownership transferred to the goroutine spawned at clientconn.go:996), so its synchronous `onClose` callback (clientconn.go:1351-1353) can briefly block on `ac.mu.Lock()` until that goroutine reaches its own unlock \u2014 a latency change from the prior code, not a deadlock (confirmed by verified premise-3).",
+      "evidence": "clientconn.go:983-996; clientconn.go:1351-1353; internal/transport/http2_client.go:1045-1058"
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-007/clone",
+    "requirements": [
+      {
+        "source": "spec-pr7390/title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 (connect) and clientconn.go:940-996 (updateAddrs) hold `ac.mu` from entry through the call into `resetTransportAndUnlock` (clientconn.go:1234), which itself never re-locks at entry; verified concurrency-safe (premise-2 holds)."
+      },
+      {
+        "source": "spec-pr7390/body/\"This ensures that no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Independent verifier ruled premise-2 `holds`: `ac.state` cannot leave `Idle` without `ac.mu` held continuously through the `Connecting` transition, so two concurrent `connect()`/`updateAddrs()` calls cannot both pass the idle check."
+      },
+      {
+        "source": "spec-pr7390/body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Reran `Test/AuthorityRevive` once with `-race` at head 76ef33f4: pass. Repeating 100000 iterations exceeds this run's five-minute focused-test bound, so the exact flake-rate claim is unrepeated; nothing material depends on it since the code-level trace and verified premise-2 independently establish the race window is closed by construction."
+      },
+      {
+        "source": "spec-pr7390/release-notes/\"client: fix race that could lead to orphaned connections and associated resources\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Matches the closed race: before this change `updateAddrs()` could start a second `tryAllAddrs` while a first was still in flight, and only one resulting transport was ever assigned to `ac.transport`/closed, per arjan-bal's 2024-07-09T06:38:44Z comment. No externally observable contract changes, so Released compatibility does not apply."
+      },
+      {
+        "source": "spec-pr7390/issue-7365",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Root cause (addrConn.connect() releasing ac.mu before resetTransport() re-acquired it, per arjan-bal's 2024-07-04T07:02:02Z root-cause comment) is eliminated: verified premise-1 and premise-2 both `holds`."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "exit 0, no output"
+      },
+      {
+        "check": "go test -count=1 .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "full root package test suite; `ok google.golang.org/grpc 10.635s`"
+      },
+      {
+        "check": "go test -race -run 'Test/(UpdateAddresses_NoopIfCalledWithSameAddresses|BackoffCancel|ResetConnectBackoff)$' -count=1 -v .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "all three subtests PASS, no race detected"
+      },
+      {
+        "check": "go test -run 'Test/AuthorityRevive$' -race -count=1 -v ./xds/internal/xdsclient/tests/...",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "PASS in 0.13s, no race detected; single run, not the PR's claimed 100000-iteration soak"
+      },
+      {
+        "check": "Codecov PR report (grpc/grpc-go#7390, comment 2024-07-04T07:54:41Z)",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "unavailable",
+        "reason": "supplied as prose only, no readable per-line raw output to project; superseded by this run's own reviewer-executed test runs"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-1",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Every code path through `resetTransportAndUnlock` (clientconn.go:1234-1304) unlocks `ac.mu` exactly once before returning, given the function's contract that the caller already holds `ac.mu` on entry and never locks it itself.",
+          "evidence": "clientconn.go:1234-1239; clientconn.go:1261-1264; clientconn.go:1265-1298; clientconn.go:1300-1304",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-2",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "`ac.state` only transitions away from `connectivity.Idle` while `ac.mu` is continuously held from the moment `connect()` (clientconn.go:905-923) or `updateAddrs()` (clientconn.go:940-996) observes the prior state, through the point `resetTransportAndUnlock` sets `connectivity.Connecting`, so two concurrent calls into `connect()`/`updateAddrs()` cannot both observe `Idle` and both proceed to start a connection attempt.",
+          "evidence": "clientconn.go:905-923; clientconn.go:948-996; clientconn.go:1261-1262",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-3",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Handing off a locked `ac.mu` from `updateAddrs()`'s goroutine to a newly spawned goroutine running `resetTransportAndUnlock` (clientconn.go:996, `go ac.resetTransportAndUnlock()`) is safe in Go because `sync.Mutex` is not goroutine-owned, and no code path requires the spawning goroutine to reacquire or rely on `ac.mu` being unlocked before the spawned goroutine runs, including the `defer ac.transport.GracefulClose()` at clientconn.go:986 (whose synchronous `onClose` callback at clientconn.go:1351-1353 also tries `ac.mu.Lock()`), which merely blocks until the spawned goroutine unlocks rather than deadlocking.",
+          "evidence": "clientconn.go:983-996; clientconn.go:1351-1353; internal/transport/http2_client.go:1045-1058",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-007/clone-work/review-priv-i6ilyZ/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-007/clone-work/review-priv-i6ilyZ/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

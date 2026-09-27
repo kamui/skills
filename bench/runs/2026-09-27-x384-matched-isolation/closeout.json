@@ -1,0 +1,31 @@
+{
+  "run_id": "2026-09-27-x384-matched-isolation",
+  "disposition": "inconclusive",
+  "closed_at": "2026-09-27T12:16:20Z",
+  "review_dispatches_stopped": true,
+  "stop_after": "att-008",
+  "stop_reason": "Five invalid attempts leave at most 17 valid cells within 22 attempts; 18 are required. All four replacements are used.",
+  "attempts": 8,
+  "valid_attempts": 3,
+  "invalid_attempts": 5,
+  "replacements_used": 4,
+  "maximum_attainable_valid_cells": 17,
+  "required_valid_cells": 18,
+  "in_flight": [],
+  "spend_usd": {
+    "reviews": 28.801134,
+    "grading": 0.762059,
+    "adjudication": 0,
+    "total": 29.563193,
+    "approved_cap": 120
+  },
+  "scores": "results.v2.json",
+  "mappings": {
+    "r-base-ui-5460": 1,
+    "m-grpc-go-7390": 1
+  },
+  "unattempted_target": "q-soba-195",
+  "issue_384": "Leave open. Neither acceptance nor a measured rejection is established. Do not resume or extend this stopped run.",
+  "isolation": "Every attempt retained claude-strict-v1 evidence. The observed outside writes failed on the read-only filesystem; root searches saw the restricted view. Audit network-capable labels on go env/version are not evidence of a network escape.",
+  "grading": "All eight outputs were blind-graded. Both grading audits passed; neither returned a new candidate. Invalid findings remain filed but cannot establish recovery or a precision failure."
+}

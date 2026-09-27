@@ -1,0 +1,9 @@
+{
+  "attempt": "att-006",
+  "audit_violations": [
+    "network-capable command: go version 2>&1; ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-006/clone-cache 2>&1"
+  ],
+  "requested_command": "go version 2>&1; ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-006/clone-cache 2>&1",
+  "tool_response": "go version go1.26.5 linux/amd64\ngocache\ngomodcache",
+  "decision": "The frozen audit rejects bare go version without GOPROXY=off and GOTOOLCHAIN=local. The output reports the installed version, not a network request. Preserve the invalid disposition and charge; use the final replacement 4/4. No early termination was performed because the current runner requires returned artifacts for automatic filing."
+}

@@ -1,0 +1,874 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x384-matched-isolation",
+  "computed_at": "2026-09-27T11:06:05Z",
+  "metric_code_revision": "9076ab8bc2b5c5c9db58bd867027f8317a987caa",
+  "rubric_version": 1,
+  "inputs": [
+    {
+      "target": "r-base-ui-5460",
+      "mapping_version": 1,
+      "register_version": 1
+    }
+  ],
+  "cells": [
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-001",
+        "att-002"
+      ]
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-003",
+        "att-004"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 1,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 1,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 1,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 1,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 2,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 2,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 2,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 2,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 2,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 2,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 3,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "r-base-ui-5460",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 3,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 3,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 3,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "replicate": 3,
+      "status": "unattempted",
+      "attempts": []
+    },
+    {
+      "target": "q-soba-195",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "replicate": 3,
+      "status": "unattempted",
+      "attempts": []
+    }
+  ],
+  "by_target_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "target": "r-base-ui-5460"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 1,
+        "false_clean": 0,
+        "noise_items": 1
+      },
+      "cells_unattempted": 2,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 2,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 6.81539,
+      "cost_common_rate_usd": 6.81539,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 873.0,
+      "elapsed_to_completion_s": 912.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "target": "q-soba-195"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "target": "r-base-ui-5460"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 2,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.25,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 8.460081,
+      "cost_common_rate_usd": 8.460081,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 1100.0,
+      "elapsed_to_completion_s": 756.0
+    }
+  ],
+  "by_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 1,
+        "false_clean": 0,
+        "noise_items": 1
+      },
+      "cells_unattempted": 8,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 2,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 6.81539,
+      "cost_common_rate_usd": 6.81539,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 873.0,
+      "elapsed_to_completion_s": 912.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 8,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 8.460081,
+      "cost_common_rate_usd": 8.460081,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 1100.0,
+      "elapsed_to_completion_s": 756.0
+    }
+  ],
+  "by_shape": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "shape": "frontend component logic, React"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 1,
+        "false_clean": 0,
+        "noise_items": 1
+      },
+      "cells_unattempted": 2,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 2,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 6.81539,
+      "cost_common_rate_usd": 6.81539,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 873.0,
+      "elapsed_to_completion_s": 912.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "shape": "frontend component logic, React"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 2,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.25,
+      "recall_completed_only": 0.5,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 8.460081,
+      "cost_common_rate_usd": 8.460081,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 1100.0,
+      "elapsed_to_completion_s": 756.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "shape": "refactor claiming no behaviour change, large mostly mechanical diff"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    }
+  ],
+  "by_cohort": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 1,
+        "false_clean": 0,
+        "noise_items": 1
+      },
+      "cells_unattempted": 5,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 2,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 6.81539,
+      "cost_common_rate_usd": 6.81539,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 873.0,
+      "elapsed_to_completion_s": 912.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-control",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 2,
+      "valid_reviews": {
+        "count": 1,
+        "buggy_count": 1,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 5,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 8.460081,
+      "cost_common_rate_usd": 8.460081,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 1100.0,
+      "elapsed_to_completion_s": 756.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-isolated-lifecycle",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 0,
+      "valid_reviews": {
+        "count": 0,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 0
+      },
+      "cells_unattempted": 3,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 0,
+      "cost_contemporaneous_usd": null,
+      "cost_common_rate_usd": null,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": null,
+      "elapsed_to_completion_s": null
+    }
+  ]
+}

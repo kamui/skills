@@ -1,0 +1,108 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "change_description": "[field] Sync controlled value changes with field state",
+    "specs": ["spec-pr5460"],
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Make `Field.Control` sync controlled `value` changes into field state (dirty, filled, validity) the same way every sibling control already does via `useValueChanged`, fixing a stuck `data-dirty` for non-string values, stale state after programmatic changes, an ignored `details.cancel()`, and a rejected or rewritten controlled value leaking into field state.",
+    "issue_fit": "No originating issue; issue alignment unavailable. Judged against the pull-request title and body (recorded as `spec-pr5460`, supplied inline), which fully accounts for the code change; every stated claim is met by the diff and its added tests.",
+    "coverage": "Complete merge-base diff reviewed for both changed files; `useValueChanged`, `useRegisterFieldControl`, `useFieldControlRegistration`, `useFieldValidation`, `useStableCallback`, and `createChangeEventDetails` read for the surrounding contract. Focused test `FieldControl.test.tsx` run once at the pinned head in jsdom: 26 passed, 1 skipped (browser-only SSR case, unaffected by this diff). One concurrency safety premise, about stale-async-validator supersession, was verified: holds.",
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "No test in this diff exercises a controlled array `value`, though the PR body claims the fix also resolves array-value dirty tracking.",
+      "evidence": "FieldControl.tsx:34's `serializedValue = value == null ? undefined : String(value)` is applied uniformly regardless of value type, and the same mechanism is exercised only for a numeric `value` by FieldControl.test.tsx's \"clears dirty state when a numeric controlled value returns to its initial value\"."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-001/clone",
+    "requirements": [
+      {
+        "source": "spec-pr5460/title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-114 wires `useValueChanged(serializedValue, ...)` so controlled prop changes reach dirty/filled/validity like every sibling control; FieldControl.test.tsx's added tests pass (26/27, 1 browser-only skip) at 14d39e5d1."
+      },
+      {
+        "source": "spec-pr5460/body/\"data-dirty stayed set even after the user returned the field to its initial value\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:34 serializes `value` via `String(value)` before registering it, and useFieldControlRegistration.ts:97 captures that same serialized value as the baseline, so `serializedValue !== (validityData.initialValue ?? '')` compares like types; FieldControl.test.tsx's \"clears dirty state when a numeric controlled value returns to its initial value\" passes. The array-value half of this claim is not independently tested (see observation)."
+      },
+      {
+        "source": "spec-pr5460/body/\"a resolved error stayed visible and a pending async validator for the old value could still publish\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-114 fires clearErrors/setDirty/setFilled/validation.change from the resolved controlled value; FieldControl.test.tsx's \"syncs state and validates when the controlled value changes programmatically\" passes. Verified safety premise `premise-1` (holds): useFieldValidation.ts's monotonic `validationCommitIdRef` still supersedes a stale in-flight async `validate()` after this change."
+      },
+      {
+        "source": "spec-pr5460/body/\"details.cancel() in onValueChange now stops the internal handling\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:141 adds `&& !details.isCanceled` to the clearErrors/validation.change guard; FieldControl.test.tsx's \"does not validate when the change is canceled\" passes."
+      },
+      {
+        "source": "spec-pr5460/body/\"A controlled value the consumer rejects or rewrites no longer reaches the field state\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:135-137 returns from `onChange` before any state update once `isControlled` is true, so a value the parent does not echo back through `value` never reaches setDirty/setFilled/validation.change."
+      },
+      {
+        "source": "spec-pr5460/body (Performance table)",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The per-validation-mode keystroke render-count table is a jsdom benchmark narrative; only the general \"renders once per keystroke once settled\" claim is covered by the added test (which passed), not the exact onSubmit-vs-onChange counts in the table."
+      }
+    ],
+    "files": [
+      {"path": "packages/react/src/field/control/FieldControl.tsx", "state": "reviewed"},
+      {"path": "packages/react/src/field/control/FieldControl.test.tsx", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "26 passed, 1 skipped (browser-only SSR case guarded by it.skipIf(isJSDOM)); run once from the clone root on the clean pinned head."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-1",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "When FieldControl.tsx's useValueChanged effect calls validation.change(serializedValue) for a newer controlled value, useFieldValidation.ts's commit()'s monotonic validationCommitIdRef supersession still discards the result of any still-pending async validate() call started for a stale (older or rejected) value, so a stale async validator can never publish its result over the field's current validity state after this change.",
+          "evidence": "FieldControl.tsx:105-114 (useValueChanged→validation.change on prop change); useFieldValidation.ts:117-119,262-271,316-328 (monotonic validationCommitIdRef supersedes a stale async validate() across both the debounced-timeout and immediate commit paths, and useTimeout.start clears any pending timeout first); useValueChanged.ts:10-16 (fires only on an actual value change). Verifier ruling: holds.",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-001/clone-work/private/review-jC2J7B/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-001/clone-work/private/review-jC2J7B/initial/accounting-repaired.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false (awaited)"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

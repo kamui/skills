@@ -1,0 +1,10 @@
+{
+  "attempt": "att-001",
+  "audit_violations": [
+    "path outside allowed roots in command: /proc",
+    "path outside allowed roots in command: /"
+  ],
+  "requested_command": "find packages/utils/src -iname \"useStableCallback*\"; echo ---; cat packages/utils/src/useStableCallback/useStableCallback.ts 2>/dev/null || find / -path /proc -prune -o -iname \"useStableCallback.ts\" -print 2>/dev/null",
+  "tool_response": "packages/utils/src/useStableCallback.ts\n---\n/home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-001/clone/packages/utils/src/useStableCallback.ts",
+  "decision": "The root search ran inside the restricted filesystem and returned only the permitted clone path. The frozen audit rejects requesting / and /proc regardless of exposure. Retain harness-invalid disposition and charge. Replace this cell immediately under replacement allowance 1/4. No isolation configuration was changed."
+}
