@@ -62,18 +62,18 @@ separately. A focused pass does not complete #380's combined and unseen-target a
 
 ## Results, 2026-09-27
 
-**Disposition: reject.** The valid ripgrep review recovered no registered defect and approved. Frozen A recovered GT-n1 in both historical reviews. The common guardrail requires no loss of per-target recall, so this valid miss is a measured guardrail failure and further dispatch stops. Even perfect remaining replicates could produce only 2/3 recovery, below the required 3/3. This is an early guardrail stop, not a claim that all 12 planned cells ran. The valid Requests review also left recovered GT-i2 as `consider` with a partial remedy, so the action objective is not met. Revert the two action sentences; retain the shared runtime cap only because remaining rules still require it.
+**Disposition: reject.** The valid ripgrep review recovered no registered defect and approved. Frozen A recovered GT-n1 in both historical reviews. The common guardrail requires no loss of per-target recall, so this valid miss is a measured guardrail failure and further dispatch stops. Even perfect remaining replicates could produce only 2/3 recovery, below the required 3/3. This is an early guardrail stop, not a claim that all 12 planned cells ran. The Requests review is invalid after the complete-path audit found a filesystem-root scan; its partial GT-i2 remedy is diagnostic only. Revert the two action sentences; retain the shared runtime cap only because remaining rules still require it.
 
-All existing outputs were blind-graded under the original template by Opus 5.5 high through Claude Code 2.1.282. No grader returned an unresolved new candidate. No additional review was purchased during recovery. Unattempted cells remain visible in `results.v1.json`; no missing cell is an approval or a recovered defect.
+All existing outputs were blind-graded under the original template by Opus 5.5 high through Claude Code 2.1.282. No grader returned an unresolved new candidate. No additional review was purchased during recovery. Unattempted cells remain visible in `results.v2.json`; no missing cell is an approval or a recovered defect.
 
-| Target | Valid / all attempts | Valid-review recall | Valid false findings | Median elapsed-to-payload |
+| Target | Valid / all attempts | Valid-review recall | Valid false findings | Median elapsed-to-payload (valid) |
 | --- | ---: | ---: | ---: | --- |
-| i-requests-6667 | 1/1 | 0.667 | 0 | 1123 s; n=1 |
+| i-requests-6667 | 0/1 | n/a | 0 | unavailable; n=0 |
 | m-grpc-go-7390 | 0/1 | n/a | 0 | unavailable; n=0 |
 | n-ripgrep-2957 | 1/1 | 0.000 | 0 | 718 s; n=1 |
 | q-soba-195 | 0/0 | n/a | 0 | unavailable; n=0 |
 
-- Validity: 2/3 attempts are valid. No replacements were dispatched.
+- Validity: 1/3 attempts are valid. No replacements were dispatched.
 - Costs: reviews $8.908711; blind grading $0.778697; total **$9.687408**, including invalid attempts. No adjudication was required.
 - Action and remedies: the [scorecards](scoring/) grade each recovered defect and its remedy; each attempt's `normalized.json` retains native action and observations. All-attempt score fields can include invalid reviews; use the table's valid-review counts for guardrails.
 - Timing: interrupted wrapper finalization leaves a missing elapsed-to-payload event on recovered outputs. `recovery.json` retains CLI durations separately; they are not substituted into the frozen metric. Medians show their actual valid, timed sample count.
@@ -81,3 +81,7 @@ All existing outputs were blind-graded under the original template by Opus 5.5 h
 - Run supervision: the original terminal jobs did not finish wrapper finalization for three completed CLI sessions. Recovery grading ran to completion in detached tmux sessions with logs under `~/.t3/bench-runs/2026-09-26-x381-action/recovery-grading.log`. There are no further eligible review dispatches for this run under its stop decision.
 
 This partial, stopped experiment does not establish an improvement or complete #380's adoption screen. A new attempt to qualify an inconclusive variant needs a separately preregistered run and spending decision; these caps are not extended.
+
+`results.v2.json` supersedes the preserved `results.v1.json` after the complete-path audit. To reproduce v1, use the corresponding saved attempt record from `audit-revisions/before-quoted-path-fix/`; current attempts reproduce v2.
+
+The [complete-path audit replay](../2026-09-27-quoted-path-audit.json) checks all 95 saved audits. It adds two experiment invalidations for filesystem-root scans, preserves prior records, and changes no historical baseline classification.

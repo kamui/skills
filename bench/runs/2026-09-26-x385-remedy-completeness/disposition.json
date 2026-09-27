@@ -8,5 +8,6 @@
   "valid_attempts": 3,
   "attempts": 5,
   "replacements": 0,
-  "new_reviews_after_recovery": 0
+  "new_reviews_after_recovery": 0,
+  "results": "results.v1.json"
 }

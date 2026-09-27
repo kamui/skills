@@ -1,0 +1,38 @@
+{
+  "audits": 95,
+  "changes": [
+    {
+      "audit": "bench/runs/2026-09-26-x381-action/attempts/att-001/audit.json",
+      "original_disposition": "valid completed",
+      "changes": [
+        {
+          "command_index": 31,
+          "added_present_outside_paths": [
+            "/"
+          ]
+        }
+      ],
+      "revised_disposition": "harness-invalid: read audit: 1 violation(s), first path outside allowed roots in command: /",
+      "preserved_records": "bench/runs/2026-09-26-x381-action/audit-revisions/before-quoted-path-fix/att-001"
+    },
+    {
+      "audit": "bench/runs/2026-09-26-x384-lifecycle/attempts/att-003/audit.json",
+      "original_disposition": "valid completed",
+      "changes": [
+        {
+          "command_index": 6,
+          "added_present_outside_paths": [
+            "/"
+          ]
+        }
+      ],
+      "revised_disposition": "harness-invalid: read audit: 1 violation(s), first path outside allowed roots in command: /",
+      "preserved_records": "bench/runs/2026-09-26-x384-lifecycle/audit-revisions/before-quoted-path-fix/att-003"
+    }
+  ],
+  "at": "2026-09-27T07:38:07Z",
+  "audit_revision": "e2ab0a965d6b28d561a3dd95db6873482e4bb185",
+  "baseline_attempts_checked": 83,
+  "baseline_changes": [],
+  "method": "Compare paths extracted by ac9512a and the repaired parser from all saved commands, using saved workdirs, allowed roots and dispatch timestamps. Preserve prior violations; assess additional paths under the same existence rule. No baseline files are rewritten."
+}
