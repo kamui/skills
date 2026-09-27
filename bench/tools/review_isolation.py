@@ -2,11 +2,15 @@
 """Build strict Claude review settings and gate file tools before execution.
 
 Usage: python3 review_isolation.py settings --attempt DIR --clone DIR --out FILE
+           [--profile claude-strict-v1|claude-strict-v2] [--target DIR]
        python3 review_isolation.py hook --attempt DIR --clone DIR
 
 The hook reads Claude's PreToolUse JSON on stdin and returns a deny decision on
 malformed input or a file operation outside the attempt's declared directories.
 Bash uses Claude's OS sandbox, with network access and unsandboxed retries disabled.
+``claude-strict-v2`` also gives the shell the offline cache environment of the target
+in ``--target``, and ``attempt_audit.py`` judges its requests by what these settings
+let the reviewer reach. ``claude-strict-v1`` keeps its request-level audit.
 Exit codes: 0 settings or hook decision written; 2 setup/input failure.
 """
 
@@ -22,8 +26,13 @@ import shutil
 import subprocess
 import sys
 
-SANDBOX = "claude-strict-v1"
+PROFILES = ("claude-strict-v1", "claude-strict-v2")
+ENFORCED = "claude-strict-v2"
+SYSTEM = ("usr", "bin", "sbin", "lib", "lib64", "etc", "dev", "proc")
 TOOLS = ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "Agent", "Skill"]
+DENIAL = "Benchmark isolation: "
+# Claude's sandbox binds these when they exist on the host, whatever the settings deny.
+BUILT_IN = ("/tmp/claude", "/private/tmp/claude")
 
 
 def prepare_runtime_cache(clone: Path) -> None:
@@ -99,10 +108,36 @@ def file_decision(event: dict, attempt: Path, clone: Path) -> str:
     return ""
 
 
-def settings(attempt: Path, clone: Path) -> dict:
+def target_env(target: Path, clone: Path) -> dict:
+    import provision
+    try:
+        config = provision.cache_config(provision.load_target(str(target)))
+    except provision.ProvisionError as error:
+        raise ValueError(str(error)) from error
+    paths = provision.substitutions(str(clone) + "-cache", provision.DEFAULT_CACHE_ROOT, str(clone), str(clone) + "-work")
+    return {name: provision.render(value, paths) for name, value in config["env"].items()}
+
+
+def exposes(path: str, config: dict) -> bool:
+    """Whether a read at or beneath ``path`` reaches anything the sandbox neither denies nor
+    declares readable. A denied directory that holds a declared one exposes only that one."""
+    files = config["sandbox"]["filesystem"]
+    real = os.path.realpath(path)
+
+    def under(roots) -> bool:
+        return any(real == root or real.startswith(root.rstrip("/") + "/") for root in roots)
+    if any(os.path.lexists(bound) and (under([bound]) or bound.startswith(real.rstrip("/") + "/")) for bound in BUILT_IN):
+        return True
+    if under(files["allowRead"]) or under(["/" + name for name in SYSTEM]) or under(files["denyRead"]):
+        return False
+    if real == "/":
+        return any(entry.name not in SYSTEM and str(entry) not in files["denyRead"] for entry in Path("/").iterdir())
+    return True
+
+
+def settings(attempt: Path, clone: Path, env: dict = None) -> dict:
     readable, writable = roots(attempt, clone)
-    system = {"usr", "bin", "sbin", "lib", "lib64", "etc", "dev", "proc"}
-    denied = sorted(str(p) for p in Path("/").iterdir() if p.name not in system)
+    denied = sorted(str(p) for p in Path("/").iterdir() if p.name not in SYSTEM)
     denied += ["/dev/shm", "/proc"]
     runtime = ["/proc/self", "/proc/thread-self", "/proc/cpuinfo", "/proc/meminfo", "/proc/stat", "/proc/sys", "/proc/uptime", "/proc/version"]
     binaries = []
@@ -115,7 +150,7 @@ def settings(attempt: Path, clone: Path) -> dict:
         runtime.append(str(resolved.parent.parent if name in ("python3", "node", "go") else resolved.parent))
     command = shlex.join([sys.executable, str(Path(__file__).resolve()), "hook", "--attempt", str(attempt), "--clone", str(clone)])
     return {
-        "env": {"PATH": ":".join(dict.fromkeys(binaries + ["/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"]))},
+        "env": {**(env or {}), "PATH": ":".join(dict.fromkeys(binaries + ["/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"]))},
         "sandbox": {
             "enabled": True, "failIfUnavailable": True,
             "allowUnsandboxedCommands": False, "excludedCommands": [],
@@ -138,13 +173,13 @@ def settings(attempt: Path, clone: Path) -> dict:
     }
 
 
-def verify_evidence(attempt: Path) -> list:
+def verify_evidence(attempt: Path, profile: str) -> list:
     try:
         config_bytes = (attempt / "isolation-settings.json").read_bytes()
         evidence = json.loads((attempt / "isolation.json").read_text(encoding="utf-8"))
         config = json.loads(config_bytes)
         sandbox = config["sandbox"]
-        if evidence["profile"] != SANDBOX or evidence["settings_sha256"] != hashlib.sha256(config_bytes).hexdigest():
+        if evidence["profile"] != profile or evidence["settings_sha256"] != hashlib.sha256(config_bytes).hexdigest():
             return ["isolation profile or settings hash changed"]
         if evidence["hook_sha256"] != hashlib.sha256(Path(__file__).read_bytes()).hexdigest():
             return ["isolation hook code changed since setup"]
@@ -163,6 +198,8 @@ def main() -> int:
     parser.add_argument("--attempt", type=Path, required=True)
     parser.add_argument("--clone", type=Path, required=True)
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--profile", choices=PROFILES, default=PROFILES[0])
+    parser.add_argument("--target", type=Path)
     args = parser.parse_args()
     attempt, clone = args.attempt.resolve(), args.clone.resolve()
     if args.action == "hook":
@@ -171,17 +208,22 @@ def main() -> int:
         except Exception as error:
             reason = f"cannot verify tool boundaries: {type(error).__name__}"
         if reason:
-            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Benchmark isolation: " + reason}}))
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": DENIAL + reason}}))
         return 0
     try:
         if args.out is None:
             raise ValueError("settings requires --out")
         if not contained(clone, [attempt]) or clone == attempt:
             raise ValueError("clone must be a directory beneath the attempt")
-        config = settings(attempt, clone)
+        if args.profile == ENFORCED and args.target is None:
+            raise ValueError(f"{ENFORCED} requires --target")
+        bound = [path for path in BUILT_IN if os.path.lexists(path)]
+        if args.profile == ENFORCED and bound:
+            raise ValueError(f"the sandbox would expose {', '.join(bound)}; remove it before dispatch")
+        config = settings(attempt, clone, target_env(args.target, clone) if args.profile == ENFORCED else None)
         prepare_runtime_cache(clone)
         args.out.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-        evidence = {"profile": SANDBOX, "settings_sha256": hashlib.sha256(args.out.read_bytes()).hexdigest(),
+        evidence = {"profile": args.profile, "settings_sha256": hashlib.sha256(args.out.read_bytes()).hexdigest(),
                     "hook_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
         (attempt / "isolation.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
         print(args.out)

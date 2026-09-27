@@ -4,7 +4,8 @@
 Usage::
 
     python3 attempt_audit.py --arm claude-builtin|codex|review-code --attempt-dir <dir> \\
-        --clone <path> [--allowed <path>...] [--allowed-prefix <prefix>...] [--json]
+        --clone <path> [--allowed <path>...] [--allowed-prefix <prefix>...] \\
+        [--isolation-settings <file>] [--json]
 
 ``review-code`` attempts read like ``claude-builtin`` ones (root plus sub-agent transcripts) but
 need no built-in header; the skill's private store lives under a ``/tmp/review-code-`` prefix,
@@ -36,11 +37,16 @@ a probe of such a guidance file in an ancestor of the clone is recorded under
 line and the Codex rubric marker are checked so the arm that ran is the arm
 that was dispatched, and the executed diff command is recorded.
 
+``--isolation-settings`` names the settings an enforced attempt ran under. A request those settings
+confine (a network tool with no allowed domain, a path the sandbox denies or whose readable
+contents are all declared, a file-tool call whose result is the hook's denial) is listed under
+``confined_requests`` and is no violation; one they leave reachable still is.
+
 Writes ``audit.json`` in the attempt directory and, for ``claude-builtin``, copies
 the final result text and any ``ReportFindings`` input into ``payload.json``.
 
 Exit codes: 0 no violation; 1 one or more violations (listed on stdout);
-2 unreadable transcripts, named on stderr.
+2 unreadable transcripts or isolation settings, named on stderr.
 """
 
 from __future__ import annotations
@@ -55,6 +61,9 @@ from pathlib import Path
 import re
 import shlex
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import review_isolation  # noqa: E402
 
 # A tool counts only in command position: at the start, after a separator, a ``do``/``then``-style
 # keyword or a wrapper such as ``env``/``xargs``/``timeout N``, or opening a shell's ``-c`` script,
@@ -313,6 +322,19 @@ def paths_in(text: str, cwd: str, base: str = None):
 
 
 PREFIXES: list = []
+# The isolation settings of an enforced attempt, or None.
+ENFORCED = None
+
+
+def confined(path: str = None) -> bool:
+    """Whether the attempt's isolation settings keep a shell request from reaching anything
+    undeclared: a path (each match of a glob), or a network tool when no path is given."""
+    if ENFORCED is None:
+        return False
+    if path is None:
+        return not ENFORCED["sandbox"]["network"]["allowedDomains"]
+    matches = glob.glob(path) if any(c in path for c in "*?[") else [path]
+    return not any(review_isolation.exposes(match, ENFORCED) for match in matches)
 
 
 def present(path: str) -> bool:
@@ -344,12 +366,12 @@ def provisioned(path: str, roots) -> bool:
 
 
 def audit_claude(attempt: Path, roots):
-    """Returns the transcripts, commands, file-tool paths, built-in headers, ReportFindings inputs,
-    the final assistant text of the transcript that carried the built-in header (or of the root
+    """Returns the transcripts, commands, file-tool paths (each with whether the isolation hook
+    denied its call), built-in headers, ReportFindings inputs, the final assistant text of the transcript that carried the built-in header (or of the root
     when none did), so a worker's chatter never stands in for the review, and the directory each
     command ran in. Claude Code keeps a ``cd`` between Bash calls and records the directory on
     every transcript line."""
-    commands, cwds, reads, headers, findings_calls = [], [], [], [], []
+    commands, cwds, reads, headers, findings_calls, denied = [], [], [], [], [], set()
     texts_by_file = {}
     header_files = []
     files = sorted((attempt / "home" / ".claude" / "projects").rglob("*.jsonl"))
@@ -370,6 +392,8 @@ def audit_claude(attempt: Path, roots):
                         header_files.append(path)
                 if block.get("type") == "text" and record.get("type") == "assistant":
                     texts_by_file[path].append(block.get("text", ""))
+                if block.get("type") == "tool_result" and review_isolation.DENIAL in json.dumps(block.get("content")):
+                    denied.add(block.get("tool_use_id"))
                 if block.get("type") == "tool_use":
                     name, inp = block.get("name"), block.get("input") or {}
                     if name == "Bash":
@@ -378,12 +402,12 @@ def audit_claude(attempt: Path, roots):
                     elif name in ("Read", "Glob", "Grep", "Write", "Edit"):
                         for key in ("file_path", "path"):
                             if inp.get(key):
-                                reads.append(inp[key])
+                                reads.append((inp[key], block.get("id")))
                     elif name == "ReportFindings":
                         findings_calls.append(inp)
     authoritative = header_files[-1] if header_files else (files[0] if files else None)
     texts = texts_by_file.get(authoritative, []) if authoritative else []
-    return files, commands, reads, headers, findings_calls, texts, cwds
+    return files, commands, [(path, call in denied) for path, call in reads], headers, findings_calls, texts, cwds
 
 
 def codex_calls(text: str) -> tuple:
@@ -455,10 +479,18 @@ def main() -> int:
     parser.add_argument("--clone", required=True)
     parser.add_argument("--allowed", nargs="*", default=[])
     parser.add_argument("--allowed-prefix", nargs="*", default=[])
+    parser.add_argument("--isolation-settings")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     attempt = Path(args.attempt_dir)
-    global HOME_DIR, DISPATCHED
+    global HOME_DIR, DISPATCHED, ENFORCED
+    if args.isolation_settings:
+        try:
+            ENFORCED = json.loads(Path(args.isolation_settings).read_text(encoding="utf-8"))
+            confined(), confined("/")
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            print(f"attempt_audit.py: isolation settings {args.isolation_settings}: {error!r}", file=sys.stderr)
+            return 2
     HOME_DIR = os.path.realpath(str(attempt / "home"))
     try:
         stamp = json.loads((attempt / "timing.json").read_text(encoding="utf-8"))["root_dispatched_at"]
@@ -468,7 +500,7 @@ def main() -> int:
         DISPATCHED = None
     roots = [os.path.realpath(p) for p in [args.clone, str(attempt), *args.allowed]]
     PREFIXES[:] = list(args.allowed_prefix)
-    violations = []
+    violations, requests = [], []
     try:
         if args.arm in ("claude-builtin", "review-code"):
             files, commands, reads, headers, calls, texts, cwds = audit_claude(attempt, roots)
@@ -508,32 +540,32 @@ def main() -> int:
         if workdir:
             start = os.path.normpath(os.path.join(clone_real, HOME_DIR + workdir[1:] if workdir.startswith("~") else workdir))
             if not inside(start, roots):
-                violations.append(f"working directory outside allowed roots: {workdir}")
+                (requests if confined(start) else violations).append(f"working directory outside allowed roots: {workdir}")
             start = os.path.realpath(start)
         if network_use(cmd, start, roots):
-            violations.append(f"network-capable command: {cmd[:200]}")
+            (requests if confined() else violations).append(f"network-capable command: {cmd[:200]}")
         for p in paths_in(cmd, start, clone_real):
             if inside(p, roots) or p.startswith(("/usr/", "/bin/", "/dev/", "/proc/", "/etc/")):
                 continue
             if os.path.basename(p) in GUIDANCE and os.path.dirname(os.path.realpath(p)) in ancestors:
                 probes.append(p)
                 if os.path.exists(p):
-                    violations.append(f"guidance file exists in an ancestor of the clone and was probed: {p}")
+                    (requests if confined(p) else violations).append(f"guidance file exists in an ancestor of the clone and was probed: {p}")
                 continue
             if present(p):
-                violations.append(f"path outside allowed roots in command: {p}")
+                (requests if confined(p) else violations).append(f"path outside allowed roots in command: {p}")
             else:
                 absent.append(p)
-    for p in reads:
+    for p, hook_denied in reads:
         if p.startswith("/") and not inside(p, roots):
             if present(p):
-                violations.append(f"file tool read outside allowed roots: {p}")
+                (requests if ENFORCED and hook_denied else violations).append(f"file tool read outside allowed roots: {p}")
             else:
                 absent.append(p)
     diffs = [m.group(0) for cmd in commands for m in DIFF_CMD.finditer(cmd)]
-    report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": reads, "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
+    report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": [p for p, _ in reads], "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
                    "absent_outside_paths": sorted(set(absent)),
-                   "violations": violations, "allowed_roots": roots})
+                   "violations": violations, "confined_requests": requests, "allowed_roots": roots})
     (attempt / "audit.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     if args.json:
         print(json.dumps(report, indent=2))
@@ -541,7 +573,7 @@ def main() -> int:
         for v in violations:
             print(v)
         print(f"{len(commands)} commands, {len(reads)} file-tool paths, {len(diffs)} diff commands, "
-              f"{len(violations)} violations -> {attempt / 'audit.json'}")
+              f"{len(violations)} violations, {len(requests)} confined requests -> {attempt / 'audit.json'}")
     return 1 if violations else 0
 
 

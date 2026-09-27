@@ -1,0 +1,108 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "spec-pr5460"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "change_description": "[field] Sync controlled value changes with field state"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Route `Field.Control`'s controlled `value` prop through the same `useValueChanged` layout-effect sync path its sibling controls (Switch, Checkbox, Select, Number Field, OTP Field, Combobox) already use, instead of driving dirty/filled/validation only from the DOM `change` event. This fixes dirty state that never cleared for non-string controlled values and field state (filled/dirty/validity) that went stale after a programmatic value change.",
+    "issue_fit": "Met \u2014 the four correctness claims in the supplied PR-body spec (serialize the controlled value before the dirty comparison; sync filled/dirty/validation on programmatic changes; respect `details.cancel()`; let a rejected/rewritten controlled value never reach field state) are all implemented and each is covered by a new test that passes at head. The PR's own jsdom render-count benchmark table is a supporting performance assertion this review could not reproduce with the PR's exact harness; a repository test asserting the same one-render-per-keystroke property passes, which is consistent but not identical evidence.",
+    "coverage": "Complete merge-base diff reviewed (2 files, `FieldControl.tsx` and `FieldControl.test.tsx`). Read every `useValueChanged` call site (Switch, Checkbox, Checkbox Group, Radio Group, Select, Number Field input, OTP Field, Combobox) and the shared `useFieldValidation`/`useRegisterFieldControl`/`useFieldControlRegistration` helpers to confirm the new call site matches existing architecture and does not race the async-validation commit-id guard. Focused test run once at head: `TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx` \u2014 26 passed, 1 skipped (SSR-only, correctly `skipIf(isJSDOM)`). One concurrency safety premise (a stale in-flight async validator for a superseded controlled value cannot publish over the newer value) was verified `holds` by a fresh-context worker."
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`NumberFieldInput`'s `useValueChanged` callback only clears errors and revalidates; unlike `FieldControl`'s combined callback it does not also call `setDirty`/`setFilled`, because `NumberFieldRoot`'s `setValue` already applies those for both controlled and uncontrolled paths.",
+      "evidence": "packages/react/src/number-field/input/NumberFieldInput.tsx:101-110 vs packages/react/src/field/control/FieldControl.tsx:105-115."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x384-staged-gate/att-001/clone",
+    "requirements": [
+      {
+        "source": "spec-pr5460/\"With value={5}, the baseline was the number 5, so \\\"5\\\" !== 5 held forever\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:86 serializes the controlled value (`String(value)`) before it is registered (FieldControl.tsx:90-97) and compared for dirtiness (FieldControl.tsx:111); FieldControl.test.tsx:116-140 (`clears dirty state when a numeric controlled value returns to its initial value`) passes at head (vitest run, 26/27 passed, 1 skipped)."
+      },
+      {
+        "source": "spec-pr5460/\"Programmatic changes left the field stale ... filled, dirty, or validity\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 runs `clearErrors`/`setDirty`/`setFilled`/`validation.change` from a `useValueChanged` layout effect keyed on the controlled value, so any external change to `value` \u2014 not just a DOM `change` event \u2014 re-syncs field state; FieldControl.test.tsx:142-167 (`syncs state and validates when the controlled value changes programmatically`) passes."
+      },
+      {
+        "source": "spec-pr5460/\"details.cancel() in onValueChange now stops the internal handling. It was ignored.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:153 adds `!details.isCanceled` to the guard before `clearErrors`/`validation.change`; FieldControl.test.tsx:189-201 (`does not validate when the change is canceled`) passes."
+      },
+      {
+        "source": "spec-pr5460/\"A controlled value the consumer rejects or rewrites no longer reaches the field state, matching Combobox, Number Field and OTP Field.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:140-146: `onChange` always calls `onValueChange` but returns immediately after for a controlled field, before touching dirty/filled/validation; the same value-prop-owns-controlled-path shape is used in NumberFieldInput.tsx:89-110, OTPFieldRoot.tsx:199, AriaCombobox.tsx:1055-1070, and SelectRoot.tsx:243."
+      },
+      {
+        "source": "spec-pr5460/performance table (\"Renders per keystroke ... This PR ... Number Field\")",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The PR's jsdom render-count benchmark harness is not part of this diff and could not be re-run here. FieldControl.test.tsx:47-80 (`renders once per keystroke for controlled input changes`) is a repository test with the same intent and passes, which is consistent with the claim but is not the cited benchmark; nothing in this review's decision depends on the exact benchmark numbers, since the correctness findings above are independently verified through code and tests."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/react/src/field/control/FieldControl.test.tsx",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "Clean offline clone, dependencies already installed; 26 passed, 1 skipped (`it.skipIf(isJSDOM)` SSR/autoFocus test, correctly skipped under the jsdom project); no failures."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-async-validation-race",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "When a controlled Field.Control's serialized value changes while a previous validation.change()/commit() call for an earlier value still has its async validate() promise pending, the new layout-effect-driven call to validation.change(serializedValue) synchronously increments validationCommitIdRef.current before the earlier commit() call's pending await resolves, so the post-await guard discards the stale result and it never overwrites the field's validity state for the newer value.",
+          "evidence": "packages/react/src/field/control/FieldControl.tsx:105-115; packages/react/src/field/root/useFieldValidation.ts:117-119,262-271,316-328; packages/react/src/internals/useValueChanged.ts:6-17; packages/utils/src/useIsoLayoutEffect.ts:6; packages/utils/src/useStableCallback.ts:42-52.",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x384-staged-gate/att-001/tmp/claude-1000/review-code.ceQaaY/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x384-staged-gate/att-001/tmp/claude-1000/review-code.ceQaaY/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false (awaited)"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
