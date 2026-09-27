@@ -240,6 +240,22 @@ def tokens(segment: str) -> list:
         return [t.strip("'\"") for t in segment.split()]
 
 
+def command_words(text: str) -> list:
+    lexer = shlex.shlex(text, posix=True, punctuation_chars=";&|")
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    groups = [[]]
+    try:
+        for word in lexer:
+            if word and all(c in ";&|" for c in word):
+                groups.append([])
+            else:
+                groups[-1].append(word)
+    except ValueError:
+        return [tokens(segment.strip().lstrip("({ ")) for segment in SPLIT.split(text)]
+    return groups
+
+
 def paths_in(text: str, cwd: str, base: str = None):
     """Absolute paths, ``~`` paths expanded against the fresh home, every relative word or path
     run with a ``..`` segment, a dot-led glob segment that can expand to ``..`` counting as one
@@ -258,8 +274,12 @@ def paths_in(text: str, cwd: str, base: str = None):
     tilde = [climbs(t) for t in re.findall(r"(?<![\w.])~(/[\w./@+*?\[\]-]*)", text or "")]
     relative = []
     here, base = cwd, base or cwd
-    for segment in SPLIT.split(commands_only(text or "")):
-        words = tokens(segment.strip().lstrip("({ "))
+    commands = commands_only(text or "")
+    scripts = []
+    unquoted(commands, scripts)
+    for start, end in scripts:
+        found.extend(paths_in(commands[start + 1:end], cwd, base))
+    for words in command_words(commands):
         for index, word in enumerate(words):
             if index == 1 and words[0] == "cd":
                 if word.startswith("/") and os.path.normpath(climbs(word)) in found:
@@ -271,7 +291,11 @@ def paths_in(text: str, cwd: str, base: str = None):
                 if run and not run.startswith("/") and ".." in run.split("/"):
                     relative.append(os.path.normpath(os.path.join(here, run)))
             operand = climbs(word.split("=", 1)[1] if word.startswith("-") and "=" in word else word)
-            if operand and not operand.startswith(("/", "~", "-")) and (
+            if operand.startswith("/"):
+                found.append(os.path.normpath(operand))
+            elif operand.startswith("~/"):
+                tilde.append(operand[1:])
+            elif operand and not operand.startswith(("~", "-")) and (
                     ".." in operand.split("/") or (index and here != base)):
                 relative.append(os.path.normpath(os.path.join(here, operand)))
         if words and words[0] == "cd":

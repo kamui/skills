@@ -119,6 +119,32 @@ class AttemptAudit(unittest.TestCase):
         self.assertEqual(self.bash('go version')[0], 1)
         self.assertEqual(self.bash('GOPROXY=off GOTOOLCHAIN=local go version'), (0, []))
 
+    def test_local_clone_quoted_operands_still_enforce_roots(self):
+        for name in ('outside with spaces', 'outside;segment', 'outside|segment'):
+            outside = Path(self.temp.name) / name / 'repo'
+            outside.mkdir(parents=True)
+            inside = self.clone / name / 'repo'
+            inside.mkdir(parents=True)
+            for command in (f'git clone "{outside}" scratch',
+                            f'git clone {self.clone} "{outside}"',
+                            f"bash -c 'git clone \"{outside}\" scratch'"):
+                with self.subTest(command=command):
+                    rc, violations = self.bash(command)
+                    self.assertEqual(rc, 1, violations)
+                    self.assertIn(f'path outside allowed roots in command: {outside}', violations)
+            self.assertEqual(self.bash(f'git clone "{inside}" scratch'), (0, []))
+        outside = Path(self.temp.name) / 'escaped space'
+        outside.mkdir()
+        escaped = str(outside).replace(' ', r'\ ')
+        concatenated = str(outside).replace(' ', "' '")
+        for source in (escaped, concatenated):
+            self.assertEqual(self.bash(f'git clone {source} scratch')[0], 1)
+
+    def test_filesystem_root_scan_is_outside_attempt_roots(self):
+        rc, violations = self.bash('find / -name target.py')
+        self.assertEqual(rc, 1, violations)
+        self.assertIn('path outside allowed roots in command: /', violations)
+
     def test_symlinks_made_before_dispatch_may_leave_the_roots(self):
         import datetime
 
