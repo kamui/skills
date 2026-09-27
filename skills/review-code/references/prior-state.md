@@ -1,7 +1,5 @@
 # Re-review and prior state
 
-Read when target pinning finds prior state from the reviewer identity, or a local target has a `prior_record`: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the `disputed` status input and the visible `Disputed` and `Prior findings` sections and collapsed `Settled findings` history.
-
 ## Prior-state sources
 
 A pull-request target takes prior state only from the persisted packet, in either mode. A local target takes it only from a `prior_record`; without one, every local run is a first review. Preserve stable finding ids and prior trailers.
