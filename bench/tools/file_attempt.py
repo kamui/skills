@@ -88,6 +88,7 @@ HERE = Path(__file__).resolve().parent
 BENCH = HERE.parent
 sys.path.insert(0, str(HERE))
 import check_manifest  # noqa: E402
+import review_isolation  # noqa: E402
 
 KINDS = ("review-code", "claude-builtin", "codex")
 NATIVE = {"review-code": "artifacts/composition.json", "claude-builtin": "payload.json", "codex": "stdout.txt"}
@@ -343,7 +344,7 @@ def archive_transcripts(paths: list, attempt_dir: str, dest: str) -> dict:
             "restoration_check": "passed" if ok else "failed"}
 
 
-def replay(kind: str, attempt_dir: str, clone: str, allowed_prefixes: list):
+def replay(kind: str, attempt_dir: str, clone: str, allowed_prefixes: list, enforced: bool):
     """Re-run the audit and the normalizer in place; return the superseded stop record, if any."""
     for name in ("audit.json", "normalized.json"):
         path = os.path.join(attempt_dir, name)
@@ -353,6 +354,8 @@ def replay(kind: str, attempt_dir: str, clone: str, allowed_prefixes: list):
     audit = [sys.executable, str(HERE / "attempt_audit.py"), "--arm", kind, "--attempt-dir", attempt_dir, "--clone", clone]
     if allowed_prefixes:
         audit += ["--allowed-prefix", *allowed_prefixes]
+    if enforced:
+        audit += ["--isolation-settings", os.path.join(attempt_dir, "isolation-settings.json")]
     subprocess.run(audit, capture_output=True, text=True, encoding="utf-8")
     if not os.path.exists(os.path.join(attempt_dir, "audit.json")):
         raise FileError(f"attempt_audit.py wrote no audit.json in {attempt_dir}")
@@ -391,7 +394,8 @@ def file_attempt(args) -> tuple:
     target = read_json(os.path.join(args.target, "target.json"))
     rates = read_json(args.rates)
     harness_dir = Path(args.harness_dir)
-    superseded = replay(kind, attempt_dir, clone, args.audit_allowed_prefix or []) if args.replay else None
+    profile = arm.get("isolation", {}).get("sandbox")
+    superseded = replay(kind, attempt_dir, clone, args.audit_allowed_prefix or [], profile == review_isolation.ENFORCED) if args.replay else None
 
     dispatch_lines = Path(attempt_dir, "dispatch.txt").read_text(encoding="utf-8").splitlines() \
         if os.path.exists(os.path.join(attempt_dir, "dispatch.txt")) else []
@@ -468,9 +472,8 @@ def file_attempt(args) -> tuple:
     arm_model, arm_effort = arm.get("model"), arm.get("effort")
     expected = arm.get("adapter", {}).get("expected_prompt_variants") or []
     problems = []
-    if arm.get("isolation", {}).get("sandbox") == "claude-strict-v1":
-        import review_isolation
-        problems.extend(review_isolation.verify_evidence(Path(attempt_dir)))
+    if profile in review_isolation.PROFILES:
+        problems.extend(review_isolation.verify_evidence(Path(attempt_dir), profile))
     if trees[0] != trees[1]:
         problems.append("tree identity changed during the attempt")
     if audit.get("violations"):
