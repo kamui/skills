@@ -1,11 +1,11 @@
-# #384 matched isolation run, draft preregistration
+# #384 matched isolation run
 
 Part of [#384](https://github.com/kamui/skills/issues/384). This is a new experiment,
 prepared after [#403](https://github.com/kamui/skills/pull/403) merged at
 `b41a6df7939978147d05239150a45c9c345b0cc5`. The maintainer selected enforced isolation
-and a matched control/candidate comparison on 2026-09-27. **Paid dispatch is not
-approved.** `manifest.json` deliberately has no freeze timestamp or commit, so
-`run_cell.py` refuses to dispatch it.
+and a matched control/candidate comparison on 2026-09-27. The maintainer approved
+the new $120 budget and the decision rule below in this thread. The manifest was
+frozen after all 15 launch isolation checks passed, before any paid dispatch.
 
 The previous experiment remains inconclusive at 0/4 valid attempts and $13.027116.
 Its attempts, charges and original comparison with historical A are not reused as
@@ -31,7 +31,7 @@ both the original instruction and candidate run under the same enforced isolatio
   Packets, source ranges, diff identities, dependency archives and target allowances
   retain their original hashes, checked during preparation.
 - Rubric v1 and the original method revision. The metric/runner revision is
-  `96208f282d90bae64f01f81fcc96120eddd181d4`.
+  `9076ab8bc2b5c5c9db58bd867027f8317a987caa`. This includes the unchanged scoring rule for both new arm names.
 
 Reviewers receive the factual packet, source diff, execution policy and the one
 selected skill tree. They receive no issue text, thresholds, other arm output,
@@ -85,19 +85,19 @@ is never replaced. Stop once the remaining attempt cap cannot yield all 18 valid
 cells. Do not add targets, tune the sentence or extend the caps after observing
 outcomes. Record all invalid/stopped attempts and all charges.
 
-## Proposed budget
+## Approved budget
 
 | Reservation | Amount |
 | --- | ---: |
 | 18 planned reviews at at most $5 reserved each | $90 |
 | Up to 4 invalid replacements at $5 each | $20 |
 | Blind grading, adjudication and closeout reserve | $10 |
-| New run dispatch ceiling requiring approval | **$120** |
+| Approved new run dispatch ceiling | **$120** |
 
 The prior four invalid reviews averaged $3.0904 each. At that rate, 18 reviews
 would cost about $55.63 before grading or replacements. A $60–75 planning range
 is an extrapolation from invalid attempts, not a forecast of valid-review cost.
-The $120 proposal leaves reservation room for the full matrix and replacements.
+The $120 budget leaves reservation room for the full matrix and replacements.
 It is separate from the previous $13.03 and does not extend that stopped run.
 
 The CLI receives `--max-budget-usd 5` for each review. That limit is checked between
@@ -131,7 +131,7 @@ The candidate passes only if all of these hold:
    cannot become zero or a substituted CLI duration.
 
 These matched-control requirements replace the old historical-control comparison
-for this new run and require approval with the budget. Report the historical
+for this new run and were approved with the budget. Report the historical
 numbers separately. They do not establish statistical significance from three
 replicates or satisfy #380's later combined and unseen-target adoption gate.
 
@@ -163,7 +163,9 @@ documented rejection and required revert are complete.
    stopping condition is acted on immediately. Reproduce scores and publish the
    evidence with the disposition and any required revert.
 
-The manifest is intentionally unfrozen. No paid review or grading call has started.
+The manifest freeze references `9076ab8bc2b5c5c9db58bd867027f8317a987caa`, which contains the complete
+protocol and runner. [Launch evidence](launch-preflight/summary.json) records the
+approval and checks. No paid call preceded the freeze.
 
 ## Preparation results
 

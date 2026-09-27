@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-09-27T09:53:28Z",
+  "source_revision": "9076ab8bc2b5c5c9db58bd867027f8317a987caa",
+  "approval": "Maintainer approved the $120 matched control/candidate run and decision rules in this thread on 2026-09-27.",
+  "paid_calls_before_freeze": 0,
+  "native_isolation_suite": {
+    "collected": 15,
+    "passed": 15,
+    "skipped": 0
+  },
+  "grading_suite": {
+    "collected": 22,
+    "passed": 22
+  },
+  "cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
+  "package_hashes": "All three match preflight/summary.json.",
+  "freeze_commit_semantics": "Immutable commit containing the protocol and complete runner; the following commit records the approval and timestamp."
+}
