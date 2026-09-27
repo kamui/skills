@@ -59,6 +59,13 @@ home and settings sources are those of `claude-strict-v1`. Two things change.
    `confined_requests` in `audit.json`. A request the settings leave reachable is
    still a violation.
 
+The sandbox also mounts the CLI's own temporary base, which the settings file
+does not list. `dispatch.sh` sets `TMPDIR` to the attempt's `tmp`, so that base
+is attempt-local. With the host default, the base is `/tmp/claude-<uid>`, which
+every Claude Code session on the host shares. The native checks now run with the
+attempt's `TMPDIR` and hold a canary in the shared base that the sandbox must not
+read.
+
 Missing or altered isolation evidence, a changed clone tree, a wrong model,
 effort, CLI version or skill tree, and a wrong diff range still invalidate an
 attempt. Sandbox failures stop the run for diagnosis before more spending.
@@ -155,11 +162,11 @@ A pass still leaves #380's combined and unseen-target adoption gate.
 
 ## Preparation results
 
-The [preflight summary](preflight/summary.json) records zero paid calls. All 20
+The [preflight summary](preflight/summary.json) records zero paid calls. All 21
 native isolation checks passed with the real CLI and a local fake API. They
 include a shell that reads `GOPROXY=off` and `GOTOOLCHAIN=local` from the
 settings, and a bare smoke command on each of the three targets with no
-environment prefix. The 143 benchmark tests passed, 13 of them native checks
+environment prefix. The 144 benchmark tests passed, 14 of them native checks
 skipped in that suite and passed in the native one. Runner, filing, provisioning
 and scoring self-tests passed.
 

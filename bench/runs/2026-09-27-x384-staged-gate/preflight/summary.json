@@ -6,13 +6,13 @@
   "native_cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
   "bubblewrap_version": "0.6.1",
   "bench_test_suites": {
-    "collected": 143,
+    "collected": 144,
     "passed": 130,
-    "skipped_native_checks": 13
+    "skipped_native_checks": 14
   },
   "native_isolation_suite": {
-    "collected": 20,
-    "passed": 20,
+    "collected": 21,
+    "passed": 21,
     "skipped": 0
   },
   "self_tests": {

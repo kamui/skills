@@ -171,7 +171,8 @@ class NativeIsolation(Boundaries):
         thread.start()
         env = {k: os.environ[k] for k in ("PATH", "LD_LIBRARY_PATH", "LANG") if k in os.environ}
         env.update(HOME=str(home), ANTHROPIC_BASE_URL=f"http://127.0.0.1:{server.server_port}", ANTHROPIC_API_KEY="test-not-a-key",
-                   DISABLE_AUTOUPDATER="1", CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1", CLAUDE_CODE_TMPDIR=str(self.attempt / "tmp"))
+                   DISABLE_AUTOUPDATER="1", CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1", CLAUDE_CODE_TMPDIR=str(self.attempt / "tmp"),
+                   TMPDIR=str(self.attempt / "tmp"))
         try:
             done = subprocess.run([os.environ["BENCH_ISOLATION_CLI"], "-p", "Execute the fixture tools.", "--model", "claude-sonnet-5",
                                    "--effort", "high", "--settings", str(config), "--setting-sources", "user", "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}',
@@ -208,6 +209,15 @@ class NativeIsolation(Boundaries):
             self.assertTrue(results[identifier].get("is_error"), results)
         self.assertRegex(results["outside"]["content"], "PermissionError|FileNotFoundError")
         self.assertEqual((self.clone / "tracked").read_text(), "original")
+
+    def test_shared_claude_temp_directory_is_unreachable(self):
+        shared = Path(f"/tmp/claude-{os.getuid()}")
+        shared.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=shared) as directory:
+            canary = Path(directory, "canary")
+            canary.write_text("PRIVATE_CANARY_DO_NOT_READ", encoding="utf-8")
+            results = self.run_cli([[call("shared", "Bash", command=f"cat {canary}")]])
+        self.assertTrue(results["shared"].get("is_error"), results)
 
     def test_target_environment_reaches_the_shell(self):
         results = self.run_cli([[call("go", "Bash", command="go env GOPROXY GOTOOLCHAIN")]], {"GOPROXY": "off", "GOTOOLCHAIN": "local"})
