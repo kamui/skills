@@ -1,7 +1,5 @@
 # Verification
 
-Read when the complete primary pass has selected required or optional verification tasks. Candidate tasks take `confirmed` or `refuted`; safety-premise tasks take `holds`, `fails`, or `unresolved`. The primary owns admission and rendering.
-
 ## Dispatch and allowance
 
 Record each task's id, trigger or area, premise and evidence when applicable, batch, and ruling. Candidate triggers are `must-fix`, `security`, `data-integrity`, `destructive-migration`, `compatibility`, `prior-must-fix`, or `optional`. Optional premises use `trigger: optional`. Undispatched tasks are `pending`; unusable returns are `withheld`.
