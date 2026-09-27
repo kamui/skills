@@ -20,7 +20,8 @@ roots that was made before ``timing.json``'s dispatch instant may lead out of th
 venv's interpreter does), or a command that runs a
 network tool in command position (``curl``, ``wget``, ``gh``, ``ssh``, ``scp``, ``cargo``,
 ``git fetch``/``pull``/``push``/``clone`` (except a clone from an explicit filesystem path
-with only local-copy options); ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
+inside the allowed roots with only local-copy options; a relative source also requires
+the clone to be the first command); ``npm``, ``pnpm``, ``yarn`` or ``pip`` with a subcommand
 that reaches a registry; ``go`` unless it runs with ``GOPROXY=off`` and ``GOTOOLCHAIN=local``, from
 its own prefix assignments or an earlier ``export``), is a violation. Every relative path with a ``..`` segment, or
 with a dot-led glob segment such as ``.*`` that bash can expand to ``..`` (a whole word, or a run
@@ -155,7 +156,7 @@ def go_env(text: str, masked: str, scripts: list, m) -> dict:
     return env
 
 
-def local_clone(arguments: str, cwd: str, roots: list) -> bool:
+def local_clone(arguments: str, cwd: str, roots: list, allow_relative: bool) -> bool:
     try:
         words = shlex.split(arguments)
     except ValueError:
@@ -171,6 +172,8 @@ def local_clone(arguments: str, cwd: str, roots: list) -> bool:
         elif source is None:
             source = word
     if not source or not source.startswith(("/", "./", "../")) or any(c in source for c in "$`*?[]"):
+        return False
+    if not source.startswith("/") and not allow_relative:
         return False
     real = os.path.realpath(os.path.join(cwd, source))
     return any(real == root or real.startswith(root + os.sep) for root in roots)
@@ -189,11 +192,7 @@ def network_use(cmd: str, cwd: str, roots: list) -> bool:
             boundary = re.search(r"[;&|\n]", masked[m.end():end])
             if boundary:
                 end = m.end() + boundary.start()
-            clone_cwd = cwd
-            for words in command_words(text[:m.start()]):
-                if len(words) > 1 and words[0] == "cd":
-                    clone_cwd = os.path.normpath(os.path.join(clone_cwd, words[1]))
-            if local_clone(text[m.end():end], clone_cwd, roots):
+            if local_clone(text[m.end():end], cwd, roots, not text[:m.start()].strip()):
                 continue
         elif tool == "go":
             env = go_env(text, masked, scripts, m)

@@ -104,7 +104,9 @@ class AttemptAudit(unittest.TestCase):
         for source in (str(self.clone), './src', '../clone', f'"{self.clone}/with spaces"'):
             with self.subTest(source=source):
                 self.assertEqual(self.bash(f'git clone --quiet --no-hardlinks {source} scratch 2>&1 | tail -5'), (0, []))
-        self.assertEqual(self.bash('cd src && git clone ../src scratch'), (0, []))
+        rc, violations = self.bash('cd src && git clone ../src scratch')
+        self.assertEqual(rc, 1)
+        self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
         for source in ('https://example.com/repo', 'git@example.com:repo', 'host:repo', '$SOURCE', 'repo'):
             with self.subTest(source=source):
                 rc, violations = self.bash(f'git clone {source} scratch')
@@ -120,6 +122,13 @@ class AttemptAudit(unittest.TestCase):
         rc, violations = self.bash('cd "/dev/shm" && git clone ./source scratch')
         self.assertEqual(rc, 1)
         self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
+        for command in ('cd -P /dev/shm && git clone ../null scratch',
+                        'cd -- /dev/shm && git clone ../null scratch',
+                        "bash -c 'cd /dev/shm && git clone ../null scratch'"):
+            with self.subTest(command=command):
+                rc, violations = self.bash(command)
+                self.assertEqual(rc, 1, violations)
+                self.assertTrue(any(v.startswith('network-capable command') for v in violations), violations)
         source_link = self.clone / 'outside-link'
         source_link.symlink_to(self.outside)
         rc, violations = self.bash(f'git clone {source_link} scratch')
