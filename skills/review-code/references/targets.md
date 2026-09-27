@@ -1,7 +1,5 @@
 # Targets
 
-Read at step 1 to pin the target: a pull request, or a range or working tree.
-
 ## Pull request
 
 Resolve originating issues from closing references, then other explicit PR-body links, user-supplied issues/specs, then unique branch or commit references. Use every clearly relevant issue. With none, use the change description and report issue alignment unavailable; a required missing issue is an `issue-required` material question, not a stop or coverage gap alone.
