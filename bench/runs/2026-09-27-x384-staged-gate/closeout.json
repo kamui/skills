@@ -1,0 +1,32 @@
+{
+  "run_id": "2026-09-27-x384-staged-gate",
+  "disposition": "rejected",
+  "closed_at": "2026-09-27T20:15:00Z",
+  "review_dispatches_stopped": true,
+  "stop_after": "att-002",
+  "stop_reason": "Two valid candidate reviews miss GT-r1 and two miss GT-r2, so neither 2 of 3 threshold is attainable.",
+  "attempts": 2,
+  "valid_attempts": 2,
+  "invalid_attempts": 0,
+  "replacements_used": 0,
+  "unrun_cells": 1,
+  "recovered": {
+    "GT-r1": "0/2",
+    "GT-r2": "0/2"
+  },
+  "in_flight": [],
+  "spend_usd": {
+    "reviews": 4.634892,
+    "grading": 0.214661,
+    "adjudication": 0,
+    "total": 4.849553,
+    "approved_cap": 30
+  },
+  "scores": "results.v1.json",
+  "mappings": {
+    "r-base-ui-5460": 1
+  },
+  "issue_384": "Close as a rejected hypothesis. The sentence left main in #405, so no revert is owed. Stage 2 does not run.",
+  "isolation": "Both attempts kept claude-strict-v2 evidence. Neither audit lists a violation or a confined request.",
+  "grading": "Both outputs were blind-graded by Opus 5.5 high in one batch. The grading audit passed and the grader proposed no new defect."
+}
