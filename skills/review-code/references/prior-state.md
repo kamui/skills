@@ -29,8 +29,6 @@ A caller continuing after fixes, such as `implement-publish`, passes `prior_reco
 3. **Carry confirmations.** An unchanged mandatory finding keeps its confirmation as a `confirmed` candidate task with the prior's `trigger` and `batch` and `confirmed_in` naming the record whose accounting confirmed it: the prior's own `confirmed_in` when it carried one, otherwise the prior record. A materially changed mandatory claim, a new mandatory candidate and a required safety premise still need verification within the remaining allowance, or stay outstanding.
 4. **Keep state.** Every prior `outstanding` and `routed` entry survives unless a task this run ruled on settles it, so carried outstanding work keeps coverage incomplete. The finalizer derives the spent flags from the prior's and refuses a batch for a phase the prior spent.
 
-A record from before `review-code-record/1`, such as an implementation-gate record or its addenda, is not a prior record: review the final head in full from its base without one, with a new allowance, and name the earlier record in the coverage summary.
-
 ## Replies and prior state
 
 Read replies as prose first. An addresser reply may state a disposition — `implemented`, `already-addressed`, `answered`, `declined`, `needs-info`, or `blocked` — with its evidence, and an agent reply may end with the trailer `<!-- reply to=<stable id> disposition=<disposition> head=<full SHA> -->`. Never require or add a trailer on a human's behalf. Verify replies against current code. A reply states intent; it does not prove outcome.
