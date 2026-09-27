@@ -562,7 +562,8 @@ ARMS = {
     "codex-default": Arm(lambda doc: doc["native_verdict"] == "patch is correct" or no_items(doc), not_stopped,
                          by_p_number),
 }
-for arm_id in ("review-code-sonnet-high-isolated-control", "review-code-sonnet-high-isolated-lifecycle"):
+for arm_id in ("review-code-sonnet-high-isolated-control", "review-code-sonnet-high-isolated-lifecycle",
+               "review-code-sonnet-high-enforced-control", "review-code-sonnet-high-enforced-lifecycle"):
     ARMS[arm_id] = ARMS["review-code-sonnet-high"]
 
 

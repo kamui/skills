@@ -1,0 +1,32 @@
+{
+  "checked_at": "2026-09-27T19:43:58Z",
+  "source_revision": "b11bb6c2afa9ddf8a0794b2f5b1349d8ce17566a",
+  "approval": "Maintainer approved the staged design and the $30 Stage 1 cap in this thread on 2026-09-27. Stage 2 has no approved budget.",
+  "paid_calls_before_freeze": 0,
+  "native_isolation_suite": {
+    "collected": 24,
+    "passed": 24,
+    "skipped": 0
+  },
+  "bench_test_suites": {
+    "collected": 149,
+    "passed": 133,
+    "skipped_native_checks": 16
+  },
+  "cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
+  "launch_checks": {
+    "pinned_cli_dry_run": "passed; $5 reservation; no claim",
+    "cli_drift": "refused before dispatch: default CLI is 2.1.283",
+    "claims_and_charges": "zero attempts, zero charges, $25 of room before the $5 closeout reserve",
+    "built_in_sandbox_bindings": "/tmp/claude absent on the host",
+    "sandbox_readable_runtime": [
+      "~/.local/share/mise/installs/go/1.26.5",
+      "~/.local/share/mise/installs/node/24.21.0",
+      "~/.local/share/mise/installs/python/3.14.7",
+      "/tmp/x384-sandbox-tools/usr/bin",
+      "/usr/bin"
+    ],
+    "launcher_environment": "every CLAUDE*, ANTHROPIC* and AI_AGENT variable of the orchestrating session is unset before run_cell.py starts"
+  },
+  "freeze_commit_semantics": "Immutable commit containing the protocol and complete runner; the following commit records the approval and timestamp."
+}

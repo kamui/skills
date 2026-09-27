@@ -1,0 +1,105 @@
+{
+  "at": "2026-09-27T19:50:00Z",
+  "method": "Run origin/main's attempt_audit.py and the revised one over every filed attempt's archived transcripts, in place, restoring audit.json and payload.json afterwards. Then run the revised audit with --isolation-settings over each attempt that kept its own isolation-settings.json. No filed record is rewritten and no disposition changes.",
+  "filed_attempts": 144,
+  "skipped_without_archived_transcripts": [
+    "2026-09-24-toy/att-001",
+    "2026-09-24-toy/att-002",
+    "2026-09-24-toy/att-003",
+    "2026-09-24-toy/att-004",
+    "2026-09-24-toy/att-005",
+    "2026-09-24-toy/att-006",
+    "2026-09-24-toy/att-007"
+  ],
+  "replayed": 137,
+  "changes_without_isolation_settings": [],
+  "with_isolation_settings": [
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-001",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "filed_disposition": "harness-invalid",
+      "request_audit_violations": [
+        "path outside allowed roots in command: /proc",
+        "path outside allowed roots in command: /"
+      ],
+      "violations_under_own_settings": [],
+      "confined_requests": [
+        "path outside allowed roots in command: /proc",
+        "path outside allowed roots in command: /"
+      ]
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-002",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "filed_disposition": "valid completed",
+      "request_audit_violations": [],
+      "violations_under_own_settings": [],
+      "confined_requests": []
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-003",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "filed_disposition": "harness-invalid",
+      "request_audit_violations": [
+        "path outside allowed roots in command: /"
+      ],
+      "violations_under_own_settings": [],
+      "confined_requests": [
+        "path outside allowed roots in command: /"
+      ]
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-004",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "filed_disposition": "valid completed",
+      "request_audit_violations": [],
+      "violations_under_own_settings": [],
+      "confined_requests": []
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-005",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "filed_disposition": "harness-invalid",
+      "request_audit_violations": [
+        "network-capable command: cd /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone\ncat go.mod | head -5\nls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone-cache 2>/dev/null || echo"
+      ],
+      "violations_under_own_settings": [],
+      "confined_requests": [
+        "network-capable command: cd /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone\ncat go.mod | head -5\nls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-005/clone-cache 2>/dev/null || echo"
+      ]
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-006",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "filed_disposition": "harness-invalid",
+      "request_audit_violations": [
+        "network-capable command: go version 2>&1; ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-006/clone-cache 2>&1"
+      ],
+      "violations_under_own_settings": [],
+      "confined_requests": [
+        "network-capable command: go version 2>&1; ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-006/clone-cache 2>&1"
+      ]
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-007",
+      "arm": "review-code-sonnet-high-isolated-lifecycle",
+      "filed_disposition": "valid completed",
+      "request_audit_violations": [],
+      "violations_under_own_settings": [],
+      "confined_requests": []
+    },
+    {
+      "attempt": "2026-09-27-x384-matched-isolation/att-008",
+      "arm": "review-code-sonnet-high-isolated-control",
+      "filed_disposition": "harness-invalid",
+      "request_audit_violations": [
+        "network-capable command: ls -la xds/internal/xdsclient/tests/ | head -5 && cat go.mod | head -5 && echo \"---\" && ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-cache 2>&1 | head -20 && which go &"
+      ],
+      "violations_under_own_settings": [],
+      "confined_requests": [
+        "network-capable command: ls -la xds/internal/xdsclient/tests/ | head -5 && cat go.mod | head -5 && echo \"---\" && ls /home/jack/.t3/bench-runs/2026-09-27-x384-matched-isolation/att-008/clone-cache 2>&1 | head -20 && which go &"
+      ]
+    }
+  ],
+  "billed_usd": 0
+}
