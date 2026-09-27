@@ -2,11 +2,11 @@
   "schema_version": 1,
   "run_id": "2026-09-27-x384-staged-gate",
   "created_at": "2026-09-27T19:27:52Z",
-  "frozen_at": null,
-  "freeze_commit": null,
+  "frozen_at": "2026-09-27T19:43:58Z",
+  "freeze_commit": "b11bb6c2afa9ddf8a0794b2f5b1349d8ce17566a",
   "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
   "rubric_version": 1,
-  "metric_code_revision": "0000000000000000000000000000000000000000",
+  "metric_code_revision": "b11bb6c2afa9ddf8a0794b2f5b1349d8ce17566a",
   "arms": [
     {
       "id": "review-code-sonnet-high-enforced-lifecycle",

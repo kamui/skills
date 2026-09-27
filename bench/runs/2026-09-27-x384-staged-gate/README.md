@@ -35,8 +35,10 @@ inconclusive.
 - `mode: one-shot`, `profile: publishable`, `return_format: artifacts`.
 - Target: Base UI `r-base-ui-5460`, register v1. Packet, diff identity and
   provisioning hashes are the matched run's.
-- Rubric v1 and the original method revision. The manifest records the runner
-  and metric revision at freeze.
+- Rubric v1 and the original method revision. The runner and metric revision is
+  `b11bb6c2afa9ddf8a0794b2f5b1349d8ce17566a`, the freeze commit.
+  [Launch evidence](launch-preflight/summary.json) records the approval and the
+  checks. No paid call preceded the freeze.
 
 Reviewers receive the factual packet, source diff, execution policy and the
 candidate skill tree. They receive no issue text, threshold, register, mapping,
