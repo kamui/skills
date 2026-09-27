@@ -84,6 +84,25 @@ class Boundaries(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be git-ignored"):
             review_isolation.prepare_runtime_cache(self.clone)
 
+    def test_target_environment_is_offline(self):
+        target = Path(__file__).resolve().parents[1] / "targets" / "m-grpc-go-7390"
+        env = review_isolation.target_env(target, self.clone)
+        self.assertEqual((env["GOPROXY"], env["GOTOOLCHAIN"]), ("off", "local"))
+        self.assertEqual(env["GOMODCACHE"], str(self.clone) + "-cache/gomodcache")
+        done = subprocess.run([sys.executable, str(Path(review_isolation.__file__)), "settings", "--attempt", str(self.attempt), "--clone", str(self.clone),
+                               "--out", str(self.attempt / "isolation-settings.json"), "--profile", review_isolation.ENFORCED],
+                              capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(done.returncode, 2, done.stdout)
+        self.assertIn("requires --target", done.stderr)
+
+    def test_exposure_follows_the_sandbox_lists(self):
+        config = {"sandbox": {"filesystem": {"denyRead": [str(self.root)], "allowRead": [str(self.clone)]}}}
+        for path in (self.outside, self.root, self.clone / "tracked", "/usr/lib", "/proc/1/environ"):
+            self.assertFalse(review_isolation.exposes(str(path), config), path)
+        config["sandbox"]["filesystem"]["denyRead"] = []
+        self.assertTrue(review_isolation.exposes(str(self.outside), config))
+        self.assertTrue(review_isolation.exposes("/", config))
+
     def test_shell_allowance(self):
         self.assertEqual(self.decision("Bash", command="sleep 1000", timeout=1000000), "deny")
         self.assertEqual(self.decision("Bash", command="true", run_in_background=True), "deny")
@@ -142,9 +161,9 @@ def call(identifier, name, **inputs):
 
 @unittest.skipUnless(os.environ.get("BENCH_ISOLATION_CLI"), "set BENCH_ISOLATION_CLI for the free real-CLI checks")
 class NativeIsolation(Boundaries):
-    def run_cli(self, responses):
+    def run_cli(self, responses, shell_env=None):
         config = self.attempt / "isolation-settings.json"
-        config.write_text(json.dumps(review_isolation.settings(self.attempt, self.clone)), encoding="utf-8")
+        config.write_text(json.dumps(review_isolation.settings(self.attempt, self.clone, shell_env)), encoding="utf-8")
         home = self.attempt / "home"
         (home / ".claude.json").write_text('{"hasCompletedOnboarding": true}', encoding="utf-8")
         server = LocalModel(responses)
@@ -190,6 +209,11 @@ class NativeIsolation(Boundaries):
         self.assertRegex(results["outside"]["content"], "PermissionError|FileNotFoundError")
         self.assertEqual((self.clone / "tracked").read_text(), "original")
 
+    def test_target_environment_reaches_the_shell(self):
+        results = self.run_cli([[call("go", "Bash", command="go env GOPROXY GOTOOLCHAIN")]], {"GOPROXY": "off", "GOTOOLCHAIN": "local"})
+        self.assertFalse(results["go"].get("is_error"), results)
+        self.assertEqual(results["go"]["content"].split(), ["off", "local"])
+
     def test_worker_inherits_file_hook(self):
         results = self.run_cli([[call("worker", "Agent", subagent_type="general-purpose", model="sonnet", description="Exercise inherited isolation",
                                       prompt="Execute the fixture tool.", run_in_background=False)],
@@ -219,20 +243,22 @@ class NativeIsolation(Boundaries):
                 probe.setUp()
                 try:
                     shutil.rmtree(probe.clone)
-                    target = provision.load_target(str(Path(__file__).resolve().parents[1] / "targets" / name))
+                    target_dir = Path(__file__).resolve().parents[1] / "targets" / name
+                    target = provision.load_target(str(target_dir))
                     prepared = provision.prepare(target, provision.DEFAULT_CACHE_ROOT, str(probe.clone))
                     self.assertFalse(prepared["failures"], prepared)
                     review_isolation.prepare_runtime_cache(probe.clone)
                     config = provision.cache_config(target)
-                    substitutions = provision.substitutions(str(probe.clone) + "-cache", provision.DEFAULT_CACHE_ROOT, str(probe.clone), str(probe.work))
-                    env = {k: provision.render(v, substitutions) for k, v in config["env"].items()}
+                    env = review_isolation.target_env(target_dir, probe.clone)
+                    bare = "cd " + shlex.quote(str(probe.clone)) + " && " + config["smoke"][0]["command"]
                     command = "cd " + shlex.quote(str(probe.clone)) + " && "
                     command += "".join(k + "=" + shlex.quote(v) + " " for k, v in env.items()) + config["smoke"][0]["command"]
                     base = probe.work / "base"
                     clone_command = shlex.join(["git", "clone", "--quiet", "--no-hardlinks", str(probe.clone), str(base)])
                     clone_command += " && " + shlex.join(["git", "-C", str(base), "checkout", "--quiet", "main"])
                     results = probe.run_cli([[call("smoke", "Bash", command=command, timeout=300000),
-                                              call("local_base_clone", "Bash", command=clone_command, timeout=300000)]])
+                                              call("bare_smoke", "Bash", command=bare, timeout=300000),
+                                              call("local_base_clone", "Bash", command=clone_command, timeout=300000)]], env)
                     clean = not provision.git("-C", str(probe.clone), "status", "--porcelain").strip()
                     record = {"target": name, "source": "real CLI with local fake API; no model inference", "billed_usd": 0,
                               "prepared": prepared, "command": command, "results": results, "tree_clean_after": clean}
@@ -242,7 +268,7 @@ class NativeIsolation(Boundaries):
                         (output / (name + ".json")).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
                     for result in results.values():
                         self.assertFalse(result.get("is_error"), results)
-                    self.assertEqual(set(results), {"smoke", "local_base_clone"})
+                    self.assertEqual(set(results), {"smoke", "bare_smoke", "local_base_clone"})
                     self.assertTrue(clean)
                 finally:
                     probe.tearDown()
