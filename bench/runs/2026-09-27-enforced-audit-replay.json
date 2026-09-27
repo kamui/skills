@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-27T19:20:00Z",
+  "at": "2026-09-27T19:50:00Z",
   "method": "Run origin/main's attempt_audit.py and the revised one over every filed attempt's archived transcripts, in place, restoring audit.json and payload.json afterwards. Then run the revised audit with --isolation-settings over each attempt that kept its own isolation-settings.json. No filed record is rewritten and no disposition changes.",
   "filed_attempts": 144,
   "skipped_without_archived_transcripts": [

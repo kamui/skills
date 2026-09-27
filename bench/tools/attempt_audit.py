@@ -39,8 +39,8 @@ that was dispatched, and the executed diff command is recorded.
 
 ``--isolation-settings`` names the settings an enforced attempt ran under. A request those settings
 confine (a network tool with no allowed domain, a path the sandbox denies or whose readable
-contents are all declared, a file-tool path the hook gates) is listed under ``confined_requests``
-and is no violation; one they leave reachable still is.
+contents are all declared, a file-tool call whose result is the hook's denial) is listed under
+``confined_requests`` and is no violation; one they leave reachable still is.
 
 Writes ``audit.json`` in the attempt directory and, for ``claude-builtin``, copies
 the final result text and any ``ReportFindings`` input into ``payload.json``.
@@ -326,13 +326,11 @@ PREFIXES: list = []
 ENFORCED = None
 
 
-def confined(path: str = None, file_tool: bool = False) -> bool:
-    """Whether the attempt's isolation settings keep a request from reaching anything undeclared:
-    a path (each match of a glob), a file-tool path when ``file_tool``, a network tool otherwise."""
+def confined(path: str = None) -> bool:
+    """Whether the attempt's isolation settings keep a shell request from reaching anything
+    undeclared: a path (each match of a glob), or a network tool when no path is given."""
     if ENFORCED is None:
         return False
-    if file_tool:
-        return bool(ENFORCED["hooks"]["PreToolUse"]) and ENFORCED["permissions"]["blockReadsOutsideWorkingDirectories"]
     if path is None:
         return not ENFORCED["sandbox"]["network"]["allowedDomains"]
     matches = glob.glob(path) if any(c in path for c in "*?[") else [path]
@@ -368,12 +366,12 @@ def provisioned(path: str, roots) -> bool:
 
 
 def audit_claude(attempt: Path, roots):
-    """Returns the transcripts, commands, file-tool paths, built-in headers, ReportFindings inputs,
-    the final assistant text of the transcript that carried the built-in header (or of the root
+    """Returns the transcripts, commands, file-tool paths (each with whether the isolation hook
+    denied its call), built-in headers, ReportFindings inputs, the final assistant text of the transcript that carried the built-in header (or of the root
     when none did), so a worker's chatter never stands in for the review, and the directory each
     command ran in. Claude Code keeps a ``cd`` between Bash calls and records the directory on
     every transcript line."""
-    commands, cwds, reads, headers, findings_calls = [], [], [], [], []
+    commands, cwds, reads, headers, findings_calls, denied = [], [], [], [], [], set()
     texts_by_file = {}
     header_files = []
     files = sorted((attempt / "home" / ".claude" / "projects").rglob("*.jsonl"))
@@ -394,6 +392,8 @@ def audit_claude(attempt: Path, roots):
                         header_files.append(path)
                 if block.get("type") == "text" and record.get("type") == "assistant":
                     texts_by_file[path].append(block.get("text", ""))
+                if block.get("type") == "tool_result" and review_isolation.DENIAL in json.dumps(block.get("content")):
+                    denied.add(block.get("tool_use_id"))
                 if block.get("type") == "tool_use":
                     name, inp = block.get("name"), block.get("input") or {}
                     if name == "Bash":
@@ -402,12 +402,12 @@ def audit_claude(attempt: Path, roots):
                     elif name in ("Read", "Glob", "Grep", "Write", "Edit"):
                         for key in ("file_path", "path"):
                             if inp.get(key):
-                                reads.append(inp[key])
+                                reads.append((inp[key], block.get("id")))
                     elif name == "ReportFindings":
                         findings_calls.append(inp)
     authoritative = header_files[-1] if header_files else (files[0] if files else None)
     texts = texts_by_file.get(authoritative, []) if authoritative else []
-    return files, commands, reads, headers, findings_calls, texts, cwds
+    return files, commands, [(path, call in denied) for path, call in reads], headers, findings_calls, texts, cwds
 
 
 def codex_calls(text: str) -> tuple:
@@ -487,7 +487,7 @@ def main() -> int:
     if args.isolation_settings:
         try:
             ENFORCED = json.loads(Path(args.isolation_settings).read_text(encoding="utf-8"))
-            confined(), confined("/"), confined(file_tool=True)
+            confined(), confined("/")
         except (OSError, ValueError, KeyError, TypeError) as error:
             print(f"attempt_audit.py: isolation settings {args.isolation_settings}: {error!r}", file=sys.stderr)
             return 2
@@ -556,14 +556,14 @@ def main() -> int:
                 (requests if confined(p) else violations).append(f"path outside allowed roots in command: {p}")
             else:
                 absent.append(p)
-    for p in reads:
+    for p, hook_denied in reads:
         if p.startswith("/") and not inside(p, roots):
             if present(p):
-                (requests if confined(file_tool=True) else violations).append(f"file tool read outside allowed roots: {p}")
+                (requests if ENFORCED and hook_denied else violations).append(f"file tool read outside allowed roots: {p}")
             else:
                 absent.append(p)
     diffs = [m.group(0) for cmd in commands for m in DIFF_CMD.finditer(cmd)]
-    report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": reads, "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
+    report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": [p for p, _ in reads], "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
                    "absent_outside_paths": sorted(set(absent)),
                    "violations": violations, "confined_requests": requests, "allowed_roots": roots})
     (attempt / "audit.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

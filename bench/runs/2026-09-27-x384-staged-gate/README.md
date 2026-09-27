@@ -54,17 +54,24 @@ home and settings sources are those of `claude-strict-v1`. Two things change.
 2. **Validity.** `attempt_audit.py` judges each request against the attempt's own
    `isolation-settings.json`. A request is confined, and does not invalidate the
    review, when the sandbox denies the path, when everything readable beneath the
-   path is declared in the settings, when the file-tool hook gates the path, or
-   when the settings allow no network domain. Confined requests are filed under
+   path is declared in the settings, when the file-tool call's result is the
+   hook's denial, or when the settings allow no network domain. Confined requests are filed under
    `confined_requests` in `audit.json`. A request the settings leave reachable is
    still a violation.
 
-The sandbox also mounts the CLI's own temporary base, which the settings file
-does not list. `dispatch.sh` sets `TMPDIR` to the attempt's `tmp`, so that base
-is attempt-local. With the host default, the base is `/tmp/claude-<uid>`, which
-every Claude Code session on the host shares. The native checks now run with the
-attempt's `TMPDIR` and hold a canary in the shared base that the sandbox must not
-read.
+The sandbox also binds two places the settings file does not list.
+
+- The CLI's temporary base. `dispatch.sh` sets `TMPDIR` to the attempt's `tmp`,
+  so the base is attempt-local. With the host default it is `/tmp/claude-<uid>`,
+  which every Claude Code session on the host shares. The native checks now run
+  with the attempt's `TMPDIR` and hold a canary in the shared base that the
+  sandbox must not read.
+- `/tmp/claude`, when the host has one. No deny setting removes it. Setup refuses
+  to dispatch while it exists, and the audit treats a request that reaches it as
+  a violation. It did not exist on this host during either earlier run.
+
+A native check scans every denied directory from inside the sandbox and fails
+when it finds a file outside the declared directories and the attempt.
 
 Missing or altered isolation evidence, a changed clone tree, a wrong model,
 effort, CLI version or skill tree, and a wrong diff range still invalidate an
@@ -162,11 +169,11 @@ A pass still leaves #380's combined and unseen-target adoption gate.
 
 ## Preparation results
 
-The [preflight summary](preflight/summary.json) records zero paid calls. All 21
+The [preflight summary](preflight/summary.json) records zero paid calls. All 24
 native isolation checks passed with the real CLI and a local fake API. They
 include a shell that reads `GOPROXY=off` and `GOTOOLCHAIN=local` from the
 settings, and a bare smoke command on each of the three targets with no
-environment prefix. The 144 benchmark tests passed, 14 of them native checks
+environment prefix. The 149 benchmark tests passed, 16 of them native checks
 skipped in that suite and passed in the native one. Runner, filing, provisioning
 and scoring self-tests passed.
 

@@ -4,29 +4,29 @@
   "billed_usd": 0,
   "prepared": {
     "recipe": "restore cache archive sha256:e9d72d6ae4aa73395c2d20d1bf05d549c67c3d0ebc93be3cb1b77461542baf15",
-    "duration_seconds": 2.8,
+    "duration_seconds": 2.86,
     "tree_clean_after": true,
     "steps": [
       {
         "command": "restore cache archive sha256:e9d72d6ae4aa73395c2d20d1bf05d549c67c3d0ebc93be3cb1b77461542baf15",
         "exit_code": 0,
-        "duration_seconds": 2.8
+        "duration_seconds": 2.86
       }
     ],
     "failures": []
   },
-  "command": "cd /tmp/review-isolation-o2j8c3ed/attempt/clone && GOMODCACHE=/tmp/review-isolation-o2j8c3ed/attempt/clone-cache/gomodcache GOCACHE=/tmp/review-isolation-o2j8c3ed/attempt/clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
+  "command": "cd /tmp/review-isolation-r59bw3jv/attempt/clone && GOMODCACHE=/tmp/review-isolation-r59bw3jv/attempt/clone-cache/gomodcache GOCACHE=/tmp/review-isolation-r59bw3jv/attempt/clone-cache/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local go test -run 'Test/(ResetConnectBackoff|WithConnectParams)$' .",
   "results": {
     "smoke": {
       "tool_use_id": "smoke",
       "type": "tool_result",
-      "content": "ok  \tgoogle.golang.org/grpc\t0.111s",
+      "content": "ok  \tgoogle.golang.org/grpc\t0.162s",
       "is_error": false
     },
     "bare_smoke": {
       "tool_use_id": "bare_smoke",
       "type": "tool_result",
-      "content": "ok  \tgoogle.golang.org/grpc\t(cached)",
+      "content": "ok  \tgoogle.golang.org/grpc\t0.163s",
       "is_error": false
     },
     "local_base_clone": {
