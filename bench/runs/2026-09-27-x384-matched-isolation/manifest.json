@@ -2,11 +2,11 @@
   "schema_version": 1,
   "run_id": "2026-09-27-x384-matched-isolation",
   "created_at": "2026-09-27T09:24:43Z",
-  "frozen_at": null,
-  "freeze_commit": null,
+  "frozen_at": "2026-09-27T09:53:28Z",
+  "freeze_commit": "9076ab8bc2b5c5c9db58bd867027f8317a987caa",
   "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
   "rubric_version": 1,
-  "metric_code_revision": "96208f282d90bae64f01f81fcc96120eddd181d4",
+  "metric_code_revision": "9076ab8bc2b5c5c9db58bd867027f8317a987caa",
   "arms": [
     {
       "id": "review-code-sonnet-high-isolated-control",
