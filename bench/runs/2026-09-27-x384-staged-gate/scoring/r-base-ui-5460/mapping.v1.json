@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x384-staged-gate",
+  "target": "r-base-ui-5460",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "1bb5b63fb98bd15bfa37812aff65255254ee03e79fcb3fea2909b2f931e25d27"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 5c8e512bfb7e99d2378394dbfaeacd71539cc757ddb88415b676a1fec374bf76; session e59866be-8fd4-4441-94fa-4f714cb5ed7f; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (2 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-27T20:08:28Z",
+  "attempts": [
+    {
+      "attempt_id": "att-001",
+      "blind_token": "blind-3f410f",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"NumberFieldInput's useValueChanged callback only clears errors and revalidates; unlike FieldControl's combined callback it does not also call setDirty/setFilled, because NumberFieldRoot's setValue already applies those\". Checked: NumberFieldInput.tsx:101-110 calls only clearErrors and validation.change; FieldControl.tsx:105-115 also calls setDirty/setFilled. NumberFieldRoot sets dirty in setValue (line 254) and filled via an effect on value (lines 120-121), so the claim is broadly accurate (filled comes from an effect rather than setValue). It is a comparative observation that asserts no defect or consequence in the PR, and touches neither the onBlur normalization problem (GT-r1) nor the mount-time filled problem (GT-r2). Below the finding threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-903847",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The PR's own CI performance-benchmark comment reports large regressions (e.g. Menu open +43.9%, Select open +28.5%, Dialog mount +23.0%) for interactions this two-file FieldControl diff does not touch, and a +88B (+0.02%) bundle-size delta.\" The figures match packet.md section 6, comment #2, verbatim. The item itself says the diff does not touch those interactions, so it does not attribute a behavioural regression to the PR. It is an accurate observation about CI noise and bundle size with no material consequence, and it is unrelated to GT-r1 or GT-r2."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

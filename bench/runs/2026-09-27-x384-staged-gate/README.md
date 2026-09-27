@@ -9,6 +9,34 @@ inconclusive. Their attempts, grades and charges are not reused as cells here.
 The maintainer approved the staged design and the $30 Stage 1 cap in this thread
 on 2026-09-27. Stage 2 has no approved budget.
 
+## Results, 2026-09-27
+
+**Rejected. Close #384.** Two valid candidate reviews approved the change and
+recovered neither defect. GT-r1 stands at 0 of 2 and GT-r2 at 0 of 2, so neither
+2 of 3 threshold is attainable. The run stopped under its frozen rule. Replicate
+3 and Stage 2 stay unrun.
+
+| Attempt | Validity | Native verdict | GT-r1 | GT-r2 | Other items | Elapsed to payload | Cost |
+| --- | --- | --- | --- | --- | --- | ---: | ---: |
+| att-001 | valid | Approved | missed | missed | 1 non-material observation | 766 s | $2.536281 |
+| att-002 | valid | Approved | missed | missed | 1 non-material observation | 576 s | $2.098611 |
+
+Neither review raised a false finding or a blocker. Neither audit lists a
+violation or a confined request, so the validity of this run does not rest on the
+new confinement rule. No replacement was used.
+
+Reviews cost $4.634892 and blind grading $0.214661, for a total of **$4.849553**
+against the $30 cap. The grading audit passed and the grader proposed no new
+defect. All three #384 runs together cost $47.439862.
+
+Across every run and arm, 16 graded Base UI reviews now recover GT-r1 0 times
+and GT-r2 twice. This run rejects the sentence. It does not show what would
+recover either defect.
+
+Evidence: [results](results.v1.json), [scorecard](scoring/r-base-ui-5460/scorecard.v1.md),
+[blind grading](grading/), [ledger](ledger.md), [stage decision](stage-decisions.jsonl)
+and [closeout record](closeout.json).
+
 ## Why the run is staged
 
 The pass rule needs GT-r1 and GT-r2 in at least 2 of 3 candidate Base UI reviews
