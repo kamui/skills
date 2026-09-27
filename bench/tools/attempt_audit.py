@@ -190,7 +190,7 @@ def network_use(cmd: str, cwd: str, roots: list) -> bool:
             if boundary:
                 end = m.end() + boundary.start()
             clone_cwd = cwd
-            for words in command_words(masked[:m.start()]):
+            for words in command_words(text[:m.start()]):
                 if len(words) > 1 and words[0] == "cd":
                     clone_cwd = os.path.normpath(os.path.join(clone_cwd, words[1]))
             if local_clone(text[m.end():end], clone_cwd, roots):
