@@ -9,6 +9,9 @@ targets, one buggy and one clean, with three replicates per arm. This run is tha
 The maintainer approved this comparison and its **$60 cap** on 2026-09-28, and chose the decision
 rule below before any target was chosen.
 
+The manifest was frozen at `2026-09-28T20:13:01Z` on freeze commit `744b32d16742d23a45a68629fb54e90b2b9ba940`, after the
+[launch checks](preflight/summary.json) passed and before any paid review.
+
 ## Frozen inputs
 
 - Control skill tree: `5e12864b52b6c0c52b9b1b1f41d5b22fa2576676`, arm
