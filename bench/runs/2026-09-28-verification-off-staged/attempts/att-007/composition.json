@@ -1,0 +1,148 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "spec-pr-5067-packet"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [
+      "honojs/hono#5060"
+    ],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Fix honojs/hono#5060: parseBody() and validator('json'|'form') matched Content-Type media types case-sensitively, so mixed/upper-case values like `Application/JSON` were silently skipped. The change lowercases only the media-type segment (before the first `;`) for comparison/normalization and adds an `i` flag to the validator's regexes, leaving parameters such as multipart boundaries untouched.",
+    "issue_fit": "Met — all three scenarios #5060 asked for (parseBody with mixed-case urlencoded, validator('json') with mixed-case JSON, validator('form') with mixed-case urlencoded/multipart while preserving the boundary) are implemented and covered by new passing tests.",
+    "coverage": "All 6 changed files reviewed against the merge-base diff. Cross-file impact traced into src/request.ts (HonoRequest.bodyCache/#cachedBody) and the pre-existing interaction test in src/request.test.ts that exercises parseBody() through a real HonoRequest. Reviewed working tree has one unrelated untracked file (.mcp.json), outside the diff.",
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts` at head 5226d4165d48643586152614cbd07422a0ab7a22: 39 passed.",
+      "Reviewer ran the same vitest invocation against src/utils/buffer.test.ts: 11 passed, 1 pre-existing unrelated skip.",
+      "Reviewer ran the same vitest invocation against src/validator/validator.test.ts: 56 passed.",
+      "Reviewer ran the same vitest invocation against src/request.test.ts (unchanged file, exercises parseBody() on a real HonoRequest and subsequent body-method calls): 38 passed.",
+      "Reviewer ran the same vitest invocation against src/hono.test.ts and src/middleware/csrf/index.test.ts as a broader smoke check: 237 passed.",
+      "Supplied CI: Codecov patch-coverage comment on the pinned head reports 76.47% against an 80% target, but codecov.yml sets patch status `informational: true`, so this does not gate merges (historical, non-blocking)."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "CI's Codecov comment on this head shows patch coverage 76.47% under the 80% target, but the base repository's codecov.yml marks the patch status check `informational: true`, so it does not block merges.",
+      "evidence": "codecov.yml:6-9 (`patch: default: target: 80%, informational: true`); packet section 6, codecov comment on 2026-07-01T09:41:59Z."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "honojs/hono",
+    "requirements": [
+      {
+        "source": "spec-pr-5067-packet/issue-5060-suggested-tests-1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.test.ts new test 'should parse mixed-case `x-www-form-urlencoded`' passes; src/utils/body.ts:104-108 normalizes the media type before comparison."
+      },
+      {
+        "source": "spec-pr-5067-packet/issue-5060-suggested-tests-2",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/validator/validator.test.ts new test 'Should validate if Content-Type media type is mixed-case' passes; src/validator/validator.ts:24 adds the `i` flag to jsonRegex."
+      },
+      {
+        "source": "spec-pr-5067-packet/issue-5060-suggested-tests-3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/validator/validator.test.ts new tests 'Should validate mixed-case URL Encoded Content-Type' and 'Should validate mixed-case multipart/form-data Content-Type' pass; the multipart boundary is asserted intact via src/utils/buffer.test.ts's new boundary-preservation test and src/utils/buffer.ts:112-113's `.replace(/^[^;]+/, ...)`, which only lowercases the segment before the first `;`."
+      },
+      {
+        "source": "spec-pr-5067-packet/issue-5060-expected-behavior",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Media-type matching is case-insensitive in both parseBody() (src/utils/body.ts:104-106) and validator() (src/validator/validator.ts:24-26), while parameter values (e.g. boundary) are preserved verbatim in src/utils/buffer.ts:113."
+      },
+      {
+        "source": "spec-pr-5067-packet/pr-body/\"Fixes #5060\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "See rows above."
+      },
+      {
+        "source": "spec-pr-5067-packet/pr-body/\"Add tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "New tests added across src/utils/body.test.ts, src/utils/buffer.test.ts, src/validator/validator.test.ts; all pass at head."
+      },
+      {
+        "source": "spec-pr-5067-packet/pr-body/\"Run tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer re-ran the affected suites plus src/request.test.ts, src/hono.test.ts, src/middleware/csrf/index.test.ts at head 5226d416; all pass."
+      },
+      {
+        "source": "spec-pr-5067-packet/pr-body/\"bun run format:fix && bun run lint:fix\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No network/registry access in this sandbox to run bun/lint; the diff reads as already formatted and no lint-sensitive pattern was found by inspection, but the lint run itself was not reproduced."
+      }
+    ],
+    "files": [
+      { "path": "src/utils/body.test.ts", "state": "reviewed" },
+      { "path": "src/utils/body.ts", "state": "reviewed" },
+      { "path": "src/utils/buffer.test.ts", "state": "reviewed" },
+      { "path": "src/utils/buffer.ts", "state": "reviewed" },
+      { "path": "src/validator/validator.test.ts", "state": "reviewed" },
+      { "path": "src/validator/validator.ts", "state": "reviewed" }
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "run directly in the offline clone at the reviewed head; 39 passed, full output read"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/buffer.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "run directly in the offline clone at the reviewed head; 11 passed, 1 pre-existing unrelated skip, full output read"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "run directly in the offline clone at the reviewed head; 56 passed, full output read"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/request.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "unchanged file, run to trace the HonoRequest/bodyCache interaction added in src/utils/body.ts; 38 passed, full output read"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/hono.test.ts src/middleware/csrf/index.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "broader smoke check of unrelated body/content-type consumers; 237 passed, full output read"
+      },
+      {
+        "check": "Codecov patch-coverage comment",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "accepted",
+        "reason": "matches reviewed head exactly; informational-only per codecov.yml, so it does not settle a pass/fail obligation but is accepted as historical context"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

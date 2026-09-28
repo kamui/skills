@@ -60,7 +60,9 @@ a scratch directory to check every member's bytes.
 
 The output directory gets ``attempt.json`` plus the small artifacts: ``dispatch.txt``,
 ``timing.json``, ``audit.json``, ``normalized.json``, the native output, ``usage-requests.jsonl``
-and ``stop.json`` when present. ``attempt.json`` is validated against
+and ``stop.json`` when present. A stopped attempt that returned no native output records
+``native_payload`` as null, and its ``normalized.json`` states that nothing was parsed, because the
+wrapper normalizes only after a zero exit. ``attempt.json`` is validated against
 ``bench/schema/attempt.schema.json`` before the command succeeds.
 
 Exit codes: 0 filed; 1 the record does not validate, one line per violation on stdout; 2 an input
@@ -171,9 +173,10 @@ def claude_observed(paths: list) -> tuple:
     order = []
     for path in paths:
         for record in jsonl(path):
-            if record.get("type") != "assistant":
-                continue
             message = record.get("message") or {}
+            # `<synthetic>` lines are the CLI's own notices, not model output; transcript_usage.py skips them too.
+            if record.get("type") != "assistant" or message.get("model") == "<synthetic>" or record.get("isApiErrorMessage"):
+                continue
             if message.get("model"):
                 models.add(message["model"])
             if record.get("effort"):
@@ -407,12 +410,22 @@ def file_attempt(args) -> tuple:
     timing_src = read_json(os.path.join(attempt_dir, "timing.json"))
     stop = read_json(os.path.join(attempt_dir, "stop.json")) if os.path.exists(os.path.join(attempt_dir, "stop.json")) else None
     audit = read_json(os.path.join(attempt_dir, "audit.json"))
-    normalized = read_json(os.path.join(attempt_dir, "normalized.json"))
-    trees = [Path(attempt_dir, n).read_text(encoding="utf-8").strip() for n in ("tree-before.txt", "tree-after.txt")]
+    stopped = stop is not None or exit_code not in (None, 0)
     native_rel = NATIVE[kind]
     native_path = os.path.join(attempt_dir, native_rel)
     if not os.path.exists(native_path):
-        raise FileError(f"native output {native_path} is missing")
+        if not stopped:
+            raise FileError(f"native output {native_path} is missing")
+        native_path = None
+        normalized_path = os.path.join(attempt_dir, "normalized.json")
+        if not os.path.exists(normalized_path):
+            reason = (stop or {}).get("reason") or f"exit {exit_code}"
+            Path(normalized_path).write_text(json.dumps({
+                "arm": kind, "parse_status": "unresolved", "native_verdict": None, "verdict_source": None, "items": [],
+                "parse_notes": [f"no {native_rel}: the attempt stopped ({reason}) before returning a review"]},
+                indent=2) + "\n", encoding="utf-8")
+    normalized = read_json(os.path.join(attempt_dir, "normalized.json"))
+    trees = [Path(attempt_dir, n).read_text(encoding="utf-8").strip() for n in ("tree-before.txt", "tree-after.txt")]
 
     notes = list(args.note or [])
     prompt_hash = prompt_header = None
@@ -530,7 +543,10 @@ def file_attempt(args) -> tuple:
         elif os.path.exists(dest):
             os.remove(dest)  # a re-filing drops what the attempt directory no longer holds
     native_name = os.path.basename(native_rel)
-    shutil.copy2(native_path, os.path.join(out, native_name))
+    if native_path:
+        shutil.copy2(native_path, os.path.join(out, native_name))
+    elif os.path.exists(os.path.join(out, native_name)):
+        os.remove(os.path.join(out, native_name))
     with open(os.path.join(out, "usage-requests.jsonl"), "w", encoding="utf-8") as handle:
         for row in requests:
             handle.write(json.dumps(row) + "\n")
@@ -538,7 +554,7 @@ def file_attempt(args) -> tuple:
                                   os.path.join(os.path.expanduser(args.archive_root), args.run_id, args.attempt_id + ".tar.gz"))
 
     arm_complete = None
-    if kind == "review-code":
+    if kind == "review-code" and native_path:
         composition = read_json(native_path)
         arm_complete = (composition.get("run") or {}).get("coverage") == "complete"
 
@@ -572,7 +588,7 @@ def file_attempt(args) -> tuple:
                   "quota_consumed": None, "metering_status": status},
         "timing": {"dispatched_at": dispatched, "payload_validated_at": validated, "completed_at": completed_value,
                    "stopped_at": stopped_value},
-        "native_payload": {"path": native_name, "sha256": sha256_file(native_path)},
+        "native_payload": {"path": native_name, "sha256": sha256_file(native_path)} if native_path else None,
         "normalized": {"path": "normalized.json", "parse_status": normalized.get("parse_status", "unresolved"),
                        "reason": None if normalized.get("parse_status") == "parsed" else "; ".join(normalized.get("parse_notes", [])) or None},
         "transcript_archive": archive,
@@ -697,6 +713,29 @@ def self_test() -> int:
         rec = json.loads((temp / "o5" / "attempt.json").read_text(encoding="utf-8"))
         assert rec["disposition"] == "stopped: exit 1" and rec["timing"]["completed_at"] is None, rec
         assert rec["timing"]["stopped_at"] == "2026-01-01T00:00:05Z", rec["timing"]
+        # A stop before any native output is filed with no payload and a normalized record of nothing parsed;
+        # a missing native output on an attempt that did not stop is still refused.
+        for name in ("payload.json", "normalized.json"):
+            (att / name).rename(att / (name + ".kept"))
+        agent = project / "s1" / "subagents" / "agent-a1.jsonl"
+        kept_lines = agent.read_text(encoding="utf-8")
+        agent.write_text(kept_lines + json.dumps({"type": "assistant", "isApiErrorMessage": True, "timestamp": "2026-01-01T00:00:04Z",
+                                                  "message": {"model": "<synthetic>", "content": [{"type": "text", "text": "Failed to authenticate"}]}}) + "\n",
+                         encoding="utf-8")
+        done = run("o5b")
+        rec = json.loads((temp / "o5b" / "attempt.json").read_text(encoding="utf-8"))
+        assert done.returncode == 0 and rec["disposition"] == "stopped: exit 1" and rec["native_payload"] is None, (done, rec)
+        assert rec["normalized"]["parse_status"] == "unresolved" and "stopped (exit 1)" in rec["normalized"]["reason"], rec
+        assert rec["observed"]["models"] == ["m-1"] and rec["usage"]["metering_status"] == "complete", rec
+        assert (temp / "o5b" / "normalized.json").is_file() and not (temp / "o5b" / "payload.json").exists()
+        (att / "normalized.json").unlink()
+        (att / "dispatch.txt").write_text("claude 9.9.9 (Claude Code)\nmodel=m effort=high\nexit=0\n", encoding="utf-8")
+        done = run("o5c")
+        assert done.returncode == 2 and "native output" in done.stderr, done
+        (att / "dispatch.txt").write_text("claude 9.9.9 (Claude Code)\nmodel=m effort=high\nexit=1\n", encoding="utf-8")
+        for name in ("payload.json", "normalized.json"):
+            (att / (name + ".kept")).rename(att / name)
+        agent.write_text(kept_lines, encoding="utf-8")
         # A replay supersedes a stop the wrapper wrote only for a failed normalization, once the
         # replayed normalizer parses; an output that still does not parse stays stopped.
         arm.update(effort="high", adapter={"expected_prompt_variants": [digest]})

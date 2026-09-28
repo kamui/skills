@@ -1,0 +1,157 @@
+{
+  "run": {
+    "coverage": "complete",
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [
+      "honojs/hono#5060"
+    ],
+    "specs": [
+      "honojs/hono#5067"
+    ],
+    "change_description": "5226d4165d48643586152614cbd07422a0ab7a22\nfix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Fix honojs/hono#5060: make parseBody() and validator() match Content-Type media types case-insensitively (Application/JSON, Application/X-WWW-Form-Urlencoded, mixed-case multipart/form-data), while keeping parameters such as the multipart boundary in their original case.",
+    "issue_fit": "Full \u2014 both code paths named in issue #5060 (body.ts's startsWith guard, validator.ts's regexes) are fixed, and buffer.ts's bufferToFormData now normalizes only the media-type prefix before handing the body to the platform's Response.formData(), so the boundary parameter keeps its original case. All three suggested tests from the issue are present and pass.",
+    "coverage": "All 6 changed files (body.ts, body.test.ts, buffer.ts, buffer.test.ts, validator.ts, validator.test.ts) read in full at base and head via the merge-base diff; traced callers (src/request.ts's HonoRequest.parseBody/arrayBuffer/formData caching, src/middleware/method-override/index.ts's parseBody(clonedRequest)) and repository guidance (only .github/pull_request_template.md exists; no AGENTS.md/CLAUDE.md rules apply). No packet or forge access was available or needed: this is a local range review (main\u2192review-head), not a live pull-request fetch.",
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts` at head 5226d416: 50 passed, 1 skipped (pre-existing, unrelated).",
+      "Reviewer ran the same vitest invocation against `src/validator/validator.test.ts` at head 5226d416: 56 passed.",
+      "Reviewer ran the same vitest invocation against `src/request.test.ts` and `src/middleware/method-override/index.test.ts` at head 5226d416 to check for regressions in body-consumption caching: 49 passed, including the pre-existing 'should parse form data' case that calls parseBody() then text()/arrayBuffer()/bytes()/blob() on the same HonoRequest.",
+      "Reviewer ran `src/middleware/csrf/index.test.ts` and `src/hono.test.ts` at head 5226d416 as a broader regression check on request-body handling: 237 passed.",
+      "codecov (github-actions comment, supplied, not reviewer-executed): patch coverage 76.47% on this diff, project coverage 79.08% (-0.01%); historical context only, not a correctness signal on its own \u2014 no candidate depended on the uncovered lines."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "src/utils/body.ts's parseFormData now buffers the whole request body via arrayBuffer() and re-wraps it in a synthetic Response before calling formData(), instead of calling the platform Request's formData() directly as before; this mirrors the pattern already used in validator.ts's 'form' branch and is required so the normalized (lower-cased) Content-Type reaches the platform's own media-type check.",
+      "evidence": "src/utils/body.ts:126-132; src/validator/validator.ts:118-121 (pre-existing pattern)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-018/clone",
+    "requirements": [
+      {
+        "source": "issue-5060/expected-behavior",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:104-106 lower-cases the media-type portion of Content-Type before comparing (`contentType?.split(';')[0].trim().toLowerCase()`); src/utils/buffer.ts:106-117 lower-cases only the media-type prefix via `contentType.replace(/^[^;]+/, ...)`, leaving parameters like the multipart boundary untouched; src/validator/validator.ts:24-26 adds the `i` flag to jsonRegex/multipartRegex/urlencodedRegex. Verified passing at head via the vitest runs in check_details. A compatibility premise (does this break any documented/relied-upon prior behavior?) was independently verified by a fresh-context worker and ruled `holds`: no docs, JSDoc, CHANGELOG, or existing test treats the old case-sensitive rejection as an intentional contract \u2014 the changed inputs previously only produced a silently empty/unvalidated result, which issue #5060 identifies as the bug."
+      },
+      {
+        "source": "issue-5060/suggested-tests",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "src/utils/body.test.ts adds 'should parse mixed-case `x-www-form-urlencoded`' and 'should parse mixed-case `multipart/form-data`'; src/validator/validator.test.ts adds 'Should validate if Content-Type media type is mixed-case' (json), 'Should validate mixed-case URL Encoded Content-Type' and 'Should validate mixed-case multipart/form-data Content-Type' (form), each asserting the parsed/validated payload, not just a status code; src/utils/buffer.test.ts adds a boundary-preservation test ('...while keeping the boundary'). All pass at head."
+      },
+      {
+        "source": "pr-body/\"Add tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "6 new test cases added across body.test.ts (+2), buffer.test.ts (+1), and validator.test.ts (+3), covering every combination named in the issue."
+      },
+      {
+        "source": "pr-body/\"Run tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer independently re-ran the affected suites at head 5226d416 (see check_details); all pass."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/utils/body.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/body.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/utils/buffer.test.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/validator/validator.test.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "clean checkout of the pinned head, offline, in-scope changed tests; 50 passed, 1 skipped (pre-existing)"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "clean checkout of the pinned head, offline, in-scope changed tests; 56 passed"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/request.test.ts src/middleware/method-override/index.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "regression check on body-consumption caching for callers of parseBody(); clean checkout at pinned head; 49 passed"
+      },
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/middleware/csrf/index.test.ts src/hono.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "broader regression check on request-body handling; clean checkout at pinned head; 237 passed"
+      },
+      {
+        "check": "codecov patch-coverage gate (github-actions PR comment)",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "failed",
+        "reason": "supplied non-review record: patch coverage 76.47% is below the repository's 80% target, so the gate failed at this exact head; read for context only — no candidate in this review rests on the uncovered lines, and coverage percentage alone is not a correctness defect"
+      },
+      {
+        "check": "HTTP Performance Benchmark (github-actions PR comment)",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "unavailable",
+        "reason": "not a correctness check; supplied benchmark numbers are within normal run-to-run noise and not tied to any candidate, so not accounted as evidence for this review"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "compat/parsebody-case-insensitive",
+          "type": "safety-premise",
+          "area": "compatibility",
+          "premise": "No released Hono documentation, changelog, existing test, or in-repo caller treats parseBody()/validator()'s previous case-sensitive Content-Type matching as an intentional, documented contract; the diff's case-insensitive media-type matching only changes behavior for inputs that previously produced a silently empty/unvalidated result.",
+          "evidence": "src/utils/body.ts:104-106; src/validator/validator.ts:24-26; src/validator/validator.test.ts:95-118 (unchanged tests only reject a genuinely different or missing media type, never a case variant); docs/ has no Content-Type case-sensitivity wording",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-018/clone-work/private/review-code-aNSLg5/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-018/clone-work/private/review-code-aNSLg5/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

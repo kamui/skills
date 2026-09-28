@@ -1,0 +1,23 @@
+# Scorecard: l-bokeh-9232, mapping v1
+
+Register v1 (f5b761a87af4), rubric v1, scored at 2026-09-28T07:30:56Z.
+
+Adjudicator: headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 0fe7f717e28e4a11d6e1aa411cb736ede470cb466ca2b26b89724aab9603fb06; session 8c957ca4-265d-48b3-917e-87874505d7f3; read audit clean.
+
+## att-005 (review-code-sonnet-high-enforced-x394-control), blind-f57b34
+
+Verdict 'Changes Requested'; completion completed; approved on buggy False; zero recovery False; false clean False.
+
+- item-0: `defect:GT-l1`, fix sufficient, priority error False, group none. Quote: "_unlocal_date now mis-shifts UTC-midnight timestamps in negative-UTC-offset zones ... DatePicker(value=datetime.date.today()) or set min_date/max_date from Python ... America/New_York, America/Los_Angeles" and "initial or programmatically-set displayed date (and the effective min/max bounds) is silently rendered one calendar day before the value the caller actually set". Same mechanism, trigger and consequence as GT-l1 (date_picker.ts:78-87 applied at render() lines 68-71). Fix: "Do not apply the same getTimezoneOffset() subtraction to both input shapes" — Python values arrive as UTC-midnight (convert_datetime_type, p.Any), _on_select's toDateString() as local-midnight — "Distinguish the two call sites ... e.g. normalizing _on_select to emit the same UTC-midnight representation the server uses so _unlocal_date only ever needs to correct one input shape". This is the anchor-aware correction the register's required_outcome names, correct for both arrival paths in all zones. The example of emitting a numeric UTC-midnight to Python would meet Python's Date.transform using date.fromtimestamp (local server time, bokeh/core/property/datetime.py:61-65), but it is offered as an example of a sound principle; the directive itself restores the required outcome. Sufficient.
+- item-1: `non-material`, fix n/a, priority error n/a, group none. Quote: "The new integration tests ... never vary TZ and only assert against the CI clock's own timezone, so ... could not have caught this change's timezone-direction-dependent regression", citing "test_datepicker.py:119-176 sets no TZ and asserts fixed literals such as 'Mon Sep 16 2019'". The substance is accurate (no TZ variation; literal 'Mon Sep 16 2019' at lines 65/68), and the register's non_defects already rule it a coverage gap that is not a separately demonstrated defect (preexisting hint: bryevdv suggested varying TZ). The cited line range is wrong: the added file is only 98 lines long, so lines 119-176 do not exist. Still a test-coverage observation below the finding threshold.
+
+## att-006 (review-code-sonnet-high-enforced-verification-off), blind-dbf7b9
+
+Verdict 'Changes Requested'; completion completed; approved on buggy False; zero recovery False; false clean False.
+
+- item-0: `defect:GT-l1`, fix sufficient, priority error False, group none. Quote: "Bokeh serializes a Python `date` as UTC-midnight epoch ms (convert_datetime_type), so value/min_date/max_date reach `_unlocal_date` already at UTC midnight" ... "`_unlocal_date` now subtracts `date.getTimezoneOffset()` from every date it receives ... under TZ=America/New_York turns a 2019-09-20 UTC-midnight input into Thu Sep 19 2019: the shown default date and the min/max calendar boundary are off by one day". This is exactly GT-l1's mechanism (blanket offset subtraction valid only for the local-midnight anchor from _on_select; wrong for Python's UTC-midnight anchor west of UTC), confirmed at clone date_picker.ts:78-87 called from render() lines 68-71. Fix: canonicalize only the _on_select round trip into a UTC-safe form (date_picker.ts:95 toDateString) and have _unlocal_date read UTC date components of server-supplied values with no blanket offset subtraction. That makes the input anchor unambiguous and correct for both arrival paths in every timezone, matching the register's required outcome (anchor-aware correction or ISO-style calendar serialization at the source) without reintroducing the east-of-UTC bug. Sufficient.
+- item-1: `non-material`, fix n/a, priority error n/a, group none. Quote: "`test_basic` ... asserts only the title label text and the absence of console errors ... never reads the picker's displayed date value, so it would not catch a wrong displayed date." Accurate: tests/integration/widgets/test_datepicker.py:42-50 asserts only el.text == 'Select date' and has_no_console_errors(). The register's non_defects list this test-coverage observation (the Selenium tests have no assertion on the initially rendered value/min_date/max_date) as not a separate material defect. True coverage remark, below the finding threshold.
+
+## New candidates
+
+None.

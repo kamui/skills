@@ -1,0 +1,73 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+    "issues": ["bokeh/bokeh#9129"],
+    "change_description": "Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\nRemoved usage of var keyword.  Replaced with const.\n\nRemoved .idea/vcs.xml.\n\nMade a shell for the integration test for DatePicker displayed/selected dates.\n\nupdate tests"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Fix bokehjs's DatePicker so the widget's displayed date matches the date it was given, for users in positive-UTC-offset (\"UTC+\") timezones (bokeh/bokeh#9129), and add an integration test file for the widget.",
+    "issue_fit": "Met for its stated target: the `_on_select` -> re-render round trip used to show the previous day in positive-UTC-offset zones and now shows the selected day. But the same unconditional offset shift breaks the mirror-image case -- Python-supplied value/min_date/max_date, which arrive as absolute UTC timestamps, not locally-parsed strings -- for negative-UTC-offset browsers; see finding `date_picker/negative-offset-regression`.",
+    "coverage": "Full merge-base diff read (date_picker.ts, the new integration test file), plus the Python-side date serialization path (bokeh/util/serialization.py, bokeh/core/json_encoder.py, bokeh/models/widgets/inputs.py) that determines what this.model.value/min_date/max_date actually carry in the browser. Selenium/browser execution is unavailable offline; the new test functions were inspected by trace against their fixtures and assertions instead, and the core date-shift logic was independently re-derived and run offline with node across ten IANA timezones (positive, negative, and fractional offsets) at head and merge-base.",
+    "check_details": [
+      "Selenium/browser execution unavailable offline; the new integration test file (tests/integration/widgets/test_datepicker.py) was inspected by trace rather than run.",
+      "Reviewer re-derived _unlocal_date in node (TZ env var) at head 36549bca3 across Europe/Paris, America/New_York, Asia/Kolkata, Pacific/Auckland, America/Sao_Paulo, Asia/Kathmandu, Pacific/Chatham, America/St_Johns, Pacific/Kiritimati, and UTC: confirms the fix for the post-selection string round trip and confirms a new one-day-early regression for the Python-timestamp path in every negative-offset zone tested."
+    ]
+  },
+  "findings": [
+    {
+      "id": "date_picker/negative-offset-regression",
+      "title": "Skip the offset shift for dates that are already absolute timestamps",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A browser west of UTC (e.g. America/New_York, America/Sao_Paulo) renders a DatePicker whose value, min_date, or max_date came from Python, e.g. `DatePicker(value=datetime.date.today())` -- issue #9129's own repro.",
+      "impact": "Python encodes those fields as an absolute UTC-midnight timestamp (bokeh/util/serialization.py:184, wired into JSON encoding at bokeh/core/json_encoder.py:186), which `toISOString()` already read correctly pre-fix. The newly added offset subtraction now shifts that instant into the prior UTC day, so the shown date -- and the min/max bounds, which have no other producer -- are one calendar day early.",
+      "change": "Apply the offset shift only to the locally-parsed string `_on_select` produces; for a value that is already an absolute timestamp, read `getUTCFullYear`/`getUTCMonth`/`getUTCDate` directly instead of shifting and re-reading local `toISOString()`.",
+      "anchor": {"type": "line", "path": "bokehjs/src/lib/models/widgets/date_picker.ts", "start_line": 82, "end_line": 83, "side": "RIGHT"},
+      "fix": {"path": "bokehjs/src/lib/models/widgets/date_picker.ts", "start_line": 66}
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "test_js_on_change_executes and test_server_on_change_round_trip only distinguish pre-fix from post-fix `_unlocal_date` behavior when the runner's TZ has a nonzero offset; .travis.yml sets no TZ, so under a UTC runner both tests pass identically whether or not the timezone fix (or this regression) is present.",
+      "evidence": "tests/integration/widgets/test_datepicker.py; .travis.yml has no TZ directive; node repro shows old==new=\"Fri Sep 20 2019\" at TZ=UTC for both the string and numeric-timestamp paths."
+    }
+  ],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-017/clone",
+    "requirements": [
+      {
+        "source": "issue-9129/body",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Re-derived _unlocal_date at head 36549bca3 for the _on_select round-trip path (a locally-parsed toDateString() string): TZ=Europe/Paris and TZ=Asia/Kolkata now render the selected day instead of day-1, matching commit 472e4770d/\"Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\""
+      }
+    ],
+    "files": [
+      {"path": "bokehjs/src/lib/models/widgets/date_picker.ts", "state": "reviewed"},
+      {"path": "tests/integration/widgets/test_datepicker.py", "state": "reviewed"}
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {"id": "date_picker/negative-offset-regression", "type": "candidate", "trigger": "must-fix", "batch": "initial", "ruling": "confirmed"}
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-017/clone-work/review-private/tmp.L2PIGhXZ1x/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-017/clone-work/review-private/tmp.L2PIGhXZ1x/initial/accounting.json",
+          "operation": "Agent tool (subagent_type=general-purpose, model=sonnet, run_in_background=false), awaited synchronously"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}
+  }
+}

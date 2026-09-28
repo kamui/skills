@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "No regression test was added for the fixed race itself; the author instead verified manually that Test/AuthorityRevive stopped flaking over 100000 local attempts (PR body, \"Tested\" section), a scale this review could not reproduce.",
+      "consequence": "Diff manifest: clientconn.go only, no *_test.go changes; pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\"",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

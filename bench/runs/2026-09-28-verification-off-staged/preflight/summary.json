@@ -1,0 +1,66 @@
+{
+  "checked_at": "2026-09-28T06:03:58Z",
+  "paid_model_calls": 0,
+  "billed_usd": 0,
+  "native_cli": "2.1.282",
+  "native_cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
+  "bubblewrap_version": "0.6.1",
+  "bench_test_suites": {
+    "collected": 149,
+    "passed": 133,
+    "skipped_native_checks": 16
+  },
+  "native_isolation_suite": {
+    "collected": 24,
+    "passed": 24,
+    "skipped": 0
+  },
+  "self_tests": {
+    "run_cell.py": "passed",
+    "file_attempt.py": "passed",
+    "provision.py": "passed",
+    "score.py": "passed",
+    "check_manifest.py": "passed",
+    "normalize_review.py": "passed",
+    "seal.py": "passed"
+  },
+  "variant_tree_tests": {
+    "collected": 9,
+    "passed": 9,
+    "note": "every test file under skills/review-code/scripts at db731b1; test_verifier_handoff.py is removed with the part"
+  },
+  "target_smokes": {
+    "m-grpc-go-7390": {
+      "passed": true,
+      "tree_clean_after": true,
+      "evidence": "m-grpc-go-7390.json"
+    },
+    "i-requests-6667": {
+      "passed": true,
+      "tree_clean_after": true,
+      "evidence": "i-requests-6667.json",
+      "note": "exit 1, as smoke.json records at head and base"
+    },
+    "l-bokeh-9232": {
+      "passed": true,
+      "tree_clean_after": true,
+      "evidence": "l-bokeh-9232.json"
+    },
+    "p-hono-5067": {
+      "passed": true,
+      "tree_clean_after": true,
+      "evidence": "p-hono-5067.json"
+    },
+    "k-graphql-js-1582": {
+      "passed": true,
+      "tree_clean_after": true,
+      "evidence": "k-graphql-js-1582.json"
+    }
+  },
+  "candidate_patch_sha256": "30a3cc8d26489989eb4fe484ee42b679860397669528dd69c8c06f61aec3f58e",
+  "limitations": [
+    "A local fake API drives tool calls; no reviewer quality or latency result is established.",
+    "The sandbox tools under /tmp/x384-sandbox-tools are temporary and are checked again at launch.",
+    "k-graphql-js-1582 is smoked for Stage 2 and has no Stage 1 cell."
+  ]
+}

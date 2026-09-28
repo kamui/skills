@@ -1,0 +1,111 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "spec-pr-psf-requests-6667"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "change_description": "commit-ec0e33b3: Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\ncommit-8f954567: Use a default SSLContext with the default CA bundle loaded when `verify=True`\n\ncommit-f21e70bf: Rename default SSLContext to make it private by convention\n\ncommit-4089f3dc: Wrap line to comply with CI lint"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Avoid a per-request urllib3 load_verify_locations() call (a known, measurably slow OpenSSL FFI call) when verify=True, by preloading the default CA bundle into one module-level SSLContext at import time and handing that same context to every verify=True connection pool, instead of letting each pool trigger its own load.",
+    "issue_fit": "No linked issue; intent taken from the supplied PR body (spec-pr-psf-requests-6667) and the four real commit messages. The stated goal (skip redundant load_verify_locations() calls for verify=True while leaving verify=True/False and client-cert behavior otherwise unchanged) is partially met: the caching works for the common case, but the preserved-behavior premise fails for verify=True combined with a client certificate (see finding).",
+    "coverage": "Full merge-base diff reviewed (src/requests/adapters.py, the only changed file, +28/-18, single complete chunk). Traced pool_kwargs construction through the installed urllib3==2.8.0 dependency's connection pooling, connection, and ssl_ modules to establish how `ssl_context`, `cert_file`/`key_file`, and `ca_certs`/`ca_cert_dir` pool kwargs are consumed. No tests were added or changed by this diff, so nothing was owed under changed-test inspection; existing cert/verify/mTLS tests were run once at head as a sanity check (see check_details).",
+    "check_details": [
+      "Caller-supplied context: two tests are known to fail at both base and head due to an environment/fixture cert mismatch ('Missing Authority Key Identifier') unrelated to this diff: tests/test_requests.py::test_pyopenssl_redirect and ::test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert. Accepted as historical/environmental, not evaluated further.",
+      "Reviewer ran `PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest tests/test_requests.py -k \"tls_settings or mtls_settings\"` at head 4089f3dc: 2 passed, 2 failed. One failure is the caller-named test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert. The other, test_different_connection_pool_for_mtls_settings, was not named by the caller; it fails inside the test's first call (`verify=False`), whose connection-pool configuration is byte-identical between base and head (the `verify is False` branch of `_urllib3_request_context()` is unchanged by this diff), so this failure is the same pre-existing environment/cert-fixture mismatch class, not introduced by this change.",
+      "Reviewer wrote and ran a focused scratch test (test_ssl_context_leak.py, outside the clone) at head 4089f3dc to fact-check the confirmed finding below: 2 passed, reproducing that requests.adapters._preloaded_ssl_context is the identical object handed to every verify=True pool regardless of client_cert, and that loading a client certificate onto it (as urllib3 does whenever cert_file is set) makes an unrelated, cert-less verify=True connection subsequently offer that certificate, while a same-built-but-unmutated control context does not."
+    ]
+  },
+  "findings": [
+    {
+      "id": "adapters/shared-ssl-context-client-cert-leak",
+      "title": "Don't load a per-request client certificate onto the shared, process-wide SSL context",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "Any call anywhere in the process of `session.request(..., cert=(certfile, keyfile))` (or `cert=certfile`) with the default `verify=True`, together with any other `verify=True` request to a different host that does not itself pass `cert=`.",
+      "impact": "`_urllib3_request_context()` hands out the single module-level `_preloaded_ssl_context` to every verify=True pool, cert or not. urllib3 calls `context.load_cert_chain(certfile, keyfile)` on whatever `ssl_context` it's given whenever `cert_file` is set, so one client-cert request permanently loads that certificate onto the shared object; every other verify=True connection in the process, to any host, then silently presents it too - a cross-host client-certificate leak, confirmed by a focused reproduction (fresh handshake with the shared context offers the cert; a same-built control context does not).",
+      "change": "In `_urllib3_request_context()`, stop reusing `pool_kwargs[\"ssl_context\"] = _preloaded_ssl_context` whenever `client_cert` is also set; build (or cache per client-cert-pair) a fresh SSLContext for that case instead, so a client certificate never gets loaded onto the shared default context.",
+      "source": "PR conversation (non-review-comment-5, tiran, 2024-05-05T05:08:40Z): \"[SSLContext] is thread safe as long as you don't reconfigure it once it is used by a connection... changing... mTLS certs can lead to surprising behavior.\"",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 94,
+        "end_line": 95,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/requests/adapters.py",
+        "start_line": 102
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))` now runs unconditionally at `requests.adapters` import time, whereas before this change the equivalent CA-bundle resolution only ran lazily, inside `cert_verify()`, the first time an HTTPS request with `verify=True` was actually made.",
+      "evidence": "src/requests/adapters.py:75-77."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "psf/requests (local offline clone, no forge access)",
+    "requirements": [
+      {
+        "source": "spec-pr-psf-requests-6667/pr-body/\"there is no need to trigger a call to load_verify_locations() again\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:75-77 create _preloaded_ssl_context once at module-import time and adapters.py:94-95 reuse that same object for every verify=True pool, replacing the previous per-request load_verify_locations() call for the common (no client-cert) case."
+      },
+      {
+        "source": "commit-ec0e33b3/\"Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "The intended behavior-preserving refactor (skip redundant CA loading without changing what gets verified/presented) does not hold when a client certificate is combined with the default verify=True: see finding adapters/shared-ssl-context-client-cert-leak."
+      },
+      {
+        "source": "spec-pr-psf-requests-6667/pr-body/\"You can test against https://invalid.badssl.com to check that verify=True and verify=False still behave as expected and are now equally fast\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No network access is available in this offline sandbox; the author's badssl.com timing/behavior comparison could not be repeated."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "adapters/shared-ssl-context-client-cert-leak",
+          "type": "candidate",
+          "trigger": "security",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-014/clone-work/tmp/review-code.FgV3Fb/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-014/clone-work/tmp/review-code.FgV3Fb/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

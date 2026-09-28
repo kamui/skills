@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/requests/adapters.py",
+      "line_start": 94,
+      "line_end": 95,
+      "claim": "Don't load a per-request client certificate onto the shared, process-wide SSL context. Any call anywhere in the process of `session.request(..., cert=(certfile, keyfile))` (or `cert=certfile`) with the default `verify=True`, together with any other `verify=True` request to a different host that does not itself pass `cert=`.",
+      "consequence": "`_urllib3_request_context()` hands out the single module-level `_preloaded_ssl_context` to every verify=True pool, cert or not. urllib3 calls `context.load_cert_chain(certfile, keyfile)` on whatever `ssl_context` it's given whenever `cert_file` is set, so one client-cert request permanently loads that certificate onto the shared object; every other verify=True connection in the process, to any host, then silently presents it too - a cross-host client-certificate leak, confirmed by a focused reproduction (fresh handshake with the shared context offers the cert; a same-built control context does not).",
+      "proposed_fix": "In `_urllib3_request_context()`, stop reusing `pool_kwargs[\"ssl_context\"] = _preloaded_ssl_context` whenever `client_cert` is also set; build (or cache per client-cert-pair) a fresh SSLContext for that case instead, so a client certificate never gets loaded onto the shared default context.",
+      "native_priority": "P1",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "`_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))` now runs unconditionally at `requests.adapters` import time, whereas before this change the equivalent CA-bundle resolution only ran lazily, inside `cert_verify()`, the first time an HTTPS request with `verify=True` was actually made.",
+      "consequence": "src/requests/adapters.py:75-77.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

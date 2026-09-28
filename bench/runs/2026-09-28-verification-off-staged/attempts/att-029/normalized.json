@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "`parseFormData` now stores the in-flight `formData()` promise directly into `HonoRequest.bodyCache.formData` (declared as `FormData`) before awaiting it; this matches the pre-existing runtime idiom in `HonoRequest#cachedBody`, which always stores an unawaited promise there, so it works correctly despite the misleading static type.",
+      "consequence": "src/utils/body.ts:126-132; src/request.ts:220-238.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "Codecov reports patch coverage of 76.47% with 3 uncovered lines in body.ts and 1 in buffer.ts; the reviewer's local run confirms every new test in this diff passes, so the uncovered lines are pre-existing branches, not the new mixed-case-matching behavior.",
+      "consequence": "codecov PR comment, 2026-07-01T09:41:59Z.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}
