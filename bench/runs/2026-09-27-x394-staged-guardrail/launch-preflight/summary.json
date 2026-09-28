@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-09-28T02:11:35Z",
+  "source_revision": "f3c7d9ca7a563a3eb41fc25a6b7e23caf81d1b93",
+  "approval": "Maintainer approved the staged design and the $40 Stage 1 cap in the #407 delivery thread on 2026-09-27, and chose to exclude Astro before any dispatch. Stage 2 has no approved budget.",
+  "paid_calls_before_freeze": 0,
+  "native_isolation_suite": {
+    "collected": 24,
+    "passed": 24,
+    "skipped": 0
+  },
+  "bench_test_suites": {
+    "collected": 149,
+    "passed": 133,
+    "skipped_native_checks": 16
+  },
+  "cli_sha256": "3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3",
+  "launch_checks": {
+    "pinned_cli_dry_run": "passed; $5 reservation; no claim",
+    "cli_drift": "refused before dispatch: default CLI is 2.1.283",
+    "claims_and_charges": "zero attempts, zero charges, $35 of room before the $5 closeout reserve",
+    "built_in_sandbox_bindings": "/tmp/claude absent on the host",
+    "launcher_environment": "every CLAUDE*, ANTHROPIC* and AI_AGENT variable of the orchestrating session is unset before run_cell.py starts"
+  },
+  "freeze_commit_semantics": "Immutable commit containing the protocol and complete runner; the following commit records the approval and timestamp."
+}
