@@ -2,11 +2,11 @@
   "schema_version": 1,
   "run_id": "2026-09-28-verification-off-staged",
   "created_at": "2026-09-28T06:03:02Z",
-  "frozen_at": null,
-  "freeze_commit": null,
+  "frozen_at": "2026-09-28T06:05:09Z",
+  "freeze_commit": "4a4f5f149e373e31878b7ad72011cc01646616fd",
   "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
   "rubric_version": 1,
-  "metric_code_revision": "0000000000000000000000000000000000000000",
+  "metric_code_revision": "4a4f5f149e373e31878b7ad72011cc01646616fd",
   "arms": [
     {
       "id": "review-code-sonnet-high-enforced-x394-control",

@@ -9,6 +9,10 @@ the [analysis note](../../../docs/research/review-code-large-part-ablation-2026-
 The maintainer approved the staged design and the $40 Stage 1 cap on 2026-09-28. Stage 2 has no
 approved budget.
 
+The manifest was frozen at `2026-09-28T06:05:09Z` on freeze commit
+`4a4f5f149e373e31878b7ad72011cc01646616fd`, after the [launch checks](launch-preflight/summary.json)
+passed and before any paid dispatch.
+
 ## Why the run is staged and matched
 
 The current tree has no filed review. Every earlier attempt ran the frozen tree `c3c53da` or a
