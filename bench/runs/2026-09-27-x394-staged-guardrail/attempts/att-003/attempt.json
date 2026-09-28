@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-003",
+  "run_id": "2026-09-27-x394-staged-guardrail",
+  "cell": {
+    "target": "i-requests-6667",
+    "arm": "review-code-sonnet-high-enforced-x394-trimmed",
+    "replicate": 1
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-28T02:40:18Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "6e6c654707781c03719c5cfe6d0381e2e4046522",
+    "diff_commands": [
+      "git diff 8dd3b26b 4089f3dc -- src/requests/adapters.py"
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f",
+    "tree_identity_after": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 4.277545,
+    "cost_bounds_usd": {
+      "low": 4.277545,
+      "high": 4.277545
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-28T02:40:18Z",
+    "payload_validated_at": "2026-09-28T03:03:39Z",
+    "completed_at": "2026-09-28T03:03:39Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "60aa0d608d3ab38c9ed0a4e9de34dd7bfdb47cf1b6da5492b5268617f4b6eb6a"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-27-x394-staged-guardrail/att-003.tar.gz",
+    "sha256": "d0ecc564968fe174b0c9edc5a0f4a4fb8f283bb1325e0e1b4ebe1dd4353f0490",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 139aa407fe2d3e80c691679ffbb739b71f558d5c4a73f82a58f2d4ca8f9de27f; run policy sha256 97abc5f4c214e1500f52488eaa9e51ae84fea80f17fc775a7fbbbd0332db7b6d (before path substitution)"
+  ]
+}

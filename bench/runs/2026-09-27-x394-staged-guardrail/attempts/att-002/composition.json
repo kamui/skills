@@ -1,0 +1,126 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main..review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "specs": ["spec-pr-195-body"],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "A pure internal refactor addressing 13 SonarQube findings: decompose five overly-complex functions (and one test) into focused helpers, deduplicate the three backup-status notification titles behind one `backupStatusTitle` helper, remove a byte-identical duplicate GitLab test, and tidy the Dockerfile (merge RUN steps, sort apk packages, quote `${TAG}`). No behavior change is intended anywhere.",
+    "issue_fit": "No originating issue is linked; the single commit message (identical in substance to the PR body) is the only intent source. Every claimed extraction and cleanup is verified `met` against the diff.",
+    "coverage": "All 4 changed files (docker/Dockerfile, internal/backup.go, internal/backup_test.go, internal/notify.go) were read in full against the merge-base diff, cross-checked line-by-line against the pre-refactor code for every extracted helper. `go build ./...`, `go vet ./...`, and `go test ./internal/ -count=1` all ran clean at the reviewed head offline; the two provider-credentialed subtests skip for lack of credentials, matching the run policy. One concurrency safety premise on the extracted scheduler-shutdown helper was dispatched to a fresh-context verifier and ruled `holds`.",
+    "check_details": [
+      "Reviewer ran `go build ./...` at head 136a4850d: exit 0, no output.",
+      "Reviewer ran `go vet ./...` at head 136a4850d: exit 0, no output.",
+      "Reviewer ran `go test ./internal/ -count=1` at head 136a4850d: `ok github.com/jonhadfield/soba/internal 5.147s`; a verbose rerun of the touched tests shows TestFormatIntervalDuration/TestFormatIntervalDurationAdditional pass and TestPublicGitLabRepositoryBackup/TestGiteaOrgsRepositoryBackup skip for missing GITLAB_TOKEN/GITEA_TOKEN, matching the stated unavailable credentials.",
+      "The PR body's claim that `golangci-lint run` reports 0 issues was not independently checked: golangci-lint is not available in the offline sandbox."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Copilot's review comment on this PR flags the log text \"Organistations\" (internal/backup.go:207 in the PR diff); that misspelling is unchanged from the base branch, which already used it in the GitHub, Gitea, and Azure DevOps startup-config blocks — the new `logProviderOrgs` helper only relocates the existing text, so it is pre-existing, not introduced by this refactor.",
+      "evidence": "internal/backup.go (base c77f548) printed `\"GitHub Organistations: %s\"`, `\"Gitea Organistations: %s\"`, and `\"Azure DevOps Organistations: %s\"`; head's `logProviderOrgs(label, envVar)` (internal/backup.go) prints `\"%s Organistations: %s\"` with the same unchanged spelling."
+    },
+    {
+      "fact": "Copilot's review comment flags `resetBackups()` running once inside each switch case and again unconditionally after the switch in the refactored `TestGiteaOrgsRepositoryBackup`; that double-call structure is identical in the base branch's version of the same test (calling `resetBackups()` at the end of each case and once more after the switch, every loop iteration) and is only extracted into helper functions here, not changed.",
+      "evidence": "internal/backup_test.go (base c77f548, TestGiteaOrgsRepositoryBackup): each `case` block ends with `resetBackups()`, followed by an unconditional `resetBackups()` after the switch, inside the same `for` loop; the head diff preserves this exact structure while moving the assertions into `assertGiteaOrgTwoOnlyBackedUp`/`assertGiteaAllOrgsBackedUp`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-002/clone",
+    "paths": {},
+    "requirements": [
+      {
+        "source": "commit-136a485/\"Reduce cognitive complexity in runProviderBackups, displayStartupConfig, checkProvider, Run and checkProvidersDefined by extracting focused helpers; behaviour and log output unchanged.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "All five functions in internal/backup.go were traced against the base branch: runProviderBackups now delegates to collectProviderBackupResults (same provider checks, same order); displayStartupConfig delegates to five per-provider helpers using shared logProviderOrgs/logProviderBackupsToKeep/logProviderCompareMethod/logProviderBackupLFS helpers that reproduce every original log line verbatim, including the pre-existing 'Gitlab backup LFS' and 'Organistations' spellings; checkProvider delegates to checkJustTokenProvider/checkUserAndPasswordProvider with identical counting/error logic; Run delegates to logRequestTimeout/validateStartupConfig/createWorkingDir/scheduleBackups in the same order with the same error returns; checkProvidersDefined's Bitbucket branch now calls the extracted bitbucketAPITokenDefined/bitbucketOAuthDefined predicates with equivalent counting. go build, go vet, and go test ./internal/ all pass at head."
+      },
+      {
+        "source": "commit-136a485/\"Extract duplicated backup status titles into constants with a shared backupStatusTitle helper (notify.go).\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go adds titleBackupsSucceeded/titleBackupsErrors/titleBackupsFailed constants and a backupStatusTitle(succeeded, failed) function reproducing the original switch; sendTelegramMessage, sendNtfy, and sendSlackMessage each now call backupStatusTitle(...) in place of their own copy of the same three-way switch, with identical strings and case order."
+      },
+      {
+        "source": "commit-136a485/\"Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of TestPublicGitLabRepositoryBackup) and simplify TestGiteaOrgsRepositoryBackup with assertion helpers.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Reading the base branch's internal/backup_test.go confirmed TestPublicGitLabRepositoryBackup2 (lines 569-591) was byte-for-byte identical to TestPublicGitLabRepositoryBackup (lines 550-567); a repository-wide search found no other reference to the removed name. TestGiteaOrgsRepositoryBackup's per-case assertions are unchanged logic moved into assertGiteaOrgTwoOnlyBackedUp, assertGiteaAllOrgsBackedUp, and a shared dirHasEntryWithPrefix helper."
+      },
+      {
+        "source": "commit-136a485/\"Dockerfile: merge consecutive RUN instructions, sort apk packages, quote the TAG variable in the download URL.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile's diff merges the addgroup/adduser RUN and the apk-add RUN into one RUN chain, alphabetizes the apk package list (bash ca-certificates curl git git-lfs grep jq), and quotes \"${TAG}\" in the release-download curl URL."
+      },
+      {
+        "source": "spec-pr-195-body/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally.\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "Reviewer independently ran go build ./..., go vet ./..., and go test ./internal/ -count=1 offline at head 136a4850d: all clean, matching the claim. golangci-lint is unavailable in this offline sandbox, so that part of the claim was not independently checked."
+      }
+    ],
+    "files": [
+      {"path": "docker/Dockerfile", "state": "reviewed"},
+      {"path": "internal/backup.go", "state": "reviewed"},
+      {"path": "internal/backup_test.go", "state": "reviewed"},
+      {"path": "internal/notify.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go build ./... (GOMODCACHE/GOCACHE redirected into the attempt's dependency cache, GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "Exit 0, no output; confirms the refactor compiles cleanly offline."
+      },
+      {
+        "check": "go vet ./... (same offline environment)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "Exit 0, no output."
+      },
+      {
+        "check": "go test ./internal/ -count=1 (same offline environment)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "`ok github.com/jonhadfield/soba/internal 5.147s`; a verbose -run rerun of the touched tests showed TestFormatIntervalDuration and TestFormatIntervalDurationAdditional pass, TestPublicGitLabRepositoryBackup and TestGiteaOrgsRepositoryBackup skip for missing GITLAB_TOKEN/GITEA_TOKEN (expected per the run policy's unavailable credentials)."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-scheduler-shutdown-ordering",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "runScheduledJob assigns `job` then calls s.Start() and a blocking waitForShutdown(s) for both scheduling paths, so SIGINT/SIGTERM still waits for the current job and its deferred cleanup before exit, exactly as when this was inlined in Run().",
+          "evidence": "internal/backup.go:491-540 (scheduleBackups/runScheduledJob) and :54-56 (deferred cleanup comment), compared against base c77f548's inlined equivalent.",
+          "ruling": "holds",
+          "trigger": "optional",
+          "batch": "initial"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-002/clone-work/review-BmCATb/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-002/clone-work/review-BmCATb/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false; awaited fresh-context worker with no access to primary reasoning"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

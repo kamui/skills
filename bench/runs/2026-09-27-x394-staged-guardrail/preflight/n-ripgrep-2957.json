@@ -1,0 +1,34 @@
+{
+  "target": "n-ripgrep-2957",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "none",
+    "duration_seconds": 0.0,
+    "tree_clean_after": true,
+    "steps": [],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-0r4bnsqg/attempt/clone && zsh -n crates/core/flags/complete/rg.zsh && echo 'no syntax errors'",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": "no syntax errors",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": "no syntax errors",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}

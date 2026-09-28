@@ -1,0 +1,100 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-bokeh/bokeh#9232-review-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+    "issues": ["bokeh/bokeh#9129"],
+    "change_description": "472e4770d363b3914bb478f0a6c3a83787b20c0d\nFixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\n7aae927cf09820e74a58108ea45facc0f6aa695c\nRemoved usage of var keyword.  Replaced with const.\n\ne92066d593fa2c88ffe732dbaeb3303fff996a15\nRemoved .idea/vcs.xml.\n\n4215c2d0b956eca3dc714b6c11c7fedb440013c9\nMade a shell for the integration test for DatePicker displayed/selected dates.\n\n36549bca3a63d581f7b68d08054a7813c1e6a499\nupdate tests\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Fix bokeh/bokeh#9129: DatePicker displays the day before the one the user just selected, for users in UTC+ (east-of-Greenwich) timezones, by changing DatePickerView._unlocal_date to derive Pikaday's displayed day from the local calendar fields of the incoming Date instead of its UTC fields; also adds a first integration-test file for the widget.",
+    "issue_fit": "Partial — issue-9129's reported symptom (off-by-one display after selecting a date, in UTC+ timezones) is fixed and verified. But the fix reworks _unlocal_date's general date-extraction rule rather than only the narrow post-selection round trip that caused it, which regresses the previously-correct display of any server-set value/min_date/max_date for every UTC-negative-offset (west of Greenwich) timezone; see finding date_picker.ts/_unlocal_date-negative-offset-regression.",
+    "coverage": "Both changed files read in full at base and head (bokehjs/src/lib/models/widgets/date_picker.ts, tests/integration/widgets/test_datepicker.py); complete diff coverage confirmed by review_context.py (2/2 diff chunks consumed, no missing chunks). Traced DatePickerView.render()/connect_signals()/_on_select()/_unlocal_date() call graph, and bokeh's Python-side date serialization (bokeh/util/serialization.py, bokeh/core/property/datetime.py, bokeh/core/json_encoder.py) to establish what shape of Date the widget actually receives from the server. Read the new test file's setup/assertions/cleanup; it is a Selenium/browser integration test which cannot execute in this offline sandbox (no browser, no npm install), so its pass/fail is unavailable evidence, but tracing shows its assertions observe the claimed behavior on the paths it covers and would not have caught the regression below (it never exercises a server-set initial value in a non-UTC browser timezone). Repository guidance checked: only .github/PULL_REQUEST_TEMPLATE.md exists at the merge-base; no AGENTS.md/CLAUDE.md/CONTEXT.md/CONTRIBUTING.md/CODEOWNERS apply.",
+    "check_details": [
+      "Reviewer ran scratch Node.js reproductions (Node v24, offline) of both the merge-base and head bodies of _unlocal_date verbatim, under TZ=Europe/Paris and TZ=America/New_York, against Date values constructed the same way bokeh's Python serializer constructs them (Date.UTC midnight) and the same way the browser reconstructs a round-tripped selection (new Date(date.toDateString())). Fresh-context verifier independently re-ran the same reproduction and confirmed the results.",
+      "The Selenium integration suite this PR adds (tests/integration/widgets/test_datepicker.py) could not be executed: no browser or npm install is available in this offline sandbox. Traced instead; no defect found in the added assertions themselves."
+    ]
+  },
+  "findings": [
+    {
+      "id": "date_picker.ts/_unlocal_date-negative-offset-regression",
+      "title": "_unlocal_date now shows the wrong day for negative-UTC-offset users",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A DatePicker is rendered with a value/min_date/max_date coming from the server (e.g. `DatePicker(value=datetime.date.today())`, or any later Python-side `.value = some_date` assignment) while the browser's local timezone is behind UTC (`getTimezoneOffset() > 0`), e.g. any US/Canada/South America timezone.",
+      "impact": "bokeh's Python side always serializes a `dt.date`/`dt.datetime` value as a UTC-midnight timestamp for the intended calendar day (bokeh/util/serialization.py:182-184). Before this diff, `_unlocal_date` read that timestamp's UTC calendar day via `toISOString()`, which is correct in every timezone. This diff instead shifts the Date by `-getTimezoneOffset()` minutes first (date_picker.ts:82-85), which extracts the Date's LOCAL calendar day. For any browser timezone behind UTC, a UTC-midnight instant's local calendar day is the day before the intended one, so the picker now displays one day earlier than the actual value for a very large population of users — reintroducing the exact class of bug this PR fixes for UTC+ users, in the opposite direction, on the more basic 'display a value set from Python' path rather than only the narrower post-selection round trip the PR targets. Reproduced directly: under TZ=America/New_York, applying the merge-base body to a Date.UTC(2019,7,30,0,0,0) instant yields 'Tue Jul 30 2019' (correct); applying the head body to the same instant yields 'Mon Jul 29 2019' (wrong).",
+      "change": "Do not change _unlocal_date's general UTC-based extraction, which unrelated callers (the server-set value/min_date/max_date path) depend on for correctness in every timezone. Instead fix the actual defect: `_on_select` (date_picker.ts:95) stores the selected date as `date.toDateString()`, a string with no timezone marker; the next render() re-parses it with `new Date(this.model.value)` (date_picker.ts:68), which JavaScript parses as LOCAL midnight, not UTC — that mismatch, not _unlocal_date's UTC extraction, is what produced the UTC+ off-by-one. Fix that specific round trip (e.g. normalize/parse the stored string consistently, or track the picked calendar day separately from the UTC-timestamp path) so both the selection round trip and the server-set-value path read correctly in every timezone.",
+      "source": "issue-9129/body; commit-472e4770d363b3914bb478f0a6c3a83787b20c0d/\"Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\"",
+      "anchor": {
+        "type": "line",
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 82,
+        "end_line": 85,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 68
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "_unlocal_date mutates its `date` argument in place (`date.setTime(...)`) before returning a new Date; every current call site passes a freshly constructed `new Date(...)` so no aliasing bug is currently observable, but the function is no longer safe to call with a shared/reused Date reference.",
+      "evidence": "bokehjs/src/lib/models/widgets/date_picker.ts:82-83, 68/70/71 (all three call sites construct `new Date(...)` inline)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-006/clone",
+    "requirements": [
+      {
+        "source": "issue-9129/body",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "date_picker.ts:82-88 fixed body, reproduced under TZ=Europe/Paris: a Date parsed from the round-tripped selection string 'Tue Jul 30 2019' now extracts to 'Tue Jul 30 2019' (was 'Mon Jul 29 2019' at merge-base), matching the day the user clicked."
+      }
+    ],
+    "files": [
+      {
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/integration/widgets/test_datepicker.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [
+        {
+          "id": "date_picker.ts/_unlocal_date-negative-offset-regression",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-006/clone-work/private/tmp.iFf9P4pcCW/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-006/clone-work/private/tmp.iFf9P4pcCW/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false, fork_turns=none (fresh context, no access to primary's reasoning)"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

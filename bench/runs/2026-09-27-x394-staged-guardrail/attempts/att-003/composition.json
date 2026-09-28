@@ -1,0 +1,145 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr-6667"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "change_description": "ec0e33b330f479e6ea1f4afb866522bd268b9d3e\nAvoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\n8f954567bdfb7fa2bd638b7021b0a156e3f71787\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\nf21e70bf7a3430f219de00557817d23bfdd62dbd\nRename default SSLContext to make it private by convention\n\n4089f3dc65f783beaa53cc032958ab625440d0ac\nWrap line to comply with CI lint\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Avoid reloading root CA certificates on every HTTPS request with verify=True, which profiling showed spends most wall-clock time in urllib3/OpenSSL's load_verify_locations() and materially hurts concurrent throughput; cache a single default-CA-bundle SSLContext once at import and reuse it for every default-trust-store request instead of triggering that call per request.",
+    "issue_fit": "No originating issue is linked; intent is taken from the user-supplied PR title/body (spec-pr-6667) and the four real commit messages. All four commit-level promises and the PR's core acceptance goal are met by the diff.",
+    "coverage": "The single changed file (src/requests/adapters.py, +28/-18) was read in full function context at base and head; no other files changed. Ran the 8 focused SSL/cert-related tests offline at the reviewed head (5 passed, 3 failed; all three failures are pre-existing/environmental, not introduced here). Because the change touches the TLS-verification/concurrency risk area, dispatched one fresh-context verifier batch against three safety premises (shared-context thread-safety, verification strength, connection-pool key separation); all three ruled `holds`.",
+    "check_details": [
+      "Reviewer ran `PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest tests/test_requests.py -k \"cert_verify or ca_certificate or ca_cert_bundles or ssl_certificate_files or http_with_certificate or different_connection_pool_for_tls or different_connection_pool_for_mtls or pyopenssl_redirect\"` at head 4089f3dc65f783beaa53cc032958ab625440d0ac: 5 passed, 3 failed, 321 deselected.",
+      "test_pyopenssl_redirect and test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert fail with `ssl.SSLCertVerificationError: ... Missing Authority Key Identifier`, a stale test-fixture-certificate mismatch under the installed OpenSSL that the run policy documents as pre-existing at both base and head.",
+      "test_different_connection_pool_for_mtls_settings fails on its very first call (verify=False) with a CERTIFICATE_EXPIRED alert; that call only exercises the verify=False branch of cert_verify()/_urllib3_request_context(), which this diff leaves byte-for-byte unchanged, so the failure cannot be attributed to this change; the verifier's own independent run corroborates the sibling test's same root cause.",
+      "Dispatched a fresh-context verifier (bundle d11218eff36970e37ccc8a3a3bc6e2e4) for 3 safety premises about the shared `_preloaded_ssl_context` (thread-safety of reuse across concurrent handshakes, verification strength vs. the pre-change per-request context, and connection-pool cache-key separation between verify=True/False/str); all three ruled `holds`, citing urllib3's connection.py and poolmanager.py sources plus one focused test it re-ran itself."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Loading the default CA bundle now happens once at import of `requests.adapters` rather than lazily on the first verify=True HTTPS request, so an unreadable default bundle would surface as an import-time exception instead of the previous per-request `OSError` (a related zip/pyinstaller-extraction concern was already raised and resolved during review by moving the extraction to this same call site).",
+      "evidence": "src/requests/adapters.py:75-78; PR conversation comment by sigmavirus24: \"Ah, I see that the PR was updated and moved the extraction.\""
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-003/clone",
+    "requirements": [
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "adapters.py:75-78 builds `_preloaded_ssl_context` once at import; adapters.py:94-95 reuses it via pool_kwargs['ssl_context'] on every verify=True request instead of calling load_verify_locations() per request."
+      },
+      {
+        "source": "pr-body/\"there is no need to trigger a call to load_verify_locations() again\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "cert_verify() (adapters.py:297-317) sets conn.ca_certs/ca_cert_dir only inside `if verify is not True:` (line 304), so for verify=True it never triggers urllib3's own load_verify_locations() call in ssl_wrap_socket()."
+      },
+      {
+        "source": "pr-body/\"~1.2s\" vs \"~0.5s\" concurrent-throughput measurement",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No network access in this offline sandbox to reproduce the badssl.com/timing benchmark; the mechanism it measures (one load_verify_locations() call at import vs. one per request) is independently verified by code inspection, so nothing material about correctness depends on reproducing the exact timing numbers."
+      },
+      {
+        "source": "commit-ec0e33b/\"Avoid setting a connection's ca_certs or ca_cert_dir attributes when verify=True\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "adapters.py:304 assigns conn.ca_certs/ca_cert_dir only inside `if verify is not True:`, so verify=True never sets them (adapters.py:297-303)."
+      },
+      {
+        "source": "commit-8f95456/\"Use a default SSLContext with the default CA bundle loaded when verify=True\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "adapters.py:75-78 creates `_preloaded_ssl_context` via create_urllib3_context()+load_verify_locations(DEFAULT_CA_BUNDLE_PATH); adapters.py:94-95 assigns it to pool_kwargs['ssl_context'] when verify is True."
+      },
+      {
+        "source": "commit-f21e70b/\"Rename default SSLContext to make it private by convention\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The module-level name at adapters.py:75 is `_preloaded_ssl_context`, leading-underscore private by convention."
+      },
+      {
+        "source": "commit-4089f3d/\"Wrap line to comply with CI lint\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "adapters.py:76-78 spans the load_verify_locations() call across three lines instead of one to satisfy the repository's line-length lint."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest tests/test_requests.py -k \"cert_verify or ca_certificate or ca_cert_bundles or ssl_certificate_files or http_with_certificate or different_connection_pool_for_tls or different_connection_pool_for_mtls or pyopenssl_redirect\"",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "5 passed, 3 failed, 321 deselected; all 3 failures are pre-existing/environmental TLS-fixture-certificate issues on this OpenSSL, unrelated to the diff (see check_details)."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "adapters/preloaded-context-thread-safety",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "The module-level `_preloaded_ssl_context`, created once and never reconfigured to a divergent value afterward, is safe to share concurrently across simultaneous TLS handshakes to different hosts.",
+          "evidence": "adapters.py:91-95; urllib3/connection.py:1039-1056 (verified holds)",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "adapters/preloaded-context-verification-strength",
+          "type": "safety-premise",
+          "area": "security",
+          "premise": "The shared `_preloaded_ssl_context` enforces the same CERT_REQUIRED/check_hostname=True validation as the pre-change per-request context; verify=True is not silently weakened.",
+          "evidence": "adapters.py:75,91-95,298; urllib3/util/ssl_.py:271,312-317 (verified holds)",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "adapters/pool-key-separation",
+          "type": "safety-premise",
+          "area": "security",
+          "premise": "urllib3's PoolManager keys cached HTTPSConnectionPools on ssl_context/ca_certs/ca_cert_dir/cert_reqs, so a verify=True pool is never reused as a verify=False or verify=<path> pool, or vice versa.",
+          "evidence": "adapters.py:91-101; urllib3/poolmanager.py:76-83; tests/test_requests.py:2833-2927 (verified holds)",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-003/clone-work/private/review.tQYieH/initial",
+          "raw_return": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-003/clone-work/private/review.tQYieH/initial-return-repaired.json",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-003/clone-work/private/review.tQYieH/initial/accounting-repaired.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false"
+        }
+      ],
+      "allowance": {
+        "initial_spent": true,
+        "follow_up_spent": false
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

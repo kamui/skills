@@ -1,0 +1,111 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+    "issues": ["BurntSushi/ripgrep#2956"],
+    "specs": ["pr-2957-packet"],
+    "supplied_inputs": "yes",
+    "coverage": "complete",
+    "change_description": "feat(completion): support sourcing zsh completion dynamically\n\nSummary:\nPreviously, you needed to save the completion script to a file and then\nsource it.  Now, you can dynamically source completions in zsh by\nrunning\n\n```zsh\n$ source <(rg --generate complete-zsh)\n```\n\nTest plan:\n1. Run `source <(rg --generate complete-zsh)`\n2. Run `rg --generate=complete-zs<TAB>`\n\nBefore this commit, you would get an error after step 1.\nAfter this commit, it should work as expected.\n\nCloses #2956\n\n===\n\nimprove FAQ text for zsh completions"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Let users dynamically `source` the zsh completion script (`source <(rg --generate complete-zsh)`) instead of requiring it to be written to a file on `fpath`, and document both installation methods in the FAQ.",
+    "issue_fit": "Met — the change implements and, by focused test, verifies both steps of the PR's test plan and the exact repro from issue BurntSushi/ripgrep#2956.",
+    "coverage": "Both changed files (FAQ.md; crates/core/flags/complete/rg.zsh) read in full against the merge-base diff. `crates/core/flags/complete/zsh.rs` confirmed the completion script is emitted verbatim by `rg --generate complete-zsh`, so the tracked file is the exact reviewed artifact. Offline zsh execution reproduced the reported bug at the merge-base, confirmed the fix at head, and confirmed no regression to the classic fpath/autoload install path or to `ci/test-complete`'s invocation style; `cargo build`/`cargo test` and `ci/test-complete` itself were unavailable offline (no vendored registry, no built `rg`).",
+    "check_details": [
+      "Reviewer ran a scratch zsh script sourcing the merge-base's generated completion script (with `compinit` loaded) at merge-base 79cbe89d: reproduces the exact reported error, `_arguments:comparguments:325: can only be called from completion function`.",
+      "Reviewer ran the same script against the head's generated completion script at head 855bfa6c: sources cleanly with no error, and `compdef` registers `$_comps[rg]=_rg`, so future `<TAB>` completion for `rg` dispatches to `_rg`.",
+      "Reviewer ran the head's completion script sourced with no `compinit` ever loaded at head 855bfa6c: fails the same way as the merge-base (command not found: `_arguments`), showing this pre-existing limitation is unchanged by the fix, not newly introduced.",
+      "Reviewer ran `_RG_COMPLETE_LIST_ARGS=1 source rg.zsh` (the exact invocation `ci/test-complete`'s `get_comp_args` uses, no `compinit`) against the head's script at head 855bfa6c: exits 0 and lists the `_arguments` specs, so the CI arg-diff check's mechanism keeps working under the new dispatch branch.",
+      "Reviewer ran `autoload -Uz _rg` then invoked `_rg` directly from `$fpath` (simulating the classic fpath-install autoload path) with `compinit` loaded, at head 855bfa6c: reaches the `_arguments` spec-listing code exactly as before, confirming the primary, pre-existing completion-install method is unaffected."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The classic fpath-install completion path (`autoload`-ing `_rg` from a directory on `$fpath`) is preserved: the new `[[ $funcstack[1] == _rg ]]` branch still calls `_rg \"$@\"` directly in that case, matching pre-change behavior.",
+      "evidence": "crates/core/flags/complete/rg.zsh:438-443 (diff, RIGHT); confirmed by focused test."
+    },
+    {
+      "fact": "The change also fixes an unrelated, pre-existing typo in FAQ.md's completions intro (\"completes\" → \"completions\"), bundled into the same commit.",
+      "evidence": "FAQ.md:97 (diff, RIGHT)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-007/clone",
+    "requirements": [
+      {
+        "source": "commit-7c2a7b0/\"you can dynamically source completions in zsh\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "crates/core/flags/complete/rg.zsh:438-443 (diff): focused test shows sourcing the head script with `compinit` loaded produces no error, versus the reported error reproduced at merge-base 79cbe89d with the pre-fix script."
+      },
+      {
+        "source": "commit-7c2a7b0/\"Run `rg --generate=complete-zs<TAB>`... it should work as expected\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "After sourcing the head script with `compinit` loaded, `$_comps[rg]` is set to `_rg` (focused test), which is what zsh's completion dispatcher consults to route `<TAB>` completion for the `rg` command."
+      },
+      {
+        "source": "spec-pr-2957-packet/originating-issue-2956",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Issue #2956's exact repro command and error text were reproduced at merge-base 79cbe89d and shown fixed at head 855bfa6c by focused test."
+      },
+      {
+        "source": "spec-pr-2957-packet/review-thread-rg.zsh-line-438",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Review thread comments 6-8 record that `ci/test-complete` requires the `compdef`-existence check now in the code; focused test reproducing `ci/test-complete`'s exact `_RG_COMPLETE_LIST_ARGS=1 source` invocation against the head script exits 0 with the expected arg-spec listing."
+      }
+    ],
+    "files": [
+      { "path": "FAQ.md", "state": "reviewed" },
+      { "path": "crates/core/flags/complete/rg.zsh", "state": "reviewed" }
+    ],
+    "check_evidence": [
+      {
+        "check": "zsh -f (compinit loaded, ZDOTDIR-isolated) -- source the generated rg.zsh completion script with no arguments",
+        "head": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+        "outcome": "historical",
+        "reason": "Reproduces the reported `_arguments:comparguments:325: can only be called from completion function` error when sourcing the pre-fix script directly, confirming the defect the PR fixes."
+      },
+      {
+        "check": "zsh -f (compinit loaded, ZDOTDIR-isolated) -- source the generated rg.zsh completion script with no arguments",
+        "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+        "outcome": "reviewer-executed",
+        "reason": "No error; `compdef` registers `$_comps[rg]=_rg`, confirming the fix resolves the reported error and wires up future tab completion."
+      },
+      {
+        "check": "zsh -f -- source the generated rg.zsh completion script with no `compinit` ever loaded",
+        "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+        "outcome": "reviewer-executed",
+        "reason": "Fails the same way as the merge-base (`command not found: _arguments`), showing this limitation is pre-existing and unchanged by the fix."
+      },
+      {
+        "check": "zsh -f -- `_RG_COMPLETE_LIST_ARGS=1 source rg.zsh` (matches ci/test-complete's `get_comp_args`), no compinit",
+        "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+        "outcome": "reviewer-executed",
+        "reason": "Exits 0 and lists `_arguments` specs; `ci/test-complete` itself could not be run offline (needs a built `rg`), but the exact zsh mechanism it depends on is confirmed compatible with the new dispatch branch."
+      },
+      {
+        "check": "zsh -f (compinit loaded) -- `autoload -Uz _rg` then invoke `_rg` directly from a `$fpath` install, simulating the classic completion-install method",
+        "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+        "outcome": "reviewer-executed",
+        "reason": "Reaches the `_arguments` spec-listing code exactly as before the change, confirming the primary fpath-based completion install method is unaffected."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "allowance": { "initial_spent": false, "follow_up_spent": false },
+      "outstanding": []
+    },
+    "routed": { "unresolved": [], "disputed": [], "unrecoverable_inputs": [] }
+  }
+}

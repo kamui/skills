@@ -1,0 +1,7 @@
+{"reviews": {"blind-c6475a": {"items": {
+  "1": {"assignment": "non-material", "duplicate_group": null, "fix_sufficiency": "n/a", "candidate": null,
+    "notes": "Quote: \"that misspelling is unchanged from the base branch, which already used it in the GitHub, Gitea, and Azure DevOps startup-config blocks — the new `logProviderOrgs` helper only relocates the existing text, so it is pre-existing, not introduced by this refactor.\" Verified: main:internal/backup.go:187/209/275 print \"GitHub/Gitea/Azure DevOps Organistations: %s\"; review-head:internal/backup.go:205 prints \"%s Organistations: %s\" with label. Accurate, and it matches the register's non_defect that the typo is preserved verbatim and is at most a non-material remark. The item asserts no defect and proposes no fix; it is an accurate observation below the finding threshold."},
+  "2": {"assignment": "non-material", "duplicate_group": null, "fix_sufficiency": "n/a", "candidate": null,
+    "notes": "Quote: \"that double-call structure is identical in the base branch's version of the same test ... and is only extracted into helper functions here, not changed.\" Verified: base backup_test.go:669/703 (resetBackups at the end of each case) and 706 (after the switch); head backup_test.go:629/632/635 keep the same structure around assertGiteaOrgTwoOnlyBackedUp/assertGiteaAllOrgsBackedUp. This matches the register's non_defect (test-only, pre-existing, idempotent). It is an accurate observation with no defect asserted, so it is non-material."}
+}}},
+ "new_candidates": []}

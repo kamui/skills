@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "target": "i-requests-6667",
+  "version": 2,
+  "sealed_at": "2026-09-25T20:59:33Z",
+  "sealed_by": {
+    "adjudicator": "claude-opus-5-5 at effort high, one headless Claude Code 2.1.282 session under a fresh home (ledger A1, $1.68, session 6ef3f56c), given the surfaced claims with arm, attempt and cost labels removed, version 1 of this register and the rubric, from prompts/candidate-adjudication-template.md",
+    "evidence_access": "an offline provisioned clone at the merge-base and head with the target's execution allowance, plus network, gh and git for upstream history after the merge",
+    "saw_reviewer_output": true
+  },
+  "supersedes": 1,
+  "defects": [
+    {
+      "id": "GT-i1",
+      "title": "A single shared, mutable, process-wide SSLContext is forced into every verified connection pool: it silently discards adapter-level ssl_context customization and lets concurrent per-request client-cert loading mutate shared OpenSSL state",
+      "trigger": "Override manifestation: subclass HTTPAdapter, inject a custom ssl_context through init_poolmanager (custom CA store, load_default_certs(), lowered SECLEVEL, preloaded mTLS chain), mount it, and send a request with verify=True. Shared-mutation manifestation: concurrent requests from several threads where at least one passes cert=(certfile, keyfile) with verify=True.",
+      "consequence": "At head, _urllib3_request_context() puts ssl_context=_preloaded_ssl_context into pool_kwargs whenever verify is True, and urllib3's _merge_pool_kwargs lets a per-request override beat whatever init_poolmanager configured, so the subclass's context is never used (reproduced: at the merge-base the custom context is preserved, at head the pool holds the preloaded one). urllib3's ssl_wrap_socket calls load_cert_chain on the context it is handed, so a client certificate supplied on one thread is loaded into the context every other thread is handshaking with; field reports include handshake failures (#6715), a discarded custom CA (#6717) and a segmentation fault under concurrent mTLS (#6745).",
+      "required_outcome": "An SSLContext configured by a subclassed HTTPAdapter through init_poolmanager must be what that adapter's pool uses for verify=True requests, and per-request customization that mutates an SSLContext (cert= via urllib3) must not be applied to an object shared across concurrent unrelated pools or threads. Not sharing one global mutable context (the revert's approach) or any design that preserves per-adapter context identity and confines in-place mutation satisfies it; the patch shape is not prescribed.",
+      "evidence": [
+        "src/requests/adapters.py at 4089f3dc: module-level _preloaded_ssl_context (lines 75-78); `elif verify is True: pool_kwargs[\"ssl_context\"] = _preloaded_ssl_context` (lines 94-95); consumed by HTTPAdapter._get_connection on every send()",
+        "urllib3 2.2.x PoolManager.connection_from_host -> _merge_pool_kwargs: a non-None per-request ssl_context overrides connection_pool_kw",
+        "urllib3 2.2.x util/ssl_.py ssl_wrap_socket: context.load_cert_chain(certfile, keyfile) on the supplied context",
+        "psf/requests#6715 and #6717 (2024-05-22): user reports one week after 2.32.0 shipped, both against init_poolmanager(ssl_context=...)",
+        "psf/requests#6716 (merged 2024-05-24, released 2.32.3): the maintainers' partial fix, injecting the preloaded context only `if not has_poolmanager_ssl_context`",
+        "psf/requests#6745: segmentation fault after 2.32.0 with concurrent cert= requests; #6767 (merged 2025-06-13, released 2.32.5): full revert citing 'edge cases and concurrency issues'"
+      ],
+      "demonstration": "Self-written reproduction at both revisions: the same CustomAdapter code yields a pool whose conn_kw['ssl_context'] is the custom context at the merge-base and the preloaded global at head. The crash mechanism is confirmed from urllib3 source and the #6745 report; the adjudicator did not itself produce a crash.",
+      "manifestations": [
+        "override of a subclass's ssl_context",
+        "shared-context mutation under concurrent client-cert loading"
+      ],
+      "added_in_version": 1
+    },
+    {
+      "id": "GT-i2",
+      "title": "CA-bundle loading (extract_zipped_paths and SSLContext.load_verify_locations) moves from lazy, per-verified-request execution to eager, unconditional execution at import time",
+      "trigger": "`import requests` (or any module that imports it), with no HTTPS request made; the multi-user manifestation needs requests or certifi loaded from a zip or pex archive on a filesystem where a differently privileged user has already left an extracted /tmp/cacert.pem behind.",
+      "consequence": "The module-level block runs load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)) on import. #6764 shows a PermissionError raised straight out of `import requests` (adapters.py line 77) during a test run that makes no network call, absent in 2.31.0; #6790 reports a measured import-time regression attributed to this move; the adjudicator measured the requests.adapters submodule's own import self time rising from 2586 us to 6704 us.",
+      "required_outcome": "`import requests` must not perform CA-bundle extraction or SSLContext construction with load_verify_locations unconditionally as an import side effect; that work stays deferred until a verified HTTPS connection is being established, as the merge-base's cert_verify()-time behaviour did. The caching strategy is not prescribed as long as the trigger is use, not import.",
+      "evidence": [
+        "src/requests/adapters.py at 4089f3dc lines 75-78, executed at module import; at the merge-base the equivalent call sat inside HTTPAdapter.cert_verify()",
+        "psf/requests#6764 (2024-07-09): PermissionError from `import requests` in a multi-user zipapp deployment, 'not present with version 2.31.0', 'seems related to #6667'",
+        "psf/requests#6790 (2024-08-15): ~25% `import requests` time increase between 2.31.0 and 2.32.3 traced with -X importtime to load_verify_locations at import",
+        "psf/requests#6767 revert and HISTORY.md 2.32.5 remove the module-level block; #7292 later removes the then-unused extraction call from cert_verify"
+      ],
+      "demonstration": "`python -X importtime -c 'import requests'` at both revisions: requests.adapters self 6704 us / cumulative 8849 us at head against 2586 us / 4489 us at the merge-base. The PermissionError race was not reproduced end to end; it rests on #6764's traceback and the structural diff.",
+      "manifestations": [
+        "import-time PermissionError in multi-user zip deployments (#6764)",
+        "import-time cost regression (#6790)"
+      ],
+      "added_in_version": 1
+    },
+    {
+      "id": "GT-i3",
+      "title": "cert_verify() no longer supplies the default (certifi) CA bundle for verify=True, so every verified TLS handshake that does not receive _preloaded_ssl_context falls back to the OS trust store (or keeps a stale custom CA)",
+      "trigger": "verify=True on any connection that is not built from pool_kwargs['ssl_context']=_preloaded_ssl_context: (a) the TLS leg to an HTTPS proxy (proxies={'https': 'https://proxy'}), whose urllib3 _connect_tls_proxy uses ca_certs=self.ca_certs and no ssl_context when no proxy_ssl_context is configured; (b) pools obtained through the public HTTPAdapter.get_connection(url) (used by send()-overriding subclasses and, from 2.32.2, the maintainers' recommended get_connection_with_tls_context pass-through) followed by cert_verify(conn, url, True, cert); (c) once GT-i1's override is lifted, any subclass init_poolmanager ssl_context that had relied on cert_verify loading certifi (#6730/#6736).",
+      "consequence": "Merge-base cert_verify set conn.ca_certs = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH) for verify=True; head sets only cert_reqs, so urllib3 finds no CA and calls context.load_default_certs(). The trusted root set silently switches from certifi (the documented default: 'By default the list of certificates trusted by Requests can be found with DEFAULT_CA_BUNDLE_PATH', advanced.rst:652-657, stated for HTTPS proxies) to the OS store. Reproduced: a certifi-rooted HTTPS proxy or server is rejected with CERTIFICATE_VERIFY_FAILED at head and accepted at the merge-base, and an OS-only-rooted one is accepted at head and rejected at the merge-base; a get_connection pool reused after verify=<path> keeps ca_certs=<path> for a later verify=True call at head (reset to certifi at the merge-base). Environments whose OS store lacks certifi's roots (python.org macOS builds without Install Certificates, slim containers) fail; environments whose OS store holds roots certifi does not are silently widened.",
+      "required_outcome": "For verify=True, every TLS handshake requests performs or configures (destination, HTTPS-proxy leg, and pools reached through get_connection()/cert_verify()) must verify against the default CA bundle (DEFAULT_CA_BUNDLE_PATH / certifi, zip-extracted as before) exactly as the merge-base did, and cert_verify(conn, url, True, ...) must reset any previously set custom CA location on the pool. How the bundle reaches the connection (ca_certs on the pool, a context with it loaded, or the revert) is not prescribed.",
+      "evidence": [
+        "Own reproduction at both revisions (clone-work/nc2.py, nc3.py; outputs quoted in rulings.md). urllib3 2.2.1 and 2.8.0 connection.py: _connect_tls_proxy passes ca_certs=self.ca_certs with ssl_context=proxy_config.ssl_context (None by default); _ssl_wrap_socket_and_match_hostname calls load_default_certs() when no CA is given. Upstream: psf/requests#6726 comment (jeffreytolar, 2024-05-29) '2.32.x isn't passing a CA bundle to urllib3 ... that causes urllib3 to load the OS default, rather than using certifi'; #6730 'Certificate loading regression with HTTPAdapters in 2.32.3' and duplicate #6736 (CERTIFICATE_VERIFY_FAILED, 'wasn't required in previous versions'), #6710 comment 2137802782; draft fix #6731 'ensuring that when opting out of the default SSLContext, we're still supplying the default CA Cert bundle correctly'; revert #6767 (merged 2025-06-13, released 2.32.5) restores `cert_loc = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)` and `conn.ca_certs = cert_loc` in cert_verify for verify=True."
+      ],
+      "demonstration": "the adjudicator's own reproduction at the merge-base and the head, quoted in docs/research/builtin-review-benchmark-2026-09-24/adjudication/i-requests-6667-rulings.md",
+      "manifestations": [
+        "HTTPS-proxy TLS leg verified against the OS store instead of certifi (NC-2)",
+        "get_connection()+cert_verify(verify=True) pools verified against the OS store instead of certifi (NC-3)",
+        "stale ca_certs retained on a get_connection pool when verify=True follows verify=<path> (NC-3)",
+        "custom init_poolmanager SSLContext no longer receives certifi once GT-i1's override is removed (#6730/#6736, post-merge exposure)"
+      ],
+      "added_in_version": 2
+    }
+  ],
+  "non_defects": [
+    {
+      "claim": "The performance optimization does not work or is not real.",
+      "ruling": "False: the PR's own profiling and post-merge confirmations corroborate the concurrency win; caching a loaded SSLContext to skip redundant load_verify_locations calls is the intended and functioning mechanism.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "verify as a string (custom CA bundle or directory) is broken.",
+      "ruling": "Not true at head: _urllib3_request_context branches ca_certs versus ca_cert_dir on os.path.isdir(verify), and cert_verify still validates the path and raises OSError; unaffected by GT-i1 and GT-i2.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "verify=False no longer disables verification.",
+      "ruling": "Not true: cert_reqs is still CERT_NONE at both the request-context and cert_verify level when verify is falsy; unaffected by this change.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "CVE-2024-35195 (Session does not verify after a first verify=False request) is this PR's defect.",
+      "ruling": "It shipped in the same 2.32.0 release but was fixed by a different PR in sessions.py; it must not be attributed to #6667.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "The eager module-level SSLContext creation breaks Python builds without the ssl module.",
+      "ruling": "A real edge case fixed later by #6724, but not demonstrable from the pinned head alone and not a guard this PR removed; out of scope for the pinned diff.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "Renaming the context with a leading underscore does not solve the design concern.",
+      "ruling": "True as a statement, but the PR never claimed the rename fixed sharing; a finding that only restates 'the context is still shared' without GT-i1's demonstrated consequence is a design observation, not a separate defect.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "Docstrings were not updated for the new pool_kwargs and ssl_context behaviour.",
+      "ruling": "A real documentation gap with no consequence beyond GT-i1 itself; not a separate defect.",
+      "added_in_version": 1
+    },
+    {
+      "claim": "The default trust store is captured once at import, so trust changes made after import (late truststore or pyOpenSSL injection, reassigning requests.adapters.DEFAULT_CA_BUNDLE_PATH, rewriting the certifi bundle file) no longer affect verify=True requests.",
+      "ruling": "True but below the bar (reproduced at both revisions): none of these triggers is a supported interface; the documented overrides (verify=<path>, REQUESTS_CA_BUNDLE, CURL_CA_BUNDLE) are resolved per request and still work, a maintainer ruled that truststore must be injected before any networking code (#6715), and no consequence has been shown. Distinct from GT-i2, which concerns where the load runs, not whether later changes are seen.",
+      "added_in_version": 2
+    }
+  ],
+  "clean_basis": null,
+  "leakage": [
+    "commits on main after 9a40d127: 145b5399 (merge of #6716), a62a2d35, 92075b33, b1d73ddb (#6716 constituents), e1887993 (#6724), aa1461b6 (_get_connection rename in the CVE-2024-35195 response), 90fee087 (#6767 revert), 8ff173b1 and every other #6767 constituent, e331a288 (#7292)",
+    "issues and PRs #6715, #6716, #6717, #6745, #6764, #6767, #6790, #6710 and the GHSA-9wx4-h78v-vm56 / CVE-2024-35195 discussion"
+  ],
+  "preexisting_hints": [
+    "sigmavirus24, inline review 2024-03-21T01:45:42Z: 'This is actually critical behavior you're removing' (the zip-CA fallback), which prompted the module-level load whose placement causes GT-i2",
+    "sigmavirus24, conversation 2024-05-05T01:44:58Z: 'I'm pretty sure SSLContext is not itself thread safe ... loading it at the module will likely cause issues'",
+    "tiran, conversation 2024-05-05T05:08:40Z: SSLContext is thread safe 'as long as you don't reconfigure it once it is used by a connection ... changing ciphers, verification settings, or mTLS certs can lead to surprising behavior', the exact mechanism behind GT-i1's mutation manifestation",
+    "sigmavirus24, conversation 2024-05-05T14:54:54Z: the sharing risk was consciously accepted for the performance win, mitigated only by making the name private",
+    "no pre-merge comment anticipates GT-i2's PermissionError manifestation or the import-time regression"
+  ],
+  "limits": [
+    "GT-i1's crash manifestation was not reproduced by the adjudicator (its mechanism is confirmed from urllib3 source and rests on #6745); the override manifestation was reproduced mechanically",
+    "GT-i2's ~25% figure from #6790 was not reproduced at that magnitude; a ~2x increase confined to requests.adapters was measured, and the PR itself notes environment dependence",
+    "the #6764 PermissionError race was not reproduced end to end",
+    "the proxy-manager branch of _get_connection was not exercised; no search for defects beyond the adjudicated hypothesis was made"
+  ],
+  "source": "docs/research/one-shot-qualification-2026-09-07/i-requests-6667/register.md",
+  "revision_reason": "Scoring of run 2026-09-24-builtin-baseline surfaced three claims version 1 did not cover. An independent adjudicator ruled two of them one new material defect, GT-i3 (cert_verify no longer supplies certifi for verify=True, confirmed upstream by #6726, #6730, #6736, #6731 and the revert #6767), and the third true but below the bar, now a non-defect. Version 1's defects, non-defects, hints and limits carry forward unchanged."
+}
