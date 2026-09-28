@@ -59,6 +59,10 @@ Four skills are model-invocable, so a driving agent can run the loop end to end,
 
 Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`; `review-bot` needs `openssl` instead. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
+## Benchmark
+
+`bench/` is a rerunnable benchmark that scores `review-code` against built-in reviewers such as Claude Code's `/code-review` on real pull requests, grading each review against a register of the pull request's known defects. The headline numbers are on [`bench/SCOREBOARD.md`](bench/SCOREBOARD.md), one row per reviewer and version, with every target a row did not run marked. The method is in [`bench/README.md`](bench/README.md).
+
 ## Skills
 
 The skills compose into a loop: `implement-publish` opens a pull request, `review-code-publish` reviews it, `resolve-review` works the feedback, and the review runs again. `finish-it` drives that loop unattended, one fresh subagent per step. Their visible comment and reply contracts keep the hand-offs readable to both people and agents; see [The review handoff](#the-review-handoff). `audit-code-publish` occupies the reviewer slot when an independent audit is requested. Its investigation stays bounded by the pull request’s affected contracts and code; it is not an automatic additional review stage.

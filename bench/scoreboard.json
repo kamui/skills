@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "description": "The scoreboard registry. Each suite names the run whose cohort fixes its targets and register versions. Each entry names the reviewer version it ran and its sources, each a run, a results file and an arm; results is null while that run is not scored. bench/SCOREBOARD.md is generated from this file by bench/tools/scoreboard.py, so edit this file and regenerate, never the page. Suites are ordered newest first.",
+  "suites": [
+    {
+      "id": "sonnet-5-5-12-targets",
+      "title": "Sonnet 5.5 re-bench, twelve targets",
+      "summary": "The Sonnet 5.5 rows come from the 2026-09-28 re-bench on Claude Code 2.1.284, three replicates per target. The Sonnet 5, Opus 5.5 and Codex rows come from earlier runs with two or three replicates per target, and each ran only some of the twelve targets. Every arm ran in a fresh home with the network off. The notes under the tables give each row's CLI and isolation.",
+      "reference": "claude-builtin-sonnet-5-5",
+      "cohort_run": "runs/2026-09-28-sonnet-5-5-rebench",
+      "entries": [
+        {"id": "claude-builtin-sonnet-5-5", "label": "Claude Code built-in /code-review, Sonnet 5.5 high", "version": "claude-code 2.1.284",
+         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": null, "arm": "claude-builtin-sonnet-5-5-high"}],
+         "note": "Safe mode, no sandbox."},
+        {"id": "review-code-sonnet-5-5", "label": "/review-code, Sonnet 5.5 high", "version": "5e12864 (main since #406, 2026-09-27)",
+         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": null, "arm": "review-code-sonnet-5-5-high-enforced"}],
+         "note": "Enforced sandbox (claude-strict-v2), claude-code 2.1.284."},
+        {"id": "review-code-sonnet-5-5e12864", "label": "/review-code, Sonnet 5 high", "version": "5e12864 (main since #406, 2026-09-27)",
+         "sources": [
+           {"run": "runs/2026-09-28-verification-off-staged", "results": "results.v2.json", "arm": "review-code-sonnet-high-enforced-x394-control"},
+           {"run": "runs/2026-09-28-unseen-target-comparison", "results": "results.v1.json", "arm": "review-code-sonnet-high-enforced-x394-control"}
+         ],
+         "note": "Enforced sandbox. The control arm of the #409 experiments, from two runs, on claude-code 2.1.282 for five targets and 2.1.284 for two."},
+        {"id": "review-code-sonnet-5-c3c53da", "label": "/review-code, Sonnet 5 high", "version": "c3c53da (main from #370, 2026-09-24)",
+         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "review-code-sonnet-high"}],
+         "note": "No sandbox, claude-code 2.1.282."},
+        {"id": "claude-builtin-sonnet-5", "label": "Claude Code built-in /code-review, Sonnet 5 high", "version": "claude-code 2.1.282",
+         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "claude-builtin-sonnet-high"}],
+         "note": "Safe mode, no sandbox. A different built-in prompt from Sonnet 5.5's, with 3+5 angles and a verify step."},
+        {"id": "claude-builtin-opus-5-5", "label": "Claude Code built-in /code-review, Opus 5.5 high", "version": "claude-code 2.1.282",
+         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "claude-builtin-opus-high"}],
+         "note": "Safe mode, no sandbox."},
+        {"id": "codex-builtin", "label": "Codex CLI codex review, GPT-6 Astra default", "version": "codex-cli 0.156.1",
+         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "codex-default"}],
+         "note": "Workspace-write sandbox with network access off. Cost is list-price equivalent, because the maintainer's plan bills quota."}
+      ]
+    }
+  ]
+}
