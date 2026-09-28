@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-011",
+  "run_id": "2026-09-28-verification-off-staged",
+  "cell": {
+    "target": "k-graphql-js-1582",
+    "arm": "review-code-sonnet-high-enforced-verification-off",
+    "replicate": 1
+  },
+  "predecessor": "att-010",
+  "retry_reason": "The reviewer's OAuth session expired mid-review and could not be refreshed; the CLI exited 1 before any review was returned.",
+  "replacement_index": 1,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-28T09:16:14Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "59e7df1b15096ccb029b35df78bbc54311795650",
+    "diff_commands": [
+      "git diff --stat main...review-head",
+      "git diff main...review-head -- src/error/__tests__/GraphQLError-test.js src/error/__tests__/locatedError-test.js src/error/__tests__/printError-test.js src/jsutils/__tests__/inspect-test.js"
+    ],
+    "sandbox": null,
+    "subagent_count": 0,
+    "tree_identity_before": "3f72982c57cef73a9752a83eb8f9c116717cb62199c78dbc93e3ac0d5b7d5a51",
+    "tree_identity_after": "3f72982c57cef73a9752a83eb8f9c116717cb62199c78dbc93e3ac0d5b7d5a51"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 2.101922,
+    "cost_bounds_usd": {
+      "low": 2.101922,
+      "high": 2.101922
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-28T09:16:14Z",
+    "payload_validated_at": "2026-09-28T09:24:36Z",
+    "completed_at": "2026-09-28T09:24:37Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "dac47e4e4db463ced52e77e68566bceaa8400f6b779cb5d18d4fceceb16f7162"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-28-verification-off-staged/att-011.tar.gz",
+    "sha256": "8e670bba99afae254fb6f29770e22f8261e1bed31fc007bbb619f531ccb31f89",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 6e44f72788ff27b5ef51d5de5e835e6c8e8918d6fb2ef5c63f8445e7b83c23f1; run policy sha256 cae24fc642f566044700579dd597189a7905f71e7c2daca34a8956ff3b8533a0 (before path substitution)"
+  ]
+}

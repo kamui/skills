@@ -1,0 +1,109 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+    "issues": ["bokeh/bokeh#9129"],
+    "specs": ["spec-pr9232"],
+    "change_description": "commit-472e477: Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\ncommit-7aae927: Removed usage of var keyword.  Replaced with const.\n\ncommit-e92066d: Removed .idea/vcs.xml.\n\ncommit-4215c2d: Made a shell for the integration test for DatePicker displayed/selected dates.\n\ncommit-36549bc: update tests",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Fix bokeh/bokeh#9129: the DatePicker widget displayed a date one day earlier than the one a user selected, reported by users in UTC+ (positive) timezones (France, UK, Germany). The change adds a timezone-offset adjustment to `_unlocal_date` in `bokehjs/src/lib/models/widgets/date_picker.ts` and adds a new Selenium integration test file for the widget.",
+    "issue_fit": "Met for the reported scenario: reproducing issue-9129's exact report (selecting a date in a positive-UTC-offset zone) now displays the selected day. But the same code change introduces a new, symmetric one-day error for the widget's other data path (the initial/programmatically supplied `value`, `min_date`, `max_date`) in every negative-UTC-offset zone, which is `finding bokehjs/date-picker-unlocal-date-negative-offset-regression`.",
+    "coverage": "Both changed files were read in full at the pinned head and merge-base: `bokehjs/src/lib/models/widgets/date_picker.ts` (the only production change) and the new `tests/integration/widgets/test_datepicker.py`. The `_unlocal_date` logic was independently reproduced in Node (pre- and post-diff bodies) under multiple `TZ` values to establish actual before/after behavior; this matches the run's explicit allowance for scratch Node execution of code that has been read. The Selenium/browser test suite and the project build are outside this run's allowance, so the new Python test file was verified by static trace (fixtures resolve, imports match an established sibling test, assertions observe the claimed behavior) rather than executed; that trace settles the case and leaves coverage complete. No supplied CI/check evidence was provided for this run. Verification (one initial batch, one confirmed must-fix candidate) is complete; no follow-up batch was needed.",
+    "check_details": [
+      "Reviewer-executed: a scratch Node reproduction of `_unlocal_date`'s pre-diff and post-diff bodies (bokehjs/src/lib/models/widgets/date_picker.ts:78-88), run under `TZ=Europe/Paris` and `TZ=America/New_York`, confirms the fix resolves the originating issue's reported scenario and introduces the regression described in finding `bokehjs/date-picker-unlocal-date-negative-offset-regression`.",
+      "Unavailable: the new `tests/integration/widgets/test_datepicker.py` Selenium tests were not executed (no browser, no Selenium suite, no project build in this sandbox); settled instead by tracing setup, calls, and assertions, which are structurally sound and mirror the repository's existing `test_radio_button_group.py` pattern."
+    ],
+    "coverage_gaps": []
+  },
+  "findings": [
+    {
+      "id": "bokehjs/date-picker-unlocal-date-negative-offset-regression",
+      "title": "_unlocal_date now mis-shifts UTC-midnight timestamps in negative-UTC-offset zones",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "Construct `DatePicker(value=datetime.date.today())` (the exact reproduction from the originating issue) or set `min_date`/`max_date` from Python, then render the widget while the browser's local timezone has a negative UTC offset (e.g. `America/New_York`, `America/Los_Angeles`, any Americas zone).",
+      "impact": "The picker's initial or programmatically-set displayed date (and the effective min/max bounds) is silently rendered one calendar day before the value the caller actually set, for every user in a negative-UTC-offset timezone. This is the same class of off-by-one-day defect issue #9129 reports, now moved onto the opposite set of timezones and onto the initial-value path instead of only the post-selection path.",
+      "change": "Do not apply the same `getTimezoneOffset()` subtraction to both input shapes `_unlocal_date` receives. `this.model.value`/`min_date`/`max_date` set from Python arrive as a UTC-midnight instant (`bokeh/util/serialization.py`'s `convert_datetime_type` serializes a `datetime.date` as milliseconds since epoch computed against a UTC epoch, and the JS-side property is untyped `p.Any`), while `_on_select`'s `date.toDateString()` round trip arrives as a local-midnight instant. Distinguish the two call sites in `bokehjs/src/lib/models/widgets/date_picker.ts:63-72` (for example by normalizing `_on_select` to emit the same UTC-midnight representation the server uses) so `_unlocal_date` only ever needs to correct one input shape, instead of adding back the local offset unconditionally.",
+      "source": "spec-pr9232/issue-9129-description; commit-472e477/\"Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\"",
+      "anchor": {
+        "type": "line",
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 82,
+        "end_line": 83,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 63,
+        "end_line": 72
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The new integration tests in `tests/integration/widgets/test_datepicker.py` never vary `TZ` and only assert against the CI clock's own timezone, so even if the Selenium suite were run here it would not have exercised (and could not have caught) this change's timezone-direction-dependent regression.",
+      "evidence": "tests/integration/widgets/test_datepicker.py:119-176 sets no TZ and asserts fixed literals such as `'Mon Sep 16 2019'`; bokehjs/src/lib/models/widgets/date_picker.ts:82-83 is the timezone-sensitive logic."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "bokeh/bokeh",
+    "requirements": [
+      {
+        "source": "spec-pr9232/issue-9129-description",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Node reproduction of the exact pre-diff/post-diff `_unlocal_date` logic under `TZ=Europe/Paris` shows the originating issue's reported round-trip (`toDateString()` re-parse) now yields the day the user selected (`2019-09-30`), where the pre-diff code yielded `2019-09-29`."
+      },
+      {
+        "source": "spec-pr9232/pr-body",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "The PR's own checklist marks \"tests added / passed\" unchecked. By the reviewed head, `tests/integration/widgets/test_datepicker.py` (98 lines, 3 test functions) was in fact added and is structurally sound, but \"passed\" is not verifiable here: it requires a Selenium browser session and this sandbox has no browser, no Selenium suite, and no project build available."
+      }
+    ],
+    "files": [
+      {"path": "bokehjs/src/lib/models/widgets/date_picker.ts", "state": "reviewed"},
+      {"path": "tests/integration/widgets/test_datepicker.py", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "TZ=Europe/Paris node scratch/test_unlocal.js && TZ=America/New_York node scratch/test_unlocal.js (scratch reproduction of _unlocal_date's pre-diff and post-diff bodies, bokehjs/src/lib/models/widgets/date_picker.ts:78-88)",
+        "head": "36549bca3a63d581f7b68d08054a7813c1e6a499",
+        "outcome": "reviewer-executed",
+        "reason": "The project cannot be built/bundled or run in a browser in this sandbox, so the exact diff logic was re-implemented verbatim in a disposable Node script and exercised under multiple TZ values; this is the run's explicitly allowed focused-check mechanism for reading code's behavior offline."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "bokehjs/date-picker-unlocal-date-negative-offset-regression",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-005/clone-work/review-priv.v42f85/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-005/clone-work/review-priv.v42f85/initial/accounting-repaired.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false (awaited, fresh context, no prior conversation)"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

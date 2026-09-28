@@ -1,0 +1,135 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "specs": ["spec-pr6667"],
+    "change_description": "commit-ec0e33b:\nAvoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\ncommit-8f95456:\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\ncommit-f21e70b:\nRename default SSLContext to make it private by convention\n\ncommit-4089f3d:\nWrap line to comply with CI lint\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Cache one shared, preloaded `SSLContext` for `verify=True` HTTPS requests so `load_verify_locations()` runs once per process instead of once per request, restoring concurrent-request throughput that OpenSSL's slow CA-bundle reload was costing.",
+    "issue_fit": "Met for the performance mechanism (one cached context avoids a repeated `load_verify_locations()` call) and the `verify=True`/`False` correctness invariants review comments demanded; the PR's informal badssl timing comparison is not independently verifiable offline.",
+    "coverage": "The single changed file (src/requests/adapters.py) was read in full; merge-base and head behavior of `cert_verify`, `_urllib3_request_context`, and the new module-level preload were traced and diffed; the focused TLS/cert-bundle test selection ran at the reviewed head.",
+    "check_details": [
+      "Reviewer ran the focused TLS/cert-bundle test selection (`tests/test_requests.py -k \"pyopenssl_redirect or invalid_ca_certificate_path or invalid_ssl_certificate_files or env_cert_bundles or http_with_certificate or certificate_failure or different_connection_pool_for_tls or different_connection_pool_for_mtls\"`) at the reviewed head: 14 passed, 3 failed; all 3 failures reproduce a pre-existing TLS-fixture/OpenSSL mismatch on code paths this diff does not touch.",
+      "Reviewer reproduced an import-time crash by patching `certifi.where()` to a missing path and importing `requests` at the reviewed head, then confirmed by reading the merge-base file that the same monkeypatch cannot fail import there."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [
+    {
+      "id": "adapters/eager-ca-bundle-import-crash",
+      "title": "Don't let a missing CA bundle crash `import requests`",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "`adapters.py:75-78` builds `_preloaded_ssl_context` from `DEFAULT_CA_BUNDLE_PATH` unconditionally at module import. Patching `certifi.where()` to a missing path and running `import requests` reproduces an immediate `FileNotFoundError`.",
+      "impact": "Every `import requests` now fails whenever the default CA bundle is missing or unreadable — even for callers who never verify TLS. At the merge-base the same lookup ran only inside `cert_verify()`, so it fired solely for a verified HTTPS request and raised a controlled `OSError` there instead.",
+      "change": "Build `_preloaded_ssl_context` lazily on first `verify=True` use, or wrap its construction in the same failure handling `cert_verify()` applied, so a broken default bundle fails only a verified request, not `import requests` itself.",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 75,
+        "end_line": 78,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/requests/adapters.py",
+        "start_line": 75,
+        "end_line": 78
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`_urllib3_request_context`'s new `os.path.isdir(verify)` check duplicates the `os.path.isdir(cert_loc)` check `cert_verify()` still performs for the same path, exactly as the PR author notes in the PR body.",
+      "evidence": "src/requests/adapters.py, `_urllib3_request_context` and `cert_verify`."
+    },
+    {
+      "fact": "A third local test, `test_different_connection_pool_for_mtls_settings`, also fails beyond the two failures the run policy names, but its failing assertion exercises the unchanged `verify=False`/mutual-TLS code path, byte-identical at base and head, so it is unrelated to this diff.",
+      "evidence": "pytest run of `tests/test_requests.py::TestPreparingURLs::test_different_connection_pool_for_mtls_settings` at the reviewed head; `git show 8dd3b26bf59808de24fd654699f592abf6de581e:src/requests/adapters.py`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "psf/requests",
+    "requirements": [
+      {
+        "source": "spec-pr6667/pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "adapters.py:75-78 and the `elif verify is True: pool_kwargs[\"ssl_context\"] = _preloaded_ssl_context` branch reuse one module-level SSLContext instead of calling `load_verify_locations()` per connection, which is what `conn.ca_certs` previously triggered inside `cert_verify()`."
+      },
+      {
+        "source": "commit-ec0e33b/\"Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`cert_verify()` only sets `conn.ca_certs`/`conn.ca_cert_dir` when `verify is not True`."
+      },
+      {
+        "source": "commit-8f95456/\"Use a default SSLContext with the default CA bundle loaded when `verify=True`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "adapters.py:75-78 builds `_preloaded_ssl_context` from `DEFAULT_CA_BUNDLE_PATH`; `_urllib3_request_context` assigns it to `pool_kwargs[\"ssl_context\"]` when `verify is True`."
+      },
+      {
+        "source": "commit-f21e70b/\"Rename default SSLContext to make it private by convention\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "the module-level context is named `_preloaded_ssl_context` (leading underscore)."
+      },
+      {
+        "source": "spec-pr6667/review-thread-1/\"This is actually critical behavior you're removing\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "`test_certificate_failure` and `test_invalid_ca_certificate_path` pass at the reviewed head, confirming `verify=True` still validates against the default CA bundle and a bad custom path still raises the original `OSError`."
+      },
+      {
+        "source": "spec-pr6667/pr-body/\"verify=True and verify=False still behave as expected and are now equally fast\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "the sandbox has no network access to badssl.com; local focused tests confirm functional correctness (see the review-thread-1 row) but not the timing claim, which needs a live-network measurement and states no numeric threshold this merge depends on."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest tests/test_requests.py -k \"pyopenssl_redirect or invalid_ca_certificate_path or invalid_ssl_certificate_files or env_cert_bundles or http_with_certificate or certificate_failure or different_connection_pool_for_tls or different_connection_pool_for_mtls\" -v",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "14 passed, 3 failed. The 3 failures (test_pyopenssl_redirect, test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert, test_different_connection_pool_for_mtls_settings) reproduce a TLS-fixture/OpenSSL-version mismatch ('Missing Authority Key Identifier' / certificate-expiry alerts); 2 are named pre-existing by the run policy and the third traces to the unchanged `verify=False`/mutual-TLS branch, byte-identical between base and head."
+      },
+      {
+        "check": "python3 -c \"import unittest.mock as m, certifi; m.patch.object(certifi, 'where', return_value='/nonexistent/path/to/cacert.pem').start(); import requests\"",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "failed",
+        "reason": "`import requests` raises FileNotFoundError when the default CA bundle path is missing, demonstrating finding `adapters/eager-ca-bundle-import-crash`; at the merge-base, `extract_zipped_paths`/`load_verify_locations` for the default bundle appear only inside `cert_verify()` (confirmed by reading `git show 8dd3b26bf59808de24fd654699f592abf6de581e:src/requests/adapters.py`), so the same monkeypatch cannot fail base's import."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "allowance": {
+        "initial_spent": false,
+        "follow_up_spent": false
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

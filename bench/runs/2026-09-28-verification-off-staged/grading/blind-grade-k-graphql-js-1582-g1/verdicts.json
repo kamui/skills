@@ -1,0 +1,116 @@
+{
+ "reviews": {
+  "blind-43a9e5": {
+   "items": {
+    "1": {
+     "assignment": "defect:GT-k1",
+     "duplicate_group": null,
+     "fix_sufficiency": "sufficient",
+     "candidate": null,
+     "notes": "Quotes: 'changes the ... fixture from a plain `{ message: 'original' }` object to `new Error('original')`. A real `Error` always carries a truthy `.stack` ... so ... `if (originalError && originalError.stack)` branch ... now fires instead of the ... fallback'; 'silently duplicates the adjacent ... test ... with a strictly weaker assertion'. This matches GT-k1's mechanism (real Error's stack makes the copy branch run) and its consequence (fallback untested, assertion can't discriminate). Fix: 'keep `original` typed as a real `Error` ... `delete original.stack;`'. That is exactly the register's required outcome (and #4774's fix), so it is sufficient."
+    },
+    "2": {
+     "assignment": "non-material",
+     "duplicate_group": null,
+     "fix_sufficiency": "n/a",
+     "candidate": null,
+     "notes": "Quotes: '`declare class` constructor ... now accepts `null` for `nodes`, but the separate runtime `function GraphQLError(...)` ... keeps its own narrower `void`-only annotation'; 'flow check ... reports 0 errors, confirming no caller ... is affected'. The review itself states there is no effect and proposes no fix. Verified in clone: src/error/GraphQLError.js:25 (declare class) now has `| void | null` while the implementation `export function GraphQLError` at line 94 still has `| void` only. The fact is true, but external callers are checked against the declare class signature, flow reports no error, and the runtime body is unaffected; the register's non_defects rule the widening itself correct. A type-annotation consistency tidy-up with no demonstrated consequence, so below the finding threshold."
+    }
+   }
+  },
+  "blind-4bd2e5": {
+   "items": {}
+  },
+  "blind-8df7f7": {
+   "items": {
+    "1": {
+     "assignment": "defect:GT-k1",
+     "duplicate_group": null,
+     "fix_sufficiency": "sufficient",
+     "candidate": null,
+     "notes": "Quotes: 'replaced `originalError = { message: 'original' }` with `new Error('original')`. Node/V8 populates a real Error's `.stack` immediately'; '`expect(e.stack).to.be.a('string')` passes under either branch, so a future regression ... would no longer be caught'. Same mechanism and consequence as GT-k1. Fix: 'Keep `new Error('original')` ... add `delete original.stack;`' keeps Flow typing and makes originalError.stack falsy, which is the register's required outcome. Sufficient."
+    },
+    "2": {
+     "assignment": "non-material",
+     "duplicate_group": null,
+     "fix_sufficiency": "n/a",
+     "candidate": null,
+     "notes": "Quotes: 'Add `| null` to the `nodes` parameter of `export function GraphQLError` on line 94 too'; 'The file's two parallel declarations ... now disagree ... only half applied'. The consequence it gives is inconsistency only; it names no failing call or wrong behaviour. Verified in clone: src/error/GraphQLError.js:25 (declare class) now has `| void | null` while the implementation `export function GraphQLError` at line 94 still has `| void` only. The fact is true, but external callers are checked against the declare class signature, flow reports no error, and the runtime body is unaffected; the register's non_defects rule the widening itself correct. A type-annotation consistency tidy-up with no demonstrated consequence, so below the finding threshold."
+    }
+   }
+  },
+  "blind-9d25cd": {
+   "items": {
+    "1": {
+     "assignment": "defect:GT-k1",
+     "duplicate_group": null,
+     "fix_sufficiency": "sufficient",
+     "candidate": null,
+     "notes": "Quotes: 'replaced that fixture with `new Error('original')`, which always has a `.stack`, so the code now takes the stack-reuse branch instead (confirmed: `e.stack === original.stack`). The test's only assertion ... holds either way'. That is GT-k1's mechanism and silent-coverage consequence. Fix: 'Give `original` no `.stack` (e.g. `delete original.stack` after construction ...) and assert `e.stack !== original.stack`'. It restores the falsy stack while keeping Flow typing and adds a discriminating assertion, so it is sufficient."
+    },
+    "2": {
+     "assignment": "non-material",
+     "duplicate_group": null,
+     "fix_sufficiency": "n/a",
+     "candidate": null,
+     "notes": "Quotes: 'the internal `export function GraphQLError`'s own `nodes` parameter (line 93) still omits `| null`; `flow check` reports 0 errors either way, so this leftover asymmetry has no observed effect.' The review calls it inconsequential itself (the line is actually 94, a trivial slip). Verified in clone: src/error/GraphQLError.js:25 (declare class) now has `| void | null` while the implementation `export function GraphQLError` at line 94 still has `| void` only. The fact is true, but external callers are checked against the declare class signature, flow reports no error, and the runtime body is unaffected; the register's non_defects rule the widening itself correct. A type-annotation consistency tidy-up with no demonstrated consequence, so below the finding threshold."
+    }
+   }
+  },
+  "blind-cf7262": {
+   "items": {
+    "1": {
+     "assignment": "defect:GT-k1",
+     "duplicate_group": null,
+     "fix_sufficiency": "sufficient",
+     "candidate": null,
+     "notes": "Quotes: 'changed from `{ message: 'original' }` (no `.stack`) to `new Error('original')`, whose `.stack` is already a truthy string'; 'this test enters the same branch as the adjacent \"uses the stack of an original error\" test and its only assertion ... is satisfied either way ... mocha still reports this test passing (13/13 at head)'. This fully matches GT-k1, including the register's demonstration. Fix: 'Keep `new Error('original')` for the `originalError?: ?Error` Flow typing, but strip its stack ... `delete original.stack;`' is the register's required outcome. Sufficient."
+    },
+    "2": {
+     "assignment": "non-material",
+     "duplicate_group": null,
+     "fix_sufficiency": "n/a",
+     "candidate": null,
+     "notes": "Quotes: 'Add `| null` to the `nodes` parameter type of `export function GraphQLError` at src/error/GraphQLError.js:94 to mirror line 25'; 'a reader of the implementation ... has no type-level signal that `null` is a supported `nodes` value'. The stated consequence is about readability and documentation, not behaviour. Verified in clone: src/error/GraphQLError.js:25 (declare class) now has `| void | null` while the implementation `export function GraphQLError` at line 94 still has `| void` only. The fact is true, but external callers are checked against the declare class signature, flow reports no error, and the runtime body is unaffected; the register's non_defects rule the widening itself correct. A type-annotation consistency tidy-up with no demonstrated consequence, so below the finding threshold."
+    }
+   }
+  },
+  "blind-db5c1e": {
+   "items": {
+    "1": {
+     "assignment": "defect:GT-k1",
+     "duplicate_group": null,
+     "fix_sufficiency": "sufficient",
+     "candidate": null,
+     "notes": "Quotes: 'verified by instrumenting the constructor: `e.stack === original.stack` is `true` at head, whereas the prior `{ message: 'original' }` fixture ... made it `false`. The test's own assertion ... holds under either branch, so the fallback stack-creation path is no longer exercised'. This is GT-k1's mechanism and consequence, matching the register demonstration. Fix: 'add `delete original.stack;` right after constructing it ... keeping `original` a real `Error` for the `@flow strict` `?Error` parameter type'. It meets the required outcome, so it is sufficient."
+    },
+    "2": {
+     "assignment": "non-material",
+     "duplicate_group": null,
+     "fix_sufficiency": "n/a",
+     "candidate": null,
+     "notes": "Quotes: 'the exported `GraphQLError` function's own parameter type on line 94 still omits `null`; `flow check` reports no error from this asymmetry'. It is an observation with no fix and no consequence claimed. Verified in clone: src/error/GraphQLError.js:25 (declare class) now has `| void | null` while the implementation `export function GraphQLError` at line 94 still has `| void` only. The fact is true, but external callers are checked against the declare class signature, flow reports no error, and the runtime body is unaffected; the register's non_defects rule the widening itself correct. A type-annotation consistency tidy-up with no demonstrated consequence, so below the finding threshold."
+    }
+   }
+  },
+  "blind-f83983": {
+   "items": {
+    "1": {
+     "assignment": "defect:GT-k1",
+     "duplicate_group": null,
+     "fix_sufficiency": "sufficient",
+     "candidate": null,
+     "notes": "Quotes: 'At head, the fixture is `new Error('original')`, whose `.stack` is populated synchronously by Node/V8, so the same test now drives the `if (originalError && originalError.stack)` branch instead \u2014 the same branch already covered by the 'uses the stack of an original error' test'; 'A regression narrowly scoped to the fallback branch ... would go undetected'. That is GT-k1's mechanism and consequence. The aside that locatedError/coerceValue can pass non-Error values is only motivating context. Fix: 'Keep the fixture an Error instance ... `delete original.stack;`' matches the required outcome. Sufficient."
+    },
+    "2": {
+     "assignment": "non-material",
+     "duplicate_group": null,
+     "fix_sufficiency": "n/a",
+     "candidate": null,
+     "notes": "Quotes: 'the runtime `export function GraphQLError`'s own Flow annotation for `nodes` ... still omits `null`, though `flow check` at head still reports 0 errors since nothing calls `GraphQLError(...)` without `new`.' The review itself frames it as inconsequential and gives no fix. Verified in clone: src/error/GraphQLError.js:25 (declare class) now has `| void | null` while the implementation `export function GraphQLError` at line 94 still has `| void` only. The fact is true, but external callers are checked against the declare class signature, flow reports no error, and the runtime body is unaffected; the register's non_defects rule the widening itself correct. A type-annotation consistency tidy-up with no demonstrated consequence, so below the finding threshold."
+    }
+   }
+  }
+ },
+ "new_candidates": []
+}

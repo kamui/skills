@@ -1,0 +1,34 @@
+{
+  "target": "l-bokeh-9232",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "none",
+    "duration_seconds": 0.0,
+    "tree_clean_after": true,
+    "steps": [],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-6tev5a3f/attempt/clone && TZ=America/New_York node -e 'console.log(process.version, new Date(2019,9,3).getTimezoneOffset())'",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": "v24.21.0 240",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": "v24.21.0 240",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}

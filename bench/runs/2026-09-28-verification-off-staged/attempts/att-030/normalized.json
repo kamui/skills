@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 57,
+      "line_end": 64,
+      "claim": "Restore a stack-less originalError in the \"no stack\" test. The `originalError` fixture in \"creates new stack if original error has no stack\" changed from `{ message: 'original' }` (no `.stack`) to `new Error('original')`, whose `.stack` is already a truthy string once constructed in this Node/V8 runtime (confirmed empirically: `new Error('original').stack` is truthy; at merge-base the plain-object fixture's `.stack` is `undefined`).",
+      "consequence": "`GraphQLError`'s constructor branches on `originalError && originalError.stack`: truthy reuses `originalError.stack`, falsy creates a fresh one via `Error.captureStackTrace`/`Error().stack` (src/error/GraphQLError.js:195-206). With the new fixture, that condition is now truthy, so this test enters the same branch as the adjacent \"uses the stack of an original error\" test and its only assertion, `expect(e.stack).to.be.a('string')`, is satisfied either way. A regression that breaks stack creation for a stack-less `originalError` would no longer be caught here, yet `mocha` still reports this test passing (13/13 at head).",
+      "proposed_fix": "Keep `new Error('original')` for the `originalError?: ?Error` Flow typing, but strip its stack before constructing the `GraphQLError`, e.g. `delete original.stack;`, or otherwise supply an Error-shaped value with no `.stack`, so the assertions again exercise the `else` branch at src/error/GraphQLError.js:195-206.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "src/error/GraphQLError.js",
+      "line_start": 92,
+      "line_end": 99,
+      "claim": "Match the runtime constructor's `nodes` typing to the ambient class. This diff added `| null` to the ambient `declare class GraphQLError` constructor's `nodes` parameter (src/error/GraphQLError.js:25), which is the type external `new GraphQLError(...)` call sites are checked against, but left the sibling `export function GraphQLError`'s own `nodes` parameter (line 94) typed as `... | void` only; before this diff the two matched (`| void` in both).",
+      "consequence": "The same constructor parameter is now typed two different ways in one file: the public/ambient signature promises `null` is accepted, but the actual implementation's own parameter type still says otherwise, so a reader of the implementation (or a future refactor merging the two) has no type-level signal that `null` is a supported `nodes` value.",
+      "proposed_fix": "Add `| null` to the `nodes` parameter type of `export function GraphQLError` at src/error/GraphQLError.js:94 to mirror line 25.",
+      "native_priority": "P3",
+      "native_action": "consider",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

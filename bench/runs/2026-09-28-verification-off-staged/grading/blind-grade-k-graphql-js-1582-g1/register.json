@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "target": "k-graphql-js-1582",
+  "version": 1,
+  "sealed_at": "2026-09-07T04:52:01Z",
+  "sealed_by": {
+    "adjudicator": "claude-sonnet-5 at effort high, one headless Claude Code 2.1.263 session (#137 ledger S8, $0.64), independent of every reviewer and told to treat the vetting hunt's proposal as an unproven hypothesis",
+    "evidence_access": "a fresh clone of the staging mirror with npm install at each checked-out commit (Node v24.19.0); mocha and flow check at the merge-base and the head; git log -S over the test's history; gh pr view for #1582 and #4774 and one issue search",
+    "saw_reviewer_output": false
+  },
+  "supersedes": null,
+  "defects": [
+    {
+      "id": "GT-k1",
+      "title": "The changed test 'creates new stack if original error has no stack' no longer exercises the no-stack fallback branch and cannot fail for the reason it exists",
+      "trigger": "Any `new Error(...)` instance has a non-empty .stack at construction in V8, so passing one as originalError always satisfies `originalError && originalError.stack` and takes the copy branch of GraphQLError's constructor, never the fallback (Error.captureStackTrace or Error().stack).",
+      "consequence": "With the post-PR body, e.stack === original.stack is true: the test silently runs the same branch as its sibling 'uses the stack of an original error' and could not fail even if the fallback branch were deleted, because its retained assertion `expect(e.stack).to.be.a('string')` holds either way. The constructor's fallback branch became untested by this suite as of this commit and stayed so for about seven and a half years until #4774.",
+      "required_outcome": "The test body must construct or mutate originalError so that originalError.stack is falsy when GraphQLError reads it (a plain object without stack, as before, or `delete original.stack` after constructing a real Error, as #4774 did), while still satisfying the Flow type that motivated the change. Any change that restores exercising the constructor's else branches under this test name is sufficient.",
+      "evidence": [
+        "src/error/__tests__/GraphQLError-test.js:57-63 at 7e39a122: `const original = { message: 'original' }` became `const original = new Error('original')`; the constructor call and four assertions are untouched",
+        "src/error/GraphQLError.js:195-208 at head: the copy branch when originalError.stack is truthy, else captureStackTrace, else Error().stack",
+        "graphql/graphql-js#4774 (merged 2026-06-01, 'test: restore GraphQLError no-stack coverage'): 'PR #1582 changed it to new Error(\"original\") while enabling Flow typing, which meant the test no longer exercised the no-stack fallback path'; fix adds `delete original.stack;`",
+        "git log -S and per-revision diffs of the test file (c1ca5467, daf11ba1, the TS migration): the bug entered at 7e39a122 and persisted unchanged"
+      ],
+      "demonstration": "Node against head's src/error/GraphQLError.js through @babel/register: with `new Error('original')`, e.stack === original.stack is true (copy branch); with `{ message: 'original' }` it is false (fallback branch); typeof e.stack is 'string' in both, so the retained assertion cannot distinguish them. The focused mocha suite passes at both revisions (13 passing), so the defect is silent.",
+      "manifestations": ["silent loss of coverage of the constructor's fallback branch"],
+      "added_in_version": 1
+    }
+  ],
+  "non_defects": [
+    {"claim": "The Flow type change on nodes (`| void` to `| void | null`) is a red flag or weakens the type.", "ruling": "The opposite: a correct, minimal, necessary widening. Every other parameter already accepts null; reverting it reintroduces eight Flow errors at call sites this PR touches.", "added_in_version": 1},
+    {"claim": "The `e: any` annotations in locatedError-test.js defeat Flow's purpose.", "ruling": "Deliberate narrow escape hatches for test doubles that monkey-patch locations/path/nodes onto a bare Error; idiomatic, no production leak.", "added_in_version": 1},
+    {"claim": "`// $FlowFixMe` in inspect-test.js suppresses a real type error.", "ruling": "It suppresses a known Flow 0.86 limitation with String.raw tagged templates; no runtime effect, the decorated assertion passes.", "added_in_version": 1},
+    {"claim": "printError-test.js's refactor through an intermediate fieldA variable changes behaviour.", "ruling": "fieldA.type is definitionally the old sourceA.definitions[0].fields[0].type; the refactor exists to obtain an invariant-checked value for Flow. Verified by inspection and the passing test.", "added_in_version": 1},
+    {"claim": "A self-merged PR with one self-review comment and no second reviewer is a process smell.", "ruling": "A process observation, not a code defect; out of scope.", "added_in_version": 1},
+    {"claim": "The renamed test is broken or failing.", "ruling": "Wrong framing: every assertion passes before and after; the defect is that it passes for the wrong reason and no longer discriminates the fallback branch (GT-k1).", "added_in_version": 1}
+  ],
+  "clean_basis": null,
+  "leakage": [
+    "8d621b00f7513194bce4a4b2f48d402a4da404bd (the #4774 branch commit) and 25680d28 (its squash-merge); PR #4774 in full, whose body names #1582 and states the defect",
+    "any commit with 'restore GraphQLError no-stack coverage' or 'no-stack' in its message",
+    "no revert of 7e39a122 and no other follow-up targeting this test exists; #4774 is the sole leakage vector"
+  ],
+  "preexisting_hints": [
+    "the entire review record is one inline self-comment by IvanGoncharov on the nodes type widening ('All other arguments support null ...'); the PR body is empty; nothing gestures at GT-k1"
+  ],
+  "limits": [
+    "GT-k1 is a defect in a test with no runtime consequence of its own; the register reads as one material defect under a test-coverage-inclusive definition and zero under a production-runtime-only one, with the evidence preserved either way",
+    "no unresolved sub-claim: the diff, the runtime branch taken, and #4774 all agree"
+  ],
+  "source": "docs/research/one-shot-qualification-2026-09-07/k-graphql-js-1582/register.md"
+}

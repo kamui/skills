@@ -1,0 +1,116 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": []
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Cache and reuse one preloaded SSLContext (with the default CA bundle already loaded) for the default verify=True path, so Requests stops calling urllib3's slow load_verify_locations() on every request, without changing verify=True/False/path-bundle behavior.",
+    "issue_fit": "No linked issue; the PR body is the only statement of intent. Alignment judged against its stated goal (avoid reloading root certificates per request) and its claim that verify=True/verify=False behavior is otherwise unchanged.",
+    "coverage": "Full merge-base diff of the one changed file (src/requests/adapters.py, +28/-18, 4 commits) read in function context; both diff hunks reviewed. A focused offline reproduction was written and run, and independently re-executed by the verifier.",
+    "check_details": [
+      "Reviewer wrote and ran a focused offline reproduction (test_repro_shared_context.py, no network) proving `_urllib3_request_context()` hands the identical module-level `_preloaded_ssl_context` object to every verify=True connection pool regardless of client certificate, and that mutating it (as urllib3's ssl_wrap_socket() does via load_cert_chain() when a client cert is set) is visible through an unrelated pool's pool_kwargs: 1 passed. Independently re-executed by the verifier with the same result.",
+      "tests/test_requests.py::test_different_connection_pool_for_mtls_settings (pre-existing, not touched by this diff) only exercises one host with one client-cert pair, so it does not exercise the cross-host sharing this finding demonstrates; not run, since it cannot settle the candidate either way and the diff does not touch it.",
+      "No full test suite was run, per the run policy's one-suite-per-review bound; the run policy separately reports two unrelated, pre-existing ssl/verify test failures at both base and head (fixture/OpenSSL certificate mismatches), not caused by this change."
+    ]
+  },
+  "findings": [
+    {
+      "id": "adapters/shared-ssl-context-client-cert-leak",
+      "title": "Don't hand the shared preloaded SSLContext to client-cert connections",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "A process makes one verify=True request with a client certificate (`requests.get(url_a, cert=(certfile, keyfile))`, the documented mTLS usage) and, in the same process at any later point while the interpreter is alive, a verify=True request to a different, unrelated host with no client certificate (`requests.get(url_b)`).",
+      "impact": "`_urllib3_request_context()` puts the same module-level `_preloaded_ssl_context` object into `pool_kwargs['ssl_context']` for every verify=True pool, regardless of client_cert. urllib3's `ssl_wrap_socket()` calls `context.load_cert_chain(certfile, keyfile)` on whatever ssl_context object a pool was built with, so loading url_a's client certificate mutates the same context object url_b's unrelated, no-client-cert pool also holds. url_b's connection then presents url_a's client certificate, silently leaking a TLS client-authentication credential to a host that should never receive it. Confirmed by tracing urllib3's connection/pool code and by an offline reproduction, independently re-executed by the verifier.",
+      "change": "In `_urllib3_request_context()` (src/requests/adapters.py:94-95), only reuse `_preloaded_ssl_context` when `client_cert` is None; when a client certificate is supplied, do not hand out the shared context (e.g. let urllib3 build its own default per-pool context, or pass a fresh copy) so `load_cert_chain()` never mutates state shared with unrelated pools.",
+      "source": "review-thread PRRT_1, comment 205 (tiran, 2024-05-05T05:08:40Z): \"changing ciphers, verification settings, or mTLS certs can lead to surprising behavior\" -- the exact risk this change does not guard against.",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 94,
+        "end_line": 95,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/requests/adapters.py",
+        "start_line": 94
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The default-CA-bundle SSLContext is now built and loaded at `import requests.adapters` time (module level) rather than lazily on the first verify=True request, so any failure loading the default bundle now surfaces at import instead of at first HTTPS call.",
+      "evidence": "src/requests/adapters.py:75-78; this was the behavior mm-matthias explicitly asked for in the PR's non-review conversation (\"it happens on the first connection (vs. module init time). This creates noise in our live profiles.\") and the module-level sharing was discussed for thread-safety in the same thread, so this is a deliberate, discussed tradeoff, not a candidate finding."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "psf/requests",
+    "requirements": [
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:75-78,94-95 preload and reuse one SSLContext for verify=True instead of calling load_verify_locations() per request; per-request pool caching via _get_connection()/pool_kwargs is unchanged, pre-existing behavior."
+      },
+      {
+        "source": "commit-8f95456/\"Use a default SSLContext with the default CA bundle loaded when `verify=True`\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:75-78 (_preloaded_ssl_context construction) and :94-95 (used for verify=True)."
+      },
+      {
+        "source": "commit-f21e70b/\"Rename default SSLContext to make it private by convention\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:75 names it `_preloaded_ssl_context` (leading underscore)."
+      },
+      {
+        "source": "pr-body/\"You can test against https://invalid.badssl.com to check that verify=True and verify=False still behave as expected and are now equally fast.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No network access in this offline sandbox; this specific live-host performance/behavior claim could not be independently reproduced. Nothing material to the decision depends on it: the confirmed finding above is established independently of this claim, and the verify=True/False cert-verification logic itself (excluding the client-cert sharing defect) was traced through code and is unchanged in its accept/reject outcome."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest test_repro_shared_context.py -q (reviewer-authored offline reproduction, no network)",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "Confirms pool_kwargs['ssl_context'] identity is shared across unrelated verify=True pools and that load_cert_chain() mutation on one is visible through the other; independently re-executed by the verifier with the same result (1 passed)."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "adapters/shared-ssl-context-client-cert-leak",
+          "type": "candidate",
+          "trigger": "security",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-025/clone-work/review-VY3ziS/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-025/clone-work/review-VY3ziS/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

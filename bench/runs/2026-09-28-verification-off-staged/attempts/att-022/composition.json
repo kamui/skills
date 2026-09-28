@@ -1,0 +1,135 @@
+{
+  "run": {
+    "coverage": "complete",
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": ["grpc/grpc-go#7365"],
+    "specs": ["grpc/grpc-go#7390"],
+    "change_description": "commit-c3a3d1c (Update conn state to prevent concurrent connection attempts):\nUpdate conn state to prevent concurrent connection attempts\n\ncommit-6214c9d (Make callers of resetBackoff() lock the mutex):\nMake callers of resetBackoff() lock the mutex\n\ncommit-ff977b3 (Add doc comment for resetTransportAndUnlock):\nAdd doc comment for resetTransportAndUnlock\n\ncommit-76ef33f (Merge remote-tracking branch 'source/master' into fix_conn_connect_race):\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a race in addrConn's connection-establishment path: hold ac.mu continuously from the Idle/state check in connect()/updateAddrs() through the transition to Connecting inside the renamed resetTransportAndUnlock(), so two goroutines can no longer both observe Idle and both start a parallel connection attempt (orphaning one transport). Motivated by a ~0.4% flake in Test/AuthorityRevive traced to this exact race (issue grpc/grpc-go#7365).",
+    "issue_fit": "Full — the root cause and fix described in issue grpc/grpc-go#7365's comments (hold the lock through the state transition) match the shipped diff exactly, and the requested doc comment (dfawley, review thread on commit 6214c9d) was added verbatim.",
+    "coverage": "Complete: the only changed file, clientconn.go, was read in full diff and function context at base and head; every call site of resetTransportAndUnlock in the repository was located (connect(), updateAddrs(), no others) and traced through every branch for lock balance. `go build .` and `go vet .` pass at head. Focused subtests most related to this path (UpdateAddresses_NoopIfCalledWithSameAddresses, ResetConnectBackoff, BackoffCancel, Dial_OneBackoffPerRetryGroup) pass under -race. The previously flaky xds/internal/xdsclient/tests Test/AuthorityRevive passes 30/30 under -race.",
+    "check_details": [
+      "Reviewer ran `go build .` at the reviewed head: exit 0, no output.",
+      "Reviewer ran `go vet .` at the reviewed head: exit 0, no output.",
+      "Reviewer ran `go test . -run 'Test/(UpdateAddresses_NoopIfCalledWithSameAddresses|ResetConnectBackoff|BackoffCancel|Dial_OneBackoffPerRetryGroup)$' -race -v` at the reviewed head: all 4 subtests PASS.",
+      "Reviewer ran `go test ./xds/internal/xdsclient/tests/ -run 'Test/AuthorityRevive$' -race -count=30` at the reviewed head: ok, 30/30 pass."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "No regression test was added for the fixed race itself; the author instead verified manually that Test/AuthorityRevive stopped flaking over 100000 local attempts (PR body, \"Tested\" section), a scale this review could not reproduce.",
+      "evidence": "Diff manifest: clientconn.go only, no *_test.go changes; pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\""
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-022/clone",
+    "requirements": [
+      {
+        "source": "pr-body/\"client: fix race that could lead to orphaned connections and associated resources.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:922 and :996 now call resetTransportAndUnlock() while still holding ac.mu from connect()'s/updateAddrs()'s Idle-state check; resetTransportAndUnlock (clientconn.go:1234-1262) transitions state to Connecting before releasing the lock, closing the window in which a second concurrent caller could also observe Idle. Verified by fresh-context verifier: premise-race-closed ruling=holds."
+      },
+      {
+        "source": "pr-body/\"caller of resetTransport() keep holding the mutex instead of releasing it and having resetTransport() re-acquire it\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 (connect) and :940-996 (updateAddrs) no longer call ac.mu.Unlock() before invoking resetTransportAndUnlock; the renamed function's doc comment (clientconn.go:1231-1233) states the lock must be held by the caller and it guarantees release. Verified by fresh-context verifier: premise-lock-discipline ruling=holds."
+      },
+      {
+        "source": "issue-grpc/grpc-go#7365/\"A simple fix it to set the state to connecting while addrConn.connect has the mutex locked\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1261-1262: ac.updateConnectivityState(connectivity.Connecting, nil) happens immediately before ac.mu.Unlock(), i.e. while the caller's lock acquisition is still held, matching the described fix approach."
+      },
+      {
+        "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "This review's execution allowance (5 minutes/command, offline) cannot reproduce a 100000-iteration run. Reviewer ran the test 30 times under -race instead (all passed), which is consistent with but does not establish the claimed ~0.4%-flake elimination at that scale."
+      },
+      {
+        "source": "commit-ff977b3/\"Add doc comment for resetTransportAndUnlock\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "clientconn.go:1231-1233 carries exactly the doc comment dfawley requested in review (\"ac.mu must be held by the caller, and this function will guarantee it is released.\")."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "offline build with GOMODCACHE/GOCACHE under the attempt's dependency cache, GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local; exit 0, no output"
+      },
+      {
+        "check": "go vet .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "same offline environment; exit 0, no output"
+      },
+      {
+        "check": "go test . -run 'Test/(UpdateAddresses_NoopIfCalledWithSameAddresses|ResetConnectBackoff|BackoffCancel|Dial_OneBackoffPerRetryGroup)$' -race -v",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "same offline environment; PASS on all 4 subtests, ok overall"
+      },
+      {
+        "check": "go test ./xds/internal/xdsclient/tests/ -run 'Test/AuthorityRevive$' -race -count=30",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "same offline environment; ok, 30/30 iterations pass (this is the test the fixed race was originally observed to flake in)"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-lock-discipline",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Every call site of resetTransportAndUnlock already holds ac.mu exactly once when it calls the method, and every path through it unlocks ac.mu exactly once.",
+          "evidence": "clientconn.go:905-923, :940-996, :1234-1304; git grep confirms only connect() and updateAddrs() call resetTransportAndUnlock.",
+          "ruling": "holds",
+          "batch": "initial"
+        },
+        {
+          "id": "premise-race-closed",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Holding ac.mu from the state check through the transition to Connecting in resetTransportAndUnlock prevents two concurrent callers from both observing Idle and both starting a parallel connection attempt.",
+          "evidence": "clientconn.go:906-922, :1234-1262.",
+          "ruling": "holds",
+          "batch": "initial"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-022/tmp/claude-1000/tmp.a3QixvBaEd/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-022/tmp/claude-1000/tmp.a3QixvBaEd/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

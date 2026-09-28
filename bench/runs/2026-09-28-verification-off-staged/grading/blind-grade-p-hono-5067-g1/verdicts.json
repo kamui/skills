@@ -1,0 +1,7 @@
+{"reviews": {
+  "blind-4d6e09": {"items": {"1": {"assignment": "non-material", "duplicate_group": null, "fix_sufficiency": "n/a", "candidate": null,
+    "notes": "Quote: \"patch coverage 76.47% under the 80% target, but the base repository's codecov.yml marks the patch status check `informational: true`, so it does not block merges.\" Accurate: clone/codecov.yml lines 6-9 (same at main) set patch target 80% with informational: true. The register's non_defects rule that Codecov patch-coverage hygiene alone is non-material; the item doesn't identify the formData()-then-parseBody() failure (GT-p1) and asserts no defect."}}},
+  "blind-5e78c0": {"items": {"1": {"assignment": "non-material", "duplicate_group": null, "fix_sufficiency": "n/a", "candidate": null,
+    "notes": "Quote: \"`parseFormData` in src/utils/body.ts now reads the whole body via `arrayBuffer()` and re-parses it through `bufferToFormData()` instead of calling the platform `Request.formData()` directly, matching the pattern `src/validator/validator.ts`'s `form` branch already used\". Accurate description: clone/src/utils/body.ts:126-132 at head and validator.ts form branch (arrayBuffer + bufferToFormData, unchanged from main). It is a neutral observation with no consequence asserted. It touches the GT-p1 code, but it never names the cached-FormData re-serialization / formData()-before-parseBody() failure or a corrective outcome, so it only points at the right function and does not recover GT-p1."}}}
+},
+ "new_candidates": []}

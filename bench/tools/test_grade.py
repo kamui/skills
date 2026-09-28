@@ -347,7 +347,8 @@ class Map(Mapped):
     def test_isolated_arms_keep_review_code_scoring(self):
         for arm in ("review-code-sonnet-high-isolated-control", "review-code-sonnet-high-isolated-lifecycle",
                     "review-code-sonnet-high-enforced-control", "review-code-sonnet-high-enforced-lifecycle",
-                    "review-code-sonnet-high-enforced-x394-control", "review-code-sonnet-high-enforced-x394-trimmed"):
+                    "review-code-sonnet-high-enforced-x394-control", "review-code-sonnet-high-enforced-x394-trimmed",
+                    "review-code-sonnet-high-enforced-verification-off"):
             with self.subTest(arm=arm):
                 path = self.run_dir / "attempts" / "att-001" / "attempt.json"
                 record = json.loads(path.read_text(encoding="utf-8"))

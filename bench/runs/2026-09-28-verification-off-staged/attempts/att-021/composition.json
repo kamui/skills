@@ -1,0 +1,122 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec:graphql-graphql-js-pr1582-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Enable `@flow strict` typings on the error-handling test suite (GraphQLError-test.js, locatedError-test.js, printError-test.js, inspect-test.js) and widen `GraphQLError`'s `nodes` constructor parameter to accept `null`, per the author's own review comment that all other constructor arguments already accept `null`.",
+    "issue_fit": "No linked issue; the pull-request body is empty. Intent is drawn from the commit message (the two-part title) and the supplied PR packet's single review-thread comment, which explicitly asks that `nodes` accept `null` like the other arguments — met by the `declare class` constructor signature change.",
+    "coverage": "All 5 changed files read in full at both merge-base (5384d21) and head (7e39a12). Focused mocha run of all 4 changed test files, `flow check`, and `eslint` on the changed files all run clean at the reviewed head. One candidate reached verification and was confirmed.",
+    "check_details": [
+      "Reviewer ran the 4 changed test files with mocha at the reviewed head: 27/27 passing.",
+      "Reviewer ran `flow check` at the reviewed head: 0 errors in any reviewed source file (4 unrelated errors, all in untracked `.claude/*.json` harness files outside the diff and outside src/).",
+      "Reviewer ran `eslint` on the 5 changed files at the reviewed head: 0 errors/warnings."
+    ]
+  },
+  "findings": [
+    {
+      "id": "error/graphqlerror-test-stack-branch-drift",
+      "title": "Restore no-stack coverage in the 'creates new stack' test",
+      "priority": "P3",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "GraphQLError's constructor branches on `if (originalError && originalError.stack)` (src/error/GraphQLError.js:195). At merge-base 5384d21, the test's `originalError` fixture was `{ message: 'original' }`, a plain object with no `.stack`, driving the `else` fallback (`Error.captureStackTrace` / `Error().stack`). At head, the fixture is `new Error('original')`, whose `.stack` is populated synchronously by Node/V8, so the same test now drives the `if (originalError && originalError.stack)` branch instead — the same branch already covered by the 'uses the stack of an original error' test directly above it.",
+      "impact": "No test in the suite still passes GraphQLError a *present* `originalError` that lacks a `.stack` property (a real scenario: `locatedError.js` and `coerceValue.js` can hand it non-Error or deserialized `originalError` values). A regression narrowly scoped to the fallback branch — e.g. weakening the guard to `if (originalError.stack)` and unconditionally copying it whenever `originalError` is truthy — would go undetected, since no remaining test drives a truthy-but-stackless `originalError`.",
+      "change": "Keep the fixture an Error instance (satisfying Flow's `?Error` typing) but strip its stack before constructing, e.g. `const original = new Error('original'); delete original.stack;`, so the test again exercises the no-stack fallback branch its name and assertions describe.",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The `declare class GraphQLError` constructor's `nodes` type gained `| null` (src/error/GraphQLError.js:25), but the runtime `export function GraphQLError`'s own Flow annotation for `nodes` a few lines below (src/error/GraphQLError.js:94) still omits `null`, though `flow check` at head still reports 0 errors since nothing calls `GraphQLError(...)` without `new`.",
+      "evidence": "src/error/GraphQLError.js:25 vs. src/error/GraphQLError.js:94; `flow check` clean on src/ at head."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "All four changed test files switch their header from `@noflow` to `@flow strict` (src/error/__tests__/GraphQLError-test.js:7, locatedError-test.js:7, printError-test.js:7, src/jsutils/__tests__/inspect-test.js:7); `flow check` at head reports 0 errors in any of them."
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/error/GraphQLError.js:25 — the `declare class GraphQLError` constructor's `nodes` parameter type gains `| null`, matching the PR packet's review comment that all other arguments already accept `null`; GraphQLError-test.js now calls `new GraphQLError('msg', null, ...)` in several tests, and `flow check` confirms 0 type errors against these call sites."
+      }
+    ],
+    "files": [
+      {"path": "src/error/GraphQLError.js", "state": "reviewed"},
+      {"path": "src/error/__tests__/GraphQLError-test.js", "state": "reviewed"},
+      {"path": "src/error/__tests__/locatedError-test.js", "state": "reviewed"},
+      {"path": "src/error/__tests__/printError-test.js", "state": "reviewed"},
+      {"path": "src/jsutils/__tests__/inspect-test.js", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js src/error/__tests__/locatedError-test.js src/error/__tests__/printError-test.js src/jsutils/__tests__/inspect-test.js",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "27 passing (72ms), 0 failing; clean tree at the reviewed head."
+      },
+      {
+        "check": "./node_modules/.bin/flow check --max-warnings 0",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "0 errors under src/ (including all 5 changed files); the only 4 reported errors are in untracked `.claude/*.json` harness files outside the reviewed diff."
+      },
+      {
+        "check": "./node_modules/.bin/eslint --report-unused-disable-directives src/error/GraphQLError.js src/error/__tests__/GraphQLError-test.js src/error/__tests__/locatedError-test.js src/error/__tests__/printError-test.js src/jsutils/__tests__/inspect-test.js",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "No output; 0 errors/warnings on the 5 changed files."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "error/graphqlerror-test-stack-branch-drift",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-021/clone-work/.private/review-hR6aYi/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-021/clone-work/.private/review-hR6aYi/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

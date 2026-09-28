@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "updateAddrs's `go ac.resetTransportAndUnlock()` now launches while ac.mu is still locked, and the function's own deferred `ac.transport.GracefulClose()` runs immediately afterward in the same goroutine, synchronously blocking on `ac.mu.Lock()` inside `onClose` until the spawned goroutine releases it \u2014 unlike the prior explicit-unlock-then-go order, and unlike tearDown's still-explicit unlock-before-GracefulClose pattern a few hundred lines below; this briefly serializes the two goroutines but a mandatory verification pass confirmed no cyclic wait exists (updateConnectivityState dispatches to the balancer asynchronously via the callback serializer), so it is not a hang.",
+      "consequence": "clientconn.go:977-996, clientconn.go:1573-1575, verification premise-2-no-lock-cycle-on-handoff (holds)",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}
