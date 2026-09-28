@@ -50,6 +50,7 @@ SKILL = "skills/review-code"
 REFS = ("targets.md", "rubric.md", "output.md", "verification.md", "verifier.md",
         "verifier-concurrency.md", "prior-state.md")
 RATES = {"input": 2.0, "output": 10.0, "cache_read": 0.2, "w5m": 2.5, "w1h": 4.0}
+RUNS_BEFORE = "2026-09-28"  # the runs filed at ca29bad; later runs would change every population here
 Counter = collections.Counter
 
 
@@ -251,7 +252,7 @@ def attempts(repo, include_toy=False):
     rows = []
     for run in sorted(os.listdir(os.path.join(repo, "bench/runs"))):
         base = os.path.join(repo, "bench/runs", run)
-        if not os.path.isdir(base) or (run.endswith("-toy") and not include_toy):
+        if not os.path.isdir(base) or run >= RUNS_BEFORE or (run.endswith("-toy") and not include_toy):
             continue
         mappings = latest_mappings(repo, run)
         for path in sorted(glob.glob(os.path.join(base, "attempts/att-*/attempt.json"))):
