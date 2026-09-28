@@ -1,0 +1,140 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "issues": ["rclone/rclone#9687"],
+    "specs": ["rclone/rclone#9699-review-packet"],
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a shutdown race in lib/batcher: a Commit could pass the closed-check, then have its request land behind Shutdown's quit marker, so the commit loop exits without ever answering it — hanging a synchronous caller forever and silently dropping an async upload.",
+    "issue_fit": "Full. Both PR-body commitments (serialize admission with the shutdown marker; preserve the existing shutdown error) and issue #9687's question (should admission and marker insertion be serialized so every accepted request is processed or explicitly rejected) are met by the new `admitMu` mutex, and the PR's third commitment (regression coverage for the sync-hang and async-drop cases) is met by `TestBatcherCommitRacingShutdown`.",
+    "coverage": "Both changed files (lib/batcher/batcher.go, lib/batcher/batcher_test.go) read in full alongside their unchanged callers (commitLoop, Shutdown, New). No coverage gaps.",
+    "ambiguities": [],
+    "coverage_gaps": [],
+    "check_details": [
+      "Reviewer ran `go test -count=1 -race ./lib/batcher` at the reviewed head (0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c): pass, 5.3s.",
+      "Reviewer ran `go test -count=20 -race -run TestBatcherCommitRacingShutdown ./lib/batcher` at the reviewed head: pass, both `sync` and `async` subtests, 20 iterations each, no race reported.",
+      "Reviewer ran `go vet ./lib/batcher` and `go build ./lib/batcher` at the reviewed head: both clean.",
+      "The PR's reported `go build` and `PATH=\"$PWD:$PATH\" make quicktest` (full-repo scope) were not reproduced: the offline run policy scopes focused execution to `./lib/batcher`, and a full-repo build needs modules outside the cached set. Nothing in this two-file, unexported-field diff makes a full-repo build regression plausible."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Commit admission is now fully serialized through `admitMu`, including while a send to the buffered `b.in` channel is blocked, so concurrent `Commit` callers queue one at a time behind the mutex rather than racing into the channel as before.",
+      "evidence": "lib/batcher/batcher.go:266-281; the commit loop (batcher.go:205-226) keeps draining `b.in` independently, so this bounds latency without risking deadlock."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "rclone/rclone",
+    "requirements": [
+      {
+        "source": "pr-body/\"Serialize commit admission with insertion of the shutdown marker.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:50 adds `admitMu sync.Mutex`; Shutdown (batcher.go:243-252) holds it across `close(b.closed)` and the quit send, and Commit (batcher.go:267-281) holds it across its closed-check and enqueue, so the two never interleave."
+      },
+      {
+        "source": "pr-body/\"Preserve the existing shutdown error for commits that arrive after shutdown starts.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:268-272 still returns `fserrors.FatalError(\"batcher is shutting down\")` when `b.closed` is already closed at admission time; the error path and message are unchanged from the merge-base."
+      },
+      {
+        "source": "pr-body/\"Add regression coverage for synchronous hangs and asynchronous dropped uploads.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher_test.go:239-315 `TestBatcherCommitRacingShutdown` runs both `sync` and `async` modes, uses `blockingStringer` (batcher_test.go:22-34) to pin a Commit between its closed-check and enqueue while Shutdown races it, then asserts the commit completes, Shutdown returns, and the batch is actually committed. Traced against the merge-base code: without `admitMu` the commit loop would drain the quit marker first and exit, leaving the sync case blocked on `<-resp` forever and the async case's request unread, exactly reproducing both failure modes."
+      },
+      {
+        "source": "issue-9687/\"Should admission and insertion of the shutdown marker be serialized so every accepted request is either processed or explicitly rejected?\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The same `admitMu` serialization (batcher.go:50,243-252,267-281) guarantees a request is enqueued strictly before the quit marker or the caller sees the explicit shutdown error; the commit loop's post-loop flush (batcher.go:227-230) then always processes any request that made it into the channel ahead of quit."
+      },
+      {
+        "source": "pr-body/\"go test -race ./lib/batcher -count=20\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer reran `go test -count=20 -race -run TestBatcherCommitRacingShutdown ./lib/batcher` at 0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c: pass."
+      },
+      {
+        "source": "pr-body/\"go vet ./lib/batcher\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer reran `go vet ./lib/batcher` at the reviewed head: clean."
+      },
+      {
+        "source": "pr-body/\"go build\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Only `go build ./lib/batcher` was reproducible under the offline allowance (clean). The full-repo build claim needs modules outside the cached set; nothing in this diff (an unexported field and two function bodies in one package) makes a full-repo build regression plausible, so nothing material depends on the missing fact."
+      },
+      {
+        "source": "pr-body/\"PATH=\\\"$PWD:$PATH\\\" make quicktest\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Full-repo quicktest needs modules outside the offline cache and is outside the run policy's allowed scope; the package's own race-enabled suite (`go test -race ./lib/batcher`) was run instead and passed."
+      }
+    ],
+    "files": [
+      {"path": "lib/batcher/batcher.go", "state": "reviewed"},
+      {"path": "lib/batcher/batcher_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -race ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Full package suite at the reviewed head under the race detector; pass in 5.3s."
+      },
+      {
+        "check": "go test -count=20 -race -run TestBatcherCommitRacingShutdown ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "New regression test only, 20x under the race detector, both sync and async subtests; pass in ~5s."
+      },
+      {
+        "check": "go vet ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Clean, no diagnostics."
+      },
+      {
+        "check": "go build ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Package builds cleanly."
+      },
+      {
+        "check": "go build (full repo)",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "unavailable",
+        "reason": "Offline run policy scopes focused execution to ./lib/batcher; a full-repo build needs modules outside the cached set."
+      },
+      {
+        "check": "PATH=\"$PWD:$PATH\" make quicktest",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "unavailable",
+        "reason": "Full-repo quicktest is outside the offline allowance, which permits only ./lib/batcher commands."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

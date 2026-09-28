@@ -1,0 +1,120 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "merge_base": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687",
+    "issues": ["rclone/rclone#9687"],
+    "specs": ["spec-pr9699-packet"],
+    "supplied_inputs": "yes",
+    "merged": false,
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Serialize `Commit`'s closed-check-and-enqueue with `Shutdown`'s close(b.closed)-and-quit-enqueue behind a new `admitMu` mutex, so a `Commit` racing `Shutdown` is either admitted strictly ahead of the quit marker or cleanly rejected with the existing shutdown error, fixing rclone/rclone#9687.",
+    "issue_fit": "Met. `spec-pr9699-packet/issue-9687-question` asks whether admission and the shutdown marker should be serialized so every accepted request is processed or explicitly rejected; `admitMu` (lib/batcher/batcher.go:50,243,267) does exactly that, and `TestBatcherCommitRacingShutdown` (lib/batcher/batcher_test.go:239-313) is a deterministic regression test for both the synchronous hang and the asynchronous silent drop the issue and ncw's confirming comment describe.",
+    "coverage": "Read the complete merge-base diff (2 files, +95/-0) and the full `lib/batcher/batcher.go` at head, including `commitLoop`, `Shutdown`, and `Commit`. Ran the focused race test at the reviewed head, and independently falsified the new regression test by overlaying it onto the pre-fix `batcher.go` in an isolated local scratch clone (the reviewed clone was never modified), confirming it fails there with the exact hang/drop symptoms the issue describes. Verified the two concurrency safety premises the no-blocker conclusion rests on with an independent fresh-context verifier; both hold.",
+    "check_details": [
+      "`go test -count=1 -race -run 'TestBatcherCommitRacingShutdown|TestBatcherCommitShutdown|TestBatcherCommitAsync' -v ./lib/batcher` at the reviewed head: all pass, including both `TestBatcherCommitRacingShutdown` subtests (sync, async).",
+      "Same test overlaid onto pre-fix `batcher.go` (merge-base) in an isolated scratch clone: fails deterministically with `commit hung while racing shutdown` (sync) and `accepted commit was dropped during shutdown` (async), confirming the regression test is not vacuous."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "rclone/rclone",
+    "requirements": [
+      {
+        "source": "spec-pr9699-packet/what-changed",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`admitMu sync.Mutex` (lib/batcher/batcher.go:50) added; `Shutdown` takes it before `close(b.closed)` and around the quit send (lib/batcher/batcher.go:243,251-252), and `Commit` takes it before its closed-check and around its enqueue (lib/batcher/batcher.go:267,281), matching 'Serialize commit admission with insertion of the shutdown marker.'"
+      },
+      {
+        "source": "spec-pr9699-packet/what-changed",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`Commit`'s shutdown-error branch (lib/batcher/batcher.go:269-271, `fserrors.FatalError(errors.New(\"batcher is shutting down\"))`) is unchanged and still returned for any Commit whose admitMu section runs after Shutdown's, matching 'Preserve the existing shutdown error for commits that arrive after shutdown starts.'"
+      },
+      {
+        "source": "spec-pr9699-packet/what-changed",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`TestBatcherCommitRacingShutdown` (lib/batcher/batcher_test.go:239-313) covers sync and async modes; reviewer falsification confirms it fails against pre-fix code with the sync-hang and async-drop symptoms, matching 'Add regression coverage for synchronous hangs and asynchronous dropped uploads.'"
+      },
+      {
+        "source": "spec-pr9699-packet/issue-9687-question",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "admitMu establishes a total order between any one Commit's admission critical section and Shutdown's close+quit-enqueue critical section (lib/batcher/batcher.go:243-281); confirmed `holds` by an independent fresh-context verifier citing lib/batcher/batcher.go:50 and 110-113 in addition to the supplied evidence."
+      },
+      {
+        "source": "spec-pr9699-packet/testing",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "PR claims `go test -race ./lib/batcher -count=20`, `go vet ./lib/batcher`, `go build`, and `make quicktest` all pass. The offline sandbox allowance covers only `go test` on ./lib/batcher; reviewer ran `-count=1 -race` (not 20) which passed cleanly and corroborates but does not reproduce the exact count=20/vet/build/quicktest claims. No conflicting evidence found, and nothing material depends on the untested multiplier or the other three commands given the independent falsification already performed."
+      }
+    ],
+    "files": [
+      {"path": "lib/batcher/batcher.go", "state": "reviewed"},
+      {"path": "lib/batcher/batcher_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -race -run 'TestBatcherCommitRacingShutdown|TestBatcherCommitShutdown|TestBatcherCommitAsync' -v ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Offline focused race run at the reviewed head, verifying the new regression test and neighboring shutdown/async tests; all passed with no race reported."
+      },
+      {
+        "check": "go test -count=1 -race -run TestBatcherCommitRacingShutdown -v -timeout 30s ./lib/batcher, run against pre-fix batcher.go (the new test overlaid in an isolated local scratch clone; the reviewed clone was never modified)",
+        "head": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+        "outcome": "historical",
+        "reason": "Falsification: the new regression test fails deterministically at the merge-base (sync hang, async drop), proving it actually detects the bug the fix addresses rather than passing vacuously."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "admit-shutdown-total-order",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "admitMu forces a total order between any one Commit call's closed-check-and-enqueue and Shutdown's close(b.closed)-and-quit-enqueue, so a Commit whose critical section runs first always enqueues its request into b.in strictly before the quit marker, and a Commit whose critical section runs after Shutdown's always observes b.closed already closed and enqueues nothing.",
+          "evidence": "lib/batcher/batcher.go:243-245,251-252,267-273,276-281,240 (supplied); verifier's holds ruling additionally cited lib/batcher/batcher.go:50.",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "admit-lock-no-deadlock",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Holding admitMu across the buffered send into b.in inside Commit or Shutdown cannot deadlock, because commitLoop keeps draining b.in until it reads the single quit marker that only Shutdown sends (itself gated by shutOnce and the same lock), so commitLoop cannot have already exited when a blocking send under admitMu needs it to make room.",
+          "evidence": "lib/batcher/batcher.go:107,206-213,240-243,251 (supplied); verifier's holds ruling additionally cited lib/batcher/batcher.go:110-113.",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-001/clone-work/verifier-bundle-initial",
+          "raw_return": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-001/clone-work/initial-return-repaired.json",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-001/clone-work/initial-accounting2.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false, awaited"
+        }
+      ],
+      "allowance": {"initial_spent": true, "follow_up_spent": false},
+      "outstanding": []
+    },
+    "routed": {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}
+  }
+}

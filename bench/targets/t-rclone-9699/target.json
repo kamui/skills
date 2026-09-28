@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "id": "t-rclone-9699",
+  "repo": "rclone/rclone",
+  "pr": 9699,
+  "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+  "merge_base": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+  "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {
+      "sha": "7f6207fae2386d747347199936d56a105cbdf557",
+      "reason": "rebase merge of the pull request on master"
+    },
+    {
+      "sha": "5dd34275dcbb485de2f6f7ce5d52242237c191f3",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "f132aef2958f21d127d614db8ea150d33eef4412",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "d5275c4ebb82ef7ffe8406c2049f29c78a8b6446",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "1d03a771727b6b158d4675442c41d3280d9eee88",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "9dc8b71ae99496460f07373674609571918bfb9c",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "225c626bacb3dfa7317248e7a45f68dbee46cd33",
+      "reason": "later pull-request branch head"
+    },
+    {
+      "sha": "fe0ec001e81d2d3d8991cee5ac7401421c0c57d8",
+      "reason": "later pull-request branch head"
+    }
+  ],
+  "cutoff": "2026-08-01T11:29:45Z",
+  "cutoff_note": "the merge instant (build_packet.py default); nothing omitted",
+  "diff_manifest_sha256": "d4fd0b53b16c728dff1c64c198b72e0a75d7adbbc8fcc3260414a3db0e9f7b54",
+  "packet_sha256": "4396cfd22d2804b6d4b6bea47f51e5b89d9f8c74cfcf616acb60236ceae6dee7",
+  "shape": "clean, high risk (concurrency)",
+  "domain": "Go cloud storage sync tool, request batching",
+  "language": "Go",
+  "merged_at": "2026-08-01T11:29:45Z",
+  "fix_published_at": null,
+  "originating_issue": "rclone/rclone#9687",
+  "provisioning": {
+    "recipe": "nothing in the clone; every go command runs with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's own restore of the cache archive, populated once online at the head by resolving the modules ./lib/batcher and its tests import, then go build and go vet of that package",
+    "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's dependency cache, for example `go test -count=1 -race ./lib/batcher` (seconds). The cache holds the modules ./lib/batcher and its tests import; packages needing other modules cannot build offline. Five minutes per command, a package's tests at most once per flag set, scratch modules and overlays only under the work directory, nothing added to or changed in the clone.",
+    "unavailable": "network; the module proxy; modules other packages need",
+    "dependency_identity": [
+      {
+        "name": "go.mod",
+        "sha256": "5b30d29d92b883358512615d71e65313452e16bdde673ec251953082363eb125",
+        "location": "head:go.mod"
+      },
+      {
+        "name": "go.sum",
+        "sha256": "9bb8250aa7c8c7dc13a0836de3ec1127cfa946789b1430ebdf9b92cf6e7f533c",
+        "location": "head:go.sum"
+      },
+      {
+        "name": "cache archive (go-modcache)",
+        "sha256": "58e7118cfd010a9fee9c1241d28b13a820f32843d0028c0cec3b0fad8ea23efc",
+        "location": "~/.t3/bench-cache/archives/t-rclone-9699.tar.gz"
+      }
+    ],
+    "platform": "measured on the suite machine at 2026-09-28T20:05:12Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "cache": {
+      "kind": "go-modcache",
+      "build": [
+        "GOPROXY=https://proxy.golang.org,direct go list -deps -test ./lib/batcher > /dev/null",
+        "go build ./lib/batcher",
+        "go vet ./lib/batcher"
+      ],
+      "post_clone": [],
+      "env": {
+        "GOMODCACHE": "{cache}/gomodcache",
+        "GOCACHE": "{cache}/gocache",
+        "GOFLAGS": "-mod=mod",
+        "GOPROXY": "off",
+        "GOTOOLCHAIN": "local"
+      },
+      "smoke": [
+        {
+          "name": "focused go test",
+          "command": "go test -count=1 ./lib/batcher",
+          "revision": "both"
+        },
+        {
+          "name": "go vet",
+          "command": "go vet ./lib/batcher && echo clean",
+          "revision": "head"
+        },
+        {
+          "name": "race detector",
+          "command": "go test -count=1 -race ./lib/batcher",
+          "revision": "head"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-28 (unseen-target comparison of #409, slot (t))",
+    "used_by": [],
+    "register_published": null,
+    "notes": "Hunted and adjudicated 2026-09-28 by headless sessions that saw no reviewer output; the register and both reports are sealed. The cleanliness window runs from the merge to 2026-09-28, 58 days. No arm reviewed this target before the comparison."
+  },
+  "current_register": 1,
+  "sealed": {
+    "key": "~/.config/bench/seal.key on the preparation machine (mode 0600, directory 0700), outside the repository and every attempt directory",
+    "files": [
+      {
+        "file": "register.v1.json.enc",
+        "plaintext_sha256": "405740094c70301ec8dab2c3cc669d642a994695139c181eedde0e09e8641797",
+        "sealed_at": "2026-09-28T20:11:33Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{"at": "2026-09-28T19:59:34Z", "step": "hunt-s", "usd": 4.551136, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "beff263c"}
+{"at": "2026-09-28T19:03:25Z", "step": "hunt-t", "usd": 2.280188, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "b7afe5de"}
+{"at": "2026-09-28T20:10:49Z", "step": "adjudicate-s-seaweedfs-10735", "usd": 2.286523, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "f9ea9822"}
+{"at": "2026-09-28T20:09:38Z", "step": "adjudicate-t-rclone-9699", "usd": 1.343123, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "d26b5d05"}
+{"at": "2026-09-28T21:14:43Z", "step": "blind-grade-t-rclone-9699-g1", "usd": 0.286192, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "97c93e69"}
+{"at": "2026-09-28T22:21:58Z", "step": "blind-grade-s-seaweedfs-10735-g1", "usd": 0.436447, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "ccba655a"}
