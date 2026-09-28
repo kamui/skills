@@ -1,0 +1,151 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["pr10735"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "db5a086d048c5c2d6e51e82bb070d20df04d688d",
+    "issues": [],
+    "change_description": "commit 9f99628001cdc79c2d49775cfc3b3ab35b77fb85\nfix(redis2): remove orphaned directory index members on listing\n\nListDirectoryEntries skipped index members whose value key was gone and\nleft them in the ZSET, so the per-directory child index grew without\nbound under any TTL workload. Mirror the ZRem the logical-expiry branch\nalready performs.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\ncommit 6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1\nfix(redis2): keep the index member when a concurrent insert recreates the value\n\nThe orphan cleanup removed the member unconditionally, so an InsertEntry\nlanding between FindEntry and the ZRem left a live value with no index\nmember, invisible to listings until another InsertEntry on that path.\nUpdateEntry does not re-add it, so the loss persisted.\n\nRestore the member when the value is present again after the removal.\nThe value key and the directory index key hash to different slots, so a\nLua script or MULTI over both is not available to the cluster store.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Stop the redis2 per-directory ZSET index from growing without bound: ListDirectoryEntries now ZRems an index member whose value key is confirmed gone, and restores it if a concurrent InsertEntry recreates the value during the removal, since the value and index keys cannot share a Redis Cluster transaction.",
+    "issue_fit": "No originating issue is linked; fit is assessed against the supplied PR body, which the change follows closely, including the recreate-race guard added in response to two review bots' comments on the first commit.",
+    "coverage": "Both changed files read in full against the pinned merge-base diff (2/2 chunks); callers (InsertEntry, UpdateEntry, DeleteEntry, DeleteFolderChildren, FindEntry) and the RedisCluster2Store composition traced to check the claims in the PR body.",
+    "check_details": [
+      "go vet ./weed/filer/redis2/... and gofmt -l on both changed files: clean, no output.",
+      "go test -count=1 ./weed/filer/redis2 and the same with -race: package and test binary build; all three new tests report SKIP (RUN_REDIS_TESTS unset, no live Redis in this sandbox).",
+      "No live Redis and no full ./weed/... build were available offline; the PR body's reported failing-then-passing test output and full build were not independently reproduced, only traced against the code."
+    ]
+  },
+  "findings": [
+    {
+      "id": "redis2/silent-restore-failure",
+      "title": "Check the restoring ZAddNX's own error",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "concurrency",
+      "trigger": "In `removeOrphanedDirectoryListMember` (universal_redis_store.go:237-251), after `ZRem` removes a candidate and `Exists` shows the value key back — the concurrent-`InsertEntry`-recreate case the function exists to handle — the restoring `ZAddNX` call's own error is never checked.",
+      "impact": "If that one write fails (a transient Redis error), the member stays removed even though its value exists: the recreated entry becomes invisible to `ListDirectoryEntries` and `DeleteFolderChildren`. Since the filename no longer appears in `ZRangeByLex`, this repair never runs for it again — unlike the function's other failure paths, this one does not self-heal on the next listing.",
+      "change": "Check the restoring `ZAddNX`'s error the way the preceding `ZRem` and `Exists` calls already are, and handle a failed restore (log it, retry) instead of silently discarding it.",
+      "source": "pr-body/\"the failure modes bias towards a stale member rather than a lost one\"",
+      "anchor": {
+        "type": "line",
+        "path": "weed/filer/redis2/universal_redis_store.go",
+        "start_line": 250,
+        "end_line": 250,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Unlike the other two new tests, TestRemoveOrphanedDirectoryListMemberKeepsRecreatedEntry only exercises keyPrefix=\"\", not the \"sw:\" prefix case.",
+      "evidence": "weed/filer/redis2/universal_redis_store_test.go:99-115 vs. :80-98/:117-142, which both loop over `[]string{\"\", \"sw:\"}`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "seaweedfs/seaweedfs",
+    "requirements": [
+      {
+        "source": "pr10735/\"ZREM the member in the not-found branch, mirroring what the expiry branch already does\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "universal_redis_store.go:207-210 calls removeOrphanedDirectoryListMember on filer_pb.ErrNotFound; TestListDirectoryEntriesRemovesOrphanedIndexMembers and TestListDirectoryEntriesRemovesIndexMembersExpiredByRedis assert exactly this (SKIP offline, no live Redis)."
+      },
+      {
+        "source": "pr10735/\"Restore the member when the value is present again after the removal\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "Restore path exists at universal_redis_store.go:245-250 and is covered by TestRemoveOrphanedDirectoryListMemberKeepsRecreatedEntry, but the restoring ZAddNX's own error is unchecked, so the guarantee itself can silently fail; see finding redis2/silent-restore-failure."
+      },
+      {
+        "source": "pr10735/\"the new ZREM reuses that variable\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "dirListKey is built once at universal_redis_store.go:178 via getKey and passed unchanged into removeOrphanedDirectoryListMember; both keyPrefix test variants exercise it."
+      },
+      {
+        "source": "pr10735/\"identity, not errors.Is\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "universal_redis_store.go:207 keeps the unchanged `err == filer_pb.ErrNotFound` identity check; FindEntry (:97-102) returns the bare sentinel only for redis.Nil, wrapping every other error."
+      },
+      {
+        "source": "pr10735/\"The feature is unaffected\" (super large directories)",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "InsertEntry (:63-65) and DeleteEntry (:132-134) skip ZAdd/ZRem for super large directories, so ZRangeByLex at :189 returns no members there and the new call at :208 is unreachable."
+      },
+      {
+        "source": "pr10735/\"Cleanup failures still do not fail the listing\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "removeOrphanedDirectoryListMember returns void; the caller at :208-210 always sets err=nil and continues regardless of its outcome."
+      },
+      {
+        "source": "pr10735/\"go build ./weed/..., go vet ./weed/filer/redis2/, gofmt all clean, and go test ./weed/filer/redis2/... -race passes against a live Redis\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Reproduced the redis2-scoped portion offline: go vet, gofmt -l, and go test -race ./weed/filer/redis2 all clean; tests SKIP without RUN_REDIS_TESTS. No live Redis or full-repo module set was available in this run to verify the rest."
+      },
+      {
+        "source": "pr10735/\"skips unless RUN_REDIS_TESTS=1... REDIS_ADDR defaulting to 127.0.0.1:6379\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "universal_redis_store_test.go:14-31 skips unless RUN_REDIS_TESTS=1 and defaults REDIS_ADDR to 127.0.0.1:6379, matching the described convention."
+      }
+    ],
+    "files": [
+      {"path": "weed/filer/redis2/universal_redis_store.go", "state": "reviewed"},
+      {"path": "weed/filer/redis2/universal_redis_store_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go vet ./weed/filer/redis2/...",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "ran offline from the clone root with GOPROXY=off GOTOOLCHAIN=local; no output, exit 0"
+      },
+      {
+        "check": "gofmt -l weed/filer/redis2/universal_redis_store.go weed/filer/redis2/universal_redis_store_test.go",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "no output; both changed files already gofmt-clean"
+      },
+      {
+        "check": "go test -count=1 ./weed/filer/redis2",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "package builds and passes; all three new tests report SKIP since RUN_REDIS_TESTS is unset in this sandbox"
+      },
+      {
+        "check": "go test -count=1 -race ./weed/filer/redis2",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "package and test binary build cleanly under -race; tests still SKIP, no live Redis available"
+      },
+      {
+        "check": "live-Redis run of the three new tests against redis-server 8.2.1, and go build ./weed/... (as reported in the PR body)",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "unavailable",
+        "reason": "run policy provides no live Redis server and no network or module proxy for a full ./weed/... build; disposition settled instead by static trace of the ZRem/Exists/ZAddNX sequence against each test's setup and assertions"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "allowance": {"initial_spent": false, "follow_up_spent": false},
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

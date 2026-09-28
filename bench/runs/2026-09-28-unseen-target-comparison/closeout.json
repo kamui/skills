@@ -1,0 +1,13 @@
+{
+  "run": "2026-09-28-unseen-target-comparison",
+  "closed_at": "2026-09-28T22:22:47Z",
+  "verdict": "pass",
+  "decided_by": "decide.py exit 0",
+  "attempts": 12,
+  "valid": 12,
+  "replacements_used": 0,
+  "reviews_usd": 27.293903,
+  "charges_usd": 11.183609,
+  "total_usd": 38.477512,
+  "cap_usd": 60.0
+}

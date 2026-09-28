@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-unseen-target-comparison",
+  "target": "s-seaweedfs-10735",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "702654549d798a40a0d1f1b28a6288b3f4a48dc5ed0fba6278b6e19b77b4567a"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.284, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 a4caf1adadf8eff887b06d6a32bf8ddfc10a9b32c55bff7579178f6ff2c974af; session ccba655a-aa78-4bfd-a5c9-013de0a21f75; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (6 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T22:21:58Z",
+  "attempts": [
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-af5a7d",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": true,
+          "notes": "Quote: 'this function's own repair `ZAddNX` errors (timeout, reset, cluster MOVED/ASK) and the result is discarded. ... The member is never restored'. The fact is true (l.250 is unchecked). go-redis follows MOVED/ASK redirects internally, so naming those as terminal errors overstates the case, but timeouts and resets are possible. Register non_defects: 'Request cancellation or a client timeout can abandon the restore after ZREM landed (#10743 item 3)' is ruled 'Non-material narrow hypothetical: harm needs a concurrent same-path recreate inside the GET->EXISTS window plus a cancellation or timeout between two back-to-back commands'. This item is that same narrow hypothetical, so it is non-material. It does not identify GT-s1's replica-routed GET/EXISTS mechanism, and a retry of ZAddNX does not address GT-s1."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: 'The pre-existing logical-expiry branch ... also discards its Del/ZRem results without checking, unchanged by this diff and outside its scope.' This is accurate (clone l.216-217) and pre-existing. It is a hygiene observation, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": true,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-008",
+      "blind_token": "blind-a5ba8f",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": true,
+          "notes": "Quote: 'this `ZAddNX`'s result is never checked. If it errors, the member stays removed while the value stays live'; Fix: 'Check the `ZAddNX` error and log it'. The fact is true (l.250 discards the result). Register non_defects: 'Request cancellation or a client timeout can abandon the restore after ZREM landed (#10743 item 3)' is ruled 'Non-material narrow hypothetical: harm needs a concurrent same-path recreate inside the GET->EXISTS window plus a cancellation or timeout between two back-to-back commands'. This item is that same concurrent-recreate plus failed-restore hypothetical, so it is non-material. The proposed logging would not restore the member in any case. The item does not identify GT-s1's replica-routing mechanism."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: '`DeleteFolderChildren` deletes each child's value key directly from the ZSET's members without ever `ZRem`-ing them ... unrelated to this diff'. This is accurate (clone l.145-170: members are iterated and values DEL'd with no ZRem; DeleteEntry l.121 DELs the path's own index key). The item describes pre-existing code, asserts no defect, and proposes no fix, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": true,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-009",
+      "blind_token": "blind-8eeb14",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": true,
+          "notes": "Quote: 'the restoring `ZAddNX` call's own error is never checked. ... If that one write fails (a transient Redis error), the member stays removed even though its value exists'. The fact is true: clone universal_redis_store.go:250 discards the ZAddNX result. Register non_defects: 'Request cancellation or a client timeout can abandon the restore after ZREM landed (#10743 item 3)' is ruled 'Non-material narrow hypothetical: harm needs a concurrent same-path recreate inside the GET->EXISTS window plus a cancellation or timeout between two back-to-back commands'. This item's scenario (concurrent recreate plus a failed restore write) is that same narrow hypothetical, so it is non-material. It does not identify GT-s1: it does not mention replica-routed GET/EXISTS, a lagging replica, or a positive-but-wrong EXISTS=0 under routeByLatency/useReadOnly. Checking or retrying the ZAddNX error would not address GT-s1."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: 'TestRemoveOrphanedDirectoryListMemberKeepsRecreatedEntry only exercises keyPrefix=\"\"'. The core claim is true (test file l.106-107). The comparison is partly wrong: the TTL test at l.123-124 also uses only newTestStore(t, \"\"), so it does not loop over \"sw:\" as the item implies. This is a test-coverage hygiene remark with no product consequence, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": true,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-010",
+      "blind_token": "blind-47bb26",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: 'The new orphan-removal call is unreachable for super-large directories: InsertEntry skips ZAddNX and DeleteEntry skips ZRem when isSuperLargeDirectory is true, so `<dir>\\x00` never exists for them'. This repeats the PR body's own observation and asserts no defect or consequence. It is accurate for directories that were super-large from the start (clone universal_redis_store.go:63-65, 132-134). Per the register, the code is reachable for directories converted later, but that case is also ruled non-material. No fix is proposed. It is an observation below the threshold, and it does not touch GT-s1 (replica-routed GET/EXISTS)."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-011",
+      "blind_token": "blind-6aa41c",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: 'a directory reconfigured to super-large after already holding index members would still have a stray member re-added by the repair path if a value reappears during the ZRem→EXISTS window — a narrow edge case'. The mechanism is accurate: the restore at l.250 has no isSuperLargeDirectory guard. The only effect is re-adding a member that was present before the ZREM, so the net state is unchanged. The register rules the super-large-directory legacy-member objection non-material, and the reviewer calls this a narrow edge case. Nothing here concerns replica routing (GT-s1)."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-012",
+      "blind_token": "blind-f9d1ce",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: 'a DeleteEntry or the sibling expiry branch deletes that same value ... The trailing ZAddNX re-adds the member for a value that is once again absent, reintroducing exactly the orphan this change removes, until the next listing repeats the whole cycle.' The interleaving is possible: EXISTS sees the value, a DeleteEntry runs DEL then a no-op ZRem, and ZAddNX re-adds the member. The consequence the reviewer states is only a stale orphan member that the next listing cleans up. That is the direction the PR deliberately accepts (a stale member rather than a lost one), and at the merge-base orphans persisted forever. The effect is transient and benign, so it is non-material. The item does not concern replica routing (GT-s1)."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: 'The `glog.V(0)` skip log at universal_redis_store.go:206 still fires once for every orphan the new cleanup removes'. This is true: clone l.206 logs before the ErrNotFound branch. The register non_defects rule 'glog.V(0) logs every missing member' pre-existing hygiene, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}
