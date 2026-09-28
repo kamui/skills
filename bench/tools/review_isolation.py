@@ -46,6 +46,9 @@ def prepare_runtime_cache(clone: Path) -> None:
     for directory in modules:
         for name in (".vite-temp", ".vite"):
             relocate_cache(clone, directory / name)
+        # Tools such as @babel/register create this on first use; a provisioned one stays in place.
+        if not (directory / ".cache").exists():
+            relocate_cache(clone, directory / ".cache")
 
 
 def relocate_cache(clone: Path, link: Path) -> None:
@@ -148,6 +151,16 @@ def settings(attempt: Path, clone: Path, env: dict = None) -> dict:
         resolved = Path(executable).resolve()
         binaries.append(str(resolved.parent))
         runtime.append(str(resolved.parent.parent if name in ("python3", "node", "go") else resolved.parent))
+    # A relocatable virtualenv in the dependency cache runs an interpreter installed outside it, found
+    # through its configured home. That home may be a symlink to the versioned install, and the sandbox
+    # exposes a symlink only through the directory holding it.
+    venv = Path(str(clone) + "-cache", "venv", "pyvenv.cfg")
+    if venv.is_file():
+        for line in venv.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "home":
+                home = Path(value.strip())
+                runtime += [str(home.parent.parent), str(home.resolve().parent)]
     command = shlex.join([sys.executable, str(Path(__file__).resolve()), "hook", "--attempt", str(attempt), "--clone", str(clone)])
     return {
         "env": {**(env or {}), "PATH": ":".join(dict.fromkeys(binaries + ["/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"]))},
