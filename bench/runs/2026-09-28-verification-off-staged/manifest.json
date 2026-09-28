@@ -61,16 +61,21 @@
       "cohort_group": "fresh",
       "execution_available": true,
       "provisioning_sha256": "6035e5f4cd2d41664e215c2acae0ed3b7780fd18704ef19a6a909786f02872c9"
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "register_version": 1,
+      "packet_sha256": "0473e248e7a759a30cab6c84abace66ecf2a04349764f18b9deaa6234c5d5258",
+      "diff_manifest_sha256": "ffb09c3239a9b09fbe3b0544994d3fecbe5fe3779848ce1ab6557e0733a98e44",
+      "cohort_group": "regression",
+      "execution_available": true,
+      "provisioning_sha256": "a8f082ed7eb23ad0edfe554161c412a3a142240daffc819b44d923db90d805b2"
     }
   ],
   "exclusions": [
     {
       "target": "o-astro-16079",
       "reason": "Its focused tests build each fixture into the clone, which claude-strict-v2 mounts read-only, as in the #394 run."
-    },
-    {
-      "target": "k-graphql-js-1582",
-      "reason": "Stage 2 only. It joins when Stage 2 is approved."
     },
     {
       "target": "q-soba-195",
@@ -129,12 +134,122 @@
       "target": "p-hono-5067",
       "arm": "review-code-sonnet-high-enforced-x394-control",
       "replicate": 1
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
     }
   ],
   "caps": {
-    "max_attempts": 10,
-    "replacements": 2,
-    "spend_usd": 40.0,
+    "max_attempts": 34,
+    "replacements": 4,
+    "spend_usd": 91.29,
     "closeout_reserve_usd": 5.0,
     "max_in_flight": 1,
     "attempt_usd": 5.0
@@ -147,7 +262,29 @@
     "l-bokeh-9232/review-code-sonnet-high-enforced-x394-control/1",
     "l-bokeh-9232/review-code-sonnet-high-enforced-verification-off/1",
     "p-hono-5067/review-code-sonnet-high-enforced-verification-off/1",
-    "p-hono-5067/review-code-sonnet-high-enforced-x394-control/1"
+    "p-hono-5067/review-code-sonnet-high-enforced-x394-control/1",
+    "k-graphql-js-1582/review-code-sonnet-high-enforced-x394-control/1",
+    "k-graphql-js-1582/review-code-sonnet-high-enforced-verification-off/1",
+    "m-grpc-go-7390/review-code-sonnet-high-enforced-verification-off/2",
+    "m-grpc-go-7390/review-code-sonnet-high-enforced-x394-control/2",
+    "i-requests-6667/review-code-sonnet-high-enforced-x394-control/2",
+    "i-requests-6667/review-code-sonnet-high-enforced-verification-off/2",
+    "l-bokeh-9232/review-code-sonnet-high-enforced-verification-off/2",
+    "l-bokeh-9232/review-code-sonnet-high-enforced-x394-control/2",
+    "p-hono-5067/review-code-sonnet-high-enforced-x394-control/2",
+    "p-hono-5067/review-code-sonnet-high-enforced-verification-off/2",
+    "k-graphql-js-1582/review-code-sonnet-high-enforced-verification-off/2",
+    "k-graphql-js-1582/review-code-sonnet-high-enforced-x394-control/2",
+    "m-grpc-go-7390/review-code-sonnet-high-enforced-x394-control/3",
+    "m-grpc-go-7390/review-code-sonnet-high-enforced-verification-off/3",
+    "i-requests-6667/review-code-sonnet-high-enforced-verification-off/3",
+    "i-requests-6667/review-code-sonnet-high-enforced-x394-control/3",
+    "l-bokeh-9232/review-code-sonnet-high-enforced-x394-control/3",
+    "l-bokeh-9232/review-code-sonnet-high-enforced-verification-off/3",
+    "p-hono-5067/review-code-sonnet-high-enforced-verification-off/3",
+    "p-hono-5067/review-code-sonnet-high-enforced-x394-control/3",
+    "k-graphql-js-1582/review-code-sonnet-high-enforced-x394-control/3",
+    "k-graphql-js-1582/review-code-sonnet-high-enforced-verification-off/3"
   ],
   "rates": [
     {
@@ -168,6 +305,11 @@
     {
       "at": "2026-09-28T06:35:16Z",
       "what": "After att-001 and att-002 were filed, grade.py's arm table gained `review-code-sonnet-high-enforced-verification-off`. Preparation missed the entry, so `grade.py map` refused the variant's attempt. The entry gives the variant the rule every review-code arm has. The gRPC grader session had already finished blind; only the unblinding ran after the change. No reviewer input, tree, prompt, rubric, cap or decision rule changed.",
+      "invalidates": []
+    },
+    {
+      "at": "2026-09-28T08:49:19Z",
+      "what": "Stage 2 added after its approval on 2026-09-28, as the protocol fixed before any Stage 1 outcome: GraphQL joins the cohort, and 22 cells join the planned cells and the sealed order after Stage 1's eight. Within a replicate the arm that runs first alternates by target position, and it flips between replicates, so replicate 1 keeps Stage 1's order. The spend cap becomes $91.29, Stage 1's $21.29 spent plus Stage 2's approved $70, with the $5 closeout reserve inside it. Replacements rise to 4 and maximum attempts to 34. No arm, tree, packet, prompt, rubric or Stage 2 rule changed.",
       "invalidates": []
     }
   ]
