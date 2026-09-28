@@ -164,5 +164,11 @@
     "allowance": "Read the clone and the pinned skill. Focused commands may run only as the target allowance states, offline, with a five-minute limit per command. Put scratch files in the attempt work directory or its private temporary directory. Dependency-cache and artifact writes remain inside the attempt. Never change the clone or request access to another attempt or the host filesystem. Unavailable paths and connections stay unavailable; do not retry outside the sandbox.",
     "unprivileged_user": null
   },
-  "deviations": []
+  "deviations": [
+    {
+      "at": "2026-09-28T06:35:16Z",
+      "what": "After att-001 and att-002 were filed, grade.py's arm table gained `review-code-sonnet-high-enforced-verification-off`. Preparation missed the entry, so `grade.py map` refused the variant's attempt. The entry gives the variant the rule every review-code arm has. The gRPC grader session had already finished blind; only the unblinding ran after the change. No reviewer input, tree, prompt, rubric, cap or decision rule changed.",
+      "invalidates": []
+    }
+  ]
 }
