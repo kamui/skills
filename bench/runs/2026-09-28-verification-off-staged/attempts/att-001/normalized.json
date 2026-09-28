@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "clientconn.go",
+      "line_start": 983,
+      "line_end": 996,
+      "claim": "Don't defer GracefulClose while ac.mu is still held by the spawned goroutine. UpdateAddresses is called on a SubConn that already has a non-nil ac.transport (e.g. connectivity.Ready) with a new address list that excludes ac.curAddr \u2014 ordinary EDS/DNS address-list churn on a connected subchannel, reaching the `ac.transport != nil` branch at clientconn.go:985-987.",
+      "consequence": "updateAddrs used to call ac.mu.Unlock() before spawning `go ac.resetTransport()`, so its deferred `ac.transport.GracefulClose()` always ran lock-free. That Unlock() was removed so the caller can hand ac.mu to the new `go ac.resetTransportAndUnlock()` goroutine instead, but the deferred GracefulClose() still fires synchronously in the *caller's* goroutine before it returns. GracefulClose calls onClose inline, and onClose's first statement is ac.mu.Lock() (clientconn.go:1351) \u2014 blocking that goroutine, which is the balancer's single CallbackSerializer, until the just-spawned resetTransportAndUnlock goroutine happens to reach its own Unlock(). It only avoids a hard deadlock today because resetTransportAndUnlock's prefix has no other blocking call; this is exactly the risk the author raised and declined to take (2024-07-04T11:17:17Z review comment) before the merged version did it anyway.",
+      "proposed_fix": "Stop depending on ac.mu being free when GracefulClose fires: capture the outgoing transport and close it from its own goroutine, e.g. `defer func(t transport.ClientTransport) { go t.GracefulClose() }(ac.transport)`, matching tearDown's existing pattern of explicitly unlocking ac.mu before calling curTr.GracefulClose() (clientconn.go:1571-1583).",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

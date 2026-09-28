@@ -1,0 +1,101 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "merged": false,
+    "issues": [],
+    "specs": ["pr7390-packet"],
+    "change_description": "commit c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\ncommit 6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\ncommit ff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\ncommit 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Hold ac.mu across the addrConn's Idle->Connecting transition by having connect() and updateAddrs() keep the lock and hand it to the renamed resetTransportAndUnlock(), instead of releasing it and letting resetTransport() re-acquire it, closing the window where two goroutines could both observe Idle and start concurrent connection attempts (grpc-go#7365).",
+    "issue_fit": "Met — the supplied PR/issue packet's root-cause analysis (two goroutines both seeing addrConn Idle before either sets Connecting) is closed: connect() and updateAddrs() now hold ac.mu continuously from the Idle check through resetTransportAndUnlock()'s state transition to Connecting, and the doc comment on resetTransportAndUnlock codifies the new locking contract.",
+    "coverage": "The sole changed file, clientconn.go (+6/-7), was read in full at both merge-base and head, along with its only two call sites of the renamed method (balancer_wrapper.go) and tearDown()/onClose() for interaction with the changed lock discipline. No test files changed in this diff.",
+    "check_details": [
+      "Reviewer ran `go build .` offline at head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6: succeeded, no errors.",
+      "Reviewer ran `go test -race -v -timeout 260s .` offline at the same head: 152 subtests, 0 failures, including TestUpdateAddresses_NoopIfCalledWithSameAddresses, TestResetConnectBackoff, TestBackoffCancel and TestDial_OneBackoffPerRetryGroup, which exercise the changed connect/updateAddrs/resetTransportAndUnlock paths."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Removing the explicit ac.mu.Unlock() in updateAddrs before its deferred ac.transport.GracefulClose() means that deferred call (when ac.transport != nil) now blocks until the spawned `go ac.resetTransportAndUnlock()` goroutine reaches its own unlock, serializing the old transport's close against the new Connecting-state transition instead of letting them race; the full -race suite passed with no hang, so this is a behavior tightening, not a defect.",
+      "evidence": "clientconn.go:983-996, clientconn.go:1234-1262; reviewer-executed `go test -race -v .` (152/152 passed)."
+    },
+    {
+      "fact": "Commit 6214c9dd1's message, \"Make callers of resetBackoff() lock the mutex,\" misdescribes its own diff, which touches connect(), updateAddrs() and resetTransport()/resetTransportAndUnlock(), not resetBackoff().",
+      "evidence": "git show 6214c9dd1cd421727852b03cafceac7c9e9eb973 (commit message vs. diff body)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "grpc/grpc-go",
+    "requirements": [
+      {
+        "source": "spec-pr7390-packet/pr-body/\"This change ensures that caller of resetTransport() keep holding the mutex instead of releasing it and having resetTransport() re-acquire it.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 (connect) and clientconn.go:940-996 (updateAddrs) now call resetTransportAndUnlock while still holding ac.mu, with no intervening Unlock/Lock; the new doc comment at clientconn.go:1231-1233 states \"ac.mu must be held by the caller, and this function will guarantee it is released.\""
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"This ensures that no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "connect() (clientconn.go:906-922) holds ac.mu from the Idle check through resetTransportAndUnlock()'s ac.updateConnectivityState(Connecting) at clientconn.go:1261, so a second concurrent connect()/updateAddrs() call blocks on ac.mu until state has already left Idle, closing the two-tryAllAddrs race described in the packet's issue-7365 root-cause comment; corroborated by the passing -race package suite."
+      },
+      {
+        "source": "spec-pr7390-packet/release-notes/\"client: fix race that could lead to orphaned connections and associated resources.\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "The packet's own root-cause comment reports that the pre-fix race let two resetTransport invocations run concurrently, each creating a transport but only one being recorded in ac.transport, orphaning the other; serializing entry into resetTransportAndUnlock via the held lock prevents the double invocation that caused the orphaning."
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"## Tested Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "A 100000-iteration flake run of xds/internal/xdsclient/tests.Test/AuthorityRevive exceeds the sandbox's 5-minute-per-command, offline execution allowance and that test's full dependency surface is outside this review's scope; the reviewer instead verified the underlying locking mechanism by code inspection and ran the root package's full -race suite (152 subtests, 0 failures) at head, which corroborates but does not reproduce the specific flake-rate claim. Nothing in the merge decision turns on the exact iteration count, since the mechanism itself is independently verified."
+      },
+      {
+        "source": "spec-pr7390-packet/review-thread-10/\"Please add a short comment here: // resetTransportAndUnlock unconditionally connects the addrConn. // ac.mu must be held by the caller, and this function will guarantee it is released.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1231-1233 carries the requested doc comment, added in commit ff977b39f (\"Add doc comment for resetTransportAndUnlock\")."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Offline build (GOPROXY=off, GOFLAGS=-mod=mod, GOTOOLCHAIN=local, cached modules) of the changed package succeeded with no output/errors."
+      },
+      {
+        "check": "go test -race -v -timeout 260s .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Offline run of the full root-package suite (google.golang.org/grpc), same environment; 152 subtests, 0 failures, exit 0; includes the tests exercising connect/updateAddrs/resetTransportAndUnlock."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

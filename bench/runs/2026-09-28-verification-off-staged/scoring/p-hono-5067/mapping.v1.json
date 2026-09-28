@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-verification-off-staged",
+  "target": "p-hono-5067",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "d0fe3517872a2ba6c5a0d564b1f4e19f31c6407bad5c0f22e2b70fe51e6b0357"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 e1d3d3bb3941d30ed1109edd3ded4cf380267ce086257ad0679c41e11471499e; session ca1a9dd2-ee2c-42a3-bdd4-082bf2ea93f4; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (2 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T07:45:11Z",
+  "attempts": [
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-4d6e09",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"patch coverage 76.47% under the 80% target, but the base repository's codecov.yml marks the patch status check `informational: true`, so it does not block merges.\" Accurate: clone/codecov.yml lines 6-9 (same at main) set patch target 80% with informational: true. The register's non_defects rule that Codecov patch-coverage hygiene alone is non-material; the item doesn't identify the formData()-then-parseBody() failure (GT-p1) and asserts no defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-008",
+      "blind_token": "blind-5e78c0",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`parseFormData` in src/utils/body.ts now reads the whole body via `arrayBuffer()` and re-parses it through `bufferToFormData()` instead of calling the platform `Request.formData()` directly, matching the pattern `src/validator/validator.ts`'s `form` branch already used\". Accurate description: clone/src/utils/body.ts:126-132 at head and validator.ts form branch (arrayBuffer + bufferToFormData, unchanged from main). It is a neutral observation with no consequence asserted. It touches the GT-p1 code, but it never names the cached-FormData re-serialization / formData()-before-parseBody() failure or a corrective outcome, so it only points at the right function and does not recover GT-p1."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

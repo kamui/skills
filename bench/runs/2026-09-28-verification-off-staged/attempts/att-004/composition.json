@@ -1,0 +1,104 @@
+{
+  "run": {
+    "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "merge_base": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "coverage": "complete",
+    "target_kind": "range",
+    "target": "main...review-head",
+    "change_description": "commit ec0e33b330f479e6ea1f4afb866522bd268b9d3e\nAvoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\ncommit 8f954567bdfb7fa2bd638b7021b0a156e3f71787\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\ncommit f21e70bf7a3430f219de00557817d23bfdd62dbd\nRename default SSLContext to make it private by convention\n\ncommit 4089f3dc65f783beaa53cc032958ab625440d0ac\nWrap line to comply with CI lint",
+    "specs": ["spec-pr6667"]
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Avoid the per-request cost of urllib3's slow load_verify_locations() call for the common verify=True case by reusing one preloaded SSLContext across requests, instead of loading the CA bundle onto every connection pool anew.",
+    "issue_fit": "No originating issue; aligned against the caller-supplied PR title and body (spec-pr6667, https://github.com/psf/requests/pull/6667). The performance goal is met for the primary send()/_get_connection() request path; the accompanying claim that verify=True behaves exactly as before is only partial.",
+    "coverage": "Full merge-base diff (one file, src/requests/adapters.py, +28/-18) read at base and head; cert_verify(), _urllib3_request_context(), _get_connection(), and the still-public get_connection() extension point traced and cross-checked with direct read-only introspection against the pinned offline virtualenv (urllib3 2.8.0). Network-dependent tests are unavailable offline; a fresh-context worker independently confirmed the one security finding below.",
+    "check_details": [
+      "Network-dependent ssl/verify pytest selection is unavailable offline; per the run policy, test_pyopenssl_redirect and test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert fail identically at merge-base and head ('Missing Authority Key Identifier', a fixture/OpenSSL-version mismatch), pre-existing and unrelated to this change.",
+      "Independent read-only introspection at the pinned head (offline venv, no network) showed get_connection() + cert_verify() leaves no CA trust source configured for verify=True (cert_reqs='CERT_REQUIRED', ca_certs=None, ca_cert_dir=None, no ssl_context), contrasted with the _get_connection() path, which correctly wires the preloaded SSLContext."
+    ]
+  },
+  "findings": [
+    {
+      "id": "adapters/cert_verify-legacy-get_connection-ca-trust",
+      "title": "Restore CA trust configuration for connections obtained via get_connection()",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "security",
+      "trigger": "A subclass overrides send() to call the older, still-public self.get_connection(url, proxies) -- kept specifically \"without breaking things\" per the comment above _get_connection() -- instead of self._get_connection(request, verify, ...), then calls self.cert_verify(conn, url, True, cert): the exact shape HTTPAdapter.send() itself used before _get_connection() existed.",
+      "impact": "The resulting pool has cert_reqs='CERT_REQUIRED' but ca_certs=None, ca_cert_dir=None, and no ssl_context, confirmed by direct introspection at the pinned head. urllib3's ssl_wrap_socket() then falls back to ssl.SSLContext.load_default_certs() (the OS trust store) instead of requests' pinned certifi bundle, or finds no usable certificates at all in a zip/frozen/minimal-CA environment -- precisely the scenario sigmavirus24 and tiran raised in review -- failing every HTTPS request through that adapter.",
+      "change": "In cert_verify() (src/requests/adapters.py), when verify is True, also set the CA trust source on conn directly (e.g. conn.ssl_context = _preloaded_ssl_context), so any conn is fully configured regardless of how it was obtained, restoring cert_verify()'s pre-change self-sufficiency.",
+      "anchor": {"type": "line", "path": "src/requests/adapters.py", "start_line": 297, "end_line": 317, "side": "RIGHT"},
+      "fix": {"path": "src/requests/adapters.py", "start_line": 297, "end_line": 304}
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone",
+    "paths": {},
+    "requirements": [
+      {
+        "source": "spec-pr6667/pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/requests/adapters.py:75-77,94-95 create a module-level _preloaded_ssl_context once at import and reuse it via pool_kwargs in the send()/_get_connection() path, avoiding a load_verify_locations() call per request for the common verify=True case."
+      },
+      {
+        "source": "spec-pr6667/pr-body/\"If a verified connection is requested, _urllib3_request_context() already makes it so that a connection pool using a SSLContext with all relevant certificates loaded is always used.\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "Holds for the send()/_get_connection() path (traced and confirmed). Does not hold for connections obtained via the still-public get_connection() method (src/requests/adapters.py:406-433), which never receives the preloaded ssl_context -- see finding adapters/cert_verify-legacy-get_connection-ca-trust."
+      },
+      {
+        "source": "spec-pr6667/pr-body/\"You can test against https://invalid.badssl.com to check that verify=True and verify=False still behave as expected and are now equally fast.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Network access is unavailable in this offline sandbox; live confirmation against invalid.badssl.com could not be performed. Static tracing supports the claim for the primary send()/_get_connection() path; it does not hold for the legacy get_connection() path (see above)."
+      }
+    ],
+    "files": [
+      {"path": "src/requests/adapters.py", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "pytest ssl/verify selection (test_pyopenssl_redirect, test_different_connection_pool_for_tls_settings_verify_bundle_unexpired_cert)",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "unavailable",
+        "reason": "Needs live network hosts, disabled in this sandbox. Per the run policy, both tests fail identically at merge-base 8dd3b26b and head with 'Missing Authority Key Identifier' (a fixture-certificate/OpenSSL-version mismatch), a pre-existing environment issue unrelated to this change."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "adapters/cert_verify-legacy-get_connection-ca-trust",
+          "type": "candidate",
+          "trigger": "security",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-work/review-yc1DXO/verify/initial",
+          "raw_return": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-work/review-yc1DXO/verify/initial-return-repaired2.json",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-work/review-yc1DXO/verify/initial/accounting-repaired2.json",
+          "operation": "Agent tool (subagent_type=general-purpose, model=sonnet, run_in_background=false), fresh-context, no shared conversation"
+        }
+      ],
+      "allowance": {"initial_spent": true, "follow_up_spent": false},
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

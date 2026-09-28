@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "Removing the explicit ac.mu.Unlock() in updateAddrs before its deferred ac.transport.GracefulClose() means that deferred call (when ac.transport != nil) now blocks until the spawned `go ac.resetTransportAndUnlock()` goroutine reaches its own unlock, serializing the old transport's close against the new Connecting-state transition instead of letting them race; the full -race suite passed with no hang, so this is a behavior tightening, not a defect.",
+      "consequence": "clientconn.go:983-996, clientconn.go:1234-1262; reviewer-executed `go test -race -v .` (152/152 passed).",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "Commit 6214c9dd1's message, \"Make callers of resetBackoff() lock the mutex,\" misdescribes its own diff, which touches connect(), updateAddrs() and resetTransport()/resetTransportAndUnlock(), not resetBackoff().",
+      "consequence": "git show 6214c9dd1cd421727852b03cafceac7c9e9eb973 (commit message vs. diff body).",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

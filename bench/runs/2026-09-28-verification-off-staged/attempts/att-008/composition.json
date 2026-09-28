@@ -1,0 +1,79 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["pr-5067-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Normalize Content-Type media-type matching to be case-insensitive in `parseBody()` and `validator()`, while preserving case-sensitive parameters such as multipart boundaries, per the supplied issue #5060 packet.",
+    "issue_fit": "Full — all three suggested tests from the supplied issue packet (parseBody with mixed-case `x-www-form-urlencoded`, `validator('json')` with mixed-case `Application/JSON`, and `validator('form')` with mixed-case urlencoded/multipart while preserving the boundary) are implemented and pass.",
+    "coverage": "All 6 changed files (body.ts, body.test.ts, buffer.ts, buffer.test.ts, validator.ts, validator.test.ts) read in full against the merge-base diff, plus the unchanged request.ts bodyCache machinery and validator.ts's pre-existing form-parsing branch that the changed code now shares.",
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts` at reviewed head 5226d4165d48643586152614cbd07422a0ab7a22 (clean tree): 106 passed, 1 pre-existing skip, 0 failed."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`parseFormData` in src/utils/body.ts now reads the whole body via `arrayBuffer()` and re-parses it through `bufferToFormData()` instead of calling the platform `Request.formData()` directly, matching the pattern `src/validator/validator.ts`'s `form` branch already used before this change.",
+      "evidence": "src/utils/body.ts:126-132; src/validator/validator.ts:119-121."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "honojs/hono",
+    "requirements": [
+      {
+        "source": "spec-pr5067-packet/issue-5060-suggested-tests",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.test.ts:54-63 (mixed-case x-www-form-urlencoded), src/validator/validator.test.ts:676-686 (mixed-case Application/JSON), src/validator/validator.test.ts:796-830 (mixed-case urlencoded and multipart, boundary preserved)"
+      },
+      {
+        "source": "spec-pr5067-packet/issue-5060-expected-behavior",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:104-106 lowercases only the media-type portion before matching; src/utils/buffer.ts:106-116 lowercases only the substring before the first `;`, leaving boundary/charset parameters untouched; src/validator/validator.ts:24-26 adds the `i` flag to the existing regexes."
+      },
+      {
+        "source": "commit-5226d41/\"normalize Content-Type media type for case-insensitive matching\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Same evidence as above; all three call sites (parseBody, bufferToFormData, validator regexes) now match case-insensitively while preserving parameters."
+      }
+    ],
+    "files": [
+      { "path": "src/utils/body.ts", "state": "reviewed" },
+      { "path": "src/utils/body.test.ts", "state": "reviewed" },
+      { "path": "src/utils/buffer.ts", "state": "reviewed" },
+      { "path": "src/utils/buffer.test.ts", "state": "reviewed" },
+      { "path": "src/validator/validator.ts", "state": "reviewed" },
+      { "path": "src/validator/validator.test.ts", "state": "reviewed" }
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "run directly by the reviewer at the pinned head on a clean tree; 106 passed, 1 pre-existing skip, 0 failed"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
