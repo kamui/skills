@@ -1,0 +1,1353 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-verification-off-staged",
+  "computed_at": "2026-09-28T13:10:09Z",
+  "metric_code_revision": "289ef4969d5d78ff2316b1da134a548d9b77761f",
+  "rubric_version": 1,
+  "inputs": [
+    {
+      "target": "m-grpc-go-7390",
+      "mapping_version": 2,
+      "register_version": 1
+    },
+    {
+      "target": "i-requests-6667",
+      "mapping_version": 2,
+      "register_version": 2
+    },
+    {
+      "target": "l-bokeh-9232",
+      "mapping_version": 2,
+      "register_version": 1
+    },
+    {
+      "target": "p-hono-5067",
+      "mapping_version": 2,
+      "register_version": 1
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "mapping_version": 1,
+      "register_version": 1
+    }
+  ],
+  "cells": [
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-001"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-002"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-003"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-004"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-005"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-006"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-007"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-008"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-009"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-010",
+        "att-011"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-012"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-013"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-014"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-015"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-016"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-017"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-018"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-019"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-020"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-021"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-022"
+      ]
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-023"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-024"
+      ]
+    },
+    {
+      "target": "i-requests-6667",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-025"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-026"
+      ]
+    },
+    {
+      "target": "l-bokeh-9232",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-027"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-028"
+      ]
+    },
+    {
+      "target": "p-hono-5067",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-029"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-030"
+      ]
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-031"
+      ]
+    }
+  ],
+  "by_target_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 7.680224,
+      "cost_common_rate_usd": 7.680224,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 624.0,
+      "elapsed_to_completion_s": 624.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "k-graphql-js-1582"
+      },
+      "attempts_included": 4,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.75,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 6.871173,
+      "cost_common_rate_usd": 6.871174,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 502.0,
+      "elapsed_to_completion_s": 503.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "l-bokeh-9232"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 6.201097,
+      "cost_common_rate_usd": 6.201097,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 463.0,
+      "elapsed_to_completion_s": 463.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 1,
+        "false_findings_unique": 1,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 8.240252,
+      "cost_common_rate_usd": 8.240252,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 522.0,
+      "elapsed_to_completion_s": 522.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 2,
+        "false_clean": 2,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 6.870328,
+      "cost_common_rate_usd": 6.870328,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 516.0,
+      "elapsed_to_completion_s": 516.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "i-requests-6667"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 2
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 3,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 11.439412,
+      "cost_common_rate_usd": 11.439412,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 906.0,
+      "elapsed_to_completion_s": 906.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "k-graphql-js-1582"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 8.120318,
+      "cost_common_rate_usd": 8.120318,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 704.0,
+      "elapsed_to_completion_s": 704.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "l-bokeh-9232"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 9.394247,
+      "cost_common_rate_usd": 9.394247,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 824.0,
+      "elapsed_to_completion_s": 824.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "m-grpc-go-7390"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 9.427459,
+      "cost_common_rate_usd": 9.427459,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 773.0,
+      "elapsed_to_completion_s": 773.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "p-hono-5067"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 3,
+        "zero_recovery": 3,
+        "false_clean": 3,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 3,
+      "false_clean": 3,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 5.47788,
+      "cost_common_rate_usd": 5.47788,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 408.0,
+      "elapsed_to_completion_s": 408.0
+    }
+  ],
+  "by_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off"
+      },
+      "attempts_included": 16,
+      "valid_reviews": {
+        "count": 15,
+        "buggy_count": 12,
+        "false_findings_raw": 1,
+        "false_findings_unique": 1,
+        "approved_on_buggy": 2,
+        "zero_recovery": 2,
+        "false_clean": 2,
+        "noise_items": 21
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.604167,
+      "recall_completed_only": 0.666667,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 3,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 9,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 21,
+      "cost_contemporaneous_usd": 35.863074,
+      "cost_common_rate_usd": 35.863074,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 522.0,
+      "elapsed_to_completion_s": 522.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control"
+      },
+      "attempts_included": 15,
+      "valid_reviews": {
+        "count": 15,
+        "buggy_count": 12,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 3,
+        "zero_recovery": 3,
+        "false_clean": 3,
+        "noise_items": 15
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.583333,
+      "recall_completed_only": 0.583333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 3,
+      "false_clean": 3,
+      "fix_sufficient": {
+        "sufficient": 6,
+        "partial": 3,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 15,
+      "cost_contemporaneous_usd": 43.859316,
+      "cost_common_rate_usd": 43.859317,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 742.0,
+      "elapsed_to_completion_s": 742.0
+    }
+  ],
+  "by_shape": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "changed-test correctness"
+      },
+      "attempts_included": 4,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.75,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 6.871173,
+      "cost_common_rate_usd": 6.871174,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 502.0,
+      "elapsed_to_completion_s": 503.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 1,
+        "false_findings_unique": 1,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 8.240252,
+      "cost_common_rate_usd": 8.240252,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 522.0,
+      "elapsed_to_completion_s": 522.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 2,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 7.680224,
+      "cost_common_rate_usd": 7.680224,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 624.0,
+      "elapsed_to_completion_s": 624.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "ordinary behavioural change"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 6.201097,
+      "cost_common_rate_usd": 6.201097,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 463.0,
+      "elapsed_to_completion_s": 463.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 2,
+        "false_clean": 2,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 6.870328,
+      "cost_common_rate_usd": 6.870328,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 516.0,
+      "elapsed_to_completion_s": 516.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "changed-test correctness"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 8.120318,
+      "cost_common_rate_usd": 8.120318,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 704.0,
+      "elapsed_to_completion_s": 704.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 9.427459,
+      "cost_common_rate_usd": 9.427459,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 773.0,
+      "elapsed_to_completion_s": 773.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "concurrency, shared mutable state"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 2
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 3,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 11.439412,
+      "cost_common_rate_usd": 11.439412,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 906.0,
+      "elapsed_to_completion_s": 906.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "ordinary behavioural change"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 3
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 1.0,
+      "recall_completed_only": 1.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 3,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 3,
+      "cost_contemporaneous_usd": 9.394247,
+      "cost_common_rate_usd": 9.394247,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 824.0,
+      "elapsed_to_completion_s": 824.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "released-compatibility break, public API or SDK"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 3,
+        "zero_recovery": 3,
+        "false_clean": 3,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 3,
+      "false_clean": 3,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 5.47788,
+      "cost_common_rate_usd": 5.47788,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 408.0,
+      "elapsed_to_completion_s": 408.0
+    }
+  ],
+  "by_cohort": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 2,
+        "false_clean": 2,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.333333,
+      "recall_completed_only": 0.333333,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 2,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 1,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 0,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 6.870328,
+      "cost_common_rate_usd": 6.870328,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 516.0,
+      "elapsed_to_completion_s": 516.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 13,
+      "valid_reviews": {
+        "count": 12,
+        "buggy_count": 9,
+        "false_findings_raw": 1,
+        "false_findings_unique": 1,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 15
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 1,
+      "recall_attempt_level": 0.694444,
+      "recall_completed_only": 0.777778,
+      "false_findings_raw": 1,
+      "false_findings_unique": 1,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 1,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 8,
+        "partial": 1,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 15,
+      "cost_contemporaneous_usd": 28.992746,
+      "cost_common_rate_usd": 28.992746,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 528.0,
+      "elapsed_to_completion_s": 528.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 3,
+        "zero_recovery": 3,
+        "false_clean": 3,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 3,
+      "zero_recovery": 3,
+      "false_clean": 3,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 5.47788,
+      "cost_common_rate_usd": 5.47788,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 408.0,
+      "elapsed_to_completion_s": 408.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "cohort_group": "regression"
+      },
+      "attempts_included": 12,
+      "valid_reviews": {
+        "count": 12,
+        "buggy_count": 9,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 11
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.777778,
+      "recall_completed_only": 0.777778,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 6,
+        "partial": 3,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 11,
+      "cost_contemporaneous_usd": 38.381436,
+      "cost_common_rate_usd": 38.381436,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 792.0,
+      "elapsed_to_completion_s": 792.0
+    }
+  ]
+}

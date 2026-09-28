@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "bokehjs/src/lib/models/widgets/date_picker.ts",
+      "line_start": 82,
+      "line_end": 83,
+      "claim": "Skip the offset shift for dates that are already absolute timestamps. A browser west of UTC (e.g. America/New_York, America/Sao_Paulo) renders a DatePicker whose value, min_date, or max_date came from Python, e.g. `DatePicker(value=datetime.date.today())` -- issue #9129's own repro.",
+      "consequence": "Python encodes those fields as an absolute UTC-midnight timestamp (bokeh/util/serialization.py:184, wired into JSON encoding at bokeh/core/json_encoder.py:186), which `toISOString()` already read correctly pre-fix. The newly added offset subtraction now shifts that instant into the prior UTC day, so the shown date -- and the min/max bounds, which have no other producer -- are one calendar day early.",
+      "proposed_fix": "Apply the offset shift only to the locally-parsed string `_on_select` produces; for a value that is already an absolute timestamp, read `getUTCFullYear`/`getUTCMonth`/`getUTCDate` directly instead of shifting and re-reading local `toISOString()`.",
+      "native_priority": "P1",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "test_js_on_change_executes and test_server_on_change_round_trip only distinguish pre-fix from post-fix `_unlocal_date` behavior when the runner's TZ has a nonzero offset; .travis.yml sets no TZ, so under a UTC runner both tests pass identically whether or not the timezone fix (or this regression) is present.",
+      "consequence": "tests/integration/widgets/test_datepicker.py; .travis.yml has no TZ directive; node repro shows old==new=\"Fri Sep 20 2019\" at TZ=UTC for both the string and numeric-timestamp paths.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

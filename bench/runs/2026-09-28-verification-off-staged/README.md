@@ -1,19 +1,86 @@
 # Verification-off staged run
 
-Refs [#394](https://github.com/kamui/skills/issues/394) and
+Part of [#409](https://github.com/kamui/skills/issues/409). Refs
+[#394](https://github.com/kamui/skills/issues/394) and
 [#380](https://github.com/kamui/skills/issues/380). It tests whether `review-code`'s independent
 verification phase earns its cost, by comparing the current tree with a tree that has the phase
 removed. The reasons for choosing this part, and the simulation behind the rules below, are in
 the [analysis note](../../../docs/research/review-code-large-part-ablation-2026-09-28/README.md).
 
-The maintainer approved the staged design and the $40 Stage 1 cap on 2026-09-28. Stage 2 has no
-approved budget.
+The maintainer approved the staged design and the $40 Stage 1 cap on 2026-09-28, and Stage 2
+and its $70 cap the same day, after Stage 1 cleared.
 
 The manifest was frozen at `2026-09-28T06:05:09Z` on freeze commit
 `4a4f5f149e373e31878b7ad72011cc01646616fd`, after the [launch checks](launch-preflight/summary.json)
 passed and before any paid dispatch.
 
-## Results, 2026-09-28
+## Stage 2 results, 2026-09-28
+
+**Stage 2 passed. Every rule holds over 15 matched pairs.** A pass is not adoption: #380's
+unseen-target comparison comes first.
+
+| Rule over the 15 pairs | Control | Variant | Passes when | Outcome |
+| --- | ---: | ---: | --- | --- |
+| Reviews carrying an in-jurisdiction false or non-material finding | 1 | 1 | Variant minus control at most 1 | Holds |
+| Reviews carrying any false finding | 0 | 1 | Variant minus control at most 2 | Holds |
+| Registered defects recovered | 9 | 10 | Variant at least control minus 3, and no defect the control recovers 3 of 3 is recovered 0 of 3 | Holds |
+| `must-fix` on recovered defects | 9 | 10 | Variant at least control minus 3 | Holds |
+| Sufficient remedies on recovered defects | 6 | 9 | Variant at least control minus 3 | Holds |
+| Invalid or stopped attempts | 0 | 1 | Variant at most control plus 1 | Holds |
+| Cost, median over targets of the variant-to-control ratio of per-target median cost | 1.0 | 0.836 | At most 0.90 | Holds |
+| Elapsed to payload, the same ratio | 1.0 | 0.689 | At most 0.90 | Holds |
+
+Per target, three replicates per arm. Recovered defects are listed by replicate; the paired
+columns read control / variant.
+
+| Target | Control recovered | Variant recovered | In-jurisdiction false or non-material | Any false finding | Median cost | Median elapsed |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| gRPC (clean) | none / none / none | none / none / none | 1 / 0 | 0 / 1 | $2.74 / $2.43 | 773 s / 522 s |
+| requests | GT-i3 / GT-i1 / GT-i1 | GT-i1 / GT-i2 / GT-i2 | 0 / 0 | 0 / 0 | $3.75 / $2.37 | 906 s / 624 s |
+| Bokeh | GT-l1 / GT-l1 / GT-l1 | GT-l1 / GT-l1 / GT-l1 | 0 / 0 | 0 / 0 | $2.91 / $1.85 | 824 s / 463 s |
+| Hono | none / none / none | none / GT-p1 / none | 0 / 0 | 0 / 0 | $1.82 / $2.26 | 408 s / 516 s |
+| GraphQL | GT-k1 / GT-k1 / GT-k1 | GT-k1 / GT-k1 / GT-k1 | 0 / 1 | 0 / 0 | $2.44 / $2.04 | 704 s / 502 s |
+
+The variant cost less on four of five targets. The per-target cost ratios are 0.89 on gRPC, 0.63
+on requests, 0.64 on Bokeh, 1.24 on Hono and 0.84 on GraphQL; their median is 0.84. For elapsed
+time the median ratio is 0.69.
+
+What the counted events are:
+
+- **Control, in jurisdiction:** att-001, the Stage 1 gRPC `must-fix` its verifier confirmed.
+  Stage 1's grader ruled it false. Stage 2's grader, seeing all six gRPC reviews, ruled it
+  non-material: the mechanics are accurate, but the consequence does not qualify.
+- **Variant, in jurisdiction:** att-011, a `must-fix` at P3 asking to finish a null-typing fix in
+  GraphQL's function signature. Non-material: it names no failing call.
+- **Variant, false finding:** att-023, a `consider` on gRPC asking to release a lock before
+  spawning a goroutine. A `consider` is outside the verifier's jurisdiction, so the control's
+  verifier would not have seen it either.
+- **Hono:** the only recovery of GT-p1 in six reviews is the variant's, att-019. Both arms
+  approved Hono in the other five.
+
+The scorer, [results.v2.json](results.v2.json), gives completed-only macro recall of 0.667 for the
+variant and 0.583 for the control, and 21 non-material items against 15. The variant's arm cost
+there includes the stopped att-010.
+
+**How far this reaches.** Fifteen pairs on five small targets. The simulation behind these rules
+shows a variant that loses 20% of its recoveries passes about half the time, so a pass rules out
+a large loss, not a small one. No target has a destructive migration or a data-loss defect, and
+only requests is a security target, which is where the verifier claims its value. The pinned
+targets cannot observe re-review, pull-request prior state, or carried confirmations.
+
+**One stop.** att-010, the variant's GraphQL replicate 1, stopped after 30 turns when its login
+expired: "OAuth session expired and could not be refreshed". It is filed as stopped and replaced
+by att-011. Filing it needed a filer change, recorded in the manifest's deviations.
+
+Reviews cost $59.649854 and blind grading $2.105612, for a Stage 2 total of **$61.755466**
+against the $70 cap. The run's total is $83.044698. Every grading audit passed and no grader
+proposed a new defect.
+
+Evidence: [results](results.v2.json), [scorecards](scoring/), [ledger](ledger.md),
+[stage decisions](stage-decisions.jsonl), [closeout record](closeout.json), and
+[`stage2.py`](stage2.py), which applies the rules to the filed records.
+
+## Stage 1 results, 2026-09-28
 
 **Stage 1 cleared. It is not a pass.** No reject rule fired, and the control dispatched a
 verifier batch on three of the four targets, so the stage observed the part. The maintainer
@@ -56,7 +123,7 @@ How each rule came out:
 
 The one false finding is the control's. On gRPC, the clean target, the control raised a
 `must-fix` concurrency finding about a deferred `GracefulClose` waiting on a lock, and its
-verifier confirmed it. The grader ruled it false. The variant saw the same behaviour, recorded it
+verifier confirmed it. The grader ruled it false. Stage 2's regrade ruled the same finding non-material. The variant saw the same behaviour, recorded it
 as an observation and approved.
 
 Both arms approved Hono and recovered nothing there. The control dispatched no batch on Hono, so

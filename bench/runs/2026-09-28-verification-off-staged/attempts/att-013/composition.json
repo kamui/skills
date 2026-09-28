@@ -1,0 +1,129 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr7390-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": ["grpc/grpc-go#7365"],
+    "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a check-then-act race in addrConn: callers of resetTransport (renamed resetTransportAndUnlock) now keep ac.mu held from validation through the connectivity-state transition to Connecting, instead of releasing and letting resetTransport re-acquire it, so two concurrent connect() calls can no longer both observe Idle and both start a connection attempt, which previously orphaned one of the two transports.",
+    "issue_fit": "Met — the supplied PR body and grpc/grpc-go#7365 both describe the exact race (addrConn.connect releases ac.mu after checking Idle, resetTransport re-acquires it, leaving a window for a second concurrent connect()/updateAddrs() call to also see Idle); the diff closes that window by holding ac.mu continuously across the check and the Connecting-state transition in both connect() and updateAddrs().",
+    "coverage": "Full merge-base diff reviewed (clientconn.go, +6/-7, the only changed file); both call sites of the renamed resetTransportAndUnlock (connect(), updateAddrs()) and the function body were read in full, along with the codebase's other GracefulClose/onClose lock-ordering site (tearDown) for a consistency check. Two safety premises about the lock hand-off from updateAddrs's `go resetTransportAndUnlock()` to the deferred `GracefulClose()` were mandatory under the concurrency risk area and both were verified `holds` by a fresh-context worker. Two focused, offline, race-detector test runs at the pinned head corroborate: TestSubConnEmpty (which exercises the exact updateAddrs-with-active-transport path) x100 and the PR's own target flaky test, xdsclient's Test/AuthorityRevive, x50 — both all-pass with no data races or hangs.",
+    "check_details": [
+      "Reviewer ran `go build ./...` at the pinned head offline: succeeded with no errors.",
+      "Reviewer ran `go test -C test . -run 'Test/SubConnEmpty$' -count=100 -race -timeout 250s` at the pinned head: all 100 iterations passed, no races or hangs (exercises updateAddrs removing all addresses from a Ready subchannel and re-adding them — the exact lock hand-off path this PR changes).",
+      "Reviewer ran `go test ./xds/internal/xdsclient/tests/... -run 'Test/AuthorityRevive' -count=50 -race -v` at the pinned head: all 50 iterations passed, no races or hangs (this is the flaky test the PR and grpc/grpc-go#7365 target; the author reports 0.4% flakiness pre-fix over 100000 CI attempts, which the 5-minute focused-test bound does not let us fully reproduce, but nothing material depends on the exact pre-fix flake rate once the structural race window is confirmed closed).",
+      "Codecov (supplied, non-review CI comment in the packet): 'All modified and coverable lines are covered by tests' at the pinned head 76ef33f4 — historical, not independently re-run, but consistent with reviewer's own build/test results."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "updateAddrs's `go ac.resetTransportAndUnlock()` now launches while ac.mu is still locked, and the function's own deferred `ac.transport.GracefulClose()` runs immediately afterward in the same goroutine, synchronously blocking on `ac.mu.Lock()` inside `onClose` until the spawned goroutine releases it — unlike the prior explicit-unlock-then-go order, and unlike tearDown's still-explicit unlock-before-GracefulClose pattern a few hundred lines below; this briefly serializes the two goroutines but a mandatory verification pass confirmed no cyclic wait exists (updateConnectivityState dispatches to the balancer asynchronously via the callback serializer), so it is not a hang.",
+      "evidence": "clientconn.go:977-996, clientconn.go:1573-1575, verification premise-2-no-lock-cycle-on-handoff (holds)"
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-013/clone",
+    "requirements": [
+      {
+        "source": "spec-pr7390-packet/pr-body/\"caller of resetTransport() keep holding the mutex instead of releasing it and having resetTransport() re-acquire it\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 (connect: no ac.mu.Unlock() between the Idle check and the resetTransportAndUnlock() call) and clientconn.go:940-996 (updateAddrs: no ac.mu.Unlock() between the state checks and the `go resetTransportAndUnlock()` call); verified premise-1-single-holder (holds)."
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"This ensures that no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The Idle-state check and the transition to Connecting (inside resetTransportAndUnlock, clientconn.go:1234-1245) now execute under one continuous ac.mu hold in connect(), removing the check-then-act window grpc/grpc-go#7365's root-cause comment identifies; corroborated by 100x -race passes of TestSubConnEmpty and 50x -race passes of Test/AuthorityRevive at the pinned head."
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"RELEASE NOTES: client: fix race that could lead to orphaned connections and associated resources\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Structural fix (above) closes the double-resetTransport race the release note describes (arjan-bal's issue comment explains the orphaned-transport mechanism: only one of the two transports created by the race is ever assigned to ac.transport, so the other leaks until server shutdown); no reviewer-run test contradicts the claim."
+      },
+      {
+        "source": "spec-pr7390-packet/issue-7365/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer reproduced 50 offline -race iterations of Test/AuthorityRevive at the pinned head with no failures, within the 5-minute focused-test bound; the full 100000-iteration soak from the author's report could not be reproduced under that bound, but nothing material depends on the exact count once the structural race window (previous requirement row) is confirmed closed."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build ./...",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "run offline at the pinned head with GOPROXY=off; succeeded with no output"
+      },
+      {
+        "check": "go test -C test . -run 'Test/SubConnEmpty$' -count=100 -race -timeout 250s",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "100/100 subtests passed, no races; exercises updateAddrs with an active transport and a since-changed address list"
+      },
+      {
+        "check": "go test ./xds/internal/xdsclient/tests/... -run 'Test/AuthorityRevive' -count=50 -race -v",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "50/50 subtests passed, no races; this is the flaky test named by grpc/grpc-go#7365 and the PR's Tested section"
+      },
+      {
+        "check": "codecov/patch (grpc/grpc-go#7390 comment #1, supplied in the packet)",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "accepted",
+        "reason": "packet-supplied CI comment reporting full coverage of modified lines, at the exact reviewed head, with readable output; not independently re-run (no forge/network access), and consistent with reviewer's own build/test results"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-1-single-holder",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "resetTransportAndUnlock is only ever invoked by addrConn.connect() and addrConn.updateAddrs(), both of which already hold ac.mu with no intervening Unlock() at the call site, so the function never begins running with ac.mu unlocked.",
+          "evidence": "clientconn.go:905-923, clientconn.go:940-996, clientconn.go:1234-1238; repo-wide grep finds no third call site",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-2-no-lock-cycle-on-handoff",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Handing ac.mu off from updateAddrs's `go ac.resetTransportAndUnlock()` to the spawned goroutine, while the calling goroutine's deferred `ac.transport.GracefulClose()` synchronously blocks on ac.mu.Lock() via onClose, never deadlocks, because resetTransportAndUnlock's path before its first ac.mu.Unlock() never needs the old transport's own mutex.",
+          "evidence": "clientconn.go:977-996, clientconn.go:1234-1260, clientconn.go:1200-1215, balancer_wrapper.go:255-259 (updateState dispatches asynchronously via the callback serializer), internal/grpcsync/callback_serializer.go:63-64, internal/transport/http2_client.go:1045-1058, clientconn.go:1573-1575 (tearDown's parallel explicit-unlock-before-GracefulClose convention)",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-013/clone-work/review-v90vB2/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-013/clone-work/review-v90vB2/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

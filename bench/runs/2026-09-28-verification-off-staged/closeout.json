@@ -1,34 +1,43 @@
 {
   "run_id": "2026-09-28-verification-off-staged",
-  "disposition": "stage 1 cleared",
-  "closed_at": "2026-09-28T07:46:10Z",
+  "disposition": "stage 2 passed",
+  "closed_at": "2026-09-28T13:10:31Z",
   "review_dispatches_stopped": true,
-  "stop_after": "att-008",
-  "stop_reason": "Stage 1's eight cells are filed and graded. Stage 2 has no approved budget.",
-  "attempts": 8,
-  "valid_attempts": 8,
+  "stop_after": "att-031",
+  "stop_reason": "Every planned cell is filed and graded.",
+  "attempts": 31,
+  "valid_attempts": 30,
   "invalid_attempts": 0,
-  "replacements_used": 0,
+  "stopped_attempts": 1,
+  "replacements_used": 1,
   "unrun_cells": 0,
   "false_findings": {
-    "att-001": 1
+    "att-023": 1
   },
-  "in_flight": [],
   "spend_usd": {
-    "reviews": 20.072536,
-    "grading": 1.216696,
+    "stage_1": 21.289232,
+    "stage_2": 61.755466,
+    "reviews": 79.72239,
+    "grading": 3.322308,
     "adjudication": 0,
-    "total": 21.289232,
-    "approved_cap": 40
+    "total": 83.044698,
+    "approved_caps": {
+      "stage_1": 40,
+      "stage_2": 70
+    }
   },
-  "scores": "results.v1.json",
+  "scores": {
+    "stage_1": "results.v1.json",
+    "stage_2": "results.v2.json"
+  },
   "mappings": {
-    "m-grpc-go-7390": 1,
-    "i-requests-6667": 1,
-    "l-bokeh-9232": 1,
-    "p-hono-5067": 1
+    "m-grpc-go-7390": 2,
+    "i-requests-6667": 2,
+    "l-bokeh-9232": 2,
+    "p-hono-5067": 2,
+    "k-graphql-js-1582": 1
   },
-  "isolation": "All eight attempts kept claude-strict-v2 evidence. No audit lists a violation; att-001, att-002 and att-005 each list 1 confined request.",
-  "grading": "Each target was blind-graded once by Opus 5.5 high, both arms' reviews together. Every grading audit passed and no grader proposed a new defect.",
-  "deviations": "One, recorded in the manifest: the grader's arm table gained the variant arm after att-002 was filed. It invalidates nothing."
+  "isolation": "Every attempt kept claude-strict-v2 evidence. No audit lists a violation.",
+  "grading": "Stage 1 graded each target once. Stage 2 graded each target once more, holding all its attempts, by Opus 5.5 high; those mappings supersede Stage 1's. Every grading audit passed and no grader proposed a new defect.",
+  "deviations": "Four, recorded in the manifest: the grader's arm table gained the variant arm; Stage 2's cells, order and caps were added at approval; att-010 stopped when its login expired, and the filer gained a path for a stopped attempt with no output; none invalidates a result."
 }

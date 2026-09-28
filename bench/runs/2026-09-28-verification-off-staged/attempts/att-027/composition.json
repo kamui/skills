@@ -1,0 +1,129 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+    "issues": [],
+    "specs": ["bokeh-pr9232-review-packet"],
+    "merged": false,
+    "coverage": "complete",
+    "change_description": "472e4770d363b3914bb478f0a6c3a83787b20c0d\nFixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\n7aae927cf09820e74a58108ea45facc0f6aa695c\nRemoved usage of var keyword.  Replaced with const.\n\ne92066d593fa2c88ffe732dbaeb3303fff996a15\nRemoved .idea/vcs.xml.\n\n4215c2d0b956eca3dc714b6c11c7fedb440013c9\nMade a shell for the integration test for DatePicker displayed/selected dates.\n\n36549bca3a63d581f7b68d08054a7813c1e6a499\nupdate tests"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Fix DatePicker showing the previous day after a user manually selects a date while the browser is in a UTC+ (east-of-UTC) timezone, per the originating issue bokeh/bokeh#9129 and the supplied review packet for bokeh/bokeh#9232.",
+    "issue_fit": "Met for the reported UTC+ post-selection scenario, but the same helper's blanket timezone-offset correction introduces a symmetric one-day error for UTC- (west-of-UTC) users on the widget's most basic path — initial `value`, `min_date`, `max_date` — see finding `date-picker/tz-offset-regression`.",
+    "coverage": "Both changed files read in full. `_unlocal_date` traced end to end together with its Python-side serialization source (`bokeh/core/property/datetime.py`, `bokeh/util/serialization.py`), and its exact diff logic reproduced with scratch Node scripts under five timezones (Europe/Paris, Europe/London, America/New_York, America/Los_Angeles, UTC), independently re-verified by a second, fresh-context pass.",
+    "check_details": [
+      "Reviewer-executed: scratch Node trace of `_unlocal_date` exactly as it appears in the diff, for both the post-selection local-date-string input and the server-supplied UTC-midnight input, under TZ=Europe/Paris, Europe/London, America/New_York, America/Los_Angeles, UTC — confirms the intended fix and an independently reproduced new regression.",
+      "Unavailable: tests/integration/widgets/test_datepicker.py is a Selenium integration suite; no browser, Selenium, or network is available in this sandbox, so it was not executed. Settled instead by tracing its assertions against the reproduced `_unlocal_date` behavior."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [
+    {
+      "id": "date-picker/tz-offset-regression",
+      "title": "Stop shifting server-supplied dates across the day boundary",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A user whose browser timezone has a positive `getTimezoneOffset()` (west of UTC, e.g. `America/New_York` or `America/Los_Angeles` — most of the Americas) opens a `DatePicker` whose `value`, `min_date`, or `max_date` came from Python as a `datetime.date`. `bokeh/util/serialization.py:184` (`convert_datetime_type`) serializes that to an exact UTC-midnight timestamp, which is precisely the originating issue's own repro, `DatePicker(value=datetime.date.today())`.",
+      "impact": "`_unlocal_date` now unconditionally subtracts `getTimezoneOffset()*60000` ms before reading the calendar day. For a UTC-midnight instant and a positive offset this rolls the instant back into the previous UTC day, so `defaultDate`/`minDate`/`maxDate` display and bound one day earlier than the real value. Node trace on `Date.UTC(2019,0,15,0,0,0)` under `TZ=America/New_York` (and `America/Los_Angeles`): merge-base prints `Tue Jan 15 2019`, head prints `Mon Jan 14 2019` — the same class of off-by-one-day bug this PR fixes, now hitting the opposite hemisphere of timezones on every initial render and on `min_date`/`max_date` always.",
+      "change": "Apply the offset correction only to a date built from the post-selection local-midnight string (the `_on_select` round trip via `date.toDateString()`), not to a date that already denotes an exact instant supplied by the server, so the calendar day for `defaultDate`/`minDate`/`maxDate` survives unmodified in every timezone.",
+      "anchor": {
+        "type": "line",
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 82,
+        "end_line": 83,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 78,
+        "end_line": 88
+      }
+    },
+    {
+      "id": "date-picker/tests-timezone-blind",
+      "title": "Exercise _unlocal_date at a non-UTC offset in the new tests",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "The Selenium suite runs with no `TZ` override, so it executes at the host's default offset (UTC in ordinary CI).",
+      "impact": "At a UTC offset of zero, `_unlocal_date`'s merge-base and head logic are byte-identical (confirmed by Node trace), so `test_js_on_change_executes` and `test_server_on_change_round_trip` pass identically whether or not the fix -- or the regression above -- is present, giving no regression protection for the defect this PR addresses.",
+      "change": "Add a case, or parametrize the existing ones, to run with `TZ` set to a non-UTC offset in each direction (e.g. `Europe/Paris` and `America/New_York`) and assert the displayed/selected date there too.",
+      "anchor": {
+        "type": "line",
+        "path": "tests/integration/widgets/test_datepicker.py",
+        "start_line": 52,
+        "end_line": 70,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`_unlocal_date` mutates its `date` argument in place via `setTime`, which is harmless today only because every call site passes a freshly constructed `Date`.",
+      "evidence": "bokehjs/src/lib/models/widgets/date_picker.ts:68-71,83."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "bokeh/bokeh",
+    "requirements": [
+      {
+        "source": "spec-bokeh-pr9232-review-packet/pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Node trace of bokehjs/src/lib/models/widgets/date_picker.ts:78-88 under TZ=Europe/Paris and TZ=Europe/London: the post-selection re-render now shows the clicked day instead of the day before, matching issue bokeh/bokeh#9129's repro."
+      },
+      {
+        "source": "spec-bokeh-pr9232-review-packet/pr-body-checklist-tests-added",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "tests/integration/widgets/test_datepicker.py adds 3 Selenium tests, left unchecked as unverified in the PR body; unexecuted here (Selenium/browser unavailable), and per finding date-picker/tests-timezone-blind they run at TZ=UTC, where they cannot discriminate the fix (or the regression) from the pre-fix code."
+      }
+    ],
+    "files": [
+      {
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/integration/widgets/test_datepicker.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "scratch Node trace of _unlocal_date under TZ=Europe/Paris,Europe/London,America/New_York,America/Los_Angeles,UTC",
+        "head": "36549bca3a63d581f7b68d08054a7813c1e6a499",
+        "outcome": "reviewer-executed",
+        "reason": "Reproduced the exact diffed logic outside the sandbox's node/browser build to confirm the intended fix and an independently reproduced new regression; independently repeated by a second fresh-context pass with the same result."
+      },
+      {
+        "check": "tests/integration/widgets/test_datepicker.py (pytest + Selenium)",
+        "head": "36549bca3a63d581f7b68d08054a7813c1e6a499",
+        "outcome": "unavailable",
+        "reason": "No browser, Selenium, or network available in this sandbox; settled instead by tracing the test's assertions against the reproduced _unlocal_date behavior above."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "allowance": {
+        "initial_spent": false,
+        "follow_up_spent": false
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
