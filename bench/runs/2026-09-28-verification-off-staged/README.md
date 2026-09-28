@@ -16,8 +16,8 @@ passed and before any paid dispatch.
 ## Results, 2026-09-28
 
 **Stage 1 cleared. It is not a pass.** No reject rule fired, and the control dispatched a
-verifier batch on three of the four targets, so the stage observed the part. Stage 2 has no
-approved budget and has not run.
+verifier batch on three of the four targets, so the stage observed the part. The maintainer
+approved Stage 2 and its $70 cap on 2026-09-28.
 
 | Attempt | Target | Arm | Native verdict | Recovered (remedy) | False findings | Non-material | Verifier batch | Elapsed to payload | Cost |
 | --- | --- | --- | --- | --- | ---: | ---: | --- | ---: | ---: |
@@ -215,6 +215,20 @@ Stage 2 runs only after a clear and a separately approved cap of $70. It has 22 
 replicates 2 and 3 of both arms on the four Stage 1 targets, and three replicates of both arms on
 GraphQL `k-graphql-js-1582`. With Stage 1 this gives 15 matched pairs. Within each replicate the
 targets keep the sealed order and the arms alternate.
+
+**Added at approval, before any Stage 2 dispatch.** The manifest records these as a deviation
+that invalidates nothing.
+
+- **Order.** GraphQL's replicate 1 runs first, then replicate 2 and replicate 3 across gRPC,
+  requests, Bokeh, Hono and GraphQL. The arm that runs first alternates by target position and
+  flips between replicates, so replicate 1 keeps Stage 1's order.
+- **Caps.** The spend cap is $91.29: Stage 1's $21.29 plus Stage 2's $70, with the $5 closeout
+  reserve inside it. Up to 4 replacements, 34 attempts in all.
+- **Grading.** Each target is graded once, after all its attempts are filed, in one blind
+  session holding every attempt on it, Stage 1's included. That mapping, v2 on the Stage 1
+  targets and v1 on GraphQL, supersedes Stage 1's and decides Stage 2. The tool refuses a
+  mapping that leaves out any attempt on the target, so the regrade is required, not optional.
+- **No early stop.** Stage 2 has no futility rule. It stops early only when a cap runs out.
 
 The variant passes only when every row holds:
 
