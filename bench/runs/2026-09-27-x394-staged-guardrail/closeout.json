@@ -1,0 +1,30 @@
+{
+  "run_id": "2026-09-27-x394-staged-guardrail",
+  "disposition": "rejected",
+  "closed_at": "2026-09-28T04:00:00Z",
+  "review_dispatches_stopped": true,
+  "stop_after": "att-008",
+  "stop_reason": "Valid candidate review att-008 on p-hono-5067 carries a false finding, which fails #394's zero-false-finding guardrail.",
+  "attempts": 8,
+  "valid_attempts": 8,
+  "invalid_attempts": 0,
+  "replacements_used": 0,
+  "unrun_cells": 1,
+  "false_findings": {"att-008": 1},
+  "in_flight": [],
+  "spend_usd": {
+    "reviews": 20.427355,
+    "grading": 1.624697,
+    "adjudication": 0,
+    "total": 22.052052,
+    "approved_cap": 40
+  },
+  "scores": "results.v1.json",
+  "mappings": {
+    "m-grpc-go-7390": 1, "q-soba-195": 1, "i-requests-6667": 1, "j-trpc-5017": 1,
+    "k-graphql-js-1582": 1, "l-bokeh-9232": 1, "n-ripgrep-2957": 1, "p-hono-5067": 1
+  },
+  "issue_394": "The removals are not adopted. The false finding does not isolate one paragraph, so #394's rule reverts the change: #407 is not merged. Stage 2 does not run.",
+  "isolation": "All eight attempts kept claude-strict-v2 evidence. No audit lists a violation; att-001, att-002 and att-003 list 1, 1 and 4 confined requests.",
+  "grading": "Each target was blind-graded once by Opus 5.5 high. Every grading audit passed and no grader proposed a new defect."
+}

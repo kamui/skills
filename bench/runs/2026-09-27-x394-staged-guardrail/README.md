@@ -13,6 +13,47 @@ The manifest was frozen at `2026-09-28T02:11:35Z` on freeze commit
 `f3c7d9ca7a563a3eb41fc25a6b7e23caf81d1b93`, after the [launch checks](launch-preflight/summary.json)
 passed and before any paid dispatch.
 
+## Results, 2026-09-28
+
+**Rejected. Do not merge #407.** The valid Hono review att-008 carries a false
+finding, which fails #394's zero-false-finding guardrail. The run stopped under its
+frozen rule after eight of nine cells. Base UI and Stage 2 stay unrun.
+
+| Attempt | Target | Native verdict | Recovered (remedy) | False findings | Non-material | Elapsed to payload | Cost |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+| att-001 | gRPC | Approved | none | 0 | 2 | 935 s | $3.722687 |
+| att-002 | soba | Approved | none | 0 | 2 | 650 s | $2.826283 |
+| att-003 | requests | Approved | GT-i2 (absent) | 0 | 0 | 1401 s | $4.277545 |
+| att-004 | tRPC | Approved | none | 0 | 1 | 546 s | $2.243351 |
+| att-005 | graphql-js | Approved | none | 0 | 1 | 354 s | $1.243795 |
+| att-006 | Bokeh | Changes Requested | GT-l1 (sufficient) | 0 | 1 | 635 s | $1.939725 |
+| att-007 | ripgrep | Approved | none | 0 | 2 | 508 s | $2.281683 |
+| att-008 | Hono | Approved | none | 1 | 2 | 503 s | $1.892286 |
+
+The false finding says the change makes every multipart or urlencoded `parseBody()`
+buffer the whole body, so "large uploads the platform could parse without fully
+materializing now pay a full in-memory buffering cost". The Hono register rules that
+claim a non-defect: `Request.formData()` also buffers the whole body. The review also
+missed GT-p1, which both historical A reviews recovered.
+
+All eight attempts are valid, and no replacement was used. No audit lists a
+violation. att-001, att-002 and att-003 list 1, 1 and 4 confined requests.
+
+Reviews cost $20.427355 and blind grading $1.624697, for a total of **$22.052052**
+against the $40 cap. Every grading audit passed and no grader proposed a new defect.
+
+**How far this result reaches.** It is one false finding in one review, with no
+matched control. Across every earlier run, the 57 graded valid A reviews carry no
+false finding, 6 of them on Hono, but those ran other trees and mostly without
+enforced isolation. Stage 1 can reject on this guardrail by design. It cannot show
+that a removed paragraph caused the finding, and none of the seven governs admission
+or falsification. Under #394, a failure that does not isolate one paragraph reverts
+the whole change.
+
+Evidence: [results](results.v1.json), [scorecards](scoring/), [blind grading](grading/),
+[ledger](ledger.md), [stage decision](stage-decisions.jsonl) and
+[closeout record](closeout.json).
+
 ## Why the run is staged
 
 #394 estimated $23 for 30 A reviews. That figure is the historical A arm at about

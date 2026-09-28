@@ -1,0 +1,134 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": ["grpc/grpc-go#7365"],
+    "specs": ["spec-pr7390"],
+    "change_description": "Update conn state to prevent concurrent connection attempts\n\nMake callers of resetBackoff() lock the mutex\n\nAdd doc comment for resetTransportAndUnlock\n\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a race in google.golang.org/grpc's addrConn state machine where two concurrent calls to connect() or updateAddrs() could each observe an Idle/eligible addrConn and both start dialing. The fix makes both callers keep ac.mu locked across the call into the renamed resetTransportAndUnlock, so the eligibility check and the transition to Connecting happen inside one uninterrupted critical section instead of two.",
+    "issue_fit": "Full. The referenced originating issue grpc/grpc-go#7365 (its content supplied verbatim in the caller's packet text; this run had no forge access and performed no live fetch) diagnoses two concurrent resetTransport/tryAllAddrs invocations caused by connect() unlocking ac.mu before resetTransport re-acquired it. The diff's lock-handoff removes exactly that gap for both connect() and updateAddrs(), and the doc comment requested during review (clientconn.go:1231-1233) is present.",
+    "coverage": "The complete merge-base diff (clientconn.go, +6/-7 across 4 commits) was read in full, along with the whole bodies of connect, updateAddrs, resetTransportAndUnlock and tryAllAddrs at head, the merge-base version of connect/resetTransport for comparison, and every other in-repo caller of resetTransport(AndUnlock), located with git grep (none outside clientconn.go; unrelated log-noise strings in test/goaway_test.go and test/end2end_test.go predate this rename and do not reference the function programmatically). No test function was added or changed by this diff. Focused go test runs at head 76ef33f4 under -race: the root google.golang.org/grpc package, the test package's Test/StateTransitions* group (count=5), and 30 iterations of the previously-flaky xds/internal/xdsclient/tests Test/AuthorityRevive all passed. Two concurrency safety premises about the lock-handoff invariant were confirmed holds by an independent fresh-context verifier that cited lines beyond the supplied premise evidence, including the merge-base code for comparison.",
+    "check_details": [
+      "Reviewer ran `go test -race -count=1 .` at the repository root (head 76ef33f4): ok, 13.6s, no failures.",
+      "Reviewer ran `go test -C test -race -run 'Test/StateTransitions' -count=5 .` (head 76ef33f4): ok, no failures.",
+      "Reviewer ran `go test -C xds/internal/xdsclient/tests -race -run 'Test/AuthorityRevive' -count=30 -v .` (head 76ef33f4): PASS, 30/30 iterations. This corroborates, but at far smaller scale than, the author's reported 100000-iteration soak, which this review's 5-minute focused-test bound cannot reproduce."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "updateAddrs() spawns `go ac.resetTransportAndUnlock()` while still holding ac.mu, so the mutex stays continuously locked across a goroutine handoff until the new goroutine reaches its first Unlock() — an unusual pattern reviewers (purnesh42H, dfawley) explicitly discussed and accepted via the function's name and doc comment rather than a compile- or runtime-enforced check.",
+      "evidence": "clientconn.go:940-996 and :1234-1262; review thread comments at clientconn.go:1231 dated 2024-07-08T19:42:18Z through 2024-07-09T20:26:47Z, ending with dfawley concluding that the function's name and doc comment were sufficient documentation of the locking contract."
+    },
+    {
+      "fact": "resetTransportAndUnlock's early `acCtx.Err() != nil` return skips the connectivity.Connecting transition entirely; this pre-existing behavior (unchanged by this diff beyond the lock removal) was raised and explicitly dismissed by reviewers as immaterial.",
+      "evidence": "clientconn.go:1234-1238; review thread comment at clientconn.go:923 dated 2024-07-08T11:45:38Z: 'Discussed offline: it doesn't matter if resetTransport() returns error after state being updated to connecting.'"
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-001/clone",
+    "requirements": [
+      {
+        "source": "spec-pr7390/body",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-922 (connect) and :940-996 (updateAddrs) no longer unlock ac.mu before calling resetTransportAndUnlock; resetTransportAndUnlock (clientconn.go:1234, doc comment at :1231-1233) no longer calls ac.mu.Lock() itself. Confirmed by fresh-context verifier premise `premise-unlock-every-path` (holds)."
+      },
+      {
+        "source": "spec-pr7390/body",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The lock is held continuously from each caller's eligibility check through the connectivity.Connecting transition inside resetTransportAndUnlock (clientconn.go:1261), so a second caller blocks on ac.mu.Lock() until state has already moved off Idle/eligible. Confirmed by fresh-context verifier premise `premise-race-closed` (holds), corroborated by 30/30 passing -race runs of Test/AuthorityRevive."
+      },
+      {
+        "source": "grpc/grpc-go#7365",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The reported root cause (two concurrent resetTransport/tryAllAddrs invocations both observing an eligible pre-transition state) is closed by the same continuous-critical-section mechanism verified above. Local reproduction under -race (30 iterations of Test/AuthorityRevive) found no recurrence, consistent with but short of the author's reported 100000-iteration soak, which is a supporting assertion not independently reproducible within this review's execution budget."
+      },
+      {
+        "source": "spec-pr7390/release-notes",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "ac.transport (clientconn.go:1422) is a single field, last-writer-wins; two concurrent successful resetTransport/tryAllAddrs calls before the fix could each create a transport but only the last write survives in ac.transport, leaving the other referenced nowhere until the addrConn is torn down — matching arjan-bal's issue-thread diagnosis that only one transport is closed on subConn update and the other is orphaned until server shutdown."
+      },
+      {
+        "source": "commit-ff977b3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1231-1233 carries the requested doc comment verbatim: 'resetTransportAndUnlock unconditionally connects the addrConn. ac.mu must be held by the caller, and this function will guarantee it is released.'"
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -race -count=1 .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Root package test suite covering clientconn_test.go and related connectivity tests; run under -race at the pinned head to check for regressions or data races introduced by this diff."
+      },
+      {
+        "check": "go test -C test -race -run 'Test/StateTransitions' -count=5 .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Exercises addrConn state-transition behavior along the connect/updateAddrs paths this diff changes, repeated 5x under -race."
+      },
+      {
+        "check": "go test -C xds/internal/xdsclient/tests -race -run 'Test/AuthorityRevive' -count=30 -v .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "Reruns the specific test the originating issue grpc/grpc-go#7365 reported as flaky, repeated 30x under -race, within this review's five-minute focused-test bound."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-unlock-every-path",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "resetTransportAndUnlock releases ac.mu exactly once on every return path, given that its callers transfer a held, locked ac.mu into it without unlocking first.",
+          "evidence": "clientconn.go:1234-1303 traced path-by-path; every return is preceded by exactly one Unlock relative to the most recent Lock, and tryAllAddrs/createTransport self-balance their own Lock/Unlock pairs.",
+          "ruling": "holds",
+          "batch": "initial"
+        },
+        {
+          "id": "premise-race-closed",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Holding ac.mu continuously from the Idle/eligibility check through the Connecting transition prevents two concurrent connect()/updateAddrs() invocations from both observing the same stale eligible state and both dialing.",
+          "evidence": "At merge-base, connect() unlocked between the Idle check and resetTransport's re-lock, letting a second caller also observe Idle; at head, no unlock occurs in that span, so a second caller blocks until state has already left Idle/eligible (clientconn.go:905-922, :956-961, :1261-1262).",
+          "ruling": "holds",
+          "batch": "initial"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-001/clone-work/tmp/review-famFFA/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-001/clone-work/tmp/review-famFFA/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x394-staged-guardrail",
+  "target": "p-hono-5067",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "d0fe3517872a2ba6c5a0d564b1f4e19f31c6407bad5c0f22e2b70fe51e6b0357"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 ed7a43d72f751ae3252ce47902d11378b66d6f2b7ebc8dfb72d9b6b9b61795fb; session a1301c26-ff55-43fe-bf11-3458e2798102; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T03:51:05Z",
+  "attempts": [
+    {
+      "attempt_id": "att-008",
+      "blind_token": "blind-8cc4b5",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "false-finding",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Avoid buffering the whole body for every multipart/urlencoded parseBody() call\" ... \"Large uploads the platform could parse without fully materializing now pay a full in-memory buffering cost inside Hono on every request\". The code fact is true (clone src/utils/body.ts:126-132 at head replaces request.formData() with arrayBuffer() + bufferToFormData), but the claimed material consequence matches register non_defect 'Reading arrayBuffer() instead of formData() doubles memory or breaks streaming', ruled: 'Request.formData() also buffers the whole body; on a first read the raw body is consumed exactly once, as before. No demonstrated performance consequence.' The item offers no evidence that the platform parses multipart without materializing. It never mentions the cached-body order (formData() then parseBody()) or re-parsing re-serialized bytes against the original Content-Type, so it does not recover GT-p1. Its suggested canonical-case fast path would only avoid GT-p1 by accident, and only for canonical-case headers, so it does not count as identifying the defect."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"body.ts's `parseFormData` now delegates to `bufferToFormData` ... the same helper validator.ts's `form` target already used before this PR, centralizing the media-type-case normalization\". This is accurate: main:src/validator/validator.ts:6,120 already imports and calls bufferToFormData, and head body.ts now calls it too. It is a neutral design observation that asserts no defect, so it falls below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"replaces a `vi.spyOn`-based mock of `formData()` in the file-object-properties preservation test with a real `FormData`, a test-hygiene cleanup\". This is accurate per the body.test.ts diff (the vi.spyOn(req, 'formData') mock is removed, and data.append('file', file) / data.append('file.hoo', 'hoo') are added). It is a test-hygiene observation with no claimed consequence."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

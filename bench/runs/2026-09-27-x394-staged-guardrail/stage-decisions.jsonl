@@ -1,0 +1,1 @@
+{"stage": 1, "after": "att-008", "mapping_version": 1, "valid_candidate": ["att-001", "att-002", "att-003", "att-004", "att-005", "att-006", "att-007", "att-008"], "candidate_false_findings": {"att-008": 1}, "unresolved_candidates": 0, "decision": "Reject. Valid review att-008 on p-hono-5067 carries a false finding. Leave r-base-ui-5460 unrun.", "spend_usd": 22.052052}
