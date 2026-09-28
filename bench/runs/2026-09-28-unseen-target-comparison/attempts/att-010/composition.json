@@ -1,0 +1,152 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["pr-body"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "db5a086d048c5c2d6e51e82bb070d20df04d688d",
+    "issues": [],
+    "change_description": "fix(redis2): remove orphaned directory index members on listing\n\nListDirectoryEntries skipped index members whose value key was gone and\nleft them in the ZSET, so the per-directory child index grew without\nbound under any TTL workload. Mirror the ZRem the logical-expiry branch\nalready performs.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\nfix(redis2): keep the index member when a concurrent insert recreates the value\n\nThe orphan cleanup removed the member unconditionally, so an InsertEntry\nlanding between FindEntry and the ZRem left a live value with no index\nmember, invisible to listings until another InsertEntry on that path.\nUpdateEntry does not re-add it, so the loss persisted.\n\nRestore the member when the value is present again after the removal.\nThe value key and the directory index key hash to different slots, so a\nLua script or MULTI over both is not available to the cluster store.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Stop weed/filer/redis2's per-directory child index (the `<dir>\\x00` ZSET) from growing without bound: remove an index member during ListDirectoryEntries once its value key is confirmed gone, while never permanently losing a member for a value a concurrent InsertEntry just recreated.",
+    "issue_fit": "Both commits' stated behavior is implemented: the not-found branch now ZREMs the stale member (mirroring the existing expiry branch), and the second commit adds a compensating re-check/restore for the concurrent-recreate race both bot reviewers flagged on the first commit.",
+    "coverage": "Both changed files read in full, including the surrounding InsertEntry/doInsertEntry/UpdateEntry/DeleteEntry/FindEntry and the redis_cluster_store.go, redis_store.go and redis_sentinel_store.go callers that embed this type. go vet and gofmt run clean; the new test file builds and all four new tests exercise correctly-reasoned assertions, though they skip at run time (no live Redis in this offline sandbox). The central concurrency safety premise was checked by a fresh-context verifier and holds.",
+    "check_details": [
+      "`go test -count=1 ./weed/filer/redis2/... -v` at `6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1`: package built; all 4 new tests ran, the 3 requiring Redis reported SKIP (RUN_REDIS_TESTS unset) — confirms the new test file compiles and its skip-gate works, not the live-Redis assertions themselves.",
+      "`go vet ./weed/filer/redis2/...` at the same head: no output, clean.",
+      "`gofmt -l weed/filer/redis2/universal_redis_store.go weed/filer/redis2/universal_redis_store_test.go` at the same head: no output, clean.",
+      "The pull request's quoted live-Redis before/after transcripts and its `-race` run could not be reproduced: no live Redis server is reachable in this offline sandbox."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The new orphan-removal call is unreachable for super-large directories: InsertEntry skips ZAddNX and DeleteEntry skips ZRem when isSuperLargeDirectory is true, so `<dir>\\x00` never exists for them and ZRangeByLex returns no members to iterate.",
+      "evidence": "weed/filer/redis2/universal_redis_store.go:63-65, :132-134, :189-197."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-010/clone",
+    "requirements": [
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "universal_redis_store.go:207-208 calls the new removeOrphanedDirectoryListMember on FindEntry's not-found branch, which ZRems the stale member at :238."
+      },
+      {
+        "source": "commit-9f99628/\"Mirror the ZRem the logical-expiry branch already performs\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "removeOrphanedDirectoryListMember's ZRem (:238) mirrors the pre-existing expiry branch's ZRem at :217, on the same dirListKey."
+      },
+      {
+        "source": "commit-6c8fde6/\"Restore the member when the value is present again after the removal\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "removeOrphanedDirectoryListMember's Exists re-check (:245) and conditional ZAddNX (:250) restore the member; a fresh-context verifier confirmed the convergence premise (task redis2-orphan-repair-convergence) holds."
+      },
+      {
+        "source": "pr-body/\"Rebuilding it unprefixed would have been a silent no-op ... which is why the test runs both with and without one\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "dirListKey (:178) is already store.getKey(...)-prefixed and is reused unchanged at :208/:238/:250; TestListDirectoryEntriesRemovesOrphanedIndexMembers runs keyPrefix=\"\" and \"sw:\"."
+      },
+      {
+        "source": "pr-body/\"Transient errors cannot trigger it\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "FindEntry (:100-102) returns the bare filer_pb.ErrNotFound sentinel only for redis.Nil; the branch guard at :207 is an identity comparison (==) against that sentinel, so a wrapped error never matches."
+      },
+      {
+        "source": "pr-body/\"Super-large directories ... unaffected\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "isSuperLargeDirectory skips ZAddNX in InsertEntry (:63-65) and ZRem in DeleteEntry (:132-134), so `<dir>\\x00` never exists for such directories and ZRangeByLex (:189) returns no members."
+      },
+      {
+        "source": "pr-body/\"go build ./weed/..., go vet ./weed/filer/redis2/, gofmt all clean\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer reran go vet ./weed/filer/redis2/... and gofmt -l on both changed files at 6c8fde664: both clean, per record.check_evidence."
+      },
+      {
+        "source": "pr-body/\"go test ./weed/filer/redis2/... -race passes against a live Redis\" and its quoted before/after failure transcripts",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "No live Redis server is reachable in this offline sandbox; the reviewer independently traced all four new tests' setup and assertions against the fixed code and reached the same pass/fail conclusions the author reports, so nothing material is left open by the missing live run."
+      },
+      {
+        "source": "pr-body/\"a Lua script or MULTI over both is not available to the cluster store\" (CROSSSLOT)",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "RedisCluster2Store (redis_cluster_store.go:17-23,58) uses redis.NewClusterClient, and getKey/genDirectoryListKey build the value key and the `<dir>\\x00` index key with no hash-tag, so a cluster deployment can place them in different slots."
+      }
+    ],
+    "files": [
+      {"path": "weed/filer/redis2/universal_redis_store.go", "state": "reviewed"},
+      {"path": "weed/filer/redis2/universal_redis_store_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 ./weed/filer/redis2/... -v",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "package built; all 4 new tests ran, the 3 requiring Redis reported SKIP (RUN_REDIS_TESTS unset, offline sandbox has no live Redis)."
+      },
+      {
+        "check": "go vet ./weed/filer/redis2/...",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "no output, clean."
+      },
+      {
+        "check": "gofmt -l weed/filer/redis2/universal_redis_store.go weed/filer/redis2/universal_redis_store_test.go",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "no output, both files already formatted."
+      },
+      {
+        "check": "author-reported: go test ./weed/filer/redis2/... -race against a live redis-server 8.2.1, plus the three quoted before/after failure transcripts",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "unavailable",
+        "reason": "no live Redis server is reachable in this offline sandbox, so the identity/environment match required to accept a supplied result could not be established."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "redis2-orphan-repair-convergence",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "removeOrphanedDirectoryListMember's ZRem-then-Exists-then-conditional-ZAddNX repair converges correctly under any interleaving with a concurrent InsertEntry (SET before ZAddNX) or DeleteEntry (Del before ZRem) on the same member, never permanently losing a live member nor permanently keeping a member for a value that stays absent.",
+          "evidence": "universal_redis_store.go:56-74 (InsertEntry), :76-90 (doInsertEntry), :119-143 (DeleteEntry), :237-251 (removeOrphanedDirectoryListMember).",
+          "trigger": "optional",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-010/tmp/review-code.AJh5Nt/initial",
+          "raw_return": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-010/tmp/review-code.AJh5Nt/initial-return.json",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-010/tmp/review-code.AJh5Nt/initial/accounting.json",
+          "operation": "Agent tool, subagent_type=general-purpose, model=sonnet, run_in_background=false, fresh context"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
