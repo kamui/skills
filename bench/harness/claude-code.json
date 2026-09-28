@@ -56,6 +56,23 @@
         "The low variant (no session effort flag) was not re-observed on 2.1.282; the run does not use it.",
         "The Opus probe ran `git diff main...review-head` (the argument's range) where 2.1.281 ran `git diff main...HEAD`; the Sonnet probe ran `git diff main...HEAD`. Both resolve to the pinned range under the suite's branch layout."
       ]
+    },
+    "2.1.284": {
+      "observed_on": "2026-09-28",
+      "variants": [
+        {
+          "header": "`high effort → 8 inline angles → dedup (no verify) → ≤10 findings`",
+          "selected_by": "session --effort high, model claude-sonnet-5-5",
+          "output_contract": "fenced JSON array in the final message (file, line, summary, failure_scenario)",
+          "body_sha256": "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a",
+          "body_bytes": 5657
+        }
+      ],
+      "notes": [
+        "Observed by the pre-dispatch probe of run 2026-09-28-sonnet-5-5-rebench (probes/att-001) on the toy fixture. Sonnet 5.5 selects the body 2.1.281 and 2.1.282 gave Opus 5.5, not the Sonnet 5 body 665e2e51…; the built-in's prompt changed with the model, so a Sonnet 5 to Sonnet 5.5 comparison of the built-in is a product-version delta, not a model swap alone.",
+        "The probe ran `git diff main...HEAD`, one subagent, and returned a fenced JSON array.",
+        "body_bytes is copied from the 2.1.281 entry of the same hash."
+      ]
     }
   }
 }

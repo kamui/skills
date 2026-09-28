@@ -67,6 +67,17 @@
       "cache_write_1h": 20,
       "source": "platform.claude.com pricing page read on 2026-09-25: $10/$50, cache write $12.50 (5m) and $20 (1h), cache read $0.25 (0.025x input). Added for the scoring phase of run 2026-09-24-builtin-baseline, whose frozen arms do not use it",
       "billing": "api-dollars"
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "as_of": "2026-09-28",
+      "input": 2.0,
+      "output": 10.0,
+      "cache_read": 0.2,
+      "cache_write_5m": 2.5,
+      "cache_write_1h": 4.0,
+      "source": "platform.claude.com pricing page read on 2026-09-28: $2/$10, cache write $2.50 (5m) and $4 (1h), cache read $0.20; the same figures as Claude Sonnet 5. Added for run 2026-09-28-sonnet-5-5-rebench",
+      "billing": "api-dollars"
     }
   ]
 }

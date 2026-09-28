@@ -348,7 +348,7 @@ class Map(Mapped):
         for arm in ("review-code-sonnet-high-isolated-control", "review-code-sonnet-high-isolated-lifecycle",
                     "review-code-sonnet-high-enforced-control", "review-code-sonnet-high-enforced-lifecycle",
                     "review-code-sonnet-high-enforced-x394-control", "review-code-sonnet-high-enforced-x394-trimmed",
-                    "review-code-sonnet-high-enforced-verification-off"):
+                    "review-code-sonnet-high-enforced-verification-off", "review-code-sonnet-5-5-high-enforced"):
             with self.subTest(arm=arm):
                 path = self.run_dir / "attempts" / "att-001" / "attempt.json"
                 record = json.loads(path.read_text(encoding="utf-8"))
@@ -361,6 +361,20 @@ class Map(Mapped):
                 self.assertEqual([i["priority_error"] for i in attempt["items"]], self.attempts["att-001"][6])
                 self.assertEqual(attempt["review_level"]["completion"], "completed")
                 shutil.rmtree(self.run_dir / "scoring")
+
+    def test_sonnet_5_5_builtin_ranks_like_opus(self):
+        opus = next((a for a, spec in sorted(self.attempts.items()) if spec[0] == C and spec[2] == "valid completed"), None)
+        if opus is None:
+            self.skipTest("this fixture has no valid Opus built-in attempt")
+        path = self.run_dir / "attempts" / opus / "attempt.json"
+        record = json.loads(path.read_text(encoding="utf-8"))
+        record["cell"]["arm"] = "claude-builtin-sonnet-5-5-high"
+        write_json(path, record)
+        done = self.map(self.verdicts())
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        mapping = json.loads(self.mapping_path().read_text(encoding="utf-8"))
+        attempt = next(a for a in mapping["attempts"] if a["attempt_id"] == opus)
+        self.assertEqual([i["priority_error"] for i in attempt["items"]], self.attempts[opus][6])
 
     def test_valid_verdicts_unblind_to_a_scorable_mapping(self):
         done = self.map(self.verdicts())
