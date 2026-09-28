@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-unseen-target-comparison",
+  "created_at": "2026-09-28T20:12:07Z",
+  "frozen_at": null,
+  "freeze_commit": null,
+  "method_revision": "bf3c25f5700cad316e8e091b01b868887361c205",
+  "rubric_version": 1,
+  "metric_code_revision": "9eb2a23635200966daf98f28f26a23d5621de6ff",
+  "arms": [
+    {
+      "id": "review-code-sonnet-high-enforced-x394-control",
+      "arm_file_sha256": "11e4755ca4167e26139153c53b04b62ba4a6061bf12e7b04b77a0fcfa678a71a",
+      "resolved_skill_tree": "5e12864b52b6c0c52b9b1b1f41d5b22fa2576676",
+      "expected_cli_version": "claude-code 2.1.284",
+      "expected_prompt_hashes": [],
+      "probe_attempt": null
+    },
+    {
+      "id": "review-code-sonnet-high-enforced-verification-off",
+      "arm_file_sha256": "32256ba4c2cd7b309885f507c95ff45ca0d2f445c9d6fd0f7e4cd48cc0437314",
+      "resolved_skill_tree": "59e7df1b15096ccb029b35df78bbc54311795650",
+      "expected_cli_version": "claude-code 2.1.284",
+      "expected_prompt_hashes": [],
+      "probe_attempt": null
+    }
+  ],
+  "cohort": [
+    {
+      "target": "t-rclone-9699",
+      "register_version": 1,
+      "packet_sha256": "4396cfd22d2804b6d4b6bea47f51e5b89d9f8c74cfcf616acb60236ceae6dee7",
+      "diff_manifest_sha256": "d4fd0b53b16c728dff1c64c198b72e0a75d7adbbc8fcc3260414a3db0e9f7b54",
+      "cohort_group": "fresh",
+      "execution_available": true,
+      "provisioning_sha256": "1efb26b883e9b89d423e49f6b489be32559e534965d49b7b69a70a90f66fb6c3"
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "register_version": 1,
+      "packet_sha256": "c92d6af708db3389750f62f924dff06d063c6c15a3481489ef83f99510160428",
+      "diff_manifest_sha256": "ffea5e5d9d89c20abf15f97e09b98ef3de630b2a8de4823c382ccacf1c55cfb7",
+      "cohort_group": "fresh",
+      "execution_available": true,
+      "provisioning_sha256": "9152b1249777bc4e1319bc4b0c447dc5884ddf2673b906defda524881ef7b303"
+    }
+  ],
+  "exclusions": [
+    {
+      "target": "i-requests-6667",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "j-trpc-5017",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "k-graphql-js-1582",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "l-bokeh-9232",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "m-grpc-go-7390",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "n-ripgrep-2957",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "o-astro-16079",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "p-hono-5067",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "q-soba-195",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    },
+    {
+      "target": "r-base-ui-5460",
+      "reason": "Reviewed by earlier arms; #380 requires targets no arm has reviewed."
+    }
+  ],
+  "planned_cells": [
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3
+    }
+  ],
+  "caps": {
+    "max_attempts": 14,
+    "replacements": 2,
+    "spend_usd": 60.0,
+    "closeout_reserve_usd": 3.0,
+    "max_in_flight": 1,
+    "attempt_usd": 5.0
+  },
+  "sealed_order": [
+    "t-rclone-9699/review-code-sonnet-high-enforced-x394-control/1",
+    "t-rclone-9699/review-code-sonnet-high-enforced-verification-off/1",
+    "t-rclone-9699/review-code-sonnet-high-enforced-verification-off/2",
+    "t-rclone-9699/review-code-sonnet-high-enforced-x394-control/2",
+    "t-rclone-9699/review-code-sonnet-high-enforced-x394-control/3",
+    "t-rclone-9699/review-code-sonnet-high-enforced-verification-off/3",
+    "s-seaweedfs-10735/review-code-sonnet-high-enforced-x394-control/1",
+    "s-seaweedfs-10735/review-code-sonnet-high-enforced-verification-off/1",
+    "s-seaweedfs-10735/review-code-sonnet-high-enforced-verification-off/2",
+    "s-seaweedfs-10735/review-code-sonnet-high-enforced-x394-control/2",
+    "s-seaweedfs-10735/review-code-sonnet-high-enforced-x394-control/3",
+    "s-seaweedfs-10735/review-code-sonnet-high-enforced-verification-off/3"
+  ],
+  "rates": [
+    {
+      "model": "claude-sonnet-5",
+      "as_of": "2026-09-24"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "as_of": "2026-09-24"
+    }
+  ],
+  "execution_policy": {
+    "branch_layout": "The review target is the explicitly named offline clone. Local branch main is the merge-base and review-head is the checked-out head; review the committed main...review-head range. The CLI starts in the attempt work directory. The clone is read-only. Shell tools run in an enforced filesystem and network sandbox; direct file tools are restricted before execution. External network access is disabled; loopback listeners inside the sandbox are available for focused tests.",
+    "allowance": "Read the clone and the pinned skill. Focused commands may run only as the target allowance states, offline, with a five-minute limit per command. Put scratch files in the attempt work directory or its private temporary directory. Dependency-cache and artifact writes remain inside the attempt. Never change the clone or request access to another attempt or the host filesystem. Unavailable paths and connections stay unavailable; do not retry outside the sandbox.",
+    "unprivileged_user": null
+  },
+  "deviations": []
+}
