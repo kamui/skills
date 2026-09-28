@@ -563,7 +563,8 @@ ARMS = {
                          by_p_number),
 }
 for arm_id in ("review-code-sonnet-high-isolated-control", "review-code-sonnet-high-isolated-lifecycle",
-               "review-code-sonnet-high-enforced-control", "review-code-sonnet-high-enforced-lifecycle"):
+               "review-code-sonnet-high-enforced-control", "review-code-sonnet-high-enforced-lifecycle",
+               "review-code-sonnet-high-enforced-x394-control", "review-code-sonnet-high-enforced-x394-trimmed"):
     ARMS[arm_id] = ARMS["review-code-sonnet-high"]
 
 
