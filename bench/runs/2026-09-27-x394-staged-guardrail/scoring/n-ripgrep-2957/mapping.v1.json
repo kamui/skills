@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x394-staged-guardrail",
+  "target": "n-ripgrep-2957",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 2,
+    "sha256": "1a98c37fb18bda8fc2f9d796525600ca7f0e8e92a8df019c82de22114e41427a"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 c59f688015fcb78905ee508a98756d1b76b7759bdf2db570af919bf67c735650; session 732e04e8-58bc-4712-897b-101ba38d1d14; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v2), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T03:41:41Z",
+  "attempts": [
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-642a5b",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The classic fpath-install completion path ... is preserved: the new `[[ $funcstack[1] == _rg ]]` branch still calls `_rg \"$@\"` directly in that case, matching pre-change behavior.\" This is an accurate confirmation, not a defect claim: clone/crates/core/flags/complete/rg.zsh:441-445 at review-head keeps `_rg \"$@\"` under the funcstack guard, and the register's first non_defect rules that the autoload dispatch path takes that same branch. It is a true observation that asserts no defect, so it is non-material. It does not touch GT-n1, the stray `$ ` prefix in the FAQ .zshrc block."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The change also fixes an unrelated, pre-existing typo in FAQ.md's completions intro (\\\"completes\\\" → \\\"completions\\\"), bundled into the same commit.\" Verified: `git diff main...review-head -- FAQ.md` shows line 97 changing 'generate completes using' to 'generate completions using', made in commit 855bfa6 alongside the rest of the FAQ rewrite. The claim is accurate but is only a hygiene/scope remark with no consequence, so it is non-material. It does not mention the `$ source <(rg --generate complete-zsh)` block at FAQ.md:135, so it does not recover GT-n1."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

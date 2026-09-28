@@ -1,0 +1,84 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr5017-review-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+    "issues": [],
+    "change_description": "commit-03089eb\nwip\n\ncommit-6123ef5\nwip\n\ncommit-4b811ff\nok\n\ncommit-896324a\nnah\n\ncommit-a82b492\nrevert\n\ncommit-3c12b28\ncol\n\ncommit-2681425\nrename\n\ncommit-7dc04a7\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Fix `Overwrite<TType, TWith>` (packages/server/src/core/internals/utils.ts) so it only key-merges when both `TType` and `TWith` are objects; for any other combination of a non-never `TWith`, `TWith` now fully replaces `TType` instead of the old implementation mapping over a primitive's prototype keys (e.g. `string`'s `charCodeAt`), which produced a mangled inferred type. A regression test pins the fixed case: a procedure with `.input(z.string())` followed by a pass-through `.use()` middleware.",
+    "issue_fit": "No issue is linked (PR body is the unfilled template); the only stated intent is the final commit's message, `commit-7dc04a7`. The merged code matches it exactly: the object+object branch is byte-identical to before (still key-by-key merge), and every other `TType`/`TWith` combination now resolves to `TWith` (or `TType` when `TWith` is absent/never), fixing `Overwrite<string, string>`.",
+    "coverage": "Both changed files reviewed in full. Traced every call site of `Overwrite` in `@trpc/server` (`_ctx_out`, `_input_in`, `_input_out` merges in `procedureBuilder.ts` and `middleware.ts`) and confirmed the object+object path — the only path the `ctx` merges exercise — is unchanged, while the primitive/`UnsetMarker` path the new test exercises is exactly what the fix targets. `Overwrite` is also re-exported from `packages/server/src/internals.ts`, so its consumers within the package were checked, not just its definition site.",
+    "check_details": [
+      "Ran `cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json` at reviewed head `7dc04a7e94654dfad6ef1289dfe01a0a206fff3b`: exit 0, no diagnostics. This type-checks the whole `packages/tests/server` integration suite, including the new regression test's `expectTypeOf` assertions for `strWithMiddleware`."
+    ],
+    "coverage_gaps": [],
+    "ambiguities": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`Overwrite` carries an `@internal` JSDoc tag and is re-exported only from `packages/server/src/internals.ts`, a module not listed among `@trpc/server`'s `package.json` `exports` subpaths, so it is not part of a documented external contract.",
+      "evidence": "packages/server/src/core/internals/utils.ts:4-10; packages/server/src/internals.ts:11; packages/server/package.json `exports`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "trpc/trpc",
+    "paths": {
+      "private_dir": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-004/tmp/claude-1000/tmp.9ZMIn0xlau",
+      "store": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-004/tmp/claude-1000/tmp.9ZMIn0xlau/review-context.json",
+      "composition": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-004/tmp/claude-1000/tmp.9ZMIn0xlau/composition.json",
+      "skill_root": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-004/home/.claude/skills/review-code"
+    },
+    "requirements": [
+      {
+        "source": "commit-7dc04a7/\"Overwrite<string,string> resulted in a mangled object type because the existing implementation iterated over the string type's keys (e.g. 'charCodeAt')\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "packages/server/src/core/internals/utils.ts:11-30 replaces the unconditional mapped type with an `extends object` check on both sides; packages/tests/server/regression/issue-5020-inference-middleware.test.ts:33-38 asserts `AppRouterInputs['strWithMiddleware']` is `string`, which type-checks cleanly (tsc exit 0 at head)."
+      },
+      {
+        "source": "commit-7dc04a7/\"a non-never TWith type will entirely replace TType, e.g. Overwrite<string, number> results in 'number'\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "packages/server/src/core/internals/utils.ts:21-29: both the `TType extends object` false branch and the `TWith extends object` false branch return `TWith` directly (or `TType`/`never` only when `TWith` is absent or `never`, via TypeScript's distributive-conditional collapse over an empty union)."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/server/src/core/internals/utils.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+        "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+        "outcome": "reviewer-executed",
+        "reason": "Focused type-check of the affected test package at the pinned head, per the run's execution allowance; exit 0 with no diagnostics."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "allowance": {"initial_spent": false, "follow_up_spent": false},
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

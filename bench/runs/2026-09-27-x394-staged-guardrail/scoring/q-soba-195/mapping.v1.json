@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x394-staged-guardrail",
+  "target": "q-soba-195",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "e54d5cbf17ad2aa15e1ce523215d6cb304a89cc1301fcb8ef35f04a6b48527f5"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 47f1dc450bbc998bd323f88512c892cee9a1f65f528d06a0e4db1cca11b0bb2d; session 6623b9ee-b2e1-497a-963e-41ab7f9567df; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T02:39:52Z",
+  "attempts": [
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-c6475a",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"that misspelling is unchanged from the base branch, which already used it in the GitHub, Gitea, and Azure DevOps startup-config blocks — the new `logProviderOrgs` helper only relocates the existing text, so it is pre-existing, not introduced by this refactor.\" Verified: main:internal/backup.go:187/209/275 print \"GitHub/Gitea/Azure DevOps Organistations: %s\"; review-head:internal/backup.go:205 prints \"%s Organistations: %s\" with label. Accurate, and it matches the register's non_defect that the typo is preserved verbatim and is at most a non-material remark. The item asserts no defect and proposes no fix; it is an accurate observation below the finding threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"that double-call structure is identical in the base branch's version of the same test ... and is only extracted into helper functions here, not changed.\" Verified: base backup_test.go:669/703 (resetBackups at the end of each case) and 706 (after the switch); head backup_test.go:629/632/635 keep the same structure around assertGiteaOrgTwoOnlyBackedUp/assertGiteaAllOrgsBackedUp. This matches the register's non_defect (test-only, pre-existing, idempotent). It is an accurate observation with no defect asserted, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

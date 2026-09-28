@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "Loading the default CA bundle now happens once at import of `requests.adapters` rather than lazily on the first verify=True HTTPS request, so an unreadable default bundle would surface as an import-time exception instead of the previous per-request `OSError` (a related zip/pyinstaller-extraction concern was already raised and resolved during review by moving the extraction to this same call site).",
+      "consequence": "src/requests/adapters.py:75-78; PR conversation comment by sigmavirus24: \"Ah, I see that the PR was updated and moved the extraction.\"",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

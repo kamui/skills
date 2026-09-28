@@ -1,0 +1,45 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/utils/body.ts",
+      "line_start": 126,
+      "line_end": 132,
+      "claim": "Avoid buffering the whole body for every multipart/urlencoded parseBody() call. Any `parseBody()` call whose Content-Type media type is `multipart/form-data` or `application/x-www-form-urlencoded`, including the previously-working canonical-case requests that this fix did not need to touch.",
+      "consequence": "`parseFormData` now always reads the full body into an `ArrayBuffer` and rebuilds a `Response` solely to call `.formData()` on a header-normalized copy, replacing the prior direct `request.formData()` call. Large uploads the platform could parse without fully materializing now pay a full in-memory buffering cost inside Hono on every request, not only the mixed-case ones this PR targets.",
+      "proposed_fix": "Keep the previous `request.formData()` fast path when the media type is already exactly `multipart/form-data` or `application/x-www-form-urlencoded` (normalization would be a no-op), and only fall back to the buffer-and-normalize path used here for non-canonical casing.",
+      "native_priority": "P3",
+      "native_action": "consider",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "body.ts's `parseFormData` now delegates to `bufferToFormData` (src/utils/buffer.ts), the same helper validator.ts's `form` target already used before this PR, centralizing the media-type-case normalization in one place instead of duplicating it per call site.",
+      "consequence": "src/utils/body.ts:126-132; src/validator/validator.ts:119-121; src/utils/buffer.ts:106-117.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "This PR's body.test.ts diff also replaces a `vi.spyOn`-based mock of `formData()` in the file-object-properties preservation test with a real `FormData`, a test-hygiene cleanup bundled into the Content-Type fix rather than part of it.",
+      "consequence": "src/utils/body.test.ts diff, the file-object-properties preservation test.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

@@ -1,0 +1,7 @@
+{"reviews": {"blind-642a5b": {"items": {
+  "1": {"assignment": "non-material", "duplicate_group": null, "fix_sufficiency": "n/a", "candidate": null,
+        "notes": "Quote: \"The classic fpath-install completion path ... is preserved: the new `[[ $funcstack[1] == _rg ]]` branch still calls `_rg \"$@\"` directly in that case, matching pre-change behavior.\" This is an accurate confirmation, not a defect claim: clone/crates/core/flags/complete/rg.zsh:441-445 at review-head keeps `_rg \"$@\"` under the funcstack guard, and the register's first non_defect rules that the autoload dispatch path takes that same branch. It is a true observation that asserts no defect, so it is non-material. It does not touch GT-n1, the stray `$ ` prefix in the FAQ .zshrc block."},
+  "2": {"assignment": "non-material", "duplicate_group": null, "fix_sufficiency": "n/a", "candidate": null,
+        "notes": "Quote: \"The change also fixes an unrelated, pre-existing typo in FAQ.md's completions intro (\\\"completes\\\" → \\\"completions\\\"), bundled into the same commit.\" Verified: `git diff main...review-head -- FAQ.md` shows line 97 changing 'generate completes using' to 'generate completions using', made in commit 855bfa6 alongside the rest of the FAQ rewrite. The claim is accurate but is only a hygiene/scope remark with no consequence, so it is non-material. It does not mention the `$ source <(rg --generate complete-zsh)` block at FAQ.md:135, so it does not recover GT-n1."}
+}}},
+ "new_candidates": []}
