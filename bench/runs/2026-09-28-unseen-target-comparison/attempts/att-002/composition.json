@@ -1,0 +1,113 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr9699-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687",
+    "issues": ["rclone/rclone#9687"]
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a channel-ordering race in lib/batcher where a Commit could pass the closed-check and then have its request land in the input channel behind the shutdown quit marker, leaving a synchronous caller blocked forever and silently dropping an async upload.",
+    "issue_fit": "Full — admission is now serialized with shutdown's close-and-quit-send under one mutex, so every accepted commit is either enqueued strictly before the quit marker (and thus processed) or rejected with the pre-existing shutdown error; the fix adds no new externally observable behavior.",
+    "coverage": "Both changed files read in full at head and compared against the merge-base; the package's tests, including the new race regression test, ran offline with -race and passed; go vet is clean.",
+    "check_details": [
+      "Reviewer ran `go test -count=1 -race ./lib/batcher` at 0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c offline: pass (`ok  github.com/rclone/rclone/lib/batcher  5.332s`), exercising TestBatcherCommitRacingShutdown's sync and async subtests.",
+      "Reviewer ran `go vet ./lib/batcher` at the same head: clean, no output.",
+      "The PR-claimed `go test -race ./lib/batcher -count=20`, `go build`, and `make quicktest` supply no readable output and were not independently reproduced at that scope; the reviewer-executed race run above already covers the same test."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Commit's admission critical section under the new admitMu also now covers the pre-existing `fs.Debugf(b.f, \"Adding %q to batch\", name)` call, so a slow `Stringer.String()` on the batching identity would hold admission (and block Shutdown) longer than before this change.",
+      "evidence": "lib/batcher/batcher.go:267-281; production `fs.Fs` identities passed as `f` are cheap strings, so no concrete instance is shown to matter."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "rclone/rclone",
+    "requirements": [
+      {
+        "source": "spec-pr9699-packet/issue-9687-question",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:50 (admitMu field), :243 and :252 (Shutdown locks admitMu around close(b.closed) and the quit send), :267,:271,:281 (Commit locks admitMu around its closed-check and its send) — every accepted commit is enqueued strictly before the quit marker or explicitly rejected."
+      },
+      {
+        "source": "spec-pr9699-packet/pr-body/\"Serialize commit admission with insertion of the shutdown marker.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:243-252 and :267-281 pair Shutdown's close+quit-send and Commit's check+send under one mutex."
+      },
+      {
+        "source": "spec-pr9699-packet/pr-body/\"Preserve the existing shutdown error for commits that arrive after shutdown starts.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:269-271 returns the same `fserrors.FatalError(errors.New(\"batcher is shutting down\"))` text and type as the merge-base (`git show 862ed2b7a:lib/batcher/batcher.go` lines 262-264), unchanged."
+      },
+      {
+        "source": "spec-pr9699-packet/pr-body/\"Add regression coverage for synchronous hangs and asynchronous dropped uploads.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher_test.go TestBatcherCommitRacingShutdown (sync and async subtests) uses a blockingStringer to deterministically pause Commit between its closed-check and its send while Shutdown races it, then asserts no hang via 1s timeouts and that the admitted item was actually committed via the `committed` channel; traced the mechanism against both the fixed code (passes) and the base code (the paused commit's send would land after commitLoop already exited on the quit message, reproducing the hang/drop)."
+      },
+      {
+        "source": "commit-0b87bc4/\"lib/batcher: prevent commits racing shutdown - fixes #9687\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Matches the acceptance rows above; the diff is scoped to exactly this fix plus its regression test."
+      }
+    ],
+    "files": [
+      {"path": "lib/batcher/batcher.go", "state": "reviewed"},
+      {"path": "lib/batcher/batcher_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -race ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "run offline from the clone root per the target's execution allowance; full package passed including the new TestBatcherCommitRacingShutdown sync/async subtests"
+      },
+      {
+        "check": "go vet ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "clean, no output"
+      },
+      {
+        "check": "go test -race ./lib/batcher -count=20",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "unavailable",
+        "reason": "PR-claimed with no readable output supplied; a repeat run at count=20 was blocked by a session tool-permission restriction, but the reviewer-executed count=1 -race pass above already exercises the same test and the mechanism was independently traced"
+      },
+      {
+        "check": "go build",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "unavailable",
+        "reason": "PR-claimed with no readable output supplied; not independently reproduced, but the package already builds successfully as part of the executed `go test`"
+      },
+      {
+        "check": "PATH=\"$PWD:$PATH\" make quicktest",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "unavailable",
+        "reason": "requires the full module's dependency graph beyond the offline lib/batcher-scoped allowance; no readable output supplied"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
