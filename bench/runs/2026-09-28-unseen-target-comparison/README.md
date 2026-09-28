@@ -12,6 +12,74 @@ rule below before any target was chosen.
 The manifest was frozen at `2026-09-28T20:13:01Z` on freeze commit `744b32d16742d23a45a68629fb54e90b2b9ba940`, after the
 [launch checks](preflight/summary.json) passed and before any paid review.
 
+## Results, 2026-09-28
+
+**The variant passes the preregistered rule, and #380's literal conditions also hold.** All 12
+attempts are valid, with no replacement. A pass is not adoption.
+
+| Rule | Control | Variant | Outcome |
+| --- | ---: | ---: | --- |
+| Clean target: reviews carrying a false finding | 0 | 0 | Holds |
+| Buggy target: registered defects recovered | 0 | 0 | Holds |
+| Control reviews dispatching a verifier batch | 6 of 6 | | Observable |
+| #380 literal: variant recoveries at least the control's | | | Met |
+| #380 literal: no false finding in the variant's clean reviews | | | Met |
+
+| Attempt | Target | Arm | Native verdict | Findings | Grader | Verifier batch | Elapsed | Cost |
+| --- | --- | --- | --- | --- | --- | --- | ---: | ---: |
+| att-001 | rclone | control | Approved | none | none | 2 premises hold | 918 s | $4.572453 |
+| att-002 | rclone | variant | Approved | none | 1 non-material observation | none | 410 s | $1.327431 |
+| att-003 | rclone | variant | Approved | none | 2 non-material observations | none | 571 s | $1.941038 |
+| att-004 | rclone | control | Approved | none | 1 non-material observation | 2 premises hold | 573 s | $2.426857 |
+| att-005 | rclone | control | Approved | none | 1 non-material observation | 2 premises hold | 705 s | $2.540823 |
+| att-006 | rclone | variant | Approved | none | 1 non-material observation | none | 433 s | $1.469623 |
+| att-007 | seaweedfs | control | Changes Requested | `must-fix` P2 | finding and 1 observation non-material | confirmed the finding; 1 premise holds | 845 s | $2.450447 |
+| att-008 | seaweedfs | variant | Changes Requested | `must-fix` P3 | finding and 1 observation non-material | none | 593 s | $2.330214 |
+| att-009 | seaweedfs | variant | Changes Requested | `must-fix` P2 | finding and 1 observation non-material | none | 536 s | $1.861126 |
+| att-010 | seaweedfs | control | Approved | none | 1 non-material observation | 1 premise holds | 669 s | $2.352864 |
+| att-011 | seaweedfs | control | Approved | none | 1 non-material observation | 1 premise holds | 729 s | $2.290059 |
+| att-012 | seaweedfs | variant | Approved | `consider` P3 | finding and 1 observation non-material | none | 527 s | $1.730968 |
+
+What the counted events are:
+
+- **Clean target.** All six reviews approved rclone#9699. None raised a finding. Their observations touch the admission
+  lock's serialization, and the grader ruled each non-material. The control's verifier ran in all three of its reviews
+  and checked only safety premises, which held. It changed no outcome.
+- **Buggy target.** No review in either arm recovered GT-s1, the replica-routed read that
+  de-indexes live entries. So the recall rule compared 0 with 0 and observed nothing about recall.
+  The three `must-fix` findings, one control and two variant, all flag the unchecked `ZAddNX`
+  result. The grader ruled each non-material: the fact is true, but the register's non-defects
+  rule the claimed consequence out. The control's verifier confirmed its copy. The variant had no verifier to
+  confirm or refute its two.
+- **Approvals of the buggy change.** Control 2 of 3, variant 1 of 3. The variant requested changes
+  more often, for a reason that is not the registered defect.
+
+| Measure | Control | Variant |
+| --- | ---: | ---: |
+| Reviews carrying an in-jurisdiction false or non-material finding | 1 | 2 |
+| Non-material items | 6 | 10 |
+| Review cost | $16.633503 | $10.660400 |
+| Median elapsed to payload | 717 s | 532 s |
+
+The per-target ratios of variant median cost to control median cost are 0.58 on rclone and 0.79
+on seaweedfs. For elapsed time they are 0.61 and 0.74.
+
+**How far this reaches.** Two unseen Go targets and three replicates per arm. The run shows the
+variant raising no false finding on a clean concurrency change it had not seen, and raising the
+same class of non-material blocker as the control on a buggy one. It says nothing about recall on
+unseen code, because neither arm found the defect. Together with the staged run's 15 pairs, this
+is the #380 evidence for adoption. It is not adoption itself: #380 also requires the full
+10-target screen.
+
+The run cost **$38.477512** against the $60 cap: reviews $27.293903, hunts and adjudication
+$10.460970, blind grading $0.722639. Both grading audits passed, and no grader proposed a new
+defect. The registers, hunt reports and rulings are revealed beside their ciphertexts, and each
+matches its recorded hash.
+
+Evidence: [results](results.v1.json), [scorecards](scoring/), [ledger](ledger.md),
+[closeout record](closeout.json) and [`decide.py`](decide.py), which applies the rule to the
+filed records.
+
 ## Frozen inputs
 
 - Control skill tree: `5e12864b52b6c0c52b9b1b1f41d5b22fa2576676`, arm

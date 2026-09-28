@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-unseen-target-comparison",
+  "computed_at": "2026-09-28T22:22:17Z",
+  "metric_code_revision": "4004e12d2f878702262b2258ec179ab3cc95eba3",
+  "rubric_version": 1,
+  "inputs": [
+    {
+      "target": "t-rclone-9699",
+      "mapping_version": 1,
+      "register_version": 1
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "mapping_version": 1,
+      "register_version": 1
+    }
+  ],
+  "cells": [
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-001"
+      ]
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-002"
+      ]
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-003"
+      ]
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-004"
+      ]
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-005"
+      ]
+    },
+    {
+      "target": "t-rclone-9699",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-006"
+      ]
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-007"
+      ]
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 1,
+      "status": "valid completed",
+      "attempts": [
+        "att-008"
+      ]
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-009"
+      ]
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 2,
+      "status": "valid completed",
+      "attempts": [
+        "att-010"
+      ]
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-x394-control",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-011"
+      ]
+    },
+    {
+      "target": "s-seaweedfs-10735",
+      "arm": "review-code-sonnet-high-enforced-verification-off",
+      "replicate": 3,
+      "status": "valid completed",
+      "attempts": [
+        "att-012"
+      ]
+    }
+  ],
+  "by_target_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "s-seaweedfs-10735"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 1,
+        "zero_recovery": 3,
+        "false_clean": 1,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 3,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 5.922308,
+      "cost_common_rate_usd": 5.922308,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 536.0,
+      "elapsed_to_completion_s": 536.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "target": "t-rclone-9699"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 4.738092,
+      "cost_common_rate_usd": 4.738092,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 433.0,
+      "elapsed_to_completion_s": 433.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "s-seaweedfs-10735"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 3,
+        "false_clean": 2,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 3,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 7.09337,
+      "cost_common_rate_usd": 7.09337,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 729.0,
+      "elapsed_to_completion_s": 729.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "target": "t-rclone-9699"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 2
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 9.540133,
+      "cost_common_rate_usd": 9.540134,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 705.0,
+      "elapsed_to_completion_s": 705.0
+    }
+  ],
+  "by_arm": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off"
+      },
+      "attempts_included": 6,
+      "valid_reviews": {
+        "count": 6,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 1,
+        "zero_recovery": 3,
+        "false_clean": 1,
+        "noise_items": 10
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 3,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 10,
+      "cost_contemporaneous_usd": 10.6604,
+      "cost_common_rate_usd": 10.6604,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 531.5,
+      "elapsed_to_completion_s": 531.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control"
+      },
+      "attempts_included": 6,
+      "valid_reviews": {
+        "count": 6,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 3,
+        "false_clean": 2,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 3,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 16.633503,
+      "cost_common_rate_usd": 16.633504,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 717.0,
+      "elapsed_to_completion_s": 717.0
+    }
+  ],
+  "by_shape": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 4.738092,
+      "cost_common_rate_usd": 4.738092,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 433.0,
+      "elapsed_to_completion_s": 433.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "shape": "data loss in a persistence layer"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 1,
+        "zero_recovery": 3,
+        "false_clean": 1,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 3,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 5.922308,
+      "cost_common_rate_usd": 5.922308,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 536.0,
+      "elapsed_to_completion_s": 536.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "clean, high risk (concurrency)"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 0,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 0,
+        "zero_recovery": 0,
+        "false_clean": 0,
+        "noise_items": 2
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": null,
+      "recall_completed_only": null,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 0,
+      "zero_recovery": 0,
+      "false_clean": 0,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": null,
+      "noise_items": 2,
+      "cost_contemporaneous_usd": 9.540133,
+      "cost_common_rate_usd": 9.540134,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 705.0,
+      "elapsed_to_completion_s": 705.0
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "shape": "data loss in a persistence layer"
+      },
+      "attempts_included": 3,
+      "valid_reviews": {
+        "count": 3,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 3,
+        "false_clean": 2,
+        "noise_items": 4
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 3,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 4,
+      "cost_contemporaneous_usd": 7.09337,
+      "cost_common_rate_usd": 7.09337,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 729.0,
+      "elapsed_to_completion_s": 729.0
+    }
+  ],
+  "by_cohort": [
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-verification-off",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 6,
+      "valid_reviews": {
+        "count": 6,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 1,
+        "zero_recovery": 3,
+        "false_clean": 1,
+        "noise_items": 10
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 1,
+      "zero_recovery": 3,
+      "false_clean": 1,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 2,
+      "noise_items": 10,
+      "cost_contemporaneous_usd": 10.6604,
+      "cost_common_rate_usd": 10.6604,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 531.5,
+      "elapsed_to_completion_s": 531.5
+    },
+    {
+      "key": {
+        "arm": "review-code-sonnet-high-enforced-x394-control",
+        "cohort_group": "fresh"
+      },
+      "attempts_included": 6,
+      "valid_reviews": {
+        "count": 6,
+        "buggy_count": 3,
+        "false_findings_raw": 0,
+        "false_findings_unique": 0,
+        "approved_on_buggy": 2,
+        "zero_recovery": 3,
+        "false_clean": 2,
+        "noise_items": 6
+      },
+      "cells_unattempted": 0,
+      "cells_invalid": 0,
+      "replacements_used": 0,
+      "recall_attempt_level": 0.0,
+      "recall_completed_only": 0.0,
+      "false_findings_raw": 0,
+      "false_findings_unique": 0,
+      "unresolved_items": 0,
+      "approved_on_buggy": 2,
+      "zero_recovery": 3,
+      "false_clean": 2,
+      "fix_sufficient": {
+        "sufficient": 0,
+        "partial": 0,
+        "absent": 0
+      },
+      "priority_errors": 1,
+      "noise_items": 6,
+      "cost_contemporaneous_usd": 16.633503,
+      "cost_common_rate_usd": 16.633504,
+      "quota_consumed": null,
+      "elapsed_to_payload_s": 717.0,
+      "elapsed_to_completion_s": 717.0
+    }
+  ]
+}
