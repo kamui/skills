@@ -476,7 +476,9 @@ is a separate purchase.
 ### What these rules can and cannot detect
 
 `measure.py rules` simulates both stages from the filed per-defect recovery rates. It assumes
-reviews are independent and that the variant truly costs 0.75 of the control.
+reviews are independent and that the variant truly costs 0.75 of the control. It models the
+false-finding, recall, action, remedy and cost rules. The any-false-finding, invalid-attempt and
+elapsed rules are not modelled and can only add rejections, so Stage 2's figures are lower bounds.
 
 | Scenario | Stage 1 rejects | Stage 2 rejects |
 | --- | ---: | ---: |
