@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "`parseFormData` in src/utils/body.ts now reads the whole body via `arrayBuffer()` and re-parses it through `bufferToFormData()` instead of calling the platform `Request.formData()` directly, matching the pattern `src/validator/validator.ts`'s `form` branch already used before this change.",
+      "consequence": "src/utils/body.ts:126-132; src/validator/validator.ts:119-121.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

@@ -13,6 +13,78 @@ The manifest was frozen at `2026-09-28T06:05:09Z` on freeze commit
 `4a4f5f149e373e31878b7ad72011cc01646616fd`, after the [launch checks](launch-preflight/summary.json)
 passed and before any paid dispatch.
 
+## Results, 2026-09-28
+
+**Stage 1 cleared. It is not a pass.** No reject rule fired, and the control dispatched a
+verifier batch on three of the four targets, so the stage observed the part. Stage 2 has no
+approved budget and has not run.
+
+| Attempt | Target | Arm | Native verdict | Recovered (remedy) | False findings | Non-material | Verifier batch | Elapsed to payload | Cost |
+| --- | --- | --- | --- | --- | ---: | ---: | --- | ---: | ---: |
+| att-001 | gRPC | control | Changes Requested | none | 1 | 0 | confirmed 1 | 1012 s | $4.140633 |
+| att-002 | gRPC | variant | Approved | none | 0 | 2 | none | 473 s | $1.684334 |
+| att-003 | requests | variant | Changes Requested | GT-i1 (partial) | 0 | 1 | none | 762 s | $2.941299 |
+| att-004 | requests | control | Changes Requested | GT-i3 (partial) | 0 | 0 | confirmed 1 | 960 s | $3.745077 |
+| att-005 | Bokeh | control | Changes Requested | GT-l1 (sufficient) | 0 | 1 | confirmed 1 | 824 s | $2.910057 |
+| att-006 | Bokeh | variant | Changes Requested | GT-l1 (sufficient) | 0 | 1 | none | 463 s | $1.833153 |
+| att-007 | Hono | variant | Approved | none | 0 | 1 | none | 393 s | $1.430104 |
+| att-008 | Hono | control | Approved | none | 0 | 1 | none | 379 s | $1.387879 |
+
+| Measure over the four pairs | Control | Variant |
+| --- | ---: | ---: |
+| Reviews carrying an in-jurisdiction false or non-material finding | 1 | 0 |
+| Reviews carrying any false finding | 1 | 0 |
+| Registered defects recovered | 2 | 2 |
+| Recovered defects marked `must-fix` | 2 | 2 |
+| Sufficient remedies | 1 | 1 |
+| Approvals of a buggy change | 1 | 1 |
+| Non-material items | 2 | 5 |
+| Review cost | $12.183646 | $7.888890 |
+| Elapsed to payload, summed | 3175 s | 2091 s |
+| Model requests, workers included | 290 | 188 |
+| Finalizer runs refused | 1 of 5 | 3 of 7 |
+| Reads of the finalizer's source | 33 | 18 |
+
+How each rule came out:
+
+| Rule | Observed | Outcome |
+| --- | --- | --- |
+| The variant carries an in-jurisdiction false or non-material finding and its control does not, on two or more targets | 0 targets | No reject |
+| The variant recovers nothing and its control recovers a defect, on two or more buggy targets | 0 targets | No reject |
+| The variant's total review cost is not below the control's | $7.89 against $12.18, a ratio of 0.65 | No reject |
+| The control dispatches a batch on fewer than three targets | 3 of 4 | Not inconclusive |
+
+The one false finding is the control's. On gRPC, the clean target, the control raised a
+`must-fix` concurrency finding about a deferred `GracefulClose` waiting on a lock, and its
+verifier confirmed it. The grader ruled it false. The variant saw the same behaviour, recorded it
+as an observation and approved.
+
+Both arms approved Hono and recovered nothing there. The control dispatched no batch on Hono, so
+the two arms did the same work, and their costs differ by 3%.
+
+The per-target cost ratios are 0.41 on gRPC, 0.79 on requests, 0.63 on Bokeh and 1.03 on Hono.
+Their median is 0.71.
+
+All eight attempts are valid, and no replacement was used. No audit lists a violation. att-001,
+att-002 and att-005 each list 1 confined request.
+
+Reviews cost $20.072536 and blind grading $1.216696, for a total of **$21.289232** against the
+$40 cap. Every grading audit passed and no grader proposed a new defect.
+
+**How far this result reaches.** It is four pairs, one review per arm per target. A difference of
+one review is within noise, in either direction. The control's false finding does not show that
+verification causes false findings, and the matched recall does not show the variant loses
+nothing. Stage 1 was built to stop a variant that is clearly worse or saves nothing. It found
+neither. Requests shows the limit: each arm recovered one of three registered defects, and they
+recovered different ones.
+
+**One deviation.** After att-002 was filed, the grader's arm table gained the variant arm, which
+preparation had missed. The gRPC grader session had already finished blind. The manifest records
+the change, and it invalidates nothing.
+
+Evidence: [results](results.v1.json), [scorecards](scoring/), [ledger](ledger.md),
+[stage decision](stage-decisions.jsonl) and [closeout record](closeout.json).
+
 ## Why the run is staged and matched
 
 The current tree has no filed review. Every earlier attempt ran the frozen tree `c3c53da` or a

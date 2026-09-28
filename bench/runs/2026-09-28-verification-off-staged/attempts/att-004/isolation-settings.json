@@ -1,0 +1,138 @@
+{
+  "env": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PATH": "/home/jack/.local/share/mise/installs/python/3.14.7/bin:/home/jack/.local/share/mise/installs/node/24.21.0/bin:/home/jack/.local/share/mise/installs/go/1.26.5/bin:/usr/bin:/tmp/x384-sandbox-tools/usr/bin:/usr/local/bin:/bin:/usr/sbin:/sbin"
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [],
+    "network": {
+      "allowedDomains": [],
+      "allowLocalBinding": true,
+      "allowAllUnixSockets": false
+    },
+    "filesystem": {
+      "denyRead": [
+        "/Docker",
+        "/boot",
+        "/home",
+        "/init",
+        "/lib32",
+        "/libx32",
+        "/lost+found",
+        "/media",
+        "/mnt",
+        "/opt",
+        "/root",
+        "/run",
+        "/snap",
+        "/srv",
+        "/sys",
+        "/tmp",
+        "/var",
+        "/wslDBeDPA",
+        "/wslINJaPA",
+        "/wslLjkIJn",
+        "/wslPgAonn",
+        "/wslbPEbNA",
+        "/wsldCEPIn",
+        "/wslenDcOA",
+        "/wsljioEon",
+        "/wslkMAfkn",
+        "/wslmjjLnn",
+        "/dev/shm",
+        "/proc"
+      ],
+      "allowRead": [
+        "/home/jack/.local/share/mise/installs/go/1.26.5",
+        "/home/jack/.local/share/mise/installs/node/24.21.0",
+        "/home/jack/.local/share/mise/installs/python/3.14.7",
+        "/home/jack/.local/share/uv/python",
+        "/home/jack/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/artifacts",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-cache",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-work",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/home/.claude/skills/review-code",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/tmp",
+        "/proc/cpuinfo",
+        "/proc/meminfo",
+        "/proc/self",
+        "/proc/stat",
+        "/proc/sys",
+        "/proc/thread-self",
+        "/proc/uptime",
+        "/proc/version",
+        "/tmp/x384-sandbox-tools/usr/bin",
+        "/usr/bin"
+      ],
+      "allowWrite": [
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-cache",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-work",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/tmp",
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/artifacts"
+      ],
+      "denyWrite": [
+        "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone"
+      ]
+    },
+    "credentials": {
+      "envVars": [
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "ANTHROPIC_AUTH_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "CLAUDE_CODE_OAUTH_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "GH_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "GITHUB_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "mode": "deny"
+        }
+      ]
+    }
+  },
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "blockReadsOutsideWorkingDirectories": true,
+    "additionalDirectories": [
+      "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone",
+      "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/home/.claude/skills/review-code",
+      "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-cache",
+      "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone-work",
+      "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/tmp",
+      "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/artifacts"
+    ],
+    "disableBypassPermissionsMode": "disable",
+    "disableAutoMode": "disable"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/jack/.local/share/mise/installs/python/3/bin/python3 /home/jack/.t3/worktrees/skills/t3code-0fcc6101/bench/tools/review_isolation.py hook --attempt /home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004 --clone /home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-004/clone",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "session_id": "e67beb37-ee1a-4305-90a8-3d2c30a1ef85",
+  "cli_version": "2.1.282",
+  "model": "claude-opus-5-5",
+  "effort": "high",
+  "prompt_sha256": "5aedc1f8a0065d3a77ebe7479d7b2b2e2bddcb11d1fa1369263b86cbb5e06e3a",
+  "dispatched_at": "2026-09-28T06:32:36Z",
+  "completed_at": "2026-09-28T06:33:27Z",
+  "exit_code": 0,
+  "models_observed": [
+    "claude-opus-5-5"
+  ],
+  "subagents": 0,
+  "audit_violations": [],
+  "usage": {
+    "priced_total_usd": 0.335808,
+    "low": 0.335808,
+    "high": 0.335808
+  },
+  "verdicts_present": true
+}
