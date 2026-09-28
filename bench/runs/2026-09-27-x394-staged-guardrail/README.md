@@ -9,6 +9,10 @@ The maintainer approved the staged design and the $40 Stage 1 cap in the #407
 delivery thread on 2026-09-27. Stage 2 has no approved budget. Before any dispatch,
 the maintainer also chose to exclude Astro (see [Cohort](#cohort)).
 
+The manifest was frozen at `2026-09-28T02:11:35Z` on freeze commit
+`f3c7d9ca7a563a3eb41fc25a6b7e23caf81d1b93`, after the [launch checks](launch-preflight/summary.json)
+passed and before any paid dispatch.
+
 ## Why the run is staged
 
 #394 estimated $23 for 30 A reviews. That figure is the historical A arm at about
