@@ -186,5 +186,11 @@
     "allowance": "Read the clone and the pinned skill. Focused commands may run only as the target allowance states, offline, with a five-minute limit per command. Put scratch files in the attempt work directory or its private temporary directory. Dependency-cache and artifact writes remain inside the attempt. Never change the clone or request access to another attempt or the host filesystem. Unavailable paths and connections stay unavailable; do not retry outside the sandbox.",
     "unprivileged_user": null
   },
-  "deviations": []
+  "deviations": [
+    {
+      "at": "2026-09-28T22:40:00Z",
+      "what": "decide.py, which applies the README's decision rule to filed records, was written at 20:13:58Z, after the freeze commit and the first dispatch but before any grading, and first committed in 4004e12 after the clean target's grading. The manifest records no hash for it. The rule it applies is the README's, fixed at freeze. preflight/summary.json was written 6 seconds before its commit 744b32d, with the checks it records already run.",
+      "invalidates": []
+    }
+  ]
 }

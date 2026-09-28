@@ -14,8 +14,11 @@ The manifest was frozen at `2026-09-28T20:13:01Z` on freeze commit `744b32d16742
 
 ## Results, 2026-09-28
 
-**The variant passes the preregistered rule, and #380's literal conditions also hold.** All 12
-attempts are valid, with no replacement. A pass is not adoption.
+**The variant passes the preregistered rule, and #380's literal conditions also hold. Only the
+false-finding half of the rule observed anything:** neither arm recovered the buggy target's
+defect, so the recall half compared 0 with 0, a case [`simulate.py`](simulate.py) does not model
+and no rule marks inconclusive. All 12 attempts are valid, with no replacement. A pass is not
+adoption.
 
 | Rule | Control | Variant | Outcome |
 | --- | ---: | ---: | --- |
@@ -49,7 +52,10 @@ What the counted events are:
   de-indexes live entries. So the recall rule compared 0 with 0 and observed nothing about recall.
   The three `must-fix` findings, one control and two variant, all flag the unchecked `ZAddNX`
   result. The grader ruled each non-material: the fact is true, but the register's non-defects
-  rule the claimed consequence out. The control's verifier confirmed its copy. The variant had no verifier to
+  rule the claimed consequence out. That non-defect, an abandoned restore after the `ZREM`, is one
+upstream also fixed later. Had the register counted it, these findings would likely have added one
+recovery to the control and two to the variant; that is an inference, not a regrade. The
+control's verifier confirmed its copy. The variant had no verifier to
   confirm or refute its two.
 - **Approvals of the buggy change.** Control 2 of 3, variant 1 of 3. The variant requested changes
   more often, for a reason that is not the registered defect.
@@ -67,8 +73,9 @@ on seaweedfs. For elapsed time they are 0.61 and 0.74.
 **How far this reaches.** Two unseen Go targets and three replicates per arm. The run shows the
 variant raising no false finding on a clean concurrency change it had not seen, and raising the
 same class of non-material blocker as the control on a buggy one. It says nothing about recall on
-unseen code, because neither arm found the defect. Together with the staged run's 15 pairs, this
-is the #380 evidence for adoption. It is not adoption itself: #380 also requires the full
+unseen code, because neither arm found the defect. With the staged run's 15 pairs, this is the
+#380 evidence for adoption. The two runs are separate evidence, not one pooled statistic, since
+their CLI versions differ. It is not adoption itself: #380 also requires the full
 10-target screen.
 
 The run cost **$38.477512** against the $60 cap: reviews $27.293903, hunts and adjudication
@@ -103,7 +110,7 @@ They receive no issue text, register, grade or earlier output.
 | From | Departure | Why |
 | --- | --- | --- |
 | #380 | The control is tree `5e12864`, not frozen A `c3c53da` | The variant was cut from `5e12864`. A control at `c3c53da` would test the removal and every change between the two trees at once |
-| #380 | The decision rule below replaces "candidate recall does not fall and the clean target has 0 false findings" | At three replicates the literal rule rejects a variant with no effect 27–54% of the time, so its verdict carries little information either way. The maintainer chose the matched rule on 2026-09-28. The literal conditions are still reported |
+| #380 | The decision rule below replaces "candidate recall does not fall and the clean target has 0 false findings" | At three replicates the literal rule rejects a variant with no effect 27–54% of the time, so its verdict carries little information either way. The maintainer chose the matched rule on 2026-09-28, shown an earlier, narrower sweep of the same simulation (33–50%). The literal conditions are still reported |
 | Staged run | Claude Code 2.1.284, not 2.1.282 | The updater deleted 2.1.282. Both arms run on the same pin, so the pair stays matched, but these cells do not pool with the staged run's |
 
 ## Targets
@@ -116,13 +123,16 @@ They receive no issue text, register, grade or earlier output.
 Both merged after 2026-07-01, and the clean target's cleanliness window runs 58 days to 2026-09-28.
 Both are Go, and the focused tests of each run offline with the clone read-only, as the
 [smoke records](../../targets/t-rclone-9699/smoke.json) show. The registers, hunt reports and
-rulings stay sealed until every attempt is filed: the [`sealed/`](sealed/) ciphertexts, with
+rulings are committed only as ciphertext until every attempt is filed. The orchestrating session
+read the reports and rulings to prepare the targets, and opened the registers outside the
+repository for grading. No reviewer could read them: the [`sealed/`](sealed/) ciphertexts, with
 plaintext hashes in `sealed/SHA256SUMS` and each `target.json`.
 
 The clean hunt's first passing candidate was taken over its alternate, rclone#9711, because #9711
 carries an intended behaviour change that graders could dispute. The buggy hunt found one passing
-candidate. The adjudicator of the buggy target registered one of the defects the hunt proposed and
-ruled a second non-material.
+candidate. The adjudicator of the buggy target registered one defect and ruled three other items
+non-material, although the upstream maintainer fixed all four. The registered one needs knowledge
+of go-redis cluster routing.
 
 Neither target has been reviewed by any arm, and neither pull request is in the
 [list of used pull requests](prompts/used-pull-requests.txt) given to the hunts. Each was chosen by
