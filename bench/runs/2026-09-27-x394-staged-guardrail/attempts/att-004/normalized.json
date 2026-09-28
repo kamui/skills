@@ -1,0 +1,21 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Approved",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "`Overwrite` carries an `@internal` JSDoc tag and is re-exported only from `packages/server/src/internals.ts`, a module not listed among `@trpc/server`'s `package.json` `exports` subpaths, so it is not part of a documented external contract.",
+      "consequence": "packages/server/src/core/internals/utils.ts:4-10; packages/server/src/internals.ts:11; packages/server/package.json `exports`.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

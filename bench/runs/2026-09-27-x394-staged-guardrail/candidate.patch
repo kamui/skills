@@ -1,0 +1,125 @@
+diff --git a/DESIGN.md b/DESIGN.md
+index 747651a..30f0cce 100644
+--- a/DESIGN.md
++++ b/DESIGN.md
+@@ -17,7 +17,7 @@ The reviewer judges evidence, admission, priority, and whether a safety area app
+ | Target resolution and pinned context | [`SKILL.md`](SKILL.md) Inputs and Steps, [`targets.md`](references/targets.md) for a pull request or a range or working tree, [`forge_packet.py`](scripts/forge_packet.py) `fetch` for a pull request's queries and pagination, and [`review_context.py`](scripts/review_context.py); `targets.md` owns a local target's run fields, and the packet owns a pull request's |
+ | Finding admission, requirements ledger, conformance, released compatibility, changed tests, supplied checks, uncertainty, priority | [`rubric.md`](references/rubric.md), read on every path |
+ | Verification triggers and batch allowance | [`SKILL.md`](SKILL.md) Verification; [`verification.md`](references/verification.md) governs a dispatched batch for the primary, and the [verifier brief](references/verifier.md) (worker instructions, its supplied-check and conformance sections, and the inline return encoding) and [concurrency check](references/verifier-concurrency.md), embedded by the builder without their primary-facing load condition, govern its worker. The builder also embeds the rubric's Released compatibility and Changed tests sections by heading. The [builder](scripts/build_verifier_prompt.py)'s `--example` and refusals own the input shape, and the [accounting helper](scripts/account_verifier_return.py) owns which records account a task |
+-| Record meaning, rendered syntax, and the report | [`SKILL.md`](SKILL.md) Return names the artifacts; [`output.md`](references/output.md) owns authoring, identity and the finalize command, `render_review.py --example` owns the input's keys, and the [finalizer](scripts/render_review.py) owns derived fields, the record's shape, the report's contents, the prior-record check and every refusal |
++| Record meaning, rendered syntax, and the report | [`SKILL.md`](SKILL.md) Return names the artifacts; [`output.md`](references/output.md) owns authoring, the trailer's `packet_context` and `supplied_inputs` rules and the finalize command, `render_review.py --example` owns the input's keys, and the [finalizer](scripts/render_review.py) owns the workflow identity, derived fields, the record's shape, the report's contents, the prior-record check and every refusal |
+ | Prior reviews and re-reviews from a prior record | [`prior-state.md`](references/prior-state.md); [`forge_packet.py`](scripts/forge_packet.py) owns `packet_context`, `later-state`'s exclusions and the `shortcut` identity check, and the finalizer owns the prior-item trailer and the lineage |
+ | Publication | [`review-code-publish`](../review-code-publish/SKILL.md) and its [publication reference](../review-code-publish/references/publication.md) |
+ 
+@@ -136,3 +136,23 @@ The removal subtracts 153 bytes and 22 words from every measured path except the
+ The Changed tests section gains one bullet: an existing test that could catch its defect at the merge-base but no longer can at head is a correctness `must-fix` gap until the change or an authorized person explicitly accepts losing that protection. The maintainer chose the coverage-inclusive policy the k-graphql-js-1582 register allowed, because the baseline reviewers found the fixture that bypasses stack creation and still approved under the `consider` cap for ineffective tests. The bullet overrides that cap and the test-hygiene clause in Priority and action only for demonstrated lost protection. Missing extra assertions, pre-existing ineffective tests and optional additional cases stay `consider`. An accepted loss resolves through prior-state's existing `accepted` state. The workflow identity moves from `v5b-28` to `v5b-28-x382`, as #380 requires of skill changes, so the duplicate-review shortcut cannot reuse a review made under the old cap and the experiment stays identifiable.
+ 
+ **Budget.** The bullet adds 221 bytes and 37 words to the always-loaded set, and the identity in `output.md` 5 bytes more, so the set rises from 29,990 to 30,216, a first review from 48,711 to 48,937, the required-verifier path from 60,888 to 61,114, a re-review from 57,904 to 58,130 and the runtime total from 73,494 to 73,720. The verifier example brief, which embeds Changed tests, rises from 20,978 to 21,199. The always-loaded, required-verifier, re-review and example-brief limits rise to the next thousand; the runtime total stays inside 74,000. The bytes buy the experiment [#382](https://github.com/kamui/skills/issues/382) preregisters under [#389](https://github.com/kamui/skills/issues/389)'s protocol: GT-k1 must-fix with a sufficient remedy in 3/3 GraphQL replicates, GraphQL approvals falling from 2/2 to 0/3, and no new false findings or recall loss on the other targets. If it fails, revert the bullet, those four limits and the identity.
++
++## Decision-neutral paragraphs removed, issue #394, 2026-09-27
++
++Seven whole paragraphs leave `output.md`, `prior-state.md`, `verification.md` and `targets.md` to offset the text epic #380 added. Each removal is a whole paragraph whose absence changes no review decision: a script builds or refuses what it describes, another file states the same rule, or it concerns housekeeping that bears on no finding, status or coverage. The [removal-candidates note](../../docs/research/review-code-removal-candidates-2026-09-27/README.md) ranks them as its tier A and holds the evidence; its tier B and other candidates are not part of this change. #394's preregistered comparison of the trimmed tree with the tree it trims has not run. If a guardrail fails, the paragraph that caused it is restored when the failure isolates it, and otherwise the change is reverted.
++
++**Workflow identity.** The finalizer's `WORKFLOW` constant carries the workflow string, which increments for admission, verification, rendering or state changes; `output.md` stated that rule until this change. Workflow `v5b-30-x382` is retained. No removal changes admission, verification, rendering or state semantics, and #358 and #359 kept the workflow for changes that left review behavior unchanged.
++
++**Removed paragraphs.** Each row names a removed paragraph and what makes its absence safe.
++
++| Removed | Why it is safe |
++| --- | --- |
++| `output.md`'s report layout: lead with status, counts and finding index, keep open items visible, follow with reviewed head, coverage and collapsed `Review details`, and aim below 100 summary words | The reviewer cannot author the layout. The composition input has no body field (`read_summary`, `render_review.py:1280-1329`), and `compose_body` builds every part the paragraph lists (`render_review.py:1488-1600`), including the merged-target Mode line (`MODE_LINE`, `render_review.py:892`). The 100-word target had no other owner and no check; it governs summary length, not a decision, so only the cost guardrail can see its loss |
++| `output.md`'s workflow sentence: `workflow=v5b-30-x382` versions review behavior, and increments for admission, verification, rendering or state changes | The string is a script constant (`WORKFLOW`, `render_review.py:130`) that the finalizer writes into the record and trailer (`render_review.py:2192`, `:2709`) and `forge_packet.py shortcut` compares (`forge_packet.py:1172`); the reviewer never writes it. The sentence addressed maintainers, so its increment rule moves to this entry and the rule-ownership table gives the workflow identity to the finalizer |
++| `prior-state.md`'s opening load condition and contents list | `SKILL.md:34` (step 2) and the re-review paragraph of `targets.md`'s Pull request section say when to read the file, before the reader reaches it. The contents list repeats the file's own section headings, and the finalizer renders the `Disputed`, `Prior findings` and `Settled findings` sections it named (`render_review.py:1585-1590`) |
++| `prior-state.md`'s pre-protocol record rule: a record from before `review-code-record/1` is not a prior record, so review in full from the base with a new allowance and name the earlier record in coverage | The finalizer refuses such a prior, and its refusal carries the same instruction (`render_review.py:1727-1730`); `test_prior_record_refusals`' retired gate record case asserts that text (`test_render_review.py:1138`). The caller that holds such records states the rule too (`skills/implement-publish/references/continuation.md:21`) |
++| `verification.md`'s opening load condition, ruling values and ownership sentence | `SKILL.md:38` (step 6, after the complete pass) and `SKILL.md:43` say when to read the file. The ruling values are stated at `SKILL.md:47` and `:49`, and the finalizer refuses any other ruling (`CANDIDATE_RULINGS` and `PREMISE_RULINGS`, `render_review.py:908-909`, checked at `:1937-1938` and `:1947-1948`). Steps 5 and 7 (`SKILL.md:37`, `:39`) give admission and the record to the primary |
++| `targets.md`'s snapshot housekeeping: `git gc --prune=now` can remove snapshot objects, and refs under `refs/review-code/session/` left by earlier versions are reported and deleted only on the user's authorization | Neither sentence bears on a finding, status or coverage. The pruning note duplicates `review_context.py:14-16`, which keeps it beside the code that writes the snapshot. No script creates or reads a session ref now. This reverses the one-sentence retention the [session-layer removal](../../docs/review-code/HISTORY.md#interactive-use-without-a-session-layer-user-request-2026-09-20) recorded on 2026-09-20 (`docs/review-code/HISTORY.md:1127`) |
++| `targets.md`'s opening load condition: read at step 1 to pin a pull request, range or working tree | `SKILL.md:33` (step 1) reads the file to pin the target, and the file's `Pull request` and `Range or working tree` sections name the two target kinds |
++
++**Budget.** The removals subtract 1,989 bytes from the runtime total, 716 from the always-loaded set, 1,124 from a first review, 1,365 from the required-verifier path and 1,748 from a re-review; the verifier briefs are unchanged. Each limit falls to the next thousand above its measured size: runtime total 71,199 bytes, 74,000 → 72,000; always loaded 28,968, 31,000 → 29,000; review 47,281, 49,000 → 48,000; required verifier 59,217, 62,000 → 60,000; re-review 55,850, 59,000 → 56,000; verifier instructions 17,701, 18,000 → 18,000; verifier example brief 21,199, 22,000 → 22,000. The always-loaded set ends 476 bytes below the 29,444 that #359 left before this epic's additions.
+diff --git a/references/output.md b/references/output.md
+index 699695f..571aae1 100644
+--- a/references/output.md
++++ b/references/output.md
+@@ -12,12 +12,8 @@ Questions state evidence, how the answer changes the decision, and its supplier
+ 
+ Author intent, issue fit, concise coverage, ambiguities, and gaps. Without an issue, state alignment was unavailable and name the intent source; a required missing issue is a whole-change question. Never present unverifiable claims as established. In `summary.check_details`, distinguish accepted supplied checks, historical checks with original heads, reviewer runs, test failures, environmental failures, and unavailable execution. Group shared head/input context and link saved output. Unmet requirements need findings or questions; `coverage_gaps` names every uncovered file or required check and its recovery input.
+ 
+-Lead with status, counts, and finding index. Keep questions, ambiguities, unanchored findings, disputes, open prior findings, and gaps visible. Follow with reviewed head, coverage, then collapsed `Review details`: intent, issue fit, base, checks, observations, settled prior findings. Retain each prior item once with classification and evidence; draft replies per `prior-state.md`. Merged targets keep the visible retrospective Mode; `review-code-publish` decides publication. Aim below 100 summary words before index/details; retain uncertainty without repeating findings or dropped candidates.
+-
+ ## Identity
+ 
+-`workflow=v5b-30-x382` versions review behavior; increment for admission, verification, rendering, or state changes.
+-
+ The run trailer carries `packet_context=` and `supplied_inputs=`. A pull request's `packet_context` is the digest `forge_packet.py` computes from the saved packet's intent, and the finalizer derives it; never write or copy one. A local target has none and its trailer reads `packet_context=none`. List the identities of the caller-supplied issues and specs in `run.specs`, empty when there were none; the finalizer derives `supplied_inputs=yes|no` from that list.
+ 
+ ## Finalize
+diff --git a/references/prior-state.md b/references/prior-state.md
+index e288609..9e0c838 100644
+--- a/references/prior-state.md
++++ b/references/prior-state.md
+@@ -1,7 +1,5 @@
+ # Re-review and prior state
+ 
+-Read when target pinning finds prior state from the reviewer identity, or a local target has a `prior_record`: prior-state reading, the duplicate-review shortcut, delta scope, reply dispositions, and the prior-item classification that feeds the `disputed` status input and the visible `Disputed` and `Prior findings` sections and collapsed `Settled findings` history.
+-
+ ## Prior-state sources
+ 
+ A pull-request target takes prior state only from the persisted packet, in either mode. A local target takes it only from a `prior_record`; without one, every local run is a first review. Preserve stable finding ids and prior trailers.
+@@ -31,8 +29,6 @@ A caller continuing after fixes, such as `implement-publish`, passes `prior_reco
+ 3. **Carry confirmations.** An unchanged mandatory finding keeps its confirmation as a `confirmed` candidate task with the prior's `trigger` and `batch` and `confirmed_in` naming the record whose accounting confirmed it: the prior's own `confirmed_in` when it carried one, otherwise the prior record. A materially changed mandatory claim, a new mandatory candidate and a required safety premise still need verification within the remaining allowance, or stay outstanding.
+ 4. **Keep state.** Every prior `outstanding` and `routed` entry survives unless a task this run ruled on settles it, so carried outstanding work keeps coverage incomplete. The finalizer derives the spent flags from the prior's and refuses a batch for a phase the prior spent.
+ 
+-A record from before `review-code-record/1`, such as an implementation-gate record or its addenda, is not a prior record: review the final head in full from its base without one, with a new allowance, and name the earlier record in the coverage summary.
+-
+ ## Replies and prior state
+ 
+ Read replies as prose first. An addresser reply may state a disposition — `implemented`, `already-addressed`, `answered`, `declined`, `needs-info`, or `blocked` — with its evidence, and an agent reply may end with the trailer `<!-- reply to=<stable id> disposition=<disposition> head=<full SHA> -->`. Never require or add a trailer on a human's behalf. Verify replies against current code. A reply states intent; it does not prove outcome.
+diff --git a/references/targets.md b/references/targets.md
+index c781208..ce6a42a 100644
+--- a/references/targets.md
++++ b/references/targets.md
+@@ -1,7 +1,5 @@
+ # Targets
+ 
+-Read at step 1 to pin the target: a pull request, or a range or working tree.
+-
+ ## Pull request
+ 
+ Resolve originating issues from closing references, then other explicit PR-body links, user-supplied issues/specs, then unique branch or commit references. Use every clearly relevant issue. With none, use the change description and report issue alignment unavailable; a required missing issue is an `issue-required` material question, not a stop or coverage gap alone.
+@@ -56,8 +54,6 @@ This is also the shared context build: retain its output and store and do not sn
+ 
+ The snapshot leaves the real index, refs, and working files unchanged, and working files win over staging. Submodules are gitlinks at their checked-out commits; dirty submodule content is unreviewed and must be named under Coverage gaps, making coverage incomplete unless the user deliberately set it aside with a reason.
+ 
+-Snapshots are unreferenced loose objects that `git gc --prune=now` can remove; the saved record retains snapshot identity and the manifest after that. Refs under `refs/review-code/session/` are leftovers from earlier versions of this skill; report them and delete them with `git update-ref -d` only on the user's authorization.
+-
+ ### Description and record inputs
+ 
+ Read real commit messages with `git log --reverse --format='%H%n%B' <merge-base>..<real head>`. For a range, real head is its pinned head; for a snapshot it is `source_head`, so no snapshot commit enters the description. Save each raw message at `commit-<sha7>` and cite a promise as `commit-<sha7>/"<quoted phrase>"`. Uncommitted changes supply no description text.
+diff --git a/references/verification.md b/references/verification.md
+index 431cb4d..0134f34 100644
+--- a/references/verification.md
++++ b/references/verification.md
+@@ -1,7 +1,5 @@
+ # Verification
+ 
+-Read when the complete primary pass has selected required or optional verification tasks. Candidate tasks take `confirmed` or `refuted`; safety-premise tasks take `holds`, `fails`, or `unresolved`. The primary owns admission and rendering.
+-
+ ## Dispatch and allowance
+ 
+ Record each task's id, trigger or area, premise and evidence when applicable, batch, and ruling. Candidate triggers are `must-fix`, `security`, `data-integrity`, `destructive-migration`, `compatibility`, `prior-must-fix`, or `optional`. Optional premises use `trigger: optional`. Undispatched tasks are `pending`; unusable returns are `withheld`.
+diff --git a/scripts/test_instruction_budget.py b/scripts/test_instruction_budget.py
+index bff614d..d23c2d3 100644
+--- a/scripts/test_instruction_budget.py
++++ b/scripts/test_instruction_budget.py
+@@ -24,9 +24,9 @@ ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
+ # Rounded ceilings above the #359 layout, including actual helper output: the activated SKILL.md,
+ # one record shape, the scripted packet identity, inline-only verifier returns and the scripted
+ # pull-request fetch without timing wrappers; DESIGN.md dates each change.
+-BUDGET = 31_000
+-LIMITS = {"runtime total": 74_000, "always loaded": BUDGET, "review": 49_000,
+-          "required verifier": 62_000, "re-review": 59_000,
++BUDGET = 29_000
++LIMITS = {"runtime total": 72_000, "always loaded": BUDGET, "review": 48_000,
++          "required verifier": 60_000, "re-review": 56_000,
+           "verifier instructions": 18_000, "verifier example brief": 22_000}
+ 
+ 

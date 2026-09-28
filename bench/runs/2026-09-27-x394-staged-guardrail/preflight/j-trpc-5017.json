@@ -1,0 +1,45 @@
+{
+  "target": "j-trpc-5017",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "restore cache archive sha256:9ea0916b60da64cfdb2c6b7f324c6de6968946ade3996462302174db8909f9fa; mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+    "duration_seconds": 26.08,
+    "tree_clean_after": true,
+    "steps": [
+      {
+        "command": "restore cache archive sha256:9ea0916b60da64cfdb2c6b7f324c6de6968946ade3996462302174db8909f9fa",
+        "exit_code": 0,
+        "duration_seconds": 10.26
+      },
+      {
+        "command": "mkdir -p {cache}/bin && corepack enable --install-directory {cache}/bin && COREPACK_ENABLE_NETWORK=0 PATH={cache}/bin:$PATH pnpm install --frozen-lockfile --offline --store-dir {cache}/pnpm-store >/dev/null 2>&1",
+        "exit_code": 0,
+        "duration_seconds": 15.82
+      }
+    ],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-q306eftb/attempt/clone && COREPACK_HOME=/tmp/review-isolation-q306eftb/attempt/clone-cache/corepack PNPM_HOME=/tmp/review-isolation-q306eftb/attempt/clone-cache/pnpm-home COREPACK_ENABLE_STRICT=0 cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && echo clean",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": "clean",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": "clean",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}

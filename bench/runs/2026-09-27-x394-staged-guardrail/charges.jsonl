@@ -1,0 +1,8 @@
+{"at": "2026-09-28T02:28:24Z", "step": "blind-grade-m-grpc-go-7390-g1", "usd": 0.170345, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "0abe801a"}
+{"at": "2026-09-28T02:39:52Z", "step": "blind-grade-q-soba-195-g-att-002", "usd": 0.207182, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "6623b9ee"}
+{"at": "2026-09-28T03:04:04Z", "step": "blind-grade-i-requests-6667-g-att-003", "usd": 0.195894, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "292f76b3"}
+{"at": "2026-09-28T03:14:42Z", "step": "blind-grade-j-trpc-5017-g-att-004", "usd": 0.244198, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "31b22f1c"}
+{"at": "2026-09-28T03:21:23Z", "step": "blind-grade-k-graphql-js-1582-g-att-005", "usd": 0.166292, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "f3122ddc"}
+{"at": "2026-09-28T03:32:45Z", "step": "blind-grade-l-bokeh-9232-g-att-006", "usd": 0.194446, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "4993dba3"}
+{"at": "2026-09-28T03:41:41Z", "step": "blind-grade-n-ripgrep-2957-g-att-007", "usd": 0.198594, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "732e04e8"}
+{"at": "2026-09-28T03:51:05Z", "step": "blind-grade-p-hono-5067-g-att-008", "usd": 0.247746, "model": "claude-opus-5-5", "billing": "api-dollars", "session": "a1301c26"}

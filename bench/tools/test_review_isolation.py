@@ -75,11 +75,14 @@ class Boundaries(unittest.TestCase):
         (self.clone / ".gitignore").write_text("node_modules/\n", encoding="utf-8")
         modules = self.clone / "packages/example/node_modules"
         modules.mkdir(parents=True)
+        provisioned = self.clone / "packages/other/node_modules/.cache"
+        provisioned.mkdir(parents=True)
         review_isolation.prepare_runtime_cache(self.clone)
         review_isolation.prepare_runtime_cache(self.clone)
-        for name in (".vite-temp", ".vite"):
+        for name in (".vite-temp", ".vite", ".cache"):
             self.assertTrue((modules / name).is_symlink())
             self.assertTrue(review_isolation.contained(modules / name, [self.work]))
+        self.assertFalse(provisioned.is_symlink())
         (self.clone / ".gitignore").write_text("", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "must be git-ignored"):
             review_isolation.prepare_runtime_cache(self.clone)
@@ -281,9 +284,11 @@ class NativeIsolation(Boundaries):
                     review_isolation.prepare_runtime_cache(probe.clone)
                     config = provision.cache_config(target)
                     env = review_isolation.target_env(target_dir, probe.clone)
-                    bare = "cd " + shlex.quote(str(probe.clone)) + " && " + config["smoke"][0]["command"]
+                    paths = provision.substitutions(str(probe.clone) + "-cache", provision.DEFAULT_CACHE_ROOT, str(probe.clone), str(probe.clone) + "-work")
+                    smoke = provision.render(config["smoke"][0]["command"], paths)
+                    bare = "cd " + shlex.quote(str(probe.clone)) + " && " + smoke
                     command = "cd " + shlex.quote(str(probe.clone)) + " && "
-                    command += "".join(k + "=" + shlex.quote(v) + " " for k, v in env.items()) + config["smoke"][0]["command"]
+                    command += "".join(k + "=" + shlex.quote(v) + " " for k, v in env.items()) + smoke
                     base = probe.work / "base"
                     clone_command = shlex.join(["git", "clone", "--quiet", "--no-hardlinks", str(probe.clone), str(base)])
                     clone_command += " && " + shlex.join(["git", "-C", str(base), "checkout", "--quiet", "main"])
@@ -297,8 +302,15 @@ class NativeIsolation(Boundaries):
                         output = Path(os.environ["BENCH_ISOLATION_EVIDENCE"])
                         output.mkdir(parents=True, exist_ok=True)
                         (output / (name + ".json")).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
-                    for result in results.values():
-                        self.assertFalse(result.get("is_error"), results)
+                    recorded = json.loads((target_dir / "smoke.json").read_text(encoding="utf-8"))["checks"]
+                    expected = next(check["exit_code"] for check in recorded
+                                    if check["name"] == config["smoke"][0]["name"] and check["revision"] == "head")
+                    for identifier in ("smoke", "bare_smoke"):
+                        if expected:
+                            self.assertTrue(results[identifier]["content"].startswith(f"Exit code {expected}\n"), results)
+                        else:
+                            self.assertFalse(results[identifier].get("is_error"), results)
+                    self.assertFalse(results["local_base_clone"].get("is_error"), results)
                     self.assertEqual(set(results), {"smoke", "bare_smoke", "local_base_clone"})
                     self.assertTrue(clean)
                 finally:

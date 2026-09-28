@@ -1,0 +1,121 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr-honojs-hono-5067"],
+    "target_kind": "range",
+    "target": "main..review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": ["honojs/hono#5060"],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Normalize the media-type portion of the Content-Type header before matching in parseBody() and validator('json'|'form'), so mixed/upper-case values like `Application/JSON` or `Application/X-WWW-Form-Urlencoded` are accepted the same as their canonical lowercase form, without altering case-sensitive parameters such as multipart boundaries.",
+    "issue_fit": "Full — parseBody() and validator('json'|'form') now match Content-Type media types case-insensitively while preserving parameter case (e.g. multipart boundaries), matching issue honojs/hono#5060's suggested fix and suggested tests.",
+    "coverage": "All 6 changed files (src/utils/body.ts, src/utils/body.test.ts, src/utils/buffer.ts, src/utils/buffer.test.ts, src/validator/validator.ts, src/validator/validator.test.ts) read in full diff and surrounding context, including HonoRequest's `bodyCache`/`#cachedBody` caching and validator.ts's pre-existing `bufferToFormData` usage that body.ts now shares. No must-fix or risk-area (security, data-loss, destructive-migration, released-compatibility) candidates surfaced, so no verification batch was required.",
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts` at the reviewed head (5226d4165d48643586152614cbd07422a0ab7a22): 3 files passed, 106 passed, 1 skipped.",
+      "Supplied Codecov comment (reviewed head): patch coverage 76.47%, below the repo's 80% target, with 3 uncovered lines in src/utils/body.ts and 1 in src/utils/buffer.ts — a coverage-threshold gate, not a failing test.",
+      "Supplied GitHub Actions benchmark comment (reviewed head): +2.20% average latency vs. origin/main, within normal run-to-run noise for this benchmark; no regression shown."
+    ]
+  },
+  "findings": [
+    {
+      "id": "utils/body-parseformdata-buffers-full-body",
+      "title": "Avoid buffering the whole body for every multipart/urlencoded parseBody() call",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "performance",
+      "trigger": "Any `parseBody()` call whose Content-Type media type is `multipart/form-data` or `application/x-www-form-urlencoded`, including the previously-working canonical-case requests that this fix did not need to touch.",
+      "impact": "`parseFormData` now always reads the full body into an `ArrayBuffer` and rebuilds a `Response` solely to call `.formData()` on a header-normalized copy, replacing the prior direct `request.formData()` call. Large uploads the platform could parse without fully materializing now pay a full in-memory buffering cost inside Hono on every request, not only the mixed-case ones this PR targets.",
+      "change": "Keep the previous `request.formData()` fast path when the media type is already exactly `multipart/form-data` or `application/x-www-form-urlencoded` (normalization would be a no-op), and only fall back to the buffer-and-normalize path used here for non-canonical casing.",
+      "anchor": {
+        "type": "line",
+        "path": "src/utils/body.ts",
+        "start_line": 126,
+        "end_line": 132,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "body.ts's `parseFormData` now delegates to `bufferToFormData` (src/utils/buffer.ts), the same helper validator.ts's `form` target already used before this PR, centralizing the media-type-case normalization in one place instead of duplicating it per call site.",
+      "evidence": "src/utils/body.ts:126-132; src/validator/validator.ts:119-121; src/utils/buffer.ts:106-117."
+    },
+    {
+      "fact": "This PR's body.test.ts diff also replaces a `vi.spyOn`-based mock of `formData()` in the file-object-properties preservation test with a real `FormData`, a test-hygiene cleanup bundled into the Content-Type fix rather than part of it.",
+      "evidence": "src/utils/body.test.ts diff, the file-object-properties preservation test."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-27-x394-staged-guardrail/att-008/clone",
+    "requirements": [
+      {
+        "source": "issue-5060/summary",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:100-105 now compares `contentType?.split(';')[0].trim().toLowerCase()` against the lowercase media types instead of case-sensitive `startsWith()`; src/validator/validator.ts:24-26 add the `/i` flag to `jsonRegex`/`multipartRegex`/`urlencodedRegex`. New passing tests in body.test.ts and validator.test.ts exercise `Application/JSON` and `Application/X-WWW-Form-Urlencoded`."
+      },
+      {
+        "source": "issue-5060/\"Parameter values such as multipart boundaries should remain intact\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/buffer.ts:113 lowercases only the substring before the first `;` via `contentType.replace(/^[^;]+/, ...)`, leaving `boundary=sampleBoundary` untouched. buffer.test.ts's new 'keeping the boundary' case uses a mixed-case boundary value and passed when run."
+      },
+      {
+        "source": "pr-body/\"Add tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "6 new test cases added across body.test.ts, buffer.test.ts, and validator.test.ts covering mixed-case multipart, urlencoded, and JSON media types; all ran and passed at the reviewed head."
+      },
+      {
+        "source": "pr-body/\"Run tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer re-ran the full changed-file test suite at the reviewed head (5226d4165d48643586152614cbd07422a0ab7a22): 106 passed, 1 skipped, 0 failed."
+      }
+    ],
+    "files": [
+      {"path": "src/utils/body.ts", "state": "reviewed"},
+      {"path": "src/utils/body.test.ts", "state": "reviewed"},
+      {"path": "src/utils/buffer.ts", "state": "reviewed"},
+      {"path": "src/utils/buffer.test.ts", "state": "reviewed"},
+      {"path": "src/validator/validator.ts", "state": "reviewed"},
+      {"path": "src/validator/validator.test.ts", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "run offline in the clone at the pinned head; 3 files passed, 106 passed, 1 skipped, 0 failed"
+      },
+      {
+        "check": "Codecov patch coverage",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "failed",
+        "reason": "supplied PR comment: patch coverage 76.47% below the repository's 80% target; 3 lines uncovered in src/utils/body.ts, 1 in src/utils/buffer.ts — a coverage-threshold gate, not a test assertion failure"
+      },
+      {
+        "check": "GitHub Actions HTTP performance benchmark",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "accepted",
+        "reason": "supplied PR comment: +2.20% average vs origin/main, within this benchmark's normal run-to-run noise; no regression shown"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

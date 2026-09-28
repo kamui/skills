@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-27-x394-staged-guardrail",
+  "target": "m-grpc-go-7390",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "5a40b59e0c384c5df8da169e4f42962ca2dcf9e28a6df4e1cbbf7423016f912e"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 c50024109624eae0c2f48a7625b5d7d38fbda4f8e9108ad5376877fb970a727b; session 0abe801a-4f0d-4e99-9878-4d2d7e87b1fd; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (1 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T02:28:24Z",
+  "attempts": [
+    {
+      "attempt_id": "att-001",
+      "blind_token": "blind-280b8f",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"updateAddrs() spawns `go ac.resetTransportAndUnlock()` while still holding ac.mu ... an unusual pattern reviewers ... explicitly discussed and accepted via the function's name and doc comment rather than a compile- or runtime-enforced check.\" Fix: \"—\". Accurate: clone/clientconn.go:996 is `go ac.resetTransportAndUnlock()` with ac.mu held, and the doc comment at :1231-1233 states the contract. The item asserts no defect or consequence; it describes the handoff and notes the trade-off was accepted. The register lists both the lock handoff (non_defects[0]: sync.Mutex has no goroutine affinity) and the lack of enforcement (non_defects[1]) as non-defects, and the review does not claim otherwise. An accurate observation below the finding threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"resetTransportAndUnlock's early `acCtx.Err() != nil` return skips the connectivity.Connecting transition entirely; this pre-existing behavior (unchanged by this diff beyond the lock removal) was raised and explicitly dismissed by reviewers as immaterial.\" Accurate: clone/clientconn.go:1235-1239 returns after Unlock before the Connecting update at :1259, and `git diff main...review-head` shows the early-return body was not changed; only the leading `ac.mu.Lock()` was removed. The item itself says the behavior is pre-existing and immaterial and proposes no fix. A true, inconsequential remark, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}
