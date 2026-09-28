@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-unseen-target-comparison",
+  "target": "t-rclone-9699",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "405740094c70301ec8dab2c3cc669d642a994695139c181eedde0e09e8641797"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.284, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 efbea21238e560ef55bdb2622dab44f8f27c6f3a1d75494142155bf0f44ec7d0; session 97c93e69-cd9f-45b8-8c9a-810582c85bdf; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (6 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T21:14:43Z",
+  "attempts": [
+    {
+      "attempt_id": "att-001",
+      "blind_token": "blind-62d112",
+      "items": [],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-002",
+      "blind_token": "blind-91a3b1",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"the new admitMu also now covers the pre-existing `fs.Debugf(b.f, ...)` call, so a slow `Stringer.String()` ... would hold admission (and block Shutdown) longer ... no concrete instance is shown to matter.\" True (batcher.go:273 Debugf between Lock at 267 and Unlock at 281) but the item itself shows no concrete impact; register non_defect 'fs.Debugf runs while admitMu is held' is ruled true and inconsequential."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-003",
+      "blind_token": "blind-695d14",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"select on `<-b.closed` with a 100ms timeout can never observe a closed channel, because Shutdown blocks on `admitMu` until the blocked `Commit` goroutine releases it ... a no-op wait that does not affect the test's correctness.\" Correct at head: the Commit goroutine holds admitMu (batcher.go:267) while blocked in blockingStringer.String() via fs.Debugf, and Shutdown takes admitMu (line 243) before close(b.closed), so the <-b.closed branch cannot fire before release; the 100ms timeout always elapses. The item itself says it does not affect correctness (and the branch is meaningful at base, where it lets the marker be queued). Test hygiene observation, below threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Holding `admitMu` across each `Commit` call's send ... fully serializes concurrent admissions ... though `commitLoop` keeps draining independently of the mutex so no deadlock is introduced.\" Accurate observation with no material consequence claimed; register non_defects rule the lock-across-send deadlock and serialisation/throughput objections not defects (critical section is a non-blocking select, Debugf and one buffered send; sync wait is after Unlock)."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-004",
+      "blind_token": "blind-747de2",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`Commit`'s admission critical section now spans its debug-log call and the send on `b.in`, so concurrent `Commit` calls (and `Shutdown`) fully serialize on `admitMu` ... unmeasured, and ... runs show no timeout regression.\" True fact (batcher.go:267-281) with no demonstrated consequence; the item concedes it is unmeasured. Register non_defects: serialisation does not defeat batching, and Debugf under the lock is inconsequential. Observation only."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-005",
+      "blind_token": "blind-4f31f7",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"toggling the process-global `fs.Config.LogLevel` ... an effective, deterministic way to hit the race window, but coupled to `fs.Debugf`'s current global-config fallback\". Accurate: the test mutates ci from fs.GetConfig(context.Background()), which returns globalConfig (fs/config.go:793-802). This is a test-design coupling remark, not a product defect; register non_defects rule that the global LogLevel mutation is not a defect (race -count=5 passes, test not parallel). Test hygiene, below threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-006",
+      "blind_token": "blind-120d0b",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Commit admission is now fully serialized through `admitMu`, including while a send to the buffered `b.in` channel is blocked ... the commit loop ... keeps draining `b.in` independently, so this bounds latency without risking deadlock.\" Accurate description (batcher.go:267-281 holds admitMu across the send; commitLoop never takes admitMu). It asserts no material consequence and itself concludes no deadlock. Register non_defects rule both the deadlock and the serialisation/throughput objections not defects. Observation only."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

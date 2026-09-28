@@ -1,0 +1,114 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["rclone-rclone-9699-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "issues": ["rclone/rclone#9687"],
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Serialize Commit's shutdown-closed check and enqueue with Shutdown's marker insertion behind one mutex, so an admitted commit is either enqueued ahead of the quit marker and processed, or rejected with the existing shutdown error; add regression coverage for the synchronous-hang and dropped-async-upload failure modes.",
+    "issue_fit": "Met - issue #9687's central question (serialize admission with insertion of the shutdown marker) is answered by the new `admitMu` mutex; the PR's three stated changes (serialize admission, preserve the shutdown error, add regression coverage) are each verified in code and by running the new test.",
+    "coverage": "Complete: both changed files (lib/batcher/batcher.go, lib/batcher/batcher_test.go) read in full and traced end to end, including the unchanged commitLoop and Shutdown/Commit callers; the new regression test and the full lib/batcher package were run under -race at the reviewed head, plus go vet and go build, all offline. An untracked .mcp.json file present in the clone is outside this committed range and was not reviewed.",
+    "ambiguities": [],
+    "coverage_gaps": [],
+    "check_details": [
+      "go test -race -count=5 -run TestBatcherCommitRacingShutdown ./lib/batcher at 0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c: pass, both sync and async subtests, 5/5 iterations.",
+      "go test -race -count=1 ./lib/batcher at 0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c: ok, 5.332s, no failures.",
+      "go vet ./lib/batcher at 0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c: clean, no output.",
+      "go build ./lib/batcher/... at 0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c: clean."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The new regression test's post-Shutdown-launch select on `<-b.closed` with a 100ms timeout can never observe a closed channel, because Shutdown blocks on `admitMu` until the blocked `Commit` goroutine releases it, so that branch always times out and the statement is a no-op wait that does not affect the test's correctness.",
+      "evidence": "lib/batcher/batcher_test.go:286-291 versus lib/batcher/batcher.go:243 and :267 (both Shutdown and Commit lock `admitMu` before touching `b.closed`)."
+    },
+    {
+      "fact": "Holding `admitMu` across each `Commit` call's send to the buffered `b.in` channel fully serializes concurrent admissions instead of letting the channel interleave them, though `commitLoop` keeps draining independently of the mutex so no deadlock is introduced.",
+      "evidence": "lib/batcher/batcher.go:267-281 (admitMu held across the `b.in <-` send) and :205-226 (commitLoop's unconditional drain loop)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-003/clone",
+    "requirements": [
+      {
+        "source": "pr-body/\"Serialize commit admission with insertion of the shutdown marker.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:243-252 (Shutdown holds admitMu around close(b.closed) and the quit send) and :266-281 (Commit holds admitMu around the closed-check and the enqueue send) so the two critical sections cannot interleave."
+      },
+      {
+        "source": "pr-body/\"Preserve the existing shutdown error for commits that arrive after shutdown starts.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:268-271 still returns fserrors.FatalError(\"batcher is shutting down\") unchanged, now decided while holding admitMu instead of via an unguarded check."
+      },
+      {
+        "source": "pr-body/\"Add regression coverage for synchronous hangs and asynchronous dropped uploads.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher_test.go TestBatcherCommitRacingShutdown covers sync and async subtests; traced that reverting admitMu reproduces both the synchronous hang and the dropped async upload the test asserts against; go test -race -count=5 -run TestBatcherCommitRacingShutdown ./lib/batcher passed at 0b87bc478."
+      },
+      {
+        "source": "issue-9687/\"Should admission and insertion of the shutdown marker be serialized so every accepted request is either processed or explicitly rejected?\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "The fix answers yes: lib/batcher/batcher.go's admitMu serializes both operations as traced under the first requirement row above."
+      },
+      {
+        "source": "pr-body/\"go test -race ./lib/batcher -count=20\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "Reviewer reproduced race-clean results at reduced scope (count=5 focused plus count=1 full-package, both -race, plus go vet and go build, all clean at 0b87bc478); count=20 and repo-wide make quicktest were outside the offline five-minute focused-command allowance and were not independently reproduced."
+      }
+    ],
+    "files": [
+      {"path": "lib/batcher/batcher.go", "state": "reviewed"},
+      {"path": "lib/batcher/batcher_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -race -count=5 -run TestBatcherCommitRacingShutdown ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Focused regression test for the fixed race, run offline at the reviewed head; 5/5 iterations pass (sync and async subtests)."
+      },
+      {
+        "check": "go test -race -count=1 ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Full lib/batcher package test suite under the race detector at the reviewed head, offline: ok, 5.332s, no failures."
+      },
+      {
+        "check": "go vet ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Clean, no output, at the reviewed head, offline."
+      },
+      {
+        "check": "go build ./lib/batcher/...",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "Builds clean at the reviewed head, offline."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main..review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "specs": ["rclone-pr9699-packet"],
+    "issues": [],
+    "coverage": "complete",
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close a shutdown race in lib/batcher: `Commit` could pass its closed-check and enqueue behind `Shutdown`'s quit marker, hanging a sync caller forever or silently dropping an async upload (issue rclone/rclone#9687, reproduced by `ncw`).",
+    "issue_fit": "Met — `admitMu` (batcher.go:50) now serializes `Shutdown`'s close(b.closed)+enqueue-quit (batcher.go:243-252) with `Commit`'s closed-check+enqueue (batcher.go:267-281), so every admitted commit is enqueued strictly before the quit marker and every commit arriving after shutdown observes the closed error; verified via two confirmed concurrency safety premises (see Verification).",
+    "coverage": "Both changed files (lib/batcher/batcher.go, lib/batcher/batcher_test.go) fully read at head against merge-base; the new `TestBatcherCommitRacingShutdown` traced line-by-line for both sync and async modes and confirmed it fails pre-fix (hang/drop) and passes post-fix by tracing the `fs.Debugf`/log-level gated blocking mechanism against fs/log.go. No other files touch lib/batcher's exported surface (backend/dropbox and backend/googlephotos are the only Batcher callers and are unchanged).",
+    "check_details": [
+      "Reviewer ran `go test -count=1 -race ./lib/batcher/...` at head 0b87bc478: PASS (5.3s).",
+      "Reviewer ran `go test -count=20 -race -run TestBatcherCommitRacingShutdown ./lib/batcher/...` at head 0b87bc478: PASS (5.1s).",
+      "Reviewer ran `go vet ./lib/batcher/...` at head 0b87bc478: clean, no output.",
+      "PR body also claims `go build` and `PATH=\"$PWD:$PATH\" make quicktest` passed; neither is reproducible in this offline sandbox (the dependency cache holds only lib/batcher and its test imports), and no captured output or CI run was supplied, so both are unavailable rather than accepted."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`Commit`'s admission critical section now spans its debug-log call and the send on `b.in`, so concurrent `Commit` calls (and `Shutdown`) fully serialize on `admitMu` for that duration instead of contending only on the channel; unmeasured, and the PR's own `-race -count=20` and this review's runs show no timeout regression.",
+      "evidence": "lib/batcher/batcher.go:266-281"
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-004/clone",
+    "requirements": [
+      {
+        "source": "rclone-pr9699-packet/pr-body-what-changed",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:50 adds `admitMu sync.Mutex`; batcher.go:243-252 and batcher.go:267-281 hold it across Shutdown's close(b.closed)+enqueue-quit and Commit's closed-check+enqueue respectively, serializing admission with shutdown-marker insertion."
+      },
+      {
+        "source": "rclone-pr9699-packet/pr-body-what-changed",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:270-271 still returns `fserrors.FatalError(errors.New(\"batcher is shutting down\"))`, the same error type and text as before the change, for commits observed after shutdown."
+      },
+      {
+        "source": "rclone-pr9699-packet/pr-body-what-changed",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher_test.go:239-311 adds `TestBatcherCommitRacingShutdown`, table-driven over sync/async, using a `blockingStringer` to pause `Commit` mid-admission and assert neither a hang (sync) nor a silently dropped upload (async); reviewer traced and reproduced pass at head (see check_details) and traced why it would fail pre-fix."
+      },
+      {
+        "source": "rclone-pr9699-packet/issue-9687-body",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Issue's closing question — whether admission and shutdown-marker insertion should be serialized so every accepted request is processed or explicitly rejected — is answered affirmatively by the same admitMu-guarded critical sections; independently confirmed by two verified concurrency safety premises (record.verification)."
+      },
+      {
+        "source": "rclone-pr9699-packet/pr-body-testing",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer reproduced the race-focused claim narrowly: `go test -count=1 -race ./lib/batcher/...` and `go test -count=20 -race -run TestBatcherCommitRacingShutdown ./lib/batcher/...` both pass at head; `go vet ./lib/batcher/...` is clean (check_details)."
+      },
+      {
+        "source": "rclone-pr9699-packet/pr-body-testing",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "`go build` and `make quicktest` are claimed but not independently reproducible offline (dependency cache scoped to lib/batcher only; no readable CI output supplied); nothing in the diff suggests either would behave differently, and lib/batcher's exported surface (New/Commit/Shutdown/Batching signatures) is unchanged, so nothing material is judged to depend on this gap."
+      }
+    ],
+    "files": [
+      {"path": "lib/batcher/batcher.go", "state": "reviewed"},
+      {"path": "lib/batcher/batcher_test.go", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -race ./lib/batcher/...",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "run at the pinned head in the offline clone with GOPROXY=off using only the pre-populated lib/batcher module cache; exit 0, `ok github.com/rclone/rclone/lib/batcher 5.334s`"
+      },
+      {
+        "check": "go test -count=20 -race -run TestBatcherCommitRacingShutdown ./lib/batcher/...",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "stress run of only the new regression test, 20 iterations under the race detector; exit 0, `ok github.com/rclone/rclone/lib/batcher 5.056s`"
+      },
+      {
+        "check": "go vet ./lib/batcher/...",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "exit 0, no diagnostics"
+      },
+      {
+        "check": "go build; PATH=\"$PWD:$PATH\" make quicktest",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "unavailable",
+        "reason": "PR body reports these passed but supplies no readable output or CI run identity, and the offline sandbox's module cache is scoped to lib/batcher only (GOPROXY=off), so a full build or the whole-repo quicktest suite cannot be reproduced here"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-admission-ordering",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "b.admitMu makes Shutdown's close(b.closed)+enqueue-of-the-quit-request one atomic critical section with each Commit's closed-check+enqueue, so once Shutdown's critical section (batcher.go:243-252) has completed, no Commit call (batcher.go:266-281) can still observe b.closed open and enqueue its request into b.in behind the quit marker.",
+          "evidence": "lib/batcher/batcher.go:50,243-252,266-281",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-no-new-deadlock",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Holding admitMu across Commit's send on the buffered channel b.in cannot deadlock against Shutdown, because commitLoop runs in its own always-live goroutine that keeps receiving from b.in independently of admitMu until it reads the quit request, and Shutdown only enqueues that quit request (still under admitMu) after any concurrently in-flight Commit send under the same lock has already completed and released it.",
+          "evidence": "lib/batcher/batcher.go:107,113,205-226,275",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-004/clone-work/private/review-osiG9g/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-unseen-target-comparison/att-004/clone-work/private/review-osiG9g/initial/accounting.json",
+          "operation": "Agent(subagent_type=general-purpose, model=sonnet, run_in_background=false)"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
