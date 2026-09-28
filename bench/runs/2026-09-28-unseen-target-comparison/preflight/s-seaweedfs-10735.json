@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "target": "s-seaweedfs-10735",
+  "source": "measured",
+  "measured_at": "2026-09-28T20:04:35Z",
+  "platform": "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+  "provisioning": {
+    "recipe": "restore cache archive sha256:f7ffcebca0eea9302380701a212af9f2aa779f6185f379bb5f9be3a159549eb8",
+    "duration_seconds": 5.68,
+    "tree_clean_after": true
+  },
+  "checks": [
+    {
+      "name": "focused go test",
+      "command": "go test -count=1 ./weed/filer/redis2",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 9.41,
+      "summary": "ok  \tgithub.com/seaweedfs/seaweedfs/weed/filer/redis2\t0.018s"
+    },
+    {
+      "name": "focused go test",
+      "command": "go test -count=1 ./weed/filer/redis2",
+      "revision": "base",
+      "exit_code": 0,
+      "duration_seconds": 8.54,
+      "summary": "?   \tgithub.com/seaweedfs/seaweedfs/weed/filer/redis2\t[no test files]"
+    },
+    {
+      "name": "go vet",
+      "command": "go vet ./weed/filer/redis2 && echo clean",
+      "revision": "head",
+      "exit_code": 0,
+      "duration_seconds": 2.0,
+      "summary": "clean"
+    }
+  ],
+  "notes": [
+    "Measured by provision.py smoke on this machine; cache kind go-modcache. Each clone restored its own copy of the cache archive after checking its recorded hash.",
+    "Base-revision checks ran in a second clone with main (the merge-base) checked out, provisioned the same way in 5.66s; tracked tree clean afterwards: true."
+  ],
+  "mirror": {
+    "built_at": "2026-09-28T20:03:33Z",
+    "cache_root": "~/.t3/bench-cache",
+    "staging_source": "full upstream bare clone at ~/.t3/bench-cache/staging/seaweedfs.git with refs/pull/10735/head fetched (2026-09-28)",
+    "negative_shas_absent": true,
+    "newest_reachable_equals_head": true,
+    "diff_identity_verified": true
+  }
+}

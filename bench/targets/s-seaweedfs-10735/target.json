@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "id": "s-seaweedfs-10735",
+  "repo": "seaweedfs/seaweedfs",
+  "pr": 10735,
+  "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+  "merge_base": "db5a086d048c5c2d6e51e82bb070d20df04d688d",
+  "base_sha": "db5a086d048c5c2d6e51e82bb070d20df04d688d",
+  "base_ref_name": "master",
+  "local_base_branch": "main",
+  "negative_shas": [
+    {
+      "sha": "f7ae2d4dd5f08826606f50761e8d7dc6f5a7ce3b",
+      "reason": "squash merge of the pull request on master"
+    },
+    {
+      "sha": "abd36cbf92cbc06f8dd86d72d0fdbc7cab6a8d93",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "7d0fff32db881a6b87dead580de382b54afcccdc",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "0481f712b1c41ed333ea0fd7a52d3cd232218b22",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "0de7ff5eb8fa00a2cd0e5b748259b41b83348390",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "5c43c03b76c0c319b1d5f33ffa2985df9e727906",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "530be3e37337488ecc34d58441e0bc476e121c93",
+      "reason": "later commit on master"
+    },
+    {
+      "sha": "9d076beada7ed0b75842919d2d03ad46aa829169",
+      "reason": "later pull-request branch head"
+    },
+    {
+      "sha": "5222902c4251ced151e0f5fa64d040f9be745d07",
+      "reason": "later pull-request branch head"
+    },
+    {
+      "sha": "75ffbd8e780a6e74e1778ee634b5a9aba823f0eb",
+      "reason": "later pull-request branch head"
+    },
+    {
+      "sha": "c0242d1344a9ed130ebf5be00d6fe9406391bf7d",
+      "reason": "later pull-request branch head"
+    },
+    {
+      "sha": "8042c1b512a83958b2c72e484dd2ade997645d72",
+      "reason": "later pull-request branch head"
+    }
+  ],
+  "cutoff": "2026-08-13T17:53:33Z",
+  "cutoff_note": "the merge instant (build_packet.py default); nothing omitted",
+  "diff_manifest_sha256": "ffea5e5d9d89c20abf15f97e09b98ef3de630b2a8de4823c382ccacf1c55cfb7",
+  "packet_sha256": "c92d6af708db3389750f62f924dff06d063c6c15a3481489ef83f99510160428",
+  "shape": "data loss in a persistence layer",
+  "domain": "Go distributed file system, Redis filer metadata store",
+  "language": "Go",
+  "merged_at": "2026-08-13T17:53:33Z",
+  "fix_published_at": "2026-08-13T20:08:26Z",
+  "originating_issue": null,
+  "provisioning": {
+    "recipe": "nothing in the clone; every go command runs with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's own restore of the cache archive, populated once online at the head by resolving the modules ./weed/filer/redis2 and its tests import, then go build and go vet of that package",
+    "allowance": "Focused test execution is permitted on this target, offline: go commands from the clone root with GOMODCACHE=<cache>/gomodcache GOCACHE=<cache>/gocache GOFLAGS=-mod=mod GOPROXY=off GOTOOLCHAIN=local, where <cache> is the attempt's dependency cache, for example `go test -count=1 ./weed/filer/redis2` (seconds). The cache holds the modules ./weed/filer/redis2 and its tests import; packages needing other modules cannot build offline. Five minutes per command, a package's tests at most once per flag set, scratch modules and overlays only under the work directory, nothing added to or changed in the clone.",
+    "unavailable": "network; the module proxy; a Redis server, so the package's tests that need a live Redis skip; modules other packages need",
+    "dependency_identity": [
+      {
+        "name": "go.mod",
+        "sha256": "2a819aef261fb746806c526846e19aae2a86dcbee67b8476538f4fa4dca0056f",
+        "location": "head:go.mod"
+      },
+      {
+        "name": "go.sum",
+        "sha256": "5a1b3ce2941c14bcdcfc51ff1a507df8a01c5c163b52e7b616f661eecfef9741",
+        "location": "head:go.sum"
+      },
+      {
+        "name": "cache archive (go-modcache)",
+        "sha256": "f7ffcebca0eea9302380701a212af9f2aa779f6185f379bb5f9be3a159549eb8",
+        "location": "~/.t3/bench-cache/archives/s-seaweedfs-10735.tar.gz"
+      }
+    ],
+    "platform": "measured on the suite machine at 2026-09-28T20:04:35Z: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64; Python 3.14.7; v24.21.0; go 1.26.5 linux/amd64; zsh 5.8.1 (x86_64-ubuntu-linux-gnu); git 2.34.1",
+    "cache": {
+      "kind": "go-modcache",
+      "build": [
+        "GOPROXY=https://proxy.golang.org,direct go list -deps -test ./weed/filer/redis2 > /dev/null",
+        "go build ./weed/filer/redis2",
+        "go vet ./weed/filer/redis2"
+      ],
+      "post_clone": [],
+      "env": {
+        "GOMODCACHE": "{cache}/gomodcache",
+        "GOCACHE": "{cache}/gocache",
+        "GOFLAGS": "-mod=mod",
+        "GOPROXY": "off",
+        "GOTOOLCHAIN": "local"
+      },
+      "smoke": [
+        {
+          "name": "focused go test",
+          "command": "go test -count=1 ./weed/filer/redis2",
+          "revision": "both"
+        },
+        {
+          "name": "go vet",
+          "command": "go vet ./weed/filer/redis2 && echo clean",
+          "revision": "head"
+        }
+      ]
+    }
+  },
+  "exposure": {
+    "entered_suite": "2026-09-28 (unseen-target comparison of #409, slot (s))",
+    "used_by": [],
+    "register_published": null,
+    "notes": "Hunted and adjudicated 2026-09-28 by headless sessions that saw no reviewer output; the register and both reports are sealed. No arm reviewed this target before the comparison."
+  },
+  "current_register": 1,
+  "sealed": {
+    "key": "~/.config/bench/seal.key on the preparation machine (mode 0600, directory 0700), outside the repository and every attempt directory",
+    "files": [
+      {
+        "file": "register.v1.json.enc",
+        "plaintext_sha256": "702654549d798a40a0d1f1b28a6288b3f4a48dc5ed0fba6278b6e19b77b4567a",
+        "sealed_at": "2026-09-28T20:11:33Z"
+      }
+    ]
+  }
+}
