@@ -1,0 +1,55 @@
+{
+  "target": "k-graphql-js-1582",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "restore cache archive sha256:b8de64655287794c2e95764e2d3ed1edaf397666b66a4e4f454b37017a06ed0c; npm install --no-audit --no-fund --offline --cache {cache}/npm-cache >/dev/null 2>&1; git checkout -- yarn.lock; rm -f package-lock.json",
+    "duration_seconds": 6.87,
+    "tree_clean_after": true,
+    "steps": [
+      {
+        "command": "restore cache archive sha256:b8de64655287794c2e95764e2d3ed1edaf397666b66a4e4f454b37017a06ed0c",
+        "exit_code": 0,
+        "duration_seconds": 1.14
+      },
+      {
+        "command": "npm install --no-audit --no-fund --offline --cache {cache}/npm-cache >/dev/null 2>&1",
+        "exit_code": 0,
+        "duration_seconds": 5.72
+      },
+      {
+        "command": "git checkout -- yarn.lock",
+        "exit_code": 0,
+        "duration_seconds": 0.01
+      },
+      {
+        "command": "rm -f package-lock.json",
+        "exit_code": 0,
+        "duration_seconds": 0.0
+      }
+    ],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-63m8need/attempt/clone && ./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": "Browserslist: caniuse-lite is outdated. Please run next command `yarn upgrade caniuse-lite browserslist`\n\n\n  GraphQLError\n    \u2713 is a class and is a subclass of Error\n    \u2713 has a name, message, and stack trace\n    \u2713 uses the stack of an original error\n    \u2713 creates new stack if original error has no stack\n    \u2713 converts nodes to positions and locations\n    \u2713 converts single node to positions and locations\n    \u2713 converts node with loc.start === 0 to positions and locations\n    \u2713 converts source and positions to locations\n    \u2713 serializes to include message\n    \u2713 serializes to include message and locations\n    \u2713 serializes to include path\n    \u2713 default error formatter includes path\n    \u2713 default error formatter includes extension fields\n\n\n  13 passing (58ms)",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": "Browserslist: caniuse-lite is outdated. Please run next command `yarn upgrade caniuse-lite browserslist`\n\n\n  GraphQLError\n    \u2713 is a class and is a subclass of Error\n    \u2713 has a name, message, and stack trace\n    \u2713 uses the stack of an original error\n    \u2713 creates new stack if original error has no stack\n    \u2713 converts nodes to positions and locations\n    \u2713 converts single node to positions and locations\n    \u2713 converts node with loc.start === 0 to positions and locations\n    \u2713 converts source and positions to locations\n    \u2713 serializes to include message\n    \u2713 serializes to include message and locations\n    \u2713 serializes to include path\n    \u2713 default error formatter includes path\n    \u2713 default error formatter includes extension fields\n\n\n  13 passing (59ms)",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}
