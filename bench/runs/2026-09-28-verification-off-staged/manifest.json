@@ -311,6 +311,11 @@
       "at": "2026-09-28T08:49:19Z",
       "what": "Stage 2 added after its approval on 2026-09-28, as the protocol fixed before any Stage 1 outcome: GraphQL joins the cohort, and 22 cells join the planned cells and the sealed order after Stage 1's eight. Within a replicate the arm that runs first alternates by target position, and it flips between replicates, so replicate 1 keeps Stage 1's order. The spend cap becomes $91.29, Stage 1's $21.29 spent plus Stage 2's approved $70, with the $5 closeout reserve inside it. Replacements rise to 4 and maximum attempts to 34. No arm, tree, packet, prompt, rubric or Stage 2 rule changed.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-28T09:15:56Z",
+      "what": "att-010, the variant's GraphQL replicate 1, stopped after 30 turns when its OAuth session expired and could not be refreshed: the CLI exited 1 and the wrapper wrote no audit or normalized output. The filer could not file a stopped attempt without native output, and it counted the CLI's `<synthetic>` error notice as a second model, which left the attempt unpriced. file_attempt.py now files such an attempt with a null native_payload and a normalized record stating nothing was parsed, and skips `<synthetic>` lines as transcript_usage.py and grade.py already do; attempt.schema.json allows the null. The read audit was run exactly as the wrapper runs it: no violation. att-010 is filed as stopped at $0.903157, the CLI's own total, and replaced as stopped by the harness. No reviewer input, tree, prompt, rubric, cap or decision rule changed; every filed attempt still validates.",
+      "invalidates": []
     }
   ]
 }

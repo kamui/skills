@@ -1,0 +1,10 @@
+{
+  "arm": "review-code",
+  "parse_status": "unresolved",
+  "native_verdict": null,
+  "verdict_source": null,
+  "items": [],
+  "parse_notes": [
+    "no artifacts/composition.json: the attempt stopped (reviewer exit 1) before returning a review"
+  ]
+}
