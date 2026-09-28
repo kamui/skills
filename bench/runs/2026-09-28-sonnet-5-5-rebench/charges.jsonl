@@ -1,0 +1,2 @@
+{"at": "2026-09-28T23:00:06Z", "step": "alias probe: `claude -p --safe-mode` under a fresh home with --model sonnet and --model claude-sonnet-5-5; both were answered by claude-sonnet-5-5 (CLI total_cost_usd)", "usd": 0.023447, "model": "claude-sonnet-5-5", "billing": "api-dollars", "session": "n/a"}
+{"at": "2026-09-28T23:01:35Z", "step": "pre-dispatch probe of the built-in arm on the toy fixture (probes/att-001)", "usd": 0.051606, "model": "claude-sonnet-5-5", "billing": "api-dollars", "session": "d9cb2790"}

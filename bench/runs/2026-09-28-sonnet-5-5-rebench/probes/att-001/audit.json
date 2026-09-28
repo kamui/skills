@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/probes/att-001/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-probes-att-001-clone/d9cb2790-0bcd-4f9d-91e7-6e4abddada5e/subagents/agent-ad6d30db498c65ef6.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/probes/att-001/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-probes-att-001-clone/d9cb2790-0bcd-4f9d-91e7-6e4abddada5e.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD; git status --short; ls; find . -name CLAUDE.md -not -path './.git/*'",
+    "cat pricing.py test_pricing.py"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/probes/att-001/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/probes/att-001"
+  ]
+}
