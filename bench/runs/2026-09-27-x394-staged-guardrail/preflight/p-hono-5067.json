@@ -1,0 +1,45 @@
+{
+  "target": "p-hono-5067",
+  "source": "real CLI with local fake API; no model inference",
+  "billed_usd": 0,
+  "prepared": {
+    "recipe": "restore cache archive sha256:b0baf546ea1c051c310592841e07e478aded81f1217fe8c01cc1d37c4e1cdb9c; cp -a {cache}/node_modules {clone}/node_modules",
+    "duration_seconds": 8.35,
+    "tree_clean_after": true,
+    "steps": [
+      {
+        "command": "restore cache archive sha256:b0baf546ea1c051c310592841e07e478aded81f1217fe8c01cc1d37c4e1cdb9c",
+        "exit_code": 0,
+        "duration_seconds": 4.8
+      },
+      {
+        "command": "cp -a {cache}/node_modules {clone}/node_modules",
+        "exit_code": 0,
+        "duration_seconds": 3.55
+      }
+    ],
+    "failures": []
+  },
+  "command": "cd /tmp/review-isolation-c4ms1k1_/attempt/clone && ./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/request.test.ts src/validator/validator.test.ts",
+  "results": {
+    "smoke": {
+      "tool_use_id": "smoke",
+      "type": "tool_result",
+      "content": " RUN  v4.1.7 /tmp/review-isolation-c4ms1k1_/attempt/clone\n\n\n Test Files  3 passed (3)\n      Tests  133 passed (133)\n   Start at  22:10:18\n   Duration  324ms (transform 295ms, setup 0ms, import 387ms, tests 140ms, environment 0ms)",
+      "is_error": false
+    },
+    "bare_smoke": {
+      "tool_use_id": "bare_smoke",
+      "type": "tool_result",
+      "content": " RUN  v4.1.7 /tmp/review-isolation-c4ms1k1_/attempt/clone\n\n\n Test Files  3 passed (3)\n      Tests  133 passed (133)\n   Start at  22:10:19\n   Duration  300ms (transform 265ms, setup 0ms, import 349ms, tests 108ms, environment 0ms)",
+      "is_error": false
+    },
+    "local_base_clone": {
+      "tool_use_id": "local_base_clone",
+      "type": "tool_result",
+      "content": "(Bash completed with no output)",
+      "is_error": false
+    }
+  },
+  "tree_clean_after": true
+}
