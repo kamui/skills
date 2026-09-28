@@ -495,13 +495,13 @@ For comparison, the same simulation on stricter rules:
 
 | Rule set | Rejects a variant that changes nothing |
 | --- | ---: |
-| This note's rules | 25% |
-| Margins of 1 on recall, action and remedy, and a cost limit of 0.85 | 63% |
+| This note's rules | At least 25% |
+| Margins of 1 on recall, action and remedy, and a cost limit of 0.85 | At least 63% |
 | #394's Stage 2 recall rule alone: no target's recall below the control's, nine targets, 3 reviews per arm | 93% |
 
 Three things follow.
 
-- **A quarter of harmless variants still fail.** 15 pairs cannot do better without margins so
+- **At least a quarter of harmless variants still fail.** 15 pairs cannot do better without margins so
   loose that they miss real losses. A rejection at the edge of a margin is weak evidence.
 - **A small loss can pass.** A variant that loses 20% of recoveries passes about half the time.
   The test is built to catch a part that matters a lot, not one that matters a little.
