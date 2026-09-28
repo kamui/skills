@@ -1,0 +1,102 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr5067-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": ["honojs/hono#5060"],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Fix honojs/hono#5060: `parseBody()` and `validator('json'|'form')` rejected requests whose `Content-Type` media type used mixed or upper case (e.g. `Application/JSON`), even though the platform `Request` parses them fine, so handlers received `{}` or unvalidated data.",
+    "issue_fit": "Met — `src/utils/body.ts` now compares a lower-cased, `;`-stripped media type before dispatching to form parsing; `src/validator/validator.ts`'s three content-type regexes gained the `i` flag; and `src/utils/buffer.ts`'s `bufferToFormData` now lower-cases only the media-type segment of the header it hands to the platform `Response`, leaving parameters such as multipart boundaries untouched. All three of the issue's suggested tests were added and pass at the reviewed head.",
+    "coverage": "All 6 changed files read in full against the merge-base diff (6/6 chunks); `src/request.ts`, `src/middleware/method-override/index.ts`, and `src/middleware/body-limit/index.ts` (the other in-repo consumers of `parseBody`/`bufferToFormData`) read to check for regressions in how `HonoRequest`'s body cache and cross-format reuse interact with the new arrayBuffer-based `parseFormData`. Focused vitest run at the reviewed head covers every changed test file.",
+    "ambiguities": [],
+    "coverage_gaps": [],
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts` at `5226d4165d48643586152614cbd07422a0ab7a22`: 106 passed, 1 pre-existing unrelated skip, 0 failed.",
+      "Codecov's supplied patch-coverage check failed for this PR (76.47% versus an 80% target); not independently reproduced since coverage instrumentation is disabled under this run's execution allowance, and manual trace of the 4 reported-missing lines found no hidden behavioral gap."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The same case-sensitive `Content-Type` gate the issue reported for `parseBody()` still exists in a sibling middleware, untouched by this diff.",
+      "evidence": "`src/middleware/method-override/index.ts:92` (`contentType?.startsWith('application/x-www-form-urlencoded')`) is unchanged at both merge-base and head, so a mixed-case override form is still silently skipped there; out of this change's scope since it doesn't touch that file."
+    },
+    {
+      "fact": "Codecov reports this diff's patch coverage below the repository's target.",
+      "evidence": "PR comment: 76.47% patch coverage against an 80% target, 3 missing lines in `src/utils/body.ts` and 1 in `src/utils/buffer.ts`; coverage instrumentation is disabled under this run's execution allowance (`--coverage.enabled=false`), so the exact lines were not independently confirmed."
+    },
+    {
+      "fact": "`parseFormData` in `src/utils/body.ts` now always reads the full request body into an `ArrayBuffer` before parsing form data, where it previously delegated straight to the platform's own `Request.formData()`.",
+      "evidence": "`src/utils/body.ts:126-132`; this mirrors the buffering `src/validator/validator.ts`'s `form` branch already performed before this diff, and the PR's own HTTP benchmark comment shows body-request throughput essentially unchanged (35,864.38 to 35,802.34, -0.17%)."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "honojs/hono",
+    "requirements": [
+      {
+        "source": "spec-pr5067-packet/issue-5060 \"Supported media type matching should be case-insensitive for the media type portion.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:104-106 gates on a lower-cased, semicolon-stripped media type; src/validator/validator.ts:24-26 add the `i` flag to all three content-type regexes; confirmed by the new mixed-case tests passing at 5226d4165d48643586152614cbd07422a0ab7a22."
+      },
+      {
+        "source": "spec-pr5067-packet/issue-5060 \"Parameter values such as multipart boundaries should remain intact.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/buffer.ts:113 lower-cases only the text before the first `;` via `contentType.replace(/^[^;]+/, ...)`, leaving `boundary=` untouched; buffer.test.ts's new test sends `Multipart/Form-Data; boundary=sampleBoundary` and confirms the field still parses."
+      },
+      {
+        "source": "spec-pr5067-packet/pr-body \"[x] Add tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Diff adds 7 tests across body.test.ts, buffer.test.ts and validator.test.ts (+90 lines) covering mixed-case JSON, urlencoded and multipart content types."
+      },
+      {
+        "source": "spec-pr5067-packet/pr-body \"[x] Run tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer re-ran the three changed test files at the reviewed head: 106 passed, 1 pre-existing unrelated skip, 0 failed."
+      }
+    ],
+    "files": [
+      {"path": "src/utils/body.test.ts", "state": "reviewed"},
+      {"path": "src/utils/body.ts", "state": "reviewed"},
+      {"path": "src/utils/buffer.test.ts", "state": "reviewed"},
+      {"path": "src/utils/buffer.ts", "state": "reviewed"},
+      {"path": "src/validator/validator.test.ts", "state": "reviewed"},
+      {"path": "src/validator/validator.ts", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "3 test files, 106 passed, 1 pre-existing unrelated skip (buffer.test.ts timingSafeEqual deprecation notice), 0 failed; clean tree aside from an untracked .mcp.json outside the source tree."
+      },
+      {
+        "check": "codecov/patch (PR #5067 patch-coverage gate)",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "failed",
+        "reason": "Supplied PR comment: 76.47% patch coverage versus an 80% target, 3 missing lines in src/utils/body.ts and 1 in src/utils/buffer.ts; not independently reproduced since coverage instrumentation is disabled under this run's execution allowance."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

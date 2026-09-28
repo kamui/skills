@@ -1,0 +1,131 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr7390-packet"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": [],
+    "change_description": "commit-c3a3d1c: Update conn state to prevent concurrent connection attempts\n\ncommit-6214c9d: Make callers of resetBackoff() lock the mutex\n\ncommit-ff977b3: Add doc comment for resetTransportAndUnlock\n\ncommit-76ef33f: Merge remote-tracking branch 'source/master' into fix_conn_connect_race"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close the race where addrConn.connect() released ac.mu before calling resetTransport(), letting a second connect() call see the Idle state and start a duplicate connection attempt; keep the mutex held from the Idle check through the transition to Connecting so no second attempt can start.",
+    "issue_fit": "Met — the change addresses the double-connection-attempt race the linked issue's root-cause comment traces to addrConn.connect() releasing ac.mu before calling resetTransport().",
+    "coverage": "The single changed file, clientconn.go, is reviewed in full: connect(), updateAddrs(), and the renamed resetTransportAndUnlock() were traced against every caller in the repository.",
+    "check_details": [
+      "go build . at 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6: clean, offline (GOPROXY=off).",
+      "go vet . at the same head: clean, no diagnostics.",
+      "go test -race -run 'Test/(ResetConnectBackoff|UpdateAddresses_NoopIfCalledWithSameAddresses|BackoffCancel)' . : 3/3 pass.",
+      "go test -race -run 'Test/SubConnEmpty' ./test: pass; exercises UpdateAddresses transitioning through TransientFailure, not the Ready-with-active-transport branch the finding below concerns.",
+      "The reported 100000-attempt flake measurement was not reproduced; it exceeds the bounded, offline focused-test allowance."
+    ]
+  },
+  "findings": [
+    {
+      "id": "clientconn.go/updateaddrs-lock-handoff",
+      "title": "Release ac.mu before spawning the reconnect goroutine in updateAddrs",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "concurrency",
+      "trigger": "updateAddrs takes the branch where an active transport exists and the addresses changed: it defers ac.transport.GracefulClose(), sets ac.transport = nil, then calls go ac.resetTransportAndUnlock() without unlocking ac.mu first.",
+      "impact": "When updateAddrs returns, the deferred GracefulClose() runs on the same goroutine and its onClose closure calls ac.mu.Lock(); since ac.mu is still held, only handed to the freshly spawned goroutine, that call now blocks until the new goroutine's setup runs and releases it — a wait base code never had, since it unlocked before spawning.",
+      "change": "Call ac.mu.Unlock() before go ac.resetTransportAndUnlock() in updateAddrs; unlike connect()'s Idle check, this branch never runs when ac.state is Idle, so releasing the lock here does not reopen the race this change fixes.",
+      "source": "spec-pr7390-packet/thread-comment/arjan-bal/\"ac.updateAddrs calls resetTransport in a new go routine so it can't hold the lock till resetTransport completes... I feel we could end up in a situation where the lock is not released correctly resulting in a deadlock.\"",
+      "anchor": {
+        "type": "line",
+        "path": "clientconn.go",
+        "start_line": 986,
+        "end_line": 996,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-023/clone",
+    "requirements": [
+      {
+        "source": "spec-pr7390-packet/pr-body/\"keep holding the mutex instead of releasing it and having resetTransport() re-acquire it\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go: connect() (line 922) and updateAddrs() (line 996) no longer call ac.mu.Unlock() before invoking resetTransportAndUnlock(), and resetTransportAndUnlock() (line 1234) no longer re-locks."
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"no concurrent requests are able to start once caller of resetTransport does some validation and calls resetTransport\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "connect() holds ac.mu from the Idle check through resetTransportAndUnlock()'s transition to Connecting (clientconn.go:906-922, 1234-1263), closing the window a concurrent connect() call previously used to also observe Idle."
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"RELEASE NOTES: - client: fix race that could lead to orphaned connections and associated resources.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Preventing the duplicate resetTransport invocation removes the mechanism the issue thread traced to orphaned transports: only one of two concurrently created transports was ever tracked in ac.transport."
+      },
+      {
+        "source": "spec-pr7390-packet/thread-comment/dfawley/\"ac.mu must be held by the caller, and this function will guarantee it is released.\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1231-1233 carries this exact doc comment on resetTransportAndUnlock."
+      },
+      {
+        "source": "spec-pr7390-packet/pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts with the change.\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The reported 0.4% flake rate cannot be confirmed or refuted by a bounded, offline focused run, and the AuthorityRevive scenario was not re-run; the fix mechanism was verified directly instead (see the first two requirement rows) and the affected package's existing addrConn/backoff unit tests pass with the race detector at head."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "clean build at the reviewed head, offline with GOPROXY=off; no errors"
+      },
+      {
+        "check": "go vet .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "clean at the reviewed head; no diagnostics"
+      },
+      {
+        "check": "go test -race -run 'Test/(ResetConnectBackoff|UpdateAddresses_NoopIfCalledWithSameAddresses|BackoffCancel)' .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "3 of 3 subtests pass with the race detector at the reviewed head"
+      },
+      {
+        "check": "go test -race -run 'Test/SubConnEmpty' ./test",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "passes with the race detector; covers UpdateAddresses through TransientFailure, not the Ready-with-active-transport branch the finding concerns"
+      },
+      {
+        "check": "codecov coverage report (supplied in the packet)",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "accepted",
+        "reason": "posted by the codecov bot in the supplied packet at exactly the reviewed head; reports all modified and coverable lines covered by tests, not independently re-run"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

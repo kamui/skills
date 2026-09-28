@@ -1,0 +1,108 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-requests-pr-6667"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+    "issues": [],
+    "change_description": "ec0e33b3 Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\n8f954567 Use a default SSLContext with the default CA bundle loaded when `verify=True`\n\nf21e70bf Rename default SSLContext to make it private by convention\n\n4089f3dc Wrap line to comply with CI lint"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Cache one SSLContext with the default CA bundle preloaded and reuse it for every default-verified (`verify=True`) HTTPS connection, so urllib3 no longer reruns the slow `SSL_CTX_load_verify_locations()` on every request; `verify=False` and explicit CA-path behavior are meant to stay as before (user-supplied PR body for psf/requests#6667, no linked issue).",
+    "issue_fit": "No linked issue; alignment judged against the PR body's own stated goal and its 'verify=True/False still behave as expected' claim.",
+    "coverage": "Full merge-base diff reviewed (src/requests/adapters.py, the only changed file, one complete chunk). Reused connection-pool caching in the same file (_get_connection, cert_verify) read in full for interaction with the new module-level context.",
+    "check_details": [
+      "Reviewer-executed: PYTHONPATH=<clone>/src pytest tests/test_requests.py tests/test_adapters.py at head 4089f3dc65f783beaa53cc032958ab625440d0ac — 23 failed, 305 passed, 1 skipped, 1 xpassed. Same command re-run against an unpacked copy of the merge-base's src tree (8dd3b26b) reproduces the identical 23 failures verbatim, so all are pre-existing/environmental (no-network httpbin fixtures, plus three TLS fixtures failing on 'Missing Authority Key Identifier' from this machine's OpenSSL rejecting the bundled test certs), not introduced by this diff.",
+      "Reviewer-executed custom probe (scratch script, not added to the clone): monkeypatches certifi.where() to a test CA before importing requests, counts ssl.SSLContext.load_verify_locations calls, and drives three verify=True requests against a local TLSServer. Call count is exactly 1 (the module-level preload) after import and stays there through pool creation, confirming the per-request reload is actually skipped; the requests themselves fail on the same pre-existing AKI fixture issue, not on this change.",
+      "Reviewer-executed: reproduced with a two-line repro (patch certifi.where() to a nonexistent path, then `import requests`) that `import requests` raises unhandled FileNotFoundError at head but succeeds at merge-base with the same broken bundle path, isolating the new must-fix finding to this diff."
+    ]
+  },
+  "findings": [
+    {
+      "id": "adapters/eager-ca-bundle-import-crash",
+      "title": "Defer the CA-bundle preload instead of running it at import",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "`import requests` now unconditionally runs `_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))` at module load, before any request is made or any `verify` value is known.",
+      "impact": "If the default CA bundle (`certifi.where()`) is missing, stripped, or unreadable, the bare import now raises an unhandled `FileNotFoundError` and crashes the whole process — even programs that only ever pass `verify=False` or an explicit CA path and never touch the default bundle. Reproduced directly: with a broken bundle path, `import requests` succeeds at the merge-base (the check was lazy, inside `cert_verify()`, only for a default-bundle verified request, and raised a clear `requests`-style `OSError`) but fails at head.",
+      "change": "Move the `create_urllib3_context()`/`load_verify_locations()` pair behind a function invoked only from the `verify is True` branch of `_urllib3_request_context` (e.g. cache it with `functools.lru_cache`), so the load stays lazy and any failure still reaches only default-bundle-verified callers with the previous clear error.",
+      "anchor": {
+        "type": "line",
+        "path": "src/requests/adapters.py",
+        "start_line": 75,
+        "end_line": 78,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/requests/adapters.py",
+        "start_line": 75,
+        "end_line": 78
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "urllib3 2.8.0's `_ssl_wrap_socket_and_match_hostname` runs `context.verify_mode = resolve_cert_reqs(cert_reqs)` on every connect, including for the shared `_preloaded_ssl_context`; this looked like the reconfiguration hazard tiran warned about in review, but it always writes the same `CERT_REQUIRED` value back (the shared context is only ever used on the `verify=True` path), so it is a redundant write, not an observed defect.",
+      "evidence": "urllib3/connection.py:1040-1042 (installed 2.8.0); src/requests/adapters.py:91-99 only reaches the `_preloaded_ssl_context` branch when `verify is True`, which always pairs with `cert_reqs=\"CERT_REQUIRED\"`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-verification-off-staged/att-015/clone",
+    "requirements": [
+      {
+        "source": "spec-requests-pr-6667/pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "adapters.py:75-98 builds one cached SSLContext with the CA bundle preloaded and passes it as pool_kwargs['ssl_context'] for verify=True, leaving ca_certs/ca_cert_dir/ca_cert_data unset; urllib3's ssl_wrap_socket (util/ssl_.py:413) only calls load_verify_locations when one of those is truthy, so it is skipped on every connect. Confirmed dynamically: a probe against the installed urllib3 2.8.0 shows load_verify_locations called exactly once (at import), not once per request, across three verify=True connections."
+      },
+      {
+        "source": "spec-requests-pr-6667/pr-body/\"You can test against https://invalid.badssl.com to check that verify=True and verify=False still behave as expected\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "cert_reqs stays CERT_REQUIRED for verify=True and CERT_NONE for verify=False (adapters.py:91-99), and verify=True still enforces hostname/cert validation via the same preloaded context's default check_hostname. Live cross-check against invalid.badssl.com is unavailable (no network, per run policy); local TLS fixtures that would exercise this fail identically at merge-base and head from a pre-existing OpenSSL 'Missing Authority Key Identifier' fixture mismatch unrelated to this change, so behavior parity rests on this code trace rather than an end-to-end pass."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/requests/adapters.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "PYTHONPATH=<clone>/src <cache>/venv/bin/python -m pytest tests/test_requests.py tests/test_adapters.py",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "23 failed / 305 passed / 1 skipped / 1 xpassed. Same command against a merge-base (8dd3b26bf59808de24fd654699f592abf6de581e) copy of src reproduces the identical 23 failing node ids, so all are pre-existing (mostly no-network httpbin fixtures, plus test_pyopenssl_redirect named unavailable by the run policy, plus three TLS/mTLS fixture tests failing on a certificate 'Missing Authority Key Identifier' mismatch under this machine's OpenSSL — the run policy named two of these three; test_different_connection_pool_for_mtls_settings shares the same root cause and is newly confirmed pre-existing here). None is introduced by this diff."
+      },
+      {
+        "check": "custom probe script (scratch, not committed) counting ssl.SSLContext.load_verify_locations calls across module import and three local verify=True requests",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "Call count stayed at 1 through import and pool/connection creation for three verify=True requests, directly confirming the claimed per-request reload is skipped; the requests themselves fail during the handshake on the same pre-existing AKI fixture issue as above (unrelated to what was being measured)."
+      },
+      {
+        "check": "two-line repro: monkeypatch certifi.where() to a nonexistent path, then `import requests`",
+        "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+        "outcome": "reviewer-executed",
+        "reason": "Raises unhandled FileNotFoundError at head; the identical repro against merge-base 8dd3b26bf59808de24fd654699f592abf6de581e succeeds (import requests works, HTTPAdapter() usable), isolating the eager-import regression to this diff."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

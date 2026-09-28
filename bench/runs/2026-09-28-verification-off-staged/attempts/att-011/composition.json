@@ -1,0 +1,127 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "specs": [
+      "graphql/graphql-js#1582 packet (PR title/body, commit message, review thread; user-supplied, offline)"
+    ],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Turn on Flow's `@flow strict` checking for four error-related test files that were `@noflow` (or untyped), and fix a reviewer-flagged gap: `GraphQLError`'s `nodes` constructor parameter didn't accept `null` like its sibling parameters.",
+    "issue_fit": "No linked issue; judged against the commit title and the packet's unresolved review comment on GraphQLError.js:25 (nodes should accept null like other args). Enabling Flow typings is fully met. The null-typing fix is only half applied: the ambient `declare class` constructor was updated but the actual exported function's own parameter type was not.",
+    "coverage": "All 5 changed files read in full, including the unchanged parts of GraphQLError.js needed to check the typing-consistency requirement. Ran the four changed test files with the reviewed head's own mocha binary to confirm the Flow-only test rewrites preserve runtime behavior.",
+    "ambiguities": [
+      {
+        "term": "Which of GraphQLError.js's two parallel `nodes` type signatures (the ambient `declare class` at line 25 vs. the exported `function` at line 94) is authoritative for external callers",
+        "readings": [
+          "Flow unifies a `declare class` with a same-named function declared right after it (the pattern this file, and others in this codebase, use with an `eslint-disable-line no-redeclare`), so the class signature governs external call sites and the function's own annotation only types its body.",
+          "The two are independent bindings, so external callers see whichever declaration Flow resolves the exported name to, and a mismatch could surface as a Flow error rather than silent inconsistency."
+        ],
+        "applied": "Treated the mismatch as a real defect either way: even the narrower reading (the function's own annotation only types its body) leaves the file's two declarations of the same parameter disagreeing about exactly the behavior this PR set out to fix, so the fix is incomplete regardless of which reading holds."
+      }
+    ],
+    "coverage_gaps": [],
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill` over the four changed test files at 7e39a122eea9292eeffa6905ffdf8a60c5161cfd: 27 passing, 0 failing, ~78ms."
+    ]
+  },
+  "findings": [
+    {
+      "id": "graphqlerror-test/stack-branch-lost",
+      "title": "Restore the no-stack branch this test claims to cover",
+      "priority": "P3",
+      "action": "must-fix",
+      "kind": "maintainability",
+      "trigger": "This test replaced `originalError = { message: 'original' }` with `new Error('original')`. Node/V8 populates a real Error's `.stack` immediately, so `originalError.stack` is now always truthy.",
+      "impact": "`GraphQLError`'s constructor now takes the `if (originalError && originalError.stack)` branch instead of the `else if (Error.captureStackTrace)` branch this test's title names. `expect(e.stack).to.be.a('string')` passes under either branch, so a future regression that breaks stack creation for a stack-less `originalError` would no longer be caught here.",
+      "change": "Keep `new Error('original')` so the value still flow-types as a real `Error`, but strip its captured stack before constructing the `GraphQLError`, e.g. add `delete original.stack;` on the next line, so the no-stack branch runs again.",
+      "source": "Merge-base `src/error/__tests__/GraphQLError-test.js` used a stack-less plain object specifically to exercise this branch; the diff's own replacement was needed only to satisfy the file's new `@flow strict` header.",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 59
+      }
+    },
+    {
+      "id": "graphqlerror/nodes-null-typing-incomplete",
+      "title": "Finish the `nodes` null-typing fix in the function's own signature",
+      "priority": "P3",
+      "action": "must-fix",
+      "kind": "requirement",
+      "trigger": "The packet's unresolved review comment asked why `nodes` accepted `undefined` but not `null`, unlike every other constructor argument. This diff answered it by adding `| null` only to the ambient `declare class` constructor at GraphQLError.js:25.",
+      "impact": "`export function GraphQLError`'s own `nodes` parameter (line 94) still reads `$ReadOnlyArray<ASTNode> | ASTNode | void`, with no `| null`. The file's two parallel declarations of the same parameter now disagree with each other, so the PR's own stated goal, \"Fix typing for Error constructor,\" and the reviewer's request are only half applied.",
+      "change": "Add `| null` to the `nodes` parameter of `export function GraphQLError` on line 94 too, matching the `declare class` constructor's now-fixed type.",
+      "source": "Commit `7e39a122e` title \"...Fix typing for Error constructor\"; packet's review thread on GraphQLError.js:25 (IvanGoncharov, unresolved): \"All other arguments support `null` so there is no reason why `nodes` accepts `undefined` but not the `null`.\"",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/GraphQLError.js",
+        "start_line": 94,
+        "end_line": 94,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "src/error/GraphQLError.js",
+        "start_line": 94,
+        "end_line": 94
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "GraphQLError-test.js, locatedError-test.js, printError-test.js, and inspect-test.js each switch their header to `@flow strict` (from `@noflow` or nothing) in the diff; the reviewed head's own mocha run passes all 27 tests across these four files, so the accompanying Flow-driven rewrites did not change runtime behavior."
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "GraphQLError.js:25's `declare class` constructor gained `| null` for `nodes`, matching the reviewer's request, but GraphQLError.js:94's exported function keeps `nodes?: $ReadOnlyArray<ASTNode> | ASTNode | void` with no `| null` (finding graphqlerror/nodes-null-typing-incomplete)."
+      }
+    ],
+    "files": [
+      { "path": "src/error/GraphQLError.js", "state": "reviewed" },
+      { "path": "src/error/__tests__/GraphQLError-test.js", "state": "reviewed" },
+      { "path": "src/error/__tests__/locatedError-test.js", "state": "reviewed" },
+      { "path": "src/error/__tests__/printError-test.js", "state": "reviewed" },
+      { "path": "src/jsutils/__tests__/inspect-test.js", "state": "reviewed" }
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/GraphQLError-test.js src/error/__tests__/locatedError-test.js src/error/__tests__/printError-test.js src/jsutils/__tests__/inspect-test.js",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "Ran directly in the offline clone at the pinned head, clean tree, dependencies already installed; 27 passing, 0 failing, ~78ms."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

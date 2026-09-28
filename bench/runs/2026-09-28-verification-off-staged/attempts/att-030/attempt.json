@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-030",
+  "run_id": "2026-09-28-verification-off-staged",
+  "cell": {
+    "target": "k-graphql-js-1582",
+    "arm": "review-code-sonnet-high-enforced-x394-control",
+    "replicate": 3
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-28T12:44:41Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.282",
+    "models": [
+      "claude-sonnet-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "5e12864b52b6c0c52b9b1b1f41d5b22fa2576676",
+    "diff_commands": [
+      "git diff 5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11 7e39a122eea9292eeffa6905ffdf8a60c5161cfd -- src/error/__tests__/GraphQLError-test.js"
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "3f72982c57cef73a9752a83eb8f9c116717cb62199c78dbc93e3ac0d5b7d5a51",
+    "tree_identity_after": "3f72982c57cef73a9752a83eb8f9c116717cb62199c78dbc93e3ac0d5b7d5a51"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 2.244482,
+    "cost_bounds_usd": {
+      "low": 2.244482,
+      "high": 2.244482
+    },
+    "rates_as_of": "2026-09-24",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-28T12:44:41Z",
+    "payload_validated_at": "2026-09-28T12:53:47Z",
+    "completed_at": "2026-09-28T12:53:47Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "d329b0cf28ea0cb2169dd9f12436154ab00945a79374a0129b3371bcdf2257f0"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-28-verification-off-staged/att-030.tar.gz",
+    "sha256": "9c6fdf7ddcc49021291057a99a0bb43b1c0312e35d26bf1fafe9fdb7cb418c52",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 66b7e93d7b8a2d26a5f0a938972b028c95a3cf0536533b92d20e742bac8bb5b8; run policy sha256 cae24fc642f566044700579dd597189a7905f71e7c2daca34a8956ff3b8533a0 (before path substitution)"
+  ]
+}

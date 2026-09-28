@@ -1,0 +1,33 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "src/error/__tests__/GraphQLError-test.js",
+      "line_start": 58,
+      "line_end": 58,
+      "claim": "Restore coverage for GraphQLError's own-stack fallback. This diff changes the `it('creates new stack if original error has no stack')` fixture from a plain `{ message: 'original' }` object to `new Error('original')`. A real `Error` always carries a truthy `.stack` in Node (confirmed directly: `new Error('x').stack` is a non-empty string immediately after construction), so `GraphQLError`'s `if (originalError && originalError.stack)` branch (src/error/GraphQLError.js:195) now fires instead of the `else if (Error.captureStackTrace)` fallback the test name describes.",
+      "consequence": "The fallback that manufactures a fresh stack when the original error has none (src/error/GraphQLError.js:201-208) is no longer exercised by any test in the suite, and this test now silently duplicates the adjacent `'uses the stack of an original error'` test (same fixture shape) with a strictly weaker assertion (`.to.be.a('string')` instead of `.to.equal(original.stack)`). A future regression in the own-stack fallback would go undetected.",
+      "proposed_fix": "In src/error/__tests__/GraphQLError-test.js:58, keep `original` typed as a real `Error` (required for `@flow strict`) but strip its `.stack` before use, e.g. `const original = new Error('original'); delete original.stack;`, so the assertion again exercises the intended fallback branch.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "`GraphQLError.js`'s `declare class` constructor (the type `new GraphQLError(...)` callers are checked against) now accepts `null` for `nodes`, but the separate runtime `function GraphQLError(...)` a few lines below keeps its own narrower `void`-only annotation for the same parameter.",
+      "consequence": "src/error/GraphQLError.js:25 vs. src/error/GraphQLError.js:94; `flow check --show-all-errors` at the reviewed head reports 0 errors, confirming no caller (all of which use `new GraphQLError(...)`, never the bare function) is affected by the asymmetry.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

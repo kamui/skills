@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-verification-off-staged",
+  "target": "p-hono-5067",
+  "mapping_version": 2,
+  "supersedes": 1,
+  "revision_reason": "Stage 2 grades every attempt on the target together, Stage 1's included, as the run's protocol fixed before any Stage 2 dispatch.",
+  "register": {
+    "version": 1,
+    "sha256": "d0fe3517872a2ba6c5a0d564b1f4e19f31c6407bad5c0f22e2b70fe51e6b0357"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.282, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 a20a687c6f42d254464dff6440da1ae0950f3f6bd831eaa5cbfd097b7990f962; session 46e172e7-06ff-43dd-b8f4-f1b822f519db; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (6 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-28T13:08:23Z",
+  "attempts": [
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-db2e4d",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"patch coverage 76.47% under the 80% target, but the base repository's codecov.yml marks the patch status check `informational: true`, so it does not block merges.\" Verified: clone/codecov.yml has `patch: default: target: 80%, informational: true`. This is a true CI-hygiene remark with no defect claim. The register rules coverage by itself non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-008",
+      "blind_token": "blind-1f5c54",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`parseFormData` ... now reads the whole body via `arrayBuffer()` and re-parses it through `bufferToFormData()` instead of calling the platform `Request.formData()` directly, matching the pattern `src/validator/validator.ts`'s `form` branch already used.\" This is accurate: body.ts:125-126 and validator.ts:118-121. It is a neutral description of the change and names no consequence. In particular it does not name what happens when only bodyCache.formData is cached (GT-p1), so it only gestures at the right function and is not a recovery."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-018",
+      "blind_token": "blind-b1fa85",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"parseFormData now buffers the whole request body via arrayBuffer() and re-wraps it in a synthetic Response before calling formData() ... this mirrors the pattern already used in validator.ts's 'form' branch and is required so the normalized (lower-cased) Content-Type reaches the platform's own media-type check.\" This is an accurate description of body.ts:125-126 and buffer.ts:110-116 with a design rationale. It asserts no defect and does not identify the cached-FormData re-serialization failure, so it is not a recovery of GT-p1. It is an observation."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-019",
+      "blind_token": "blind-2c8ef3",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-p1",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"When only `bodyCache.formData` is already cached, `HonoRequest#cachedBody`'s fallback rebuilds bytes via `new Response(cachedFormData).arrayBuffer()`, which ... re-serialize[s] with a brand-new random multipart boundary, while `parseFormData` still passes the original, now-stale `Content-Type` header ... For multipart requests this throws `Failed to parse body as FormData.` ... for urlencoded requests it silently returns corrupted data.\" This matches the register's trigger, mechanism (src/request.ts:234 plus body.ts:125-126) and both main manifestations exactly, including the merge-base contrast. Proposed fix: \"check `request.bodyCache.formData` first and `await`/reuse it when present ... before falling back to `arrayBuffer()` + `bufferToFormData()`.\" This is the upstream approach the register names as sufficient. It restores correct fields for multipart and urlencoded. Because the cache is reused and not reassigned, bodyCache.formData is no longer overwritten, which also removes the cache-poisoning manifestation. The first-read path and the other working orders are unchanged. Sufficient."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Codecov ... reports src/utils/body.ts patch coverage at 75% (3 missing lines) ... the missing branches are exactly parseFormData's new bodyCache-population path, consistent with the untested regression above.\" The figures match packet section 6. The attribution of the missing lines cannot be confirmed without coverage output, though it is plausible because src/utils/body.test.ts builds raw `new Request` objects. This is a coverage-hygiene note that supports item 1, not a separate defect. The register rules coverage by itself non-material."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"stores a pending Promise under a field typed `FormData`; this mirrors `#cachedBody`'s own existing convention ... so it is not a new type-safety regression.\" This is accurate (body.ts:130; request.ts:238). The register's non_defects entry calls the cast type hygiene. The item explicitly disclaims any defect, so it is non-material."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-028",
+      "blind_token": "blind-f9a0b3",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`src/middleware/method-override/index.ts:92` (`contentType?.startsWith('application/x-www-form-urlencoded')`) is unchanged at both merge-base and head ... out of this change's scope since it doesn't touch that file.\" Verified: line 92 still uses the case-sensitive startsWith, and the diff stat shows method-override is not touched. The item itself labels this pre-existing and out of scope. The PR introduces nothing here, so it is a true observation about adjacent code that sits below the finding threshold for this change."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Codecov reports this diff's patch coverage below the repository's target ... 76.47% patch coverage against an 80% target.\" This matches packet section 6. The register rules coverage hygiene non-material, and the item names no cached-body failure."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`parseFormData` ... now always reads the full request body into an `ArrayBuffer` before parsing form data, where it previously delegated straight to the platform's own `Request.formData()` ... body-request throughput essentially unchanged (35,864.38 to 35,802.34, -0.17%).\" This is accurate (body.ts:125-126, and the benchmark in packet section 6). It is a neutral observation that asserts no defect. It does not identify the formData()-then-parseBody() failure, so it is not a recovery of GT-p1."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-029",
+      "blind_token": "blind-14eda6",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"stores the in-flight `formData()` promise directly into `HonoRequest.bodyCache.formData` (declared as `FormData`) ... so it works correctly despite the misleading static type.\" Accurate description of src/utils/body.ts:128-131 and the #cachedBody idiom (src/request.ts:220-239). The register's non_defects rule that storing a Promise there is type hygiene and harmless on a first read. The item asserts no defect. It does not identify the formData()-then-parseBody() re-serialization failure (GT-p1), so it is not a recovery. It is a hygiene observation below the finding threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Codecov reports patch coverage of 76.47% with 3 uncovered lines in body.ts and 1 in buffer.ts ... the uncovered lines are pre-existing branches, not the new mixed-case-matching behavior.\" The coverage figures match packet section 6. Calling the lines \"pre-existing\" is loose, because Codecov patch coverage counts only changed lines. The item still asserts no defect, and the register's non_defects rule coverage hygiene non-material by itself. It says nothing about the cached-body order, so it does not recover GT-p1."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

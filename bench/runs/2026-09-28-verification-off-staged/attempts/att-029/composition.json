@@ -1,0 +1,115 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+    "issues": [],
+    "specs": ["spec-pr5067"],
+    "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Fix honojs/hono#5060: normalize the Content-Type media type before matching in parseBody() and validator() so mixed/upper-case media types (e.g. `Application/JSON`, `Application/X-WWW-Form-Urlencoded`) are parsed instead of silently yielding `{}` or skipping validation, while leaving parameters such as multipart boundaries untouched.",
+    "issue_fit": "Met — every acceptance point and suggested test from honojs/hono#5060 (parseBody urlencoded, validator json, validator form including multipart boundary preservation) is implemented and covered by a passing new test.",
+    "coverage": "All 6 changed files read in full diff and surrounding context (body.ts, body.test.ts, buffer.ts, buffer.test.ts, validator.ts, validator.test.ts); vitest run of the 3 changed test files passed at the reviewed head.",
+    "check_details": [
+      "Reviewer ran `./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts` at 5226d4165d48643586152614cbd07422a0ab7a22: 106 passed, 1 pre-existing unrelated skip, 0 failed.",
+      "Supplied Codecov PR comment (same head): patch coverage 76.47%, 4 lines uncovered — informational only, no repository-cited coverage gate, and no failing test.",
+      "Supplied GitHub Actions HTTP Performance Benchmark PR comment (same head): no throughput regression (Body -0.17%, Average +2.20%, within normal run-to-run noise)."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`parseFormData` now stores the in-flight `formData()` promise directly into `HonoRequest.bodyCache.formData` (declared as `FormData`) before awaiting it; this matches the pre-existing runtime idiom in `HonoRequest#cachedBody`, which always stores an unawaited promise there, so it works correctly despite the misleading static type.",
+      "evidence": "src/utils/body.ts:126-132; src/request.ts:220-238."
+    },
+    {
+      "fact": "Codecov reports patch coverage of 76.47% with 3 uncovered lines in body.ts and 1 in buffer.ts; the reviewer's local run confirms every new test in this diff passes, so the uncovered lines are pre-existing branches, not the new mixed-case-matching behavior.",
+      "evidence": "codecov PR comment, 2026-07-01T09:41:59Z."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "honojs/hono",
+    "requirements": [
+      {
+        "source": "spec-pr5067/issue-5060/suggested-tests",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/body.ts:104-106 computes `mediaType = contentType?.split(';')[0].trim().toLowerCase()` and compares it against `application/x-www-form-urlencoded`; src/utils/body.test.ts adds `should parse mixed-case \\`x-www-form-urlencoded\\`` which passed under the reviewer's vitest run."
+      },
+      {
+        "source": "spec-pr5067/issue-5060/suggested-tests",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/validator/validator.ts:24 adds the `/i` flag to `jsonRegex`; src/validator/validator.test.ts adds `Should validate if Content-Type media type is mixed-case` (`Application/JSON`), which passed under the reviewer's vitest run."
+      },
+      {
+        "source": "spec-pr5067/issue-5060/suggested-tests",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/validator/validator.ts:25-26 adds `/i` to `multipartRegex`/`urlencodedRegex`; src/validator/validator.test.ts adds mixed-case urlencoded and multipart tests, and src/utils/buffer.test.ts adds a mixed-case-media-type-with-boundary test; all passed under the reviewer's vitest run."
+      },
+      {
+        "source": "spec-pr5067/issue-5060/expected-behavior",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/utils/buffer.ts:113 lowercases only the substring before the first `;` via `contentType.replace(/^[^;]+/, (mediaType) => mediaType.toLowerCase())`, leaving parameter values such as the multipart `boundary` untouched; the new buffer.test.ts case asserts a mixed-case boundary (`sampleBoundary`) is still found by name after normalization."
+      },
+      {
+        "source": "spec-pr5067/pr-body/\"[x] Add tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "body.test.ts (+28/-9), buffer.test.ts (+14), validator.test.ts (+48) add mixed-case-media-type coverage for every changed path."
+      },
+      {
+        "source": "spec-pr5067/pr-body/\"[x] Run tests\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "Reviewer independently re-ran the changed test files at the reviewed head; all passed (see check_details)."
+      }
+    ],
+    "files": [
+      {"path": "src/utils/body.test.ts", "state": "reviewed"},
+      {"path": "src/utils/body.ts", "state": "reviewed"},
+      {"path": "src/utils/buffer.test.ts", "state": "reviewed"},
+      {"path": "src/utils/buffer.ts", "state": "reviewed"},
+      {"path": "src/validator/validator.test.ts", "state": "reviewed"},
+      {"path": "src/validator/validator.ts", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "reviewer-executed",
+        "reason": "Run from the clone root at the pinned head, clean tree, offline; 3 files / 106 passed, 1 pre-existing unrelated skip (buffer.test.ts:69, outside this diff), 0 failed."
+      },
+      {
+        "check": "codecov/patch (PR comment)",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "accepted",
+        "reason": "Supplied comment posted at the exact reviewed head; patch coverage 76.47% with 4 lines uncovered (3 in body.ts, 1 in buffer.ts) — informational, no repository rule cited making this a merge gate, and it duplicates no correctness claim the reviewer's own test run already settled."
+      },
+      {
+        "check": "HTTP Performance Benchmark (GitHub Actions PR comment)",
+        "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+        "outcome": "accepted",
+        "reason": "Supplied comment posted at the exact reviewed head; shows Body -0.17% and Average +2.20%, i.e. no regression outside normal noise; no performance requirement is in scope for this change."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}
