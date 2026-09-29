@@ -13,7 +13,12 @@ and register versions) and ``entries``. An entry has ``id``, ``label``, ``versio
 the reviewer version it ran), ``sources`` and an optional ``note``. A source has ``run`` (a run
 directory relative to the registry), ``results`` (a ``results.v<N>.json`` in that run written by
 ``score.py``, or null while the run is not scored) and ``arm`` (an arm id of that run's manifest).
-An entry with any unscored source is pending everywhere.
+An entry with any unscored source is pending everywhere. A suite may add ``chart`` with ``targets``, a
+subset of its cohort; its entries then need ``method`` (``claude-builtin``, ``review-code`` or
+``codex``) and ``short``, the point label. Every scored entry that ran all chart targets is drawn
+on two scatter charts over exactly those targets, defects found against cost per review and against
+false findings per review, each written as a light and a dark SVG under ``scoreboard/`` beside the
+page (``scoreboard_svg.py``) with a table of the plotted values; the detailed tables fold below.
 
 Each scored entry gets one status per suite target. At most one of its sources may have attempts
 on a target, since one target is never pooled across separately graded runs. With none the target
@@ -37,14 +42,16 @@ Exit codes: 0 written, or with ``--check`` the page is current; 1 a problem in t
 inputs (a missing manifest or results file, an arm absent from its run or with no ``by_arm`` row,
 a rubric version that differs from the cohort run's, an unknown ``reference``, a duplicate entry
 id, two sources of one entry with attempts on the same target, a ``by_arm`` row the per-target
-rows do not reproduce), or with ``--check`` a stale page, one line per problem on stdout; 2 an
-input cannot be read.
+rows do not reproduce, chart targets outside the cohort, a charted entry without ``method`` or
+``short``), or with ``--check`` a stale page or chart, one line per problem on stdout; 2 an input
+cannot be read.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -53,6 +60,7 @@ TOOLS = Path(__file__).resolve().parent
 BENCH = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 from score import mean, median, seconds_between  # noqa: E402
+from scoreboard_svg import METHOD_NAMES, Axis, Point, scatter  # noqa: E402
 
 SUITE_KEYS = ("id", "title", "summary", "reference", "cohort_run", "entries")
 ENTRY_KEYS = ("id", "label", "version", "sources")
@@ -222,6 +230,15 @@ def suite_problems(suite: dict, cohort, loaded: list) -> list:
         problems.append(f"{suite['id']}: duplicate entry id {dup}")
     if suite["reference"] not in ids:
         problems.append(f"{suite['id']}: reference {suite['reference']} names no entry")
+    if "chart" in suite:
+        outside = [t for t in suite["chart"].get("targets", []) if cohort is not None and t not in cohort["targets"]]
+        if not suite["chart"].get("targets") or outside:
+            problems.append(f"{suite['id']}: chart targets must be a non-empty subset of the cohort"
+                            + (f"; not in it: {', '.join(outside)}" if outside else ""))
+        for entry in suite["entries"]:
+            if entry.get("method") not in METHOD_NAMES or not entry.get("short"):
+                problems.append(f"{suite['id']}/{entry.get('id')}: a charted suite needs each entry's method "
+                                f"({', '.join(METHOD_NAMES)}) and short label")
     for item in filter(None, loaded):
         where = f"{suite['id']}/{item['entry']['id']}"
         for source in item["sources"]:
@@ -370,8 +387,80 @@ class Board:
                 "Each cell is attempt-level recall, or clean when the target has no registered defect, "
                 "then the raw false-finding count.", "", *table(header, rows), "", STATUS_LEGEND]
 
-    def render(self) -> list:
-        lines = [f"## {self.suite['title']}", "", self.suite["summary"], "", *self.sources_section(), "",
+    def chart_rows(self) -> tuple:
+        """Entries that ran every chart target, with their figures over exactly those targets, and the rest."""
+        targets = self.suite["chart"]["targets"]
+        drawn, left_out = [], []
+        for item in self.loaded:
+            if item["pending"] or not all(t in self.ran(item) for t in targets):
+                left_out.append(item)
+                continue
+            placed = placements(item)
+            m = aggregate([(placed[t][0], t) for t in targets])
+            valid = m["valid_reviews"]
+            drawn.append((item, {
+                "recall": m["recall_attempt_level"], "reviews": valid["count"], "cells": m["cells_planned"],
+                "cost": None if m["cost_contemporaneous_usd"] is None else m["cost_contemporaneous_usd"] / m["attempts_included"],
+                "false": valid["false_findings_raw"] / valid["count"] if valid["count"] else None,
+                "noise": valid["noise_items"] / valid["count"] if valid["count"] else None}))
+        return drawn, left_out
+
+    def chart_section(self) -> tuple:
+        if "chart" not in self.suite:
+            return [], {}
+        targets = self.suite["chart"]["targets"]
+        drawn, left_out = self.chart_rows()
+        cohort_run = self.root / self.suite["cohort_run"]
+        points = []
+        for item, f in drawn:
+            entry = item["entry"]
+            tip = (f"{entry['label']} at {entry['version']}: {percent(f['recall'])} of registered defects found, "
+                   f"{f['false']:.2f} false findings per review, ${f['cost']:.2f} per review, "
+                   f"{f['reviews']} completed reviews of {f['cells']}")
+            points.append((entry, f, tip, any(s["run_dir"] == cohort_run for s in item["sources"])))
+        make = lambda x_key: [Point(e["short"], e["method"], current, f[x_key], f["recall"] * 100, tip)
+                              for e, f, tip, current in points]
+        subtitle = f"{len(targets)} of {len(self.targets)} targets, the ones every plotted reviewer ran"
+        floor = max(0, 25 * math.floor((min(f["recall"] for _, f, _, _ in points) * 100 - 5) / 25))
+        y = Axis("Registered defects found (recall)", False, floor, 100, tuple(range(floor, 101, 25 if floor == 0 else 10)),
+                 lambda v: f"{v:.0f}%")
+        costs = [f["cost"] for _, f, _, _ in points]
+        falses = [f["false"] for _, f, _, _ in points]
+        charts = {
+            "cost": ("Defects found against cost per review", "Cost per review (log scale)", make("cost"),
+                     cost_axis(costs)),
+            "false-findings": ("Defects found against false findings", "False findings per completed review",
+                               make("false"), false_axis(falses)),
+        }
+        files, lines = {}, []
+        for key, (title, x_title, pts, (lo, hi, ticks, fmt, log)) in charts.items():
+            x = Axis(x_title, log, lo, hi, ticks, fmt)
+            stem = f"scoreboard/{self.suite['id']}-{key}"
+            for theme in ("light", "dark"):
+                files[f"{stem}-{theme}.svg"] = scatter(title, subtitle, pts, x, y, theme)
+            lines += ["<picture>",
+                      f'  <source media="(prefers-color-scheme: dark)" srcset="{stem}-dark.svg">',
+                      f'  <img alt="{title}. The table below lists every plotted value." src="{stem}-light.svg">',
+                      "</picture>", ""]
+        rows = [[item["entry"]["label"], item["entry"]["version"], percent(f["recall"]), f"{f['false']:.2f}",
+                 f"{f['noise']:.1f}", f"${f['cost']:.2f}" + (" †" if item["list_price"] else ""),
+                 f"{f['reviews']} of {f['cells']}"] for item, f in drawn]
+        lines += table(["Reviewer", "Version", "Defects found", "False findings per review", "Noise per review",
+                        "Cost per review", "Completed reviews"], rows)
+        lines += ["", f"Both charts and this table cover {code_list(targets)}. Up and left is better on both charts; "
+                  "the thin line joins the reviewers no other reviewer beats on both axes. A filled dot is this "
+                  "suite's run, a hollow dot an earlier run. Recall counts an incomplete review as finding nothing."]
+        if left_out:
+            lines += ["", "Not plotted, because they did not run every one of these targets: "
+                      + "; ".join(f"{i['entry']['label']} at {i['entry']['version']}" for i in left_out) + "."]
+        return lines, files
+
+    def render(self) -> tuple:
+        charts, files = self.chart_section()
+        lines = [f"## {self.suite['title']}", "", self.suite["summary"], "", *charts, ""]
+        if charts:
+            lines += ["<details>", "<summary>Every number, target by target</summary>", ""]
+        lines += [*self.sources_section(), "",
                  *self.own_targets_table(), "", *self.pairwise_table(), "", LEGEND]
         if any(i["list_price"] for i in self.loaded):
             lines += ["", LIST_PRICE_NOTE]
@@ -379,7 +468,23 @@ class Board:
                  for i in self.loaded if i["entry"].get("note")]
         if notes:
             lines += ["", *notes]
-        return lines + ["", *self.per_target_table(), ""]
+        lines += ["", *self.per_target_table(), ""]
+        if charts:
+            lines += ["</details>", ""]
+        return lines, files
+
+
+def cost_axis(values: list) -> tuple:
+    steps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100)
+    lo = max(s for s in steps if s <= min(values) * 0.9)
+    hi = min(s for s in steps if s >= max(values) * 1.2)
+    return lo, hi, tuple(s for s in steps if lo <= s <= hi), lambda v: f"${v:.2f}" if v < 1 else f"${v:g}", True
+
+
+def false_axis(values: list) -> tuple:
+    step = 0.1 if max(values) < 0.4 else 0.2
+    hi = step * max(2, math.ceil(max(values) * 1.15 / step))
+    return 0, hi, tuple(round(step * i, 2) for i in range(round(hi / step) + 1)), lambda v: f"{v:g}", False
 
 
 def table(header, rows) -> list:
@@ -396,21 +501,20 @@ def target_shape(root: Path, target: str) -> str:
     return read_json(path).get("shape", "") if path.is_file() else ""
 
 
-def render(boards: list) -> str:
+def render(boards: list) -> tuple:
     lines = [
         "# Reviewer benchmark scoreboard", "",
-        "This page holds the headline numbers of the reviewer benchmark, one section per suite. "
-        "A suite fixes its targets, packets, diffs, registers and rubric, and every row is marked on each target "
-        "it did not run or ran under a different identity. "
-        "The legend under each table says which direction is better for each column. "
-        "The method and its rules are in [README.md](README.md).", "",
-        "The page is generated from `bench/scoreboard.json`. "
-        "Regenerate it with `python3 bench/tools/scoreboard.py`. "
-        "`python3 bench/tools/scoreboard.py --check` fails when it is stale.", "",
+        "How many registered defects each code reviewer finds, how much noise it adds, and what it costs, "
+        "one section per suite of pull requests. The method is in [README.md](README.md).", "",
+        "Generated from `bench/scoreboard.json` by `python3 bench/tools/scoreboard.py`; "
+        "`--check` fails when this page or a chart is stale.", "",
     ]
+    files = {}
     for board in boards:
-        lines += board.render()
-    return "\n".join(lines)
+        section, charts = board.render()
+        lines += section
+        files.update(charts)
+    return "\n".join(lines), files
 
 
 def build(registry_path: Path, out_dir: Path):
@@ -446,26 +550,30 @@ def main(argv=None) -> int:
     parser.add_argument("--out", type=Path, default=BENCH / "SCOREBOARD.md")
     parser.add_argument("--check", action="store_true", help="exit 1 when the page on disk is stale")
     args = parser.parse_args(argv)
+    out_dir = args.out.resolve().parent
     try:
-        page, problems = build(args.registry.resolve(), args.out.resolve().parent)
-        current = args.out.read_text(encoding="utf-8") if args.check and args.out.is_file() else None
+        built, problems = build(args.registry.resolve(), out_dir)
+        if problems:
+            print("\n".join(problems))
+            return 1
+        page, charts = built
+        outputs = {args.out: page, **{out_dir / name: svg for name, svg in charts.items()}}
+        stale = [path for path, text in outputs.items()
+                 if not path.is_file() or path.read_text(encoding="utf-8") != text] if args.check else []
     except (InputError, OSError) as error:
         print(error, file=sys.stderr)
         return 2
     except (KeyError, TypeError) as error:
         print(f"malformed input: {error!r}")
         return 1
-    if problems:
-        print("\n".join(problems))
-        return 1
     if args.check:
-        if current != page:
-            print(f"{args.out} is stale; run python3 bench/tools/scoreboard.py")
-            return 1
-        return 0
-    args.out.write_text(page, encoding="utf-8")
+        for path in stale:
+            print(f"{os.path.relpath(path)} is stale; run python3 bench/tools/scoreboard.py")
+        return 1 if stale else 0
+    for path, text in outputs.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img" aria-label="Defects found against false findings">
+<title>Defects found against false findings</title>
+<rect width="720" height="440" rx="8" fill="#1a1a19"/>
+<text x="64" y="24" font-size="15" font-weight="600" fill="#ffffff">Defects found against false findings</text>
+<text x="64" y="42" font-size="12" fill="#c3c2b7">9 of 12 targets, the ones every plotted reviewer ran</text>
+<line x1="64" x2="570" y1="380.0" y2="380.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="56" y="384.0" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">50%</text>
+<line x1="64" x2="570" y1="320.8" y2="320.8" stroke="#2c2c2a" stroke-width="1"/>
+<text x="56" y="324.8" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">60%</text>
+<line x1="64" x2="570" y1="261.6" y2="261.6" stroke="#2c2c2a" stroke-width="1"/>
+<text x="56" y="265.6" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">70%</text>
+<line x1="64" x2="570" y1="202.4" y2="202.4" stroke="#2c2c2a" stroke-width="1"/>
+<text x="56" y="206.4" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">80%</text>
+<line x1="64" x2="570" y1="143.2" y2="143.2" stroke="#2c2c2a" stroke-width="1"/>
+<text x="56" y="147.2" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">90%</text>
+<line x1="64" x2="570" y1="84.0" y2="84.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="56" y="88.0" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">100%</text>
+<line x1="64.0" x2="64.0" y1="84" y2="380" stroke="#2c2c2a" stroke-width="1"/>
+<text x="64.0" y="398" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">0</text>
+<line x1="165.2" x2="165.2" y1="84" y2="380" stroke="#2c2c2a" stroke-width="1"/>
+<text x="165.2" y="398" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">0.2</text>
+<line x1="266.4" x2="266.4" y1="84" y2="380" stroke="#2c2c2a" stroke-width="1"/>
+<text x="266.4" y="398" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">0.4</text>
+<line x1="367.6" x2="367.6" y1="84" y2="380" stroke="#2c2c2a" stroke-width="1"/>
+<text x="367.6" y="398" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">0.6</text>
+<line x1="468.8" x2="468.8" y1="84" y2="380" stroke="#2c2c2a" stroke-width="1"/>
+<text x="468.8" y="398" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">0.8</text>
+<line x1="570.0" x2="570.0" y1="84" y2="380" stroke="#2c2c2a" stroke-width="1"/>
+<text x="570.0" y="398" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">1</text>
+<line x1="64" x2="570" y1="380" y2="380" stroke="#383835" stroke-width="1"/>
+<text x="317.0" y="422" font-size="12" text-anchor="middle" fill="#c3c2b7">False findings per completed review</text>
+<text transform="translate(18 232.0) rotate(-90)" font-size="12" text-anchor="middle" fill="#c3c2b7">Registered defects found (recall)</text>
+<text x="72" y="100" font-size="12" fill="#898781">better ↖</text>
+<path d="M64.0,225.0 L120.2,161.5" fill="none" stroke="#898781" stroke-width="1"/>
+<g><title>Claude Code built-in /code-review, Sonnet 5.5 high at claude-code 2.1.284: 85% of registered defects found, 0.70 false findings per review, $0.12 per review, 27 completed reviews of 27</title><circle cx="420.1" cy="170.9" r="12" fill="transparent"/><circle cx="420.1" cy="170.9" r="6" fill="#3987e5" stroke="#3987e5" stroke-width="2"/></g>
+<text x="430.1" y="174.9" font-size="11" text-anchor="start" fill="#ffffff">Built-in · Sonnet 5.5</text>
+<g><title>/review-code, Sonnet 5.5 high at 5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts): 69% of registered defects found, 0.00 false findings per review, $0.99 per review, 22 completed reviews of 27</title><circle cx="64.0" cy="267.2" r="12" fill="transparent"/><circle cx="64.0" cy="267.2" r="6" fill="#d95926" stroke="#d95926" stroke-width="2"/></g>
+<text x="74.0" y="271.2" font-size="11" text-anchor="start" fill="#ffffff">/review-code 5e12864 · Sonnet 5.5</text>
+<g><title>/review-code, Sonnet 5 high at c3c53da (main from #370, 2026-09-24): 76% of registered defects found, 0.00 false findings per review, $0.79 per review, 18 completed reviews of 18</title><circle cx="64.0" cy="225.0" r="12" fill="transparent"/><circle cx="64.0" cy="225.0" r="6" fill="#1a1a19" stroke="#d95926" stroke-width="2"/></g>
+<text x="74.0" y="229.0" font-size="11" text-anchor="start" fill="#ffffff">/review-code c3c53da · Sonnet 5</text>
+<g><title>Claude Code built-in /code-review, Sonnet 5 high at claude-code 2.1.282: 87% of registered defects found, 0.11 false findings per review, $0.14 per review, 18 completed reviews of 18</title><circle cx="120.2" cy="161.5" r="12" fill="transparent"/><circle cx="120.2" cy="161.5" r="6" fill="#1a1a19" stroke="#3987e5" stroke-width="2"/></g>
+<text x="130.2" y="149.5" font-size="11" text-anchor="start" fill="#ffffff">Built-in · Sonnet 5</text>
+<g><title>Claude Code built-in /code-review, Opus 5.5 high at claude-code 2.1.282: 86% of registered defects found, 0.33 false findings per review, $0.36 per review, 18 completed reviews of 18</title><circle cx="232.7" cy="168.6" r="12" fill="transparent"/><circle cx="232.7" cy="168.6" r="6" fill="#1a1a19" stroke="#3987e5" stroke-width="2"/></g>
+<text x="242.7" y="172.6" font-size="11" text-anchor="start" fill="#ffffff">Built-in · Opus 5.5</text>
+<g><title>Codex CLI codex review, GPT-6 Astra default at codex-cli 0.156.1: 62% of registered defects found, 0.00 false findings per review, $0.29 per review, 18 completed reviews of 18</title><circle cx="64.0" cy="309.5" r="12" fill="transparent"/><circle cx="64.0" cy="309.5" r="6" fill="#1a1a19" stroke="#199e70" stroke-width="2"/></g>
+<text x="74.0" y="313.5" font-size="11" text-anchor="start" fill="#ffffff">Codex · GPT-6 Astra</text>
+<circle cx="69" cy="60" r="5" fill="#3987e5"/>
+<text x="79" y="64" font-size="11" fill="#c3c2b7">Claude Code built-in</text>
+<circle cx="230.0" cy="60" r="5" fill="#d95926"/>
+<text x="240.0" y="64" font-size="11" fill="#c3c2b7">/review-code</text>
+<circle cx="339.8" cy="60" r="5" fill="#199e70"/>
+<text x="349.8" y="64" font-size="11" fill="#c3c2b7">Codex review</text>
+<circle cx="455.6" cy="60" r="5" fill="#898781"/>
+<text x="465.6" y="64" font-size="11" fill="#c3c2b7">this run</text>
+<circle cx="533.8000000000001" cy="60" r="4" fill="#1a1a19" stroke="#898781" stroke-width="2"/>
+<text x="543.8000000000001" y="64" font-size="11" fill="#c3c2b7">earlier run</text>
+</svg>
