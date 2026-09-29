@@ -597,6 +597,11 @@
       "at": "2026-09-28T23:18:40Z",
       "what": "Replacements raised from 4 to 10 and max_attempts from 76 to 82, after 2 of the built-in's first 22 attempts (att-008 on n-ripgrep-2957, att-020 on j-trpc-5017) wrote scratch files under /tmp against the run policy and were filed harness-invalid, as att-006 and att-042 were in the 2026-09-24 baseline. At that rate the built-in alone would exhaust the 4 replacements before any review-code cell. The spend cap, the reserve and every reviewer input are unchanged. Replacing these attempts keeps only reviews that obeyed the scratch-path rule, the same selection the baseline made.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-29T02:36:11Z",
+      "what": "bench/tools/attempt_audit.py changed after the freeze (commit f92bcbd). att-046, review-code on n-ripgrep-2957, ran `B=$(git rev-parse --verify 'main^{commit}') && H=$(git rev-parse --verify 'review-head^{commit}') && git diff --stat $B...$H`, the pinned range, and was filed harness-invalid because the recorded diff command kept the unresolvable `$B...$H`. The audit now substitutes variables bound in the same command to a ref or to `git rev-parse <ref>` before it extracts diff commands. att-046 was re-filed with file_attempt.py --replay, valid, with no replacement: the repair changes no reviewer input or execution condition. Every other filed audit in bench/runs with a variable in a diff command uses the two-argument form, which the range check never reads, so no other attempt changes.",
+      "invalidates": []
     }
   ]
 }
