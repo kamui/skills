@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-30-x382` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-30-x382-x415` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -40,6 +40,12 @@ Workflow `v5b-30-x382` versions admission, verification, rendering, and state se
 **Verifier returns.** A worker returns its JSON inline and the primary saves it verbatim. Every build generates a fresh opaque `bundle_id`, stores it in the manifest and prints it after the brief's return encoding, and the worker copies it into its return; a rebuild of the same input gets a new ID. Accounting refuses a bundle whose manifest no longer matches its input, brief and printed ID, or that an older builder wrote, and withholds every task of a return whose `bundle_id` is not the bundle's. The finalizer requires each batch's accounting report to carry its bundle's ID and manifest hash. `--repair-of` records a repaired return's original, which must carry the bundle's ID. Structural success is only structural, and a repair grants no batch.
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
+
+## Denied-command recovery, issue #415, 2026-09-29
+
+The always-loaded boundary rule tells a reviewer to keep working after a command is denied or refused: retry once in an allowed form, or record the evidence as unavailable and continue to the artifacts. Four of 36 Sonnet 5.5 reviews in [the benchmark](https://github.com/kamui/skills/issues/415) stopped after one sandbox denial. The rule adds no execution permission or new phase. Workflow `v5b-30-x382-x415` prevents reuse of a review made without it.
+
+The rule and workflow marker add 186 bytes to each primary path and the runtime total. The always-loaded set is 29,870 bytes, so its limit falls from 31,000 to 30,000; the other limits stand. The focused paid re-run awaits an approved spending cap and is not claimed by this change.
 
 ## One record, prior records and packet identity, issue #357, 2026-09-24
 
