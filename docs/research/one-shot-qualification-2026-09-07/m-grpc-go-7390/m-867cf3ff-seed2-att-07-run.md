@@ -6,7 +6,7 @@
 | --- | --- |
 | Target | `grpc/grpc-go#7390` — "grpc: hold ac.mu while calling resetTransport to prevent concurrent connection attempts" |
 | Cell / attempt | `m-867cf3ff-seed2` / `att-07` |
-| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` |
 | `workflow` identifier reported by the validator | `v5b-1` (`WORKFLOW = "v5b-1"` in `scripts/validate_review.py`; also embedded and required in the run trailer) |
 | Model I (the primary reviewer) ran on | `claude-sonnet-5` (this session) |
 | Sub-agents spawned | **none** — see §7 below; no verification trigger fired, so no `Agent` call was made in this run. Every sub-agent this cell's rules describe (`model: "sonnet"`, `subagent_type: "general-purpose"`, foreground) would have been dispatched with those exact parameters had one been required. |
@@ -61,9 +61,9 @@ All three rows above were falsified inside my own primary-reviewer context (no f
 All commands were run from `/tmp/qual137/runs/m-867cf3ff-seed2-att-07` (the clone) unless noted, and all reads stayed inside the clone, the skill snapshot, the packet directory, and my own work/report/payload paths (see §9).
 
 ### Skill legwork (step 2)
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/review_context.py --merge-base daab56344e612097fd50c46c433de5d9b6013837 --head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6` — exit 0. Produced `manifest` (1 file, `clientconn.go +6 -7`), the full `diff` (reproduced and read once, with `--function-context` enclosing-function ranges), `ranges` (3 hunk ranges at head and merge-base), and `history` (3 pre-merge-base commits touching `clientconn.go`, none read further — none bore on the reviewed hunks). Saved to `/tmp/qual137/work/m-867cf3ff-seed2-att-07/review_context_output.md`.
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/context_fingerprint.py /tmp/qual137/work/m-867cf3ff-seed2-att-07/context_input.json` — printed the digest once (see §6). Not re-run.
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/validate_review.py --render < payload_v2.json` then `< payload_v3.json` (validate) then `--emit-batch < payload_v3.json` — all exit 0 on the final payload. No `--self-test` was run per rule 3 of this cell.
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/review_context.py --merge-base daab56344e612097fd50c46c433de5d9b6013837 --head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6` — exit 0. Produced `manifest` (1 file, `clientconn.go +6 -7`), the full `diff` (reproduced and read once, with `--function-context` enclosing-function ranges), `ranges` (3 hunk ranges at head and merge-base), and `history` (3 pre-merge-base commits touching `clientconn.go`, none read further — none bore on the reviewed hunks). Saved to `/tmp/qual137/work/m-867cf3ff-seed2-att-07/review_context_output.md`.
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/context_fingerprint.py /tmp/qual137/work/m-867cf3ff-seed2-att-07/context_input.json` — printed the digest once (see §6). Not re-run.
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/validate_review.py --render < payload_v2.json` then `< payload_v3.json` (validate) then `--emit-batch < payload_v3.json` — all exit 0 on the final payload. No `--self-test` was run per rule 3 of this cell.
 
 ### Reads
 - `CONTRIBUTING.md` (via `git show master:CONTRIBUTING.md`, i.e. the merge-base version, matching the packet's recorded blob) — read in full (73 lines). Classified as: present at the merge-base but **not** a member of the `guidance` digest set under the output contract's exhaustive membership rules (only root/path-scoped `AGENTS.md`/`CLAUDE.md` and root `CONTEXT.md` qualify); read anyway as general repository-workflow context (small-PRs norm, "all tests need to be passing," `go test -race -cpu 1,4 ./...` as the repo's own prescribed check). No repository-rule finding arose from it — nothing in it states a repo-specific invariant the diff violates.
@@ -148,7 +148,7 @@ No `git checkout`, `git switch`, `git reset`, `git stash`, `git fetch`, `git pul
 
 ## 9. Sandbox disclosure
 
-Every path I read was inside one of: the clone (`/tmp/qual137/runs/m-867cf3ff-seed2-att-07/`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`), the packet directory (`/tmp/qual137/packets/m/packet.md`), or my own work/report/payload/timing paths under `/tmp/qual137/work/m-867cf3ff-seed2-att-07/` and `/tmp/qual137/reports/m/`. I also invoked `/tmp/qual137/mark_event.py`, which is named explicitly in this cell's dispatch instructions as the required timing tool, not a sandbox excursion. **No other path was read.** In particular, I did not read any other run's clone, report, or payload directory (e.g. no `m-867cf3ff-seed2-att-0{1..6}` or any sibling cell's files), and I made no network calls.
+Every path I read was inside one of: the clone (`/tmp/qual137/runs/m-867cf3ff-seed2-att-07/`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`), the packet directory (`/tmp/qual137/packets/m/packet.md`), or my own work/report/payload/timing paths under `/tmp/qual137/work/m-867cf3ff-seed2-att-07/` and `/tmp/qual137/reports/m/`. I also invoked `/tmp/qual137/mark_event.py`, which is named explicitly in this cell's dispatch instructions as the required timing tool, not a sandbox excursion. **No other path was read.** In particular, I did not read any other run's clone, report, or payload directory (e.g. no `m-867cf3ff-seed2-att-0{1..6}` or any sibling cell's files), and I made no network calls.
 
 ## 10. Notes — judgment calls on ambiguities in the skill's contract
 

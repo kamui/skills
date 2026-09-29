@@ -1,6 +1,6 @@
 # Evaluation — issue #137 qualification grid
 
-**The screen fails.** On six fresh execution-enabled targets, the repaired `code-review-publish`
+**The screen fails.** On six fresh execution-enabled targets, the repaired `legacy reviewer`
 snapshot (#136, `v5b-10`) recovered **fewer** material defects per completed review than the
 historical control (`v5b-1`, pre-#70) and produced **more** false-clean outcomes, at a matched
 billed cost close to parity. The measured baseline is retained. The qualification is additionally

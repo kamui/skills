@@ -6,7 +6,7 @@
 | --- | --- |
 | Target | `trpc/trpc#5017` — "fix(server): inference fix for inputs with middleware" (cell `j`) |
 | Cell / attempt | `j-bea6be14-seed2-att-12`, attempt `att-12` |
-| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` |
 | Skill `workflow` identifier | `v5b-10` (read from `scripts/validate_review.py`'s `WORKFLOW = "v5b-10"` constant, and it is the value the validator required and accepted — `--emit-batch` exited `0` with `workflow=v5b-10` in the trailer) |
 | Reviewer model | `claude-sonnet-5` (this context, i.e. me) |
 | Sub-agent models | N/A — no sub-agent was dispatched (see "Verification trigger" below); had one been required, it would have run as `subagent_type: "general-purpose"`, `model: "sonnet"`, `run_in_background: false` per the dispatch instructions |
@@ -144,7 +144,7 @@ No command fetched, pulled, or otherwise attempted to reach anything past the pi
 
 ## 9. Sandbox disclosure
 
-Every path I read or wrote falls inside: the clone (`/tmp/qual137/runs/j-bea6be14-seed2-att-12`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), the packet directory (`/tmp/qual137/packets/j/`), my own work directory (`/tmp/qual137/work/j-bea6be14-seed2-att-12/`, including a `mktemp -d` private store outside the tree at `/var/folders/tj/.../tmp.KHkLepAvEn/` as SKILL.md step 2 requires), and my own report/payload/timing paths under `/tmp/qual137/reports/j/`.
+Every path I read or wrote falls inside: the clone (`/tmp/qual137/runs/j-bea6be14-seed2-att-12`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), the packet directory (`/tmp/qual137/packets/j/`), my own work directory (`/tmp/qual137/work/j-bea6be14-seed2-att-12/`, including a `mktemp -d` private store outside the tree at `/var/folders/tj/.../tmp.KHkLepAvEn/` as SKILL.md step 2 requires), and my own report/payload/timing paths under `/tmp/qual137/reports/j/`.
 
 One incidental exception to disclose: an `ls -la /tmp/qual137/reports/j/` directory listing (run once, early, to confirm my own output paths and check the timing sidecar) also enumerated filenames belonging to other cells/attempts on the same target that share that parent directory (`j-867cf3ff-seed1-att-10-*`, `j-bea6be14-seed1-att-09-*`, `j-867cf3ff-seed2-att-11-*`). I saw only the file *names* in that listing (sizes/timestamps), never opened or read the *content* of any of those files, and took no further action on them. I judged a listing of my own designated report directory's contents (needed to see whether my own timing sidecar already existed) as within my sandbox even though sibling attempts' outputs happen to live alongside mine there; I did not read any other run's clone, payload, or report content, per rule 7/rule 4 of the dispatch.
 

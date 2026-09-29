@@ -194,18 +194,16 @@ class Loop(unittest.TestCase):
         for paragraph in rules:
             self.assertIn(paragraph, ADDRESSING.read_text(encoding="utf-8"))
 
-    def test_mappings_and_shared_wording(self):
+    def test_mappings_and_dispositions(self):
         publication = PUBLICATION.read_text(encoding="utf-8")
         addressing = ADDRESSING.read_text(encoding="utf-8")
-        protocol = (SKILLS / "code-review-publish" / "references" / "review-protocol.md").read_text(encoding="utf-8")
         self.assertIn("`action`: `resolve` for `fixed`, `accepted`, and `obsolete`; `none` for `still-open`, "
                       "`not-verifiable`, disputed items", publication)
         self.assertIn("`action`: `resolve` for `implemented`, `already-addressed`, and `answered` items", addressing)
         self.assertIn("`reopen` for a thread resolved too early", addressing)
         self.assertIn("`none` for `declined`, `needs-info`, and `blocked`", addressing)
-        self.assertNotIn("rather than batching resolutions at the end", addressing + protocol)
-        for text in (addressing, protocol):
-            self.assertIn("never as a detached sweep of resolutions after the replies", text)
+        self.assertNotIn("rather than batching resolutions at the end", addressing)
+        self.assertIn("never as a detached sweep of resolutions after the replies", addressing)
 
     def test_validation_refuses_before_any_write(self):
         good = row("a", 101, "T1", "ok", "resolve")

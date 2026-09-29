@@ -76,7 +76,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** `hashicorp/raft#581` — "Fix rare leadership transfer failures when writes happen during transfer"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 1
 - **Skill snapshot read:** `/tmp/holdout/skills/v5b/SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md` (re-review reference read because the skill instructs reading it whenever step 1 found *any* prior review/reply/trailer-bearing comment; the packet's prior-review section lists reviews from `banks`/`ncabatoff`, so I read it to confirm none of it is from the posting identity `kamui` and therefore this is a first review, not a re-review)
 - **Model I (the reviewer) ran on:** `claude-sonnet-5`, run in the primary dispatch context (per the dispatch, no explicit "model:" call applies to me — I am the reviewer).
@@ -121,7 +121,7 @@ Requirement ledger: **empty by design.** Per the pinned packet (§4), the pull r
 
 ```
 You are an independent clean-verdict verifier for one cell of a controlled, offline research
-evaluation of a code-review skill (code-review-publish) against a pinned, already-merged pull
+evaluation of a code-review skill (legacy reviewer) against a pinned, already-merged pull
 request. You are NOT the reviewer, NOT a second finder, and you have NO network access. You
 cannot write to the pull request. Follow the task below exactly.
 

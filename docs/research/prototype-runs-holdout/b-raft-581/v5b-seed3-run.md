@@ -78,7 +78,7 @@ Wall clock start: 2026-09-04T20:08:05Z (UTC, per `date -u`).
 ## 1. Metadata
 
 - **Target:** `hashicorp/raft#581` — "Fix rare leadership transfer failures when writes happen during transfer"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 3
 - **Model — primary reviewer (me, this context):** `claude-sonnet-5`, run in the foreground with no sub-agent delegation of the review itself.
 - **Model — every sub-agent I spawned:** `sonnet` passed explicitly on the `Agent` call (see §4 for the exact call).
@@ -117,7 +117,7 @@ No candidate was routed to `Observations`: each failed a gate other than "meanin
 ### Exact prompt given
 
 ```
-You are an independent verifier for one cell of a controlled research evaluation of a code-review skill (`code-review-publish`, pinned `workflow=v5b-1`) against a real, pinned, merged pull request. This is NOT a live review: no network access, no publishing, no repository mutation, no builds, no test execution. Nothing you write is posted anywhere. You are a genuinely fresh context with no visibility into the primary reviewer's reasoning — you only get what is below.
+You are an independent verifier for one cell of a controlled research evaluation of a code-review skill (`legacy reviewer`, pinned `workflow=v5b-1`) against a real, pinned, merged pull request. This is NOT a live review: no network access, no publishing, no repository mutation, no builds, no test execution. Nothing you write is posted anywhere. You are a genuinely fresh context with no visibility into the primary reviewer's reasoning — you only get what is below.
 
 ## Your role
 

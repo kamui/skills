@@ -6,7 +6,7 @@
 | --- | --- |
 | Target | `graphql/graphql-js#1582` — "Enable Flow typings on errors tests + Fix typing for Error constructor" |
 | Cell / attempt | `k-bea6be14-seed2` / `att-20` |
-| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` |
 | `workflow` identifier | `v5b-10` (from `validate_review.py`'s `WORKFLOW` constant, confirmed present in the validated run trailer) |
 | Model (this reviewer) | `claude-sonnet-5` |
 | Model per sub-agent | n/a — **zero sub-agents were spawned this run** (see §7, "early dispatch" and verification-trigger rows) |

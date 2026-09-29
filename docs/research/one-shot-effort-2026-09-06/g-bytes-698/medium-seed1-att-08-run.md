@@ -1,7 +1,7 @@
 # Research report — cell `g-medium-seed1`, attempt `att-08`
 
 Target: `tokio-rs/bytes#698` ("Reuse capacity when possible in `<BytesMut as Buf>::advance` impl").
-Skill: `code-review-publish` at `/tmp/effort124/skill/skills/code-review-publish/` (workflow=v5b-10, per `references/output-contract.md`).
+Skill: `legacy reviewer` at `/tmp/effort124/skill/snapshot-path-omitted/` (workflow=v5b-10, per `references/output-contract.md`).
 Model: `claude-sonnet-5` (me, the primary reviewer). Every sub-agent dispatched below also ran on `model: "sonnet"`.
 
 This report is written in stages, per the run conditions: manifest/ledger first, then the complete
@@ -13,7 +13,7 @@ rewritten after the fact except to append the verifier section and the final met
 ## 1. Metadata
 
 - **Target / cell / attempt:** `tokio-rs/bytes#698`, cell `g-medium-seed1`, attempt `att-08`.
-- **Skill pin:** `code-review-publish` snapshot at `/tmp/effort124/skill/skills/code-review-publish/`; no self-tests run (rule 3 of the dispatch forbids it); `workflow=v5b-10` in the rendered trailer.
+- **Skill pin:** `legacy reviewer` snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`; no self-tests run (rule 3 of the dispatch forbids it); `workflow=v5b-10` in the rendered trailer.
 - **Model:** primary reviewer = `claude-sonnet-5` (`model: "sonnet"` context). One sub-agent dispatched: the clean-verdict verifier batch, `subagent_type: "v5b-verifier-effort-high"`, `model: "sonnet"`, `run_in_background: false`.
 - **Verification trigger that fired:** zero-survivor clean-verdict mode. Zero candidates survived primary falsification as findings, and the changed behavior sits on a data-integrity/memory-safety surface (an `unsafe` call that rewrites `BytesMut`'s length/capacity bookkeeping). Per `SKILL.md` step 3, this required one clean-verdict batch over the complete disposition ledger rather than a candidate batch. No related-acquittal mode applied (no survivor existed to anchor it). No follow-up batch was needed (see §7).
 - **Sub-agents spawned:** 1 (role: clean-verdict verifier; `subagent_type: v5b-verifier-effort-high`; `model: sonnet`).
@@ -141,7 +141,7 @@ RULES (apply to you):
 2. Offline only: no network access, no `git fetch`/`pull`, no `gh`, no `curl`, no web fetch of any kind.
 3. Stay inside this sandbox only: the clone at /tmp/effort124/runs/g-medium-seed1-att-08 (read-only),
    the skill reference file at
-   /tmp/effort124/skill/skills/code-review-publish/references/verifier.md (you may read it, but do not
+   /tmp/effort124/skill/snapshot-path-omitted/references/verifier.md (you may read it, but do not
    read any other skill file), and nothing else. Report any other path you read.
 4. If a tree is mutated anyway (it should not be, since you must not run mutating commands), report
    that fact; do not attempt to fix it yourself.
@@ -156,7 +156,7 @@ RULES (apply to you):
    anything mid-task.
 
 TASK: This is the verifier's "clean-verdict" mode, defined in the attached reference. Read it now:
-/tmp/effort124/skill/skills/code-review-publish/references/verifier.md — specifically its "Clean-verdict
+/tmp/effort124/skill/snapshot-path-omitted/references/verifier.md — specifically its "Clean-verdict
 task" section, and the "Isolation" section's list of what a clean-verdict batch receives. Follow that
 procedure exactly, attacking each acquittal below at the depth its `kind` sets (full 5-step attack for
 `kind: invariant`; a one-citation check for `kind: maintainability`).
@@ -255,7 +255,7 @@ The sub-agent's response was returned via `agentId: a1f48bc56104cf70b`, `subagen
 ```
 ## Verifier findings — clean-verdict batch
 
-I read `/tmp/effort124/skill/skills/code-review-publish/references/verifier.md` (Clean-verdict task + Isolation sections) and attacked each ledger row against the code in `/tmp/effort124/runs/g-medium-seed1-att-08` (read-only; no mutating or network commands were run).
+I read `/tmp/effort124/skill/snapshot-path-omitted/references/verifier.md` (Clean-verdict task + Isolation sections) and attacked each ledger row against the code in `/tmp/effort124/runs/g-medium-seed1-att-08` (read-only; no mutating or network commands were run).
 
 **Row 1 — bytes-mut/advance-fast-path-safety (kind: invariant, full 5-step attack)**
 - Premise: `set_len`'s only safety obligation is `len <= self.cap` (its `debug_assert!`), and `0 <= self.cap` holds unconditionally since `cap: usize`.
@@ -477,7 +477,7 @@ text above, with the run trailer), `summary.repository_url` = `https://github.co
 (`baseRepository.url` from the packet), and one `items` entry, `type: "observation"`, carrying the
 verifier's aside verbatim.
 
-Ran, in order, from `/tmp/effort124/skill/skills/code-review-publish/`:
+Ran, in order, from `/tmp/effort124/skill/snapshot-path-omitted/`:
 
 ```
 python3 scripts/validate_review.py --render < /tmp/effort124/work/g-medium-seed1-att-08/payload.json

@@ -78,7 +78,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** `hashicorp/raft#581` — "Fix rare leadership transfer failures when writes happen during transfer"
-- **Arm:** v5b-effort-medium — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b-effort-medium — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 2
 - **Model:** I (the primary reviewer) ran on `claude-sonnet-5` at effort `medium` (dispatched via the `v5b-primary-effort-medium` agent definition, one step below the harness default, per the dispatch). Every sub-agent I spawn is dispatched with `subagent_type: "v5b-verifier-effort-high"` and `model: "sonnet"` explicitly, in the foreground.
 - **Verification trigger fired:** zero-survivor mode. Zero candidates survived primary falsification as findings, and the changed behavior touches a concurrency/failover path (leadership-transfer goroutine coordination in `raft.go`'s `leaderLoop`). Per `SKILL.md` step 3, this requires one clean-verdict batch (not a candidate batch) attacking the complete disposition ledger.

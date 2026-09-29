@@ -6,7 +6,7 @@
 
 - **Target:** `psf/requests#6667` ("Avoid reloading root certificates to improve concurrent performance"), MERGED 2024-05-15T20:07:26Z.
 - **Cell:** `i-867cf3ff-seed1`, **attempt:** `att-02`.
-- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` (SKILL.md + references/review-rubric.md, references/output-contract.md, references/verifier.md; `references/re-review.md` was present but not read — see §7 "deferral handling"/re-review note below, since this is a first review with no prior state from the posting identity).
+- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` (SKILL.md + references/review-rubric.md, references/output-contract.md, references/verifier.md; `references/re-review.md` was present but not read — see §7 "deferral handling"/re-review note below, since this is a first review with no prior state from the posting identity).
 - **`workflow` identifier the validator reports:** `v5b-1` (from `scripts/validate_review.py`'s `WORKFLOW` constant).
 - **Model I ran on:** `claude-sonnet-5` (the primary/integrated reviewer for the entire run — no delegation of the review itself).
 - **Model each sub-agent ran on:** `claude-sonnet-5` (`model: "sonnet"` passed explicitly) — one verifier sub-agent, `subagent_type: "general-purpose"`, `run_in_background: false`. See §4 for its full prompt and verbatim report.
@@ -302,7 +302,7 @@ Only read files inside `/tmp/qual137/runs/i-867cf3ff-seed1-att-02` (the clone) a
 
 All commands were run from the clone root `/tmp/qual137/runs/i-867cf3ff-seed1-att-02` unless noted. None were repo-wide/case-insensitive searches (the diff touches exactly one file, so no synchronization-drift sweep was needed — no shared rule or vocabulary crossed a file boundary in this change).
 
-1. `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/review_context.py --merge-base 8dd3b26bf59808de24fd654699f592abf6de581e --head 4089f3dc65f783beaa53cc032958ab625440d0ac` — exit 0. Produced the manifest, full function-context diff (effectively the whole 616-line file across three ranges: 26-32, 72-115, 148-616), hunk ranges, and pre-merge-base history. Run exactly once, per contract.
+1. `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/review_context.py --merge-base 8dd3b26bf59808de24fd654699f592abf6de581e --head 4089f3dc65f783beaa53cc032958ab625440d0ac` — exit 0. Produced the manifest, full function-context diff (effectively the whole 616-line file across three ranges: 26-32, 72-115, 148-616), hunk ranges, and pre-merge-base history. Run exactly once, per contract.
 2. `git status`, `git branch -a`, `git log --oneline -5 review-head`, `git log --oneline -5 main` — read-only, to confirm clone hygiene and branch pinning before doing anything else.
 3. `git show 8dd3b26bf59808de24fd654699f592abf6de581e:src/requests/adapters.py | sed -n '60,90p'` — base-branch guarantee citation for both F1 and F2 (Code-candidate falsification gate 4).
 4. `Read` of `src/requests/adapters.py` lines 1-25 (import block, the one small gap the function-context diff didn't already show) and lines 70-120, 285-315 (bounded ranges around the two survivor candidates and the C3 dead-code check).
@@ -325,7 +325,7 @@ No repo-wide search was run (single-file diff; no drift/consistency check applic
 
 **Digest:** `9e80f1a16f93243a31dff067dd6ba49658a84f52b2a0216860c03ff210cf8621`
 
-Computed once, via `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/context_fingerprint.py /tmp/qual137/work/i-867cf3ff-seed1-att-02/context_input.json`, from:
+Computed once, via `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/context_fingerprint.py /tmp/qual137/work/i-867cf3ff-seed1-att-02/context_input.json`, from:
 
 - `pr.title`: `"Avoid reloading root certificates to improve concurrent performance"` (packet §1).
 - `pr.body`: the exact verbatim pull-request body reproduced in packet §3 (reproduced byte-for-byte into the JSON input file).

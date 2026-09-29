@@ -48,7 +48,7 @@
   "exposure": {
     "entered_suite": "2026-09-07 (issue #137 qualification grid, target (n))",
     "used_by": [
-      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates; one cell surfaced the claim that became GT-n1",
+      "one-shot-qualification-2026-09-07 (#137): four cells, two legacy reviewer snapshots x two replicates; one cell surfaced the claim that became GT-n1",
       "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
       "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",
       "bounded-discovery-prototype/targets/criteria.md: listed as used and excluded from later hunts"

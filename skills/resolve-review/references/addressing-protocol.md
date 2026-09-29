@@ -7,7 +7,6 @@ The addresser's side of the review protocol: how to read a finding, the reply sh
 A reviewer's finding is one comment: a bold title line, evidence with `file:line`, a **Change**: line naming the concrete edit, and an HTML-comment trailer that is invisible in the rendered view and present in the raw body via `gh api`. The trailer's `id` is the finding's stable identity across rounds; key the ledger by it, and fall back to the comment id where there is no trailer.
 
 - `review-code-publish` labels findings `[P0]` through `[P3]` and then `[must-fix]` or `[consider]`; its trailers carry matching `priority`, `action`, and `blocking` fields. `[must-fix]` or `action=must-fix blocking=true` is blocking; `[consider]` or `action=consider blocking=false` is optional. A visible action/trailer mismatch is malformed feedback to clarify rather than silently choosing one.
-- A legacy `code-review-publish` finding opens with an axis tag, `[Code]` or `[Requirements]`, and is blocking unless its title carries `[Suggestion]` and its trailer `severity=optional`.
 - Anything without one of those optional markers is blocking, a human's comment included.
 
 A **Change**: line names what the reviewer would do; whether it should be done here is the addresser's to settle.

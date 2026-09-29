@@ -1,10 +1,6 @@
 # Aggregate analysis — v2a and v5a across the 2026-09-01–03 runs
 
-> **Promotion status:** "v5" is the historical prototype name used by this record. PR #17 promoted
-> that workflow to `skills/code-review-publish` on `main`; new experiments should invoke
-> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`. "v2a" is `code-review-deep-publish` (PR #18,
-> pinned `87c68a9`, the Panel line) and "v5a" is `code-review-publish-5a` (PR #19, pinned `c5f76df`,
-> the Skeptic line). Neither branch moved during the runs analyzed here.
+> **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
 **2026-09-03.** Successor to
 [`prototype-runs-aggregate-tests-1-3-v2-v5.md`](prototype-runs-aggregate-tests-1-3-v2-v5.md).

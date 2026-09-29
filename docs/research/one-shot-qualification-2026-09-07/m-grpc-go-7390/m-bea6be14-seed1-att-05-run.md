@@ -8,7 +8,7 @@ disposition ledger with every disposition — all produced before any verifier w
 
 - **Target:** `grpc/grpc-go#7390` — "grpc: hold ac.mu while calling resetTransport to prevent
   concurrent connection attempts", cell `m-bea6be14-seed1`, attempt `att-05`.
-- **Skill snapshot directory:** `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`.
+- **Skill snapshot directory:** `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`.
 - **`workflow` identifier:** `v5b-10`. This is not just the output contract's worked example — I
   grepped `scripts/validate_review.py` and found it hard-codes `WORKFLOW = "v5b-10"` (line 115) as the
   one value it accepts in the `review-run` trailer's `workflow=` field (`check_run_trailer` rejects any
@@ -206,7 +206,7 @@ You are an independent, fresh-context verifier for one cell of a code-review ski
 
 ## Your task
 
-You are running the "clean-verdict task" defined in the code-review-publish skill's `references/verifier.md` and `references/verifier-concurrency.md`, at path `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`. Before doing anything else, read both of those files in full from that exact directory (do not use any other copy of a review skill you may know about). Then read `references/review-rubric.md` in the same directory if you need the admission-gate vocabulary referenced by the ledger rows below (kind, gate numbers, etc.) — it is optional background, the ledger rows below are self-contained.
+You are running the "clean-verdict task" defined in the legacy reviewer skill's `references/verifier.md` and `references/verifier-concurrency.md`, at path `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`. Before doing anything else, read both of those files in full from that exact directory (do not use any other copy of a review skill you may know about). Then read `references/review-rubric.md` in the same directory if you need the admission-gate vocabulary referenced by the ledger rows below (kind, gate numbers, etc.) — it is optional background, the ledger rows below are self-contained.
 
 You are in **zero-survivor clean-verdict mode**: the primary reviewer raised five candidates while reviewing this pull request and dropped or refuted every one of them before any finding survived. Because the diff touches a concurrency path, the skill requires this clean-verdict attack on the complete candidate ledger before the primary can report a clean review. Your job is to attack each acquittal below, per the clean-verdict task's five steps (restate the decisive premise; state the concrete condition that would falsify it; trace the *opposite* branch of every conditional the premise depends on, citing `path:line`; either construct the complete failing state transition or cite the specific impossible step; a `holds` ruling on a fully attacked row must cite at least one line the ledger row did not cite). Apply the full five-step attack to every row below since all five are `kind: concurrency` or `kind: maintainability`— per verifier-concurrency's attack-depth rule, the three `maintainability` rows only need a one-citation check (read the row's evidence pointer, confirm or contradict its stated fact, return `holds` or `re-open` without tracing conditionals) unless the row asserts a safety/scope claim, while the two `concurrency` rows need the full five-step attack. Also apply the concurrency bug-class check from `verifier-concurrency.md` to the two `concurrency` rows as part of your attack (name the invariant at rule level, ask whether the failing interleaving requires shutdown/teardown or can happen in steady state, enumerate sibling interleavings).
 
@@ -216,7 +216,7 @@ You are in **zero-survivor clean-verdict mode**: the primary reviewer raised fiv
 2. **Execution allowance.** You may run focused Go tests, offline, from the clone root: `GOMODCACHE=/tmp/qual137/gomodcache GOCACHE=/tmp/qual137/gocache GOFLAGS=-mod=mod GOPROXY=off go test ...`. Five minutes per command max. Run a given package's tests at most once per distinct flag set. Any scratch files you need go under `/tmp/qual137/work/m-bea6be14-seed1-att-05/private/verifier-scratch/` (create it) — never write inside the clone.
 3. **Clone hygiene.** Do not run `git checkout`, `git switch`, `git reset`, `git stash`, or anything that mutates the tree. Read-only: `git show <sha>:<path>`, `git diff`, `git log` (do not read history past the pinned head), `grep`, and Go tooling only.
 4. **History bound.** The clone's history is intentionally truncated at the pinned head `76ef33f44a600c3ed1a385979fd1dfbcade3fbb6`. Do not try to look past it. State in your reply whether you read any history at all and which commands.
-5. **Sandbox scope.** You may read: the clone at `/tmp/qual137/runs/m-bea6be14-seed1-att-05`, the skill snapshot at `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`, the packet at `/tmp/qual137/packets/m/packet.md`, and your own scratch directory under `/tmp/qual137/work/m-bea6be14-seed1-att-05/private/verifier-scratch/`. Do not read any other run's clone, report, or payload, and do not write anything outside your scratch directory. If you read any other path, say so explicitly in your reply.
+5. **Sandbox scope.** You may read: the clone at `/tmp/qual137/runs/m-bea6be14-seed1-att-05`, the skill snapshot at `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`, the packet at `/tmp/qual137/packets/m/packet.md`, and your own scratch directory under `/tmp/qual137/work/m-bea6be14-seed1-att-05/private/verifier-scratch/`. Do not read any other run's clone, report, or payload, and do not write anything outside your scratch directory. If you read any other path, say so explicitly in your reply.
 6. **No publication, no code changes.** You render nothing to any forge and change no source file. You are not a second reviewer: do not search for new findings outside the supplied rows; if an accurate, sub-threshold fact surfaces incidentally, you may return at most one non-actionable `observation` aside with a decisive evidence pointer, using no "should"/"must" language.
 7. **Finish in this dispatch.** Do not ask anyone anything. If something is genuinely unavailable, say so in your verdict rather than blocking.
 
@@ -285,7 +285,7 @@ For each of the 5 rows: `holds` or `re-open`, with your one-sentence premise res
 
 > ## Sandbox / provenance notes
 >
-> Read, in full, from the exact skill snapshot path: `references/verifier.md`, `references/verifier-concurrency.md`, and (as optional background) `references/review-rubric.md`, all under `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`.
+> Read, in full, from the exact skill snapshot path: `references/verifier.md`, `references/verifier-concurrency.md`, and (as optional background) `references/review-rubric.md`, all under `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`.
 >
 > Read from the clone `/tmp/qual137/runs/m-bea6be14-seed1-att-05`: `clientconn.go` (full relevant ranges), `internal/transport/http2_client.go:1020-1075`, `internal/backoff/backoff.go:56`, `test/subconn_test.go:1-126`, `test/goaway_test.go` (grep + context), `test/end2end_test.go` (grep + context).
 >
@@ -577,7 +577,7 @@ The dispatched verifier sub-agent reported the same discipline independently in 
 
 No path outside the sandbox this dispatch defines was read. Everything I read was one of: the clone at
 `/tmp/qual137/runs/m-bea6be14-seed1-att-05`; the skill snapshot at
-`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` (`SKILL.md` and every reference file it
+`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` (`SKILL.md` and every reference file it
 names); the packet at `/tmp/qual137/packets/m/packet.md`; my own work/scratch/report/payload/timing
 paths under `/tmp/qual137/work/m-bea6be14-seed1-att-05/` and `/tmp/qual137/reports/m/`; and the
 `mark_event.py` helper at `/tmp/qual137/mark_event.py`, which the dispatch names explicitly. I also used

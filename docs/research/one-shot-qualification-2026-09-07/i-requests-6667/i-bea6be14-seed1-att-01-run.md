@@ -8,7 +8,7 @@ verifier report arrives.
 
 - **Target:** `psf/requests#6667` — "Avoid reloading root certificates to improve concurrent performance"
 - **Cell / attempt:** `i-bea6be14-seed1` / `att-01`
-- **Skill snapshot:** `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`
+- **Skill snapshot:** `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`
 - **`workflow` identifier** (from `scripts/validate_review.py`'s `WORKFLOW` constant): `v5b-10`
 - **Model:** this reviewer ran on `claude-sonnet-5` (Sonnet 5) throughout, in this same context, per the
   dispatch's binding instruction that the reviewer itself is never delegated. Every sub-agent dispatched
@@ -411,14 +411,14 @@ final primary disposition, all before the dispatch below.
 <details>
 <summary>Full verifier prompt (click to expand — reproduced verbatim as sent)</summary>
 
-You are an INDEPENDENT VERIFIER for a code review. You are not a second reviewer: you do not search for new findings. You fact-check the supplied candidate records against the actual repository. Follow exactly the procedure in the two reference files quoted in full below (`verifier.md` and `verifier-concurrency.md` from the `code-review-publish` skill). Do not consult any other review skill or methodology.
+You are an INDEPENDENT VERIFIER for a code review. You are not a second reviewer: you do not search for new findings. You fact-check the supplied candidate records against the actual repository. Follow exactly the procedure in the two reference files quoted in full below (`verifier.md` and `verifier-concurrency.md` from the `legacy reviewer` skill). Do not consult any other review skill or methodology.
 
 ## Binding rules for this dispatch (apply to you, the verifier, exactly as given)
 
 1. This is a retrospective, offline review of a merged, real pull request (`psf/requests#6667`). No network access exists or is permitted: no `git fetch`/`pull`, no `gh`, no `curl`, no web fetch of any kind. You do not need any of these — everything you need is below or in the local clone.
 2. **Clone hygiene:** the repository clone is at `/tmp/qual137/runs/i-bea6be14-seed1-att-01`. Do NOT run `git checkout`, `git switch`, `git reset`, `git stash`, or any command that mutates the working tree or history. Read-only git commands (`git show`, `git log`, `git diff`, `git archive`, `git merge-base`) are fine. If you ever discover the tree was mutated, run `git -C /tmp/qual137/runs/i-bea6be14-seed1-att-01 reset --hard review-head` and say so prominently in your report.
 3. **Execution allowance:** focused test execution IS permitted, offline: run pytest from the clone root using the pre-provisioned virtualenv, as `PYTHONPATH=/tmp/qual137/runs/i-bea6be14-seed1-att-01/src /tmp/qual137/venvs/requests/bin/python -m pytest <selection>`. Five minutes per command max. A given selection (file + flags) at most once. Any new scratch file you create must live under `/tmp/qual137/work/i-bea6be14-seed1-att-01/` (you may also read, and re-run via pytest, the existing scratch repro files already there — do not modify them). Never add or change anything inside the clone itself. No production service, no credentials, no destructive external effect.
-4. **Sandbox:** you may read/execute only within: the clone (`/tmp/qual137/runs/i-bea6be14-seed1-att-01`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), and the work directory (`/tmp/qual137/work/i-bea6be14-seed1-att-01/`). Do not read any other path (no other run's clone, report, or payload). If you accidentally read anything outside this list, disclose it plainly in your report.
+4. **Sandbox:** you may read/execute only within: the clone (`/tmp/qual137/runs/i-bea6be14-seed1-att-01`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), and the work directory (`/tmp/qual137/work/i-bea6be14-seed1-att-01/`). Do not read any other path (no other run's clone, report, or payload). If you accidentally read anything outside this list, disclose it plainly in your report.
 5. This is a one-shot dispatch. Do not ask anyone anything. If some input is genuinely missing, say so explicitly in your report as an incomplete/unresolved item rather than guessing.
 6. You never write to, edit, or publish anything about the pull request. You produce only the structured verdicts this task asks for, returned as your final report text.
 7. Do not inherit or infer the primary reviewer's reasoning beyond what is explicitly given to you below — decide independently from the cited code and evidence.
@@ -805,7 +805,7 @@ No `git fetch`, `git pull`, `gh`, `curl`, or web fetch of any kind was performed
 
 No path outside the authorized set was read by me: the clone
 (`/tmp/qual137/runs/i-bea6be14-seed1-att-01`), the skill snapshot
-(`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), the packet directory
+(`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), the packet directory
 (`/tmp/qual137/packets/i/`), my own work directory (`/tmp/qual137/work/i-bea6be14-seed1-att-01/`), my own
 report/payload/timing paths under `/tmp/qual137/reports/i/i-bea6be14-seed1-att-01-*`, and one incidental
 `ls` of the shared `/tmp/qual137/reports/i/` directory (to locate my own timing sidecar), which surfaced

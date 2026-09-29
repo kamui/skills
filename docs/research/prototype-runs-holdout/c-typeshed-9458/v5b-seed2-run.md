@@ -81,14 +81,14 @@ including the verifier's return and the final findings/payload.
 ## 1. Metadata
 
 - **Target:** `python/typeshed#9458` — "Bump redis to 4.4.0" (holdout target (c))
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 2
 - **Model I ran on:** `claude-sonnet-5` (dispatched by the orchestrator with `model: "sonnet"`; this whole
   review was performed by me, the dispatched agent, in this single context — no sub-agent did any part
   of the reading, falsification, or report-writing except the verifier batch described below).
 - **Sub-agents spawned:** exactly one verifier batch (candidate mode), model `sonnet` passed explicitly.
   Details, exact prompt, and verbatim report are in section 4 below, appended once it returns.
-- **Skill and pin:** `code-review-publish`, snapshot at `/tmp/holdout/skills/v5b/`, `workflow=v5b-1`
+- **Skill and pin:** `legacy reviewer`, snapshot at `/tmp/holdout/skills/v5b/`, `workflow=v5b-1`
   (from `SKILL.md`/`output-contract.md`).
 - **Run identity (pinned by the packet, not re-resolved):**
   - repository: `python/typeshed`, `summary.repository_url = https://github.com/python/typeshed`
@@ -344,7 +344,7 @@ candidate — only `claim`/`trigger`/`impact`/`change`/citations, per `verifier.
 ### Exact prompt given
 
 ```
-You are an independent verifier for one batch of code-review candidates, under the `code-review-publish`
+You are an independent verifier for one batch of code-review candidates, under the `legacy reviewer`
 skill's verifier protocol (v5b). You are a fresh, isolated context: you have no access to and must not
 assume anything about the primary reviewer's reasoning, confidence, or process — only what is given to you
 below and what you inspect yourself.

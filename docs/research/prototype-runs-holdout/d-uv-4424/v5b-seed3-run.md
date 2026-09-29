@@ -63,7 +63,7 @@ Per agent:
 
 - **Target:** `astral-sh/uv#4424` — "Expose `toolchain-preference` as a CLI and configuration file option" (author `zanieb`, `MEMBER`).
 - **Arm / seed:** v5b, seed 3.
-- **Skill and pin:** `code-review-publish`, snapshot at `/tmp/holdout/skills/v5b/` (`main 2f06662`, `workflow=v5b-1`).
+- **Skill and pin:** `legacy reviewer`, snapshot at `/tmp/holdout/skills/v5b/` (`main 2f06662`, `workflow=v5b-1`).
 - **Model:** I (the primary reviewer for this whole cell) ran on `claude-sonnet-5`. I dispatched **zero sub-agents** — see §7 for why the verifier was never triggered — so there is no sub-agent model to report; had one been dispatched, `model: "sonnet"` would have been passed explicitly per the dispatch's binding rule.
 - **Verification trigger:** did not fire. No candidate reached `must-fix`, and no candidate involved security/authorization, data loss or corruption, destructive migration, or an externally observable compatibility break at a level that survived primary falsification. Zero-survivor clean-verdict mode's own trigger (concurrency/failover path, data-integrity surface, or security/authorization boundary) also did not fire — the changed surface is Python-toolchain/interpreter-discovery CLI and config plumbing, which I judged falls outside all three categories (reasoning in §7).
 - **Sub-agents spawned:** none (role: n/a; count: 0).

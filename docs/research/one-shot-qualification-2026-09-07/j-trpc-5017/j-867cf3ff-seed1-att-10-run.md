@@ -4,7 +4,7 @@
 
 - **Target:** `trpc/trpc#5017` — "fix(server): inference fix for inputs with middleware" (author `KATT`, merged 2023-11-10T10:08:08Z).
 - **Cell / attempt:** `j-867cf3ff-seed1` / `att-10`.
-- **Skill snapshot directory:** `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` (`SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md`, `scripts/*.py` — all read in full before reviewing).
+- **Skill snapshot directory:** `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` (`SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md`, `scripts/*.py` — all read in full before reviewing).
 - **`workflow` identifier the validator reports:** `v5b-1` (constant `WORKFLOW` in `scripts/validate_review.py`; also embedded and mechanically checked in the run trailer).
 - **Model I ran on:** `claude-sonnet-5` (Sonnet 5), as instructed.
 - **Sub-agents spawned:** **none.** No verifier batch and no clean-verdict batch fired (see §7 mechanism checklist and the trigger analysis in §3 below), so no fresh-context worker was ever dispatched. There is consequently no `subagent_type`/model to report for a sub-agent — the entire review was performed by me, in this context, as the skill requires ("The primary reviewer owns the selected review diff... Do the review yourself... Never delegate the review... the only sub-agents you may spawn are the ones your skill's own process calls for").
@@ -85,7 +85,7 @@ Six items total in the ledger (C1, C2, D1, D2, D3, D4); two survive as findings,
 
 ## 5. Everything consulted beyond the diff
 
-All commands were run from either `/tmp/qual137/runs/j-867cf3ff-seed1-att-10` (the clone) or `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts` (the skill's own scripts), except the two `tsc` invocations noted below and the one Python digest computation.
+All commands were run from either `/tmp/qual137/runs/j-867cf3ff-seed1-att-10` (the clone) or `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts` (the skill's own scripts), except the two `tsc` invocations noted below and the one Python digest computation.
 
 1. `git status && git log --oneline -3 main && git log --oneline -3 review-head && git rev-parse main review-head` — clone-hygiene sanity check before touching anything; not a content search. Confirmed a clean working tree and that `main`=`2abb2d5c...` (merge-base), `review-head`=`7dc04a7e9...` (head), matching the packet exactly. Exit 0.
 2. `python3 scripts/review_context.py --merge-base 2abb2d5c... --head 7dc04a7e9...` (run from the clone root, output captured to my work directory) — the mandated single context-building command for a first review (no `--prior-head`, so no `--base-ref` either — the script rejects `--base-ref` without `--prior-head`, which I discovered on a first, corrected, invocation). Exit 0. Produced the full `manifest`, `diff`, `ranges`, and `history` sections, all reproduced verbatim in this report where used. This was the **only** read of the diff itself, per SKILL.md step 3 ("Read the review diff once").
@@ -152,7 +152,7 @@ No test suite (`vitest`/`jest`) was run — only the TypeScript compiler, which 
 
 ## 9. Sandbox disclosure
 
-No path outside the sandbox was read. Every file, command, and search in §5 and §8 targeted one of: the clone (`/tmp/qual137/runs/j-867cf3ff-seed1-att-10`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`), the packet (`/tmp/qual137/packets/j/packet.md`), or my own work/report/payload/timing paths under `/tmp/qual137/work/j-867cf3ff-seed1-att-10/` and `/tmp/qual137/reports/j/`. No other run's clone, report, or payload was ever opened, and no network call was made or attempted.
+No path outside the sandbox was read. Every file, command, and search in §5 and §8 targeted one of: the clone (`/tmp/qual137/runs/j-867cf3ff-seed1-att-10`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`), the packet (`/tmp/qual137/packets/j/packet.md`), or my own work/report/payload/timing paths under `/tmp/qual137/work/j-867cf3ff-seed1-att-10/` and `/tmp/qual137/reports/j/`. No other run's clone, report, or payload was ever opened, and no network call was made or attempted.
 
 One incidental disclosure: a final sanity `ls -la /tmp/qual137/reports/j/` (run to confirm my own two output files existed and were freshly written) also listed the filenames of a different cell/attempt's output files that happen to share the `reports/j/` directory (`j-bea6be14-seed1-att-09-*`, a different target-hash/attempt). I saw only their names in that directory listing — I never opened, read, or otherwise used their contents, and no other command in this run referenced them. Flagging it here in the interest of exhaustive disclosure even though no content was read.
 

@@ -74,7 +74,7 @@ Per agent:
 # Research report — cell (e) / arm v5b / seed 2
 
 Target: `pola-rs/polars#24771` — "perf: Duration/interval string parsing optimisation (2-5x faster)"
-Arm: v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+Arm: v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 Seed: 2
 Skill snapshot read from: `/tmp/holdout/skills/v5b/` (SKILL.md + references/review-rubric.md, references/output-contract.md, references/re-review.md, references/verifier.md; scripts/review_context.py, scripts/validate_review.py, scripts/context_fingerprint.py)
 Packet: `/tmp/holdout/packets/e/packet.md`
@@ -89,7 +89,7 @@ Wall clock: start noted at first tool call of this dispatch; will record end at 
 ## 1. Metadata (preliminary — completed further below and at the end)
 
 - Target: pola-rs/polars#24771, arm v5b, seed 2.
-- Skill/pin: code-review-publish, `workflow=v5b-1` (per `references/output-contract.md` and `scripts/validate_review.py`'s `WORKFLOW` constant).
+- Skill/pin: legacy reviewer, `workflow=v5b-1` (per `references/output-contract.md` and `scripts/validate_review.py`'s `WORKFLOW` constant).
 - Run conditions: offline, no execution, retrospective/non-publishing (target `merged=true`), history truncated at pinned head, sandbox limited to clone/skill/packet/work/report/payload paths.
 - Posting identity: `kamui`, did not author the PR, no prior comments/reviews → first review by a third party, event `COMMENT`, retrospective mode, publication disabled per packet and per binding run condition 4.
 - Originating issue(s): none (`issues=none`); PR body carries no closing reference (packet §4).

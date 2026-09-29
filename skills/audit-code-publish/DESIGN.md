@@ -583,8 +583,7 @@ a finder can decline to produce is a rule, not a mechanism.
 
 Both axis briefs now end the report with fenced `ledger` and `manifest` blocks, plus a `counts`
 block on the Requirements axis, in a row grammar a script can check, and
-[`validate_finder_report.py`](scripts/validate_finder_report.py) checks it before step 3, the way
-`code-review-publish` gates its own output with `validate_review.py` (issue #31). A violation
+[`validate_finder_report.py`](scripts/validate_finder_report.py) checks it before step 3. A violation
 re-dispatches the finder once with its original prompt, the violation lines, and the instruction
 to return the same review in shape; a second failure leaves the axis `incomplete` and the summary
 names it. The script validates shape only — block presence and order, field counts, the

@@ -4,7 +4,7 @@
 
 - Target: `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready"
 - Cell: `a-medium-seed2`; attempt: `att-03`
-- Skill: `code-review-publish` (snapshot at `/tmp/effort124/skill/skills/code-review-publish/`), read `SKILL.md` in full plus `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md`. `references/re-review.md` and `references/conformance.md` were **not** read: no prior state from the posting identity (`kamui`) exists in the packet, and no versioned artifact is tracked by this change.
+- Skill: `legacy reviewer` (snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`), read `SKILL.md` in full plus `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md`. `references/re-review.md` and `references/conformance.md` were **not** read: no prior state from the posting identity (`kamui`) exists in the packet, and no versioned artifact is tracked by this change.
 - Primary reviewer model: `claude-sonnet-5` (this session).
 - Sub-agent model: `sonnet` passed explicitly on the one verifier dispatch (see §4/§7).
 - Verification trigger fired: **yes** — candidate `dispatch/write-busy-spin` was raised `must-fix`, `kind=concurrency`, which is a mandatory-verification trigger under `SKILL.md` step 3 ("Independently verify every surviving candidate proposed as `must-fix`... when any batch candidate's `kind` is `concurrency`... read `verifier-concurrency.md` too").
@@ -370,7 +370,7 @@ The independent verifier separately ran, and disclosed, its own read-only histor
 
 ## 9. Sandbox disclosure
 
-No path outside the sandbox was read. Everything consulted was one of: the clone (`/tmp/effort124/runs/a-medium-seed2-att-03/`), the skill snapshot (`/tmp/effort124/skill/skills/code-review-publish/`), the packet directory (`/tmp/effort124/packets/a/packet.md`), and this run's own work/report/payload/timing paths under `/tmp/effort124/work/a-medium-seed2-att-03/` and `/tmp/effort124/reports/a/`. The verifier sub-agent confirmed the same discipline for itself (touched only `src/proto/h1/dispatch.rs`, `src/proto/h1/io.rs`, `src/proto/h1/conn.rs`, `src/common/task.rs` inside the same clone, no writes, no other path).
+No path outside the sandbox was read. Everything consulted was one of: the clone (`/tmp/effort124/runs/a-medium-seed2-att-03/`), the skill snapshot (`/tmp/effort124/skill/snapshot-path-omitted/`), the packet directory (`/tmp/effort124/packets/a/packet.md`), and this run's own work/report/payload/timing paths under `/tmp/effort124/work/a-medium-seed2-att-03/` and `/tmp/effort124/reports/a/`. The verifier sub-agent confirmed the same discipline for itself (touched only `src/proto/h1/dispatch.rs`, `src/proto/h1/io.rs`, `src/proto/h1/conn.rs`, `src/common/task.rs` inside the same clone, no writes, no other path).
 
 ## 10. Notes — judgment calls on the skill's contract
 

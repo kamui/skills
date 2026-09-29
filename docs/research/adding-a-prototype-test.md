@@ -1,6 +1,6 @@
 # Handoff — add a new prototype code-review comparison test
 
-After the split in issue #226, a snapshot of the default line consists of the `skills/review-code` and `skills/code-review-publish` trees together; pin both tree hashes. Historical run snapshots below remain unchanged.
+This prototype runbook is archived. The legacy reviewer snapshot used by the historical experiments has been removed, so the instructions below are not runnable as written. Historical run snapshots and results remain unchanged. `snapshot-path-omitted` marks removed snapshot paths in archived records.
 
 **For the current-skill one-shot program (#137, #124, and any later #138 preregistration), use
 [the one-shot method](code-review-one-shot-method.md) before preparing or dispatching runs.**
@@ -60,10 +60,7 @@ Call the **Skill** tool for these:
 - **`writing-for-agents`** — before writing the dispatch prompts in step 6. These prompts are
   agent-facing documents and their precision determines whether the run is valid.
 
-Do **not** invoke `/code-review`, `/code-review-publish`, `/code-review-publish-legacy`, or any
-prototype skill in your own context. `/code-review-publish` is now v5a itself — invoking it is
-running a prototype under test. The prototypes run *inside sub-agents*, from pinned snapshots;
-invoking one yourself contaminates the experiment.
+The historical experiments ran prototype skills inside isolated sub-agents from pinned snapshots. The removed snapshot cannot be invoked or recreated from this repository.
 
 ---
 
@@ -98,18 +95,18 @@ pinning** — record whatever you actually find, do not trust this table.
 
 | Nickname | What it is | Where to snapshot it from | Pin as of 2026-09-03 |
 | --- | --- | --- | --- |
-| v1 | Legacy two-axis reviewer, the Matt Pocock `code-review` lineage. Superseded; kept for historical comparison | `skills/code-review-publish-legacy` on `main` | current `main` |
+| v1 | Legacy two-axis reviewer, the Matt Pocock `code-review` lineage. Superseded; kept for historical comparison | snapshot path omitted | historical pin |
 | v2 | Panel line, original | `skills/code-review-publish-2` on `t3code/research-agentic-code-review-skills-1` (PR #14) | `3c93b42` |
 | v2a *(default)* | Panel line, patched | `skills/code-review-deep-publish` on `t3code/prototype-code-review-publish-2a` (PR #18) | `87c68a9` |
-| v5 | Skeptic line, original. **No longer on `main`** — it was replaced, so pin it from history | `571f31d:skills/code-review-publish` (the pre-swap tree) | `571f31d` |
-| v5a *(default)* | Skeptic line, patched. **Now shipping as `skills/code-review-publish`** | `skills/code-review-publish` on `main` | current `main` |
+| v5 | Skeptic line, original. **No longer on `main`** — it was replaced, so pin it from history | historical source path omitted (the pre-swap tree) | `571f31d` |
+| v5a *(default)* | Skeptic line, patched. **was the shipping snapshot at the time** | snapshot path omitted | historical pin |
 | *(new version)* | *(what it changes)* | *(its skill dir / branch / PR)* | *(pin and record)* |
 
 **Naming changed on 2026-09-03 (PR #42, `bc6edc3`).** v5a was promoted into the
-`code-review-publish` name, replacing v5 there. The current state on `main`:
+`legacy reviewer` name, replacing v5 there. The recorded state at that time was:
 
-- `skills/code-review-publish` = **v5a**
-- `skills/code-review-publish-legacy` = **v1**, the legacy two-axis reviewer — *not* the old v5
+- the promoted snapshot = **v5a**
+- the earlier two-axis snapshot = **v1**, not the old v5
 - `skills/code-review-publish-5a` **no longer exists**
 - **v5 is not present on `main` in any directory.** Pin it from `571f31d` if a test needs it.
 

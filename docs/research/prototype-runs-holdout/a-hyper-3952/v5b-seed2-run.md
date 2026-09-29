@@ -79,7 +79,7 @@ in stages per the dispatch's persistence rule; each stage below is appended as i
 ## 1. Metadata
 
 - **Target:** `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready", head `f2aa734e5699a91fc20f1178e38af7b1e374bdbc`, base `master`@merge-base `f9f8f44058745d23fa52abf51b96b61ee7665642` (base SHA == merge-base).
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`, read from `/tmp/holdout/skills/v5b/`.
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`, read from `/tmp/holdout/skills/v5b/`.
 - **Seed:** 2 (independent replicate).
 - **Model:** I (the primary reviewer for this whole cell) ran on `claude-sonnet-5`, dispatched via the harness under the parent's instruction; no sub-agent was spawned except the one mandatory-verification batch below (see §4), which I dispatched with `model: "sonnet"` explicitly and which reports its own `message.model` was `claude-sonnet-5` (verbatim report in §4).
 - **Verification trigger that fired:** SKILL.md step 3's mandatory-verification rule — one surviving candidate (C1) was proposed as `must-fix`. C1 is also `kind=concurrency`, so it received the verifier's full concurrency/invariant attack-depth procedure (`references/verifier.md` steps 1–5) rather than the one-citation check. Zero-survivor mode did not fire (candidates survived). Related-acquittal mode did not fire (no non-survivor ledger row shares C1's file/function/state field in a way that qualifies — checked; see §7).

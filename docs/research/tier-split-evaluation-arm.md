@@ -1,7 +1,7 @@
 # Model-tier-split evaluation arm — Sonnet 5 primary, Opus 5 verifier
 
 **2026-09-01.** This document specifies one experiment arm for the next evaluation round of the
-`code-review-publish` line. It extends the protocol in
+`legacy reviewer` line. It extends the protocol in
 [Aggregate analysis § Before calling it: the evaluation protocol](prototype-runs-aggregate-tests-1-3-v2-v5.md#before-calling-it-the-evaluation-protocol),
 whose item 4 puts a controlled model-tier comparison after — and only after — repeated seeds with one
 model held constant. Nothing here changes a skill default: no `SKILL.md`, reference, or

@@ -68,7 +68,7 @@ See [private-contracts.md](private-contracts.md#consumers-of-each-retained-field
 
 | Test | Covers | Rewrite impact | Owner |
 | --- | --- | --- | --- |
-| `review-code/scripts/test_command_chains.py` | `SKILL.md` finalize commands; the `pull-request-target.md` root block; publisher freshness and submission; dismissal; token blocks in `audit-code-publish` and `code-review-publish` | Update the finalize extraction if step 5 moves, and remove the early-build cases. Keep the other blocks. | #330, #332 |
+| `review-code/scripts/test_command_chains.py` | `SKILL.md` finalize commands; the `pull-request-target.md` root block; publisher freshness and submission; dismissal; token blocks in `audit-code-publish` and `legacy reviewer` | Update the finalize extraction if step 5 moves, and remove the early-build cases. Keep the other blocks. | #330, #332 |
 | `review-code/scripts/test_thread_writes.py` | Byte-identical write loop in `publication.md` and `addressing-protocol.md`; installed-path runs | Unchanged. | — |
 | `review-code/scripts/test_run_events.py` | Wrapped commands in two references; `summarize` verification counters | Update the verification counters for the new modes, and keep old-event fixtures. | #331 |
 | `review-code/scripts/test_verifier_handoff.py` | Build and account modes; projection; return rules | Replace the complete-ledger and related-acquittal cases with safety-premise cases. Keep candidate-only cases. | #331 |

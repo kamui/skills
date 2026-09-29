@@ -18,11 +18,11 @@ Use the single-context layout. See `docs/agents/domain.md`.
 
 ### Shared protocol vocabulary
 
-`code-review-publish/references/review-protocol.md` and `resolve-review/references/addressing-protocol.md` share the reply, disposition, verdict, and thread-state vocabulary. Skills install one at a time, so neither can point at the other's copy; a change to that vocabulary lands in both.
+`resolve-review/references/addressing-protocol.md` defines the reply, disposition, verdict, and thread-state vocabulary used by the review skills. Keep its wording aligned with `review-code-publish/references/publication.md` when changing those shared terms.
 
 ### Runtime review dependency
 
-`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. These are the two named exceptions to installing skills alone. `review-bot` is optional for `review-code-publish`, `code-review-publish`, `audit-code-publish`, and `finish-it`; its absence is a recorded fallback to the authenticated user with gating withheld, never a stop or a third install-alone exception.
+`review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. These are the two named exceptions to installing skills alone. `review-bot` is optional for `review-code-publish`, `audit-code-publish`, and `finish-it`; its absence is a recorded fallback to the authenticated user with gating withheld, never a stop or a third install-alone exception.
 
 ### Global skill sync
 

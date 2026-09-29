@@ -62,7 +62,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** `astral-sh/uv#4424` — "Expose `toolchain-preference` as a CLI and configuration file option"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 2
 - **Skill snapshot read:** `/tmp/holdout/skills/v5b/SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md`, `agents/openai.yaml` (all read in full before starting)
 - **Packet:** `/tmp/holdout/packets/d/packet.md` (read in full; pinned values used verbatim, not re-resolved)

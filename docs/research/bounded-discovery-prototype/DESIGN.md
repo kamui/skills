@@ -10,9 +10,9 @@ No shipped skill, default, publisher, or general agent framework changes here.
 
 Inspected repository revision: `face533044492ca06e11134751d9ea457ed6e429` (2026-09-07 local
 date); current skill tree: `f9a195bed7fa0d9182de5eaef4a5a8cf35b0d1b4`. Read the actual
-[`SKILL.md`](../../../skills/code-review-publish/SKILL.md),
-[`verifier.md`](../../../skills/code-review-publish/references/verifier.md), its
-[`concurrency procedure`](../../../skills/code-review-publish/references/verifier-concurrency.md),
+`SKILL.md` (historical source path omitted),
+`verifier.md` (historical source path omitted), its
+`concurrency procedure` (historical source path omitted),
 rubric and output contract at that revision. The method inspected was also at this revision;
 the companion method changes in this handoff must be included in #149's final method pin.
 

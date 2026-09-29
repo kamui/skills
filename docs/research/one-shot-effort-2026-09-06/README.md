@@ -1,7 +1,7 @@
 # One-shot effort experiment — medium primary with pinned high verifiers (issue #124)
 
 **Bundle for [#124](https://github.com/kamui/skills/issues/124), started 2026-09-06.** This is the
-matched experiment the ticket authorizes: the same repaired `code-review-publish` snapshot run with
+matched experiment the ticket authorizes: the same repaired `legacy reviewer` snapshot run with
 its primary at effort `high` (the measured runtime's default for `claude-sonnet-5`) and at effort
 `medium`, with every verifier batch pinned at `high` in both arms. It follows the
 [one-shot evaluation method](../code-review-one-shot-method.md) and uses the pins from
@@ -38,7 +38,7 @@ differ in one command-line flag.
 
 | | Value |
 | --- | --- |
-| Skill | `skills/code-review-publish` at commit `83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6`, tree `bea6be143582e75bada966ee85964623ef31f167` (the #136 repaired baseline; `workflow=v5b-10`). Snapshot taken with `git archive` and the tree hash re-checked; runs identify the snapshot by tree hash, never by trailer |
+| Historical reviewer tree (path omitted) | at commit `83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6`, tree `bea6be143582e75bada966ee85964623ef31f167` (the #136 repaired baseline; `workflow=v5b-10`). Snapshot taken with `git archive` and the tree hash re-checked; runs identify the snapshot by tree hash, never by trailer |
 | Model | `claude-sonnet-5`, passed as `--model sonnet` on the root and `model: "sonnet"` on every `Agent` call; verified from every assistant line of every transcript before scoring |
 | Runtime | Claude Code `2.1.263` (headless `claude -p`), Darwin 27.0.0, Python 3.14.7, git 2.55.0 |
 | Prices | Sonnet 5 list `$2/$10` per M tokens; cache write ×1.25 (5-minute tier) and ×2.0 (1-hour tier) as the transcripts report them; cache read ×0.1. `transcript_usage.py` prices each tier from the usage fields (#97) |

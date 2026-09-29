@@ -194,4 +194,4 @@ Finish with the short form: status, run identity, coverage, counts, questions, o
 
 ## Why this shape
 
-The goals, research, and decisions are in [`DESIGN.md`](DESIGN.md); the adapted sources and their licenses are in [`references/ATTRIBUTION.md`](references/ATTRIBUTION.md). `references/review-protocol.md` in `code-review-publish` is the ancestor of the comment shape, the status ladder, the disposition vocabulary, and the round cap; it is directional here, not binding, and the two skills' output is not interchangeable on one pull request.
+The goals, research, and decisions are in [`DESIGN.md`](DESIGN.md); the adapted sources and their licenses are in [`references/ATTRIBUTION.md`](references/ATTRIBUTION.md).

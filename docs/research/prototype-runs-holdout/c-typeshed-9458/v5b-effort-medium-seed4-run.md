@@ -78,7 +78,7 @@ Run started (UTC): 2026-09-04T19:11:37Z
 ## 1. Metadata
 
 - **Target:** `python/typeshed#9458` — "Bump redis to 4.4.0"
-- **Arm:** `v5b-effort-medium` — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** `v5b-effort-medium` — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 4
 - **Model:** I (the primary reviewer) ran on `claude-sonnet-5`, dispatched through the `v5b-primary-effort-medium` agent definition (effort `medium`, one step below harness default). Every sub-agent (verifier batch) was dispatched with `subagent_type: "v5b-verifier-effort-high"` and `model: "sonnet"` explicitly, in the foreground, running at effort `high` (harness default) per that definition — see §4 below for the exact dispatch and verbatim return.
 - **Verification trigger fired:** yes — the sole surviving candidate (`redis/asyncio-can-read-destructive`) is proposed `must-fix`, which under `SKILL.md` step 3 mandates independent verification. This is candidate-batch mode (not zero-survivor / clean-verdict mode, since one candidate survived).
@@ -184,7 +184,7 @@ One verifier batch was dispatched, in candidate mode (one candidate, the sole mu
 **Exact prompt given (verbatim):**
 
 ```
-You are an independent verifier for one candidate finding from a code review of a pinned pull request, under the `code-review-publish` skill (`v5b-1`). Read `/tmp/holdout/skills/v5b/references/verifier.md` in full first and follow its "Verification task" and "Verdicts" sections exactly. This is a fresh, isolated context: you have no knowledge of the primary reviewer's reasoning beyond what is given below.
+You are an independent verifier for one candidate finding from a code review of a pinned pull request, under the `legacy reviewer` skill (`v5b-1`). Read `/tmp/holdout/skills/v5b/references/verifier.md` in full first and follow its "Verification task" and "Verdicts" sections exactly. This is a fresh, isolated context: you have no knowledge of the primary reviewer's reasoning beyond what is given below.
 
 ## Rules binding on you (same rules 1-6 given to the primary reviewer, plus this one)
 

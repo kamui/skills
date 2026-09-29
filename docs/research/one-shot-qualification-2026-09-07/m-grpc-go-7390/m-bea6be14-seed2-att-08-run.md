@@ -4,7 +4,7 @@
 
 - **Target:** `grpc/grpc-go#7390` — "grpc: hold ac.mu while calling resetTransport to prevent concurrent connection attempts", merged 2024-07-09T20:27:27Z.
 - **Cell / attempt:** `m-bea6be14-seed2` / `att-08`.
-- **Skill snapshot:** `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` (`SKILL.md` + `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md`; `references/re-review.md` and `references/conformance.md` were not loaded — neither branch condition fired, see §7 below).
+- **Skill snapshot:** `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` (`SKILL.md` + `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md`; `references/re-review.md` and `references/conformance.md` were not loaded — neither branch condition fired, see §7 below).
 - **Validator's `workflow` identifier:** `v5b-10` (constant `WORKFLOW` in `scripts/validate_review.py`).
 - **Model I (the primary reviewer) ran on:** `claude-sonnet-5`, invoked in-context (no separate Agent dispatch for the primary review itself — the task specifies the primary review is done directly in this context, never delegated).
 - **Sub-agents spawned:** exactly one, for the mandatory verification step (see §2/§4 below): role = independent clean-verdict verifier, count = 1, `subagent_type: "general-purpose"`, `model: "sonnet"` (explicit), `run_in_background: false`.
@@ -173,11 +173,11 @@ verification: independent-confirmed — clean-verdict batch returned `holds`, on
 
 ### 5.1 Exact prompt given to the verifier
 
-> You are an independent verifier for a code-review skill (`code-review-publish`, `references/verifier.md` and `references/verifier-concurrency.md`). You have NOT seen the primary reviewer's reasoning or narrative — only the record below. Do not search for new findings. Do not write, edit, or publish anything.
+> You are an independent verifier for a code-review skill (`legacy reviewer`, `references/verifier.md` and `references/verifier-concurrency.md`). You have NOT seen the primary reviewer's reasoning or narrative — only the record below. Do not search for new findings. Do not write, edit, or publish anything.
 >
 > ## Your sandbox (binding on you)
 >
-> - Read-only. You may read inside: the clone at `/tmp/qual137/runs/m-bea6be14-seed2-att-08` (git repo, offline; `origin` is a local path, not github.com — do NOT run `git fetch`/`git pull`/`gh`/`curl`/any network call), the skill snapshot at `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` (you already have `verifier.md` and `verifier-concurrency.md` inline below; you do not need to re-read them from disk, but may), and the packet at `/tmp/qual137/packets/m/packet.md`.
+> - Read-only. You may read inside: the clone at `/tmp/qual137/runs/m-bea6be14-seed2-att-08` (git repo, offline; `origin` is a local path, not github.com — do NOT run `git fetch`/`git pull`/`gh`/`curl`/any network call), the skill snapshot at `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` (you already have `verifier.md` and `verifier-concurrency.md` inline below; you do not need to re-read them from disk, but may), and the packet at `/tmp/qual137/packets/m/packet.md`.
 > - Do NOT run `git checkout`, `git switch`, `git reset`, `git stash`, or any command that mutates the tree in the clone. If you need to look at a file at a specific SHA, use `git show <sha>:<path>` — never check anything out.
 > - History is truncated at the pinned head `76ef33f44a600c3ed1a385979fd1dfbcade3fbb6` on purpose; do not try to reach further history and report explicitly if you run any history command beyond what's needed to read the two pinned revisions below.
 > - Focused test execution IS permitted, offline, exactly under these bounds: from the clone root, `GOMODCACHE=/tmp/qual137/gomodcache GOCACHE=/tmp/qual137/gocache GOFLAGS=-mod=mod GOPROXY=off`, five minutes per command, a given package's tests at most once per flag set, nothing added to or changed in the clone, scratch files only under `/tmp/qual137/work/m-bea6be14-seed2-att-08/` if you need any. You are not required to re-run anything the ledger already cites a command/exit-status/output for — treat that as an evidence citation, not the primary's interpretation — but you may re-run or extend it if you think it is decisive for a verdict.
@@ -395,7 +395,7 @@ Nothing reachable only after `76ef33f44a600c3ed1a385979fd1dfbcade3fbb6` was read
 
 ## 11. Sandbox disclosure
 
-No path outside the declared sandbox (the clone at `/tmp/qual137/runs/m-bea6be14-seed2-att-08`, the skill snapshot at `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`, the packet directory `/tmp/qual137/packets/m/`, and my own work/report/payload/timing paths under `/tmp/qual137/work/m-bea6be14-seed2-att-08/` and `/tmp/qual137/reports/m/`) was read by me or, per its own report, by the verifier sub-agent. `GOMODCACHE=/tmp/qual137/gomodcache` and `GOCACHE=/tmp/qual137/gocache` were used only as environment variables for `go test`/`go build` invocations (per the packet's execution allowance), not read as source material.
+No path outside the declared sandbox (the clone at `/tmp/qual137/runs/m-bea6be14-seed2-att-08`, the skill snapshot at `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`, the packet directory `/tmp/qual137/packets/m/`, and my own work/report/payload/timing paths under `/tmp/qual137/work/m-bea6be14-seed2-att-08/` and `/tmp/qual137/reports/m/`) was read by me or, per its own report, by the verifier sub-agent. `GOMODCACHE=/tmp/qual137/gomodcache` and `GOCACHE=/tmp/qual137/gocache` were used only as environment variables for `go test`/`go build` invocations (per the packet's execution allowance), not read as source material.
 
 ## 12. Everything consulted beyond the diff
 

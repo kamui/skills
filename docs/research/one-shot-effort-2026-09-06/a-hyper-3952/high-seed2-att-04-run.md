@@ -1,6 +1,6 @@
 # Research report — `hyperium/hyper#3952`, cell `a-high-seed2`, attempt `att-04`
 
-Skill under evaluation: `code-review-publish` (snapshot at `/tmp/effort124/skill/skills/code-review-publish/`).
+Skill under evaluation: `legacy reviewer` (snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`).
 Payload (rendered review): [`a-high-seed2-att-04-payload.md`](./a-high-seed2-att-04-payload.md).
 
 ## 1. Metadata
@@ -9,7 +9,7 @@ Payload (rendered review): [`a-high-seed2-att-04-payload.md`](./a-high-seed2-att
 | --- | --- |
 | Target | `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready" |
 | Cell / attempt | `a-high-seed2` / `att-04` |
-| Skill | `code-review-publish` (this run's snapshot; `workflow=v5b-10` per `output-contract.md` / `validate_review.py`) |
+| Skill | `legacy reviewer` (this run's snapshot; `workflow=v5b-10` per `output-contract.md` / `validate_review.py`) |
 | Primary reviewer model | `claude-sonnet-5` (this session) |
 | Sub-agents spawned | **None.** No mandatory-verification trigger fired (see §7); no sub-agent was dispatched, so there is no second model to report. |
 | Verification trigger fired | **None.** Neither survivor (`hyper/ready-stream-ci-coverage-gap`, `hyper/ready-stream-no-fail-signal`) was proposed `must-fix`, and neither touches security/authorization, data loss/corruption, destructive migration, or an externally observable compatibility break — the only mandatory triggers `SKILL.md` step 3 defines. Zero-survivor clean-verdict mode also did not apply because two candidates survived as findings. See §7 for the full mechanism checklist. |
@@ -98,7 +98,7 @@ Neither row is `partial` or `not-verifiable`, so the Issue fit ledger produced n
 
 All of the following were read from the offline clone at `/tmp/effort124/runs/a-high-seed2-att-04` (branch `review-head`, checked out at the pinned head `f2aa734e5699a91fc20f1178e38af7b1e374bdbc`; branch `master` pinned to the merge-base `f9f8f44058745d23fa52abf51b96b61ee7665642`) unless noted otherwise. No command executed cargo/rustc/miri/loom; every read below is a plain file read, `git show`, or `grep`.
 
-1. **Skill snapshot** (`/tmp/effort124/skill/skills/code-review-publish/`): `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md` — read in full before doing anything else. (`references/re-review.md` and `references/conformance.md` were *not* read: re-review does not apply because the posting identity `kamui` has no prior comment/review on the PR per the packet, and no versioned artifact is referenced by any source, so conformance does not apply.)
+1. **Skill snapshot** (`/tmp/effort124/skill/snapshot-path-omitted/`): `SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md` — read in full before doing anything else. (`references/re-review.md` and `references/conformance.md` were *not* read: re-review does not apply because the posting identity `kamui` has no prior comment/review on the PR per the packet, and no versioned artifact is referenced by any source, so conformance does not apply.)
 2. **Phase-1 packet** (`/tmp/effort124/packets/a/packet.md`): read in full; every pinned fact (head/base/merge-base SHAs, PR body, commit list, prior-review transcript, repository-guidance table, run conditions) taken verbatim, not re-resolved.
 3. `git branch -a`, `git log --oneline -5 review-head`, `git status` in the clone — to confirm the pinned branches/head and a clean tree before touching anything. This only looked *backward* from the pinned head (older, already-merge-base-side commits `f9f8f440`, `5803a9c0`, `e1e1f2b4`); it did not attempt to read anything newer than the pinned head, and nothing newer exists in this truncated clone.
 4. `git show master:CONTRIBUTING.md` — the one repository-guidance file the packet's table marks present at the merge-base. Read in full (short file). Classified as a general contributor-onboarding index (links to `docs/PULL_REQUESTS.md`, `docs/COMMITS.md`, etc., which are themselves excluded from the digest's `guidance` set and from consideration here as "merely linked from an included instruction file"); it states no repository-specific coding standard, invariant, or verification requirement applicable to `Cargo.toml`, `src/proto/h1/dispatch.rs`, or `tests/ready_stream.rs`, so it produced no repository-rule finding.

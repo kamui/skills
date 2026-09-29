@@ -6,7 +6,7 @@
 
 - Target: `bokeh/bokeh#9232` ("Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.")
 - Cell: `l-bea6be14-seed1`, attempt `att-13`
-- Skill snapshot: `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`
+- Skill snapshot: `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`
 - `workflow` identifier: **`v5b-10`** (from `references/output-contract.md`'s example trailer: `` `workflow=v5b-10` versions this package's review behavior``; the validator embeds/checks this same string — confirmed against `scripts/validate_review.py` at rendering time below).
 - Model: I (the primary reviewer, this whole run) ran on **claude-sonnet-5**. The one sub-agent I dispatch (the mandatory verifier for the surviving `must-fix` candidate) also runs on **claude-sonnet-5**, invoked with `subagent_type: "general-purpose"`, `model: "sonnet"`, `run_in_background: false`, per the cell's run conditions and rule 8.
 - Posting identity: `kamui` (third party, did not author the PR, has no prior comments/reviews on it per the packet) → first review, **not** a re-review. `references/re-review.md` was read only to *confirm* it does not apply (its trigger condition — "a prior review, reply, or trailer-bearing comment from the posting identity" — is not met; `bryevdv`/`madkopp` prior review activity belongs to the author and a maintainer, not to `kamui`). Confirmed empirically: `git log`/`git branch -a`/`git status` on the clone show only the pinned commits and clean tree; no re-fetch was attempted (offline).
@@ -24,7 +24,7 @@ Read, in full, from the skill snapshot directory only:
 6. `references/verifier-concurrency.md` — read to confirm it does **not** apply: no candidate's `kind` is `concurrency` or `invariant` (the surviving candidate is `kind: bug`, a pure date-arithmetic defect, not a cross-path state/lock rule).
 7. `references/re-review.md` — read to confirm it does **not** apply (see above).
 
-No other review skill's references were consulted. No behavior was borrowed from `code-review-publish-legacy` or any other skill.
+No other review skill's references were consulted. No behavior was borrowed from `legacy two-axis reviewer` or any other skill.
 
 ## 3. Step 1 — Pin the review
 
@@ -570,7 +570,7 @@ No `git fetch`, `git pull`, `git log` unbounded, or any command targeting a ref 
 
 ## 14. Sandbox disclosure
 
-All reads and writes stayed within: the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), the packet (`/tmp/qual137/packets/l/packet.md`), the clone (`/tmp/qual137/runs/l-bea6be14-seed1-att-13/`), my own work directory (`/tmp/qual137/work/l-bea6be14-seed1-att-13/`), and my own report/payload/timing paths (`/tmp/qual137/reports/l/l-bea6be14-seed1-att-13-*`). The verifier sub-agent confirmed the same boundaries for itself (§7.2).
+All reads and writes stayed within: the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), the packet (`/tmp/qual137/packets/l/packet.md`), the clone (`/tmp/qual137/runs/l-bea6be14-seed1-att-13/`), my own work directory (`/tmp/qual137/work/l-bea6be14-seed1-att-13/`), and my own report/payload/timing paths (`/tmp/qual137/reports/l/l-bea6be14-seed1-att-13-*`). The verifier sub-agent confirmed the same boundaries for itself (§7.2).
 
 **One incidental exposure to disclose:** in an early `ls -la` call I listed the contents of the shared directory `/tmp/qual137/reports/l/` to confirm my own report/payload/timing paths existed before writing to them; that listing incidentally showed the **file names** (not contents) of another cell's artifacts already present there — `l-867cf3ff-seed1-att-14-session.txt` and `l-867cf3ff-seed1-att-14-timing.json`. I did not open, read, or otherwise use either file; only their names were visible in the directory listing. Disclosed here per rule 7 ("Report any other path you read") out of caution, though strictly only a listing, not a read of file content, occurred.
 

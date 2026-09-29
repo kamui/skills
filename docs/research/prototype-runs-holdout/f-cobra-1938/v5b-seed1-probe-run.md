@@ -62,7 +62,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** (f) `kamui/cobra-holdout#9` — replay of `spf13/cobra#1938` ("Add env variable to suppress completion descriptions on create").
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`.
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`.
 - **Seed:** 1.
 - **Model I ran on:** `claude-sonnet-5` (Sonnet 5), as required. Ran entirely in this single context, no session relay.
 - **Sub-agents spawned:** **zero.** No independent-verification trigger fired (see §7). Consequently there was no occasion to pass `model: "sonnet"` to an `Agent` call in this run; had a verifier or the zero-survivor clean-verdict batch been required, it would have been dispatched in the foreground with `model: "sonnet"` per the dispatch rules. Nothing was delegated; the review, falsification, and report/payload writing were all done directly in this context, as required.

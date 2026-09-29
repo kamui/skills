@@ -4,7 +4,7 @@
 
 - **Target:** `grpc/grpc-go#7390` — "grpc: hold ac.mu while calling resetTransport to prevent concurrent connection attempts"
 - **Cell:** `m-867cf3ff-seed1`; **attempt:** `att-06`
-- **Skill snapshot directory:** `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`
+- **Skill snapshot directory:** `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`
 - **`workflow` identifier reported by the validator:** `v5b-1` (from `scripts/validate_review.py`'s `WORKFLOW` constant, confirmed by reading the script; also the value used and accepted in the run trailer below)
 - **Model I ran on:** `claude-sonnet-5` (this entire review — pinning, context-building, falsification, rendering — was done by me, the primary reviewer, in this one context; I never delegated the review itself)
 - **Sub-agent model:** every sub-agent I spawned ran with `model: "sonnet"` explicitly passed on the `Agent` call, `subagent_type: "general-purpose"`, `run_in_background: false`, per the dispatch instructions. (One sub-agent spawned; see §4.)
@@ -53,13 +53,13 @@ You are an independent verifier for a code review of a merged, third-party pull 
 1. Never mutate the git working tree (no checkout/switch/reset/stash/commit or any tree-mutating command).
 2. Offline only: no network access of any kind (no git fetch/pull, no gh, no curl, no web fetch).
 3. Execution allowance: focused Go test/build commands ARE permitted, offline, from the clone root /tmp/qual137/runs/m-867cf3ff-seed1-att-06, with env GOMODCACHE=/tmp/qual137/gomodcache GOCACHE=/tmp/qual137/gocache GOFLAGS=-mod=mod GOPROXY=off; five minutes per command; run a given package's tests at most once per flag set; put any scratch files only under /tmp/qual137/work/m-867cf3ff-seed1-att-06/.
-4. Stay inside this sandbox only: the clone /tmp/qual137/runs/m-867cf3ff-seed1-att-06, the skill snapshot /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/, the packet directory /tmp/qual137/packets/m/, and your own scratch directory /tmp/qual137/work/m-867cf3ff-seed1-att-06/. Report any other path you read.
+4. Stay inside this sandbox only: the clone /tmp/qual137/runs/m-867cf3ff-seed1-att-06, the skill snapshot /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/, the packet directory /tmp/qual137/packets/m/, and your own scratch directory /tmp/qual137/work/m-867cf3ff-seed1-att-06/. Report any other path you read.
 5. Do not ask anyone anything; finish in this one dispatch and return your complete findings as your final message.
 6. You are a genuinely fresh context: you have no access to, and must not assume, any prior reasoning from the primary reviewer beyond exactly what is supplied to you below.
 7. Do not write publication-ready prose; return verdicts, justifications, and citations only.
 8. Do not search the rest of the pull request or repository for new findings; you are only attacking the acquittals supplied below.
 
-First, read /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/references/verifier.md in full. This dispatch is the "Clean-verdict task" in zero-survivor mode: the primary reviewer found zero surviving candidates on a merged pull request (grpc/grpc-go#7390, repo already cloned at /tmp/qual137/runs/m-867cf3ff-seed1-att-06, local branch `master` pinned to the merge-base daab56344e612097fd50c46c433de5d9b6013837, local branch `review-head` checked out at head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6), and the changed behavior touches a concurrency path (addrConn mutex discipline around connection-attempt state transitions), so per SKILL.md you must attack every acquittal in the complete disposition ledger below, per the "Clean-verdict task" section's five-step procedure, at the depth each row's `kind` requires (full 5-step depth for kind bug/concurrency/invariant/security; one-citation check for kind performance/maintainability/requirement).
+First, read /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/references/verifier.md in full. This dispatch is the "Clean-verdict task" in zero-survivor mode: the primary reviewer found zero surviving candidates on a merged pull request (grpc/grpc-go#7390, repo already cloned at /tmp/qual137/runs/m-867cf3ff-seed1-att-06, local branch `master` pinned to the merge-base daab56344e612097fd50c46c433de5d9b6013837, local branch `review-head` checked out at head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6), and the changed behavior touches a concurrency path (addrConn mutex discipline around connection-attempt state transitions), so per SKILL.md you must attack every acquittal in the complete disposition ledger below, per the "Clean-verdict task" section's five-step procedure, at the depth each row's `kind` requires (full 5-step depth for kind bug/concurrency/invariant/security; one-citation check for kind performance/maintainability/requirement).
 
 The full merge-base diff (`git diff master review-head`) is exactly this one hunk set in clientconn.go (+6/-7, only changed file):
 
@@ -179,7 +179,7 @@ All five rows returned `holds`; the batch conclusion was `clean verdict stands`.
 All reads and searches below were performed in this same context by me, the primary reviewer, except where explicitly attributed to the verifier sub-agent in §4.
 
 - **`review_context.py` output** (the complete merge-base diff and manifest, read once per step 2's instruction): command run —
-  `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/review_context.py --merge-base daab56344e612097fd50c46c433de5d9b6013837 --head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6`
+  `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/review_context.py --merge-base daab56344e612097fd50c46c433de5d9b6013837 --head 76ef33f44a600c3ed1a385979fd1dfbcade3fbb6`
   run from `/tmp/qual137/runs/m-867cf3ff-seed1-att-06`, exit 0. Output saved to
   `/tmp/qual137/work/m-867cf3ff-seed1-att-06/review_context.md` (219 lines): manifest (1 file, `clientconn.go` +6/−7), the full diff (three hunks: `connect()`, `updateAddrs()`, `resetTransport`→`resetTransportAndUnlock`), `ranges` (six `path:line @head`/`@merge-base` coordinates), and `history` (three pre-merge-base commits touching `clientconn.go`, supplied by the script itself for drift context, not separately fetched by me).
 - **`git status`, `git branch -a`, `git log --oneline -5 review-head`** — run once at the start to confirm clean tree and pinned branches. Not repo-wide, not a search; a one-time hygiene check. Output: tree clean; `master` and `review-head` present plus their remotes; `review-head`'s five most recent commits are `76ef33f4` (the pinned head) down through `53a5c415`, all pre-dating or equal to the pinned head — no history beyond the pinned head was read (see §8).
@@ -212,7 +212,7 @@ No other file, path, or command was read or run beyond what is listed above and 
 
 Computed once via:
 ```
-python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/context_fingerprint.py \
+python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/context_fingerprint.py \
   /tmp/qual137/work/m-867cf3ff-seed1-att-06/context_input.json
 ```
 Inputs (the exact JSON object hashed, saved at `/tmp/qual137/work/m-867cf3ff-seed1-att-06/context_input.json`):
@@ -251,7 +251,7 @@ No command in this run fetched, checked out, or read anything past the pinned he
 
 ## 9. Sandbox disclosure
 
-No path outside the authorized sandbox (the clone `/tmp/qual137/runs/m-867cf3ff-seed1-att-06`, the skill snapshot `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`, the packet directory `/tmp/qual137/packets/m/`, and my own work/report/payload/timing paths under `/tmp/qual137/work/m-867cf3ff-seed1-att-06/` and `/tmp/qual137/reports/m/`) was read by me or, per its verbatim report, by the sub-agent. I did not read any other run's clone, report, or payload.
+No path outside the authorized sandbox (the clone `/tmp/qual137/runs/m-867cf3ff-seed1-att-06`, the skill snapshot `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`, the packet directory `/tmp/qual137/packets/m/`, and my own work/report/payload/timing paths under `/tmp/qual137/work/m-867cf3ff-seed1-att-06/` and `/tmp/qual137/reports/m/`) was read by me or, per its verbatim report, by the sub-agent. I did not read any other run's clone, report, or payload.
 
 ## 10. Notes — judgment calls on ambiguities in the skill's contract
 

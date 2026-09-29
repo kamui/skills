@@ -6,7 +6,7 @@
 | --- | --- |
 | Target | `graphql/graphql-js#1582` — "Enable Flow typings on errors tests + Fix typing for Error constructor" |
 | Cell | `k-867cf3ff-seed2`, attempt `att-19` |
-| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` |
 | Skill `workflow` identifier (from `scripts/validate_review.py`'s `WORKFLOW` constant, confirmed by reading the script source and by the accepted run trailer) | `v5b-1` |
 | Model I (the reviewer) ran on | `claude-sonnet-5` (this whole review — pinning, context-building, falsification, rendering — was done by me, in this context; no part of the review itself was delegated) |
 | Model any sub-agent ran on | **N/A — no sub-agent was spawned.** See §7 (mechanism checklist) and §3 for why: no candidate met the mandatory-verification bar, and zero-survivor mode did not fire because one candidate survived as a finding. |
@@ -140,7 +140,7 @@ I did not run `git log` on any range extending past `review-head`, did not `git 
 
 ## 9. Sandbox disclosure
 
-No path outside the sandbox was read. Every file/command touched one of: the clone (`/tmp/qual137/runs/k-867cf3ff-seed2-att-19`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`), the packet (`/tmp/qual137/packets/k/packet.md`), my own work directory (`/tmp/qual137/work/k-867cf3ff-seed2-att-19/`), or my own report/payload/timing paths under `/tmp/qual137/reports/k/`. Nothing else was read.
+No path outside the sandbox was read. Every file/command touched one of: the clone (`/tmp/qual137/runs/k-867cf3ff-seed2-att-19`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`), the packet (`/tmp/qual137/packets/k/packet.md`), my own work directory (`/tmp/qual137/work/k-867cf3ff-seed2-att-19/`), or my own report/payload/timing paths under `/tmp/qual137/reports/k/`. Nothing else was read.
 
 ## 10. Notes — judgment calls on ambiguities
 

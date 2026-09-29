@@ -1,13 +1,13 @@
 # Research report — cell `h-high-seed1`, attempt `att-11`
 
 Target: `etcd-io/etcd#18749` — "Fix risk of a partial write txn being applied"
-Skill: `code-review-publish` snapshot at `/tmp/effort124/skill/skills/code-review-publish/`
+Skill: `legacy reviewer` snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`
 Pin source: `/tmp/effort124/packets/h/packet.md` (phase 1 already resolved by orchestrator; not re-fetched)
 
 ## 1. Metadata
 
 - **Target / cell / attempt:** `etcd-io/etcd#18749`, cell `h-high-seed1`, attempt `att-11`.
-- **Skill and pin:** `code-review-publish` (current, non-legacy). References loaded: `review-rubric.md`, `output-contract.md`, `verifier.md`, `verifier-concurrency.md` (read, but ultimately not attached to the verifier brief — see §7 note). `re-review.md` and `conformance.md` were **not** loaded: no prior state from posting identity `kamui` (packet confirms no prior comments/reviews from `kamui`), and no versioned artifact conformance is implicated by this change.
+- **Skill and pin:** `legacy reviewer` (current, non-legacy). References loaded: `review-rubric.md`, `output-contract.md`, `verifier.md`, `verifier-concurrency.md` (read, but ultimately not attached to the verifier brief — see §7 note). `re-review.md` and `conformance.md` were **not** loaded: no prior state from posting identity `kamui` (packet confirms no prior comments/reviews from `kamui`), and no versioned artifact conformance is implicated by this change.
 - **Model:** I (the primary reviewer) ran on `claude-sonnet-5`. The one verifier sub-agent I dispatched ran on `model: "sonnet"` via `subagent_type: "v5b-verifier-effort-high"`, per the dispatch's binding instruction.
 - **Verification trigger that fired:** Zero-survivor clean-verdict mode (`SKILL.md` step 3). All candidates I raised were falsified/dropped at primary review; the change touches a data-integrity surface (cross-node write-txn consistency / KV revision and consistency-index bookkeeping) and a concurrency surface (backend batch-tx and store locks), so the mandatory clean-verdict batch fired even with zero survivors.
 - **Sub-agents spawned:** 1 — role: clean-verdict verifier, `subagent_type: "v5b-verifier-effort-high"`, `model: "sonnet"`, `run_in_background: false`.
@@ -136,14 +136,14 @@ Verifier sub-agent: `Agent` tool, `subagent_type: "v5b-verifier-effort-high"`, `
 <details><summary>Full prompt (click to expand — reproduced verbatim)</summary>
 
 ```
-You are an independent verifier for one clean-verdict batch under the code-review-publish skill's verifier protocol. You have NOT seen any primary reviewer reasoning beyond what is supplied below. Read `/tmp/effort124/skill/skills/code-review-publish/references/verifier.md` in full now (it owns your evidence procedure and the Clean-verdict task) before doing anything else.
+You are an independent verifier for one clean-verdict batch under the legacy reviewer skill's verifier protocol. You have NOT seen any primary reviewer reasoning beyond what is supplied below. Read `/tmp/effort124/skill/snapshot-path-omitted/references/verifier.md` in full now (it owns your evidence procedure and the Clean-verdict task) before doing anything else.
 
 ## Binding rules (apply to you as this task's sub-agent)
 
 1. Follow `verifier.md`'s Clean-verdict task exactly. You are ruling on already-dropped ledger rows, not searching for new findings.
 2. This is an OFFLINE, read-only, non-mutating task. Do not run `git fetch`, `git pull`, `git checkout`, `git switch`, `git reset`, `git stash`, or any command that mutates the working tree. You may run read-only `git show`, `git log`, `git diff`, `grep`/ripgrep, and read files.
 3. Focused Go test execution IS permitted, offline only, from the clone's `server/` module, with `GOMODCACHE=/tmp/effort124/gomodcache GOCACHE=/tmp/effort124/gocache GOFLAGS=-mod=mod GOPROXY=off`, 5 minutes per command, a given package's tests at most once per flag set, and nothing added to or changed in the clone. You should not need to run tests for this task, but it's available if a row's claim requires it.
-7. Stay inside this sandbox only: the clone at `/tmp/effort124/runs/h-high-seed1-att-11` (read-only), the skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/` (read-only, for reference docs only), and your own scratch output. Do not read or write anything under `/tmp/effort124/reports/`, `/tmp/effort124/work/`, `/tmp/effort124/packets/`, or any other run's directory. If you read anything outside this list, say so explicitly in your reply.
+7. Stay inside this sandbox only: the clone at `/tmp/effort124/runs/h-high-seed1-att-11` (read-only), the skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/` (read-only, for reference docs only), and your own scratch output. Do not read or write anything under `/tmp/effort124/reports/`, `/tmp/effort124/work/`, `/tmp/effort124/packets/`, or any other run's directory. If you read anything outside this list, say so explicitly in your reply.
 9. No session relays: finish in this one dispatch and return your complete verdict in your final reply. Do not ask anyone anything; if you cannot settle a row, say so in your ruling per the reference's `unresolved`/`re-open` rules.
 
 ## Pinned coordinates
@@ -323,7 +323,7 @@ No other `git log`, `git show <commit>`, or history-inspecting command was run b
 
 I read/wrote only:
 - The clone: `/tmp/effort124/runs/h-high-seed1-att-11` (read-only; confirmed clean via `git status` at the end — "nothing to commit, working tree clean" — no mutation occurred, so the rule-4 hard-reset recovery was never needed).
-- The skill snapshot: `/tmp/effort124/skill/skills/code-review-publish/` (SKILL.md, all five references, and the three scripts I invoked).
+- The skill snapshot: `/tmp/effort124/skill/snapshot-path-omitted/` (SKILL.md, all five references, and the three scripts I invoked).
 - The packet: `/tmp/effort124/packets/h/packet.md`.
 - My own work directory: `/tmp/effort124/work/h-high-seed1-att-11/` (created `packet.json`, `payload.json`, `batch.json`, and `private-store/review-context-8a0fd66db3291bd6397a1341dc07ad41294a3caf.json`).
 - My own report/payload/timing paths under `/tmp/effort124/reports/h/`.

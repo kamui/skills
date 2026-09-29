@@ -1,26 +1,21 @@
-# v5 run — `code-review-publish` against `microsoft/playwright#29698`
+# v5 run — `legacy reviewer` against `microsoft/playwright#29698`
 
 **2026-09-03.** Data only. Not published to the PR. See [`README.md`](README.md) for the
 pinned run identity, the ground truth, and the conditions held constant across all four runs.
 
-> **Promotion status:** “v5” is the historical prototype name. PR #17 promoted this workflow to
-> `skills/code-review-publish` on `main`; the snapshot under test is that skill, unchanged since the
-> promotion commit. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so
-> `/code-review-publish` now invokes v5a, not the v5 workflow this run tests.
-> `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin
-> it from `571f31d`. This run completed in a single pass.
+> **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
 ---
 
 
-Skill under test: `code-review-publish` (research nickname **v5**, `workflow=v5-2`), snapshot at
-`/tmp/handoff4/skill-v5/skills/code-review-publish/`.
+Skill under test: `legacy reviewer` (research nickname **v5**, `workflow=v5-2`), snapshot at
+`/tmp/handoff4/skill-v5/snapshot-path-omitted/`.
 
 ## Metadata
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish` (`workflow=v5-2`) — `/tmp/handoff4/skill-v5/skills/code-review-publish/` |
+| Skill | `legacy reviewer` (`workflow=v5-2`) — `/tmp/handoff4/skill-v5/snapshot-path-omitted/` |
 | Architecture | One integrated primary reviewer (this agent) reading the full merge-base diff, building a private requirement ledger, generating and falsifying candidates, then dispatching exactly one batched fresh-context verifier for the single surviving `must-fix`/data-loss candidate, per `SKILL.md` §3 and `references/verifier.md`. No parallel code/spec fan-out was used (skill forbids it for the frequent path). |
 | Model | `sonnet` was passed explicitly on the one `Agent` call made (the verifier dispatch). No other sub-agents were spawned. Confirmed from the call: `model: "sonnet"` was set in the tool call parameters, not left to harness default. |
 | Agents spawned | 1 — independent finding verifier (`general-purpose`, `model: sonnet`) |
@@ -30,7 +25,7 @@ Skill under test: `code-review-publish` (research nickname **v5**, `workflow=v5-
 | Candidates raised | 3 rendered candidates (1 proposed must-fix, 2 consider) + ~14 examined-and-dropped/acquitted items (see ledger) + 12 prior review-thread comments cross-checked as already fixed |
 | Candidates surviving falsification | 3 (all three survived primary falsification and were rendered; only 1 required independent verification) |
 | Verifier verdicts | 1 candidate sent, 1 `confirmed` (with a correction to the proposed `change`, priority/action unchanged at P2/must-fix) |
-| `context` fingerprint | `5800da33cc9e9f42704b0ee4b81a7a4d7ef62d5919e4098fad8fc8b65303c67d` — computed by `/tmp/handoff4/skill-v5/skills/code-review-publish/scripts/context_fingerprint.py` from `pr.title`/`pr.body` (packet §3, verbatim), `issues=[{coordinate: "microsoft/playwright#29662", title/body: packet §4 verbatim, comments: []}]` (packet supplies no issue-level comments, only PR-thread comments, which are out of the fingerprint's scope), `specs=[]` (none supplied), `guidance=[{path: "CONTRIBUTING.md", blob_sha: "264793fc2b7342bfb84835f1cbfa400f5692a7e5"}]` (verified via `git rev-parse main:CONTRIBUTING.md`, matches packet §7) |
+| `context` fingerprint | `5800da33cc9e9f42704b0ee4b81a7a4d7ef62d5919e4098fad8fc8b65303c67d` — computed by `/tmp/handoff4/skill-v5/snapshot-path-omitted/scripts/context_fingerprint.py` from `pr.title`/`pr.body` (packet §3, verbatim), `issues=[{coordinate: "microsoft/playwright#29662", title/body: packet §4 verbatim, comments: []}]` (packet supplies no issue-level comments, only PR-thread comments, which are out of the fingerprint's scope), `specs=[]` (none supplied), `guidance=[{path: "CONTRIBUTING.md", blob_sha: "264793fc2b7342bfb84835f1cbfa400f5692a7e5"}]` (verified via `git rev-parse main:CONTRIBUTING.md`, matches packet §7) |
 | Findings for publication | 3 — 1× P2 must-fix (confirmed), 2× P3 consider (primary-confirmed) |
 | Questions | 0 |
 | Observations | 0 separate observation items (the CI-flake corroboration and the verifier's remedy correction are folded into the finding 1 prose rather than posted as standalone observations, since they materially inform an already-admitted finding rather than standing alone) |
@@ -388,7 +383,7 @@ Corroborating-but-not-decisive signal (do not treat as proof by itself; it comes
 
 ## Your task
 
-Follow `/tmp/handoff4/skill-v5/skills/code-review-publish/references/verifier.md` (you may read it, it is inside your allowed sandbox) for your task and verdict format. In summary, for this one candidate:
+Follow `/tmp/handoff4/skill-v5/snapshot-path-omitted/references/verifier.md` (you may read it, it is inside your allowed sandbox) for your task and verdict format. In summary, for this one candidate:
 
 1. Read the cited anchor and trace the actual current code (does the method really do snapshot → clearCookies → addCookies, with no locking/transaction around it?).
 2. Determine whether the stated trigger is real: is there a plausible, concrete mechanism by which a cookie could be written into this same browser context (by the browser itself, not by Playwright-side JS) during the async gap between `this.cookies()` resolving and `this.clearCookies()` executing? Consider how `clearCookies()`/`addCookies()`/`cookies()` are implemented across at least one real per-browser backend (Chromium is provided above; check Firefox and/or WebKit backends too if you have time, to see if the same non-atomic pattern holds there, since removeCookies is implemented once at the abstract BrowserContext level and used by all backends).
@@ -460,7 +455,7 @@ No history beyond the pinned head was accessed or attempted.
 
 ### Sandbox confirmation
 
-All reads and commands stayed inside `/tmp/handoff4/run-v5` (repo) and `/tmp/handoff4/skill-v5/skills/code-review-publish/references/verifier.md` (skill reference). I did not read any other `/tmp/handoff4/*` path.
+All reads and commands stayed inside `/tmp/handoff4/run-v5` (repo) and `/tmp/handoff4/skill-v5/snapshot-path-omitted/references/verifier.md` (skill reference). I did not read any other `/tmp/handoff4/*` path.
 
 ### Token/tool-use footprint
 
@@ -503,16 +498,16 @@ Files/paths read (all inside the two authorized sandbox roots, `/tmp/handoff4/ru
 `/tmp/handoff4/skill-v5`, plus the packet itself):
 
 - `/tmp/handoff4/packet-playwright.md` (the full packet, read first, treated as authoritative)
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/SKILL.md`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/DESIGN.md`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/references/review-rubric.md`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/references/output-contract.md`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/references/verifier.md`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/references/review-protocol.md` — **not read** (mentioned by name in DESIGN.md/SKILL.md as informative-only/non-authoritative background; not loaded, since neither `SKILL.md` nor the active references required it)
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/scripts/context_fingerprint.py` (read, then executed per the explicit exception in binding constraint #2)
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/agents/openai.yaml`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/THIRD_PARTY_NOTICES.md`
-- `/tmp/handoff4/skill-v5/skills/code-review-publish/licenses/Apache-2.0.txt` — **not read** (license boilerplate, not needed for the review itself)
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/SKILL.md`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/DESIGN.md`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/references/review-rubric.md`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/references/output-contract.md`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/references/verifier.md`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/references/review-protocol.md` — **not read** (mentioned by name in DESIGN.md/SKILL.md as informative-only/non-authoritative background; not loaded, since neither `SKILL.md` nor the active references required it)
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/scripts/context_fingerprint.py` (read, then executed per the explicit exception in binding constraint #2)
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/agents/openai.yaml`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/THIRD_PARTY_NOTICES.md`
+- `/tmp/handoff4/skill-v5/snapshot-path-omitted/licenses/Apache-2.0.txt` — **not read** (license boilerplate, not needed for the review itself)
 - `CONTRIBUTING.md` at `main` (`git show main:CONTRIBUTING.md`) — full text
 - `package.json` (version field)
 - `docs/src/api/class-browsercontext.md` — full context around the change, plus a repo-wide `since:`

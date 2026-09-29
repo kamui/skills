@@ -1,9 +1,6 @@
 # Prototype run data — v2, v2a, v5, v5a against `microsoft/playwright#29698` (test 4)
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
-> that workflow to `skills/code-review-publish` on `main`; new experiments should invoke
-> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`. “v2a” is `code-review-deep-publish` (PR #18, the
-> Panel line) and “v5a” is `code-review-publish-5a` (PR #19, the Skeptic line).
+> **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
 **2026-09-03.** Raw outputs and metadata from a fourth controlled comparison of the code-review
 prototypes, against a target chosen for a different reason from the first three. **Data only** — the
@@ -259,7 +256,7 @@ Only the skill under test:
 | | v2 (PR #14) | v2a (PR #18) | v5 (PR #17) | v5a (PR #19) |
 | --- | --- | --- | --- | --- |
 | Line | Panel | Panel, patched | Skeptic | Skeptic, patched |
-| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `code-review-publish` | `code-review-publish-5a` |
+| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `legacy reviewer` | `code-review-publish-5a` |
 | Pinned commit | `3c93b42` | `87c68a9` | `571f31d` (skill identical to `16a3504`) | `c5f76df` |
 | Architecture | axis finders in parallel + fresh-context verifier when candidates exist | same, plus disposition ledger, question routing, and doc-sync drift sweep | 1 integrated reviewer + consequence-triggered fresh-context verifier | same, plus fix-sufficiency check, question channel, clean-verdict verifier, repo-wide drift sweep |
 

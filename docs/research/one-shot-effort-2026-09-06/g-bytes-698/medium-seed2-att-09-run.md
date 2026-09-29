@@ -5,7 +5,7 @@ Target: `tokio-rs/bytes#698` — "Reuse capacity when possible in `<BytesMut as 
 ## 1. Metadata
 
 - Target: (g) tokio-rs/bytes#698. Cell `g-medium-seed2`, attempt `att-09`.
-- Skill: `/tmp/effort124/skill/skills/code-review-publish/SKILL.md` (current, non-legacy). References read in full: `review-rubric.md`, `output-contract.md`, `verifier.md`. Not loaded: `re-review.md` (no prior review/reply/trailer-bearing comment from posting identity `kamui` exists in the packet — this is a first review by this identity, not a re-review), `conformance.md` (no versioned artifact named by any source), `verifier-concurrency.md` (no candidate reached verification with `kind` of `concurrency`/`invariant`, since the sole candidates raised of that shape were refuted by the primary before the batch and the batch used was clean-verdict, not candidate mode — see §7).
+- Skill: `/tmp/effort124/skill/snapshot-path-omitted/SKILL.md` (historical snapshot). References read in full: `review-rubric.md`, `output-contract.md`, `verifier.md`. Not loaded: `re-review.md` (no prior review/reply/trailer-bearing comment from posting identity `kamui` exists in the packet — this is a first review by this identity, not a re-review), `conformance.md` (no versioned artifact named by any source), `verifier-concurrency.md` (no candidate reached verification with `kind` of `concurrency`/`invariant`, since the sole candidates raised of that shape were refuted by the primary before the batch and the batch used was clean-verdict, not candidate mode — see §7).
 - Model: I (the primary reviewer) ran on `claude-sonnet-5`. The one sub-agent I dispatched (the clean-verdict verifier batch) ran with `model: "sonnet"` and `subagent_type: "v5b-verifier-effort-high"`, per the dispatch's binding instructions.
 - Verification trigger fired: **zero-survivor mode** (SKILL.md step 3). Zero candidates survived primary falsification as findings, and the diff manipulates raw buffer-length/pointer invariants (`unsafe fn set_len`, `ptr`/`cap`/`vec_pos` bookkeeping) inside a foundational, memory-safety-critical library — I judged this a "data-integrity surface" under the trigger's risk-surface list (see Notes, judgment call #3). This ran one clean-verdict batch over the complete disposition ledger.
 - Sub-agents spawned: 1 — the clean-verdict verifier batch, `subagent_type: "v5b-verifier-effort-high"`, `model: "sonnet"`, `run_in_background: false`.
@@ -62,12 +62,12 @@ No candidate reached the independent-verification mandatory-trigger list (none i
 **Exact prompt given:**
 
 ~~~text
-You are the independent verifier for a code review skill (`code-review-publish`), running in clean-verdict mode. Read `/tmp/effort124/skill/skills/code-review-publish/references/verifier.md` in full now — it owns your evidence procedure and verdict format. This message supplies the clean-verdict task inputs it names.
+You are the independent verifier for a code review skill (`legacy reviewer`), running in clean-verdict mode. Read `/tmp/effort124/skill/snapshot-path-omitted/references/verifier.md` in full now — it owns your evidence procedure and verdict format. This message supplies the clean-verdict task inputs it names.
 
 RULES BINDING ON YOU (same as the primary reviewer's rules):
 1. Offline. No git fetch/pull, no gh, no curl, no network call of any kind.
 2. Clone hygiene: do NOT run `git checkout`, `git switch`, `git reset`, `git stash`, or any command that mutates the tree. Read-only git commands only (`git show`, `git diff`, `git log`, `git archive` if needed).
-3. Stay inside this sandbox only: the clone at `/tmp/effort124/runs/g-medium-seed2-att-09`, the skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/`, and this prompt's content. Do not read any other run's clone, report, or payload, and do not write anywhere.
+3. Stay inside this sandbox only: the clone at `/tmp/effort124/runs/g-medium-seed2-att-09`, the skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`, and this prompt's content. Do not read any other run's clone, report, or payload, and do not write anywhere.
 4. Do not search the rest of the pull request for new findings — you are attacking the supplied acquittals only, per the clean-verdict task.
 5. You cannot write, publish, or render comments. Return your ruling as structured text in your final report.
 
@@ -225,7 +225,7 @@ No separate `observation` aside is returned: the one incidental fact found (the 
 
 ## 5. Everything consulted beyond the diff
 
-All commands were run from `/tmp/effort124/runs/g-medium-seed2-att-09` (the clone) or `/tmp/effort124/skill/skills/code-review-publish` (the skill directory), except the scratch cargo probes which ran from `/tmp/effort124/work/g-medium-seed2-att-09/scratch{,-base}` (my own work directory). No `git checkout`, `git switch`, `git reset`, or `git stash` was run at any point; `git archive master | tar -x -C <workdir>` reads objects only and does not touch the working tree, branches, or `.git` administrative state (verified: it's a plain object read/export, not a checkout).
+All commands were run from `/tmp/effort124/runs/g-medium-seed2-att-09` (the clone) or `/tmp/effort124/skill/snapshot-path-omitted` (the skill directory), except the scratch cargo probes which ran from `/tmp/effort124/work/g-medium-seed2-att-09/scratch{,-base}` (my own work directory). No `git checkout`, `git switch`, `git reset`, or `git stash` was run at any point; `git archive master | tar -x -C <workdir>` reads objects only and does not touch the working tree, branches, or `.git` administrative state (verified: it's a plain object read/export, not a checkout).
 
 - `git log --oneline -3 review-head` — confirms head commit and its two predecessors (`ce09d7d`, `9d3ec1c`), matching the packet's pinned SHAs.
 - `git diff master review-head -- src/bytes_mut.rs` — the reviewed diff (also reproduced via `review_context.py`, see below); matches packet.md §2's manifest exactly (+8/−0, 1 file).
@@ -284,7 +284,7 @@ No command referenced a SHA newer than `7052d2454a2370ab9583f63711df89f3bd7bec83
 
 ## 9. Sandbox disclosure
 
-No path outside the sandbox was read. Everything I read or wrote was confined to: the clone (`/tmp/effort124/runs/g-medium-seed2-att-09`), the skill snapshot (`/tmp/effort124/skill/skills/code-review-publish/`), the packet directory (`/tmp/effort124/packets/g/`), and my own work/report/payload/timing paths under `/tmp/effort124/work/g-medium-seed2-att-09/` and `/tmp/effort124/reports/g/`. The one path outside those four roots that I created was the `mktemp -d` private store directory (`/var/folders/.../tmp.lzX3qcJYuY`), which is exactly what SKILL.md step 2 requires ("Create a private directory outside the working tree"); nothing else was read from or written to it besides the `review_context.py` store file.
+No path outside the sandbox was read. Everything I read or wrote was confined to: the clone (`/tmp/effort124/runs/g-medium-seed2-att-09`), the skill snapshot (`/tmp/effort124/skill/snapshot-path-omitted/`), the packet directory (`/tmp/effort124/packets/g/`), and my own work/report/payload/timing paths under `/tmp/effort124/work/g-medium-seed2-att-09/` and `/tmp/effort124/reports/g/`. The one path outside those four roots that I created was the `mktemp -d` private store directory (`/var/folders/.../tmp.lzX3qcJYuY`), which is exactly what SKILL.md step 2 requires ("Create a private directory outside the working tree"); nothing else was read from or written to it besides the `review_context.py` store file.
 
 ## 10. Notes — judgment calls
 

@@ -78,7 +78,7 @@ Payload file: `/tmp/holdout/reports/b/v5b-effort-medium-seed3-payload.md`
 ## 1. Metadata
 
 - Target: `hashicorp/raft#581` — "Fix rare leadership transfer failures when writes happen during transfer"
-- Arm: `v5b-effort-medium`; skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- Arm: `v5b-effort-medium`; skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - Seed: 3
 - Primary reviewer model: `claude-sonnet-5`, run at effort `medium` (one step below harness default), dispatched through the `v5b-primary-effort-medium` agent definition, doing the entire review in this single context (no delegation of the review itself).
 - Sub-agents spawned: **one** verifier batch, role = clean-verdict verifier (zero-survivor mode), dispatched via `subagent_type: "v5b-verifier-effort-high"`, `model: "sonnet"`, run in the foreground, effort inherited at `high` per that definition's pin. See §4 for the full prompt and verbatim report.
