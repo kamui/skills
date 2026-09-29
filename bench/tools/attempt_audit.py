@@ -88,6 +88,7 @@ HEREDOC = re.compile(r"^([^\n]*<<-?\s*(['\"]?)(\w+)\2[^\n]*)\n.*?(?:\n[ \t]*\3[ 
 BUILTIN_HEADER = re.compile(r"^`(high effort|medium effort|low effort|minimal prompt)[^`]*`$", re.M)
 CODEX_RUBRIC = "You are acting as a reviewer for a proposed code change"
 DIFF_CMD = re.compile(r"git\s+diff\s+[^;&|\n]*")
+DATA_SINK = re.compile(r"(?:^|&&|\|\||;)\s*(?:cat|tee)\b[^|;&<]*<<-?\s*(['\"]?)\w+\1[^|;&]*$")
 ASSIGN = re.compile(r"(?<![\w$])([A-Za-z_]\w*)=(?:\$\(git rev-parse (?:--[\w-]+ )*'?([\w./@{}~^-]+)'?\)|'?([\w./@{}~^-]+)'?)(?=[\s;&|)]|$)")
 GUIDANCE = ("AGENTS.md", "AGENTS.override.md", "CLAUDE.md", "CLAUDE.local.md")
 CODEX_CMD = re.compile(r'cmd"?:\s*"((?:[^"\\]|\\.)*)"')
@@ -95,6 +96,12 @@ CODEX_CMD = re.compile(r'cmd"?:\s*"((?:[^"\\]|\\.)*)"')
 CODEX_OBJ = re.compile(r'\{((?:\s*"?[\w$]+"?\s*:\s*(?:"(?:[^"\\]|\\.)*"|[^,{}"\[\]]+)\s*,?)+)\}')
 CODEX_FIELD = re.compile(r'"?([\w$]+)"?\s*:\s*(?:"((?:[^"\\]|\\.)*)"|[^,{}"\[\]]+)')
 CODEX_WORKDIR = re.compile(r'(?:workdir|cwd|working_directory)"?\s*:\s*"((?:[^"\\]|\\.)*)"')
+
+
+def without_written_data(cmd: str) -> str:
+    """``cmd`` with the body dropped from each heredoc that ``cat`` or ``tee`` only writes to a file,
+    since that body is data and no command reads the paths it names."""
+    return HEREDOC.sub(lambda m: m.group(1) if DATA_SINK.search(m.group(1)) else m.group(0), cmd)
 
 
 def commands_only(cmd: str) -> str:
@@ -286,7 +293,7 @@ def paths_in(text: str, cwd: str, base: str = None):
     # (``/*/x``) counts once another slash follows, so a regex class such as ``/[a-z]+`` does not.
     # A URL's authority (``http://localhost/``) is not a path: no match starts at a slash after ``:/``.
     found = [os.path.normpath(climbs(p)) for p in re.findall(
-        r"(?<![\w.~}\)\"'*?\]])(?<!:/)(/(?:[\w.@+-]|[*?\[][\w.@+*?\[\]-]*/)[\w./@+*?\[\]-]*)", text or "")]
+        r"(?<![\w.~}\)\"'*?\]])(?<!:/)(/(?:[\w.@+-]|[*?\[][\w.@+*?\[\]-]*/)[\w./@+*?\[\]-]*)", without_written_data(text or ""))]
     tilde = [climbs(t) for t in re.findall(r"(?<![\w.])~(/[\w./@+*?\[\]-]*)", text or "")]
     relative = []
     here, base = cwd, base or cwd
