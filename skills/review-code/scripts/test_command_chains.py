@@ -5,7 +5,7 @@ Usage: python3 scripts/test_command_chains.py
 Inputs: output.md's `render_review.py` command, implement-publish's prior-record
 continuation and lineage check, the pull-request target's fetch command, the
 publisher's freshness and review-submission block, its dismissal command, the
-app-token acquisition blocks in `audit-code-publish` and `code-review-publish`, a
+app-token acquisition block in `audit-code-publish`, a
 disposable Git repository, and a stub `gh` on PATH; no forge access and no live writes.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
@@ -47,8 +47,7 @@ SCRIPTS = Path(__file__).resolve().parent
 SKILL = SCRIPTS.parent
 TARGET = SKILL / "references" / "targets.md"
 PUBLICATION = SKILL.parent / "review-code-publish" / "references" / "publication.md"
-TOKEN_BLOCKS = {"audit": SKILL.parent / "audit-code-publish" / "references" / "publishing.md",
-                "legacy": SKILL.parent / "code-review-publish" / "references" / "review-protocol.md"}
+TOKEN_BLOCKS = {"audit": SKILL.parent / "audit-code-publish" / "references" / "publishing.md"}
 SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
 
 FAKE_GH = r"""#!/usr/bin/env python3

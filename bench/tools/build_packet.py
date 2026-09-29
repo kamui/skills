@@ -2,9 +2,9 @@
 """Build a phase-1 review packet for one pull-request target, frozen at a cutoff instant.
 
 Reads the pull request, its closing issues with comments, its reviews, review threads and
-conversation comments in ONE ``gh api graphql`` call (the same shape ``code-review-publish``
-step 1 uses), and takes the changed-file manifest, the commit list and the guidance inventory
-from a local staging mirror. Records first published after the cutoff are omitted. Required
+conversation comments in ONE ``gh api graphql`` call, and takes the changed-file manifest,
+the commit list and the guidance inventory from a local staging mirror. Records first published
+after the cutoff are omitted. Required
 pre-cutoff text must have valid creation/submission and edit provenance: an edit after the cutoff
 or unknown provenance makes that input unavailable and refuses the packet. Thread comments also
 require their review's submission instant, since they can be drafted before being published.

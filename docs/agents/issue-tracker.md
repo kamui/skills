@@ -27,7 +27,7 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## Pull request review operations
 
-Reviewing and replying on a pull request needs verbs this file does not carry (batched review submission, inline replies, GraphQL thread resolution). `review-code` returns the review record without forge writes; `review-code-publish` ships `references/publication.md` for review submission, thread replies, and resolution; `code-review-publish` ships `references/review-protocol.md` and `resolve-review` ships `references/addressing-protocol.md` for their operations. These references apply to this GitHub repository as written.
+Reviewing and replying on a pull request needs verbs this file does not carry (batched review submission, inline replies, GraphQL thread resolution). `review-code` returns the review record without forge writes; `review-code-publish` ships `references/publication.md` for review submission, thread replies, and resolution; `resolve-review` ships `references/addressing-protocol.md` for its operations. These references apply to this GitHub repository as written.
 
 ## Reviewing identity
 
