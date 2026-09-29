@@ -97,10 +97,13 @@ class AttemptAudit(unittest.TestCase):
         bound = ("B=$(git rev-parse --verify 'main^{commit}') && H=$(git rev-parse --verify 'review-head^{commit}') "
                  "&& git diff --stat $B...$H && git log $B..$H")
         blocks = [{"type": "tool_use", "name": "Bash", "input": {"command": c}}
-                  for c in (bound, "X=main; git diff ${X}...HEAD", "git diff $B...$H")]
+                  for c in (bound, "X=main; git diff ${X}...HEAD", "git diff $B...$H",
+                            "B=main; B=HEAD~1; git diff $B...review-head", "B=main; B=$(pick); git diff $B...HEAD",
+                            "git diff $B...HEAD; B=main")]
         done = self.audit("review-code", [{"type": "assistant", "message": {"content": blocks}}])
         self.assertEqual(json.loads(done.stdout)["diff_commands"],
-                         ["git diff --stat main^{commit}...review-head^{commit} ", "git diff main...HEAD", "git diff $B...$H"])
+                         ["git diff --stat main^{commit}...review-head^{commit} ", "git diff main...HEAD", "git diff $B...$H",
+                          "git diff HEAD~1...review-head", "git diff $B...HEAD", "git diff $B...HEAD"])
 
     def test_in_clone_commands_pass(self):
         rc, violations = self.bash("cat src/a.py", "cd src && cat ../README.md", "git diff main...HEAD -- src",
@@ -281,11 +284,13 @@ class AttemptAudit(unittest.TestCase):
 
     def test_a_heredoc_that_cat_or_tee_only_writes_is_data(self):
         body = f"a path in the text: {self.outside}/x\nEOF"
-        for command in (f"cat > verdicts.json <<'EOF'\n{body}", f"cd src && tee out.txt <<EOF\n{body}\necho done"):
+        for command in (f"cat > verdicts.json <<'EOF'\n{body}", f"cd src && tee out.txt <<EOF\n{body}\necho done",
+                        f"cat > notes.txt <<'EOF'\n$(cat {self.outside}/x)\nEOF"):
             with self.subTest(command=command):
                 self.assertEqual(self.bash(command), (0, []))
         for command in (f"bash <<'EOF'\ncat {self.outside}/x\nEOF", f"cat <<'EOF' | sh\ncat {self.outside}/x\nEOF",
-                        f"cat {self.outside}/x > v.json <<'EOF'\nx\nEOF"):
+                        f"cat {self.outside}/x > v.json <<'EOF'\nx\nEOF",
+                        f"cat > notes.txt <<EOF\n$(cat {self.outside}/x)\nEOF", f"tee notes.txt <<EOF\n`cat {self.outside}/x`\nEOF"):
             with self.subTest(command=command):
                 rc, violations = self.bash(command)
                 self.assertIn(f"path outside allowed roots in command: {self.outside}/x", violations)
