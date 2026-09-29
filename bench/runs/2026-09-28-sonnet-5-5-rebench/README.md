@@ -80,7 +80,7 @@ the 36 `review-code` cells the same way. The maintainer funded the built-in firs
 | --- | --- |
 | Spend | $125: $25 for the built-in and $100 for `review-code`, as approved on 2026-09-28, counting `charges.jsonl` and every attempt at its metered cost |
 | Closeout reserve | $12, for blind grading |
-| Attempts | 76 (72 cells and at most 4 replacements) |
+| Attempts | 82 (72 cells and at most 10 replacements), raised from 76 and 4 by the first deviation in `manifest.json` |
 | In flight | 2 |
 | Per-attempt bound | the arm file's `budget_usd_per_attempt`: built-in $2.50, `review-code` $8 |
 
