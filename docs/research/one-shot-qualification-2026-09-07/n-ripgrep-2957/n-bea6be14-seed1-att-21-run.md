@@ -8,7 +8,7 @@ Cell `n-bea6be14-seed1`, attempt `att-21`. Reviewer: me, in this context, throug
 | --- | --- |
 | Target | `BurntSushi/ripgrep#2957` — "feat(completion): support sourcing zsh completion dynamically" |
 | Cell / attempt | `n-bea6be14-seed1` / `att-21` |
-| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` (`code-review-publish`, not `-legacy`, not `-deep-publish`) |
+| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` (`legacy reviewer`, not `-legacy`, not `-deep-publish`) |
 | `workflow` identifier | `v5b-10` (read from `WORKFLOW` in `scripts/validate_review.py`; also the value printed in the run trailer and accepted by `validate_review.py`'s `trailer-grammar` rule) |
 | Model — reviewer (me) | `claude-sonnet-5` |
 | Model — sub-agents | **none spawned** (see below); had any been spawned, `model: "sonnet"` would have been passed explicitly per the dispatch's binding rule |
@@ -172,7 +172,7 @@ No `git fetch`, `git pull`, `git log` against any ref newer than `review-head`, 
 
 ## 9. Sandbox disclosure
 
-No path outside the sandbox was read. Paths touched, all explicitly in-bounds per dispatch rule 7 and the Files section: the clone (`/tmp/qual137/runs/n-bea6be14-seed1-att-21`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`, including its `references/` and `scripts/` subdirectories, plus a glance at `DESIGN.md`'s existence via `ls` — not opened), the packet directory (`/tmp/qual137/packets/n/packet.md`), my own work directory (`/tmp/qual137/work/n-bea6be14-seed1-att-21/` and its `scratch/`, `private/` subdirectories), the report/payload directory (`/tmp/qual137/reports/n/`), and `/tmp/qual137/mark_event.py` (named explicitly in the dispatch's Files section for the timing sidecar). No other run's clone, report, or payload was read, and I did not read `THIRD_PARTY_NOTICES.md`, `licenses/`, or `DESIGN.md` inside the skill snapshot (not named by `SKILL.md` as references to read).
+No path outside the sandbox was read. Paths touched, all explicitly in-bounds per dispatch rule 7 and the Files section: the clone (`/tmp/qual137/runs/n-bea6be14-seed1-att-21`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`, including its `references/` and `scripts/` subdirectories, plus a glance at `DESIGN.md`'s existence via `ls` — not opened), the packet directory (`/tmp/qual137/packets/n/packet.md`), my own work directory (`/tmp/qual137/work/n-bea6be14-seed1-att-21/` and its `scratch/`, `private/` subdirectories), the report/payload directory (`/tmp/qual137/reports/n/`), and `/tmp/qual137/mark_event.py` (named explicitly in the dispatch's Files section for the timing sidecar). No other run's clone, report, or payload was read, and I did not read `THIRD_PARTY_NOTICES.md`, `licenses/`, or `DESIGN.md` inside the skill snapshot (not named by `SKILL.md` as references to read).
 
 ## 10. Notes — judgment calls
 

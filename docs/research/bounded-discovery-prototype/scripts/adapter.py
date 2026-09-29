@@ -40,6 +40,17 @@ class Stop(Violation):
         self.disposition = disposition
 
 
+def pinned_validator_path():
+    result = subprocess.run(["git", "ls-tree", "-r", "--name-only", POLICY], cwd=REPO, capture_output=True)
+    if result.returncode:
+        raise OSError("git ls-tree pinned policy failed: " + result.stderr.decode("utf-8"))
+    paths = [line for line in result.stdout.decode("utf-8").splitlines()
+             if line.endswith("/scripts/validate_review.py")]
+    if len(paths) != 1:
+        raise OSError("pinned policy must contain exactly one review validator")
+    return paths[0]
+
+
 def require(condition, reason):
     if not condition:
         raise Violation(reason)
@@ -173,7 +184,7 @@ def validate_config(config, out):
     for name in ("validate_review", "transcript_usage", "agent_effort"):
         load_ref(config["helpers"][name], roots)
     # Check the actual baseline validator, not just a user-supplied matching hash.
-    pinned = subprocess.run(["git", "show", POLICY + ":skills/code-review-publish/scripts/validate_review.py"],
+    pinned = subprocess.run(["git", "show", POLICY + ":" + pinned_validator_path()],
                             cwd=REPO, capture_output=True)
     if pinned.returncode:
         raise OSError("git show pinned validate_review.py failed: " + pinned.stderr.decode("utf-8"))

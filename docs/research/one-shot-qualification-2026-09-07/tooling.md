@@ -19,7 +19,7 @@ CELL="$T-$ARM-seed$SEED"
 CLONE="$B/runs/$CELL-$ATT"; WORK="$B/work/$CELL-$ATT"
 REPORT="$B/reports/$T/$CELL-$ATT-run.md"; PAYLOAD="$B/reports/$T/$CELL-$ATT-payload.md"
 TIMING="$B/reports/$T/$CELL-$ATT-timing.json"; DISPATCH="$B/dispatch/$T/$CELL-$ATT.md"
-SKILL_DIR="$B/snapshots/$ARM/skills/code-review-publish"
+SKILL_DIR="$B/snapshots/$ARM/snapshot-path-omitted"
 [ -s "$PACKET" ] || { echo "no packet $PACKET" >&2; exit 1; }
 [ -d "$SKILL_DIR" ] || { echo "no skill snapshot $SKILL_DIR" >&2; exit 1; }
 [ ! -e "$CLONE" ] || { echo "clone exists: $CLONE (attempt ids are never reused)" >&2; exit 1; }
@@ -541,7 +541,7 @@ for L in i j k l m n; do
   C=$B/transport-check/$L
   H=$(git -C $C rev-parse review-head); MB=$(git -C $C rev-parse $BASE_BRANCH)
   for ARM in 867cf3ff bea6be14; do
-    (cd $C && python3 $B/snapshots/$ARM/skills/code-review-publish/scripts/review_context.py \
+    (cd $C && python3 $B/snapshots/$ARM/snapshot-path-omitted/scripts/review_context.py \
         --merge-base $MB --head $H > $B/transport-check/$L-$ARM.txt)
   done
   cmp -s $B/transport-check/$L-867cf3ff.txt $B/transport-check/$L-bea6be14.txt \

@@ -1,8 +1,6 @@
 # Comparison data — v2, v2a, v5, v5a on `microsoft/playwright#29698`
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted
-> that workflow to `skills/code-review-publish` on `main`; new work should invoke
-> `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`.
+> **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
 **2026-09-03. Data only.** This consolidates the four run records in this directory:
 [v2](v2-run.md), [v2a](v2a-run.md), [v5](v5-run.md), [v5a](v5a-run.md). Interpretation is in
@@ -51,7 +49,7 @@ direct visibility into their finders' model parameter.
 | | v2 | v2a | v5 | v5a |
 | --- | --- | --- | --- | --- |
 | Line | Panel | Panel, patched | Skeptic | Skeptic, patched |
-| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `code-review-publish` | `code-review-publish-5a` |
+| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `legacy reviewer` | `code-review-publish-5a` |
 | Pinned commit | `3c93b42` | `87c68a9` | `571f31d` | `c5f76df` |
 | Architecture | 2 axis finders + verifier | 2 axis finders + verifier | integrated reviewer + verifier | integrated reviewer + verifier |
 | Agents spawned | 3 | 3 | 1 | 1 |

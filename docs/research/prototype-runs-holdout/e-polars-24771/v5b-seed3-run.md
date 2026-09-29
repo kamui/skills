@@ -73,7 +73,7 @@ Per agent:
 
 # Research report — cell (e) / v5b / seed 3
 
-`pola-rs/polars#24771`, arm v5b (`code-review-publish` pinned at `main 2f06662`,
+`pola-rs/polars#24771`, arm v5b (`legacy reviewer` pinned at `main 2f06662`,
 workflow=`v5b-1`), seed 3.
 
 Payload (the review exactly as it would be published): [`v5b-seed3-payload.md`](v5b-seed3-payload.md)
@@ -86,7 +86,7 @@ version is complete.
 ## 1. Metadata
 
 - Target: `pola-rs/polars#24771` — "perf: Duration/interval string parsing optimisation (2-5x faster)"
-- Arm: v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- Arm: v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - Seed: 3
 - Model: I (the primary reviewer for this cell) ran on `claude-sonnet-5`, per the dispatch's explicit
   instruction (`model: "sonnet"` on every `Agent` call). Every sub-agent I dispatch is instructed the

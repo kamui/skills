@@ -78,7 +78,7 @@ Status: COMPLETE
 ## 1. Metadata
 
 - **Target:** `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 3
 - **Model:** I (the primary reviewer, running this whole dispatch in this context) ran on `claude-sonnet-5` (passed as the harness's active model for this conversation; the dispatch mandates `claude-sonnet-5`/`sonnet` for me and every sub-agent). Every sub-agent I spawn is dispatched with `model: "sonnet"` explicitly — recorded per-dispatch below as each one is sent.
 - **Retrospective mode:** target is `merged=true`; posting identity `kamui` did not author the PR and has no prior review state on it, so this is an ordinary first review, event `COMMENT`, publication disabled per the packet and per the skill's own merged-target rule. The `Mode` line required by the output contract is included in the rendered payload.

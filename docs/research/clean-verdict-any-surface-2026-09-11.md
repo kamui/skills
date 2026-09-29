@@ -62,7 +62,7 @@ status. The two other reserved targets were never attempted and supply no histor
 
 **GraphQL classification matters.** All four (k) payloads report a test that passes while exercising
 the wrong branch, not a failing test or a runtime constructor regression. The current rubric's
-Changed tests rule and [#185's test example](../../skills/code-review-publish/DESIGN.md#paper-regression-checks-issue-185)
+Changed tests rule and #185's test example (historical source path omitted)
 classify that as optional test quality; the other surviving claim is a declaration-consistency
 suggestion with no demonstrated runtime break. Thus these are hygiene for routing, even though
 the evaluator counted the test defect as material recovery and H 18/19 labelled it `kind=bug`.

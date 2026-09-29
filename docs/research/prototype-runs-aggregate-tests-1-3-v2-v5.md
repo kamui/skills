@@ -8,9 +8,8 @@
 > against.
 
 > **Naming status.** “v5” is the historical prototype name used by this record. PR #17 promoted that
-> workflow to `skills/code-review-publish`; **PR #42 (2026-09-03) then replaced it there with v5a**,
-> so `/code-review-publish` now invokes v5a, `skills/code-review-publish-legacy` is the v1 legacy
-> reviewer, and v5 itself is no longer present on `main` (pin it from `571f31d` if needed).
+> workflow and snapshot path are omitted from this archive. **PR #42 (2026-09-03) later replaced v5 with v5a.**
+> This archive retains the run data; pin v5 from `571f31d` for a historical rerun.
 
 **2026-09-01.** Synthesis of the three controlled comparisons of `code-review-publish-2` through
 `code-review-publish-5`:

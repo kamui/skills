@@ -4,7 +4,7 @@
 
 - **Target:** `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready"
 - **Cell / attempt:** `a-medium-seed3` / `att-06`
-- **Skill:** `code-review-publish` (snapshot at `/tmp/effort124/skill/skills/code-review-publish/`)
+- **Skill:** `legacy reviewer` (snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`)
 - **Model I ran on:** `claude-sonnet-5`
 - **Sub-agents spawned:** one, `subagent_type: "v5b-verifier-effort-high"`, `model: "sonnet"`, `run_in_background: false` — see §4 for its role, exact prompt, and verbatim report.
 - **Verification trigger fired:** yes — mandatory verification for a surviving `must-fix`, `kind=concurrency` candidate (`dispatch/poll-loop-write-busy-spin`), which also carried `verifier-concurrency.md`'s bug-class check. One initial candidate batch was dispatched (see §4), carrying that candidate plus, under related-acquittal mode, the non-survivor ledger row `dispatch/poll-loop-closing-spin` (same file, same `kind=concurrency`, same claimed state field `body_rx`/`can_write_again`). The verifier **re-opened** that related row (`disposition dispatch/poll-loop-closing-spin does not hold; re-open it`), with a full clean-verdict trace showing my "bounded, one-time" disposition was wrong — it is in fact an **unbounded livelock**, more severe than the general spin, and citing a line (`dispatch.rs:149`) my own ledger row had not cited. I re-falsified it myself as primary per the re-open rule and merged it into `dispatch/poll-loop-write-busy-spin`'s scope rather than publishing a second finding, since both share the identical root cause and identical fix; I judged this merge fully covered by the evidence the same fresh-context verifier batch already produced, so no second (follow-up) batch was needed — see §10 for that judgment call. The verifier also corrected my anchor/fix line numbers: the numbers I supplied in the candidate record did not match the real file (I had mis-transcribed hunk-relative line numbers rather than reading the actual post-diff file positions); I use the verifier's corrected coordinates, confirmed by my own direct re-read of the file (see §5), in the published finding.
@@ -68,10 +68,10 @@
 **Prompt given** (verbatim, exactly as sent to the `Agent` tool):
 
 ```
-You are an independent verifier for one candidate batch in the code-review-publish skill (candidate mode).
+You are an independent verifier for one candidate batch in the legacy reviewer skill (candidate mode).
 You have a completely fresh context: you do not see the primary reviewer's reasoning, only what is below.
 Read references/verifier.md and references/verifier-concurrency.md at
-/tmp/effort124/skill/skills/code-review-publish/references/ IN FULL before you do anything else, and follow
+/tmp/effort124/skill/snapshot-path-omitted/references/ IN FULL before you do anything else, and follow
 their evidence procedure and verdict format exactly. Do not search for new findings beyond what is below,
 except the single permitted non-actionable observation aside.
 
@@ -86,7 +86,7 @@ RUN CONDITIONS BINDING ON YOU (same as the primary reviewer's):
    accidentally mutate it, run `git -C /tmp/effort124/runs/a-medium-seed3-att-06 reset --hard review-head`
    and disclose it in your reply.
 5. Stay inside this sandbox only: the clone at /tmp/effort124/runs/a-medium-seed3-att-06, the skill
-   snapshot at /tmp/effort124/skill/skills/code-review-publish/, and this prompt. Do not read any other
+   snapshot at /tmp/effort124/skill/snapshot-path-omitted/, and this prompt. Do not read any other
    run's clone, report, or payload, and disclose if you do.
 6. You render nothing: no publication-ready prose, no trailers, no comment shapes. Return only the
    structured verdicts references/verifier.md's "Verdicts" section defines, plus the clean-verdict
@@ -247,7 +247,7 @@ None offered — no additional sub-threshold fact surfaced that doesn't already 
 
 (a) History read beyond the pinned head: none. Commands run were local-only and did not fetch or reconstruct anything past `f2aa734e5699a91fc20f1178e38af7b1e374bdbc`: `git log --oneline -5 review-head`, `git log --oneline -5 master`, `git rev-parse HEAD`, `git show master:src/proto/h1/dispatch.rs` (merge-base file text), `git show f2aa734e... --stat`, `git log -1 --format=%B f2aa734e...`. No fetch/pull/network commands were used.
 
-(b) Sandbox: all files read were within `/tmp/effort124/runs/a-medium-seed3-att-06` (src/proto/h1/dispatch.rs, src/proto/h1/conn.rs, src/common/task.rs) and `/tmp/effort124/skill/skills/code-review-publish/references/` (verifier.md, verifier-concurrency.md). No other run's clone, report, or payload was read. The clone was not mutated (read-only `Read`/`Grep`/`git show`/`git log` only).
+(b) Sandbox: all files read were within `/tmp/effort124/runs/a-medium-seed3-att-06` (src/proto/h1/dispatch.rs, src/proto/h1/conn.rs, src/common/task.rs) and `/tmp/effort124/skill/snapshot-path-omitted/references/` (verifier.md, verifier-concurrency.md). No other run's clone, report, or payload was read. The clone was not mutated (read-only `Read`/`Grep`/`git show`/`git log` only).
 
 <usage>subagent_tokens: 78929 tool_uses: 21 duration_ms: 422414</usage>
 ```
@@ -313,7 +313,7 @@ No `git log` beyond `-5` from the pinned head, no `git fetch`/`git pull`, no tra
 
 ## 9. Sandbox disclosure
 
-No path outside the declared sandbox (the clone at `/tmp/effort124/runs/a-medium-seed3-att-06`, the skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/`, the packet directory at `/tmp/effort124/packets/a/`, and my own work/report/payload/timing paths under `/tmp/effort124/work/a-medium-seed3-att-06/` and `/tmp/effort124/reports/a/`) was read by me or, per its own disclosure, by the verifier sub-agent.
+No path outside the declared sandbox (the clone at `/tmp/effort124/runs/a-medium-seed3-att-06`, the skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`, the packet directory at `/tmp/effort124/packets/a/`, and my own work/report/payload/timing paths under `/tmp/effort124/work/a-medium-seed3-att-06/` and `/tmp/effort124/reports/a/`) was read by me or, per its own disclosure, by the verifier sub-agent.
 
 ## 10. Notes — judgment calls on ambiguities
 

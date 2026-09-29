@@ -4,7 +4,7 @@
 
 - **Target:** `psf/requests#6667` — "Avoid reloading root certificates to improve concurrent performance"
 - **Cell / attempt:** `i-867cf3ff-seed2` / `att-03`
-- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` (`SKILL.md` supersedes `code-review-publish-legacy`)
+- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` (`SKILL.md` supersedes `legacy two-axis reviewer`)
 - **`workflow` identifier reported by the validator:** `v5b-1` (from `scripts/validate_review.py`'s `WORKFLOW` constant, confirmed at final validation run below)
 - **Model:** I (the primary reviewer, this whole dispatch) ran on `claude-sonnet-5`. Every sub-agent I spawned also ran on `model: "sonnet"` (explicit on the call) — see §4 for the one verifier batch dispatched.
 - **Verification trigger fired:** Yes. `SKILL.md` step 3: *"Independently verify every surviving candidate proposed as `must-fix`, plus every candidate involving security or authorization, data loss or corruption, destructive migration, or an externally observable compatibility break."* Both survivors (`ssl-context-sharing/client-cert-mtls-leak` and `adapters/eager-ca-bundle-import-crash`) were proposed `must-fix`, and the first is additionally a concurrency/security defect. One initial candidate batch was dispatched in a fresh context (candidate mode) carrying both survivors, plus three related non-survivor ledger rows under related-acquittal mode (all `kind=bug`, decisive evidence in the same file, `src/requests/adapters.py`, as the survivors' anchors — see §3).
@@ -96,7 +96,7 @@ retrospective, non-publishing review). Follow these binding rules:
    `git -C /tmp/qual137/runs/i-867cf3ff-seed2-att-03 reset --hard review-head` and
    report that you had to.
 4. Stay inside: the clone at /tmp/qual137/runs/i-867cf3ff-seed2-att-03, the skill
-   snapshot at /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/, and your
+   snapshot at /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/, and your
    own scratch directory above. If you need to read the pinned virtualenv's installed
    urllib3 dependency at /tmp/qual137/venvs/requests/lib/python3.14/site-packages/urllib3/
    to independently check a claim about urllib3's own behavior, you may — it is the
@@ -271,7 +271,7 @@ clone tree was mutated by you (it must not be).
 Fresh, isolated context; no network, no git fetch/pull/gh/curl; no clone mutation; no `git checkout/switch/reset/stash`. All work stayed inside the clone at `/tmp/qual137/runs/i-867cf3ff-seed2-att-03`, the skill snapshot, the pinned venv's urllib3 source, and my scratch dir (unused — no files written).
 
 **Paths read:**
-- `.../skills/code-review-publish/references/verifier.md` (full)
+- `.../snapshot-path-omitted/references/verifier.md` (full)
 - `src/requests/adapters.py` @head — ranges 1–120, 148–616, and precise re-reads of 73–112 (`_urllib3_request_context`) and 285–320 (`cert_verify`)
 - `src/requests/adapters.py` @merge-base (`git show 8dd3b26bf59808de24fd654699f592abf6de581e:src/requests/adapters.py`) — full head section (1–120) and `cert_verify` (274–320)
 - `src/requests/certs.py`, `src/requests/utils.py` (`DEFAULT_CA_BUNDLE_PATH`, `extract_zipped_paths`)

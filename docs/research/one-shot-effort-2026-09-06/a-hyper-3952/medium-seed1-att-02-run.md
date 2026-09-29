@@ -3,7 +3,7 @@
 ## 1. Metadata
 
 - Target: `hyperium/hyper#3952` ("fix(http1): poll_loop writes when ready"), cell `a-medium-seed1`, attempt `att-02`.
-- Skill: `code-review-publish` at `/tmp/effort124/skill/skills/code-review-publish/` (pinned snapshot; `workflow=v5b-10` per `output-contract.md`).
+- Skill: `legacy reviewer` at `/tmp/effort124/skill/snapshot-path-omitted/` (pinned snapshot; `workflow=v5b-10` per `output-contract.md`).
 - Model I (primary reviewer) ran on: `claude-sonnet-5`.
 - Sub-agents spawned: 1 verifier batch, `subagent_type: v5b-verifier-effort-high`, `model: "sonnet"`, `run_in_background: false`. No other sub-agents.
 - Verification trigger fired: none of the *mandatory* triggers applied at the time I formed the candidate (no surviving `must-fix` yet, no security/authorization, no data-loss/corruption, no destructive migration, no externally observable compatibility break, not a re-review). One verification batch was run anyway under the rubric's optional-inclusion clause ("Include an ordinary `consider` survivor only when proving or refuting its existing claim requires a cross-module trace") for candidate `dispatch/poll-loop-write-busy-spin`, whose claim spans `dispatch.rs`, `conn.rs`, and `io.rs`. The verifier's own decisive citation (`src/common/task.rs:9`, `task::yield_now`'s `wake_by_ref` before returning `Pending`) then **escalated that candidate from P2/consider to P1/must-fix** — which retroactively satisfies (rather than requires a second dispatch for) the mandatory-verification rule, since the same batch that supplied the correction also confirmed it with citations I independently validated against the diff (§4, §10 note 2).
@@ -60,7 +60,7 @@ One verifier batch was dispatched, in the foreground (`run_in_background: false`
 
 ```
 You are an independent verifier for one code-review candidate, dispatched under the
-code-review-publish skill's verifier procedure. Follow the rules below exactly. You have NO
+legacy reviewer skill's verifier procedure. Follow the rules below exactly. You have NO
 knowledge of any other reviewer's reasoning, confidence, or argument — you must reach your own
 conclusion from the cited evidence and your own inspection.
 
@@ -72,7 +72,7 @@ RULES YOU MUST OBEY (same as the primary reviewer's rules 1-7, plus these):
 - Do not mutate the tree: no git checkout / switch / reset / stash / commit, in that clone or any
   other. If you accidentally mutate it, report that clearly.
 - Stay inside this sandbox only: the clone at /tmp/effort124/runs/a-medium-seed1-att-02, the skill
-  snapshot at /tmp/effort124/skill/skills/code-review-publish/ (you may read
+  snapshot at /tmp/effort124/skill/snapshot-path-omitted/ (you may read
   references/verifier.md and references/verifier-concurrency.md there if you want the source of the
   rules restated below), and nothing else. Report any other path you read.
 - Do not publish, write, or edit anything. Return your verdict as text in your final message only.
@@ -250,7 +250,7 @@ No focused test or repro command was executed (run conditions §8 rule 2 forbid 
 ## 6. The `context` digest
 
 - Digest: `13e9221f7237270401636a59c7b7430de3eb6002aaa4f29ad7ad84884a7869e5`
-- Computed once via `python3 scripts/context_fingerprint.py --packet packet.json --json '{"specs": [], "guidance": []}'` from inside `/tmp/effort124/skill/skills/code-review-publish`.
+- Computed once via `python3 scripts/context_fingerprint.py --packet packet.json --json '{"specs": [], "guidance": []}'` from inside `/tmp/effort124/skill/snapshot-path-omitted`.
 - Inputs:
   - `packet.json`'s `fingerprint.pr`: `title` = `"fix(http1): poll_loop writes when ready"`; `body` = the PR body verbatim as quoted in packet §3.
   - `packet.json`'s `fingerprint.issues`: `[]` — no originating issue (packet §4: "None. The pull-request body is the only statement of intent.").
@@ -281,7 +281,7 @@ No `git fetch`, `git log` beyond `-5`, `git blame`, or any other history-widenin
 
 ## 9. Sandbox disclosure
 
-No path outside the declared sandbox was read. Every read was inside: the clone (`/tmp/effort124/runs/a-medium-seed1-att-02`), the skill snapshot (`/tmp/effort124/skill/skills/code-review-publish/`), the packet directory (`/tmp/effort124/packets/a/`), and my own work/report/payload/timing paths under `/tmp/effort124/work/a-medium-seed1-att-02/` and `/tmp/effort124/reports/a/`. The verifier sub-agent was instructed under the same constraint and its verbatim report (§4) shows it read only within the clone and the skill snapshot (it named `src/common/task.rs`, `src/proto/h1/dispatch.rs`, `src/proto/h1/conn.rs`, `src/proto/h1/io.rs`, `tests/ready_stream.rs`, all inside the clone) — it reported no read outside that sandbox.
+No path outside the declared sandbox was read. Every read was inside: the clone (`/tmp/effort124/runs/a-medium-seed1-att-02`), the skill snapshot (`/tmp/effort124/skill/snapshot-path-omitted/`), the packet directory (`/tmp/effort124/packets/a/`), and my own work/report/payload/timing paths under `/tmp/effort124/work/a-medium-seed1-att-02/` and `/tmp/effort124/reports/a/`. The verifier sub-agent was instructed under the same constraint and its verbatim report (§4) shows it read only within the clone and the skill snapshot (it named `src/common/task.rs`, `src/proto/h1/dispatch.rs`, `src/proto/h1/conn.rs`, `src/proto/h1/io.rs`, `tests/ready_stream.rs`, all inside the clone) — it reported no read outside that sandbox.
 
 ## 10. Notes — judgment calls on ambiguities in the skill's contract
 

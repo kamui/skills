@@ -15,7 +15,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from adapter import HERE, POLICY, REPO, SCHEMA, TREE, artifact, write
+from adapter import HERE, POLICY, REPO, SCHEMA, TREE, artifact, pinned_validator_path, write
 from budget import now
 
 
@@ -86,7 +86,7 @@ def make(root, case, arm="C"):
                   roots=[dict(path="queue.rs", symbol="idle", start=1, end=1)], frontier=[], exclusions=["queue.rs:3"],
                   frozen_at=now()))
     helpers = {}
-    command = ["git", "show", POLICY + ":skills/code-review-publish/scripts/validate_review.py"]
+    command = ["git", "show", POLICY + ":" + pinned_validator_path()]
     result = subprocess.run(command, cwd=REPO, capture_output=True)
     if result.returncode:
         raise OSError("git show pinned validator failed: " + result.stderr.decode("utf-8"))

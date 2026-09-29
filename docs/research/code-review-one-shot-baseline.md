@@ -1,6 +1,6 @@
 # Pinned baseline for the repaired one-shot review skill
 
-After the split in issue #226, a snapshot of the default line consists of the `skills/review-code` and `skills/code-review-publish` trees together; pin both tree hashes. Historical run snapshots below remain unchanged.
+After the split in issue #226, the default line used a paired snapshot of the repaired reviewer and a historical reviewer tree. The historical tree path is omitted; pin both tree hashes. Historical run snapshots below remain unchanged.
 
 **Pinned 2026-09-06 for [#136](https://github.com/kamui/skills/issues/136).** This document
 fixes the snapshot that [#137](https://github.com/kamui/skills/issues/137) measures against the
@@ -16,16 +16,19 @@ material defects a review recovers. Recall belongs to #137 under the
 | | Repaired baseline | Historical control |
 | --- | --- | --- |
 | Commit | `83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6` | `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83` |
-| `skills/code-review-publish` tree | `bea6be143582e75bada966ee85964623ef31f167` | `867cf3ff0d9f097259699be4f55aa147c98a3a5d` |
+| Historical reviewer tree | `bea6be143582e75bada966ee85964623ef31f167` | `867cf3ff0d9f097259699be4f55aa147c98a3a5d` |
 | Workflow identifier | `v5b-10` | `v5b-1` (pre-#70; see §3) |
 | Status | pinned here; later commits are a different snapshot | unchanged by this work |
 
-Evaluation agents snapshot the pinned skill tree, never a moving branch. Take the snapshot by
-commit, not by copying `main`:
+Evaluation agents snapshot the pinned reviewer tree, never a moving branch. Its historical
+path is omitted; select it by its unique validator file, then archive the containing directory:
 
 ```sh
-git -C <clone> archive 83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6 skills/code-review-publish | tar -x -C <snapshot-dir>
-git -C <clone> rev-parse 83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6:skills/code-review-publish   # must print bea6be14…
+commit=83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6
+root=$(git -C <clone> ls-tree -r --name-only "$commit" | awk -F/ '$NF == "validate_review.py" { sub("/scripts/validate_review.py$", ""); print }')
+test "$(printf '%s\n' "$root" | wc -l | tr -d ' ')" = 1
+git -C <clone> archive "$commit" "$root" | tar -x -C <snapshot-dir>
+git -C <clone> rev-parse "$commit:$root"   # must print bea6be14…
 ```
 
 The tree hash is the check that matters. The commit SHA identifies where the snapshot came from;
@@ -34,7 +37,7 @@ only documents outside the skill. The control is pinned the same way and is not 
 
 ## 2. Merged change map, control to baseline
 
-Everything in `skills/code-review-publish` between the two pins, newest first. Each entry is one
+Everything in the historical reviewer tree between the two pins, newest first. Each entry is one
 merged issue; the identifier column is what that issue left the workflow identifier at.
 
 | Issue | Change | Identifier |
@@ -51,7 +54,13 @@ merged issue; the identifier column is what that issue left the workflow identif
 | [#119](https://github.com/kamui/skills/issues/119) | Scoped verifier safety rulings; post-refutation clean-verdict recheck | `v5b-2` |
 | [#70](https://github.com/kamui/skills/issues/70) | Early dispatch of the candidate batch on low-risk surfaces (PR #125) | `v5b-1` (retained — the defect §3 repairs) |
 
-`git diff --stat 3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83 83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6 -- skills/code-review-publish`
+```sh
+before=3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83
+after=83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6
+before_root=$(git -C <clone> ls-tree -r --name-only "$before" | awk -F/ '$NF == "validate_review.py" { sub("/scripts/validate_review.py$", ""); print }')
+after_root=$(git -C <clone> ls-tree -r --name-only "$after" | awk -F/ '$NF == "validate_review.py" { sub("/scripts/validate_review.py$", ""); print }')
+git -C <clone> diff --stat "$before" "$after" -- "$before_root" "$after_root"
+```
 reports 14 files changed, 3691 insertions, 188 deletions, including two new scripts
 (`forge_packet.py`, `test_forge_packet.py`) and two new references (`conformance.md`,
 `verifier-concurrency.md`). #84's paired routine/audit repair is not in this snapshot: it stays
@@ -104,8 +113,7 @@ and example trailer, and `README.md`'s version history. `DESIGN.md` and the run 
 
 ## 4. Mechanical checks
 
-Environment: Python 3.14.7, git 2.55.0, gh 2.98.0, Darwin 27.0.0. Run from
-`skills/code-review-publish` at the pinned commit.
+Environment: Python 3.14.7, git 2.55.0, gh 2.98.0, Darwin 27.0.0. Run from the pinned repository checkout.
 
 | Command | Exit | Result |
 | --- | --- | --- |

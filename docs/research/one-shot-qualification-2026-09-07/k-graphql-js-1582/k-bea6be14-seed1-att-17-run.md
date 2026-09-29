@@ -6,7 +6,7 @@ Payload (the review exactly as it would be published): [`k-bea6be14-seed1-att-17
 
 - **Target:** `graphql/graphql-js#1582` — "Enable Flow typings on errors tests + Fix typing for Error constructor", author `IvanGoncharov`, `state=MERGED`, `merged=true` (2018-11-21T14:33:19Z), `isDraft=false`.
 - **Cell / attempt:** `k-bea6be14-seed1`, `att-17`.
-- **Skill snapshot:** `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`. Its validator reports `WORKFLOW = "v5b-10"` (`scripts/validate_review.py:115`), matching the run trailer's `workflow=v5b-10`.
+- **Skill snapshot:** `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`. Its validator reports `WORKFLOW = "v5b-10"` (`scripts/validate_review.py:115`), matching the run trailer's `workflow=v5b-10`.
 - **Model:** I (the primary reviewer) ran on `claude-sonnet-5`, as required for this cell.
 - **Sub-agents spawned:** **zero.** No sub-agent of any kind (finder, verifier, clean-verdict batch) was dispatched. See §7 for the exact chain of skill sentences that determined no batch was ever required. There is therefore no "model each sub-agent ran on" to report beyond stating none ran.
 - **Verification trigger fired:** **none.** Neither the mandatory-verification trigger nor either clean-verdict trigger mode fired. Quoted sentences and reasoning are in §7.
@@ -141,7 +141,7 @@ I did not use the `history` section `review_context.py` printed (last commit bef
 
 - The private context-store directory created by `mktemp -d` (`/var/folders/tj/sr3wvlgs0v9608r9tjwmtnk40000gn/T/tmp.xxxxx/`) is outside the four sandbox roots named in rule 7. This is the skill's own explicit, required behavior ("Create a private directory outside the working tree... a shared, predictable location such as a world-writable `/tmp` would hand the pull request's diff to whoever pre-created the file"), not an incidental excursion, and I am disclosing it per rule 7's instruction to report any other path read.
 - `ls /tmp/qual137/reports/k/` (run once, to confirm the reports directory existed before writing into it) incidentally listed the **filenames** of another attempt's artifacts in the same shared target directory — `k-867cf3ff-seed1-att-18-session.txt` and `k-867cf3ff-seed1-att-18-timing.json`. I did not open or read the contents of either file; I only saw their names in a directory listing while confirming my own output directory. Disclosing this per rule 7 out of caution, even though `/tmp/qual137/reports/k/` is the directory my own task explicitly designates for my payload and report files.
-- No other path outside the clone (`/tmp/qual137/runs/k-bea6be14-seed1-att-17`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish`), the packet directory (`/tmp/qual137/packets/k`), my work directory (`/tmp/qual137/work/k-bea6be14-seed1-att-17`), or my report/payload/timing paths was read.
+- No other path outside the clone (`/tmp/qual137/runs/k-bea6be14-seed1-att-17`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted`), the packet directory (`/tmp/qual137/packets/k`), my work directory (`/tmp/qual137/work/k-bea6be14-seed1-att-17`), or my report/payload/timing paths was read.
 
 ## 10. Notes — judgment calls on skill-contract ambiguities
 

@@ -875,7 +875,7 @@ treat as authoritative).
 ## 12. The `context` digest
 
 **Not applicable to this skill.** I searched `SKILL.md` and every file in `references/` for the word
-"digest" and for a "context" field akin to the one used in the `code-review-publish`/v5b family; none
+"digest" and for a "context" field akin to the one used in the `legacy reviewer`/v5b family; none
 exists in the Panel line (`code-review-deep-publish`). The Panel skill's actual analogous mechanism is
 the **shared block** built once by `scripts/build_shared_block.py` (§ 4 above) and reused byte-identical
 for both finder prompts — I am treating this as the item's intended referent for this skill and have

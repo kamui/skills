@@ -4,7 +4,7 @@
 
 - **Target:** `bokeh/bokeh#9232` ("Fixed issue of Datepicker displaying the wrong date for users in UTC+ timezones"), author `madkopp`, **MERGED** (2019-10-03T15:52:02Z). Originating issue: `bokeh/bokeh#9129`.
 - **Cell / attempt:** `l-867cf3ff-seed2` / `att-15`.
-- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` (`SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md` all read in full; `references/re-review.md` was **not** read — see §7 Mechanism checklist, "retrospective mode" / re-review rows below for why it does not apply).
+- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` (`SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md` all read in full; `references/re-review.md` was **not** read — see §7 Mechanism checklist, "retrospective mode" / re-review rows below for why it does not apply).
 - **`workflow` identifier:** `v5b-1` — this is the literal version token given in `references/output-contract.md`'s example trailer ("`workflow=v5b-1` versions this package's review behavior") and is not itself printed by `validate_review.py`; the script consumes/validates whatever `workflow=` token the payload supplies rather than emitting its own, so I used `v5b-1` as the payload's `workflow` value and it validated cleanly (see §9 for the exact validator invocation and exit code).
 - **Model:** I (the primary reviewer) ran on `claude-sonnet-5`. The one sub-agent I dispatched (the independent verifier for the must-fix candidate) was dispatched via `Agent` with `subagent_type: "general-purpose"` and `model: "sonnet"` explicitly, per the dispatch instructions.
 - **Verification trigger fired:** Yes — the mandatory-verification trigger in `SKILL.md`: *"Independently verify every surviving candidate proposed as `must-fix`, plus every candidate involving security or authorization, data loss or corruption, destructive migration, or an externally observable compatibility break."* One surviving candidate (`bokehjs/date-picker/unlocal-date-utc-negative-regression`, kind `bug`, priority `P1`, action `must-fix`) triggered this. This was **not** zero-survivor mode (there were survivors), so the clean-verdict batch's zero-survivor path did not fire; instead **related-acquittal mode** fired per: *"when at least one candidate survives and the initial candidate batch is dispatched, include in that same batch every non-survivor ledger row that is related to a survivor... its kind is `bug`, `concurrency`, `invariant`, or `security` and ... its decisive evidence pointer is in the same file as a survivor's anchor or fix."* One dropped candidate (`bokehjs/date-picker/unlocal-date-mutates-argument`, kind `bug`, same file/same lines as the survivor's anchor) qualified and rode along in the same batch.
@@ -100,7 +100,7 @@ RULES BINDING ON YOU (verbatim, from the run's binding conditions):
    borrow behavior from any other review methodology.
 6. Persist nothing yourself — just return your complete verdicts in your final message.
 7. Stay inside: the clone at /tmp/qual137/runs/l-867cf3ff-seed2-att-15, the skill snapshot at
-   /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/, the packet at
+   /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/, the packet at
    /tmp/qual137/packets/l/packet.md, and your own scratch directory under
    /tmp/qual137/work/l-867cf3ff-seed2-att-15/scratch/verifier/. Do not read any other run's clone,
    report, or payload (there is nothing you need to write under /tmp/qual137/reports/ — you have no
@@ -316,7 +316,7 @@ None to add — no additional sub-threshold fact surfaced that doesn't already b
 
 ## 5. Everything consulted beyond the diff
 
-All commands were run from either the clone root (`/tmp/qual137/runs/l-867cf3ff-seed2-att-15`) or the skill snapshot root (`/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish`), as noted. None mutated the clone (verified afterward with `git status` showing a clean tree throughout, and no `checkout`/`switch`/`reset`/`stash` was ever run by me).
+All commands were run from either the clone root (`/tmp/qual137/runs/l-867cf3ff-seed2-att-15`) or the skill snapshot root (`/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted`), as noted. None mutated the clone (verified afterward with `git status` showing a clean tree throughout, and no `checkout`/`switch`/`reset`/`stash` was ever run by me).
 
 **Skill/reference reads (full files, not repo-wide searches):**
 - `SKILL.md` (full)
@@ -330,7 +330,7 @@ All commands were run from either the clone root (`/tmp/qual137/runs/l-867cf3ff-
 
 **Mandated context command (run exactly once, per SKILL.md step 2):**
 ```
-cd /tmp/qual137/runs/l-867cf3ff-seed2-att-15 && python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/review_context.py --merge-base ccb4bcb4c2b841d89b0e88303a97bf4604a5795f --head 36549bca3a63d581f7b68d08054a7813c1e6a499
+cd /tmp/qual137/runs/l-867cf3ff-seed2-att-15 && python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/review_context.py --merge-base ccb4bcb4c2b841d89b0e88303a97bf4604a5795f --head 36549bca3a63d581f7b68d08054a7813c1e6a499
 ```
 Exit 0. Output kept at `/tmp/qual137/work/l-867cf3ff-seed2-att-15/context_output.md` and read in full (192 lines) — this supplied the `manifest`, `diff`, `ranges`, and `history` sections used for the whole review; the diff was **not** re-read via `git show` of individual commits.
 

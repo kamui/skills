@@ -130,7 +130,7 @@ choice wherever a whole-file read exists, not that the fallback is unneeded.
 
 The round changed no Python. Of the sixteen test files, three read the markdown it edited:
 `test_thread_writes.py` (both protocol copies), `test_check_runs.py` (the addressing protocol, its
-`code-review-publish` peer, and `resolve-review/SKILL.md`), and `test_command_chains.py` (the peer's
+`legacy reviewer` peer, and `resolve-review/SKILL.md`), and `test_command_chains.py` (the peer's
 token block). Together they run in 44.6 s here (46.6 s in the round). None of the round's eighteen
 changed lines fell inside a block those tests extract; their exposure to the edit is their prose
 assertions, such as `test_check_runs.py`'s stale-wording guard and shared-vocabulary sites. All

@@ -74,7 +74,7 @@ Per agent:
 # Research report — cell (c) / v5b-effort-medium / seed 2
 
 Target: `python/typeshed#9458` ("Bump redis to 4.4.0")
-Arm: v5b-effort-medium — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+Arm: v5b-effort-medium — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 Seed: 2
 Primary reviewer model: `claude-sonnet-5`, run at effort `medium` (dispatched through `v5b-primary-effort-medium`).
 Verifier sub-agents: `claude-sonnet-5`, dispatched with `subagent_type: "v5b-verifier-effort-high"` and `model: "sonnet"` (child inherits parent effort; that agent definition pins verifiers at `high`, the harness default).

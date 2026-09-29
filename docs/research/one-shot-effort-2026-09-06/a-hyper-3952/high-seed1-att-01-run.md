@@ -4,7 +4,7 @@
 
 - **Target:** `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready" (author `lthiery`, association CONTRIBUTOR)
 - **Cell/attempt:** `a-high-seed1` / `att-01`
-- **Skill:** `code-review-publish` at the snapshot pinned in `/tmp/effort124/skill/skills/code-review-publish/` (workflow version `v5b-10` per `references/output-contract.md`)
+- **Skill:** `legacy reviewer` at the snapshot pinned in `/tmp/effort124/skill/snapshot-path-omitted/` (workflow version `v5b-10` per `references/output-contract.md`)
 - **Primary model:** `claude-sonnet-5` (this session)
 - **Sub-agent model:** every sub-agent dispatched with `model: "sonnet"` (only sub-agents spawned are the mandatory verifier batch(es), `subagent_type: "v5b-verifier-effort-high"`) — recorded verbatim below as they are dispatched.
 - **Verification trigger fired:** yes — one surviving candidate is proposed `must-fix` and has `kind: concurrency`, which is a mandatory-verification trigger under `SKILL.md` step 3. No zero-survivor clean-verdict mode fired (at least one candidate survived). No related-acquittal rows attach (checked below).
@@ -68,7 +68,7 @@ No originating issue (`issues=none`); ledger built from the PR title and body al
 
 Built the private context store once:
 ```
-python3 /tmp/effort124/skill/skills/code-review-publish/scripts/review_context.py \
+python3 /tmp/effort124/skill/snapshot-path-omitted/scripts/review_context.py \
   --merge-base f9f8f44058745d23fa52abf51b96b61ee7665642 \
   --head f2aa734e5699a91fc20f1178e38af7b1e374bdbc \
   --store /tmp/effort124/work/a-high-seed1-att-01/private/ctxC5Gs/review-context-f2aa734e5699a91fc20f1178e38af7b1e374bdbc.json
@@ -147,7 +147,7 @@ Dispatched via `Agent` with `subagent_type: "v5b-verifier-effort-high"`, `model:
 ~~~markdown
 # Independent verification batch — candidate mode
 
-You are an independent verifier for the code-review-publish skill (`hyperium/hyper#3952`, cell `a-high-seed1`, attempt `att-01`). You are fact-checking one supplied candidate. You are not a second reviewer: do not search for new findings beyond what is supplied, and you cannot write to the pull request. Read `references/verifier.md` and `references/verifier-concurrency.md` under `/tmp/effort124/skill/skills/code-review-publish/` in full before proceeding — they own your evidence procedure, verdict vocabulary, and (for this candidate, whose kind is `concurrency`) the mandatory bug-class check. This prompt does not restate their content; follow them as written.
+You are an independent verifier for the legacy reviewer skill (`hyperium/hyper#3952`, cell `a-high-seed1`, attempt `att-01`). You are fact-checking one supplied candidate. You are not a second reviewer: do not search for new findings beyond what is supplied, and you cannot write to the pull request. Read `references/verifier.md` and `references/verifier-concurrency.md` under `/tmp/effort124/skill/snapshot-path-omitted/` in full before proceeding — they own your evidence procedure, verdict vocabulary, and (for this candidate, whose kind is `concurrency`) the mandatory bug-class check. This prompt does not restate their content; follow them as written.
 
 ## Binding run conditions (apply to you exactly as they apply to the primary reviewer)
 
@@ -156,7 +156,7 @@ You are an independent verifier for the code-review-publish skill (`hyperium/hyp
 3. **History is truncated at the pinned head on purpose.** The newest object reachable in the clone is `f2aa734e5699a91fc20f1178e38af7b1e374bdbc`. Do not try to work around this. Report explicitly whether you read any history beyond the pinned head and which history commands you ran.
 4. **Clone hygiene.** Do not run `git checkout`, `git switch`, `git reset`, `git stash`, or any command that mutates the tree. If you find the tree already mutated, stop and report it rather than repairing it yourself.
 5. **Follow `references/verifier.md` and `references/verifier-concurrency.md` exactly as written.** Do not borrow behavior from any other review skill.
-6. **Stay inside your sandbox.** Your clone (`/tmp/effort124/runs/a-high-seed1-att-01`), the skill snapshot (`/tmp/effort124/skill/skills/code-review-publish/`), and this prompt's contents only. Do not read any other run's clone, report, or payload (in particular, do not read anything under `/tmp/effort124/reports/` or `/tmp/effort124/work/` outside what this prompt gives you). Report any other path you read anyway.
+6. **Stay inside your sandbox.** Your clone (`/tmp/effort124/runs/a-high-seed1-att-01`), the skill snapshot (`/tmp/effort124/skill/snapshot-path-omitted/`), and this prompt's contents only. Do not read any other run's clone, report, or payload (in particular, do not read anything under `/tmp/effort124/reports/` or `/tmp/effort124/work/` outside what this prompt gives you). Report any other path you read anyway.
 7. **Persist nothing yourself** — return your complete verdict in your response; there is no report file for you to write.
 9. **No session relays.** Finish in this dispatch. Do not stop to ask anyone anything; if an input is genuinely missing, say so in your verdict rather than pausing.
 
@@ -265,7 +265,7 @@ focused_check_run: none — no test or repro command was executed for this candi
 
 ## Your permission and task
 
-You may inspect the cited code and any narrow callers, tests, configuration, or history needed to decide this candidate, within the clone at `/tmp/effort124/runs/a-high-seed1-att-01` and the skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/` only. Apply `references/verifier.md`'s verification task (all 6 steps) and, because this candidate's `kind` is `concurrency`, `references/verifier-concurrency.md`'s bug-class check in full (state the invariant at rule level; answer whether the failing interleaving requires shutdown/teardown/an error path, and if not, trace at least one steady-state interleaving to a `holds`/`fails` verdict with citations; enumerate sibling interleavings — e.g. producer-body-pending vs. connection-idle, spawner/steady-state read vs. write — before sibling code paths; widen `change` to the rule level if the proposed fix is narrower than the bug class). Return your verdict in the exact format `references/verifier.md`'s "Verdicts" section specifies: `confirmed` or `refuted` (with its named `basis`), decisive citations, any correction to `trigger`/`impact`/`priority`/`action`/`anchor`/`fix`/`change`, any scoped safety ruling, and any duplicate-id grouping. Do not render publication prose. If you find an incidental, non-actionable, in-scope observation, return it separately as the single permitted `observation` aside per `verifier.md`; do not fold it into the verdict.
+You may inspect the cited code and any narrow callers, tests, configuration, or history needed to decide this candidate, within the clone at `/tmp/effort124/runs/a-high-seed1-att-01` and the skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/` only. Apply `references/verifier.md`'s verification task (all 6 steps) and, because this candidate's `kind` is `concurrency`, `references/verifier-concurrency.md`'s bug-class check in full (state the invariant at rule level; answer whether the failing interleaving requires shutdown/teardown/an error path, and if not, trace at least one steady-state interleaving to a `holds`/`fails` verdict with citations; enumerate sibling interleavings — e.g. producer-body-pending vs. connection-idle, spawner/steady-state read vs. write — before sibling code paths; widen `change` to the rule level if the proposed fix is narrower than the bug class). Return your verdict in the exact format `references/verifier.md`'s "Verdicts" section specifies: `confirmed` or `refuted` (with its named `basis`), decisive citations, any correction to `trigger`/`impact`/`priority`/`action`/`anchor`/`fix`/`change`, any scoped safety ruling, and any duplicate-id grouping. Do not render publication prose. If you find an incidental, non-actionable, in-scope observation, return it separately as the single permitted `observation` aside per `verifier.md`; do not fold it into the verdict.
 ~~~
 
 ### 8.2 Verbatim verifier report
@@ -378,7 +378,7 @@ No `git log` walking past the head, no `git fetch`/`git pull`, no attempt to rea
 
 ## 12. Sandbox disclosure
 
-Every path I read was inside: the clone (`/tmp/effort124/runs/a-high-seed1-att-01`), the skill snapshot (`/tmp/effort124/skill/skills/code-review-publish/`), the packet directory (`/tmp/effort124/packets/a/packet.md`), and my own work/report/payload/timing paths under `/tmp/effort124/work/a-high-seed1-att-01/` and `/tmp/effort124/reports/a/`. I additionally observed, via one `ls` listing only (not a read of contents), that `/tmp/effort124/reports/a/` contains sibling files for a different attempt (`a-medium-seed1-att-02-*`); I did not open or read any of that attempt's report, payload, or timing content, per rule 7/§8's sandbox instruction — disclosed here since the instruction asks me to report any other path I so much as touched. No other out-of-sandbox path was read by me or, per its own disclosure, by the verifier sub-agent.
+Every path I read was inside: the clone (`/tmp/effort124/runs/a-high-seed1-att-01`), the skill snapshot (`/tmp/effort124/skill/snapshot-path-omitted/`), the packet directory (`/tmp/effort124/packets/a/packet.md`), and my own work/report/payload/timing paths under `/tmp/effort124/work/a-high-seed1-att-01/` and `/tmp/effort124/reports/a/`. I additionally observed, via one `ls` listing only (not a read of contents), that `/tmp/effort124/reports/a/` contains sibling files for a different attempt (`a-medium-seed1-att-02-*`); I did not open or read any of that attempt's report, payload, or timing content, per rule 7/§8's sandbox instruction — disclosed here since the instruction asks me to report any other path I so much as touched. No other out-of-sandbox path was read by me or, per its own disclosure, by the verifier sub-agent.
 
 ## 13. Notes — judgment calls on the skill's contract
 

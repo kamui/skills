@@ -79,7 +79,7 @@ before verifier dispatch). Final wall clock reported in Notes at the end.
 ## 1. Metadata
 
 - **Target:** `python/typeshed#9458` — "Bump redis to 4.4.0", merged, retrospective non-publishing review.
-- **Arm:** `v5b-effort-medium`, skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`.
+- **Arm:** `v5b-effort-medium`, skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`.
 - **Seed:** 3.
 - **Primary reviewer model:** `claude-sonnet-5`, run at effort `medium` (via the `v5b-primary-effort-medium`
   dispatch agent), in this single context — the whole review (phases 1–6) was done by me directly; no
@@ -259,7 +259,7 @@ section 1).
 ### Exact prompt given to the verifier
 
 ```
-You are an independent verifier for one code-review-publish run (workflow v5b-1). Read `/tmp/holdout/skills/v5b/references/verifier.md` in full now and follow its "Verification task" and "Verdicts" sections exactly. This is candidate mode (not clean-verdict mode). Run in a genuinely fresh context: do not assume anything beyond what is given here.
+You are an independent verifier for one legacy reviewer run (workflow v5b-1). Read `/tmp/holdout/skills/v5b/references/verifier.md` in full now and follow its "Verification task" and "Verdicts" sections exactly. This is candidate mode (not clean-verdict mode). Run in a genuinely fresh context: do not assume anything beyond what is given here.
 
 ## Binding run conditions (apply to you too)
 

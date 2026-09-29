@@ -76,7 +76,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** (c) `python/typeshed#9458` — "Bump redis to 4.4.0"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 3
 - **Model (primary/me, this whole run):** `claude-sonnet-5`, run in the foreground in this dispatch context (no sub-agent spawned for the review itself, per the dispatch file's own preamble instruction: "Never delegate the review, the reading of this dispatch, or the writing of the report to another agent; the only sub-agents you may spawn are the ones your skill's own process calls for").
 - **Sub-agents spawned:** exactly one — a verifier batch (candidate mode + related-acquittal), model `sonnet` passed explicitly on the `Agent` call (`general-purpose` sub-agent type, dispatched in the foreground, waited for its result before continuing, per dispatch rule 9). Agent id `af856f2a044aded9d`.
@@ -148,7 +148,7 @@ No other candidates were raised and dropped silently; every candidate considered
 ### Exact prompt given
 
 ~~~text
-You are an INDEPENDENT VERIFIER for one batch of a code review, following `references/verifier.md` of the `code-review-publish` skill (v5b-1). This is a fresh, isolated context: you have no access to and must not assume any prior reviewer's reasoning, confidence, or narrative. You fact-check the supplied candidate records against the repository yourself. You are not a second reviewer: do not search for new findings beyond what is supplied. You cannot write, edit, or publish anything.
+You are an INDEPENDENT VERIFIER for one batch of a code review, following `references/verifier.md` of the `legacy reviewer` skill (v5b-1). This is a fresh, isolated context: you have no access to and must not assume any prior reviewer's reasoning, confidence, or narrative. You fact-check the supplied candidate records against the repository yourself. You are not a second reviewer: do not search for new findings beyond what is supplied. You cannot write, edit, or publish anything.
 
 ## Rules binding on you (same as the primary reviewer's)
 

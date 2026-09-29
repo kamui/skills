@@ -6,7 +6,7 @@
 
 - Target: `bokeh/bokeh#9232` ("Fixed issue of Datepicker displaying the wrong date for users in UTC+…")
 - Cell: `l-867cf3ff-seed1`; attempt: `att-14`
-- Skill snapshot: `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`
+- Skill snapshot: `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`
 - Skill `workflow` identifier reported by the validator: `v5b-1` (from `scripts/validate_review.py`'s `WORKFLOW = "v5b-1"` constant, confirmed by running `--self-test`-free inspection of the script; the payload's own run trailer will carry `workflow=v5b-1`)
 - Model I (the primary reviewer) ran on: `claude-sonnet-5`
 - Model every sub-agent ran on: `claude-sonnet-5` (passed explicitly as `model: "sonnet"` on the `Agent` call, per the cell's binding instruction)
@@ -61,9 +61,9 @@ Repository guidance: `.github/PULL_REQUEST_TEMPLATE.md` present at merge-base, r
 
 ## 5. Everything consulted beyond the diff (commands, searches, execution)
 
-All commands below were run from `/tmp/qual137/runs/l-867cf3ff-seed1-att-14` (the clone) or `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish` (the skill directory) or `/tmp/qual137/work/l-867cf3ff-seed1-att-14` (my work directory), never mutating the clone.
+All commands below were run from `/tmp/qual137/runs/l-867cf3ff-seed1-att-14` (the clone) or `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted` (the skill directory) or `/tmp/qual137/work/l-867cf3ff-seed1-att-14` (my work directory), never mutating the clone.
 
-1. `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/review_context.py --merge-base ccb4bcb4c2b841d89b0e88303a97bf4604a5795f --head 36549bca3a63d581f7b68d08054a7813c1e6a499` — exit 0. Produced the manifest, full diff, `ranges`, and `history` sections (192 lines), saved to `/tmp/qual137/work/l-867cf3ff-seed1-att-14/review_context_output.md`. Run exactly once, per SKILL.md §2/§3.
+1. `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/review_context.py --merge-base ccb4bcb4c2b841d89b0e88303a97bf4604a5795f --head 36549bca3a63d581f7b68d08054a7813c1e6a499` — exit 0. Produced the manifest, full diff, `ranges`, and `history` sections (192 lines), saved to `/tmp/qual137/work/l-867cf3ff-seed1-att-14/review_context_output.md`. Run exactly once, per SKILL.md §2/§3.
 2. `git log --oneline -5 review-head` and `git branch -a` and `git status` in the clone — confirmed the clone's state (branch `review-head` checked out at `36549bca3`, tree clean, no history beyond the pinned head reachable — see §8).
 3. `wc -l bokehjs/src/lib/models/widgets/date_picker.ts` → 129 lines; then a full `Read` of that file.
 4. `grep -n "_unlocal_date" -r bokehjs` (via the `Grep` tool, repo-wide within `bokehjs/`, case-sensitive — the identifier has no case variants worth searching case-insensitively) — found exactly 3 call sites, all in `date_picker.ts` itself (lines 68, 70, 71), each wrapped in a freshly constructed `new Date(...)`. This is the decisive evidence that the parameter-mutation observation (§2 Observations) has no current consequence.
@@ -126,7 +126,7 @@ You are an independent fresh-context verifier for one code-review candidate. You
 2. Execution allowance: node (v24.19.0) is installed; you may write and run scratch JavaScript under `/tmp/qual137/work/l-867cf3ff-seed1-att-14/scratch/` (your own subdirectory there is fine) to check code behavior you've read, including with a `TZ` environment variable set. Five minutes per command. Do NOT attempt the project's own build or its Selenium suite (unavailable offline). Do not add or change anything inside the clone.
 3. History is truncated at the pinned head (`36549bca3a63d581f7b68d08054a7813c1e6a499`) on purpose in this clone. Do not try to work around that. If you run any `git log`/`git show` beyond what's needed, report exactly which commands.
 4. Clone hygiene: do NOT run `git checkout`, `git switch`, `git reset`, `git stash`, or anything that mutates the working tree of `/tmp/qual137/runs/l-867cf3ff-seed1-att-14`. Read-only git commands (`git show`, `git diff`, `git log`) are fine.
-5. Stay inside this sandbox only: the clone at `/tmp/qual137/runs/l-867cf3ff-seed1-att-14`, the skill snapshot at `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`, the packet at `/tmp/qual137/packets/l/packet.md`, and your scratch subdirectory under `/tmp/qual137/work/l-867cf3ff-seed1-att-14/`. Do not read any other run's clone, report, or payload (in particular, do not read anything under `/tmp/qual137/reports/l/` other than nothing — you have no need to read report files at all). If you read anything outside this sandbox, say so explicitly in your report.
+5. Stay inside this sandbox only: the clone at `/tmp/qual137/runs/l-867cf3ff-seed1-att-14`, the skill snapshot at `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`, the packet at `/tmp/qual137/packets/l/packet.md`, and your scratch subdirectory under `/tmp/qual137/work/l-867cf3ff-seed1-att-14/`. Do not read any other run's clone, report, or payload (in particular, do not read anything under `/tmp/qual137/reports/l/` other than nothing — you have no need to read report files at all). If you read anything outside this sandbox, say so explicitly in your report.
 6. This is a one-shot task. Do not ask anyone anything; finish and return your verdict in this single response.
 
 ## Pinned run identity

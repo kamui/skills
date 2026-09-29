@@ -62,7 +62,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** `astral-sh/uv#4424` — "Expose `toolchain-preference` as a CLI and configuration file option"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662` (`workflow=v5b-1`)
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662` (`workflow=v5b-1`)
 - **Seed:** 1
 - **Model:** `claude-sonnet-5` for the primary reviewer (this run, in this context). **No sub-agents were spawned** (see §7 for the exact trigger evaluation that makes this the skill-correct outcome, not an omission); consequently there is no sub-agent model to report beyond the instruction that `sonnet` would have been passed explicitly had one been dispatched.
 - **Verification trigger fired:** none. Neither the mandatory-verification trigger (a `must-fix` survivor, or any candidate touching security/authorization, data loss/corruption, destructive migration, or an externally observable compatibility break) nor zero-survivor clean-verdict mode (which requires *zero* surviving findings) applied. One `consider` finding survived falsification, which by itself blocks zero-survivor mode, and no candidate ever reached the must-fix/security/data-loss/destructive-migration/compat-break bar. See §7 for the full walk-through.

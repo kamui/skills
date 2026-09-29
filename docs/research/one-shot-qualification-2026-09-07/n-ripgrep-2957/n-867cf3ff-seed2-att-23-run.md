@@ -4,7 +4,7 @@
 
 - **Target:** `BurntSushi/ripgrep#2957` — "feat(completion): support sourcing zsh completion dynamically" (cell `n`)
 - **Cell:** `n-867cf3ff-seed2`, attempt `att-23`
-- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`
+- **Skill snapshot:** `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`
 - **`workflow` identifier the validator reports:** `v5b-1` (from `scripts/validate_review.py` source, `WORKFLOW = "v5b-1"`, line 99; also enforced at line 267-268)
 - **Model:** I (the primary reviewer) ran on `claude-sonnet-5`. Every sub-agent I dispatch is instructed with `model: "sonnet"` explicitly, as required.
 - **Verification trigger fired:** Yes — mandatory verification for a `must-fix` candidate. SKILL.md's exact sentence: *"Independently verify every surviving candidate proposed as `must-fix`, plus every candidate involving security or authorization, data loss or corruption, destructive migration, or an externally observable compatibility break."* Candidate `faq/zsh-source-snippet-prompt-prefix` (below) is proposed `must-fix`, so it fired. No candidate involved security/authorization/data-loss/destructive-migration/compat-break, and the zero-survivor and related-acquittal clean-verdict triggers did not fire (at least one candidate survived as a finding, and no dropped candidate's `kind` was `bug`/`concurrency`/`invariant`/`security` while also sharing the survivor's file/function/branch/lock — see ledger row `zsh/funcstack-compdef-guard` and `zsh/ci-test-complete-compat`, both dropped with kind=bug but in a *different* file (`crates/core/flags/complete/rg.zsh`) than the must-fix survivor's anchor/fix (`FAQ.md`), and not naming the same function/branch as the survivor's claim, so related-acquittal inclusion was not required).
@@ -85,7 +85,7 @@ Requirement ledger (private, from step 2 of the skill; issue `BurntSushi/ripgrep
 - **`subagent_type`:** `general-purpose`
 - **`model`:** `"sonnet"` (passed explicitly)
 - **`run_in_background`:** `false`
-- **Moment of dispatch relative to the falsification pass:** dispatched only *after* my own primary falsification pass was complete for all 6 candidates and the full candidate ledger (§3) had already been written to this report file, per rule 6 ("Persist before you verify") and the skill's own "Write the private record once per phase… the candidate ledger with every disposition at the end of falsification" (SKILL.md §3). This skill defines no "early dispatch of the verifier batch before the falsification pass" mechanism, so that mechanism did not fire — falsification-then-verify is the whole of this skill's order (contrast with a hypothetical skill that dispatches verifiers concurrently with primary review; `code-review-publish` does not do this).
+- **Moment of dispatch relative to the falsification pass:** dispatched only *after* my own primary falsification pass was complete for all 6 candidates and the full candidate ledger (§3) had already been written to this report file, per rule 6 ("Persist before you verify") and the skill's own "Write the private record once per phase… the candidate ledger with every disposition at the end of falsification" (SKILL.md §3). This skill defines no "early dispatch of the verifier batch before the falsification pass" mechanism, so that mechanism did not fire — falsification-then-verify is the whole of this skill's order (contrast with a hypothetical skill that dispatches verifiers concurrently with primary review; `legacy reviewer` does not do this).
 
 ### Exact prompt given
 
@@ -112,7 +112,7 @@ RULES YOU MUST FOLLOW (binding on you exactly as they were binding on the review
 6. Persist nothing beyond your returned report; there is no shared ledger file for you to write.
 7. Stay inside: the clone at /tmp/qual137/runs/n-867cf3ff-seed2-att-23 (read-only — do not run
    `git checkout`, `git switch`, `git reset`, `git stash`, or any command that mutates the tree), the
-   skill snapshot directory /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/ (read-only,
+   skill snapshot directory /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/ (read-only,
    read references/verifier.md there if you want the full verification-task text, though it is
    reproduced below), and your own scratch directory
    /tmp/qual137/work/n-867cf3ff-seed2-att-23/verifier1/ (create it, write scratch test scripts only
@@ -338,7 +338,7 @@ No `git fetch`, `git pull`, `gh`, `curl`, or other network-touching command was 
 
 ## 9. Sandbox disclosure
 
-I read only: the clone at `/tmp/qual137/runs/n-867cf3ff-seed2-att-23`; the skill snapshot at `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`; the packet at `/tmp/qual137/packets/n/packet.md`; my own work directory `/tmp/qual137/work/n-867cf3ff-seed2-att-23/`; and my own report/payload/timing paths under `/tmp/qual137/reports/n/`.
+I read only: the clone at `/tmp/qual137/runs/n-867cf3ff-seed2-att-23`; the skill snapshot at `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`; the packet at `/tmp/qual137/packets/n/packet.md`; my own work directory `/tmp/qual137/work/n-867cf3ff-seed2-att-23/`; and my own report/payload/timing paths under `/tmp/qual137/reports/n/`.
 
 One incidental exception to disclose: in listing `/tmp/qual137/reports/n/` with `ls` (to check that my own report/payload/timing paths existed before creating them), the directory listing surfaced the *names* of other cells' report files for this same target (`n-867cf3ff-seed1-att-22-*`, `n-bea6be14-seed1-att-21-*`, `n-bea6be14-seed2-att-24-*`, and their `-meta.json`/`-session.txt` siblings). I did not open, read, or otherwise consult the contents of any of those files — only their filenames appeared in the `ls` output I requested for my own directory-existence check. Rule 7 requires me to report any other path read; I list these filenames here in the interest of full disclosure even though I did not read their contents, since the bare `ls` on a shared parent directory is arguably already a boundary case. No other path outside the sandbox was touched.
 

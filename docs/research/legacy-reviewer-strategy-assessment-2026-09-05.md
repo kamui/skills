@@ -1,8 +1,8 @@
-# Code-review-publish strategy assessment — 2026-09-05
+# legacy reviewer strategy assessment — 2026-09-05
 
 The recommendation is to keep the current skill as the production baseline, improve discovery and verification handling, and test one small alternative that gives a fresh reviewer permission to discover missed defects on a bounded surface. Do not replace it with an always-on panel or implement the replica design in #88 as written. The current evidence supports neither a wholesale replacement nor confidence that further rubric additions alone will solve recall.
 
-This assessment covers `skills/code-review-publish` at `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83`, verified against GitHub `main`, and all 13 open GitHub issues retrieved with their comments on 2026-09-05. Tickets focused solely on the v2a prototype are excluded; shared epics and the current-line replica proposal are included only for their relevant portions. Historical Panel results are used as comparison evidence, not as a recommendation to resume its backlog. No skill implementation or GitHub issue was changed. This document and its [empirical companion](code-review-publish-empirical-assessment-2026-09-05.md) are research artifacts.
+This assessment covers `snapshot-path-omitted` at `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83`, verified against GitHub `main`, and all 13 open GitHub issues retrieved with their comments on 2026-09-05. Tickets focused solely on the v2a prototype are excluded; shared epics and the current-line replica proposal are included only for their relevant portions. Historical Panel results are used as comparison evidence, not as a recommendation to resume its backlog. No skill implementation or GitHub issue was changed. This document and its [empirical companion](legacy-reviewer-empirical-assessment-2026-09-05.md) are research artifacts.
 
 ## 1. What the evidence supports
 
@@ -37,7 +37,7 @@ Keep the integrated primary as the default until a matched experiment beats it. 
 
 The publication layer has substantial useful mechanical coverage. During this assessment, `validate_review.py --self-test` passed 70 cases, `test_context_fingerprint.py` passed eight groups, and `review_context.py --self-test` passed its reported cases. The holdout's live Cobra rounds also provide limited but real evidence for reply handling and stale-head protection. These checks establish their tested mechanics, not the truth of review findings.
 
-Sources: [skill](../../skills/code-review-publish/SKILL.md), [rubric](../../skills/code-review-publish/references/review-rubric.md), [output contract](../../skills/code-review-publish/references/output-contract.md).
+Sources: skill (historical source path omitted), rubric (historical source path omitted), output contract (historical source path omitted).
 
 ### Shift attention toward discovering failures
 
@@ -62,7 +62,7 @@ The verifier currently uses `refuted` for both a claim contradicted by evidence 
 3. **The documented large-diff fallback is unavailable.** Step 3 allows rerunning `review_context.py` split by path after output truncation, but its parser exposes no path-selection option. Add stable chunking or persisted selectable sections before relying on this escape hatch.
 4. **The output validator protects formatting more thoroughly than essential prose.** Removing both `Triggers when` and `Impact` from the shipped valid-payload fixture still returns zero validation violations. Their factual sufficiency belongs to the reviewer, but their required presence and order are mechanical. Add those simple checks rather than trying to encode review judgment in regexes.
 
-Sources and inspection locations: [fetch and fallback instructions](../../skills/code-review-publish/SKILL.md), [fingerprint normalization](../../skills/code-review-publish/scripts/context_fingerprint.py), [context CLI](../../skills/code-review-publish/scripts/review_context.py), [finding validator](../../skills/code-review-publish/scripts/validate_review.py). The missing-ID and missing-field cases were exercised in memory without modifying these files. Pagination and CLI mismatch were established by source inspection. The passing self-tests do not cover these integration gaps.
+Sources and inspection locations: fetch and fallback instructions (historical source path omitted), fingerprint normalization (historical source path omitted), context CLI (historical source path omitted), finding validator (historical source path omitted). The missing-ID and missing-field cases were exercised in memory without modifying these files. Pagination and CLI mismatch were established by source inspection. The passing self-tests do not cover these integration gaps.
 
 ## 3. Cost, time, and evaluation
 

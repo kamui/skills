@@ -1,6 +1,6 @@
 # Prototype run data — v2, v3, v4, v5 against `kamui/shortlist#66`
 
-> **Promotion status:** “v5” is the historical prototype name used by this record. PR #17 promoted that workflow to `skills/code-review-publish` on `main`; new experiments should invoke `/code-review-publish` without the `-5` suffix. **Superseded 2026-09-03:** PR #42 replaced that skill with **v5a**, so `/code-review-publish` now invokes v5a, not the v5 workflow this record tests. `skills/code-review-publish-legacy` is the v1 legacy reviewer, and v5 is no longer on `main` — pin it from `571f31d`.
+> **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
 **2026-09-01.** Raw outputs and metadata from running four code-review prototypes against one
 pull request under controlled conditions. **Data only** — the analysis of this run lives in

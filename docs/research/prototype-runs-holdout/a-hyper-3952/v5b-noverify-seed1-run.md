@@ -60,7 +60,7 @@ Per agent:
 # Research report — cell `a/v5b-noverify-seed1`
 
 Target `hyperium/hyper#3952`, arm `v5b-noverify (ablation: verification disabled)`, seed 1.
-Skill pin: `code-review-publish` at `main 2f06662 minus references/verifier.md (workflow=v5b-1, ablation)`.
+Skill pin: `legacy reviewer` at `main 2f06662 minus references/verifier.md (workflow=v5b-1, ablation)`.
 Dispatch: `/tmp/holdout/dispatch/a/v5b-noverify-seed1.md`.
 
 The complete rendered review (summary + finding comments) is at

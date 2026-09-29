@@ -73,7 +73,7 @@ Per agent:
 
 # Research report — cell (a) v5b seed 1
 
-Target: `hyperium/hyper#3952` ("fix(http1): poll_loop writes when ready"). Arm `v5b` — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`. Seed 1.
+Target: `hyperium/hyper#3952` ("fix(http1): poll_loop writes when ready"). Arm `v5b` — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`. Seed 1.
 
 Run started (best-effort; not stamped at the very first tool call): approx. 2026-09-04T~19:40Z. Report first persisted (this stage): 2026-09-04T20:29:55Z. Final wall clock is stated in section 10 once the run finishes.
 
@@ -81,7 +81,7 @@ Run started (best-effort; not stamped at the very first tool call): approx. 2026
 
 - **Target:** `hyperium/hyper#3952`, head `f2aa734e5699a91fc20f1178e38af7b1e374bdbc`, base `master`, base SHA / merge-base `f9f8f44058745d23fa52abf51b96b61ee7665642` (identical). `state=MERGED`, `merged=true`, `isDraft=false`.
 - **Arm/seed:** v5b, seed 1.
-- **Skill and pin:** `code-review-publish`, snapshot at `/tmp/holdout/skills/v5b/`, `workflow=v5b-1` (matches `WORKFLOW = "v5b-1"` hard-coded in `scripts/validate_review.py`).
+- **Skill and pin:** `legacy reviewer`, snapshot at `/tmp/holdout/skills/v5b/`, `workflow=v5b-1` (matches `WORKFLOW = "v5b-1"` hard-coded in `scripts/validate_review.py`).
 - **Model I (the primary reviewer) ran on:** `claude-sonnet-5` (`model: sonnet` requested for this whole dispatch; I am the reviewer, running directly in this context, not as a spawned sub-agent).
 - **Sub-agents spawned:** one verifier batch (candidate mode with one related-acquittal row), dispatched with `model: "sonnet"` explicitly, `run_in_background: false`, foreground, waited for completion. See section 4 for the exact prompt and verbatim report. No other sub-agents were spawned (no finder fan-out; this skill is a single integrated reviewer).
 - **Verification trigger that fired:** the *must-fix* trigger — one surviving candidate (C1, busy-poll on the write side) was proposed `must-fix`, which mandates independent verification under `SKILL.md` step 3. Related-acquittal mode also fired alongside it (one dropped `kind=bug` ledger row, D1, shares a file with C1's anchor/fix), so it rode in the same batch. Zero-survivor mode did **not** fire (there was at least one survivor). No candidate needed a follow-up batch (see section 4 for the verifier's verdicts and whether anything re-opened).
@@ -440,7 +440,7 @@ own usage).
 ### Exact prompt given
 
 ```
-You are an INDEPENDENT VERIFIER for one batch of a code review conducted under the `code-review-publish` skill (workflow v5b-1). You are not the primary reviewer, cannot search for new findings, and cannot write anything to the repository or to any pull request. This is a fresh, isolated context: you have no access to and must not try to access the primary reviewer's reasoning, chain of thought, or any other conversation.
+You are an INDEPENDENT VERIFIER for one batch of a code review conducted under the `legacy reviewer` skill (workflow v5b-1). You are not the primary reviewer, cannot search for new findings, and cannot write anything to the repository or to any pull request. This is a fresh, isolated context: you have no access to and must not try to access the primary reviewer's reasoning, chain of thought, or any other conversation.
 
 ## Ground rules (binding on you)
 

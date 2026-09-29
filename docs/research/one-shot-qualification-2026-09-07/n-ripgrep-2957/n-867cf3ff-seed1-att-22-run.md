@@ -6,7 +6,7 @@
 | --- | --- |
 | Target | `BurntSushi/ripgrep#2957` ("feat(completion): support sourcing zsh completion dynamically") |
 | Cell | `n-867cf3ff-seed1`, attempt `att-22` |
-| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` |
 | `workflow` identifier (validator) | `v5b-1` (from `scripts/validate_review.py`'s `WORKFLOW` constant, confirmed by a clean `validate_review.py` exit on the emitted trailer) |
 | Model I ran on | `claude-sonnet-5` |
 | Sub-agents spawned | **none** — see §7 for why the verification trigger never fired |
@@ -55,11 +55,11 @@ Per the task's own instruction that sub-agent dispatch is used "for a verifier b
 
 ### Scripted/tool inputs
 
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/review_context.py --merge-base 79cbe89deb1151e703f4d91b19af9cdcc128b765 --head 855bfa6cdae4f4fe8762f892fc4957635397083e` (run from inside the clone `/tmp/qual137/runs/n-867cf3ff-seed1-att-22`, `master` branch checked out at nothing/`review-head` checked out) — exit 0, 298 lines of Markdown output written to `/tmp/qual137/work/n-867cf3ff-seed1-att-22/review_context.md`, read in full. This supplied `manifest`, the complete function-context `diff`, `ranges`, and `history` sections used for the whole review; the diff was read exactly once from this output as the rubric's "Review once" step requires.
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/context_fingerprint.py /tmp/qual137/work/n-867cf3ff-seed1-att-22/context_input.json` — exit 0, printed the digest `fea14e64c218222905fc4b1fc7bde1d1907a2826ffb04195d9add739b148f6a1` (see §6 for the exact input JSON).
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/validate_review.py /tmp/qual137/work/n-867cf3ff-seed1-att-22/payload.json` — exit 0, no violations.
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/validate_review.py --render /tmp/qual137/work/n-867cf3ff-seed1-att-22/payload.json` — exit 0, empty output (correct: zero findings/questions means zero rendered fragments).
-- `python3 /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/validate_review.py --emit-batch /tmp/qual137/work/n-867cf3ff-seed1-att-22/payload.json` — exit 0, printed the one-call batch JSON (`commit_id`, `event=COMMENT`, `body`, empty `comments`), reproduced verbatim in this session's transcript.
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/review_context.py --merge-base 79cbe89deb1151e703f4d91b19af9cdcc128b765 --head 855bfa6cdae4f4fe8762f892fc4957635397083e` (run from inside the clone `/tmp/qual137/runs/n-867cf3ff-seed1-att-22`, `master` branch checked out at nothing/`review-head` checked out) — exit 0, 298 lines of Markdown output written to `/tmp/qual137/work/n-867cf3ff-seed1-att-22/review_context.md`, read in full. This supplied `manifest`, the complete function-context `diff`, `ranges`, and `history` sections used for the whole review; the diff was read exactly once from this output as the rubric's "Review once" step requires.
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/context_fingerprint.py /tmp/qual137/work/n-867cf3ff-seed1-att-22/context_input.json` — exit 0, printed the digest `fea14e64c218222905fc4b1fc7bde1d1907a2826ffb04195d9add739b148f6a1` (see §6 for the exact input JSON).
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/validate_review.py /tmp/qual137/work/n-867cf3ff-seed1-att-22/payload.json` — exit 0, no violations.
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/validate_review.py --render /tmp/qual137/work/n-867cf3ff-seed1-att-22/payload.json` — exit 0, empty output (correct: zero findings/questions means zero rendered fragments).
+- `python3 /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/validate_review.py --emit-batch /tmp/qual137/work/n-867cf3ff-seed1-att-22/payload.json` — exit 0, printed the one-call batch JSON (`commit_id`, `event=COMMENT`, `body`, empty `comments`), reproduced verbatim in this session's transcript.
 - I did **not** run either script's `--self-test` mode, per the task's explicit instruction ("Compute the `context` digest once... do not run the skill's self-tests inside this cell").
 
 ### Repo reads and greps (all inside the pinned clone `/tmp/qual137/runs/n-867cf3ff-seed1-att-22`, offline, no `git checkout`/`switch`/`reset`/`stash` run)
@@ -158,7 +158,7 @@ No `git fetch`, `git pull`, `git log` past the pinned head, or any other history
 No path outside the sandbox was read. Every read and write stayed within:
 
 - the clone `/tmp/qual137/runs/n-867cf3ff-seed1-att-22` (read-only; no mutating git command run),
-- the skill snapshot `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/`,
+- the skill snapshot `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/`,
 - the packet directory `/tmp/qual137/packets/n/`,
 - my own work directory `/tmp/qual137/work/n-867cf3ff-seed1-att-22/`, and
 - my own report/payload/timing paths under `/tmp/qual137/reports/n/`.

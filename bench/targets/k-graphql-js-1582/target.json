@@ -78,7 +78,7 @@
   "exposure": {
     "entered_suite": "2026-09-07 (issue #137 qualification grid, target (k))",
     "used_by": [
-      "one-shot-qualification-2026-09-07 (#137): four cells, two code-review-publish snapshots x two replicates",
+      "one-shot-qualification-2026-09-07 (#137): four cells, two legacy reviewer snapshots x two replicates",
       "clean-verdict-any-surface-2026-09-11: attempt-level analysis of the #137 cells",
       "routine-review-diagnosis-2026-09-13: consumed an error-constructor and disposition-ledger snippet",
       "skills/review-code/HISTORY.md: policy analysis over the #137 attempts",

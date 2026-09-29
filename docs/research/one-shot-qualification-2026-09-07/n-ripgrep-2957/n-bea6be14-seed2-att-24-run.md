@@ -2,7 +2,7 @@
 
 Target: **(n) BurntSushi/ripgrep#2957** ("feat(completion): support sourcing zsh completion dynamically")
 Cell: `n-bea6be14-seed2`, attempt `att-24`
-Skill snapshot: `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`
+Skill snapshot: `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`
 Reviewer model: `claude-sonnet-5` (this session). No sub-agents were spawned (see §7 — verification trigger did not fire), so there is no sub-agent model to report beyond this session's own.
 
 Payload file (rendered, would-be-published review): [`n-bea6be14-seed2-att-24-payload.md`](./n-bea6be14-seed2-att-24-payload.md)
@@ -199,7 +199,7 @@ No `git fetch`, `git pull`, or any network-touching git command was run (none is
 
 ## 9. Sandbox disclosure
 
-- All substantive reads and all execution stayed inside: the clone (`/tmp/qual137/runs/n-bea6be14-seed2-att-24`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), the packet directory (`/tmp/qual137/packets/n/`), and my own work/report/payload/timing paths under `/tmp/qual137/work/n-bea6be14-seed2-att-24/` and `/tmp/qual137/reports/n/n-bea6be14-seed2-att-24-*`.
+- All substantive reads and all execution stayed inside: the clone (`/tmp/qual137/runs/n-bea6be14-seed2-att-24`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), the packet directory (`/tmp/qual137/packets/n/`), and my own work/report/payload/timing paths under `/tmp/qual137/work/n-bea6be14-seed2-att-24/` and `/tmp/qual137/reports/n/n-bea6be14-seed2-att-24-*`.
 - **One incidental directory listing outside that list:** early in the run I executed `ls -la /tmp/qual137/reports/n/` to confirm my own work/report directories existed before writing into them. That directory also holds sibling replicates' files from other cells (`n-867cf3ff-seed1-att-22-*`, `n-867cf3ff-seed2-att-23-*`, `n-bea6be14-seed1-att-21-*`), whose **filenames** were incidentally visible in that listing's output. I did not open, read, or otherwise inspect the **contents** of any of those files at any point. Disclosing this per rule 7 ("Report any other path you read") even though only filenames, not content, were exposed.
 - **One instructed exception:** the dispatch itself directs running `python3 /tmp/qual137/mark_event.py /tmp/qual137/reports/n/n-bea6be14-seed2-att-24-timing.json payload_validated_at` for the timing sidecar. `/tmp/qual137/mark_event.py` sits outside the sandbox paths rule 7 enumerates (clone/skill-snapshot/packet-dir/own-report-paths), but the dispatch names this exact command explicitly as a required step, so I ran it as instructed and disclose it here rather than treating it as a silent boundary crossing.
 - No other path outside the sandbox was read.

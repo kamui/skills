@@ -78,7 +78,7 @@ Status: COMPLETE.
 ## 1. Metadata
 
 - **Target:** `hashicorp/raft#581` — "Fix rare leadership transfer failures when writes happen during transfer"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 2
 - **Skill snapshot read:** `/tmp/holdout/skills/v5b/SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md` — all read in full before starting the review.
 - **Model — primary reviewer (me, this context):** `claude-sonnet-5`, run in the foreground for the entire cell, no delegation of the review itself.
@@ -130,7 +130,7 @@ Trigger: SKILL.md step 3, zero-survivor mode — zero candidates survived as fin
 
 **Exact prompt given to the sub-agent (verbatim):**
 
-> You are an independent verifier sub-agent for a code review skill (`code-review-publish`, workflow v5b-1). You are running in a fresh, isolated context with no access to the primary reviewer's reasoning, chain of thought, or narrative. Read `/tmp/holdout/skills/v5b/references/verifier.md` in full now, before doing anything else, and follow it exactly. This message runs its "Clean-verdict task" in **zero-survivor mode**: zero candidates from the primary review survived as findings, and you must attack every acquittal in the ledger below to check whether primary falsification actually holds. You are not a second reviewer: do not search for new findings anywhere else in the diff. You cannot write, publish, or modify anything.
+> You are an independent verifier sub-agent for a code review skill (`legacy reviewer`, workflow v5b-1). You are running in a fresh, isolated context with no access to the primary reviewer's reasoning, chain of thought, or narrative. Read `/tmp/holdout/skills/v5b/references/verifier.md` in full now, before doing anything else, and follow it exactly. This message runs its "Clean-verdict task" in **zero-survivor mode**: zero candidates from the primary review survived as findings, and you must attack every acquittal in the ledger below to check whether primary falsification actually holds. You are not a second reviewer: do not search for new findings anywhere else in the diff. You cannot write, publish, or modify anything.
 >
 > ## Rules binding on you (same rules the primary reviewer is bound by)
 >

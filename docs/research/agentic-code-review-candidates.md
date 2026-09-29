@@ -1,4 +1,4 @@
-# Agentic code-review skills and prompts: candidates for `code-review-publish` to delegate to
+# Agentic code-review skills and prompts: candidates for `legacy reviewer` to delegate to
 
 **Researched 2026-08-31.** Every URL below was live on that date. Prompt text in vendored
 artifacts drifts fast — Anthropic's bundled plugin prompts and the Claude Code binary in
@@ -7,7 +7,7 @@ named in each section. Treat anything unpinned as liable to have moved.
 
 ## The question
 
-`skills/code-review-publish/SKILL.md` step 2 delegates the actual reviewing:
+the historical reviewer instructions (snapshot path omitted), step 2 delegates the actual reviewing:
 
 > Honor a code-review skill the user names. Otherwise invoke the model-invoked review skill
 > whose description best matches the change, passing it the fixed point, the spec source,
@@ -49,7 +49,7 @@ Two things about it are commonly mis-stated, and both matter:
 
 **Its interactivity is mostly not a live liability.** It has two "ask the user" branches:
 step 1 ("If they didn't specify one, ask for it" — the fixed point) and step 2 ("If nothing
-is found, ask the user where the spec is"). `code-review-publish` step 1 supplies both:
+is found, ask the user where the spec is"). `legacy reviewer` step 1 supplies both:
 it resolves the fixed point (merge-base by default) and the originating issue as spec
 source before invoking anything. So under this caller, neither branch fires. There is a
 third, harder stop that *can* fire — "If `docs/agents/issue-tracker.md` is missing, tell
@@ -80,7 +80,7 @@ That would be tolerable in an interactive report. It is not tolerable here, beca
 > A finding is blocking unless it says otherwise. Unmarked means the change should not merge
 > until this is settled, and that is what the author reads it as.
 
-and `code-review-address` will dutifully act on each one. `code-review-publish` step 2 already
+and `code-review-address` will dutifully act on each one. `legacy reviewer` step 2 already
 knows this — "a fabricated finding costs a round and an agent will dutifully 'fix' it" — but
 it is compensating downstream for a reviewer that does no filtering upstream.
 
@@ -150,7 +150,7 @@ taste baseline.
   reasonable.
 - **Portability:** it is a slash command with `disable-model-invocation: false`, so it is
   model-invocable in principle, but it *owns* the posting step, which collides with
-  `code-review-publish` step 3.
+  `legacy reviewer` step 3.
 
 **Verdict: not a drop-in, but the single best donor of false-positive discipline.**
 
@@ -239,7 +239,7 @@ good the rest of it is.
   learn from is fine; copying it into this repo is not.
 - **Requirements axis:** **none.** Not one angle reads an issue or spec.
 - **Interactivity:** none.
-- **Portability:** it is a built-in slash command, not a skill. `code-review-publish` cannot
+- **Portability:** it is a built-in slash command, not a skill. `legacy reviewer` cannot
   `Skill(...)` it.
 
 **Verdict: read it, steal from it, cannot depend on it.**
@@ -278,7 +278,7 @@ and a three-step runtime that separates finding from filtering:
 > sub-tasks as parallel sub-tasks. […] 3. Filter out any vulnerabilities where the sub-task
 > reported a confidence less than 8.
 
-Output schema is exactly the shape `code-review-publish` wants:
+Output schema is exactly the shape `legacy reviewer` wants:
 `{file, line, severity: HIGH|MEDIUM|LOW, category, description, exploit_scenario,
 recommendation, confidence}`.
 
@@ -492,7 +492,7 @@ class TicketCompliance(BaseModel):
 ```
 
 That fourth field is notable: it is a built-in **"raise a question rather than guess a finding"**
-channel, which is exactly what `code-review-publish` step 2 asks for and which Pocock's Spec
+channel, which is exactly what `legacy reviewer` step 2 asks for and which Pocock's Spec
 brief has no slot for.
 
 It also emits merge-level judgments directly:
@@ -675,7 +675,7 @@ the resulting false positives may also substantially increase the burden on main
 
 **Read that against this repo's design.** A reviewer that is *useful but unaligned* is fine
 when a human reads the output and files what they like. It is actively harmful when
-`code-review-publish` posts every finding as a blocking line comment and `code-review-address`
+`legacy reviewer` posts every finding as a blocking line comment and `code-review-address`
 fixes them. The publish pipeline converts "unaligned but useful" into "unaligned and merged".
 That is the strongest argument in this document for prioritising precision machinery over
 recall machinery in step 2 — and it is an argument *against* adopting the Claude Code
@@ -718,7 +718,7 @@ calibrated is guessing.**
 
 ## Comparison
 
-Scored against what `code-review-publish` actually needs.
+Scored against what `legacy reviewer` actually needs.
 
 | Candidate | Text readable? | License | Asks the user? | Anchoring | Per-finding severity | Requirements axis | FP control | Runtime | Callable as a skill? |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -749,7 +749,7 @@ The two families split cleanly. The precision leaders — Codex's rubric, Anthro
 `code-review` plugin, the Claude Code built-in, `/security-review` — are **all code-only**.
 Not one of them reads the originating issue. The requirements-capable artifacts — pr-agent's
 `TicketCompliance`, superpowers' plan alignment, Pocock's Spec axis — all have weak-to-absent
-noise control. `code-review-publish` needs both axes and cannot get both from one place.
+noise control. `legacy reviewer` needs both axes and cannot get both from one place.
 
 Pocock's skill also has two structural advantages this repo has already paid for. Its
 axis separation is load-bearing: `references/review-protocol.md` builds `[Code]` / `[Requirements]`
@@ -785,7 +785,7 @@ Three grafts, in descending order of value per unit of effort:
    from the `code-review` plugin, which *is* Apache-2.0 and quotable.
 
 3. **Give the Spec/Requirements axis pr-agent's `requires_further_human_verification` slot.**
-   MIT, and it directly serves an instruction `code-review-publish` already carries: "Where a
+   MIT, and it directly serves an instruction `legacy reviewer` already carries: "Where a
    verdict turns on something the code, spec, standards, and history do not answer, raise a
    question rather than guess a finding." Right now the Spec sub-agent has no output slot for
    "I can't tell from the code" — so an uncertain requirement either becomes a finding or
@@ -802,12 +802,12 @@ high-yield defect class that neither Pocock axis covers and it is the one specia
 
 **What the hybrid must not import:** the built-in's high-effort recall bias ("catching real
 bugs matters more than avoiding false positives — err on the side of surfacing"). That
-calibration is written for a human reading a terminal. Under `code-review-publish` every
+calibration is written for a human reading a terminal. Under `legacy reviewer` every
 surfaced finding becomes a blocking line comment by default, so the correct calibration here
 is the *medium*-effort precision framing — "every finding you surface should be one a
 maintainer would act on" — or Codex's, which is the same idea stated better.
 
-### (c) What would have to change in `code-review-publish` step 2 to adopt each option
+### (c) What would have to change in `legacy reviewer` step 2 to adopt each option
 
 Step 2's delegation is description-matched: "invoke the model-invoked review skill whose
 description best matches the change". So adoption cost is mostly *how the reviewer is reached*
@@ -833,7 +833,7 @@ seriously are all code-only, and the ones that check the change against its spec
 false positives casually.** Pocock's skill is on the wrong side of that split — good axes,
 casual filtering — but it is on the side this repo's protocol is built around, and the
 filtering is the part you can bolt on from Apache-2.0 and MIT sources without touching
-`code-review-publish` at all.
+`legacy reviewer` at all.
 
 The one artifact I would put real weight on is
 [Codex's `rubric.md`](https://github.com/openai/codex/blob/main/codex-rs/prompts/templates/review/rubric.md):

@@ -4,7 +4,7 @@
 
 - **Target:** `tokio-rs/bytes#698` ("Reuse capacity when possible in `<BytesMut as Buf>::advance` impl")
 - **Cell:** `g-high-seed1`, attempt `att-07`
-- **Skill:** `code-review-publish` (skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/`, `workflow=v5b-10` per `references/output-contract.md`)
+- **Skill:** `legacy reviewer` (skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`, `workflow=v5b-10` per `references/output-contract.md`)
 - **Model I (the primary reviewer) ran on:** `claude-sonnet-5`
 - **Model every sub-agent ran on:** `claude-sonnet-5` (passed explicitly as `model: "sonnet"` on the one verifier dispatch made — see §4)
 - **Verification trigger that fired:** zero-survivor clean-verdict mode (`SKILL.md` step 3) — zero candidates survived primary falsification as findings, and the diff touches a data-integrity surface (unsafe raw pointer/length/capacity bookkeeping inside `BytesMut`, the crate's core buffer type). No candidate met the independent mandatory-verification trigger (none proposed as `must-fix`, none security/authorization/data-loss/destructive-migration/compatibility-break survivors), so no candidate batch ran — only the clean-verdict batch.
@@ -54,7 +54,7 @@ Since `kamui` has no prior review, reply, or trailer-bearing comment on this PR 
 
 **Build command (run exactly once):**
 ```
-python3 /tmp/effort124/skill/skills/code-review-publish/scripts/review_context.py \
+python3 /tmp/effort124/skill/snapshot-path-omitted/scripts/review_context.py \
   --merge-base ce09d7d358ab1d1d31ed9d0b52a747c0a21ea401 \
   --head 7052d2454a2370ab9583f63711df89f3bd7bec83 \
   --store <mktemp-dir>/review-context-7052d2454a2370ab9583f63711df89f3bd7bec83.json
@@ -363,7 +363,7 @@ No `git fetch`, `git pull`, `gh`, `curl`, or any network call was made by me or 
 
 ## 9. Sandbox disclosure
 
-I read only: the skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/` (SKILL.md and the five references it named on the branches that applied: `review-rubric.md`, `output-contract.md`, `verifier.md`, `verifier-concurrency.md`, and `re-review.md` — the last only to confirm its trigger did not fire, per SKILL.md step 1's instruction), the packet at `/tmp/effort124/packets/g/packet.md`, the clone at `/tmp/effort124/runs/g-high-seed1-att-07`, and my own work/report/payload/timing paths under `/tmp/effort124/work/g-high-seed1-att-07/` and `/tmp/effort124/reports/g/`. I did not read `conformance.md` (no versioned artifact was named by any source) beyond noting from `review-rubric.md`'s own text that it would only apply if one existed.
+I read only: the skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/` (SKILL.md and the five references it named on the branches that applied: `review-rubric.md`, `output-contract.md`, `verifier.md`, `verifier-concurrency.md`, and `re-review.md` — the last only to confirm its trigger did not fire, per SKILL.md step 1's instruction), the packet at `/tmp/effort124/packets/g/packet.md`, the clone at `/tmp/effort124/runs/g-high-seed1-att-07`, and my own work/report/payload/timing paths under `/tmp/effort124/work/g-high-seed1-att-07/` and `/tmp/effort124/reports/g/`. I did not read `conformance.md` (no versioned artifact was named by any source) beyond noting from `review-rubric.md`'s own text that it would only apply if one existed.
 
 While listing `/tmp/effort124/reports/g/` to confirm the timing sidecar existed, I incidentally observed the *names* of two files belonging to a different attempt in the same shared directory (`g-medium-seed1-att-08-session.txt`, `g-medium-seed1-att-08-timing.json`) via a directory listing (`ls -la`) — I did not open, read, or otherwise use their contents, only saw their filenames as a side effect of listing the shared parent directory that the dispatch itself designated as my report output location. Disclosing this per rule 7's "report it if you read one anyway," even though only filenames (not contents) were seen and the directory itself is where the dispatch told me to write my own files.
 

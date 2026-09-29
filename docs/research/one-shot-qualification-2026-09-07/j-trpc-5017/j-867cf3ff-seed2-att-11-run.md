@@ -10,7 +10,7 @@ Payload (the review exactly as it would be posted): [`j-867cf3ff-seed2-att-11-pa
 | --- | --- |
 | Target | `trpc/trpc#5017` |
 | Cell / attempt | `j-867cf3ff-seed2` / `att-11` |
-| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/` |
 | `workflow` identifier (from `validate_review.py`'s `WORKFLOW` constant) | `v5b-1` |
 | Model I ran on | `claude-sonnet-5` (Sonnet 5) |
 | Sub-agents spawned | **none** — see §7 for why the verification trigger did not fire |
@@ -74,9 +74,9 @@ Every row above states, per the requirement in the dispatch, whether a verifier 
 
 ## 5. Everything consulted beyond the diff
 
-All commands were run from a foreground shell against the offline clone at `/tmp/qual137/runs/j-867cf3ff-seed2-att-11` or the skill snapshot at `/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish`, or against scratch files under `/tmp/qual137/work/j-867cf3ff-seed2-att-11/`. None reached the network (none were attempted).
+All commands were run from a foreground shell against the offline clone at `/tmp/qual137/runs/j-867cf3ff-seed2-att-11` or the skill snapshot at `/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted`, or against scratch files under `/tmp/qual137/work/j-867cf3ff-seed2-att-11/`. None reached the network (none were attempted).
 
-1. `ls -la /tmp/qual137/snapshots/867cf3ff/skills/code-review-publish/scripts/` and `ls -la /tmp/qual137/runs/j-867cf3ff-seed2-att-11` and `cat` the timing sidecar and work dir — orientation, not repo-wide, not case-sensitive-relevant.
+1. `ls -la /tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted/scripts/` and `ls -la /tmp/qual137/runs/j-867cf3ff-seed2-att-11` and `cat` the timing sidecar and work dir — orientation, not repo-wide, not case-sensitive-relevant.
 2. `git -C /tmp/qual137/runs/j-867cf3ff-seed2-att-11 branch -a`, `git log --oneline -3 main`, `git log --oneline -3 review-head`, `git status` — clone orientation. Both `log -3` calls stayed within the pinned range (`main`'s tip is the merge-base itself; `review-head`'s tip is the pinned head `7dc04a7e9`); no history beyond the pinned head was read (see §8).
 3. Step-2 context command (run once, from inside the clone, per the skill): `python3 .../scripts/review_context.py --merge-base 2abb2d5cd19740be37272dac6ad7fdd36244ae54 --head 7dc04a7e94654dfad6ef1289dfe01a0a206fff3b`. Exit 0. Output saved to `context_output.txt` (manifest, full diff, ranges, and a bounded pre-merge-base `history` section for `utils.ts` — 3 commits, all dated before the PR, none beyond the pinned head).
 4. `git show review-head:packages/server/src/core/internals/utils.ts` — whole-file read (95 lines total per the manifest, ≤300-line threshold, so a whole-file read needs no candidate-scoped justification per the rubric).
@@ -149,7 +149,7 @@ No `git log` targeting anything past `7dc04a7e9`, no `git fetch`/`git pull` (bot
 
 ## 9. Sandbox disclosure
 
-No path outside the sandbox was read for content. Every content read/command targeted one of: the clone (`/tmp/qual137/runs/j-867cf3ff-seed2-att-11`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/skills/code-review-publish`), the packet directory (`/tmp/qual137/packets/j/packet.md`), or my own work/report/payload/timing paths under `/tmp/qual137/work/j-867cf3ff-seed2-att-11/` and `/tmp/qual137/reports/j/`. I did not read any other run's clone, report, or payload content, and no sub-agent was spawned that could have done so either.
+No path outside the sandbox was read for content. Every content read/command targeted one of: the clone (`/tmp/qual137/runs/j-867cf3ff-seed2-att-11`), the skill snapshot (`/tmp/qual137/snapshots/867cf3ff/snapshot-path-omitted`), the packet directory (`/tmp/qual137/packets/j/packet.md`), or my own work/report/payload/timing paths under `/tmp/qual137/work/j-867cf3ff-seed2-att-11/` and `/tmp/qual137/reports/j/`. I did not read any other run's clone, report, or payload content, and no sub-agent was spawned that could have done so either.
 
 One disclosure for completeness: a final sanity-check `ls -la /tmp/qual137/reports/j/` (run only to confirm my own four output files existed with the right names before finishing) also listed the *filenames* of other attempts' output files in the same shared directory — `j-867cf3ff-seed1-att-10-*`, `j-bea6be14-seed1-att-09-*`, `j-bea6be14-seed2-att-12-*`. I did not open, read, or otherwise use the content of any of those files; only their names and sizes were visible in the listing.
 

@@ -5,7 +5,7 @@ These files ran the grid. They are experiment-local (absolute `/tmp` paths, one 
 ## `agents.json`
 
 ````json
-{"v5b-verifier-effort-high":{"description":"code-review-publish verifier batch pinned at effort high, for the issue #124 matched effort experiment. A child agent inherits its parent's effort, so every verifier batch is dispatched through this definition so that it runs at high regardless of the primary's effort. Not for ordinary use.","prompt":"You are one verifier batch for a cell of a controlled evaluation. The dispatch message carries the verifier task exactly as the primary reviewer composed it under the skill snapshot's references/verifier.md; follow that message and that reference. The only thing this definition changes is the effort level, which pins you at high regardless of the primary's effort. You do not spawn sub-agents.","model":"sonnet","effort":"high"}}
+{"v5b-verifier-effort-high":{"description":"legacy reviewer verifier batch pinned at effort high, for the issue #124 matched effort experiment. A child agent inherits its parent's effort, so every verifier batch is dispatched through this definition so that it runs at high regardless of the primary's effort. Not for ordinary use.","prompt":"You are one verifier batch for a cell of a controlled evaluation. The dispatch message carries the verifier task exactly as the primary reviewer composed it under the skill snapshot's references/verifier.md; follow that message and that reference. The only thing this definition changes is the effort level, which pins you at high regardless of the primary's effort. You do not spawn sub-agents.","model":"sonnet","effort":"high"}}
 ````
 
 ## `run_cell.sh`
@@ -25,7 +25,7 @@ CELL="$T-$ARM-seed$SEED"
 CLONE="$B/runs/$CELL-$ATT"; WORK="$B/work/$CELL-$ATT"
 REPORT="$B/reports/$T/$CELL-$ATT-run.md"; PAYLOAD="$B/reports/$T/$CELL-$ATT-payload.md"
 TIMING="$B/reports/$T/$CELL-$ATT-timing.json"; DISPATCH="$B/dispatch/$T/$CELL-$ATT.md"
-SKILL_DIR="$B/skill/skills/code-review-publish"
+SKILL_DIR="$B/skill/snapshot-path-omitted"
 [ -s "$PACKET" ] || { echo "no packet $PACKET" >&2; exit 1; }
 [ ! -e "$CLONE" ] || { echo "clone exists: $CLONE (attempt ids are never reused)" >&2; exit 1; }
 [ ! -e "$TIMING" ] || { echo "sidecar exists: $TIMING" >&2; exit 1; }
@@ -284,7 +284,7 @@ tot=sum(c["cost"] for c in cells.values()); print("\ncells all-attempt total", r
 """Build a phase-1 review packet for one holdout target, in the test-4 packet format.
 
 Reads the pull request, its closing issues with comments, reviews, review threads, and
-conversation comments in ONE GraphQL call (the same shape code-review-publish step 1 uses),
+conversation comments in ONE GraphQL call (the same shape legacy reviewer step 1 uses),
 the commit list and changed files from the same query, and the guidance inventory and
 verified manifest from the local staging mirror. Writes Markdown to --out.
 

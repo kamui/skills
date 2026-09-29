@@ -62,7 +62,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** (f) `kamui/cobra-holdout#9` — replay of `spf13/cobra#1938` ("Add env variable to suppress completion descriptions on create")
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 1, replicate r1
 - **Model:** `claude-sonnet-5` for the primary reviewer (me), running this entire cell in one continuous context, as `model: "sonnet"` per dispatch instruction. **No sub-agents were spawned in this run** (see §7, mechanism checklist, and §3 disposition ledger for why: no candidate reached the mandatory-verification threshold, and the surviving `consider` candidate did not require a cross-module trace, so `SKILL.md`'s fan-out conditions never fired). There is therefore no second model to report — no verifier or finder ran.
 - **Verification trigger fired:** none. Zero-survivor mode did not apply (one candidate survived as a finding). The related-acquittal/initial-candidate-batch trigger did not apply (no must-fix, security, data-loss, destructive-migration, or compatibility-break candidate; the one `consider` survivor needed no cross-module trace, so it was not opted into a batch).

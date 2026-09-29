@@ -4,7 +4,7 @@
 
 - **Target:** `etcd-io/etcd#18749` — "Fix risk of a partial write txn being applied"
 - **Cell / attempt:** `h-medium-seed1`, `att-12`
-- **Skill:** `code-review-publish` at `/tmp/effort124/skill/skills/code-review-publish/` (workflow version `v5b-10` per its validator)
+- **Skill:** `legacy reviewer` at `/tmp/effort124/skill/snapshot-path-omitted/` (workflow version `v5b-10` per its validator)
 - **Pin:** head `8a0fd66db3291bd6397a1341dc07ad41294a3caf`, base ref `main`, base SHA / merge-base `bb381d473c24ff2cd771f109c63443e03ac459c2` (identical), `state=MERGED`, `merged=true` (2024-10-24T09:25:08Z)
 - **Model I ran on:** `claude-sonnet-5` (Sonnet 5), as required by the dispatch.
 - **Sub-agents spawned:** one `v5b-verifier-effort-high` batch (clean-verdict mode), model `sonnet`, `run_in_background: false`. See §4 for its exact prompt and verbatim return.
@@ -69,9 +69,9 @@ Zero candidates survived as findings (Row 3 was routed to `Observations`, not a 
 ### Exact prompt given to the verifier
 
 ```
-You are the independent verifier for a code review (code-review-publish skill), in CLEAN-VERDICT mode.
-Read /tmp/effort124/skill/skills/code-review-publish/references/verifier.md and
-/tmp/effort124/skill/skills/code-review-publish/references/verifier-concurrency.md now (the latter applies
+You are the independent verifier for a code review (legacy reviewer skill), in CLEAN-VERDICT mode.
+Read /tmp/effort124/skill/snapshot-path-omitted/references/verifier.md and
+/tmp/effort124/skill/snapshot-path-omitted/references/verifier-concurrency.md now (the latter applies
 because row 1 below is kind=invariant); those two files define your task, your verdict vocabulary, and the
 five-step bug-class check you must run on any kind=invariant/concurrency/bug/security row. Do not read any
 other review-skill reference. You are NOT a second reviewer: do not search for new findings; only attack the
@@ -96,7 +96,7 @@ RULES YOU MUST FOLLOW (binding on you and identical to the primary reviewer's ru
    base-branch reads; do not check out any other ref.
 6. Persist nothing yourself; just return your complete ruling in your response text.
 7. Stay inside: the clone at /tmp/effort124/runs/h-medium-seed1-att-12, the skill snapshot at
-   /tmp/effort124/skill/skills/code-review-publish/, and your own scratch directory under
+   /tmp/effort124/skill/snapshot-path-omitted/, and your own scratch directory under
    /tmp/effort124/work/h-medium-seed1-att-12/verifier-scratch. Do not read any other run's clone, report,
    or payload directory (there are sibling attempt directories under /tmp/effort124/runs/ and
    /tmp/effort124/reports/ — they belong to other independent replicates of this same experiment; do not
@@ -320,7 +320,7 @@ I did not read any git history beyond the pinned head `8a0fd66db3291bd6397a1341d
 
 ## 9. Sandbox disclosure
 
-No path was read by me outside: the clone at `/tmp/effort124/runs/h-medium-seed1-att-12/`, the skill snapshot at `/tmp/effort124/skill/skills/code-review-publish/`, the packet at `/tmp/effort124/packets/h/packet.md`, and my own work/report/payload/timing paths under `/tmp/effort124/work/h-medium-seed1-att-12/` and `/tmp/effort124/reports/h/`. I did not open the *content* of any other run's clone, report, or payload. One final `ls -la /tmp/effort124/reports/h/` sanity check (run to confirm my own payload/run/timing files existed after writing them) incidentally listed the filenames — not the contents — of a sibling replicate's files (`h-high-seed1-att-11-*`); I disclose this directory-listing exposure explicitly, though no content of that sibling's report or payload was read.
+No path was read by me outside: the clone at `/tmp/effort124/runs/h-medium-seed1-att-12/`, the skill snapshot at `/tmp/effort124/skill/snapshot-path-omitted/`, the packet at `/tmp/effort124/packets/h/packet.md`, and my own work/report/payload/timing paths under `/tmp/effort124/work/h-medium-seed1-att-12/` and `/tmp/effort124/reports/h/`. I did not open the *content* of any other run's clone, report, or payload. One final `ls -la /tmp/effort124/reports/h/` sanity check (run to confirm my own payload/run/timing files existed after writing them) incidentally listed the filenames — not the contents — of a sibling replicate's files (`h-high-seed1-att-11-*`); I disclose this directory-listing exposure explicitly, though no content of that sibling's report or payload was read.
 
 The dispatched verifier stayed inside its assigned paths and read no sibling attempt's directory, but it disclosed one exception: it read `go.uber.org/zap@v1.27.0/logger.go` and `zapcore/entry.go` from `/tmp/effort124/gomodcache` (the module cache the run conditions designate for the permitted focused-test execution) to confirm the mechanism of `lg.Panic`. This is a populated dependency of the module under test, reached only via the permitted test-execution allowance, not a foreign or sibling-run path — but it is technically outside the four sandbox locations rule 7 names, so it is disclosed here exactly as the verifier flagged it.
 

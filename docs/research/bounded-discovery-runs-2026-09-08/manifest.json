@@ -386,7 +386,7 @@
       "sha256": "60d8a067c8ce7b1fcb9ceb3097e8d84756f2c37eef22eb55c7a89e4d3bf84c9c",
       "uri": "docs/research/bounded-discovery-runs-2026-09-08/rates.json"
     },
-    "skill_path_in_snapshot": "skills/code-review-publish",
+    "skill_path_in_snapshot": "snapshot-path-omitted",
     "skill_tree": "bea6be143582e75bada966ee85964623ef31f167",
     "target_handoff": {
       "access": "coordinator-only",

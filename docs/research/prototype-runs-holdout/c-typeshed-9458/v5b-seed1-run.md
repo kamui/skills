@@ -78,7 +78,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** `python/typeshed#9458` — "Bump redis to 4.4.0" (author `juanamari94`), merged 2023-01-05T15:25:11Z.
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662` (`workflow=v5b-1`).
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662` (`workflow=v5b-1`).
 - **Seed:** 1.
 - **Model — primary reviewer (me, this context):** `claude-sonnet-5`, run as the dispatch's top-level agent (harness default overridden per dispatch instruction).
 - **Model — every sub-agent spawned:** `claude-sonnet-5`, passed explicitly as `model: "sonnet"` on the `Agent` call. (One sub-agent spawned: the mandatory verifier batch — see §4/§7.)

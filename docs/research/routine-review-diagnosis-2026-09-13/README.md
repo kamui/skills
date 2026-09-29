@@ -4,7 +4,7 @@
 
 ## Collection and policy identity
 
-The [collection plan and frozen selection](collection.md) pin the cutoff to **2026-09-13T07:47:31Z**, the preceding 30 days, and the selection rule before selected outcomes were inspected. Shipped policy is repository commit [`374635be7f4e62f6eb9c797530bf6bf091a9d3a1`](https://github.com/kamui/skills/commit/374635be7f4e62f6eb9c797530bf6bf091a9d3a1); the latest package-touching commit is [`afcdbd86bb328d5071153d65a22ea1fa3f5e7433`](https://github.com/kamui/skills/commit/afcdbd86bb328d5071153d65a22ea1fa3f5e7433). Both the [runtime contract](../../../skills/code-review-publish/references/output-contract.md) and [validator](../../../skills/code-review-publish/scripts/validate_review.py) identify v5b-15.
+The [collection plan and frozen selection](collection.md) pin the cutoff to **2026-09-13T07:47:31Z**, the preceding 30 days, and the selection rule before selected outcomes were inspected. Shipped policy is repository commit [`374635be7f4e62f6eb9c797530bf6bf091a9d3a1`](https://github.com/kamui/skills/commit/374635be7f4e62f6eb9c797530bf6bf091a9d3a1); the latest package-touching commit is [`afcdbd86bb328d5071153d65a22ea1fa3f5e7433`](https://github.com/kamui/skills/commit/afcdbd86bb328d5071153d65a22ea1fa3f5e7433). Both the runtime contract (historical source path omitted) and validator (historical source path omitted) identify v5b-15.
 
 | Policy evidence | Selected runs | Interpretation |
 | --- | ---: | --- |

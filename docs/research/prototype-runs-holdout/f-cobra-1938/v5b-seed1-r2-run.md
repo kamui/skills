@@ -62,7 +62,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** (f) `kamui/cobra-holdout#9` — replay of `spf13/cobra#1938`. Live, open, non-merged pull request; posting identity `kamui`, publication ENABLED, event `COMMENT`.
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`, snapshot at `/tmp/holdout/skills/v5b/`.
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`, snapshot at `/tmp/holdout/skills/v5b/`.
 - **Seed:** 1 (round 2 / re-review cell).
 - **Model:** I ran this entire review myself, in this context, on `claude-sonnet-5` (the model named "Sonnet 5" per this session's own system info). **No sub-agents were spawned this run** (see §4/§7 for why the verification and clean-verdict triggers did not fire), so there is no sub-agent model to report.
 - **Verification trigger fired:** None. Zero candidates reached the `must-fix` or security/data-loss/migration/compatibility-break bar that mandates verification, and the zero-survivor clean-verdict trigger did not fire because although zero *new* findings survived, the changed behavior (an env-var toggle for shell-completion descriptions) does not touch a concurrency/failover path, a data-integrity surface, or a security/authorization boundary — both conjuncts of that trigger must hold, and the topic conjunct failed.

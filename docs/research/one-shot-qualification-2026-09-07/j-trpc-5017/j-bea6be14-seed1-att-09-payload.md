@@ -5,7 +5,7 @@ exactly as it would have been published — one forge-native review with a summa
 inline line comment — had publication been authorized. Event: `COMMENT`. Posting identity: `kamui`.
 
 Produced by `python3 scripts/validate_review.py --emit-batch < payload.json`, which validated
-(exit 0) against `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/scripts/validate_review.py`.
+(exit 0) against `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/scripts/validate_review.py`.
 
 ---
 

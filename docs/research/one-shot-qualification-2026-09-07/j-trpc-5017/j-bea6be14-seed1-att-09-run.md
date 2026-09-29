@@ -10,7 +10,7 @@ Target **(j) `trpc/trpc#5017`** — "fix(server): inference fix for inputs with 
 | --- | --- |
 | Target | `trpc/trpc#5017`, MERGED, retrospective/non-publishing (packet §1, §8.4) |
 | Cell / attempt | `j-bea6be14-seed1` / `att-09` |
-| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/` |
+| Skill snapshot | `/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/` |
 | `workflow` identifier (validator) | `v5b-10` (`WORKFLOW = "v5b-10"` in `scripts/validate_review.py:115`) |
 | Model — reviewer (me) | `claude-sonnet-5` |
 | Model — sub-agents | none spawned this run (see §4/§7 for why) |
@@ -74,7 +74,7 @@ All commands below were run from `/private/tmp/qual137/sessions` (harness cwd) u
 
 **Diff and manifest (read once, per `SKILL.md` step 3):**
 - `git diff main review-head` inside the clone — full 2-file diff, read directly once for orientation before building the persisted store.
-- `python3 /tmp/qual137/snapshots/bea6be14/skills/code-review-publish/scripts/review_context.py --merge-base 2abb2d5cd19740be37272dac6ad7fdd36244ae54 --head 7dc04a7e94654dfad6ef1289dfe01a0a206fff3b --store <mktemp-dir>/review-context-7dc04a7e94654dfad6ef1289dfe01a0a206fff3b.json` — the one authoritative build call. Diff text printed in full (not withheld — 2 small files, well under the 24000-byte bound); `## chunks` inventory showed `diff coverage: complete (2/2 chunks consumed)`, so no `--from` recovery read was ever needed.
+- `python3 /tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/scripts/review_context.py --merge-base 2abb2d5cd19740be37272dac6ad7fdd36244ae54 --head 7dc04a7e94654dfad6ef1289dfe01a0a206fff3b --store <mktemp-dir>/review-context-7dc04a7e94654dfad6ef1289dfe01a0a206fff3b.json` — the one authoritative build call. Diff text printed in full (not withheld — 2 small files, well under the 24000-byte bound); `## chunks` inventory showed `diff coverage: complete (2/2 chunks consumed)`, so no `--from` recovery read was ever needed.
 
 **Whole-file reads (files ≤300 lines, permitted without extra justification per the rubric's Complete inspection section):**
 - `Read packages/server/src/core/internals/utils.ts` (95 lines) — the changed file, both to see the head state in full and to compare structurally against the diff.
@@ -98,7 +98,7 @@ All commands below were run from `/private/tmp/qual137/sessions` (harness cwd) u
 - `./node_modules/.bin/tsc --version` — `Version 5.1.3`, a one-line sanity check before the real run; not itself a "configuration," so it does not count against the one-per-flag-set budget.
 
 **Context digest:**
-- `python3 /tmp/qual137/snapshots/bea6be14/skills/code-review-publish/scripts/context_fingerprint.py /tmp/qual137/work/j-bea6be14-seed1-att-09/context-input.json` — run exactly once (see §6).
+- `python3 /tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/scripts/context_fingerprint.py /tmp/qual137/work/j-bea6be14-seed1-att-09/context-input.json` — run exactly once (see §6).
 
 **Not read / not run, and why:**
 - No `git log`/`git show` beyond the pinned head or beyond the one `main:CONTRIBUTING.md` base-branch read (see §8 — history discipline).
@@ -159,7 +159,7 @@ I ran no `git fetch`, `git pull`, `gh`, `curl`, or other network-touching comman
 
 ## 9. Sandbox disclosure
 
-Everything substantive was read from: the clone (`/tmp/qual137/runs/j-bea6be14-seed1-att-09`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), the packet (`/tmp/qual137/packets/j/packet.md`), and my own work/report/payload/timing paths under `/tmp/qual137/work/j-bea6be14-seed1-att-09/` and `/tmp/qual137/reports/j/j-bea6be14-seed1-att-09-*`.
+Everything substantive was read from: the clone (`/tmp/qual137/runs/j-bea6be14-seed1-att-09`), the skill snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), the packet (`/tmp/qual137/packets/j/packet.md`), and my own work/report/payload/timing paths under `/tmp/qual137/work/j-bea6be14-seed1-att-09/` and `/tmp/qual137/reports/j/j-bea6be14-seed1-att-09-*`.
 
 Two paths outside that enumerated list were touched, both required by the dispatch or the skill itself rather than chosen by me:
 

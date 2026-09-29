@@ -58,8 +58,8 @@ than review the target, and every v5a run document carries them at a cost of rou
 A holdout dispatch asks for the digest **once**, as the arm's own contract specifies, and asks for no
 in-run self-test. Determinism and validator soundness are established once, before the grid starts, by
 running the arm's script regression tests in this repository — for the Skeptic line
-`python3 skills/code-review-publish/scripts/test_context_fingerprint.py` and
-`python3 skills/code-review-publish/scripts/validate_review.py --self-test` — and recording that they
+`python3 snapshot-path-omitted/scripts/test_context_fingerprint.py` and
+`python3 snapshot-path-omitted/scripts/validate_review.py --self-test` — and recording that they
 passed at the pinned commit. That is CI's job once this repository has CI. Metering a run afterwards
 with `cost_split.py`, including its `--self-test`, is the researcher's work outside the run and is
 unaffected.
@@ -194,7 +194,7 @@ supersede them, as the test-4 table explains.) Because `transcript_usage.py` rep
 tokens per sub-agent, the arm's effect is read directly from that column rather than inferred from
 totals.
 
-**Arm:** `code-review-publish` (v5b) with the **primary one effort step below the harness default**
+**Arm:** `legacy reviewer` (v5b) with the **primary one effort step below the harness default**
 and every verifier batch at the default. Row label `v5b-effort-medium`.
 
 **Targets and seeds:** three seeds on target (b), high-risk and adjudicated clean, where reasoning
@@ -211,7 +211,7 @@ creates for the grid and removes afterwards, at `.claude/agents/v5b-primary-effo
 ```yaml
 ---
 name: v5b-primary-effort-medium
-description: code-review-publish primary at one effort step below the harness default (#68)
+description: legacy reviewer primary at one effort step below the harness default (#68)
 model: sonnet
 effort: medium
 ---
@@ -1027,10 +1027,10 @@ lower-effort arm checks.
 
 | Row label | Skill | Snapshot | What differs |
 | --- | --- | --- | --- |
-| `v5b` | `code-review-publish`, `workflow=v5b-1` | `main` at the commit recorded in [comparison-data.md](comparison-data.md#comparison-boundaries) | the advancing line |
+| `v5b` | `legacy reviewer`, `workflow=v5b-1` | `main` at the commit recorded in [comparison-data.md](comparison-data.md#comparison-boundaries) | the advancing line |
 | `v2b` | `code-review-deep-publish` | `t3code/prototype-code-review-publish-2a` at the recorded commit | the Panel comparator; runs as `v2b` only once #59 has bumped it, otherwise as `v2a` with its merged fixes and the row label says which |
-| `v5b-noverify` | `code-review-publish` with verification disabled | the `v5b` snapshot with `references/verifier.md` deleted | the v3 ablation; see below |
-| `v5b-effort-medium` | `code-review-publish`, primary at effort `medium` | the `v5b` snapshot | #68's arm, targets (b) and (c) only; see [Lower-effort primary arm](#lower-effort-primary-arm) |
+| `v5b-noverify` | `legacy reviewer` with verification disabled | the `v5b` snapshot with `references/verifier.md` deleted | the v3 ablation; see below |
+| `v5b-effort-medium` | `legacy reviewer`, primary at effort `medium` | the `v5b` snapshot | #68's arm, targets (b) and (c) only; see [Lower-effort primary arm](#lower-effort-primary-arm) |
 
 Three seeds per arm per target. A seed is an independent dispatch of the same packet into a fresh
 clone with a fresh orchestrator context; nothing is shared between seeds except the packet and the

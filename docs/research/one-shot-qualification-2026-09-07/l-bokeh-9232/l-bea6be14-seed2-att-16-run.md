@@ -1,7 +1,7 @@
 # Research report — `l-bea6be14-seed2-att-16`
 
 Target: `bokeh/bokeh#9232`. Cell `l-bea6be14-seed2`, attempt `att-16`. Skill snapshot:
-`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`. Skill: `code-review-publish`.
+`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`. Skill: `legacy reviewer`.
 Validator-reported `workflow` identifier: **`v5b-10`** (from
 `scripts/validate_review.py`'s `WORKFLOW` constant, confirmed against the payload trailer
 after `--render`/validation — see §6).
@@ -466,7 +466,7 @@ candidate and must not simply agree with its reasoning — falsify it independen
    none of that is available (no browser, no npm install, no network).
 4. SANDBOX. Only read inside: the clone at
    /tmp/qual137/runs/l-bea6be14-seed2-att-16, the skill snapshot at
-   /tmp/qual137/snapshots/bea6be14/skills/code-review-publish/, and your own scratch
+   /tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/, and your own scratch
    directory under /tmp/qual137/work/l-bea6be14-seed2-att-16/verifier-scratch/. Do not
    read any other path (no other run's clone, report, or payload). If you do read
    something outside this list, disclose it in your report.
@@ -861,7 +861,7 @@ I read history **only** within the pinned head, and only via the documented mech
 ## 9. Sandbox disclosure
 
 No path was read outside: the clone (`/tmp/qual137/runs/l-bea6be14-seed2-att-16`), the skill
-snapshot (`/tmp/qual137/snapshots/bea6be14/skills/code-review-publish/`), the packet
+snapshot (`/tmp/qual137/snapshots/bea6be14/snapshot-path-omitted/`), the packet
 directory (`/tmp/qual137/packets/l/`), and my own work/report/payload/timing paths under
 `/tmp/qual137/work/l-bea6be14-seed2-att-16/` and `/tmp/qual137/reports/l/`. I ran `ls
 /tmp/qual137/reports/l/` once while creating my own report file and observed the *names* of

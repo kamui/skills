@@ -8,7 +8,7 @@ Payload (the review exactly as it would be published): [`a-high-seed3-att-05-pay
 | --- | --- |
 | Target | `hyperium/hyper#3952` — "fix(http1): poll_loop writes when ready" |
 | Cell / attempt | `a-high-seed3` / `att-05` |
-| Skill | `code-review-publish` at `/tmp/effort124/skill/skills/code-review-publish/` (`SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md` all read in full; `references/re-review.md` and `references/conformance.md` were **not** read — see §7 for why each branch did not fire) |
+| Skill | `legacy reviewer` at `/tmp/effort124/skill/snapshot-path-omitted/` (`SKILL.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/verifier-concurrency.md` all read in full; `references/re-review.md` and `references/conformance.md` were **not** read — see §7 for why each branch did not fire) |
 | Pin | Head `f2aa734e5699a91fc20f1178e38af7b1e374bdbc`; base ref `master`; base SHA / merge-base `f9f8f44058745d23fa52abf51b96b61ee7665642` (identical); `state=MERGED`, `merged=true`; posting identity `kamui` (third party, no prior comments/reviews on this PR) |
 | Model — primary (me) | `claude-sonnet-5` |
 | Model — sub-agents | n/a — no sub-agent was dispatched this run (see §4) |
@@ -79,7 +79,7 @@ I made one deliberate, documented choice **not** to escalate CAND-004 (the concu
 
 All commands below were run from `/tmp/effort124/runs/a-high-seed3-att-05` (the clone) or `/tmp/effort124/work/a-high-seed3-att-05` (scratch/store), except the packet and skill reads noted separately. No command mutated the clone (no `checkout`/`switch`/`reset`/`stash` was run).
 
-- `python3 /tmp/effort124/skill/skills/code-review-publish/scripts/review_context.py --merge-base f9f8f44058745d23fa52abf51b96b61ee7665642 --head f2aa734e5699a91fc20f1178e38af7b1e374bdbc --store <tmp-store>` — built the private context store once (first review, no `--prior-head`). Exit 0. Diff was `withheld` in the direct call (26,769 bytes across 3 chunks vs. a 22,791-byte remaining bound), so per SKILL.md I read it back from the store instead of rebuilding.
+- `python3 /tmp/effort124/skill/snapshot-path-omitted/scripts/review_context.py --merge-base f9f8f44058745d23fa52abf51b96b61ee7665642 --head f2aa734e5699a91fc20f1178e38af7b1e374bdbc --store <tmp-store>` — built the private context store once (first review, no `--prior-head`). Exit 0. Diff was `withheld` in the direct call (26,769 bytes across 3 chunks vs. a 22,791-byte remaining bound), so per SKILL.md I read it back from the store instead of rebuilding.
 - `python3 .../review_context.py --from <store> --path Cargo.toml` — exit 0, full diff for `Cargo.toml` (1 chunk, consumed).
 - `python3 .../review_context.py --from <store> --path src/proto/h1/dispatch.rs` — exit 0, full diff for `dispatch.rs` (1 chunk, consumed), printed with `--function-context`-equivalent enclosing-symbol context (the tool's own range print already showed the full enclosing `impl` block, so I did not re-read that symbol separately).
 - `python3 .../review_context.py --from <store> --path tests/ready_stream.rs` — exit 0, full diff for the new file (1 chunk, consumed; complete, since it is a wholly new ≤300-line-class file already fully shown by the diff itself, so no further re-read was needed per the rubric's "a file the diff adds is already fully present in it" rule — though at 249 lines it is also under the 300-line whole-file threshold regardless).
@@ -144,7 +144,7 @@ git show review-head:Cargo.toml | sed -n '238,252p' | cat -n
 
 ## 9. Sandbox disclosure
 
-No path outside the authorized sandbox was read. Everything read came from one of: the clone (`/tmp/effort124/runs/a-high-seed3-att-05`), the skill snapshot (`/tmp/effort124/skill/skills/code-review-publish/`), the packet directory (`/tmp/effort124/packets/a/`), and my own work/report/payload/timing paths (`/tmp/effort124/work/a-high-seed3-att-05/`, `/tmp/effort124/reports/a/`). I did not read any other run's clone, report, or payload, and did not read the `MEMORY.md`/session-memory files (irrelevant to this cell; not consulted).
+No path outside the authorized sandbox was read. Everything read came from one of: the clone (`/tmp/effort124/runs/a-high-seed3-att-05`), the skill snapshot (`/tmp/effort124/skill/snapshot-path-omitted/`), the packet directory (`/tmp/effort124/packets/a/`), and my own work/report/payload/timing paths (`/tmp/effort124/work/a-high-seed3-att-05/`, `/tmp/effort124/reports/a/`). I did not read any other run's clone, report, or payload, and did not read the `MEMORY.md`/session-memory files (irrelevant to this cell; not consulted).
 
 ## 10. Notes — judgment calls on the skill's contract
 

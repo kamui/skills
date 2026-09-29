@@ -80,7 +80,7 @@ Payload (would-be published review, rendered exactly as the skill's step 6 would
 ## 1. Metadata
 
 - **Target:** `hashicorp/raft#581` — "Fix rare leadership transfer failures when writes happen during transfer"
-- **Arm:** `v5b-effort-medium` — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** `v5b-effort-medium` — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 4
 - **Skill snapshot:** `/tmp/holdout/skills/v5b/` (`SKILL.md` + `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md` all read in full before starting)
 - **Model — primary (me, this context):** `claude-sonnet-5`, dispatched through the `v5b-primary-effort-medium` agent definition, i.e. one step below the harness default ("medium" effort).
@@ -134,7 +134,7 @@ No `Observations`-channel candidate was routed: every candidate above failed on 
 ### 4.1 Exact prompt given (verbatim)
 
 ```
-You are an independent verifier running the `code-review-publish` skill's zero-survivor clean-verdict task, as defined in `/tmp/holdout/skills/v5b/references/verifier.md` ("Clean-verdict task", zero-survivor mode). Read that file's "Clean-verdict task" section in full before proceeding; also read `/tmp/holdout/skills/v5b/references/review-rubric.md` for the admission gates the ledger rows below were judged against.
+You are an independent verifier running the `legacy reviewer` skill's zero-survivor clean-verdict task, as defined in `/tmp/holdout/skills/v5b/references/verifier.md` ("Clean-verdict task", zero-survivor mode). Read that file's "Clean-verdict task" section in full before proceeding; also read `/tmp/holdout/skills/v5b/references/review-rubric.md` for the admission gates the ledger rows below were judged against.
 
 ## Sandbox and rules (binding on you)
 

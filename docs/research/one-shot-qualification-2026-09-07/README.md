@@ -1,7 +1,7 @@
 # One-shot qualification grid — repaired policy against the historical baseline (issue #137)
 
 **Bundle for [#137](https://github.com/kamui/skills/issues/137), started 2026-09-07 UTC.** This is
-the matched experiment the ticket authorizes: the repaired `code-review-publish` snapshot pinned by
+the matched experiment the ticket authorizes: the repaired `legacy reviewer` snapshot pinned by
 [#136](../code-review-one-shot-baseline.md) against the unchanged historical control
 `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83`, on fresh execution-enabled targets, under one model,
 one effort and one verifier configuration. It follows the
@@ -35,12 +35,12 @@ exactly one thing: which pinned skill tree the reviewer reads.
 
 | Arm | Skill snapshot | Workflow identifier | Row label |
 | --- | --- | --- | --- |
-| candidate | `skills/code-review-publish` at commit `83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6`, tree `bea6be143582e75bada966ee85964623ef31f167` (the #136 repaired baseline) | `v5b-10` | `repaired` |
-| control | `skills/code-review-publish` at commit `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83`, tree `867cf3ff0d9f097259699be4f55aa147c98a3a5d` (unchanged historical baseline) | `v5b-1`, pre-#70 | `historical` |
+| candidate | historical reviewer tree (path omitted), pinned at commit `83bc170e8ae9c5f2d6a6941a94f25f6748a36ed6`, tree `bea6be143582e75bada966ee85964623ef31f167` (the #136 repaired baseline) | `v5b-10` | `repaired` |
+| control | `snapshot-path-omitted` at commit `3ff624a0a8b57e7096d8ad8263ac64a3fb3ccd83`, tree `867cf3ff0d9f097259699be4f55aa147c98a3a5d` (unchanged historical baseline) | `v5b-1`, pre-#70 | `historical` |
 
 Runs identify their snapshot **by tree hash, never by the `workflow` trailer**: #136 §3 records
 that `v5b-1` names two different verification behaviours across the #70 window, so the trailer
-cannot separate them. Each snapshot was taken with `git archive <commit> skills/code-review-publish`
+cannot separate them. Each snapshot was taken with `git archive <commit> snapshot-path-omitted`
 and the extracted tree re-hashed with `git write-tree`; both re-hashes matched the pins above
 (ledger S2). The two snapshot directories are named `snapshots/bea6be14/` and `snapshots/867cf3ff/`
 so that the path a reviewer reads carries the pin and not an arm label.

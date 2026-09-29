@@ -76,7 +76,7 @@ Per agent:
 ## 1. Metadata
 
 - **Target:** `pola-rs/polars#24771` — "perf: Duration/interval string parsing optimisation (2-5x faster)"
-- **Arm:** v5b — skill `code-review-publish` pinned at `main 2f06662 (workflow=v5b-1)`
+- **Arm:** v5b — skill `legacy reviewer` pinned at `main 2f06662 (workflow=v5b-1)`
 - **Seed:** 1
 - **Skill and pin:** `/tmp/holdout/skills/v5b/SKILL.md`, `workflow=v5b-1`
 - **Model I (the reviewer) ran on:** `claude-sonnet-5`, passed no explicit model parameter for myself (I am the top-level agent for this dispatch, running under the harness's active session model, which the dispatch and packet both specify as `claude-sonnet-5`).
@@ -173,7 +173,7 @@ Per agent:
 
 ```
 You are an independent verifier sub-agent for a static, offline, non-publishing code review
-(code-review-publish, workflow=v5b-1). Read `/tmp/holdout/skills/v5b/references/verifier.md` in
+(legacy reviewer, workflow=v5b-1). Read `/tmp/holdout/skills/v5b/references/verifier.md` in
 full first and follow its "Verification task", "Verdicts", and "Clean-verdict task" (related-acquittal
 mode) sections exactly. You are given a candidate batch (2 candidates) plus 1 related-acquittal row.
 
