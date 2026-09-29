@@ -602,6 +602,11 @@
       "at": "2026-09-29T02:36:11Z",
       "what": "bench/tools/attempt_audit.py changed after the freeze (commit f92bcbd). att-046, review-code on n-ripgrep-2957, ran `B=$(git rev-parse --verify 'main^{commit}') && H=$(git rev-parse --verify 'review-head^{commit}') && git diff --stat $B...$H`, the pinned range, and was filed harness-invalid because the recorded diff command kept the unresolvable `$B...$H`. The audit now substitutes variables bound in the same command to a ref or to `git rev-parse <ref>` before it extracts diff commands. att-046 was re-filed with file_attempt.py --replay, valid, with no replacement: the repair changes no reviewer input or execution condition. Every other filed audit in bench/runs with a variable in a diff command uses the two-argument form, which the range check never reads, so no other attempt changes.",
       "invalidates": []
+    },
+    {
+      "at": "2026-09-29T03:38:45Z",
+      "what": "bench/tools/attempt_audit.py changed after every attempt was filed (the commit after f92bcbd). The blind grader of o-astro-16079 failed its read audit twice (charges blind-grade-o-astro-16079 and blind-grade-o-astro-16079-r2): it wrote verdicts.json with `cat > verdicts.json <<'EOF'`, and the review text it quoted held `/../..`, which the absolute-path scan normalised to `/`. The scan now drops the body of a heredoc that `cat` or `tee` only writes to a file. Removing paths can only remove violations, and no filed harness-invalid attempt in bench/runs has a flagged path that appears only in such a body, so no attempt changes. o-astro-16079 is graded again from a new prepare.",
+      "invalidates": []
     }
   ]
 }
