@@ -1,0 +1,147 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-5460-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "change_description": "[field] Sync controlled value changes with field state\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Make Field.Control sync filled, dirty and validity from controlled `value` changes through useValueChanged, keep onChange as the uncontrolled path, register the serialized value so non-string dirty baselines match, honor details.cancel(), and keep rejected controlled values out of field state.",
+    "issue_fit": "Unavailable: no originating issue. Intent comes from the caller-supplied pull-request text and the commit message; each stated outcome is met or, for the performance table, not repeatable here.",
+    "coverage": "Both changed files reviewed against the full diff and the validation, registration and Form code they call. Test execution was denied by the harness in this session, so the changed tests were traced statically. Two safety premises were verified in one awaited batch and both hold.",
+    "check_details": [
+      "Reviewer test run of FieldControl.test.tsx at the reviewed head: unavailable, the harness denied the command; changed tests were traced by hand instead.",
+      "The bot bundle-size and performance comments in the pull-request text were not treated as check evidence; the render-count table is not repeatable here."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Registering the serialized value means a controlled non-string `value` such as a number or array reaches the Form-submit-time `validate` as a string, matching what the change and blur paths already pass; submitted form values still come from the DOM read.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:85-97`, `packages/react/src/internals/field-register-control/useFieldControlRegistration.ts:35-49`."
+    },
+    {
+      "fact": "In the uncontrolled path `details.cancel()` skips error clearing and validation but dirty and filled still follow the DOM value, and the controlled value-driven sync does not consult cancellation.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:144-156`, `packages/react/src/internals/useValueChanged.ts:6-17`."
+    },
+    {
+      "fact": "The controlled path no longer applies the `defaultPrevented` guard, and the only test for prevented changes is uncontrolled.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:144-156`, `packages/react/src/field/control/FieldControl.test.tsx` test 'does not clear errors or validate when change is prevented'."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "mui/base-ui",
+    "requirements": [
+      {
+        "source": "spec-pr-5460-text/\"a value set from code had no path at all\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 syncs clearErrors, dirty, filled and validation from a value-change layout effect; test 'syncs state and validates when the controlled value changes programmatically'."
+      },
+      {
+        "source": "spec-pr-5460-text/\"Dirty state never cleared for non-string values\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:85-97 registers String(value), so the captured baseline is a string; test 'clears dirty state when a numeric controlled value returns to its initial value' traces to a cleared attribute."
+      },
+      {
+        "source": "spec-pr-5460-text/\"a pending async validator for the old value could still publish\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "useFieldValidation.ts:117-119,268-271,316-326 (premise-stale-async-validation holds)."
+      },
+      {
+        "source": "spec-pr-5460-text/\"onChange returns early when controlled\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:144-146 returns before any field-state work; the controlled path runs once from useValueChanged."
+      },
+      {
+        "source": "spec-pr-5460-text/\"details.cancel() in onValueChange now stops the internal handling\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:153 skips clearErrors and validation when canceled; test 'does not validate when the change is canceled'. Ambiguity: a stricter reading also covers dirty and filled, which still follow the DOM value in the uncontrolled path; no consequence beyond the DOM state was found, so it is an observation."
+      },
+      {
+        "source": "spec-pr-5460-text/\"A controlled value the consumer rejects or rewrites no longer reaches the field state\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 and 144-146: field state follows the `value` prop, not the DOM event."
+      },
+      {
+        "source": "spec-pr-5460-text/\"2 per keystroke\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The render-count table could not be repeated because test execution was denied; a trace of the onSubmit steady state (no-op setDirty/setFilled, revalidate early return at useFieldValidation.ts:169-172) is consistent with one render per keystroke."
+      },
+      {
+        "source": "commit-14d39e5/\"[field] Sync controlled value changes with field state\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "The diff touches only Field.Control and its test."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/react/src/field/control/FieldControl.test.tsx",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "unavailable",
+        "reason": "the harness denied the command in this session; the changed tests were traced statically"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-form-values-unchanged",
+          "type": "safety-premise",
+          "area": "data-integrity",
+          "premise": "Registering String(value) does not change the value Form reads as the submitted value, because the registration's getValue override reads the DOM.",
+          "evidence": "FieldControl.tsx:85-97; useFieldControlRegistration.ts:35-50",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-stale-async-validation",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "A pending async validate for the previous value cannot publish after a programmatic controlled change, because change() and commit() bump validationCommitIdRef before any await.",
+          "evidence": "FieldControl.tsx:105-115; useFieldValidation.ts:117-119,268-271,316-326",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-044/tmp/claude-1000/tmp.G9f1RArRtr/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-044/tmp/claude-1000/tmp.G9f1RArRtr/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-034/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-034-clone/3f04433b-953e-44cd-b5e8-0ffe7cec9c2d/subagents/agent-a99632a22176d7902.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-034/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-034-clone/3f04433b-953e-44cd-b5e8-0ffe7cec9c2d.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD; sed -n 400,450p crates/core/flags/complete/rg.zsh; ls ci; cat ci/test-complete",
+    "sed -n 1,30p crates/core/flags/complete/rg.zsh; grep -n \"RG_COMPLETE_LIST_ARGS\" -B3 -A8 crates/core/flags/complete/rg.zsh | head -40; mkdir -p ../clone-work; cd ../clone-work; cat > t.zsh <<'EOF'\nf(){ print -r \"stack: $funcstack[1] / ${#funcstack}\"; }\nsource <(print -r 'print -r \"top: $funcstack[1] n=${#funcstack}\"; print $+functions[compdef]')\nEOF\nzsh t.zsh; zsh -c 'autoload -Uz compinit; compinit -u -D 2>&1; source <(print \"print $+functions[compdef]\")'"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-034/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-034"
+  ]
+}

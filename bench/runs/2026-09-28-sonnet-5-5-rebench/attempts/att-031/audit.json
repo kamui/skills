@@ -1,0 +1,44 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-031/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-031-clone/cbfaa7fd-2672-4930-8978-28adafa3349f/subagents/agent-ab21800f812822a87.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-031/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-031-clone/cbfaa7fd-2672-4930-8978-28adafa3349f.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "sed -n 90,175p src/utils/body.ts; grep -n \"bodyCache\\|cachedBody\\|formData\" src/request.ts | head -40; sed -n 95,125p src/utils/buffer.ts; git diff main...HEAD -- src/utils/body.test.ts src/validator/validator.test.ts | head -200; grep -rn \"bufferToFormData\\|parseBody(\" src --include=*.ts | grep -v test",
+    "sed -n 215,240p src/request.ts; sed -n 470,495p src/request.ts; grep -n \"parseBody\" src/request.ts; grep -rn \"parseBody(\\|bufferToFormData\" src --include=\"*.ts\" --include=\"*.tsx\" | grep -v \"test\\.\"",
+    "sed -n 85,140p src/validator/validator.ts",
+    "grep -rniE \"content-type\" src --include=*.ts -l | grep -v test | head -30; grep -rnE \"startsWith\\('(multipart|application)|/\\^?(application|multipart)\" src --include=*.ts | grep -v \"test\\.\" | head -20\nmkdir -p ../clone-work && cat > ../clone-work/t.ts <<'EOF'\nimport { Hono } from '/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-031/clone/src/index'\nconst app = new Hono()\napp.post('/a', async (c) => { await c.req.formData(); try { return c.json(await c.req.parseBody()) } catch(e){ return c.text('ERR '+e,500) } })\napp.post('/b', async (c) => { const b = await c.req.parseBody(); const f = await c.req.formData(); return c.json({b, f:[...f.keys()]}) })\nfor (const p of ['/a','/b']) {\n  const fd = new FormData(); fd.append('x','1')\n  let r = await app.request(p,{method:'POST',body:fd}); console.log(p,'multipart',r.status, await r.text())\n  r = await app.request(p,{method:'POST',body:new URLSearchParams({x:'1'})}); console.log(p,'urlenc',r.status, await r.text())\n}\nEOF\n./node_modules/.bin/esbuild ../clone-work/t.ts --bundle --platform=node --format=esm --outfile=../clone-work/t.mjs --log-level=error && node ../clone-work/t.mjs",
+    "grep -rniE \"content-type\" src -l --include='*.ts' --include='*.tsx' | grep -v \"test\\.\" | head -30; grep -rnE \"application/(x-www|json)|multipart/form\" src --include='*.ts' | grep -v \"test\\.\" | grep -v \"^\\S*:\\s*[0-9]*:\\s*\\*\" | head -30",
+    "grep -n -i \"content-type\\|isRequestedByFormElement\\|mime\" src/middleware/csrf/index.ts | head; sed -n 60,110p src/middleware/method-override/index.ts",
+    "sed -n 27,33p src/middleware/csrf/index.ts"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "git diff main...HEAD -- src/utils/body.test.ts src/validator/validator.test.ts "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-031/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-031"
+  ]
+}

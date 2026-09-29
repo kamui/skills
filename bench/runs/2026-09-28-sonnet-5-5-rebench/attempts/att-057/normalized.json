@@ -1,0 +1,45 @@
+{
+  "arm": "review-code",
+  "parse_status": "parsed",
+  "native_verdict": "Changes Requested",
+  "verdict_source": "composition.summary.status",
+  "items": [
+    {
+      "file": "packages/server/src/core/internals/utils.ts",
+      "line_start": 11,
+      "line_end": 30,
+      "claim": "Keep Overwrite a single object type when TType is any. A router built on `initTRPC.context<any>()` adds context in a middleware, for example `t.procedure.use((opts) => opts.next({ ctx: { extra: 1 } })).query(({ ctx }) => ctx.foo.bar)`.",
+      "consequence": "`any` distributes into both branches of the new `TType extends object` test, so ctx becomes a union with the non-indexable `{ extra: number }` and `ctx.foo` fails with TS2339, where the merge-base compiled cleanly.",
+      "proposed_fix": "In `Overwrite`, test for `any` first (for example `0 extends 1 & TType`) and keep the key-by-key mapped type for that case, then add an `initTRPC.context<any>()` middleware case to `packages/tests/server/regression/issue-5020-inference-middleware.test.ts`.",
+      "native_priority": "P2",
+      "native_action": "must-fix",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "packages/server/src/core/internals/utils.ts",
+      "line_start": 25,
+      "line_end": 30,
+      "claim": "Drop the unreachable `TType` fallback in Overwrite. `TWith extends any` on line 26 is true for every type, and for `never` the distributive conditional yields `never` before reaching the `: TType` arm, so `Overwrite<string, never>` is `never`, not `string`.",
+      "consequence": "The doc comment says a non-object `TType` is overwritten \"unless TWith is never\", which suggests `Overwrite<X, never>` keeps `X`, and the dead arm reinforces that misreading.",
+      "proposed_fix": "Collapse the non-object arm to `TWith` and reword the doc comment to say that a `never` `TWith` yields `never`.",
+      "native_priority": "P3",
+      "native_action": "consider",
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": null,
+      "line_start": null,
+      "line_end": null,
+      "claim": "The new test declares `voidWithMiddleware` but never asserts on it, leaves two `// ^?` editor markers, and covers only a string input, not number, array, union or object inputs.",
+      "consequence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:11-16`, `:30-33`.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "observation"
+    }
+  ],
+  "parse_notes": []
+}

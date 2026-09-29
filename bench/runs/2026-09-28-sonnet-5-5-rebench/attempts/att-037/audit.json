@@ -1,0 +1,32 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-037/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-037-clone/82ad9859-3d71-4708-87ac-5495da32f683/subagents/agent-a7e7de30ef2ed84fd.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-037/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-037-clone/82ad9859-3d71-4708-87ac-5495da32f683.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD -- internal/backup.go internal/notify.go docker/Dockerfile",
+    "git diff main...HEAD -- internal/backup_test.go; grep -n \"compareTypeRefs\\|compareTypeClone\" internal/*.go | head -5; sed -n 486,530p internal/backup.go; git show main:internal/notify.go | grep -n \"soba backups\" | od -c | head -30; grep -n \"soba backups\" internal/notify.go | od -c | head -30"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD -- internal/backup.go internal/notify.go docker/Dockerfile",
+    "git diff main...HEAD -- internal/backup_test.go"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-037/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-037"
+  ]
+}

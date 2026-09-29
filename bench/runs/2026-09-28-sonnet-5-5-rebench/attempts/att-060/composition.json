@@ -1,0 +1,155 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "ccb4bcb4c2b841d89b0e88303a97bf4604a5795f",
+    "issues": [
+      "bokeh/bokeh#9129"
+    ],
+    "specs": [
+      "pr9232-packet"
+    ],
+    "change_description": "472e4770d363b3914bb478f0a6c3a83787b20c0d\nFixed issue of Datepicker displaying the wrong date for users in UTC+ timezones.\n\n7aae927cf09820e74a58108ea45facc0f6aa695c\nRemoved usage of var keyword.  Replaced with const.\n\ne92066d593fa2c88ffe732dbaeb3303fff996a15\nRemoved .idea/vcs.xml.\n\n4215c2d0b956eca3dc714b6c11c7fedb440013c9\nMade a shell for the integration test for DatePicker displayed/selected dates.\n\n36549bca3a63d581f7b68d08054a7813c1e6a499\nupdate tests\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Stop the DatePicker showing the day before the chosen one for users east of UTC (issue 9129), and add integration tests for the widget.",
+    "issue_fit": "Partial \u2014 the post-selection display is fixed for UTC+ zones, but the initial value and min/max bounds that Python sends as UTC-midnight timestamps now display a day early for users west of UTC, where the base code was correct.",
+    "coverage": "Both changed files reviewed; behavior of the old and new `_unlocal_date` traced and run in node across nine TZ values; Selenium tests not run (unavailable), settled by trace. Untracked `.mcp.json` in the clone is outside the range.",
+    "check_details": [
+      "Reviewer-executed at head 36549bca: scratch node script comparing base and head `_unlocal_date` under TZ=UTC, Europe/Paris, Europe/London, Asia/Kolkata, Pacific/Auckland, America/Los_Angeles, America/New_York, America/Sao_Paulo, Pacific/Honolulu; all exit 0 (see finding).",
+      "Unavailable: Selenium integration suite `tests/integration/widgets/test_datepicker.py`, browser and project build are not available offline; the tests were read and traced, not run."
+    ]
+  },
+  "findings": [
+    {
+      "id": "date_picker/unlocal-date-negative-offset-initial-value",
+      "title": "Fix initial DatePicker day shifted back west of UTC",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "Python sends `DatePicker(value=datetime.date(2019, 9, 20))`, `min_date` and `max_date` as UTC-midnight milliseconds, and `render()` passes them through `_unlocal_date`, which now subtracts `getTimezoneOffset()` before reading the UTC date; under `TZ=America/Los_Angeles` a node run returns 2019-9-19 where the base returned 2019-9-20.",
+      "impact": "Every user west of UTC sees the initial input text and highlighted day one day early, and a `max_date` day becomes unselectable, a regression from the base code, which was only wrong east of UTC.",
+      "change": "In `_unlocal_date`, treat a numeric UTC-midnight timestamp with `new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())` and the `toDateString()` string that `_on_select` stores with `new Date(d.getFullYear(), d.getMonth(), d.getDate())`, instead of one offset shift for both.",
+      "source": "Issue 9129 (correct displayed date); verified in `verification.tasks`.",
+      "anchor": {
+        "type": "line",
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "start_line": 82,
+        "end_line": 83,
+        "side": "RIGHT"
+      }
+    },
+    {
+      "id": "tests/integration/widgets/test_datepicker/initial-display-untested",
+      "title": "Assert the initial displayed date in the DatePicker test",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "`test_js_on_change_executes` clicks day 16 and reads the input text but never reads it before the click, and nothing sets the browser time zone.",
+      "impact": "The initial-display regression above passes unnoticed, and on a UTC runner the post-click assertion passes with the base `_unlocal_date` as well, so the test does not guard issue 9129.",
+      "change": "Before the first click, assert that `.foo input` has value `'Fri Sep 20 2019'`, and run the browser under a fixed non-UTC time zone so the assertion is sensitive to the offset.",
+      "source": "Issue 9129 (displayed value must match the chosen date).",
+      "anchor": {
+        "type": "line",
+        "path": "tests/integration/widgets/test_datepicker.py",
+        "start_line": 52,
+        "end_line": 68,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "`_unlocal_date` now mutates its `Date` argument through `setTime`, but every caller passes a freshly constructed `Date`, so nothing observes it.",
+      "evidence": "`bokehjs/src/lib/models/widgets/date_picker.ts:68-71`, `bokehjs/src/lib/models/widgets/date_picker.ts:83`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "issue-9129/report",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "With `_on_select` storing a `toDateString()` value, head `_unlocal_date` returns the chosen day in Paris, London, Kolkata and Auckland where the base returned the day before (node TZ matrix, `bokehjs/src/lib/models/widgets/date_picker.ts:78-88`)."
+      },
+      {
+        "source": "issue-9129/example",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "`DatePicker(value=datetime.date.today())` is sent as UTC-midnight ms (`bokeh/util/serialization.py:183-184`); head shows it a day early under America/Los_Angeles, New_York, Sao_Paulo and Honolulu, while the base showed it correctly."
+      },
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Title promises the UTC+ display fix, which the head delivers for the post-selection path (node TZ matrix)."
+      },
+      {
+        "source": "spec-pr9232-packet/conversation-comment-3",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "The PST check ('working great') does not extend to the initial value: head returns 2019-9-19 for a UTC-midnight 2019-9-20 under America/Los_Angeles."
+      }
+    ],
+    "files": [
+      {
+        "path": "bokehjs/src/lib/models/widgets/date_picker.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/integration/widgets/test_datepicker.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "node scratch TZ matrix of `_unlocal_date` (base vs head)",
+        "head": "36549bca3a63d581f7b68d08054a7813c1e6a499",
+        "outcome": "reviewer-executed",
+        "reason": "no supplied checks; run offline by the reviewer at the pinned head"
+      },
+      {
+        "check": "tests/integration/widgets/test_datepicker.py (Selenium)",
+        "head": "36549bca3a63d581f7b68d08054a7813c1e6a499",
+        "outcome": "unavailable",
+        "reason": "browser, Selenium and project build are unavailable offline; tests traced instead"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "date_picker/unlocal-date-negative-offset-initial-value",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-060/clone-work/rc.kSdCtn/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-060/clone-work/rc.kSdCtn/initial/accounting.json",
+          "operation": "Agent run_in_background=false subagent_type=general-purpose model=sonnet"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "bokeh/bokeh",
+    "paths": {
+      "private_dir": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-060/clone-work/rc.kSdCtn",
+      "store": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-060/clone-work/rc.kSdCtn/review-context.json",
+      "composition": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-060/clone-work/rc.kSdCtn/composition.json",
+      "skill_root": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-060/home/.claude/skills/review-code"
+    }
+  }
+}

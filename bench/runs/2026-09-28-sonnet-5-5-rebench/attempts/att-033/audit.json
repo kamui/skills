@@ -1,0 +1,42 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-033-clone/a73a043e-73af-4920-8979-817060eb1531/subagents/agent-a4c6b4e6fffc5f282.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-033-clone/a73a043e-73af-4920-8979-817060eb1531.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/clone/packages/server/src/core && sed -n 1,80p internals/utils.ts; sed -n 30,125p internals/procedureBuilder.ts; grep -n \"unsetMarker\\|UnsetMarker\" -r . | head -20",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/clone/packages/tests && time ./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | tail -30; sed -n 50,140p ../server/src/core/middleware.ts; sed -n 205,225p ../server/src/core/internals/procedureBuilder.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/clone-work && cat > a.ts <<'EOF'\nimport { Overwrite } from '../clone/packages/server/src/core/internals/utils';\nimport { initTRPC } from '../clone/packages/server/src';\nimport { inferRouterInputs, inferRouterOutputs } from '../clone/packages/server/src';\nimport { z } from '../clone/packages/tests/node_modules/zod';\n\ntype Eq<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;\nconst ok = <T extends true>() => {};\nok<Eq<Overwrite<{a:1}|undefined,{b:2}|undefined>, {a:1,b:2}|undefined>>();\nok<Eq<Overwrite<{a:1},never>, {a:1}>>();\nok<Eq<Overwrite<string,never>, string>>();\nok<Eq<Overwrite<{a:1},string>, string>>();\nok<Eq<Overwrite<{a:1},{b:2}|undefined>, {a:1,b:2}|undefined>>();\nok<Eq<Overwrite<any,{b:2}>, {b:2}>>();\nok<Eq<Overwrite<{a:1},any>, any>>();\nok<Eq<Overwrite<string[],{b:2}>, {b:2}>>();\n\nconst t = initTRPC.context<{a:string}|undefined>().create();\nconst r = t.router({\n  x: t.procedure.input(z.object({a:z.string()}).optional()).use(o=>o.next()).input(z.object({b:z.string()}).optional()).query(({input,ctx})=>input),\n  y: t.procedure.input(z.object({a:z.string()})).use(o=>o.next()).input(z.object({b:z.string()})).query(({input})=>input),\n  z: t.procedure.use(o=>o.next({ctx:{u:1}})).use(o=>o.next({ctx:{v:2}})).query(({ctx})=>ctx),\n});\ntype I = inferRouterInputs<typeof r>;\nconst i: I['x'] = 1 as any as string;\nconst j: I['y'] = 1 as any as string;\nconst k: inferRouterOutputs<typeof r>['z'] = 1 as any as string;\nEOF\ncd ../clone/packages/tests && ./node_modules/.bin/tsc --noEmit --strict --skipLibCheck --target es2020 --moduleResolution node ../../../clone-work/a.ts 2>&1 | head -40",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/clone-work && cat > b.ts <<'EOF'\nimport { Overwrite } from '../clone/packages/server/src/core/internals/utils';\nconst a: Overwrite<{a:1}|undefined,{b:2}|undefined> = 1 as any as string;\nconst b: Overwrite<any,{b:2}> = 1 as any as string;\nconst c: Overwrite<{a:1},any> = 1 as any as string;\nconst d: Overwrite<{a:1},never> = 1 as any as string;\nconst e: Overwrite<string[],{b:2}> = 1 as any as string;\nconst f: Overwrite<{a:1},unknown> = 1 as any as string;\nconst g: Overwrite<{a:1},{b:2}|string> = 1 as any as number;\nEOF\ncd ../clone/packages/tests && ./node_modules/.bin/tsc --noEmit --strict --skipLibCheck --target es2020 --moduleResolution node ../../../clone-work/b.ts 2>&1 | head -40"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/clone/packages"
+  ],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/home/jack/.t3/bench-runs/clone-work/a.ts",
+    "/home/jack/.t3/bench-runs/clone-work/b.ts"
+  ],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-033"
+  ]
+}

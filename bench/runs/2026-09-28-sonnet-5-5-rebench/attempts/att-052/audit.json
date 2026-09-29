@@ -1,0 +1,51 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-052-clone-work/32cf0dc9-072d-4bc4-af3e-ad8667a1e449.jsonl"
+  ],
+  "prompt_headers": [],
+  "report_findings_calls": 0,
+  "commands": [
+    "ls -R /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/skills/review-code | head -50",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone && git rev-parse --verify main^{commit} review-head^{commit} && git merge-base main review-head && git status --short | head && git log --reverse --format='%H%n%B---END---' main..review-head && git diff --stat main...review-head && echo $TMPDIR",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone && git rev-parse --verify 'main^{commit}'; git rev-parse --verify 'review-head^{commit}'; git merge-base main review-head; git status --short | head; git log --reverse --format='%H%n%B---END---' main..review-head; git diff --stat main...review-head; echo $TMPDIR",
+    "S=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/skills/review-code && D=$(mktemp -d /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone-work/rc.XXXXXX) && echo $D && for c in $(git log --reverse --format=%h main..review-head); do git log -1 --format=%B $c > $D/commit-${c:0:7}.txt; done; python3 $S/scripts/review_context.py --merge-base 8dd3b26bf59808de24fd654699f592abf6de581e --head 4089f3dc65f783beaa53cc032958ab625440d0ac --store $D/review-context.json 2>&1 | head -300; ls $D",
+    "grep -n \"cert_verify\\|_urllib3_request_context\\|_get_connection\\|get_connection_with_tls_context\\|_preloaded\\|pool_kwargs\" src/requests/adapters.py; sed -n 380,470p src/requests/adapters.py; pip list 2>/dev/null | grep -i urllib3; ls ../clone-cache; ../clone-cache/venv/bin/python -c \"import urllib3,ssl;print(urllib3.__version__, ssl.OPENSSL_VERSION)\"",
+    "grep -rn \"ca_certs\\|ca_cert_dir\\|cert_verify\\|_preloaded\\|extract_zipped\\|ssl_context\" tests/*.py | head -40; git diff main...review-head --stat -- tests; grep -n \"DEFAULT_CA_BUNDLE_PATH\\|^import\\|^from\" src/requests/adapters.py | head -40",
+    "V=../clone-cache/venv/lib/python*/site-packages/urllib3; grep -n \"ssl_context\\|load_cert_chain\\|verify_mode\\|check_hostname\\|load_default_certs\\|default_ssl_context\" $V/connection.py | head -60; grep -n \"def ssl_wrap_socket\" -A75 $V/util/ssl_.py | grep -n \"load_cert_chain\\|load_verify\\|ca_certs\\|context\" | head -30; grep -n \"def _merge_pool_kwargs\" -A20 $V/poolmanager.py",
+    "P=$(PYTHONPATH=src ../clone-cache/venv/bin/python -c \"import urllib3,os;print(os.path.dirname(urllib3.__file__))\"); echo $P; grep -n \"ssl_context\\|load_cert_chain\\|verify_mode\\|check_hostname\\|load_default_certs\\|default_ssl_context\" $P/connection.py | head -60; grep -n \"load_cert_chain\\|load_verify_locations\" $P/util/ssl_.py; grep -n \"def _merge_pool_kwargs\" -A20 $P/poolmanager.py",
+    "W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone-work && cat > $W/repro1.py <<'EOF'\nimport ssl, socket, threading, requests\nfrom unittest import mock\nfrom requests.adapters import HTTPAdapter\nimport requests.adapters as A\n\n# 1. custom ssl_context in adapter subclass is overridden for default verify=True\ncustom = ssl.create_default_context()\nclass Ad(HTTPAdapter):\n    def init_poolmanager(self, *a, **k):\n        k[\"ssl_context\"] = custom\n        super().init_poolmanager(*a, **k)\nad = Ad()\nreq = requests.Request(\"GET\", \"https://example.com/\").prepare()\nfor v in (True, False, \"/etc/ssl/certs/ca-certificates.crt\"):\n    pool = ad._get_connection(req, v)\n    print(\"verify=%r pool ssl_context is custom: %s, is shared preloaded: %s\" % (v, pool.conn_kw.get(\"ssl_context\") is custom, pool.conn_kw.get(\"ssl_context\") is A._preloaded_ssl_context))\n\n# 2. client cert loaded onto shared context\nsrv = socket.socket(); srv.bind((\"127.0.0.1\", 0)); srv.listen(5); port = srv.getsockname()[1]\ndef acc():\n    while True:\n        try: c,_ = srv.accept(); c.close()\n        except Exception: return\nthreading.Thread(target=acc, daemon=True).start()\nreq2 = requests.Request(\"GET\", \"https://127.0.0.1:%d/\" % port).prepare()\nad2 = HTTPAdapter()\npool = ad2._get_connection(req2, True, cert=(\"/tmp/a.crt\", \"/tmp/a.key\"))\nprint(\"client-cert pool uses shared ctx:\", pool.conn_kw.get(\"ssl_context\") is A._preloaded_ssl_context)\nwith mock.patch.object(type(A._preloaded_ssl_context), \"load_cert_chain\", autospec=True) as m:\n    try:\n        c = pool._new_conn(); c.connect()\n    except Exception as e:\n        print(\"connect err:\", type(e).__name__)\n    print(\"load_cert_chain calls on shared ctx:\", [(x.args[0] is A._preloaded_ssl_context, x.args[1:]) for x in m.call_args_list])\n# a later cert-less verify=True pool shares the same context\npool_b = ad2._get_connection(req2, True)\nprint(\"cert-less pool shares ctx:\", pool_b.conn_kw.get(\"ssl_context\") is A._preloaded_ssl_context, \"distinct pool:\", pool_b is not pool)\nEOF\nPYTHONPATH=src ../clone-cache/venv/bin/python $W/repro1.py 2>&1 | tail -15\necho ---base; git stash list >/dev/null; mkdir -p $W/base && git archive main src | tar -x -C $W/base && PYTHONPATH=$W/base/src ../clone-cache/venv/bin/python $W/repro1.py 2>&1 | tail -8",
+    "W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone-work && sed -i 's/A._preloaded_ssl_context/getattr(A, \"_preloaded_ssl_context\", None)/g; s/print(\"connect err:\", type(e).__name__)/import traceback; traceback.print_exc()/' $W/repro1.py && PYTHONPATH=$W/base/src ../clone-cache/venv/bin/python $W/repro1.py 2>&1 | head -6; echo ---; PYTHONPATH=src ../clone-cache/venv/bin/python $W/repro1.py 2>&1 | grep -v \"^verify\" | tail -12"
+  ],
+  "workdirs": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone-work",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone-work",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone-work",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/skills/review-code/references/targets.md",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/skills/review-code/references/rubric.md",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/skills/review-code/references/output.md",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/home/.claude/skills/review-code/references/verification.md"
+  ],
+  "diff_commands": [
+    "git diff --stat main...review-head ",
+    "git diff --stat main...review-head",
+    "git diff main...review-head --stat -- tests"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-052"
+  ]
+}

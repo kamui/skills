@@ -1,0 +1,432 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-sonnet-5-5-rebench",
+  "target": "j-trpc-5017",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 3,
+    "sha256": "3404ee4026d5116dc65ae1416c8470a0fb3350ba888f07b7d8018704fb51be41"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.284, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 7cb72283f4cba997251b3829611bfd3417d36d98349b395225ad3031039a1964; session b782368c-ffe5-4c38-b38c-39c9adb1f3ee; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v3), rubric.md, packet.md, reviews/ (7 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-29T03:28:34Z",
+  "attempts": [
+    {
+      "attempt_id": "att-007",
+      "blind_token": "blind-8b99dd",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-j3",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quote: \"When TType is an object and TWith is `unknown` (or `any`), the new Overwrite returns `unknown`/`any` and drops TType... Any caller that passes a TWith of `unknown`... (a middleware `_ctx_out`...) now erases the accumulated ctx or input type.\" This is GT-j3's mechanism: the non-object TWith branch replaces an object context at the ctx merge. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): an unknown ctx override gives TS2339 on ctx.base at head only, and the `X|undefined` override gives TS18048 at head only. The item's passing mention of `Overwrite<any,{b:2}>` junk touches GT-j2 without the consequence; the primary claim is the GT-j3 one. No fix is proposed, so absent."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The `object` check still treats arrays and functions as objects, so `Overwrite<string[], {b:2}>` is key-merged... The fix is only partial.\" Array and function operands also took the key-wise mapped branch at the merge-base; the mapped body did not change. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): Eq<Overwrite<string[],string[]>, string[]> is false at both base and head. So this is an accurate observation of a pre-existing limitation, not a defect introduced by the PR."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "false-finding",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`Overwrite<{a:1}|undefined, {b:2}|undefined>` gives `{b:2} | {a:1;b:2} | undefined`. The `{b:2}` member drops `a`... infers an input type that no longer requires `a`.\" The old Overwrite distributed over both parameters too, and produced the `{b:2}` member (plus `{a:1}` and `{}`). Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): assigning `{b:2}` to that Overwrite compiles at both base and head. For `.input(optional obj).use(next)` the head is stricter than base (base accepted `{}`, head rejects it). The asserted input regression is not introduced by the PR, and the middleware-input `{b}|undefined` scenario is not substantiated."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`Overwrite<string, never>` and `Overwrite<{a:1}, never>` both evaluate to `never`, not TType. The `: TType` branch is dead code.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The conditional is needlessly nested. `X extends any ? Y : never` is a no-op wrapper\". A factoring preference; the register's non_defects rule it not a defect."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The fix is made in the shared `Overwrite` helper, which also computes `_ctx_out` and middleware ctx, instead of at the input-merging site... wide blast radius.\" This is a design and placement critique. The facts are accurate: Overwrite is used at the ctx sites, and OverwriteIfDefined exists at procedureBuilder.ts:69. It names no concrete defect beyond deferring to item 1, so it is an observation below the threshold."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The regression test is thin... it never asserts the `voidWithMiddleware` procedure it defines.\" A test-coverage and hygiene remark; the register lists the voidWithMiddleware gap as a non-defect."
+        },
+        {
+          "item_id": "item-7",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The test file is named `issue-5020` but the PR is #5017.\" Accurate traceability and naming hygiene, below the threshold."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-020",
+      "blind_token": "blind-bb6c07",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-j2",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quote: \"With `initTRPC.context<any>().create()` and `t.procedure.use(o => o.next({ ctx: { x: 1 } })).query(({ ctx }) => ctx.foo.bar)`, tsc on review-head reports TS2339... The same code compiled cleanly on main\". This is GT-j2's trigger, mechanism (`any extends object` resolves to both branches) and consequence exactly, matching the register's reproduction. No fix is proposed (Fix: —), so absent."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-j3",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": false,
+          "notes": "Quote: \"A non-object TWith (unknown, any, undefined, string) now replaces an object TType wholesale... Overwrite<{a:1}, undefined> gives `undefined`... Any place where `_ctx_out` is or becomes `unknown` or `undefined` now wipes out the previously accumulated ctx\". This is GT-j3's mechanism, and it names the undefined override at the ctx call sites (middleware.ts:65/81/103, procedureBuilder.ts:38, ResolveOptions). Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): `next({ ctx: maybe })` with `{extra}|undefined` gives TS18048 at head only. No fix is proposed, so absent."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Overwrite<{a:1}, never> and Overwrite<string, never> both evaluate to `never`... The fallback `: TType` in the last branch is dead code.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"the PR adds no unit type tests for `Overwrite` itself... Overwrite<{a:1}, {b:2}[]> now gives a mixed... type, because arrays extend `object`\". This is mainly a test-coverage remark. The array and function examples describe behaviour unchanged from the merge-base, because the mapped body is the same, so the 'semantics changed for... arrays and functions' part is overstated. It asserts no concrete regression; below the threshold."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The regression test is named `issue-5020`, but the PR is #5017.\" Naming and traceability hygiene, accurate, below the threshold."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`voidWithMiddleware` is declared in the router but never asserted on... `.input(optional obj).use(next)` now infers `void | {a:string} | {a:string} | undefined` with a duplicated member\". The coverage gap is a register non-defect. The duplicate-member observation is true (my probe shows exactly that type at head) but inconsequential; head is stricter than base, which also admitted `{}`."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Leftover twoslash `// ^?` debugging markers, an unnecessary `async`... The eight-commit history was merged unsquashed\". Hygiene and style."
+        },
+        {
+          "item_id": "item-7",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The nested conditionals are more complex than needed... the mapped type still drops optional modifiers\". The factoring point is a register non-defect. The optional-modifier loss is pre-existing, because the mapped body is unchanged by the PR."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-025",
+      "blind_token": "blind-41d406",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Overwrite still merges any two object-like types key by key. Arrays and functions extend `object`, so array inputs come out mangled\". Array and function operands also took the key-wise mapped branch at the merge-base; the mapped body did not change. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): Eq<Overwrite<string[],string[]>, string[]> is false at both base and head. So this is an accurate observation of a pre-existing limitation, not a defect introduced by the PR. `Overwrite<{a:1}, () => void>` yields {a:1} at base as well. The chained-`.input()` example is also off, since `.input()` merges through OverwriteIfDefined (procedureBuilder.ts:69), not Overwrite."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "defect:GT-j2",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": true,
+          "notes": "Quote: \"`Overwrite<any, {a:1}>` evaluates to `{a:1} | { [x: string]: any; ... }`, because `any extends object` takes both branches. If the ctx or input type is `any`, that index-signature branch leaks into the inferred type.\" This names GT-j2's mechanism and trigger (an any ctx overwritten by a middleware). The consequence is only 'garbage union' / 'leaks', not the TS2339, but it leads a reader to the defect. The added union-of-objects remark describes behaviour identical at the merge-base; it is harmless and does not cancel the recovery. No fix is proposed, so absent."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "defect:GT-j3",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": true,
+          "notes": "Quote: \"`Overwrite<{a:1}, unknown>` now gives `unknown`... The old mapped type gave `{a:1}`... Any caller such as `_ctx_out`... that passes a TNext of `unknown` now silently erases the previous ctx or input type... The new 'replace entirely' semantics are a behaviour change for the ctx call sites in `middleware.ts` and `procedureBuilder.ts`.\" This is GT-j3's mechanism: a non-object ctx override replaces an object context at the `_ctx_out` merge. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): `next({ ctx: u as unknown })` gives TS2339 on ctx.base at head only, and the undefined-union variant gives TS18048 at head only. No fix is proposed, so absent."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"With TWith = `never` the whole conditional is `never`, so the `: TType` arm is unreachable.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"uses a non-homomorphic mapped type over `keyof TType | keyof TWith`, so it drops `?` and `readonly` modifiers.\" This is true of Overwrite, but the mapped-type body is byte-for-byte unchanged by this PR (diff of utils.ts). As with the register's index-signature non-defect, it is pre-existing and not attributable to the change."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The regression test file is named for issue 5020, but the PR and the earlier review comments refer to 5017.\" Accurate naming and traceability hygiene, below the threshold."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`voidWithMiddleware` is declared but never asserted on\". A test-coverage gap; the register lists it as a non-defect."
+        },
+        {
+          "item_id": "item-7",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"Leftover `// ^?` twoslash query markers are committed in the test.\" Accurate (lines 8 and 32 of the test); hygiene."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-033",
+      "blind_token": "blind-1f1c8e",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"arrays, Dates, Maps, functions and class instances still take the key-by-key branch... `Overwrite<string[], string[]>` is mangled the same way.\" Array and function operands also took the key-wise mapped branch at the merge-base; the mapped body did not change. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): Eq<Overwrite<string[],string[]>, string[]> is false at both base and head. So this is an accurate observation of a pre-existing limitation, not a defect introduced by the PR. The phrase 'garbled again' overstates it: array inputs were never fixed, and they are no worse than before."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`Overwrite<string, never>` and `Overwrite<{a:1}, never>` both evaluate to `never`... The `: TType` branch can never be reached.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold. The suggested erasure of ctx by a never `_ctx_out` behaves identically at the merge-base and is hypothetical."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "false-finding",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"The new `Overwrite` distributes over both union parameters... because the `undefined` member of TType is replaced wholesale by `{b:2}`... A caller can then pass `{b}` alone even though `a` is required\". The old Overwrite was distributive over both parameters as well (`TType extends any ? TWith extends any`). At the merge-base, undefined x {b:2} maps to {b:2} too. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): `const c3: Overwrite<{a:1}|undefined,{b:2}|undefined> = {b:2}` compiles at both base and head. For the realistic `.input(optional obj).use(next)` case, the head no longer accepts `{}` while base did (c6), so it is stricter. The asserted regression is not attributable to the PR."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "defect:GT-j2",
+          "duplicate_group": null,
+          "fix_sufficiency": "partial",
+          "priority_error": true,
+          "notes": "Quote: \"`Overwrite<any,{b:2}>` becomes `{b:2} | {[x:string]:any; ...}`. That is the result for a user context typed `any`... gives middleware and resolvers a union containing a wide index-signature type rather than the overwritten ctx\". This names GT-j2's mechanism (`any extends object` takes both branches) and its trigger (context typed any plus a middleware ctx overwrite). The consequence is misdescribed as 'weakens type safety'; the real effect is TS2339 on property access. It still leads a reader to the defect. Fix: \"Handle `any` explicitly, for example with `0 extends 1 & T`\". The direction is right, but it does not say what the any case should produce (the index-signature merge with the added keys). Partial."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"The conditional is more nested than it needs to be. `TWith extends any ? TWith : never` is an identity conditional\". The register's non_defects rule this factoring preference, with no demonstrated consequence, as not a defect."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`voidWithMiddleware` is defined but has no `expectTypeOf` assertions... The filename says `issue-5020` while the PR and the review thread refer to 5017\". Test coverage and naming hygiene; accurate but below the threshold (the register lists the voidWithMiddleware gap as a non-defect)."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "defect:GT-j3",
+          "duplicate_group": null,
+          "fix_sufficiency": "absent",
+          "priority_error": true,
+          "notes": "Quote: \"It now returns TWith wholesale, where it used to return a merged object... `_ctx_out`... A middleware whose `_ctx_out` is `unknown`, `UnsetMarker` (a symbol) or another primitive would replace the whole accumulated ctx with that value.\" This is GT-j3's mechanism: the `TType extends object ? (TWith extends object ? merge : TWith)` branch lets a non-object ctx override replace an object context, at the `_ctx_out` call sites. `next<$Context>` is unconstrained (middleware.ts:147). Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict): `next({ ctx: u as unknown })` gives TS2339 'base' does not exist on '{}' at head only, and `next({ ctx: maybe|undefined })` gives TS18048 at head only. The item does not name undefined/null specifically, but 'another primitive' covers them. No fix is proposed (Fix: —), so absent."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-045",
+      "blind_token": "blind-f13d27",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-j3",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"A middleware calls `opts.next({ ctx: maybe })` with `maybe: { extra: number } | undefined`... ctx becomes possibly `undefined` and the resolver fails with TS18048, although `next()` spreads `{ ...callOpts.ctx, ...nextOpts.ctx }`... the merge-base type kept it.\" This is GT-j3's trigger, mechanism, TS18048 consequence and runtime contradiction exactly. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict) reproduces TS18048 at head only. Fix: a ctx-specific merge at the procedureBuilder and middleware `_ctx_out` sites \"that keeps `TType` when `TWith` is `undefined` or `null`\", leaving the input fix intact, plus a regression test. That covers every listed manifestation (undefined union, null union, literal undefined) and does not disturb #5020's fix or GT-j1/GT-j2. Sufficient for GT-j3."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"the trailing `: TType` branch is unreachable because `TWith extends any` distributes over `never`... `Overwrite<string, never>` is `never`, as at the merge-base.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"declares `voidWithMiddleware` but never asserts on it, and leaves `// ^?` twoslash markers\". Accurate hygiene and coverage; the gap is a register non-defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-057",
+      "blind_token": "blind-0133ac",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "defect:GT-j2",
+          "duplicate_group": null,
+          "fix_sufficiency": "sufficient",
+          "priority_error": false,
+          "notes": "Quote: \"`any` distributes into both branches of the new `TType extends object` test, so ctx becomes a union with the non-indexable `{ extra: number }` and `ctx.foo` fails with TS2339, where the merge-base compiled cleanly\", with the trigger `initTRPC.context<any>()` plus a ctx-extending middleware. This is GT-j2's mechanism, trigger and consequence exactly. Fix: \"test for `any` first (for example `0 extends 1 & TType`) and keep the key-by-key mapped type for that case\". That gives the merge-base result `{[x:string]:any; extra:number}`, which is the required outcome, and it adds a regression test. Sufficient for GT-j2's known manifestation."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`Overwrite<string, never>` is `never`, not `string`... the dead arm reinforces that misreading.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"declares `voidWithMiddleware` but never asserts on it, leaves two `// ^?` editor markers, and covers only a string input\". This is accurate (see the test file). It is a test-coverage and hygiene remark; the register lists the voidWithMiddleware gap as a non-defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Changes Requested",
+        "approved_on_buggy": false,
+        "zero_recovery": false,
+        "false_clean": false,
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-069",
+      "blind_token": "blind-a7cf51",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "Quote: \"`Overwrite<string, never>` and `Overwrite<{ a: 1 }, never>` are `never`, not `TType`. The comment misleads readers and the `: TType` arm is unreachable.\" True, but it is only a doc and dead-code point. Overwrite<X, never> is never at the merge-base too (the old `TType extends any ? TWith extends any` also distributed over never; my probe's Eq<Overwrite<{a:1},never>, never> holds at both commits), so nothing regresses. The register's non_defects cover the `TWith extends any` / factoring remarks. Below the finding threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"Array and tuple inputs combined with `.use()` still infer a key-wise merged array-like object... the same as at the merge-base, though the type stays mutually assignable\". Accurate and explicitly pre-existing; it asserts no regression. Scratch tsc probe (clone-work/probe-{base,head}.ts, clone's tsc 5.x, --strict) confirms the array result is not equal to string[] at both commits."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "Quote: \"`voidWithMiddleware`... is declared but never asserted on, and the file carries stray `// ^?` twoslash markers.\" Accurate test hygiene and coverage; the register lists the gap as a non-defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": true,
+        "zero_recovery": true,
+        "false_clean": true,
+        "completion": "completed"
+      }
+    }
+  ]
+}

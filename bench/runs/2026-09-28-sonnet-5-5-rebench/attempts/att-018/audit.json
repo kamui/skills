@@ -1,0 +1,42 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-018-clone/ab7eca72-8276-4b92-aef8-118116fcbdef/subagents/agent-a4bde252cb2a95e54.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-018-clone/ab7eca72-8276-4b92-aef8-118116fcbdef.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "git diff main...HEAD -- '*.test.ts'",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone; sed -n 90,175p src/utils/body.ts; grep -n \"cachedBody\\|bodyCache\" -n src/request.ts | head -40; sed -n 95,125p src/utils/buffer.ts; sed -n 80,150p src/validator/validator.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone; sed -n 215,245p src/request.ts; sed -n 470,495p src/request.ts; grep -n \"BodyCache\" src/request.ts | head; grep -rn \"parseBody\\|bufferToFormData\" src --include=*.ts -l | grep -v test",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone; grep -n \"parseBody\" -B3 -A12 src/request.ts | sed -n 1,60p",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone; W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone-work; cat > $W/t.ts <<EOF\nimport { Hono } from '$PWD/src/hono'\nconst app = new Hono()\napp.post('/a', async (c) => { await c.req.formData(); try { return c.json(await c.req.parseBody()) } catch (e) { return c.text('ERR '+e, 500) } })\nfor (const body of [new URLSearchParams({a:'1'}), (() => { const f = new FormData(); f.append('a','1'); return f })()]) {\n  const r = await app.request('/a', { method: 'POST', body })\n  console.log(r.status, await r.text())\n}\nEOF\n./node_modules/.bin/esbuild $W/t.ts --bundle --platform=node --format=esm --outfile=$W/t.mjs --log-level=error && node $W/t.mjs",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone; W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone-work; rm -rf $W/main && mkdir $W/main && git archive main src | tar -x -C $W/main && ln -s $PWD/node_modules $W/main/node_modules; sed \"s#$PWD/src#$W/main/src#\" $W/t.ts > $W/main/t.ts; ./node_modules/.bin/esbuild $W/main/t.ts --bundle --platform=node --format=esm --outfile=$W/tm.mjs --log-level=error && node $W/tm.mjs"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "git diff main...HEAD -- '*.test.ts'"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-018"
+  ]
+}

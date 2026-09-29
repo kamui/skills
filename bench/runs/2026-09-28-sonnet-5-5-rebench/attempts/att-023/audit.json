@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-023-clone/1de402e0-f579-4279-aff1-6b2b2d68098d/subagents/agent-aaef2f625241a34e1.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-023-clone/1de402e0-f579-4279-aff1-6b2b2d68098d.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "grep -n \"class DatePicker\" -A25 bokeh/models/widgets/inputs.py | head -50; grep -n \"Date\" bokeh/core/property/dates.py | head -30\nmkdir -p /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023/clone-work; cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023/clone-work\ncat > t.js <<'EOF'\nfunction u(date){const o=date.getTimezoneOffset()*60000;date.setTime(date.getTime()-o);const s=date.toISOString().substr(0,10).split('-');return new Date(+s[0],+s[1]-1,+s[2])}\nfunction old(date){const s=date.toISOString().substr(0,10).split('-');return new Date(+s[0],+s[1]-1,+s[2])}\nfor (const v of [Date.UTC(2019,8,20), \"Mon Sep 16 2019\", \"2019-09-20\"]) {\n console.log(process.env.TZ, JSON.stringify(v), \"new:\", u(new Date(v)).toDateString(), \"old:\", old(new Date(v)).toDateString())\n}\nEOF\nfor tz in America/Los_Angeles UTC Europe/Paris Pacific/Auckland; do TZ=$tz node t.js; done"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023/clone/bokehjs/src/lib/models/widgets/date_picker.ts"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-023"
+  ]
+}

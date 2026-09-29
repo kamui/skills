@@ -1,0 +1,113 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "soba-pr-195-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Resolve 13 SonarQube findings (complexity, duplicated literals, duplicate test, Dockerfile style) with behaviour and log output unchanged.",
+    "issue_fit": "Met — no issue exists; against the supplied PR text every stated outcome is implemented and the unchanged-output claim held under trace.",
+    "coverage": "All four files and the full merge-base diff reviewed; build, vet and `go test ./internal/` pass offline at the head; Dockerfile not built (no Docker).",
+    "check_details": [
+      "Reviewer ran `go build ./...`, `go vet ./internal/` and `go test ./internal/ -count=1` at 136a4850df9aec8c: all pass (live provider tests skip without credentials).",
+      "Supplied PR-body claims about local build, lint and test results were not reused as evidence; golangci-lint was not run and the Dockerfile could not be built."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The `Organistations` typo the earlier review flagged exists verbatim at the merge-base in three log lines and is now emitted from one helper, matching the PR's promise that log output is unchanged.",
+      "evidence": "`internal/backup.go:207`, merge-base `internal/backup.go` `displayStartupConfig`."
+    },
+    {
+      "fact": "The doubled `resetBackups()` call per loop iteration in `TestGiteaOrgsRepositoryBackup` is carried over from the merge-base, where it was already called in each case and after the switch.",
+      "evidence": "`internal/backup_test.go:615-621`, merge-base `internal/backup_test.go:619-710`."
+    },
+    {
+      "fact": "The three backup status title strings are byte-identical at the merge-base and the head, including the leading U+FE0F sequences.",
+      "evidence": "`internal/notify.go:23-25`, xxd comparison of merge-base and head."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "spec-soba-pr-195-text/pr-body/\"Behaviour and log output are unchanged\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Traced each extracted helper in internal/backup.go against the merge-base bodies; call order, log strings and provider order are preserved, and `go test ./internal/` passes."
+      },
+      {
+        "source": "spec-soba-pr-195-text/pr-body/\"backup status titles extracted into constants\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:23-25,30-38 defines three constants and backupStatusTitle, used by Telegram, ntfy and Slack senders."
+      },
+      {
+        "source": "spec-soba-pr-195-text/pr-body/\"removed TestPublicGitLabRepositoryBackup2\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Merge-base body of the removed test is identical to TestPublicGitLabRepositoryBackup; internal/backup_test.go:567-572."
+      },
+      {
+        "source": "spec-soba-pr-195-text/pr-body/\"merged consecutive RUN instructions, sorted apk package names, quoted ${TAG}\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:5-15 merges the user/apk RUNs, keeps the same seven packages sorted, and quotes the download URL."
+      },
+      {
+        "source": "spec-soba-pr-195-text/pr-body/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Build, vet and package tests reproduced passing; golangci-lint and SonarQube results were not runnable offline."
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-073/clone",
+    "paths": {
+      "private_dir": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-073/clone-work/tmp.KrMZ5a5sZm",
+      "store": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-073/clone-work/tmp.KrMZ5a5sZm/review-context.json",
+      "composition": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-073/clone-work/tmp.KrMZ5a5sZm/composition.json",
+      "skill_root": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-073/home/.claude/skills/review-code"
+    }
+  }
+}

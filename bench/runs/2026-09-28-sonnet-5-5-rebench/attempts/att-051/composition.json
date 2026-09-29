@@ -1,0 +1,116 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr-9699"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "issues": ["rclone/rclone#9687"],
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Serialize Batcher.Commit admission with insertion of the shutdown marker so every accepted request is processed before the commit loop quits, and later Commits get the existing shutdown error.",
+    "issue_fit": "Met. Issue #9687's question (serialize admission and the quit marker so every accepted request is processed or rejected) is answered by the new `admitMu`, and the PR text's promises about the preserved shutdown error and sync/async regression coverage hold.",
+    "coverage": "Both changed files reviewed in full; Commit, Shutdown, commitLoop and the dropbox and googlephotos callers traced; changed test read in execution order and run at head and against merge-base product code. Untracked `.claude/` and `.mcp.json` in the clone are uncommitted and not reviewed.",
+    "check_details": [
+      "Reviewer ran `go test -count=1 -race ./lib/batcher` at the reviewed head: pass (ok, 5.3s).",
+      "Reviewer ran `go test -count=1 -race -run TestBatcherCommitRacingShutdown -overlay=<work>/overlay.json ./lib/batcher` with the head test file and the merge-base `batcher.go`: both subtests fail (`commit hung while racing shutdown`, `accepted commit was dropped during shutdown`), so the test catches the unfixed code.",
+      "Author-reported `go test -race -count=20`, `go vet`, `go build` and `make quicktest` were not supplied as check evidence and were not re-run; `go vet`, `go build` and `make quicktest` are unavailable offline for other packages."
+    ],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "rclone/rclone",
+    "requirements": [
+      {
+        "source": "issue-9687/question",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:243-252 and :267-281 take admitMu around close(b.closed)+quit send and around the closed check+send to b.in, so accepted requests precede quit and later ones are rejected; premise-admission-before-quit holds"
+      },
+      {
+        "source": "spec-pr-9699/\"Preserve the existing shutdown error for commits that arrive after shutdown starts\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:268-271 still returns fserrors.FatalError(errors.New(\"batcher is shutting down\")) when b.closed is closed, now after releasing admitMu"
+      },
+      {
+        "source": "spec-pr-9699/\"Add regression coverage for synchronous hangs and asynchronous dropped uploads\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher_test.go:239-311 runs TestBatcherCommitRacingShutdown in sync and async modes and asserts no error, Shutdown completion and that commitBatch ran; against the merge-base batcher.go both subtests fail"
+      },
+      {
+        "source": "spec-pr-9699/\"go test -race ./lib/batcher -count=20\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Reviewer reproduced a single-count -race pass; the count=20 run, go vet, go build and make quicktest were not re-run and nothing depends on them beyond the focused pass"
+      }
+    ],
+    "files": [
+      {
+        "path": "lib/batcher/batcher.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "lib/batcher/batcher_test.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -race ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "run by the reviewer at the pinned head with the offline module cache; exit 0"
+      },
+      {
+        "check": "go test -count=1 -race -run TestBatcherCommitRacingShutdown -overlay (merge-base batcher.go) ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "head test file against merge-base product code through a scratch overlay under the work directory; both subtests fail as intended"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-admission-before-quit",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Every admitted Commit request is enqueued on b.in before the quit marker and a Commit after shutdown starts observes b.closed under admitMu and is rejected.",
+          "evidence": "lib/batcher/batcher.go:243-252, lib/batcher/batcher.go:266-287, lib/batcher/batcher.go:205-230",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-no-new-deadlock",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "The change adds no deadlock: commitLoop keeps draining b.in until quit, quit is sent only after close(b.closed) under admitMu, and no path re-enters admitMu or calls Shutdown or Commit while holding it.",
+          "evidence": "lib/batcher/batcher.go:236-255, lib/batcher/batcher.go:New, backend/dropbox/dropbox.go:1763, backend/googlephotos/googlephotos.go:891",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-051/tmp/claude-1000/tmp.Njltd9fFte/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-051/tmp/claude-1000/tmp.Njltd9fFte/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

@@ -10,12 +10,12 @@
       "cohort_run": "runs/2026-09-28-sonnet-5-5-rebench",
       "entries": [
         {"id": "claude-builtin-sonnet-5-5", "label": "Claude Code built-in /code-review, Sonnet 5.5 high", "version": "claude-code 2.1.284",
-         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": null, "arm": "claude-builtin-sonnet-5-5-high"}],
-         "note": "Safe mode, no sandbox."},
-        {"id": "review-code-sonnet-5-5", "label": "/review-code, Sonnet 5.5 high", "version": "5e12864 (main since #406, 2026-09-27)",
-         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": null, "arm": "review-code-sonnet-5-5-high-enforced"}],
-         "note": "Enforced sandbox (claude-strict-v2), claude-code 2.1.284."},
-        {"id": "review-code-sonnet-5-5e12864", "label": "/review-code, Sonnet 5 high", "version": "5e12864 (main since #406, 2026-09-27)",
+         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": "results.v1.json", "arm": "claude-builtin-sonnet-5-5-high"}],
+         "note": "Safe mode, no sandbox. On Sonnet 5.5 the built-in runs the prompt it gave Opus 5.5 on claude-code 2.1.282 (8 angles, no verify step). 2 attempts wrote scratch files to /tmp and were replaced."},
+        {"id": "review-code-sonnet-5-5", "label": "/review-code, Sonnet 5.5 high", "version": "5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts)",
+         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": "results.v1.json", "arm": "review-code-sonnet-5-5-high-enforced"}],
+         "note": "Enforced sandbox (claude-strict-v2), claude-code 2.1.284. 5 of 36 reviews are incomplete: 4 stopped when the sandbox denied a Bash command, which no Sonnet 5 review under the same profile did, and 1 reported its own coverage incomplete."},
+        {"id": "review-code-sonnet-5-5e12864", "label": "/review-code, Sonnet 5 high", "version": "5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts)",
          "sources": [
            {"run": "runs/2026-09-28-verification-off-staged", "results": "results.v2.json", "arm": "review-code-sonnet-high-enforced-x394-control"},
            {"run": "runs/2026-09-28-unseen-target-comparison", "results": "results.v1.json", "arm": "review-code-sonnet-high-enforced-x394-control"}

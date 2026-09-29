@@ -1,0 +1,10 @@
+{
+  "arm": "review-code",
+  "parse_status": "unresolved",
+  "native_verdict": null,
+  "verdict_source": null,
+  "items": [],
+  "parse_notes": [
+    "no artifacts/composition.json: the attempt stopped (normalization exit 1: no artifacts/composition.json returned ) before returning a review"
+  ]
+}

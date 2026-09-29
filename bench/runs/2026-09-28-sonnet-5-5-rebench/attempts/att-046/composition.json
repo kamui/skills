@@ -1,0 +1,138 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "BurntSushi/ripgrep#2957",
+      "BurntSushi/ripgrep#2956"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "79cbe89deb1151e703f4d91b19af9cdcc128b765",
+    "issues": [
+      "BurntSushi/ripgrep#2956"
+    ],
+    "change_description": "feat(completion): support sourcing zsh completion dynamically\n\nSummary:\nPreviously, you needed to save the completion script to a file and then\nsource it.  Now, you can dynamically source completions in zsh by\nrunning\n\n```zsh\n$ source <(rg --generate complete-zsh)\n```\n\nTest plan:\n1. Run `source <(rg --generate complete-zsh)`\n2. Run `rg --generate=complete-zs<TAB>`\n\nBefore this commit, you would get an error after step 1.\nAfter this commit, it should work as expected.\n\nCloses #2956\n\n\nimprove FAQ text for zsh completions\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Let zsh users load ripgrep completions with `source <(rg --generate complete-zsh)` by registering `_rg` via `compdef` instead of calling it at source time, and document that in the FAQ.",
+    "issue_fit": "Met — sourcing after `compinit` registers `_rg` for `rg` without the issue's `_arguments` error; the TAB step could not be exercised without a built `rg`.",
+    "coverage": "Both changed files and the full committed range reviewed; scratch zsh 5.8.1 runs covered the new dispatch branch. `ci/test-complete` and `cargo` were unavailable.",
+    "check_details": [
+      "Reviewer-executed scratch zsh runs at the reviewed head, outside the clone: sourcing after `compinit` (via `source <(...)`, `eval`, and from inside a function) leaves `_comps[rg]=_rg` with no error; sourcing before `compinit` prints `command not found: _arguments`; the pre-change file reproduces the issue's `_arguments:comparguments` error; a `ci/test-complete`-style `_RG_COMPLETE_LIST_ARGS=1` subshell source still prints the argument specs.",
+      "Unavailable: `ci/test-complete` and `cargo build`/`cargo test` (no built `rg`, no vendored registry). The list-args path was traced by scratch run instead."
+    ]
+  },
+  "findings": [
+    {
+      "id": "FAQ.md/source-before-compinit",
+      "title": "State that the source line must follow compinit",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "A reader adds the new `source <(rg --generate complete-zsh)` line to `.zshrc` above `compinit`, as many setups order it.",
+      "impact": "`compdef` is undefined, so the script falls through to `_rg \"$@\"` at source time and prints `command not found: _arguments` on every shell start, with no completion registered.",
+      "change": "Add a sentence after the snippet saying it belongs after `compinit` has run, and that the `fpath` line above must precede `compinit` too.",
+      "anchor": {
+        "type": "line",
+        "path": "FAQ.md",
+        "start_line": 131,
+        "end_line": 139,
+        "side": "RIGHT"
+      }
+    },
+    {
+      "id": "FAQ.md/source-snippet-prompt-prefix",
+      "title": "Drop the `$ ` prompt from the `.zshrc` snippet",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "A reader copies the block that the text says to add to `$HOME/.zshrc`, which begins with the shell prompt `$ `.",
+      "impact": "The pasted line fails on every shell start with `command not found: $`, so no completion is loaded. The neighbouring `fpath=(...)` snippet correctly has no prompt.",
+      "change": "Change the line to `source <(rg --generate complete-zsh)` without the leading `$ `.",
+      "anchor": {
+        "type": "line",
+        "path": "FAQ.md",
+        "start_line": 135,
+        "end_line": 135,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The sentence \"easier to setup, is generally slower\" is missing a subject and uses the noun `setup` as a verb.",
+      "evidence": "`FAQ.md:138`."
+    },
+    {
+      "fact": "The clone holds an untracked `.mcp.json` that is outside the committed range and was not reviewed.",
+      "evidence": "`git status --short` in the clone."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "BurntSushi/ripgrep",
+    "requirements": [
+      {
+        "source": "issue-2956/\"source <(rg --generate=complete-zsh)\" fails with comparguments error",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`crates/core/flags/complete/rg.zsh:441-446`; scratch run after `compinit`: no error, `_comps[rg]=_rg`; base file reproduces the error."
+      },
+      {
+        "source": "pr-body/\"you can dynamically source completions in zsh\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`source` and `eval` after `compinit` both register `_rg`; sourcing before `compinit` still errors (finding `FAQ.md/source-before-compinit`)."
+      },
+      {
+        "source": "pr-body/\"Run `rg --generate=complete-zs<TAB>`\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "An interactive TAB completion needs a built `rg` and a pty; registration through `compdef` was verified instead."
+      },
+      {
+        "source": "commit-855bfa6/\"improve FAQ text for zsh completions\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "`FAQ.md:94-143` now adds the `fpath` step and a speed caveat."
+      }
+    ],
+    "files": [
+      {
+        "path": "FAQ.md",
+        "state": "reviewed"
+      },
+      {
+        "path": "crates/core/flags/complete/rg.zsh",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "scratch zsh 5.8.1 sourcing runs under clone-work",
+        "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+        "outcome": "reviewer-executed",
+        "reason": "Focused runs permitted by the run policy; they check the dispatch branch, not the whole completion."
+      },
+      {
+        "check": "ci/test-complete",
+        "head": "855bfa6cdae4f4fe8762f892fc4957635397083e",
+        "outcome": "unavailable",
+        "reason": "Needs a built rg; cargo is unavailable offline."
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

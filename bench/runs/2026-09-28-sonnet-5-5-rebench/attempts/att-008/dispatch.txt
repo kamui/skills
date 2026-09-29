@@ -1,0 +1,3 @@
+claude 2.1.284 (Claude Code)
+model=claude-sonnet-5-5 effort=high session=9cd6a2a5-26a8-4862-a07c-63bfa19a397b
+exit=0

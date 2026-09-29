@@ -1,0 +1,36 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-006/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-006-clone/cb2a6ea5-efc6-4504-aec6-60bcc1bc834c/subagents/agent-a38a85b1cdf1d7a94.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-006/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-006-clone/cb2a6ea5-efc6-4504-aec6-60bcc1bc834c.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx && cat packages/react/src/field/control/FieldControl.tsx",
+    "cat packages/react/src/internals/useValueChanged.ts; cat packages/react/src/internals/field-register-control/useRegisterFieldControl.ts; grep -n \"change\\b\\|change =\\|change:\" -n packages/react/src/field/root/useFieldValidation.ts | head -20",
+    "sed -n 300,345p packages/react/src/field/root/useFieldValidation.ts; grep -n \"initialValue\\|registerFieldControl\" -r packages/react/src/field/root/*.ts* packages/react/src/internals/field-register-control/*.ts | grep -v test | head -30; git diff main...review-head -- '*.test.tsx' | head -250",
+    "grep -n \"markedDirtyRef\" -r packages/react/src --include=*.ts --include=*.tsx | grep -v test | head; grep -n \"setDirty\" -B2 -A12 packages/react/src/field/root/FieldRoot.tsx | head -50; grep -n \"change is prevented\" -A25 packages/react/src/field/control/FieldControl.test.tsx; sed -n 20,110p packages/react/src/internals/field-register-control/useFieldControlRegistration.ts"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx ",
+    "git diff main...review-head -- '*.test.tsx' "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-006/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-006"
+  ]
+}

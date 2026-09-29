@@ -1,0 +1,44 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-019-clone/18750d07-7734-4b86-873c-0c5a0cf72509/subagents/agent-a77297ae0e4e54ee2.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-019-clone/18750d07-7734-4b86-873c-0c5a0cf72509.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx && cat packages/react/src/field/control/FieldControl.tsx",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone/packages/react/src && cat internals/useValueChanged.ts* ; cat internals/field-register-control/useRegisterFieldControl.ts; grep -n \"change\\b\\|change =\" -n field/root/useFieldValidation.ts | head -20",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone/packages/react/src && sed -n 225,350p field/root/useFieldValidation.ts; grep -rn \"initialValue\" field/root/*.ts* | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone/packages/react/src && grep -n \"useValueChanged\" -A12 number-field/root/NumberFieldRoot.tsx | head -50; cat internals/field-register-control/useFieldControlRegistration.ts | head -80",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone/packages/react/src && sed -n 80,200p internals/field-register-control/useFieldControlRegistration.ts; grep -rn \"useValueChanged(\" --include=*.tsx . | grep -v test | head -12",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone/packages/react/src && grep -rn \"initialValue\" --include=*.ts --include=*.tsx . | grep -v \"test\\.\" | grep -v \"^./number-field\\|^./slider\" | head -30; grep -n \"setDirty\\|markedDirtyRef\" field/root/FieldRoot.tsx",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx | head -300",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone/packages/react/src && sed -n 45,100p field/root/FieldRoot.tsx; sed -n 195,225p field/root/useFieldValidation.ts"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx ",
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.test.tsx "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-019"
+  ]
+}

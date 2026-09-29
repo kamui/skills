@@ -1,0 +1,126 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "spec-grpc-go-7390-pr-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": [
+      "grpc/grpc-go#7365"
+    ],
+    "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Stop two concurrent connection attempts on one subchannel by keeping ac.mu held from connect()'s Idle check (and updateAddrs' restart) through the transition to Connecting.",
+    "issue_fit": "Met: issue 7365's root cause and proposed fix (move to Connecting while connect() still holds the mutex) are implemented; the duplicate tryAllAddrs run can no longer start.",
+    "coverage": "Full merge-base diff of clientconn.go reviewed with callers, onClose/createTransport/tearDown state writers and the balancer-wrapper state hook; focused AuthorityRevive test passed; three lock-handling premises verified.",
+    "check_details": [
+      "Reviewer ran go test ./xds/internal/xdsclient/tests/ -run Test/AuthorityRevive -count=100 at 76ef33f44a60: ok (12.8s). The base was not run, and at the reported ~0.4% flake rate 100 runs cannot distinguish base from head, so this is a smoke result, not proof of the fix.",
+      "No CI or supplied check evidence was available offline."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The change adds no regression test of its own; the fix is evidenced only through the previously flaky Test/AuthorityRevive.",
+      "evidence": "`clientconn.go` is the only changed file in `main...review-head`."
+    },
+    {
+      "fact": "Commit 6214c9dd1 is titled 'Make callers of resetBackoff() lock the mutex' but changes callers of resetTransport, now resetTransportAndUnlock.",
+      "evidence": "`clientconn.go:922`, `clientconn.go:996`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "grpc/grpc-go",
+    "requirements": [
+      {
+        "source": "issue-7365/comment-3/\"set the state to connecting while addrConn.connect has the mutex locked\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 keeps ac.mu locked from the Idle check into resetTransportAndUnlock, which sets Connecting at clientconn.go:1261 before unlocking."
+      },
+      {
+        "source": "pr-body/\"no concurrent requests are able to start once caller of resetTransport does some validation\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "connect() and updateAddrs both hand a held ac.mu to resetTransportAndUnlock (clientconn.go:922, 996); premise-single-attempt holds."
+      },
+      {
+        "source": "commit-c3a3d1c/\"Update conn state to prevent concurrent connection attempts\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:1261 sets Connecting under the same critical section as the Idle check."
+      },
+      {
+        "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Author-reported 100000-run result cannot be repeated here; reviewer's 100-run pass is consistent but not decisive at a ~0.4% base flake rate."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test ./xds/internal/xdsclient/tests/ -run Test/AuthorityRevive -count=100",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "run offline in the clone at the reviewed head; ok in 12.8s"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-single-attempt",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "For one addrConn, connect() cannot start two connection attempts concurrently: the Idle check and the transition to Connecting share one ac.mu critical section.",
+          "evidence": "clientconn.go:905-923, 1234-1262",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-lock-balance",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "Every caller of resetTransportAndUnlock holds ac.mu at the call and the function releases it exactly once on every path before blocking.",
+          "evidence": "clientconn.go:922, 996, 1234-1262",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-updateaddrs-no-deadlock",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "The lock hand-off in updateAddrs cannot deadlock with the deferred GracefulClose/onClose, since the spawned goroutine releases ac.mu without waiting on the updateAddrs goroutine.",
+          "evidence": "clientconn.go:983-996, balancer_wrapper.go:255-265",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-042/tmp/claude-1000/tmp.yIWLva5y8a/initial-b",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-042/tmp/claude-1000/tmp.yIWLva5y8a/initial-b/accounting.json",
+          "operation": "Agent run_in_background=false subagent_type=general-purpose model=sonnet"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

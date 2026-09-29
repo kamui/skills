@@ -1,0 +1,93 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "internal/backup.go",
+      "line_start": 207,
+      "line_end": 207,
+      "claim": "The log string typo \"Organistations\" is carried into the shared helper `logProviderOrgs`, so it now appears for GitHub, Gitea and Azure DevOps.",
+      "consequence": "With SOBA_GITHUB_ORGS, SOBA_GITEA_ORGS or SOBA_AZURE_DEVOPS_ORGS set, startup logs \"GitHub Organistations: ...\". Anyone grepping for \"Organisations\" or \"Organizations\" finds nothing. The refactor centralised the string, so fixing it in one place was cheap. The PR claims log output is unchanged, and that is why the typo was preserved. Copilot flagged this and the thread was left unresolved at merge.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "internal/backup_test.go",
+      "line_start": 629,
+      "line_end": 629,
+      "claim": "`resetBackups()` runs inside each switch case and again after the switch, so every loop iteration resets twice.",
+      "consequence": "In `TestGiteaOrgsRepositoryBackup`, both the `sobaOrgTwo` and `\"*\"` cases call `resetBackups()`, and the unconditional call after the switch repeats it. The double reset was already in the original test. The PR rewrote this exact block into helper calls and kept the redundancy. The extra call adds cleanup work and can hide ordering problems between iterations. Copilot flagged this and the thread was left unresolved.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "internal/backup.go",
+      "line_start": 678,
+      "line_end": 678,
+      "claim": "`checkProvidersDefined` now precomputes `bitbucketAPITokenComplete`. The original set it only when the map loop reached the API-token provider, so the old result depended on random map iteration order.",
+      "consequence": "The old code let `providerNameBitBucketOAuth` be visited before `providerNameBitBucketAPIToken`, which double-counted Bitbucket when both credential sets were present. The new code is deterministic, so the count differs from the old code in that ordering. This is probably an improvement, but it contradicts the PR's \"behaviour unchanged\" claim. No test covers a config with both Bitbucket credential sets.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "internal/backup.go",
+      "line_start": 251,
+      "line_end": 251,
+      "claim": "The refactor kept the inconsistent label \"Gitlab backup LFS\" and passes it as an argument to `logProviderBackupLFS`, while every other line for that provider says \"GitLab\".",
+      "consequence": "The log shows \"GitLab compare method\" and \"GitLab backups to keep\" but \"Gitlab backup LFS: true\", so a case-sensitive grep for \"GitLab\" misses the LFS line. Now that a single label is passed to each helper, it is easy to fix, but the typo was preserved.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "internal/backup.go",
+      "line_start": 258,
+      "line_end": 258,
+      "claim": "`displayBitBucketStartupConfig` only prints anything when `SOBA_BITBUCKET_EMAIL` is set, so OAuth2-only Bitbucket users get no startup config output.",
+      "consequence": "A user who configures Bitbucket with OAuth2 (user, key and secret) but no email gets no Bitbucket compare, retention or LFS lines at startup. `bitbucketOAuthDefined()` already exists and was added in this same PR. The gate could have used `bitbucketAPITokenDefined() || bitbucketOAuthDefined()`, but the old gate was copied unchanged.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "docker/Dockerfile",
+      "line_start": 7,
+      "line_end": 7,
+      "claim": "The merged RUN keeps `rm -f \"/var/cache/apk/*\"` with the glob inside quotes, so the shell never expands it and it removes nothing.",
+      "consequence": "The quoted pattern is passed literally to `rm -f`, which matches no file and returns success. The cleanup is dead code that looks like it does something. The `--no-cache` flag already prevents the cache from being written, so the image is unaffected. This was already the case before the merge. The PR rewrote this line without fixing it.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "internal/backup.go",
+      "line_start": 494,
+      "line_end": 494,
+      "claim": "`createWorkingDir` and `validateStartupConfig` were extracted from `Run` without checking that the merged startup order still matches. `createWorkingDir` has no doc comment, and `scheduleBackups` creates the scheduler even when it falls through to the single-run default.",
+      "consequence": "In the default case with no interval or cron, the scheduler is created and never started or shut down, so gocron resources can leak. The original code had the same flow, but `scheduleBackups` now presents it as a self-contained function. Creating the scheduler after the `default` branch is decided would avoid this.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

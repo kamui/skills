@@ -1,0 +1,125 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "daab56344e612097fd50c46c433de5d9b6013837",
+    "issues": [
+      "grpc/grpc-go#7365"
+    ],
+    "specs": [
+      "grpc/grpc-go#7390 pull-request text"
+    ],
+    "change_description": "c3a3d1c48adcf492696029fa946d606e5e7ba40a\nUpdate conn state to prevent concurrent connection attempts\n\n6214c9dd1cd421727852b03cafceac7c9e9eb973\nMake callers of resetBackoff() lock the mutex\n\nff977b39fc525a077d16427fad00949e179dc17b\nAdd doc comment for resetTransportAndUnlock\n\n76ef33f44a600c3ed1a385979fd1dfbcade3fbb6\nMerge remote-tracking branch 'source/master' into fix_conn_connect_race\n\n",
+    "coverage": "complete",
+    "merged": false
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Close the race in which two addrConn.connect() calls both saw Idle and both started tryAllAddrs, orphaning a transport (issue 7365), by holding ac.mu from the idle check through the Connecting transition.",
+    "issue_fit": "Met: connect() and updateAddrs() now hand ac.mu to resetTransportAndUnlock(), so the second connect sees Connecting; the 100000-run flake measurement is a supporting assertion not reproduced here.",
+    "coverage": "Full diff of clientconn.go, both callers, onClose, tearDown and the health-check state route reviewed; two focused tests passed at the head; two lock-handoff premises verified as holding.",
+    "check_details": [
+      "Reviewer ran `go test -race -count=1 -run 'Test$/(DialWithBlockErrorOnBadCertificates|ResetConnectBackoff|UpdateAddresses|TestConnectivity|CanceledCtx)' .` at the reviewed head: ok in 1.1s; subtests matched were not listed (no -v).",
+      "Reviewer ran `go test -race -count=1 -v -run 'Test/AuthorityRevive' ./xds/internal/xdsclient/tests` at the reviewed head: PASS (0.13s); one pass does not reproduce the 0.4% flake, so it is not evidence the race is closed.",
+      "Environment note: after the runs, empty read-only placeholder files (`.claude/*`, `.mcp.json`) were listed as untracked in the clone; the sandbox appears to have created them, the tracked tree and HEAD are unchanged, and they were left in place."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The change adds no regression test; the race is probabilistic and the only stated evidence is the existing Test/AuthorityRevive flake rate.",
+      "evidence": "`clientconn.go` is the only changed file (git diff --stat main...review-head)."
+    },
+    {
+      "fact": "The health-check callback is a second route into Connecting, but it only acts while ac.transport == currentTr, so it cannot start from Idle.",
+      "evidence": "`clientconn.go:1479-1486`, `health/client.go:73`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "grpc/grpc-go",
+    "requirements": [
+      {
+        "source": "issue-7365/root-cause",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:905-923 and 1234-1262: no unlock between the Idle check and updateConnectivityState(Connecting); a second connect() blocks on ac.mu and sees Connecting."
+      },
+      {
+        "source": "pr-body/\"caller of resetTransport() keep holding the mutex\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "clientconn.go:922 and 996 call resetTransportAndUnlock() with ac.mu held; the function unlocks it (clientconn.go:1237, 1262)."
+      },
+      {
+        "source": "pr-body/\"Verified that Test/AuthorityRevive no longer flakes for 100000 attempts\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "A 100000-attempt measurement was not repeated; one reviewer run of Test/AuthorityRevive passed, which cannot show a 0.4% flake is gone. Nothing material depends on it because the fix is established by the lock-handoff trace."
+      },
+      {
+        "source": "pr-body/\"RELEASE NOTES: client: fix race that could lead to orphaned connections\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "The orphaned transport arises from two tryAllAddrs on one addrConn, which the held lock prevents (clientconn.go:914-922)."
+      }
+    ],
+    "files": [
+      {
+        "path": "clientconn.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -race -count=1 -run 'Test$/(DialWithBlockErrorOnBadCertificates|ResetConnectBackoff|UpdateAddresses|TestConnectivity|CanceledCtx)' .",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "root package, offline, exit 0; matched subtests not listed"
+      },
+      {
+        "check": "go test -race -count=1 -v -run 'Test/AuthorityRevive' ./xds/internal/xdsclient/tests",
+        "head": "76ef33f44a600c3ed1a385979fd1dfbcade3fbb6",
+        "outcome": "reviewer-executed",
+        "reason": "single pass of the originating flaky test, PASS"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-single-connect",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "At the head, the only transition of an addrConn into Connecting is the updateConnectivityState(Connecting) inside resetTransportAndUnlock, and connect() reaches it with ac.mu held continuously from its Idle check, so two concurrent connect() calls cannot both start tryAllAddrs for the same ctx.",
+          "evidence": "clientconn.go:905-923, clientconn.go:1234-1262, balancer_wrapper.go:275-277",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-unlock-once",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "At the head, both callers enter resetTransportAndUnlock holding ac.mu once, every path unlocks exactly once, and nothing run under the lock or after the handoff in updateAddrs can wait on a lock the same goroutine holds, so no double unlock, leak or deadlock is introduced.",
+          "evidence": "clientconn.go:980-996, clientconn.go:1234-1262, balancer_wrapper.go:255-265",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-066/tmp/rc.gfCx1E/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-066/tmp/rc.gfCx1E/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

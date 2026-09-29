@@ -1,0 +1,39 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-002-clone/541d6d53-6bcf-4540-8543-3a812ea58c51/subagents/agent-aa11db4f4ef4dcfcc.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-002-clone/541d6d53-6bcf-4540-8543-3a812ea58c51.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone-cache && ls; venv/bin/python -c \"import urllib3;print(urllib3.__version__, urllib3.__file__)\"",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone-cache/venv/lib/python3.13/site-packages/urllib3 && grep -n \"load_cert_chain\\|load_default_certs\\|check_hostname\\|verify_mode\\|ssl_context\" util/ssl_.py connection.py | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone-cache/venv/lib/python3.13/site-packages/urllib3 && sed -n 400,440p util/ssl_.py; sed -n 1025,1075p connection.py; sed -n 940,990p connection.py"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone/src/requests/adapters.py"
+  ],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-002"
+  ]
+}

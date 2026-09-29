@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-010",
+  "run_id": "2026-09-28-sonnet-5-5-rebench",
+  "cell": {
+    "target": "n-ripgrep-2957",
+    "arm": "claude-builtin-sonnet-5-5-high",
+    "replicate": 1
+  },
+  "predecessor": "att-008",
+  "retry_reason": "the reviewer wrote scratch files to /tmp/w, outside the attempt's directories, against the run policy; the files are kept with their hashes under ~/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/evidence/att-008-tmp-w and were removed from /tmp before the replacement",
+  "replacement_index": 1,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-28T23:12:19Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.284",
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "effort": "high",
+    "prompt_hash": "bf131e069bf68669923e244772ba546803f49841e51b865866f21e3ef9205b5a",
+    "prompt_header": "`high effort → 8 inline angles → dedup (no verify) → ≤10 findings`",
+    "prompt_registry_match": "claude-code 2.1.284 / session --effort high, model claude-sonnet-5-5",
+    "skill_tree": null,
+    "diff_commands": [
+      "git diff main...review-head"
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "ae7b2833838e297ab27fc365121c19ab560af76c4c844dd820439c5f5196ee32",
+    "tree_identity_after": "ae7b2833838e297ab27fc365121c19ab560af76c4c844dd820439c5f5196ee32"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": null,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 0.088323,
+    "cost_bounds_usd": {
+      "low": 0.088323,
+      "high": 0.088323
+    },
+    "rates_as_of": "2026-09-28",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-28T23:12:19Z",
+    "payload_validated_at": "2026-09-28T23:12:48Z",
+    "completed_at": "2026-09-28T23:12:48Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "payload.json",
+    "sha256": "1f5744f0f6bd05f3d75cc9c64447914e99e6b357f5b09350826c84b54b746ef6"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-28-sonnet-5-5-rebench/att-010.tar.gz",
+    "sha256": "9ea98440d682e0fbf328546745974838683cebb67df9ac3b6f1e1efa752d5c87",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 22371342ed262304b940f90ba93226af1e329b585dcf0ae16073a8bf37ea135b; run policy sha256 652f6a84c408740effae37126d738b6cfbb98c8f6247b0c2e047fcbf78c371e5 (before path substitution)"
+  ]
+}

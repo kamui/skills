@@ -1,0 +1,167 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "specs": [],
+    "change_description": "[field] Sync controlled value changes with field state\n\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Make Field.Control sync controlled value changes with field state through useValueChanged, register the serialized value so numeric/array dirty checks clear, keep onChange as the sole owner of the uncontrolled path, and honor details.cancel() (source: PR title and body supplied by the caller; the single commit message carries only the title).",
+    "issue_fit": "Unavailable: the PR names no originating issue, so alignment is judged against the caller-supplied PR text only.",
+    "coverage": "Both changed files reviewed in full at the pinned range; focused FieldControl tests ran and passed (26 passed, 1 skipped); scratch jsdom probes exercised the changed behaviors; no prior review state; uncommitted changes not reviewed (untracked .mcp.json is outside the range).",
+    "check_details": [
+      "Reviewer ran `TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx` at the reviewed head: 26 passed, 1 skipped (the browser-only SSR autofocus test).",
+      "Reviewer scratch probes at the reviewed head (work directory, not the clone): submit-time `validate` argument for controlled `value={5}` is \"5\"; a superseded async validator does not publish after a programmatic change; a rejected controlled edit leaves dirty, filled and validation untouched; uncontrolled `details.cancel()` skips validation but still sets dirty and filled.",
+      "Bot comments in the PR text (bundle size, benchmark deltas, Netlify preview) were not reused: they are not check evidence for this obligation, and the benchmarked components do not touch Field.",
+      "The PR's render-count table was not re-measured beyond the added steady-state render test, which passed."
+    ],
+    "ambiguities": [
+      {
+        "term": "`details.cancel()` now \"stops the internal handling\" (pr-body)",
+        "readings": [
+          "Only validation and error clearing are skipped, as the added test asserts",
+          "Dirty and filled updates are skipped too"
+        ],
+        "applied": "The narrower reading: an uncontrolled input keeps the typed text after cancel, so dirty and filled continue to describe the DOM; no finding raised."
+      }
+    ],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "For a controlled `Field.Control` with a non-string value, the `validate` argument on the submit-time path and `validityData.value`/`initialValue` are now the serialized string (for example \"5\" instead of 5), matching what the change path already passed.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:86`, `packages/react/src/internals/field-register-control/useFieldControlRegistration.ts:48-50`; scratch probe at head returned [\"5\"]."
+    },
+    {
+      "fact": "The claims that a consumer-rejected or rewritten controlled value never reaches field state, and that array values serialize, have no dedicated test in the change; scratch probes at head show both hold.",
+      "evidence": "`packages/react/src/field/control/FieldControl.test.tsx:8-273`."
+    },
+    {
+      "fact": "The uncontrolled path still sets dirty and filled after `details.cancel()`; only validation and error clearing are skipped.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:136-158`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "requirements": [
+      {
+        "source": "pr-body/\"was the only Field control that ignored controlled value changes\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`packages/react/src/field/control/FieldControl.tsx:105-115` adds useValueChanged; probe and test 'syncs state and validates when the controlled value changes programmatically' pass"
+      },
+      {
+        "source": "pr-body/\"Dirty state never cleared for non-string values\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`FieldControl.tsx:86-98` registers String(value); test 'clears dirty state when a numeric controlled value returns to its initial value' passes"
+      },
+      {
+        "source": "pr-body/\"Programmatic changes left the field stale\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "effect updates clearErrors, dirty, filled and validation; stale async result discarded via validationCommitIdRef (`useFieldValidation.ts:117-119,267-271`); verifier premise holds"
+      },
+      {
+        "source": "pr-body/\"onChange returns early when controlled\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`FieldControl.tsx:143-145`; probe H4 shows a rejected controlled edit leaves state untouched"
+      },
+      {
+        "source": "pr-body/\"details.cancel() in onValueChange now stops the internal handling\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`FieldControl.tsx:154` gates validation and error clearing on isCanceled; test 'does not validate when the change is canceled'; narrower reading recorded as an ambiguity"
+      },
+      {
+        "source": "pr-body/\"A controlled value the consumer rejects or rewrites no longer reaches the field state\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`FieldControl.tsx:141-145`; probes H4 and H7 at head (no dedicated test)"
+      },
+      {
+        "source": "pr-body/\"Renders per keystroke for a controlled input\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "The onSubmit steady state is asserted by the added render-count test, which passes; the onChange-mode count and the Number Field column were not re-measured, and no threshold is stated"
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/react/src/field/control/FieldControl.test.tsx",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "FieldControl.test.tsx focused jsdom run",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "run from the clone root at the reviewed head, 26 passed and 1 skipped"
+      },
+      {
+        "check": "scratch jsdom probes (work directory)",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "behavior probes for validate argument, stale async validator, controlled rejection, and cancel"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "premise-serialized-registration-compat",
+          "type": "safety-premise",
+          "area": "compatibility",
+          "premise": "Registering the serialized string changes no released behavior beyond the validate argument and validityData value fields for controlled non-string values; form values already come from the DOM string.",
+          "evidence": "`FieldControl.tsx:86-98`, `useFieldControlRegistration.ts:35-62`",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-stale-async-validator",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "A validate promise started for the previous value cannot publish after a programmatic controlled value change.",
+          "evidence": "`useFieldValidation.ts:117-119,267-271,318-330`, `FieldControl.tsx:105-115`",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "premise-controlled-single-owner",
+          "type": "safety-premise",
+          "area": "data-integrity",
+          "premise": "For a controlled Field.Control, dirty, filled, validity and error clearing come only from the value prop, with the baseline captured in the same serialized form.",
+          "evidence": "`FieldControl.tsx:100-115,136-158`, `useFieldControlRegistration.ts:91-102`",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-056/tmp/claude-1000/tmp.6G8rkGwHCC/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-056/tmp/claude-1000/tmp.6G8rkGwHCC/initial/accounting.json",
+          "operation": "Agent run_in_background=false, subagent_type general-purpose, model sonnet"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    },
+    "repository": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-056/clone"
+  }
+}

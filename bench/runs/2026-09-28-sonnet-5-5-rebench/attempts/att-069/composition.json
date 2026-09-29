@@ -1,0 +1,112 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pr-5017-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+    "issues": [],
+    "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Fix inferRouterInputs/Outputs for procedures that combine `.input()` with `.use()`: `Overwrite<string, string>` iterated the keys of `string` and produced a mangled object type; `Overwrite` now merges key-wise only when both sides are objects and otherwise lets `TWith` replace `TType`.",
+    "issue_fit": "Issue alignment unavailable: the PR has no closing issue and a template-only body; intent comes from the PR title, the supplied PR text and the last commit message. Met for primitive inputs; array and tuple inputs with middleware keep the pre-existing key-wise merge.",
+    "coverage": "Both changed files reviewed in full; focused tsc at the head passes; base-vs-head type probes run in scratch copies. The vitest runtime suite was unavailable by policy. Uncommitted `.mcp.json` in the clone is outside the range and not reviewed. The PR is already merged, so this is a retrospective review of the range.",
+    "check_details": [
+      "Reviewer ran `cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json` at the reviewed head: exit 0, no diagnostics; this includes the new regression test.",
+      "Reviewer type probes in scratch copies of `packages/server/src` (base and head `utils.ts`) show `.input(z.string()).use(...)` inferring a mangled string-method object at the base and `string` at the head. The base-side type-level failure is what makes the regression test discriminating. Vitest runtime execution was unavailable by policy."
+    ]
+  },
+  "findings": [
+    {
+      "id": "server-utils/overwrite-never-doc",
+      "title": "Correct the `Overwrite` never-handling comment and dead branch",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "The new doc comment says a non-object `TType` is fully overwritten by `TWith` \"unless TWith is never\", and the non-object branch has a `: TType` fallback for that case.",
+      "impact": "Both `TWith extends object` and `TWith extends any` distribute over `never` and yield `never`, so `Overwrite<string, never>` and `Overwrite<{ a: 1 }, never>` are `never`, not `TType`. The comment misleads readers and the `: TType` arm is unreachable.",
+      "change": "In `packages/server/src/core/internals/utils.ts`, drop the unreachable `: TType` arm and reword the comment to say a `never` `TWith` yields `never`, or wrap the checks in `[TWith] extends [never]` if retaining `TType` is intended.",
+      "anchor": {
+        "type": "line",
+        "path": "packages/server/src/core/internals/utils.ts",
+        "start_line": 6,
+        "end_line": 10,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Array and tuple inputs combined with `.use()` still infer a key-wise merged array-like object rather than `string[]` or `[string, number]`, the same as at the merge-base, though the type stays mutually assignable with `string[]` and the new test does not cover it.",
+      "evidence": "Scratch probe at head: `inferRouterInputs` of `.input(z.array(z.string())).use(...)` fails an exact `string[]` equality check, while `extends string[]`, element access and `.map` compile; `packages/server/src/core/internals/utils.ts:11-14`."
+    },
+    {
+      "fact": "`voidWithMiddleware` in the new regression test is declared but never asserted on, and the file carries stray `// ^?` twoslash markers.",
+      "evidence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:13-17`, `:8`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "trpc/trpc",
+    "requirements": [
+      {
+        "source": "spec-pr-5017-text/pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`packages/server/src/core/internals/utils.ts:11-30`; scratch probe: `string` input with middleware infers `string` at head and a mangled string-method object at base; tsc of the new test passes at head"
+      },
+      {
+        "source": "commit-7dc04a7/\"only overwrite keys of objects\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`packages/server/src/core/internals/utils.ts:11-30`; both-object inputs still merge key-wise (`{ a: string }` with `{ b: number }` gives `{ a: string; b: number }`)"
+      },
+      {
+        "source": "commit-7dc04a7/\"Overwrite<string, number> results in 'number'\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "`packages/server/src/core/internals/utils.ts:20-26`; scratch probe `Overwrite<{a:1}, string>` and `Overwrite<typeof unsetMarker, {a:1}>` resolve to `string` and `{a:1}`"
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/server/src/core/internals/utils.ts",
+        "state": "reviewed"
+      },
+      {
+        "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "cd packages/tests && ./node_modules/.bin/tsc --noEmit -p tsconfig.json",
+        "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+        "outcome": "reviewer-executed",
+        "reason": "run by the reviewer offline at the reviewed head, exit 0 with no diagnostics"
+      },
+      {
+        "check": "vitest runtime suite for the regression test",
+        "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+        "outcome": "unavailable",
+        "reason": "excluded by run policy; only tsc discriminates type-level assertions"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

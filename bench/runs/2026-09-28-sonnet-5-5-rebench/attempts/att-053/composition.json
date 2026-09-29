@@ -1,0 +1,132 @@
+{
+ "run": {
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "b089b904f1ed578e9edaefd129bf9843120a808f",
+  "issues": [],
+  "specs": [
+   "spec-withastro/astro#16079-pr-packet"
+  ],
+  "change_description": "fix(vercel): Fix ISR path rewrite to prevent 404\n",
+  "coverage": "complete"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Restore ISR-served routes (currently 404) by letting the ISR function take the real path from the `x_astro_path` query parameter, without undoing the secret-only path override added in #15959.",
+  "issue_fit": "Partial — no linked issue; the PR text is the only intent source. The ISR 404 fix is plausible in code, but the change silently reverses #15959's trusted-secret guarantee.",
+  "coverage": "Both changed files reviewed and the security candidate verified; focused fixture tests were unavailable (environmental) and settled by trace; Vercel platform behaviour is not checkable offline and bounds only the `_render` vector.",
+  "check_details": [
+   "Reviewer attempted `node --test test/path-override-security.test.js test/isr.test.js` at the reviewed head: unavailable, fixture build failed with an environmental ENOENT creating `.astro/collections`; not a test failure.",
+   "Reviewer attempted `node --test test/isr.test.js` at the reviewed head: unavailable, same environmental fixture-build failure.",
+   "The PR's manual Vercel e2e deployments are external and could not be reached offline: unavailable."
+  ],
+  "ambiguities": [
+   {
+    "term": "Prior approval of the merged pull request",
+    "readings": [
+     "Princesseuh's empty-body approval accepted the whole diff, including the header-keyed override",
+     "The approval addressed only the ISR 404 fix; it left no comment on path-override trust, so it accepts nothing about it"
+    ],
+    "applied": "The second reading: approval accepts only what the review addressed, and no inline comment touched path-override trust."
+   },
+   {
+    "term": "Whether `x-vercel-isr` and the function URLs are reachable by an untrusted client",
+    "readings": [
+     "Vercel strips a client-sent `x-vercel-isr` and does not expose `/_render` or `/_isr` directly, so the override is unreachable",
+     "Vercel forwards the client header, or exposes the function URLs, so any client can trigger the override"
+    ],
+    "applied": "The second reading: the entrypoint authenticates neither the header nor the query, #15959 treated direct function access as exploitable, and `_isr` needs no header spoofing; platform behaviour could not be checked offline."
+   }
+  ],
+  "coverage_gaps": []
+ },
+ "findings": [
+  {
+   "id": "vercel/entrypoint-isr-header-path-override",
+   "title": "Do not trust a client-settable header to unlock the path override",
+   "priority": "P1",
+   "action": "must-fix",
+   "kind": "security",
+   "trigger": "A client calls the `_isr` function URL, or `_render` with `x-vercel-isr: 1`, with `?x_astro_path=/protected/route` and no middleware secret.",
+   "impact": "The shared entrypoint rewrites `url.pathname` and renders that route while edge middleware never sees the real path, reopening the auth bypass #15959 closed for `isr.exclude` routes and every route in non-ISR builds.",
+   "change": "In `packages/integrations/vercel/src/serverless/entrypoint.ts`, honor the query override only in the `_isr` bundle via a build-time flag, or authenticate the rewrite, instead of keying on a request header. Add a test sending the query with `x-vercel-isr: 1` to `_render` that expects it ignored.",
+   "source": "Commit 335a20416 (#15959) changeset: override values apply only when the trusted middleware secret is present.",
+   "anchor": {
+    "type": "line",
+    "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "start_line": 21,
+    "end_line": 26,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "pr-body/\"any route served by ISR result in a 404\"",
+    "class": "acceptance",
+    "disposition": "not-verifiable",
+    "evidence": "packages/integrations/vercel/src/serverless/entrypoint.ts:24-25 reads the path from `x_astro_path` when `x-vercel-isr` is `1`; that Vercel sends that header on ISR invocations is undocumented in the repository and unverifiable offline."
+   },
+   {
+    "source": "pr-body/\"Manual e2e tests performed on a test vercel project\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "The cited deployments are external and unreachable offline; the reported outcome cannot be repeated here."
+   }
+  ],
+  "files": [
+   {
+    "path": ".changeset/common-cats-travel.md",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "node --test test/path-override-security.test.js test/isr.test.js",
+    "head": "71ae513388df11d7dad6b1e0077c402ad03d0d62",
+    "outcome": "unavailable",
+    "reason": "fixture build failed with environmental ENOENT on .astro/collections in the sandbox"
+   },
+   {
+    "check": "node --test test/isr.test.js",
+    "head": "71ae513388df11d7dad6b1e0077c402ad03d0d62",
+    "outcome": "unavailable",
+    "reason": "same environmental fixture-build failure"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "vercel/entrypoint-isr-header-path-override",
+     "type": "candidate",
+     "trigger": "security",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-053/tmp/claude-1000/tmp.U900kVWoJ9/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-053/tmp/claude-1000/tmp.U900kVWoJ9/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "withastro/astro"
+ }
+}

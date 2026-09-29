@@ -1,0 +1,37 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-015-clone/f51a018e-23ab-48b5-9c29-51249e610712/subagents/agent-a77d82e11b530de5d.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-015-clone/f51a018e-23ab-48b5-9c29-51249e610712.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/clone-cache && U=$(ls -d venv/lib/python*/site-packages/urllib3); grep -n \"version\" $U/_version.py; grep -n \"ssl_context\\|load_cert_chain\\|verify_mode\\|check_hostname\" $U/connection.py $U/util/ssl_.py | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/clone-cache/venv/lib/python3.13/site-packages/urllib3 && sed -n 1025,1062p connection.py; sed -n 425,435p util/ssl_.py"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/clone/src/requests/adapters.py",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/clone/src/requests/adapters.py"
+  ],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-015"
+  ]
+}

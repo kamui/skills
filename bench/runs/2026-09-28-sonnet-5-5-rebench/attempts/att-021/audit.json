@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-021/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-021-clone/ad9f729b-089b-4626-a695-d37221ab6b47/subagents/agent-a2ec3887b7c4d4c30.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-021/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-021-clone/ad9f729b-089b-4626-a695-d37221ab6b47.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && tail -30 crates/core/flags/complete/rg.zsh && cat ci/test-complete | head -60",
+    "head -5 crates/core/flags/complete/rg.zsh; grep -n \"^_rg()\" -A12 crates/core/flags/complete/rg.zsh | head -30; mkdir -p ../clone-work; cd ../clone-work; cat > t.zsh <<'EOF'\n_rg() { echo \"called _rg funcstack=$funcstack\" }\nf() { if [[ $funcstack[1] == _rg ]] || (( ! $+functions[compdef] )); then _rg \"$@\"; else echo compdef; fi }\nf\nautoload -Uz compinit; compinit -u 2>&1\nf\nEOF\nzsh -f t.zsh"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-021/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-021"
+  ]
+}

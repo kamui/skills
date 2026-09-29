@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-011-clone/c0d6467e-dc2b-4110-a5df-a57bd361ac3f/subagents/agent-a2d0bf4df006a3ab9.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-011-clone/c0d6467e-dc2b-4110-a5df-a57bd361ac3f.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "mkdir -p /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/clone-work && cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/clone-work && cat > t.js <<'EOF'\nfunction u(date){const o=date.getTimezoneOffset()*60000;date.setTime(date.getTime()-o);const s=date.toISOString().substr(0,10).split('-');return new Date(+s[0],+s[1]-1,+s[2])}\nfunction old(date){const s=date.toISOString().substr(0,10).split('-');return new Date(+s[0],+s[1]-1,+s[2])}\nconst num=Date.UTC(2019,8,20); \nfor (const f of [u,old]) console.log(f.name, process.env.TZ, f(new Date(num)).toDateString(), f(new Date(\"Mon Sep 16 2019\")).toDateString(), f(new Date(\"2019-09-20\")).toDateString());\nEOF\nfor tz in America/Los_Angeles Europe/Paris UTC Pacific/Auckland; do TZ=$tz node t.js; done; cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/clone; grep -rn \"TZ\\|timezone\" bokeh/_testing/plugins/*.py tests/integration/conftest.py 2>/dev/null | head; grep -n \"Date\\|date\" bokehjs/src/lib/models/widgets/date_slider.ts bokehjs/src/lib/models/widgets/date_range_slider.ts 2>/dev/null | head -5"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/clone/bokehjs/src/lib/models/widgets/date_picker.ts"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-011"
+  ]
+}

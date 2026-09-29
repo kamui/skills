@@ -1,0 +1,142 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "rclone/rclone#9699-pr-text"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "862ed2b7ace176a919ed7b3a49fe5e01a5744992",
+    "issues": [
+      "rclone/rclone#9687"
+    ],
+    "change_description": "lib/batcher: prevent commits racing shutdown - fixes #9687\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Serialize Commit admission with insertion of the shutdown quit marker so every accepted request is processed or rejected with the existing shutdown error (fixes #9687).",
+    "issue_fit": "Full \u2014 admission and the quit marker now share one critical section, so no request can queue behind the marker; the shutdown error is unchanged.",
+    "coverage": "Both changed files fully reviewed with the dropbox and googlephotos callers; the new test passes at head and fails at the merge-base. Uncommitted clone files (.mcp.json, .claude/) are outside the range and were not reviewed.",
+    "check_details": [
+      "Reviewer ran `go test -count=1 -race -v ./lib/batcher` at the reviewed head: all pass, including TestBatcherCommitRacingShutdown/sync and /async.",
+      "Reviewer ran `go test -count=5 -race -run TestBatcherCommitRacingShutdown ./lib/batcher` with the merge-base batcher.go overlaid: 5 of 5 runs fail for both modes (hang and dropped commit), so the test detects the defect.",
+      "The PR's claimed `-count=20`, `go vet`, `go build` and `make quicktest` were not re-run; no CI evidence was supplied, and none of them decides a candidate."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "Commit now holds the admission mutex across its send on b.in, so concurrent Commits queue on the mutex rather than on the channel when b.in is full; the commit loop keeps draining, so this only delays them.",
+      "evidence": "`lib/batcher/batcher.go:267-281`, `lib/batcher/batcher.go:206-230`."
+    },
+    {
+      "fact": "The regression test relies on a 100ms wait to let Shutdown contend for the held mutex, and mutates the global log level to reach the blocking Stringer; both are deterministic in outcome at head.",
+      "evidence": "`lib/batcher/batcher_test.go:283-296`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "rclone/rclone",
+    "requirements": [
+      {
+        "source": "issue-9687/question",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:243-252 and :267-281 put the closed check plus send and the close plus quit send under admitMu; verifier ruled premise batcher/no-request-behind-quit holds."
+      },
+      {
+        "source": "spec-rclone/rclone#9699-pr-text/why",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "No request can queue behind the quit marker, so sync callers cannot block forever and async uploads are not dropped; verified by TestBatcherCommitRacingShutdown failing at the merge-base and passing at head."
+      },
+      {
+        "source": "spec-rclone/rclone#9699-pr-text/what-changed-2",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher.go:269-271 returns the unchanged fserrors.FatalError(\"batcher is shutting down\") for Commits that see b.closed."
+      },
+      {
+        "source": "spec-rclone/rclone#9699-pr-text/what-changed-3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "lib/batcher/batcher_test.go:239-311 covers sync (commitDone hang) and async (committed never closed); base overlay run failed 5/5."
+      },
+      {
+        "source": "commit-0b87bc4/\"prevent commits racing shutdown\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "Same evidence as issue-9687/question."
+      },
+      {
+        "source": "spec-rclone/rclone#9699-pr-text/testing",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "Only `go test -count=1 -race ./lib/batcher` was re-run (pass); -count=20, go vet, go build and make quicktest were not (offline policy, packages outside lib/batcher need uncached modules)."
+      }
+    ],
+    "files": [
+      {
+        "path": "lib/batcher/batcher.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "lib/batcher/batcher_test.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -race -v ./lib/batcher",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "run at the reviewed head from the clone root offline; all tests passed"
+      },
+      {
+        "check": "go test -count=5 -race -run TestBatcherCommitRacingShutdown ./lib/batcher (merge-base batcher.go overlaid)",
+        "head": "0b87bc4788cd50664b82dd7e74c78aa2c7fc3b1c",
+        "outcome": "reviewer-executed",
+        "reason": "overlay of the merge-base batcher.go under the work directory; the new test failed 5 of 5, confirming it detects the defect"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "batcher/no-request-behind-quit",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "No request can be placed on b.in behind the quit marker: both send sites run under admitMu, Shutdown closes b.closed before sending quit in one critical section, and Commit checks b.closed in the same critical section as its send.",
+          "evidence": "lib/batcher/batcher.go:240-254, lib/batcher/batcher.go:266-288",
+          "batch": "initial",
+          "ruling": "holds"
+        },
+        {
+          "id": "batcher/no-new-deadlock",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "admitMu introduces no deadlock: the commit loop drains b.in until the quit marker, b.wg.Wait and the response wait run after Unlock, and the dropbox and googlephotos commit callbacks never call Commit or Shutdown.",
+          "evidence": "lib/batcher/batcher.go:188-231, backend/dropbox/dropbox.go:2122, backend/googlephotos/googlephotos.go:1226",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-039/clone-work/rc.HYLQ37/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-039/clone-work/rc.HYLQ37/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

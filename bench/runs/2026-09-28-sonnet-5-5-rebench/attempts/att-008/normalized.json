@@ -1,0 +1,81 @@
+{
+  "arm": "claude-builtin",
+  "parse_status": "parsed",
+  "native_verdict": "findings",
+  "verdict_source": "final_text json",
+  "items": [
+    {
+      "file": "crates/core/flags/complete/rg.zsh",
+      "line_start": 441,
+      "line_end": 441,
+      "claim": "The `(( ! $+functions[compdef] ))` branch still calls `_rg \"$@\"` outside a completion context, so sourcing the script before `compinit` fails.",
+      "consequence": "A user puts `source <(rg --generate complete-zsh)` in .zshrc above `compinit`, as the FAQ and the fzf/gh pattern suggest. `compdef` is not defined yet, so the script runs `_rg` at top level. It prints `_arguments: command not found` or `can only be called from completion function`, which is the error in #2956. I reproduced this in scratch zsh: `zsh -fc 'source ./rg.zsh'` gives `_rg:341: command not found: _arguments` and exit code 1. Sourcing after `compinit` works. A missing `compdef` is the normal state when sourcing before `compinit`, so the fallback should register lazily or do nothing. The `ci/test-complete` case is a separate one and can be detected by another means, such as the `_RG_COMPLETE_LIST_ARGS` variable.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "crates/core/flags/complete/rg.zsh",
+      "line_start": 441,
+      "line_end": 441,
+      "claim": "The fix only works when `compinit` has already run, and neither the FAQ nor the script comments say so.",
+      "consequence": "A user reads the FAQ and adds the `source <(...)` line at the top of .zshrc, or via a plugin manager that runs `compinit` at the end. They get the error above with no hint that ordering matters. If the source line fails, `rg` completion is never registered.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "FAQ.md",
+      "line_start": 132,
+      "line_end": 132,
+      "claim": "The code block for the .zshrc line begins with a `$ ` prompt, so a copy-paste puts a literal `$ source ...` into .zshrc.",
+      "consequence": "The text says to add the block to `$HOME/.zshrc`, but the block reads `$ source <(rg --generate complete-zsh)`. The fpath block just above it has no `$` prefix. Pasting the line as shown gives a `$: command not found` error on every shell start.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "FAQ.md",
+      "line_start": 138,
+      "line_end": 138,
+      "claim": "The caveat sentence is ungrammatical, and \"than the previous method\" is a vague reference.",
+      "consequence": "It reads \"while this approach is easier to setup, is generally slower than the previous method\". It has no subject for \"is\", and \"setup\" should be \"set up\". A reader has to guess which method \"previous\" means, and the text gives no cost figure such as the ~4ms mentioned in the PR discussion.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "FAQ.md",
+      "line_start": 116,
+      "line_end": 116,
+      "claim": "The fpath instructions omit that `$HOME/.zsh-complete` must be on `fpath` before `compinit` runs, and `compinit` is not mentioned at all.",
+      "consequence": "A user appends the `fpath=(...)` line after `compinit` in .zshrc. `_rg` is never found and completion silently does not work. The same ordering problem affects the new `source` method, which needs `compinit` first.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    },
+    {
+      "file": "crates/core/flags/complete/rg.zsh",
+      "line_start": 1,
+      "line_end": 1,
+      "claim": "The `#compdef rg` header and the unconditional-call design leave the dual autoload and source behaviour undocumented, and the comment does not explain the second condition.",
+      "consequence": "The comment says \"Don't run the completion function when being sourced by itself\". The code actually also runs `_rg` whenever `compdef` is undefined, which is what the test harness relies on. A later maintainer may tidy the condition, for example back to a `type compdef` check, and break `ci/test-complete`. Nothing in the file records why the fallback exists.",
+      "proposed_fix": null,
+      "native_priority": null,
+      "native_action": null,
+      "native_confidence": null,
+      "kind": "finding"
+    }
+  ],
+  "parse_notes": []
+}

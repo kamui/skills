@@ -1,0 +1,147 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": ["spec-pr5460"],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "30b8ea2004fa999bed151204208676c6c0a9d261",
+    "issues": [],
+    "change_description": "[field] Sync controlled value changes with field state\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Make Field.Control sync controlled value changes with field state through useValueChanged, fix dirty tracking for non-string values, and honor details.cancel().",
+    "issue_fit": "Partial: no issue exists, so alignment was unavailable and intent comes from the commit message and the supplied PR text. The dirty, programmatic-sync, cancel and reject/rewrite outcomes are met; one regression in the removed mount-time filled reset remains.",
+    "coverage": "Both changed files reviewed against the full merge-base diff; the changed tests read and the FieldControl suite run at the head; probe tests exercised cancel, reset, async-validator and render-count behavior; uncommitted changes not reviewed.",
+    "check_details": [
+      "Reviewer ran the FieldControl jsdom suite (`vitest run --project @base-ui/react packages/react/src/field/control/FieldControl.test.tsx`) at 14d39e5d1ad6b7aca2fb067415dba09c6bea219b: 26 passed, 1 skipped, exit 0.",
+      "Reviewer ran scratch jsdom probes from the work directory at the head and against a `git archive` copy of the merge-base: the remount probe printed data-filled true at the head and false at the merge-base.",
+      "No CI evidence was supplied; the chromium mode and rendered-output checks were unavailable (no browser)."
+    ]
+  },
+  "findings": [
+    {
+      "id": "field/control/remount-filled-stale",
+      "title": "Reset filled state when a controlled Field.Control mounts empty",
+      "priority": "P3",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A Field.Root stays mounted while its controlled Field.Control unmounts and remounts: the user types 'abc', the control is hidden, the parent state becomes '' while it is hidden, and the control is shown again with value=''. The merge-base mount effect called setFilled(false) for a controlled '', this change deleted that branch, and useValueChanged cannot fire on mount.",
+      "impact": "The Field.Root keeps data-filled although the mounted input is empty, so filled-dependent styling such as floating labels renders a filled state for an empty input; a probe printed filled=true at the head and filled=false at the merge-base.",
+      "change": "In the mount layout effect in `FieldControl.tsx`, also clear filled when the control is controlled and its DOM value is empty, for example by calling `setFilled(Boolean(validation.inputRef.current?.value))` when `isControlled`, and add a remount test.",
+      "source": "commit-14d39e5/\"Sync controlled value changes with field state\"",
+      "anchor": {
+        "type": "line",
+        "path": "packages/react/src/field/control/FieldControl.tsx",
+        "start_line": 99,
+        "end_line": 103,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "In uncontrolled mode a canceled change skips error clearing and validation but still updates dirty and filled, which follow the DOM value.",
+      "evidence": "`packages/react/src/field/control/FieldControl.tsx:148-156`; scratch probe printed filled=true dirty=true invalid=false after details.cancel()."
+    },
+    {
+      "fact": "A programmatic reset of a controlled required field to '' in onChange mode clears data-dirty and data-filled but shows the valueMissing error, because markedDirtyRef stays true.",
+      "evidence": "`packages/react/src/field/root/useFieldValidation.ts:225`; scratch probe printed filled=false dirty=false invalid=true with the Required error visible."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "mui/base-ui",
+    "requirements": [
+      {
+        "source": "spec-pr5460/\"Dirty state never cleared for non-string values\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:86-97 registers String(value); test 'clears dirty state when a numeric controlled value returns to its initial value' passes. Public validityData.initialValue is typed unknown; the numeric case now holds a string, and no in-repo consumer relies on the old type (downstream readers not enumerable, no concrete conflict)."
+      },
+      {
+        "source": "spec-pr5460/\"Programmatic changes left the field stale\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:105-115 syncs clearErrors, dirty, filled and validation on value change; test 'syncs state and validates when the controlled value changes programmatically' passes; probe showed a stale async validator result discarded after a programmatic change."
+      },
+      {
+        "source": "spec-pr5460/\"onChange returns early when controlled\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "FieldControl.tsx:144-146 returns early and useValueChanged owns the controlled path, but the mount-time filled reset for a controlled empty value was dropped (finding field/control/remount-filled-stale)."
+      },
+      {
+        "source": "spec-pr5460/\"details.cancel() in onValueChange now stops the internal handling\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:153 gates clearErrors and validation on details.isCanceled; test 'does not validate when the change is canceled' passes. Dirty and filled still track the DOM value (see observation)."
+      },
+      {
+        "source": "spec-pr5460/\"A controlled value the consumer rejects or rewrites no longer reaches the field state\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "FieldControl.tsx:144-146 skips field-state updates in controlled mode; state syncs only from the serialized value prop; no dedicated test, verified by trace."
+      },
+      {
+        "source": "spec-pr5460/\"Renders per keystroke\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "The committed steady-state test passes at 1 render per keystroke in onSubmit mode; a probe counted 2, 4, 6, 8, 10 renders across mount and four keystrokes in onChange mode, matching the reported 2 per keystroke. The Number Field column was not measured."
+      }
+    ],
+    "files": [
+      {"path": "packages/react/src/field/control/FieldControl.tsx", "state": "reviewed"},
+      {"path": "packages/react/src/field/control/FieldControl.test.tsx", "state": "reviewed"}
+    ],
+    "check_evidence": [
+      {
+        "check": "vitest jsdom FieldControl.test.tsx (26 passed, 1 skipped)",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "no CI evidence supplied; run by the reviewer at the reviewed head"
+      },
+      {
+        "check": "scratch jsdom probes (cancel, reset, async validator, render counts, remount)",
+        "head": "14d39e5d1ad6b7aca2fb067415dba09c6bea219b",
+        "outcome": "reviewer-executed",
+        "reason": "scratch tests in the work directory; the remount probe was also run against a git-archive copy of the merge-base"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "field/control/remount-filled-stale",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        },
+        {
+          "id": "premise-async-validator-discard",
+          "type": "safety-premise",
+          "area": "concurrency",
+          "premise": "A pending async validator for the previous value is discarded when a controlled value changes programmatically, because validation.change bumps validationCommitIdRef before the stale result publishes.",
+          "evidence": "packages/react/src/field/root/useFieldValidation.ts:117-119,268-271",
+          "batch": "initial",
+          "ruling": "holds"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-068/tmp/claude-1000/tmp.a3Ts9SzFt9/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-068/tmp/claude-1000/tmp.a3Ts9SzFt9/initial/accounting.json",
+          "operation": "Agent run_in_background=false, subagent_type general-purpose, model sonnet"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

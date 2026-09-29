@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-024/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-024-clone/2f983395-16ca-442c-b8d3-0a3383532a9d/subagents/agent-ae79465c284fad321.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-024/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-024-clone/2f983395-16ca-442c-b8d3-0a3383532a9d.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD",
+    "sed -n 395,425p internal/backup.go; sed -n 485,525p internal/backup.go; sed -n 660,730p internal/backup.go; grep -n \"compareTypeClone\\|compareTypeRefs\" internal/*.go | head -5; grep -n \"^var job\\|job \\+\\*\\|job  *gocron\\|job\\b\" internal/backup.go | head; sed -n 545,570p internal/backup_test.go"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-024/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-024"
+  ]
+}

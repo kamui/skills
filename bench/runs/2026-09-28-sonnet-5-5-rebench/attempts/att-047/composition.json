@@ -1,0 +1,193 @@
+{
+ "run": {
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "db5a086d048c5c2d6e51e82bb070d20df04d688d",
+  "issues": [],
+  "specs": [
+   "pull-request-text/seaweedfs-seaweedfs-10735"
+  ],
+  "change_description": "9f99628001cdc79c2d49775cfc3b3ab35b77fb85\nfix(redis2): remove orphaned directory index members on listing\n\nListDirectoryEntries skipped index members whose value key was gone and\nleft them in the ZSET, so the per-directory child index grew without\nbound under any TTL workload. Mirror the ZRem the logical-expiry branch\nalready performs.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1\nfix(redis2): keep the index member when a concurrent insert recreates the value\n\nThe orphan cleanup removed the member unconditionally, so an InsertEntry\nlanding between FindEntry and the ZRem left a live value with no index\nmember, invisible to listings until another InsertEntry on that path.\nUpdateEntry does not re-add it, so the loss persisted.\n\nRestore the member when the value is present again after the removal.\nThe value key and the directory index key hash to different slots, so a\nLua script or MULTI over both is not available to the cluster store.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n",
+  "coverage": "complete"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Stop the redis2 per-directory index from accumulating members whose value key is gone, by removing the member during listing while compensating for a concurrent recreate of the same path.",
+  "issue_fit": "Mostly met \u2014 orphan removal, keyPrefix handling and the concurrent-recreate compensation work on a primary-routed client; the promise that only a positively confirmed absent value drops a member, and that a failed ZREM removes nothing, does not hold on replica-read cluster stores or when the ZREM reply is lost. No linked issue; the supplied pull-request text is the spec.",
+  "coverage": "Full range reviewed (2 files, both commits) with the go-redis cluster routing code the change depends on. Uncommitted work is not part of the target. The focused package test ran and skipped, because it needs a live Redis that this run does not have; the changed tests were judged by trace.",
+  "check_details": [
+   "Reviewer ran `go test -count=1 -v ./weed/filer/redis2` at the reviewed head with the offline module cache: PASS with every Redis test SKIPPED (no RUN_REDIS_TESTS, no Redis server). This is unavailable execution, not a pass of the Redis tests; output saved at /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-047/tmp/claude-1000/tmp.YAAZmTyS0j/go-test-redis2.txt.",
+   "No caller-supplied check evidence; the pull-request text's claimed pass against redis-server 8.2.1 is a supporting assertion this run could not repeat."
+  ]
+ },
+ "findings": [
+  {
+   "id": "redis2/orphan-cleanup-replica-read-recheck",
+   "title": "Confirm absence on the primary before dropping the index member",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "concurrency",
+   "trigger": "A redis_cluster2 store with useReadOnly or routeByLatency lists a directory just after an entry was created, while the replica serving the value key's slot has not yet applied the SET but the replica serving the index key's slot has applied the ZADD.",
+   "impact": "The GET and the EXISTS re-check are both replica reads, so both report the value absent, the ZREM on the master succeeds, and the live entry permanently loses its index member; UpdateEntry never re-adds it, so it disappears from listings and DeleteFolderChildren. Before this change lag only skipped one listing.",
+   "change": "In `removeOrphanedDirectoryListMember`, confirm absence with a read that reaches the master of the value key's slot (for example an EVAL-based EXISTS, which go-redis does not treat as read-only), or skip the cleanup when the cluster client was built with ReadOnly or RouteByLatency.",
+   "source": "Pull-request text: \"Only a positively confirmed absent value leaves the member removed\" and \"behaves identically on all three transports\".",
+   "anchor": {
+    "type": "line",
+    "path": "weed/filer/redis2/universal_redis_store.go",
+    "start_line": 245,
+    "end_line": 248,
+    "side": "RIGHT"
+   }
+  },
+  {
+   "id": "redis2/orphan-cleanup-zrem-error-skips-restore",
+   "title": "Run the restore check even when ZREM returns an error",
+   "priority": "P3",
+   "action": "must-fix",
+   "kind": "concurrency",
+   "trigger": "A concurrent InsertEntry recreates the path after FindEntry returns not-found (its ZAddNX is a no-op because the member is still present), and the ZREM is executed by Redis but its reply is lost or the context ends before the reply is read.",
+   "impact": "The helper returns on the ZREM error without the EXISTS re-check or ZAddNX restore, so the live value has no index member; nothing revisits it because the member is gone, contrary to the stated 'retried on the next listing'.",
+   "change": "In `removeOrphanedDirectoryListMember`, do not return early when ZREM errors: fall through to the EXISTS re-check and ZAddNX restore, which is a no-op when the member is present, and run the compensation on a context not tied to the request, such as `context.WithoutCancel` with a short timeout.",
+   "source": "Pull-request text: \"a ZREM that errors removes nothing and returns\"; commit-6c8fde6/\"Restore the member when the value is present again after the removal\".",
+   "anchor": {
+    "type": "line",
+    "path": "weed/filer/redis2/universal_redis_store.go",
+    "start_line": 238,
+    "end_line": 240,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The scaffold documents the replica-read switch as `readOnly`, but `RedisCluster2Store` reads `useReadOnly`, so setting the documented key does not enable replica reads; `routeByLatency` does and also turns ReadOnly on.",
+   "evidence": "`weed/command/scaffold/filer.toml:288`, `weed/filer/redis2/redis_cluster_store.go:27`, `weed/filer/redis2/redis_cluster_store.go:40`."
+  },
+  {
+   "fact": "The three new tests skip unless RUN_REDIS_TESTS=1, so the default `go test` run does not exercise the cleanup.",
+   "evidence": "`weed/filer/redis2/universal_redis_store_test.go:21`, saved test output."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "pr-body/\"ZREM the member in the not-found branch\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": ":207-209 calls the helper, which ZREMs the prefixed dirListKey at :238"
+   },
+   {
+    "source": "pr-body/\"Only a positively confirmed absent value leaves the member removed\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": ":245-248 re-checks with EXISTS, a replica-routed read under useReadOnly/routeByLatency (redis2/orphan-cleanup-replica-read-recheck)"
+   },
+   {
+    "source": "pr-body/\"behaves identically on all three transports\"",
+    "class": "supporting",
+    "disposition": "partial",
+    "evidence": "single-key commands avoid CROSSSLOT, but read routing differs on the cluster client (redis2/orphan-cleanup-replica-read-recheck)"
+   },
+   {
+    "source": "pr-body/\"a ZREM that errors removes nothing and returns\"",
+    "class": "supporting",
+    "disposition": "partial",
+    "evidence": ":238-240 returns before the restore although an errored ZREM may have executed (redis2/orphan-cleanup-zrem-error-skips-restore)"
+   },
+   {
+    "source": "pr-body/\"reuses that variable instead of rebuilding the key\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": ":178 builds the prefixed key once; :208 passes it to the helper; tests run with and without a prefix (test file:84-101)"
+   },
+   {
+    "source": "pr-body/\"Transient errors cannot trigger it\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": ":99-105 returns the bare sentinel only for redis.Nil; the guard at :207 is an identity compare"
+   },
+   {
+    "source": "pr-body/\"Super-large directories ... the new call is unreachable\"",
+    "class": "supporting",
+    "disposition": "met",
+    "evidence": ":63-65 skips ZAddNX for super-large directories, so ZRangeByLex returns no members"
+   },
+   {
+    "source": "pr-body/\"the first three cases fail on master and pass with the change\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "needs a live Redis 8.2.1; not available offline, tests skip (saved go test output)"
+   }
+  ],
+  "files": [
+   {
+    "path": "weed/filer/redis2/universal_redis_store.go",
+    "state": "reviewed"
+   },
+   {
+    "path": "weed/filer/redis2/universal_redis_store_test.go",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "redis2/orphan-cleanup-replica-read-recheck",
+     "type": "candidate",
+     "trigger": "data-integrity",
+     "batch": "initial",
+     "ruling": "confirmed"
+    },
+    {
+     "id": "premise-1",
+     "type": "safety-premise",
+     "area": "concurrency",
+     "premise": "On a primary-routed client, for any interleaving of one InsertEntry(path) with one removeOrphanedDirectoryListMember for that path and no other writers, a live value key implies the index member exists afterwards.",
+     "evidence": ":56-74, :237-251",
+     "batch": "initial",
+     "ruling": "holds"
+    },
+    {
+     "id": "premise-2",
+     "type": "safety-premise",
+     "area": "data-integrity",
+     "premise": "On a primary-routed client every error in ZREM or EXISTS leaves the index member present or restored, and the ignored final ZAddNX only matters when a concurrent recreate and a Redis failure coincide.",
+     "evidence": ":237-251, :97-106",
+     "batch": "initial",
+     "ruling": "fails",
+     "reopened_as": "redis2/orphan-cleanup-zrem-error-skips-restore"
+    },
+    {
+     "id": "redis2/orphan-cleanup-zrem-error-skips-restore",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "follow-up",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-047/tmp/claude-1000/tmp.YAAZmTyS0j/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-047/tmp/claude-1000/tmp.YAAZmTyS0j/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    },
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-047/tmp/claude-1000/tmp.YAAZmTyS0j/follow-up",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-047/tmp/claude-1000/tmp.YAAZmTyS0j/follow-up/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-047/clone"
+ }
+}

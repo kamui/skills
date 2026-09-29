@@ -1,0 +1,37 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-017/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-017-clone/dfdbc939-ff03-4572-b1fe-2c968a8f3b42/subagents/agent-af958446328c7d18a.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-017/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-017-clone/dfdbc939-ff03-4572-b1fe-2c968a8f3b42.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "sed -n 895,1000p clientconn.go && sed -n 1225,1340p clientconn.go && grep -n \"resetTransport\\|func (ac \\*addrConn) resetConnectBackoff\" -n *.go",
+    "grep -n \"func (t \\*http2Client) GracefulClose\" -A40 internal/transport/http2_client.go; grep -n \"onClose\" clientconn.go | head; grep -n \"func (ac \\*addrConn) createTransport\" -A75 clientconn.go",
+    "sed -n 1495,1515p clientconn.go; grep -n \"func (ac \\*addrConn) updateConnectivityState\" -A25 clientconn.go",
+    "grep -n \"func (acbw \\*acBalancerWrapper) updateState\" -A30 balancer_wrapper.go; grep -rn \"resetTransport\" --include=*.go . | grep -v \"^./clientconn.go\""
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-017/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-017"
+  ]
+}

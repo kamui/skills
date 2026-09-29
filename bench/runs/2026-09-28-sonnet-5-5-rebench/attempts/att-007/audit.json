@@ -1,0 +1,43 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-007-clone/a33e8a49-1f3d-49fb-8782-80eeaea930dc/subagents/agent-a7730b054ccc37478.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-007-clone/a33e8a49-1f3d-49fb-8782-80eeaea930dc.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "grep -rn \"Overwrite\" packages --include=*.ts --include=*.tsx -l | grep -v node_modules | head -20",
+    "sed -n 25,125p packages/server/src/core/internals/procedureBuilder.ts; sed -n 1,80p packages/server/src/core/internals/utils.ts; git log --oneline -3 main; ls packages/tests/server/regression | head -40",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone/packages/tests && time ./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | tail -30",
+    "sed -n 55,140p packages/server/src/core/middleware.ts; cat packages/tests/server/regression/issue-4947-merged-middleware-inputs.test.ts | head -60; cat packages/tests/tsconfig.json",
+    "mkdir -p /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone-work && cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone-work && cat > t.ts <<'EOF'\ntype Overwrite<TType, TWith> = TType extends object\n  ? TWith extends object\n    ? { [K in keyof TType | keyof TWith]: K extends keyof TWith ? TWith[K] : K extends keyof TType ? TType[K] : never }\n    : TWith extends any ? TWith : never\n  : TType extends any ? TWith extends any ? TWith : TType : never;\ntype Show<T> = { v: T };\ndeclare const a1: Show<Overwrite<{a:1}, unknown>>;\ndeclare const a2: Show<Overwrite<{a:1}, any>>;\ndeclare const a3: Show<Overwrite<{a:1}, never>>;\ndeclare const a4: Show<Overwrite<string, never>>;\ndeclare const a5: Show<Overwrite<{a:1}|undefined, {b:2}|undefined>>;\ndeclare const a6: Show<Overwrite<{a:1}, {b:2}|undefined>>;\ndeclare const a7: Show<Overwrite<{a:1}, {b?:2}>>;\ndeclare const a8: Show<Overwrite<string[], {b:2}>>;\ndeclare const a9: Show<Overwrite<{a:1}, string[]>>;\ndeclare const a10: Show<Overwrite<any, {b:2}>>;\ndeclare const a11: Show<Overwrite<unknown, {b:2}>>;\ndeclare const a12: Show<Overwrite<undefined, {b:2}>>;\ndeclare const a13: Show<Overwrite<{a:1}, undefined>>;\nconst chk: [typeof a1,typeof a2,typeof a3,typeof a4,typeof a5,typeof a6,typeof a7,typeof a8,typeof a9,typeof a10,typeof a11,typeof a12,typeof a13] = 0 as any as string;\nEOF\n/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone/packages/tests/node_modules/.bin/tsc --noEmit --strict t.ts 2>&1 | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone-work && sed -i '$d' t.ts && for i in 1 2 3 4 5 6 7 8 9 10 11 12 13; do echo \"const c$i: string = a$i;\" >> t.ts; done; /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone/packages/tests/node_modules/.bin/tsc --noEmit --strict t.ts 2>&1 | sed 's/is not assignable to type .string.//'"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone/packages"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-007"
+  ]
+}

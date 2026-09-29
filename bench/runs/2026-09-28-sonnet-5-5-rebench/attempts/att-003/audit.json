@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-003/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-003-clone/ed91b806-0e91-4653-9ae8-f198ab414198/subagents/agent-a861811f01d4b9539.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-003/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-003-clone/ed91b806-0e91-4653-9ae8-f198ab414198.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-003/clone/packages/integrations/vercel && grep -rn \"ASTRO_PATH_PARAM\\|ASTRO_PATH_HEADER\\|x-vercel-isr\\|__isr\\|allowQuery\\|bypassToken\" src test/*.js | head -50; git log --oneline -5 -- src/serverless/entrypoint.ts; cat ../../../AGENTS.md | head -80",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-003/clone/packages/integrations/vercel && sed -n 55,70p src/index.ts; grep -n \"ISR_PATH\\|_isr\" src/index.ts; sed -n 690,730p src/index.ts; sed -n 110,150p src/serverless/middleware.ts; git show 335a20416 --stat; ls test | grep -i \"path\\|isr\""
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-003/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-003"
+  ]
+}
