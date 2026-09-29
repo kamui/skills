@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-027/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-027-clone/db8a1bb3-fa4c-491e-9cef-94bdb15531c8/subagents/agent-a2a7c9b7e051669f6.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-027/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-027-clone/db8a1bb3-fa4c-491e-9cef-94bdb15531c8.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat lib/batcher/batcher.go",
+    "grep -rn \"batcher\\.\\|\\.Shutdown()\" backend --include=*.go | grep -i \"batch\" | grep -v _test | head -30"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-027/clone/backend"
+  ],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-027/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-027"
+  ]
+}

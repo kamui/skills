@@ -1,0 +1,130 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "2abb2d5cd19740be37272dac6ad7fdd36244ae54",
+  "issues": [],
+  "change_description": "03089eb108a2179070a392e429e680f18088ad11\nwip\n\n6123ef5d79c279752483a062022448c0e2398be2\nwip\n\n4b811ff4d3ca63fd946e43172cbb6753eefff728\nok\n\n896324afa33dcccf103626fb1aaee6d9be3226ab\nnah\n\na82b492939e859126b4f6dcd178d704ff0306d1b\nrevert\n\n3c12b289c67a547f59581555c0fbc33f0398a3c4\ncol\n\n26814253f4fb53ac2cfaaadb62bb0cb1e561d1fe\nrename\n\n7dc04a7e94654dfad6ef1289dfe01a0a206fff3b\ntypes/utils.ts/Overwrite: only overwrite keys of objects\n\nOverwrite<string,string> resulted in a mangled object type\nbecause the existing implementation iterated over the string\ntype's keys (e.g. 'charCodeAt')\n\nThis commit changes the implementation so that keys are only\niterated and overwritten in the case of objects. Otherwise,\na non-never TWith type will entirely replace TType, e.g.\nOverwrite<string, number> results in 'number'.\n\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Fix inferred input types for procedures that combine .input() with .use() by making Overwrite replace non-object types instead of mangling them (commit 7dc04a7; PR body is an unfilled template).",
+  "issue_fit": "Issue alignment unavailable (no linked issue); intent taken from the PR title and commit 7dc04a7. The reported input case is fixed, but the same Overwrite change regresses next({ ctx }) typing.",
+  "coverage": "Both changed files reviewed in full; tsc on packages/tests passes at head; uncommitted .mcp.json in the clone is outside the range and not reviewed.",
+  "check_details": [
+   "Reviewer ran `tsc --noEmit -p tsconfig.json` in packages/tests at the reviewed head: exit 0, no diagnostics (includes the new regression test).",
+   "Reviewer compiled scratch copies of packages/server/src at the merge-base and at head: the regression scenario (input(z.string()).use(next())) fails at the merge-base and passes at head; the ctx scenario in the finding passes at the merge-base and fails at head. Scratch files live under clone-work, not in the clone.",
+   "Runtime vitest was not run, per run policy."
+  ]
+ },
+ "findings": [
+  {
+   "id": "packages/server/core/internals/utils/overwrite-nonobject-ctx",
+   "title": "Keep the previous context when next() gets a non-object ctx",
+   "priority": "P3",
+   "action": "must-fix",
+   "kind": "compatibility",
+   "trigger": "A middleware calls `opts.next({ ctx: maybe })` with `maybe: { extra: number } | undefined`, and a later resolver reads `ctx.base` from the root context.",
+   "impact": "The new `Overwrite` returns the non-object `TWith`, so ctx becomes possibly `undefined` and the resolver fails with TS18048, although `next()` spreads `{ ...callOpts.ctx, ...nextOpts.ctx }` and never drops the previous context; the merge-base type kept it.",
+   "change": "Leave the shared `Overwrite` as is, since the input fix depends on it, and in `packages/server/src/core/internals/procedureBuilder.ts` (and the matching `_ctx_out` merges in `middleware.ts`) use a ctx-specific merge that keeps `TType` when `TWith` is `undefined` or `null`. Add a regression test for `next({ ctx: obj | undefined })`.",
+   "source": "Commit 7dc04a7 body, \"a non-never TWith type will entirely replace TType\"; released contract of `next({ ctx })` at @trpc/server 10.43.2.",
+   "anchor": {
+    "type": "line",
+    "path": "packages/server/src/core/internals/utils.ts",
+    "start_line": 21,
+    "end_line": 24,
+    "side": "RIGHT"
+   },
+   "fix": {
+    "path": "packages/server/src/core/internals/procedureBuilder.ts",
+    "start_line": 38
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "The doc comment says a non-object `TType` is replaced by `TWith` \"unless TWith is never\", but the trailing `: TType` branch is unreachable because `TWith extends any` distributes over `never` and yields `never`.",
+   "evidence": "`packages/server/src/core/internals/utils.ts:25-30`; scratch check: `Overwrite<string, never>` is `never`, as at the merge-base."
+  },
+  {
+   "fact": "The regression test declares `voidWithMiddleware` but never asserts on it, and leaves `// ^?` twoslash markers in place.",
+   "evidence": "`packages/tests/server/regression/issue-5020-inference-middleware.test.ts:11-15,24-39`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "requirements": [
+   {
+    "source": "pr-title/\"inference fix for inputs with middleware\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts:24-39 passes under tsc at head; the same scenario in a scratch copy of the merge-base Overwrite yields a non-string input type."
+   },
+   {
+    "source": "commit-7dc04a7/\"keys are only iterated and overwritten in the case of objects\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "packages/server/src/core/internals/utils.ts:11-20 iterates keys only when both types are objects; scratch check Overwrite<string,string> = string."
+   },
+   {
+    "source": "commit-7dc04a7/\"a non-never TWith type will entirely replace TType\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "Implemented at utils.ts:21-30, but it also changes _ctx_out merging (procedureBuilder.ts:38) where next() spreads at runtime; compatibility violated, see packages/server/core/internals/utils/overwrite-nonobject-ctx."
+   }
+  ],
+  "files": [
+   {
+    "path": "packages/server/src/core/internals/utils.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/tests/server/regression/issue-5020-inference-middleware.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "tsc --noEmit -p packages/tests/tsconfig.json",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "reviewer ran it at the reviewed head; exit 0, no diagnostics"
+   },
+   {
+    "check": "scratch tsc of merge-base and head copies of packages/server/src",
+    "head": "7dc04a7e94654dfad6ef1289dfe01a0a206fff3b",
+    "outcome": "reviewer-executed",
+    "reason": "reviewer ran both variants offline under clone-work to compare base and head types"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "packages/server/core/internals/utils/overwrite-nonobject-ctx",
+     "type": "candidate",
+     "trigger": "compatibility",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-045/tmp/claude-1000/tmp.spwDos0ZL4/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-045/tmp/claude-1000/tmp.spwDos0ZL4/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  },
+  "repository": "trpc/trpc"
+ }
+}

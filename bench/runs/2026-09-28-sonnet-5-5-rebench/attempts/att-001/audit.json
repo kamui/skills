@@ -1,0 +1,29 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-001/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-001-clone/d1238319-9e15-4ecf-bcee-8ac2ff3d16c6/subagents/agent-a0e2ea780daf8b5f6.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-001/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-001-clone/d1238319-9e15-4ecf-bcee-8ac2ff3d16c6.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat lib/batcher/batcher.go | sed -n 1,400p"
+  ],
+  "workdirs": [
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-001/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-001"
+  ]
+}

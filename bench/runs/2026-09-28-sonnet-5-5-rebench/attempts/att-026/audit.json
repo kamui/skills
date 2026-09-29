@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-026/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-026-clone/1e1d0de2-b52b-47d1-af5b-ddee2a526714/subagents/agent-a042e4225df0435f2.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-026/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-026-clone/1e1d0de2-b52b-47d1-af5b-ddee2a526714.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "sed -n 15,60p src/error/GraphQLError.js; grep -n \"nodes\" src/error/GraphQLError.js | head -30; sed -n 35,60p src/error/__tests__/GraphQLError-test.js; grep -rn \"GraphQLError(\" src --include=*.js | grep -v __tests__ | head -20; ./node_modules/.bin/mocha --require @babel/register --require @babel/polyfill src/error/__tests__/*.js src/jsutils/__tests__/inspect-test.js 2>&1 | tail -15; ./node_modules/.bin/flow check 2>&1 | tail -30",
+    "sed -n 56,66p src/error/__tests__/GraphQLError-test.js; sed -n 88,100p src/error/GraphQLError.js; sed -n 180,215p src/error/GraphQLError.js; grep -n \"stack\" src/error/GraphQLError.js"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-026/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-026"
+  ]
+}

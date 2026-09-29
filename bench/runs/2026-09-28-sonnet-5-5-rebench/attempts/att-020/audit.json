@@ -1,0 +1,53 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-020-clone/bc18a5d6-43e7-44f0-ad19-06544ef2a004/subagents/agent-a33bd69cf2f45411d.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-020-clone/bc18a5d6-43e7-44f0-ad19-06544ef2a004.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/server/src/core && sed -n 1,80p internals/utils.ts; sed -n 30,125p internals/procedureBuilder.ts; sed -n 55,110p middleware.ts; grep -rn \"unsetMarker\\|UnsetMarker\" internals/utils.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/tests && ls server/regression | head -30; (time ./node_modules/.bin/tsc --noEmit -p tsconfig.json) 2>&1 | tail -30",
+    "mkdir -p /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && cat > t.ts <<'EOF'\nimport type { Overwrite } from '/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/server/src/core/internals/utils';\ntype Show<T> = { v: T };\ntype A1 = Show<Overwrite<{a:1}, unknown>>;\ntype A2 = Show<Overwrite<{a:1}, never>>;\ntype A3 = Show<Overwrite<{a:1}, undefined>>;\ntype A4 = Show<Overwrite<{a:1}, string>>;\ntype A5 = Show<Overwrite<string, never>>;\ntype A6 = Show<Overwrite<{a:1}|undefined, {b:2}>>;\ntype A7 = Show<Overwrite<{a:1}|undefined, {b:2}|undefined>>;\ntype A8 = Show<Overwrite<{a:1}, any>>;\ntype A9 = Show<Overwrite<{a:1}, {b:2}[]>>;\ntype A10 = Show<Overwrite<{a:1}, () => void>>;\ntype A11 = Show<Overwrite<any, {b:2}>>;\ntype A12 = Show<Overwrite<unknown, {b:2}>>;\ntype A13 = Show<Overwrite<{a:1}, {a?:2}>>;\ndeclare const x: [A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13];\nexport const y: { [K in keyof typeof x]: 0 } = x;\nEOF\ncat > tsconfig.json <<'EOF'\n{\"compilerOptions\":{\"strict\":true,\"noEmit\":true,\"skipLibCheck\":true,\"target\":\"es2020\",\"module\":\"esnext\",\"moduleResolution\":\"node\",\"declaration\":false},\"files\":[\"t.ts\"]}\nEOF\n/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/tests/node_modules/.bin/tsc -p tsconfig.json 2>&1 | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && python3 - <<'EOF'\nimport re\ns=open('t.ts').read().split('\\n')\nout=[s[0]]\nnames=[]\nfor l in s[2:15]:\n    m=re.match(r'type (A\\d+) = Show<(.*)>;',l)\n    out.append(f\"type {m.group(1)} = {m.group(2)};\")\n    names.append(m.group(1))\nfor n in names:\n    out.append(f\"export const v{n}: {n} = 0 as unknown as 'PROBE';\")\nopen('t.ts','w').write('\\n'.join(out))\nEOF\n/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/tests/node_modules/.bin/tsc -p tsconfig.json 2>&1 | grep '^t.ts'",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/tests/server/regression && cat > /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work/probe.ts <<'EOF'\nimport { initTRPC } from '@trpc/server';\nimport { z } from 'zod';\nconst t = initTRPC.context<any>().create();\nexport const r = t.router({\n  a: t.procedure.query(({ ctx }) => ctx.foo.bar),\n  b: t.procedure.use((o) => o.next({ ctx: { x: 1 } })).query(({ ctx }) => ctx.foo.bar + ctx.x),\n  c: t.procedure.input(z.object({a: z.string()}).optional()).input(z.object({b: z.string()}).optional()).query(({ input }) => input),\n  d: t.procedure.input(z.object({a: z.string()}).optional()).use((o)=>o.next()).query(({ input }) => input),\n});\ntype I = Parameters<typeof r.d>;\nEOF\ncd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages/tests && cp /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work/probe.ts /tmp/probe_x.ts 2>/dev/null; cat tsconfig.json; git -C .. status --short | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && C=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone; grep -n \"paths\" -A8 $C/tsconfig.json | head -20; cat > tsconfig.probe.json <<EOF\n{\"extends\":\"$C/packages/tests/tsconfig.json\",\"compilerOptions\":{\"noEmit\":true,\"baseUrl\":\"$C\",\"typeRoots\":[\"$C/packages/tests/node_modules/@types\",\"$C/node_modules/@types\"],\"paths\":{\"@trpc/server\":[\"packages/server/src\"],\"@trpc/server/*\":[\"packages/server/src/*\"],\"zod\":[\"packages/tests/node_modules/zod\"]}},\"include\":[],\"files\":[\"probe.ts\"]}\nEOF\n$C/packages/tests/node_modules/.bin/tsc -p tsconfig.probe.json 2>&1 | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && C=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone; sed -i 's/\"noEmit\":true,/\"noEmit\":true,\"types\":[\"node\"],/' tsconfig.probe.json; $C/packages/tests/node_modules/.bin/tsc -p tsconfig.probe.json 2>&1 | head -30\n# compare with baseline\ncd $C && git stash list >/dev/null; git show main:packages/server/src/core/internals/utils.ts > /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work/utils_main.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && C=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone; mkdir -p base && (cd $C && git archive main packages/server/src) | tar -x -C base; sed \"s#\\\"packages/server/src\\\"#\\\"$PWD/base/packages/server/src\\\"#; s#\\\"packages/server/src/\\*\\\"#\\\"$PWD/base/packages/server/src/*\\\"#\" tsconfig.probe.json > tsconfig.base.json; sed -i 's#\"paths\":{\"@trpc/server\":\\[\"packages/server/src\"\\]#&#' tsconfig.base.json; cat tsconfig.base.json; $C/packages/tests/node_modules/.bin/tsc -p tsconfig.base.json 2>&1 | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && C=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone; cat > probe.ts <<'EOF'\nimport { initTRPC, inferRouterInputs } from '@trpc/server';\nimport { z } from 'zod';\nconst t = initTRPC.create();\nexport const r = t.router({\n  c: t.procedure.input(z.object({a: z.string()}).optional()).input(z.object({b: z.string()}).optional()).query(({ input }) => input),\n  d: t.procedure.input(z.object({a: z.string()}).optional()).use((o)=>o.next()).query(({ input }) => input),\n  e: t.procedure.input(z.object({a: z.string()})).use((o)=>o.next()).input(z.object({b: z.string()})).query(({ input }) => input),\n  f: t.procedure.use((o)=>o.next()).input(z.object({b: z.string()})).query(({ input }) => input),\n});\ntype I = inferRouterInputs<typeof r>;\nexport const c: I['c'] = 'PROBE1' as never as {zzz:1};\nexport const d: I['d'] = {zzz:1};\nexport const e: I['e'] = {zzz:1};\nexport const f: I['f'] = {zzz:1};\nEOF\nfor f in tsconfig.probe.json tsconfig.base.json; do echo == $f; $C/packages/tests/node_modules/.bin/tsc -p $f 2>&1 | grep -v \"^ \" | cut -c1-300; done",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone-work && C=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone; for f in tsconfig.probe.json tsconfig.base.json; do echo \"== $f\"; $C/packages/tests/node_modules/.bin/tsc -p $f 2>&1 | grep -v \"^ \" | cut -c1-300; done"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone/packages"
+  ],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [
+    "path outside allowed roots in command: /tmp/probe_x.ts"
+  ],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-020"
+  ]
+}

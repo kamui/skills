@@ -1,0 +1,137 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "c77f548cbd340d2e744da7c6d92a54372b4b900b",
+    "issues": [],
+    "change_description": "refactor: resolve SonarQube findings\n\n- Reduce cognitive complexity in runProviderBackups, displayStartupConfig,\n  checkProvider, Run and checkProvidersDefined by extracting focused\n  helpers; behaviour and log output unchanged.\n- Extract duplicated backup status titles into constants with a shared\n  backupStatusTitle helper (notify.go).\n- Remove TestPublicGitLabRepositoryBackup2 (identical duplicate of\n  TestPublicGitLabRepositoryBackup) and simplify\n  TestGiteaOrgsRepositoryBackup with assertion helpers.\n- Dockerfile: merge consecutive RUN instructions, sort apk packages,\n  quote the TAG variable in the download URL.\n\n"
+  },
+  "summary": {
+    "status": "Approved",
+    "intent": "Resolve 13 SonarQube findings by decomposing complex functions, extracting duplicate literals and a duplicate test, and tidying the Dockerfile, with behaviour and log output unchanged.",
+    "issue_fit": "Alignment with an issue was unavailable (none linked); the supplied pull-request text and the commit message were the intent sources, and every ledger row is met.",
+    "coverage": "All four changed files read in full from the merge-base diff; call sites, constants, and tests traced; go build, go vet and the internal package tests run at the head. Docker was unavailable, so the Dockerfile was read, not built. Untracked files in the clone (.mcp.json, .claude/) are outside the range and were not reviewed.",
+    "check_details": [
+      "Reviewer ran `go build ./...` at head 136a4850: clean.",
+      "Reviewer ran `go vet ./internal/` at head 136a4850: clean.",
+      "Reviewer ran `go test ./internal/ -count=1` at head 136a4850: ok (5.154s); live provider tests skip without credentials, so the Gitea and GitLab tests were traced, not executed.",
+      "The pull request's `golangci-lint run` claim was not reproduced: no linter run was performed by the reviewer.",
+      "Docker was unavailable, so the Dockerfile change was checked by reading only."
+    ]
+  },
+  "findings": [],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The double `resetBackups()` call Copilot flagged (inside each switch case and after the switch) is present unchanged in the base version of `TestGiteaOrgsRepositoryBackup`.",
+      "evidence": "`internal/backup_test.go:619-710` @merge-base and `internal/backup_test.go:600-683` @head."
+    },
+    {
+      "fact": "The `Organistations` log typo Copilot flagged is carried byte-for-byte from the base into the new `logProviderOrgs` helper, consistent with the stated unchanged log output.",
+      "evidence": "`internal/backup.go:190-296` @head, `internal/backup.go:179-290` @merge-base."
+    },
+    {
+      "fact": "`checkProvidersDefined` now computes Bitbucket API-token completeness before the map loop, so its count no longer depends on map iteration order; the count is only tested against zero, so the returned error is unchanged.",
+      "evidence": "`internal/backup.go:680-717` @head, `internal/backup.go:625-672` @merge-base."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "jonhadfield/soba",
+    "requirements": [
+      {
+        "source": "pr-body/\"Behaviour and log output are unchanged\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go:190-296 keeps log labels, order and text (including 'Gitlab backup LFS'); internal/backup.go:322-545 keeps the validation order and error text; notify.go title bytes identical to base."
+      },
+      {
+        "source": "pr-body/\"runProviderBackups, displayStartupConfig, checkProvider, Run and checkProvidersDefined and TestGiteaOrgsRepositoryBackup decomposed into focused helpers\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup.go:40-142, 190-296, 322-545, 680-717; internal/backup_test.go:600-683."
+      },
+      {
+        "source": "pr-body/\"backup status titles extracted into constants with a shared backupStatusTitle helper\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/notify.go:18-44 and the three call sites at internal/notify.go:101-238."
+      },
+      {
+        "source": "pr-body/\"removed TestPublicGitLabRepositoryBackup2, an exact duplicate\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "internal/backup_test.go:567-572 @head: the retained test body matches the removed one line for line."
+      },
+      {
+        "source": "pr-body/\"Dockerfile: merged consecutive RUN instructions, sorted apk package names, quoted ${TAG}\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "docker/Dockerfile:3-18 @head."
+      },
+      {
+        "source": "pr-body/\"go build, go vet, golangci-lint run (0 issues) and the full test suite pass locally\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "go build, go vet and go test ./internal/ reproduced clean at head; golangci-lint not run by the reviewer."
+      }
+    ],
+    "files": [
+      {
+        "path": "docker/Dockerfile",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/backup_test.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "internal/notify.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go build ./...",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline module cache, clean output"
+      },
+      {
+        "check": "go vet ./internal/",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "offline module cache, clean output"
+      },
+      {
+        "check": "go test ./internal/ -count=1",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "reviewer-executed",
+        "reason": "ok in 5.154s; live provider tests skip without credentials"
+      },
+      {
+        "check": "golangci-lint run (pull-request body claim)",
+        "head": "136a4850df9aec8cf8813b27ba1533d4a17bc642",
+        "outcome": "unavailable",
+        "reason": "not run by the reviewer and no readable output supplied"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

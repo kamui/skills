@@ -1,0 +1,131 @@
+{
+  "run": {
+    "coverage": "complete",
+    "specs": [
+      "pull-request-text/graphql-js#1582"
+    ],
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "5384d218539dbb6bb39b25e0b7a5dcdd69ad8a11",
+    "issues": [],
+    "change_description": "Enable Flow typings on errors tests + Fix typing for Error constructor\n\n"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Enable Flow on the error and inspect tests and let the GraphQLError constructor type accept null nodes.",
+    "issue_fit": "Issue alignment unavailable (no issue, empty PR body); intent taken from the commit message and supplied PR text. Both stated outcomes are met.",
+    "coverage": "All 5 changed files and the full diff reviewed; committed range only, so untracked .mcp.json and sandbox .claude/ placeholders in the clone were not reviewed. Focused mocha on the 4 changed test files passed (27 tests) and flow check found no error in src.",
+    "check_details": [
+      "Reviewer ran mocha on the 4 changed test files at the reviewed head: 27 passing, exit 0. This cannot detect the finding, which is about a test that passes regardless of the branch it targets.",
+      "Reviewer ran flow check at the reviewed head: the only 4 errors were empty read-only sandbox placeholder files under untracked .claude/ (environmental, not from the change); no error in src.",
+      "The prior review thread (nodes should accept null) is addressed by the diff, which adds | null to the constructor's nodes type; no CI or supplied checks were provided."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [
+    {
+      "id": "src/error/__tests__/GraphQLError-test.js/stackless-original-fixture",
+      "title": "Keep a stackless fixture in the no-stack test",
+      "priority": "P3",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "The test 'creates new stack if original error has no stack' now uses new Error('original') as originalError, which always has a stack, so GraphQLError takes the originalError.stack branch instead of the Error.captureStackTrace fallback.",
+      "impact": "Its assertions pass on either branch, so a regression in the fallback path, which the merge-base fixture { message: 'original' } would catch, now passes unnoticed; the sibling test already covers the has-stack branch.",
+      "change": "Restore a stackless fixture typed for Flow, for example const original: any = { message: 'original' };, as the same commit does with ': any' in locatedError-test.js.",
+      "anchor": {
+        "type": "line",
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "start_line": 58,
+        "end_line": 58,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [
+    {
+      "fact": "The exported implementation signature of GraphQLError still types nodes without null while the declare class now accepts it; runtime handles null, and the implementation is cast to any.",
+      "evidence": "`src/error/GraphQLError.js:94`, `src/error/GraphQLError.js:25`."
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "graphql/graphql-js",
+    "requirements": [
+      {
+        "source": "commit-7e39a12/\"Enable Flow typings on errors tests\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "@flow strict replaces @noflow in GraphQLError-test.js, locatedError-test.js, printError-test.js and inspect-test.js; flow check reports no src error at head."
+      },
+      {
+        "source": "commit-7e39a12/\"Fix typing for Error constructor\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "src/error/GraphQLError.js:25 adds | null to nodes, matching the sibling ?-typed parameters and the runtime null handling at lines 102-107."
+      }
+    ],
+    "files": [
+      {
+        "path": "src/error/GraphQLError.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/GraphQLError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/locatedError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/error/__tests__/printError-test.js",
+        "state": "reviewed"
+      },
+      {
+        "path": "src/jsutils/__tests__/inspect-test.js",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "mocha --require @babel/register --require @babel/polyfill on the 4 changed test files",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "27 passing, exit 0, offline with the clone's own binary"
+      },
+      {
+        "check": "flow check --temp-dir <scratch>",
+        "head": "7e39a122eea9292eeffa6905ffdf8a60c5161cfd",
+        "outcome": "reviewer-executed",
+        "reason": "no src errors; 4 errors only in empty sandbox placeholder files under untracked .claude/"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "src/error/__tests__/GraphQLError-test.js/stackless-original-fixture",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-062/clone-work/tmp.nnlWiJ2vmc/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-062/clone-work/tmp.nnlWiJ2vmc/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

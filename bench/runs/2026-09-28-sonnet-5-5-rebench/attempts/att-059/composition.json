@@ -1,0 +1,171 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...review-head",
+    "base_ref": "main",
+    "base_sha": "db5a086d048c5c2d6e51e82bb070d20df04d688d",
+    "issues": [],
+    "specs": [
+      "spec-seaweedfs-pr-10735-packet"
+    ],
+    "change_description": "fix(redis2): remove orphaned directory index members on listing\n\nListDirectoryEntries skipped index members whose value key was gone and\nleft them in the ZSET, so the per-directory child index grew without\nbound under any TTL workload. Mirror the ZRem the logical-expiry branch\nalready performs.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\nfix(redis2): keep the index member when a concurrent insert recreates the value\n\nThe orphan cleanup removed the member unconditionally, so an InsertEntry\nlanding between FindEntry and the ZRem left a live value with no index\nmember, invisible to listings until another InsertEntry on that path.\nUpdateEntry does not re-add it, so the loss persisted.\n\nRestore the member when the value is present again after the removal.\nThe value key and the directory index key hash to different slots, so a\nLua script or MULTI over both is not available to the cluster store.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n",
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Remove orphaned members from the redis2 per-directory index during listing, without stripping the member from an entry that a concurrent insert recreates.",
+    "issue_fit": "Alignment with an originating issue is unavailable (none linked); the supplied pull-request text is the intent source. The orphan-removal goal is met, but the promise that only a confirmed-absent value loses its member, identically on all transports, is only partly met.",
+    "coverage": "Both changed files and the full diff were reviewed; the redis2 package compiles and its tests skip because no Redis server is available offline.",
+    "check_details": [
+      "Reviewer ran `go test -count=1 -v ./weed/filer/redis2` at 6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1: exit 0, every Redis-backed test skipped (RUN_REDIS_TESTS unset, no server), so no test exercised the change.",
+      "The PR's reported results against redis-server 8.2.1 were not reproducible offline and are not relied on."
+    ],
+    "ambiguities": [],
+    "coverage_gaps": []
+  },
+  "findings": [
+    {
+      "id": "redis2/orphan-cleanup-replica-read",
+      "title": "Confirm absence on the master before removing the index member",
+      "priority": "P2",
+      "action": "must-fix",
+      "kind": "concurrency",
+      "trigger": "redis_cluster2 runs with useReadOnly (or routeByLatency), so the FindEntry GET and the re-check EXISTS go to a replica of the value key's slot while ZREM goes to the index key's master. A replica that has not yet applied a recent SET returns absent for both reads.",
+      "impact": "The cleanup removes the index member of a live entry and skips the restore. UpdateEntry never re-adds it, so the entry vanishes from listings and DeleteFolderChildren until another InsertEntry hits that path; before this change, lag only hid the entry from one listing.",
+      "change": "In `removeOrphanedDirectoryListMember`, run the re-check against the master, for example a single-key EVAL of `return redis.call('EXISTS', KEYS[1])` (EVAL routes to the master), or skip the cleanup when the client reads from replicas.",
+      "source": "PR body: the compensating form 'behaves identically on all three transports'; only a positively confirmed absent value leaves the member removed.",
+      "anchor": {
+        "type": "line",
+        "path": "weed/filer/redis2/universal_redis_store.go",
+        "start_line": 245,
+        "end_line": 249,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "weed/filer/redis2/universal_redis_store.go",
+        "start_line": 245
+      }
+    },
+    {
+      "id": "redis2/orphan-cleanup-restore-error-dropped",
+      "title": "Handle a failed ZAddNX when restoring the index member",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "bug",
+      "trigger": "A concurrent InsertEntry recreates the value, ZREM succeeds, and the restoring ZAddNX fails, for instance on a timeout, a connection error, or a request context cancelled after the ZREM; its error is discarded.",
+      "impact": "The live entry stays out of ListDirectoryEntries and DeleteFolderChildren until another InsertEntry hits that path, with no log line, contradicting the PR's claim that failures bias towards a stale member rather than a lost one.",
+      "change": "In `removeOrphanedDirectoryListMember`, run the restoring ZAddNX on a context detached from request cancellation with a short bounded retry, and log a final failure.",
+      "source": "PR body: 'the failure modes bias towards a stale member rather than a lost one'.",
+      "anchor": {
+        "type": "line",
+        "path": "weed/filer/redis2/universal_redis_store.go",
+        "start_line": 250,
+        "end_line": 250,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "weed/filer/redis2/universal_redis_store.go",
+        "start_line": 250
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "prior_items": [],
+  "record": {
+    "repository": "seaweedfs/seaweedfs",
+    "requirements": [
+      {
+        "source": "pr-title",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "weed/filer/redis2/universal_redis_store.go:208 calls the new cleanup on the not-found branch; :237-251 removes the member"
+      },
+      {
+        "source": "pr-body/\"Only a positively confirmed absent value leaves the member removed\"",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "weed/filer/redis2/universal_redis_store.go:245 re-checks with a read that a replica-reading cluster client serves from a lagging replica (redis2/orphan-cleanup-replica-read); :250 drops a restore failure (redis2/orphan-cleanup-restore-error-dropped)"
+      },
+      {
+        "source": "pr-body/\"behaves identically on all three transports\"",
+        "class": "supporting",
+        "disposition": "partial",
+        "evidence": "go-redis v9.21.0 osscluster.go:2399-2403 routes GET and EXISTS to replicas under ReadOnly; weed/filer/redis2/redis_cluster_store.go:54 enables it via useReadOnly"
+      },
+      {
+        "source": "pr-body/\"keyPrefix\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "weed/filer/redis2/universal_redis_store.go:178 builds the prefixed dirListKey and :208 passes it to the helper; the helper reads the value key through getKey (:245)"
+      },
+      {
+        "source": "pr-body/\"Transient errors cannot trigger it\"",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "weed/filer/redis2/universal_redis_store.go:100-105 returns the bare sentinel only for redis.Nil; :207 guards with identity comparison"
+      },
+      {
+        "source": "pr-body/\"Super-large directories\"",
+        "class": "supporting",
+        "disposition": "met",
+        "evidence": "weed/filer/redis2/universal_redis_store.go:63-65 skips ZAdd for super-large directories, so the loop at :202 has no members to visit"
+      },
+      {
+        "source": "pr-body/\"the first three cases fail on master and pass with the change\"",
+        "class": "supporting",
+        "disposition": "not-verifiable",
+        "evidence": "weed/filer/redis2/universal_redis_store_test.go skips without RUN_REDIS_TESTS=1 and no Redis server is available offline"
+      }
+    ],
+    "files": [
+      {
+        "path": "weed/filer/redis2/universal_redis_store.go",
+        "state": "reviewed"
+      },
+      {
+        "path": "weed/filer/redis2/universal_redis_store_test.go",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "go test -count=1 -v ./weed/filer/redis2",
+        "head": "6c8fde6642cd428e884cc9c9d88c9aaa189c4bf1",
+        "outcome": "reviewer-executed",
+        "reason": "the package builds and every Redis-backed test skips without a server, so it proves compilation only"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "redis2/orphan-cleanup-replica-read",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        },
+        {
+          "id": "redis2/orphan-cleanup-restore-error-dropped",
+          "type": "candidate",
+          "trigger": "data-integrity",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-059/tmp/claude-1000/tmp.wZzu8Q8oy0/initial",
+          "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-059/tmp/claude-1000/tmp.wZzu8Q8oy0/initial/accounting.json",
+          "operation": "Agent run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

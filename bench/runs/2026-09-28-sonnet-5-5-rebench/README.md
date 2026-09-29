@@ -114,3 +114,43 @@ $L python3 -B bench/tools/run_cell.py --run bench/runs/2026-09-28-sonnet-5-5-reb
 
 `launch.sh` unsets the orchestrating session's `CLAUDE*`, `ANTHROPIC*` and `AI_AGENT` variables,
 puts the pinned CLI and the sandbox tools on `PATH`, and runs its arguments.
+
+## Results
+
+Dispatched 2026-09-28 23:08Z to 2026-09-29 03:32Z. All 72 cells are filed in 74 attempts, and each
+target has one blind mapping over both arms. `results.v1.json` is `score.py` output over the
+twelve v1 mappings. The headline numbers are on the [scoreboard](../../SCOREBOARD.md).
+
+| | Built-in | `review-code` |
+| --- | --- | --- |
+| Valid completed reviews | 36 of 36 | 31 of 36 |
+| Recall, every planned review | 75% | 67% |
+| Recall, completed reviews only | 79% | 82% |
+| Reviews that missed every registered defect | 3 of 27 | 3 of 22 |
+| Reviews that approved a buggy change | 0 of 27 | 5 of 22 |
+| False findings | 27 in 36 reviews | 0 in 31 |
+| Noise items per review | 5.2 | 1.7 |
+| Recovered defects with a sufficient fix | 9 of 31 | 16 of 22 |
+| Metered cost | $4.66, $0.12 per attempt | $38.13, $1.06 per attempt |
+| Median time to completion | 38 s | 3 min 28 s |
+
+**The built-in finds as much and flags far more that is wrong.** Its 27 false findings fall on 8
+of the 12 targets: 10 on `r-base-ui-5460`, and 5 on the three clean targets. On the
+nine targets both runs graded under the same register, the Sonnet 5 built-in had 2 false findings in
+18 reviews. The Sonnet 5.5 row runs a different prompt, so the rise belongs to the model and the
+prompt together.
+
+**`review-code` never reported a false finding, and 5 of its 36 reviews are incomplete.** Four
+stopped when the sandbox denied a Bash command. The reviewer reported the denial and ended without
+writing its artifacts, although the denial text invites another route. They are att-050
+(`k-graphql-js-1582`), att-052 and att-064 (`i-requests-6667`), and att-070 (`n-ripgrep-2957`). The fifth, att-074 (`k-graphql-js-1582`), finished and reported its own
+coverage incomplete. None was replaced: the method replaces a stop only when the harness caused it,
+and the same profile denied commands in 24 of 51 Sonnet 5 reviews across the #394 and #409 runs
+without one stop. Counted as reviews that recovered nothing, the four stops take `review-code`'s
+recall from 82% on completed reviews to 67%. Its five approvals of a buggy change are on
+`j-trpc-5017` (1), `n-ripgrep-2957` (2) and `r-base-ui-5460` (2).
+
+**Spend.** $51.48 of the $125 cap: the built-in $4.66, `review-code` $38.13, the probes $0.08, and
+14 grading sessions $8.62. Two of those sessions were `o-astro-16079`'s failed gradings ($1.16),
+whose cause the third deviation records. The built-in stayed inside its $25 share, and the
+projection at gate 2 ($26 for replicates 2 and 3) held: they cost $25.27.

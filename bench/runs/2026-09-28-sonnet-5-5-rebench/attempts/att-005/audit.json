@@ -1,0 +1,42 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-005-clone/7a71fc39-5cd4-4abd-a9b8-0f8718b3adec/subagents/agent-acc08a9513dd467d9.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-005-clone/7a71fc39-5cd4-4abd-a9b8-0f8718b3adec.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "cat src/utils/body.ts && sed -n 1,140p src/validator/validator.ts && grep -n \"contentType\\|Content-Type\" -i src/utils/buffer.ts",
+    "grep -n \"bodyCache\\|#cachedBody\\|cachedBody\" -B2 -A25 src/request.ts | sed -n 1,200p; git diff main...review-head -- src/utils/body.test.ts src/utils/buffer.test.ts | head -150",
+    "W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone-work && mkdir -p $W && cat > $W/t.ts <<'EOF'\nimport { Hono } from '/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone/src/index'\nconst app = new Hono()\napp.post('/a', async (c) => {\n  await c.req.formData()\n  try { return c.json(await c.req.parseBody()) } catch (e) { return c.text('ERR ' + e, 500) }\n})\napp.post('/b', async (c) => {\n  const b = await c.req.parseBody()\n  const f = await c.req.formData()\n  const b2 = await c.req.parseBody()\n  return c.json({ b, f: Object.fromEntries(f as any), b2 })\n})\napp.post('/c', async (c) => {\n  await c.req.text()\n  return c.json(await c.req.parseBody())\n})\napp.post('/d', async (c) => {\n  await c.req.json().catch(()=>{})\n  return c.json(await c.req.parseBody())\n})\nfor (const p of ['/a','/b','/c']) {\n  const fd = new FormData(); fd.append('m','hello')\n  const r = await app.request(p, { method: 'POST', body: fd })\n  console.log(p, r.status, await r.text())\n}\nconst r = await app.request('/a', { method: 'POST', body: 'm=hello', headers: {'Content-Type':'application/x-www-form-urlencoded'} })\nconsole.log('urlenc', r.status, await r.text())\nconst r2 = await app.request('/a', { method: 'POST', body: 'garbage', headers: {'Content-Type':'multipart/form-data; boundary=x'} })\nconsole.log('bad', r2.status, await r2.text())\nEOF\n./node_modules/.bin/esbuild $W/t.ts --bundle --platform=node --format=esm --outfile=$W/t.mjs --log-level=error && node $W/t.mjs; git stash list | head -1; git checkout -q main 2>&1|head -1",
+    "W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone-work && git branch --show-current && ./node_modules/.bin/esbuild $W/t.ts --bundle --platform=node --format=esm --outfile=$W/t0.mjs --log-level=error && node $W/t0.mjs 2>&1 | head -6; git checkout -q review-head; git branch --show-current; git status --short | head",
+    "W=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone-work && cat > $W/t2.ts <<'EOF'\nimport { Hono } from '/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone/src/index'\nimport { validator } from '/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone/src/validator'\nconst app = new Hono()\napp.post('/v', validator('form', (v)=>v), async (c) => {\n  try { return c.json(await c.req.parseBody()) } catch (e) { return c.text('ERR ' + e, 500) }\n})\nconst fd = new FormData(); fd.append('m','hello')\nconst r = await app.request('/v', { method: 'POST', body: fd })\nconsole.log(r.status, await r.text())\nEOF\n./node_modules/.bin/esbuild $W/t2.ts --bundle --platform=node --format=esm --outfile=$W/t2.mjs --log-level=error && node $W/t2.mjs 2>&1 | head -5; git status --short | head -3",
+    "grep -n \"parseBody\" -B3 -A12 src/request.ts | sed -n 1,60p"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- src/utils/body.ts src/utils/buffer.ts src/validator/validator.ts",
+    "git diff main...review-head -- src/utils/body.test.ts src/utils/buffer.test.ts "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-005"
+  ]
+}

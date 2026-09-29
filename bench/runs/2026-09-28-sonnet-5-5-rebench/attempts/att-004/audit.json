@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-004/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-004-clone/08a705fa-7650-4da2-9e62-f9c3ad19b0ab/subagents/agent-af56612c0be611945.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-004/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-004-clone/08a705fa-7650-4da2-9e62-f9c3ad19b0ab.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head",
+    "sed -n 895,1000p clientconn.go; sed -n 1225,1400p clientconn.go; grep -n \"resetTransport\\|resetConnectBackoffTimer\" -r --include=*.go . | head -30",
+    "grep -n \"onClose\" internal/transport/http2_client.go | head; grep -n \"func (t \\*http2Client) GracefulClose\" -A30 internal/transport/http2_client.go | head -50; grep -n \"resetTransport\\|ac.connect()\\|\\.connect()\" *.go | head -20"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-004/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-004"
+  ]
+}

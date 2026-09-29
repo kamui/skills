@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-28-sonnet-5-5-rebench",
+  "target": "q-soba-195",
+  "mapping_version": 1,
+  "supersedes": null,
+  "revision_reason": null,
+  "register": {
+    "version": 1,
+    "sha256": "e54d5cbf17ad2aa15e1ce523215d6cb304a89cc1301fcb8ef35f04a6b48527f5"
+  },
+  "rubric_version": 1,
+  "scored_by": {
+    "adjudicator": "headless Claude Code 2.1.284, --safe-mode, fresh home, claude-opus-5-5 at high, single-threaded; prompt sha256 d515aad13b9c4e9a3f2a66bfb761c1073ca93b6ce846c81c1c9809b823588ee3; session b7bab6ff-659d-4884-ba46-7c0b758eb143; read audit clean",
+    "blind": true,
+    "evidence_access": "the grader's working directory only: prompt.md, register.json (register v1), rubric.md, packet.md, reviews/ (6 reviews rendered under blind tokens), clone/ (offline clone at the pinned head) and clone-cache/ (its dependency cache)"
+  },
+  "scored_at": "2026-09-29T03:34:15Z",
+  "attempts": [
+    {
+      "attempt_id": "att-012",
+      "blind_token": "blind-2331e9",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'hardcodes the misspelling \"Organistations\"' — The typo is verbatim at base (main internal/backup.go:187,209,275 'Organistations'); head logProviderOrgs (backup.go:205-207) emits identical text. Register non_defects: preserved verbatim to keep the 'log output unchanged' promise; at most a non-material remark."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'still calls resetBackups() inside each switch case and again after the switch' — Register non_defects/preexisting_hints: the double resetBackups() is test-only, present at base (backup_test.go:669/703/706), and removeContents is idempotent. Pre-existing hygiene, below threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'passes the label \"Gitlab\" (lowercase l) to logProviderBackupLFS' — True: head backup.go:252 passes 'Gitlab' to logProviderBackupLFS, and base backup.go:251 logged 'Gitlab backup LFS: true'. The text is preserved verbatim per the PR's unchanged-log promise (register non_defects on the typos). Cosmetic label inconsistency."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'displayBitBucketStartupConfig is gated only on the BitBucket email variable ... Behaviour is unchanged from before the PR' — Head displayBitBucketStartupConfig (backup.go:265-273) gates on envBitBucketEmail exactly as base did; register non_defects: 'BitBucket startup config is gated only on BITBUCKET_EMAIL ... Pre-existing quirks carried over verbatim; not introduced by #195.' Log-only, pre-existing."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'runScheduledJob assigns the package-level global job ... hidden global mutation' — True (head backup.go:528 assigns the global declared at backup.go:737), but the base assigned the same global in both schedule branches and never set it in default (main backup.go:446,465). Register non_defects: runScheduledJob correctly assigns the global. The 'future caller' concern is a maintainability remark with no present consequence."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'a clunky output-parameter pattern ... Maintainability cost only' — Style remark on checkJustTokenProvider/checkUserAndPasswordProvider (head backup.go:325-340). Register: these are direct extractions with identical results. Below threshold."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'adds no unit tests ... A regression ... would go unnoticed' — Register non_defects: 'The new helpers lack unit tests. Test-coverage hygiene with no demonstrated consequence; non-material.'"
+        },
+        {
+          "item_id": "item-7",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'The extracted title constants contain invisible leading U+FE0F variation selectors ... can render as an odd leading glyph' — True that the literals begin with EF B8 8F (cat -A of head notify.go:27-28), but register non_defects: the three literals are byte-identical to the base's (xxd), leading U+FE0F included. The PR introduced nothing, and the rendering concern is speculative. Pre-existing cosmetic remark."
+        },
+        {
+          "item_id": "item-8",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'rm -f \"/var/cache/apk/*\". The quotes stop the shell expanding the glob' — True: the quoted glob makes rm a no-op, but register non_defects: 'True but pre-existing at the base; not introduced by #195', and --no-cache already avoids the cache, as the item itself concedes."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-024",
+      "blind_token": "blind-095ea3",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'The typo \"Organistations\" is kept in the new shared logProviderOrgs helper' — The typo is verbatim at base (main internal/backup.go:187,209,275 'Organistations'); head logProviderOrgs (backup.go:205-207) emits identical text. Register non_defects: preserved verbatim to keep the 'log output unchanged' promise; at most a non-material remark."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'resetBackups() is called inside each switch case and again unconditionally after the switch' — Register non_defects/preexisting_hints: the double resetBackups() is test-only, present at base (backup_test.go:669/703/706), and removeContents is idempotent. Pre-existing hygiene, below threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'checkProvidersDefined changes behaviour ... undocumented semantic change' — Register non_defects: 'Hoisting bitbucketAPITokenDefined() ... The base's count was 2 or 1 depending on map order ...; the head's is always 1. count is only compared with 0 (internal/backup.go:712) and never returned.' The internal count difference is accurate, but there is no observable behaviour change. Below threshold. The item itself says the new code 'arguably fixes that' and names no user-visible consequence."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'The BitBucket startup config display is still gated only on envBitBucketEmail' — Head displayBitBucketStartupConfig (backup.go:265-273) gates on envBitBucketEmail exactly as base did; register non_defects: 'BitBucket startup config is gated only on BITBUCKET_EMAIL ... Pre-existing quirks carried over verbatim; not introduced by #195.' Log-only, pre-existing."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'The gocron scheduler s is never shut down when neither an interval nor a cron schedule is configured' — Accurate but pre-existing: base Run (main backup.go:437-482) likewise created the scheduler before the switch and ran execProviderBackups() without Shutdown in the default branch. gocron v2.22.0 NewScheduler does spawn a goroutine (scheduler.go:229), but default mode is a one-shot run, and the PR does not change this flow (register non_defects: Run decomposition/scheduler flow unchanged). The item acknowledges 'This was already the case before the PR'."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'rm -f \"/var/cache/apk/*\" has its glob quoted, so it removes nothing' — True: the quoted glob makes rm a no-op, but register non_defects: 'True but pre-existing at the base; not introduced by #195', and --no-cache already avoids the cache, as the item itself concedes."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-037",
+      "blind_token": "blind-e58da2",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'The log string typo \"Organistations\" is carried into the shared helper' — The typo is verbatim at base (main internal/backup.go:187,209,275 'Organistations'); head logProviderOrgs (backup.go:205-207) emits identical text. Register non_defects: preserved verbatim to keep the 'log output unchanged' promise; at most a non-material remark."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'resetBackups() runs inside each switch case and again after the switch' — Register non_defects/preexisting_hints: the double resetBackups() is test-only, present at base (backup_test.go:669/703/706), and removeContents is idempotent. Pre-existing hygiene, below threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'the count differs from the old code in that ordering. This is probably an improvement, but it contradicts the PR's \"behaviour unchanged\" claim' — Register non_defects: 'Hoisting bitbucketAPITokenDefined() ... The base's count was 2 or 1 depending on map order ...; the head's is always 1. count is only compared with 0 (internal/backup.go:712) and never returned.' The internal count difference is accurate, but there is no observable behaviour change. Below threshold."
+        },
+        {
+          "item_id": "item-3",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'kept the inconsistent label \"Gitlab backup LFS\"' — True: head backup.go:252 passes 'Gitlab' to logProviderBackupLFS, and base backup.go:251 logged 'Gitlab backup LFS: true'. The text is preserved verbatim per the PR's unchanged-log promise (register non_defects on the typos). Cosmetic label inconsistency."
+        },
+        {
+          "item_id": "item-4",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'displayBitBucketStartupConfig only prints anything when SOBA_BITBUCKET_EMAIL is set ... the old gate was copied unchanged' — Head displayBitBucketStartupConfig (backup.go:265-273) gates on envBitBucketEmail exactly as base did; register non_defects: 'BitBucket startup config is gated only on BITBUCKET_EMAIL ... Pre-existing quirks carried over verbatim; not introduced by #195.' Log-only, pre-existing."
+        },
+        {
+          "item_id": "item-5",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'The merged RUN keeps rm -f \"/var/cache/apk/*\" with the glob inside quotes' — True: the quoted glob makes rm a no-op, but register non_defects: 'True but pre-existing at the base; not introduced by #195', and --no-cache already avoids the cache, as the item itself concedes."
+        },
+        {
+          "item_id": "item-6",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": false,
+          "notes": "'the scheduler is created and never started or shut down, so gocron resources can leak. The original code had the same flow' — Accurate but pre-existing: base Run (main backup.go:437-482) likewise created the scheduler before the switch and ran execProviderBackups() without Shutdown in the default branch. gocron v2.22.0 NewScheduler does spawn a goroutine (scheduler.go:229), but default mode is a one-shot run, and the PR does not change this flow (register non_defects: Run decomposition/scheduler flow unchanged). The item's suggestion that the startup order may have changed is unsubstantiated, but the item does not assert that it did. Register: 'validation order and error strings are identical to the base'."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "findings",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-049",
+      "blind_token": "blind-e3bda8",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The double resetBackups() call Copilot flagged ... is present unchanged in the base version' — Accurate observation. Register non_defects/preexisting_hints: the double resetBackups() is test-only, present at base (backup_test.go:669/703/706), and removeContents is idempotent. Pre-existing hygiene, below threshold."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The Organistations log typo ... is carried byte-for-byte from the base' — Accurate observation. The typo is verbatim at base (main internal/backup.go:187,209,275 'Organistations'); head logProviderOrgs (backup.go:205-207) emits identical text. Register non_defects: preserved verbatim to keep the 'log output unchanged' promise; at most a non-material remark."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'its count no longer depends on map iteration order; the count is only tested against zero, so the returned error is unchanged' — Accurate, and it matches the register non_defects ruling on the hoisting. An observation, not a defect."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-061",
+      "blind_token": "blind-ce6d7a",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The Organistations log typo ... is carried over verbatim from the merge-base into the new logProviderOrgs helper' — Accurate observation. The typo is verbatim at base (main internal/backup.go:187,209,275 'Organistations'); head logProviderOrgs (backup.go:205-207) emits identical text. Register non_defects: preserved verbatim to keep the 'log output unchanged' promise; at most a non-material remark."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The duplicate resetBackups() call ... exists at the merge-base and is preserved' — Accurate observation. Register non_defects/preexisting_hints: the double resetBackups() is test-only, present at base (backup_test.go:669/703/706), and removeContents is idempotent. Pre-existing hygiene, below threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The SonarQube Cloud comment reports one new issue on the pull request without naming it' — True per packet section 6 ('1 New issue'), with no defect asserted. Observation."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    },
+    {
+      "attempt_id": "att-073",
+      "blind_token": "blind-6356bc",
+      "items": [
+        {
+          "item_id": "item-0",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The Organistations typo ... exists verbatim at the merge-base ... matching the PR's promise that log output is unchanged' — Accurate verification observation consistent with the register. The typo is verbatim at base (main internal/backup.go:187,209,275 'Organistations'); head logProviderOrgs (backup.go:205-207) emits identical text. Register non_defects: preserved verbatim to keep the 'log output unchanged' promise; at most a non-material remark."
+        },
+        {
+          "item_id": "item-1",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The doubled resetBackups() call ... is carried over from the merge-base' — Accurate observation. Register non_defects/preexisting_hints: the double resetBackups() is test-only, present at base (backup_test.go:669/703/706), and removeContents is idempotent. Pre-existing hygiene, below threshold."
+        },
+        {
+          "item_id": "item-2",
+          "assignment": "non-material",
+          "duplicate_group": null,
+          "fix_sufficiency": "n/a",
+          "priority_error": "n/a",
+          "notes": "'The three backup status title strings are byte-identical at the merge-base and the head, including the leading U+FE0F sequences' — Accurate; it matches the register non_defects ruling on backupStatusTitle. Observation, not a finding."
+        }
+      ],
+      "review_level": {
+        "native_verdict": "Approved",
+        "approved_on_buggy": "n/a",
+        "zero_recovery": "n/a",
+        "false_clean": "n/a",
+        "completion": "completed"
+      }
+    }
+  ]
+}

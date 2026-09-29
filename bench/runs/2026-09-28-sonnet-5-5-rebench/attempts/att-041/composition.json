@@ -1,0 +1,104 @@
+{
+ "run": {
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "b089b904f1ed578e9edaefd129bf9843120a808f",
+  "issues": [],
+  "specs": [
+   "spec-pr-withastro-astro-16079-text"
+  ],
+  "change_description": "fix(vercel): Fix ISR path rewrite to prevent 404\n",
+  "coverage": "complete"
+ },
+ "summary": {
+  "status": "Needs Information",
+  "intent": "Restore ISR-served routes on the Vercel adapter, which returned 404 after #15959 removed the unauthenticated query-parameter path override, by re-enabling that override for requests carrying `x-vercel-isr: 1`.",
+  "issue_fit": "Issue alignment unavailable: no originating issue; the supplied pull-request text and the commit message are the intent sources. The ISR outcome is not verifiable offline.",
+  "coverage": "Both changed files reviewed against the merge-base; the built handler was called in-process with stubbed virtual modules. Repository tests could not run: fixture directories are read-only in this sandbox. Uncommitted `.mcp.json` in the clone is outside the range.",
+  "check_details": [
+   "Reviewer ran `node --test test/path-override-security.test.js test/isr.test.js` at the reviewed head: environmental failure, the fixture build could not create `.astro/collections` (read-only fixture directory); no test result.",
+   "Reviewer ran an in-process scratch harness against the built `dist/serverless/entrypoint.js` at the reviewed head: a request without the middleware secret but with `x-vercel-isr: 1` and `?x_astro_path=` was rewritten to the query-supplied path; the same request without the header was not.",
+   "No CI or supplied check evidence was provided; the author-reported manual Vercel deployments were not reproducible offline."
+  ]
+ },
+ "findings": [],
+ "questions": [
+  {
+   "id": "vercel-serverless-entrypoint/isr-header-override-spoofable",
+   "title": "Does Vercel strip a client-supplied x-vercel-isr header?",
+   "evidence": "The head now honours `x_astro_path` whenever the request has `x-vercel-isr: 1` and no valid middleware secret (`packages/integrations/vercel/src/serverless/entrypoint.ts:21-26`). Nothing in the repository sets, documents or strips that header, and the same entrypoint is the `_render` function of every build, ISR or not. An in-process call with the header and `?x_astro_path=/api/private` on `/api/public` rendered `/api/private`; without the header it rendered `/api/public`, the behaviour the #15959 test in `packages/integrations/vercel/test/path-override-security.test.js` pins.",
+   "why_it_matters": "If Vercel forwards a client-sent `x-vercel-isr`, any caller can again rewrite the routed path and bypass edge-middleware or firewall rules, undoing #15959, and the candidate reopens as a must-fix security finding. If Vercel strips or overwrites it, the guard is sound and only a regression test is missing.",
+   "answer": "A Vercel maintainer or Vercel platform documentation can state whether the edge network removes or overwrites inbound `x-vercel-isr` and sends `1` only to ISR invocations; a deployed request with a spoofed header would also settle it.",
+   "anchor": {
+    "type": "line",
+    "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "start_line": 21,
+    "end_line": 26,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "observations": [
+  {
+   "fact": "The change adds no test for the ISR rewrite, although `test/path-override-security.test.js` covers the sibling untrusted-override cases on `_render`.",
+   "evidence": "`git diff main...review-head --stat` lists only the changeset and `packages/integrations/vercel/src/serverless/entrypoint.ts`."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "withastro/astro",
+  "requirements": [
+   {
+    "source": "pr-body/\"made any route served by ISR result in a 404\"",
+    "class": "acceptance",
+    "disposition": "not-verifiable",
+    "evidence": "packages/integrations/vercel/src/serverless/entrypoint.ts:21-26 rewrites the path from `x_astro_path` when `x-vercel-isr` is `1` (traced in-process); that Vercel sends this header to ISR invocations could not be checked offline."
+   },
+   {
+    "source": "pr-body/\"Manual e2e tests performed on a test vercel project\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "The deployment URLs in the pull-request text are not reachable from this offline run."
+   }
+  ],
+  "files": [
+   {
+    "path": ".changeset/common-cats-travel.md",
+    "state": "reviewed"
+   },
+   {
+    "path": "packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [],
+  "verification": {
+   "tasks": [
+    {
+     "id": "vercel-serverless-entrypoint/isr-header-override-spoofable",
+     "type": "candidate",
+     "trigger": "security",
+     "batch": "initial",
+     "ruling": "unresolved",
+     "settling_fact": "Whether Vercel strips or overwrites a client-supplied x-vercel-isr request header."
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-041/tmp/claude-1000/tmp.GLz1D0saSd/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-041/tmp/claude-1000/tmp.GLz1D0saSd/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [
+    "vercel-serverless-entrypoint/isr-header-override-spoofable"
+   ],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

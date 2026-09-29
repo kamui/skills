@@ -1,0 +1,33 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-038/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-038-clone/1c8483b7-d7eb-4028-8f08-6146b5f5e128/subagents/agent-a8471b4da5b71aa23.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-038/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-038-clone/1c8483b7-d7eb-4028-8f08-6146b5f5e128.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD",
+    "sed -n 1,60p src/error/GraphQLError.js; grep -n \"nodes\\|originalError\" src/error/GraphQLError.js | sed -n 1,60p; sed -n 25,60p src/error/__tests__/GraphQLError-test.js; sed -n 80,100p src/error/__tests__/GraphQLError-test.js; grep -n \"GraphQLError(\" -r src --include=*.js | grep -v __tests__ | head -30",
+    "sed -n 56,66p src/error/__tests__/GraphQLError-test.js; sed -n 88,100p src/error/GraphQLError.js; sed -n 190,215p src/error/GraphQLError.js; sed -n 20,60p src/error/__tests__/locatedError-test.js; sed -n 15,50p src/jsutils/__tests__/inspect-test.js"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-038/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-038"
+  ]
+}

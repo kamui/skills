@@ -1,0 +1,158 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-pr-5067-packet"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "9728702911073aec5a63a3ba2840b7240e5d3205",
+  "issues": [
+   "honojs/hono#5060"
+  ],
+  "change_description": "fix(utils/body,validator): normalize Content-Type media type for case-insensitive matching\n\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Make Content-Type media-type matching case-insensitive in parseBody() and validator() while keeping parameters such as multipart boundaries intact (issue #5060).",
+  "issue_fit": "Partial \u2014 the mixed-case JSON, urlencoded and multipart cases from #5060 are handled, but the parseFormData() rewrite breaks calling c.req.formData() before c.req.parseBody().",
+  "coverage": "All six changed files and the full merge-base diff reviewed; callers in src/request.ts and src/validator/validator.ts read; focused vitest run and a base-versus-head probe executed. The clone has an untracked .mcp.json outside the range, not reviewed.",
+  "check_details": [
+   "Reviewer ran vitest (main project, coverage off) on body, buffer, validator and request tests at the reviewed head: 144 passed, 1 skipped, exit 0. No test covers c.req.formData() followed by c.req.parseBody().",
+   "Reviewer ran a scratch base-versus-head probe at both heads: the formData-then-parseBody sequence fails at head and passes at base.",
+   "Supplied codecov and benchmark comments (head 5226d41) were not reused: raw output unavailable and neither settles the finding."
+  ]
+ },
+ "findings": [
+  {
+   "id": "src/utils/body/parseFormData-ignores-formdata-cache",
+   "title": "Reuse cached FormData in parseFormData",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "bug",
+   "trigger": "A handler or middleware awaits `c.req.formData()` and then `c.req.parseBody()` on the same request.",
+   "impact": "parseFormData() now calls `arrayBuffer()`, which re-serializes the cached FormData with a new boundary; multipart requests reject with `Failed to parse body as FormData.`, and urlencoded requests silently return a single garbage key instead of the fields. Base returned the cached FormData and worked for both.",
+   "change": "In `parseFormData`, when `request instanceof HonoRequest && request.bodyCache.formData` is set, await it and convert it directly, as `src/validator/validator.ts` does, keeping the `arrayBuffer()`/`bufferToFormData()` path for the uncached case, and add a regression test for `formData()` followed by `parseBody()`.",
+   "source": "Base behavior of `parseFormData` through `HonoRequest.formData()` in `src/request.ts`; issue #5060 scopes the change to media-type matching.",
+   "anchor": {
+    "type": "line",
+    "path": "src/utils/body.ts",
+    "start_line": 121,
+    "end_line": 133,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "On Node 24 the platform Request.formData() already accepts mixed-case multipart and urlencoded media types, so the parseBody() guard change alone covers the reported Node case; the parseFormData() rewrite matters only where a runtime's native parser is case-sensitive, which was not checked.",
+   "evidence": "scratch probe `clone-work/native.mjs` (both cases parsed under Node v24.21.0), `src/utils/body.ts:121-133`."
+  },
+  {
+   "fact": "parseBody() now requires an exact media type, so prefix-only values such as `multipart/form-data-x` that base's startsWith accepted are no longer parsed.",
+   "evidence": "`src/utils/body.ts:100-104` at head versus base."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "honojs/hono",
+  "requirements": [
+   {
+    "source": "issue-5060/expected-behavior",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/utils/body.ts:100-104 lower-cases the media type before matching; src/validator/validator.ts:24-26 regexes gain the i flag; src/utils/buffer.ts:113 lower-cases only text before the first semicolon"
+   },
+   {
+    "source": "issue-5060/suggested-tests",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/utils/body.test.ts, src/validator/validator.test.ts and src/utils/buffer.test.ts add mixed-case urlencoded, multipart and JSON cases; all pass at head"
+   },
+   {
+    "source": "issue-5060/actual-behavior",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "Mixed-case bodies are parsed, but parseFormData now fails or returns garbage after c.req.formData() (finding src/utils/body/parseFormData-ignores-formdata-cache)"
+   },
+   {
+    "source": "commit-5226d41/\"normalize Content-Type media type for case-insensitive matching\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/utils/body.ts:100-104, src/validator/validator.ts:24-26, src/utils/buffer.ts:113"
+   }
+  ],
+  "files": [
+   {
+    "path": "src/utils/body.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/utils/body.test.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/utils/buffer.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/utils/buffer.test.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/validator/validator.ts",
+    "state": "reviewed"
+   },
+   {
+    "path": "src/validator/validator.test.ts",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "./node_modules/.bin/vitest --run --project main --coverage.enabled=false src/utils/body.test.ts src/utils/buffer.test.ts src/validator/validator.test.ts src/request.test.ts",
+    "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+    "outcome": "reviewer-executed",
+    "reason": "run offline at the reviewed head; 144 passed, 1 skipped"
+   },
+   {
+    "check": "codecov patch report",
+    "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+    "outcome": "unavailable",
+    "reason": "comment only, raw output unavailable; it agrees with the untested cache branch but does not settle a candidate"
+   },
+   {
+    "check": "github-actions HTTP benchmark",
+    "head": "5226d4165d48643586152614cbd07422a0ab7a22",
+    "outcome": "unavailable",
+    "reason": "performance comment, not relevant to the finding"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "src/utils/body/parseFormData-ignores-formdata-cache",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-055/tmp/claude-1000/rc.tgvuKG/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-055/tmp/claude-1000/rc.tgvuKG/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

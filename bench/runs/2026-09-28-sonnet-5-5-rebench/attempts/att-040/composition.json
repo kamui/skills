@@ -1,0 +1,181 @@
+{
+ "run": {
+  "coverage": "complete",
+  "specs": [
+   "spec-pr-6667"
+  ],
+  "target_kind": "range",
+  "target": "main...review-head",
+  "base_ref": "main",
+  "base_sha": "8dd3b26bf59808de24fd654699f592abf6de581e",
+  "issues": [],
+  "change_description": "Avoid setting a connection's `ca_certs` or `ca_cert_dir` attributes when `verify=True`\n\nUse a default SSLContext with the default CA bundle loaded when `verify=True`\n\nRename default SSLContext to make it private by convention\n\nWrap line to comply with CI lint\n\n"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Stop reloading the default CA bundle on every verify=True request by giving such requests one preloaded module-level SSLContext (psf/requests#6667, merged 2024-05-15 under the supplied PR text).",
+  "issue_fit": "Partial \u2014 the redundant load_verify_locations() calls are removed and default-bundle, directory and custom-bundle verification still work, but the shared context breaks the 'verify=True still behaves as before' promise for adapter-level TLS settings and client certificates. No linked issue.",
+  "coverage": "Whole diff (src/requests/adapters.py) reviewed; three findings verified by a fresh worker; focused ssl/verify tests run at the head, with only environment failures.",
+  "check_details": [
+   "Reviewer ran `pytest tests/test_requests.py tests/test_adapters.py -k 'ssl or verify or cert or tls or adapter or pool'` at head 4089f3dc: 21 passed, 3 failed. All three fail with 'Missing Authority Key Identifier' (fixture certificates under the installed OpenSSL 3.5.8), an environmental failure. `test_pyopenssl_redirect` and `..._verify_bundle_unexpired_cert` fail at the merge-base per the run policy; `test_different_connection_pool_for_mtls_settings` was rerun on a `git archive` copy of the merge-base under the clone-work directory and fails the same way.",
+   "Reviewer scripts in the work directory (`repro_ctx.py`, `repro_leak2.py`) ran at the head against urllib3 2.8.0 and reproduce the first two findings; no supplied CI evidence."
+  ],
+  "ambiguities": [],
+  "coverage_gaps": []
+ },
+ "findings": [
+  {
+   "id": "src/requests/adapters.py/client-cert-loaded-into-shared-context",
+   "title": "Stop sharing one mutable SSLContext across requests that carry client certs",
+   "priority": "P1",
+   "action": "must-fix",
+   "kind": "security",
+   "trigger": "A verify=True request passes cert=(cert, key): urllib3 then calls load_cert_chain() on the module-global _preloaded_ssl_context, which every default verify=True connection in the process shares.",
+   "impact": "That client identity stays installed and can be presented on later unrelated verify=True connections (other sessions, callers, hosts), and concurrent cert= requests race on one object; the merge-base built a fresh context per connection.",
+   "change": "In `_urllib3_request_context()`, inject `_preloaded_ssl_context` only when `client_cert is None`; for cert= requests set `pool_kwargs[\"ca_certs\"] = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)` so urllib3 builds a per-connection context that still trusts certifi rather than the OS store.",
+   "source": "Confirmed by the verifier; reproduced with `clone-work/repro_leak2.py`.",
+   "anchor": {
+    "type": "line",
+    "path": "src/requests/adapters.py",
+    "start_line": 75,
+    "end_line": 78,
+    "side": "RIGHT"
+   },
+   "fix": {
+    "path": "src/requests/adapters.py",
+    "start_line": 94
+   }
+  },
+  {
+   "id": "src/requests/adapters.py/shared-context-overrides-adapter-ssl-context",
+   "title": "Preserve adapter-level SSLContext when verify=True",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "compatibility",
+   "trigger": "An HTTPAdapter subclass passes ssl_context (or, per docs/user/advanced.rst, ssl_version) through `init_poolmanager`, and a request uses the default verify=True.",
+   "impact": "urllib3 merges the per-request `ssl_context` from `_urllib3_request_context()` over the pool manager's settings, so the adapter's TLS policy (minimum version, trust anchors, ciphers) is silently replaced by the library default; the merge-base honored it.",
+   "change": "In `_urllib3_request_context()`/`_get_connection()`, add the preloaded context only when the adapter's pool manager (or proxy manager) has no `ssl_context` configured in its connection_pool_kw, and add a test with a custom-context adapter.",
+   "source": "Confirmed by the verifier; released contract: docs/user/advanced.rst:1017-1033 and `init_poolmanager(**pool_kwargs)`.",
+   "anchor": {
+    "type": "line",
+    "path": "src/requests/adapters.py",
+    "start_line": 94,
+    "end_line": 95,
+    "side": "RIGHT"
+   }
+  },
+  {
+   "id": "src/requests/adapters.py/import-time-bundle-load",
+   "title": "Do not load the CA bundle at import time",
+   "priority": "P3",
+   "action": "consider",
+   "kind": "compatibility",
+   "trigger": "`certifi.where()` points at a missing file (stripped or frozen install) and the program only uses verify=False or plain HTTP.",
+   "impact": "`import requests` now raises a bare FileNotFoundError; the merge-base imported fine and raised the 'Could not find a suitable TLS CA certificate bundle' OSError only for verify=True requests.",
+   "change": "Create and cache the preloaded context lazily on the first verify=True request (guarded by a lock) so import stays side-effect free and the OSError message is retained.",
+   "source": "Confirmed by the verifier at merge-base and head.",
+   "anchor": {
+    "type": "line",
+    "path": "src/requests/adapters.py",
+    "start_line": 76,
+    "end_line": 78,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [
+  {
+   "fact": "When verify=True is used through `get_connection()` plus a subclass calling `cert_verify()` directly, `conn.ca_certs` is now left unset, so urllib3 falls back to the OS trust store instead of certifi.",
+   "evidence": "`src/requests/adapters.py:285-310` at head (repro: `cert_verify(conn, url, True, None)` leaves `ca_certs=None`, `ssl_context=None`)."
+  }
+ ],
+ "prior_items": [],
+ "record": {
+  "repository": "local clone of psf/requests (range main...review-head)",
+  "requirements": [
+   {
+    "source": "pr-body/\"there is no need to trigger a call to `load_verify_locations()` again\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/requests/adapters.py:75-78,94-95 loads the bundle once and reuses it; cert_verify sets no ca_certs for verify=True"
+   },
+   {
+    "source": "pr-body/\"check that `verify=True` and `verify=False` still behave as expected\"",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "Default and custom-bundle verification work, but adapter-level ssl_context and client-cert handling regress (findings src/requests/adapters.py/shared-context-overrides-adapter-ssl-context, src/requests/adapters.py/client-cert-loaded-into-shared-context)"
+   },
+   {
+    "source": "spec-pr-6667/review-thread \"This is actually critical behavior you're removing\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/requests/adapters.py:75-78 keeps loading DEFAULT_CA_BUNDLE_PATH via extract_zipped_paths for verify=True"
+   },
+   {
+    "source": "pr-body/\"handle the case where `verify` is a path to a dir\"",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "src/requests/adapters.py:96-100 sets ca_cert_dir for directories, ca_certs for files"
+   },
+   {
+    "source": "pr-body/\"~1.2s for verify=True and ~0.5s for verify=False\"",
+    "class": "supporting",
+    "disposition": "not-verifiable",
+    "evidence": "Timings need a live host and the author's machine; the offline run cannot repeat them"
+   }
+  ],
+  "files": [
+   {
+    "path": "src/requests/adapters.py",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "pytest tests/test_requests.py tests/test_adapters.py -k 'ssl or verify or cert or tls or adapter or pool'",
+    "head": "4089f3dc65f783beaa53cc032958ab625440d0ac",
+    "outcome": "reviewer-executed",
+    "reason": "21 passed, 3 environment failures ('Missing Authority Key Identifier'), all also failing at the merge-base"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "src/requests/adapters.py/shared-context-overrides-adapter-ssl-context",
+     "type": "candidate",
+     "trigger": "compatibility",
+     "batch": "initial",
+     "ruling": "confirmed"
+    },
+    {
+     "id": "src/requests/adapters.py/client-cert-loaded-into-shared-context",
+     "type": "candidate",
+     "trigger": "security",
+     "batch": "initial",
+     "ruling": "confirmed"
+    },
+    {
+     "id": "src/requests/adapters.py/import-time-bundle-load",
+     "type": "candidate",
+     "trigger": "compatibility",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-040/tmp/claude-1000/tmp.Z9Uhjv5tKZ/initial",
+     "accounting": "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-040/tmp/claude-1000/tmp.Z9Uhjv5tKZ/initial/accounting.json",
+     "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+    }
+   ],
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

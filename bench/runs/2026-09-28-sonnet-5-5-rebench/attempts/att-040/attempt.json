@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "attempt_id": "att-040",
+  "run_id": "2026-09-28-sonnet-5-5-rebench",
+  "cell": {
+    "target": "i-requests-6667",
+    "arm": "review-code-sonnet-5-5-high-enforced",
+    "replicate": 1
+  },
+  "predecessor": null,
+  "retry_reason": null,
+  "replacement_index": null,
+  "continuity": "fresh",
+  "dispatched_at": "2026-09-29T02:16:19Z",
+  "observed": {
+    "harness": "claude-code",
+    "cli_version": "2.1.284",
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "effort": "high",
+    "prompt_hash": null,
+    "prompt_header": null,
+    "prompt_registry_match": null,
+    "skill_tree": "5e12864b52b6c0c52b9b1b1f41d5b22fa2576676",
+    "diff_commands": [
+      "git diff 8dd3b26 4089f3d --stat",
+      "git diff 8dd3b26 4089f3d -- src ",
+      "git diff main review-head --stat",
+      "git diff --stat "
+    ],
+    "sandbox": null,
+    "subagent_count": 1,
+    "tree_identity_before": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f",
+    "tree_identity_after": "8d2387c312f3887ca2dc5ea7f92ce19fdbe9476f63681d6e71de7b3f3b2d8e6f"
+  },
+  "phase_reached": "result",
+  "disposition": "valid completed",
+  "arm_reported_complete": true,
+  "audit": {
+    "violations": [],
+    "guidance_probes": [],
+    "network_commands": [],
+    "audit_file": "audit.json"
+  },
+  "usage": {
+    "requests": "usage-requests.jsonl",
+    "priced_total_usd": 1.668898,
+    "cost_bounds_usd": {
+      "low": 1.668898,
+      "high": 1.668898
+    },
+    "rates_as_of": "2026-09-28",
+    "billing": "api-dollars",
+    "quota_consumed": null,
+    "metering_status": "complete"
+  },
+  "timing": {
+    "dispatched_at": "2026-09-29T02:16:19Z",
+    "payload_validated_at": "2026-09-29T02:22:01Z",
+    "completed_at": "2026-09-29T02:22:01Z",
+    "stopped_at": null
+  },
+  "native_payload": {
+    "path": "composition.json",
+    "sha256": "63926e15cf7aaf40a32b695a14b0cd9528016a8b89125cb0b21b17bd586094c8"
+  },
+  "normalized": {
+    "path": "normalized.json",
+    "parse_status": "parsed",
+    "reason": null
+  },
+  "transcript_archive": {
+    "path": "~/.t3/bench-cache/transcripts/2026-09-28-sonnet-5-5-rebench/att-040.tar.gz",
+    "sha256": "f6b6b27e6b1e4a26824f89c49664a35134906a3c26082b63cab75ba69756ecc2",
+    "restoration_check": "passed"
+  },
+  "notes": [
+    "input.md sha256 3bf663d3025ba571369035e118e0751fc663bd5bc3065bd05cbd7b7814f7d38d; run policy sha256 f6e510fa40dc8b3ab6542e3e0dab68fa332768f03b641e0ebf7ad4b714d873ac (before path substitution)"
+  ]
+}

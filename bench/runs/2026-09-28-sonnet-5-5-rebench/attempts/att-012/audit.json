@@ -1,0 +1,31 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-012/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-012-clone/004cbbfc-d126-47f2-845b-35433172d19f/subagents/agent-a90955c520b5ca805.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-012/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-012-clone/004cbbfc-d126-47f2-845b-35433172d19f.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...HEAD",
+    "sed -n 540,570p internal/backup_test.go; grep -n \"compareTypeClone\\|compareTypeRefs\\|enabledProviderAuth\\b\" internal/*.go | head -30; sed -n 395,420p internal/backup.go; sed -n 660,730p internal/backup.go"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...HEAD"
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-012/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-012"
+  ]
+}

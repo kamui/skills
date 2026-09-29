@@ -1,0 +1,52 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-064-clone-work/3134e17c-a8ee-41f6-8c0e-1721b9b0a287.jsonl"
+  ],
+  "prompt_headers": [],
+  "report_findings_calls": 0,
+  "commands": [
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone && git rev-parse --verify main^{commit} review-head^{commit} && git merge-base main review-head && git status --short | head && git log --reverse --format='%h %s' main..review-head && ls /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code/scripts; ls docs/agents 2>&1 | head -3; echo $TMPDIR",
+    "git rev-parse --verify 'main^{commit}'; git rev-parse --verify 'review-head^{commit}'; git merge-base main review-head; git status --short | head; git log --reverse --format='%h %s' main..review-head; ls /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code/scripts",
+    "S=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code; P=$(mktemp -d); echo $P; git log --reverse --format='%H%n%B' 8dd3b26bf59808de24fd654699f592abf6de581e..4089f3dc65f783beaa53cc032958ab625440d0ac > $P/commit-messages.txt; python3 $S/scripts/review_context.py --help 2>&1 | head -40",
+    "S=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code; P=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/tmp/claude-1000/tmp.g43CX6gswu; python3 $S/scripts/review_context.py --merge-base 8dd3b26bf59808de24fd654699f592abf6de581e --head 4089f3dc65f783beaa53cc032958ab625440d0ac --store $P/review-context.json",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064; C=clone-cache; ls $C; $C/venv/bin/python -c \"import urllib3,ssl,certifi;print(urllib3.__version__,ssl.OPENSSL_VERSION,certifi.__file__)\"; U=$($C/venv/bin/python -c \"import urllib3,os;print(os.path.dirname(urllib3.__file__))\"); grep -n \"ssl_context\\|load_cert_chain\\|verify_mode\\|check_hostname\\|load_verify\" $U/util/ssl_.py $U/connection.py | head -80",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone; grep -rn \"ssl_context\\|_preloaded\\|init_poolmanager\" src/ tests/ docs/ 2>/dev/null | grep -v \"^src/requests/adapters.py\" | head -30; git show main:src/requests/sessions.py | grep -n \"verify\" | head -30",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064; U=clone-cache/venv/lib/python3.13/site-packages/urllib3; sed -n 1015,1070p $U/connection.py; sed -n 404,436p $U/util/ssl_.py; grep -n \"base_pool_kwargs\\|def connection_from_host\\|def connection_from_context\\|def connection_from_pool_key\" -n $U/poolmanager.py; sed -n 1005,1050p clone/docs/user/advanced.rst",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone; git tag | tail -3; git describe --tags main 2>&1; git log --oneline -8 main; git tag --contains c0813a2d | head -3; cat src/requests/__version__.py | grep version; sed -n 385,412p ../clone-cache/venv/lib/python3.13/site-packages/urllib3/poolmanager.py; sed -n 321,345p ../clone-cache/venv/lib/python3.13/site-packages/urllib3/poolmanager.py; grep -n \"cert_reqs\\|ssl_context\" src/requests/adapters.py | head -20; sed -n 1,80p HISTORY.md | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work && which openssl && mkdir -p exp && cd exp && \\\nopenssl req -x509 -newkey rsa:2048 -nodes -keyout srv.key -out srv.pem -days 2 -subj \"/CN=localhost\" -addext \"subjectAltName=DNS:localhost\" -addext \"basicConstraints=critical,CA:TRUE\" -addext \"keyUsage=keyCertSign,digitalSignature,keyEncipherment\" 2>&1 | tail -1; \\\nopenssl req -x509 -newkey rsa:2048 -nodes -keyout cli.key -out cli.pem -days 2 -subj \"/CN=client-A\" -addext \"basicConstraints=critical,CA:TRUE\" -addext \"keyUsage=keyCertSign,digitalSignature\" 2>&1 | tail -1; ls",
+    "cat > exp.py <<'EOF'\nimport ssl, threading, socketserver, http.server, sys\nimport requests, requests.adapters as A\nfrom requests.adapters import HTTPAdapter\nfrom urllib3.poolmanager import PoolManager\nprint(\"requests from\", requests.__file__)\nseen = []\nclass H(http.server.BaseHTTPRequestHandler):\n    def do_GET(self):\n        cert = self.connection.getpeercert()\n        seen.append(dict(x[0] for x in cert[\"subject\"])[\"commonName\"] if cert else None)\n        self.send_response(200); self.send_header(\"Content-Length\",\"2\"); self.end_headers(); self.wfile.write(b\"ok\")\n    def log_message(self,*a): pass\ndef serve():\n    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)\n    ctx.load_cert_chain(\"srv.pem\",\"srv.key\")\n    ctx.verify_mode = ssl.CERT_OPTIONAL\n    ctx.load_verify_locations(\"cli.pem\")\n    srv = http.server.ThreadingHTTPServer((\"127.0.0.1\",0),H)\n    srv.socket = ctx.wrap_socket(srv.socket, server_side=True)\n    threading.Thread(target=srv.serve_forever,daemon=True).start()\n    return srv.server_address[1]\nport = serve()\nurl = f\"https://localhost:{port}/\"\n# trust the test server via the shared preloaded context (stand-in for a publicly-trusted server)\nA._preloaded_ssl_context.load_verify_locations(\"srv.pem\")\n\nprint(\"--- Exp1: request WITH client cert, then request WITHOUT (verify=True both, separate Sessions)\")\nrequests.get(url, cert=(\"cli.pem\",\"cli.key\"))\nrequests.get(url)\nprint(\"server saw client cert CN for req1, req2:\", seen)\n\nprint(\"--- Exp2: user-supplied ssl_context on adapter honored with default verify=True?\")\nseen.clear()\nclass Ad(HTTPAdapter):\n    def init_poolmanager(self, connections, maxsize, block=False, **kw):\n        c = ssl.create_default_context(); c.load_verify_locations(\"srv.pem\")\n        c.load_cert_chain(\"cli.pem\",\"cli.key\")   # user's own client identity\n        self.user_ctx = c\n        self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block, ssl_context=c)\ns = requests.Session(); ad = Ad(); s.mount(\"https://\", ad)\n# fresh module context lacking client cert: use a new interpreter state by comparing contexts used\nr = s.get(url)\npool = ad.poolmanager.connection_from_host(\"localhost\", port, \"https\", pool_kwargs=A._urllib3_request_context(requests.Request(\"GET\",url).prepare(), True, None)[1])\nprint(\"pool ssl_context is user's:\", pool.conn_kw.get(\"ssl_context\") is ad.user_ctx, \"| is module preloaded:\", pool.conn_kw.get(\"ssl_context\") is A._preloaded_ssl_context)\nEOF\ncd .. && PYTHONPATH=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone/src ../clone-cache/venv/bin/python exp/exp.py 2>&1 | tail -20",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone && PYTHONPATH=/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone/src timeout 280 ../clone-cache/venv/bin/python -m pytest tests/test_requests.py tests/test_adapters.py -k \"verify or ssl or cert or tls or adapter\" -p no:cacheprovider -q -x --no-header 2>&1 | tail -25"
+  ],
+  "workdirs": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work",
+    null,
+    null,
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work",
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work",
+    null,
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work/exp",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone-work/exp"
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code/references/targets.md",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code/references/rubric.md",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code/references/output.md",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/home/.claude/skills/review-code/references/verification.md"
+  ],
+  "diff_commands": [],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/CN=client-A",
+    "/CN=localhost"
+  ],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-064"
+  ]
+}

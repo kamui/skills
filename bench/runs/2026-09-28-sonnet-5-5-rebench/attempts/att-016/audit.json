@@ -1,0 +1,37 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-016-clone/70debb3a-48b2-458d-88c9-380c70616da8/subagents/agent-a7c043f8c53ad6a22.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-016-clone/70debb3a-48b2-458d-88c9-380c70616da8.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat packages/integrations/vercel/src/serverless/entrypoint.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016/clone/packages/integrations/vercel && grep -rn \"ASTRO_PATH_PARAM\\|ASTRO_PATH_HEADER\\|x-vercel-isr\\|__astro_path\" src test/*.js | head -40; ls test | head -50; git log --oneline -3 -- src/serverless/entrypoint.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016/clone/packages/integrations/vercel && sed -n 40,70p src/index.ts; sed -n 690,730p src/index.ts; cat test/path-override-security.test.js; git show 335a20416 --stat | head -20",
+    "git show 335a20416 -- packages/integrations/vercel/src | head -60; grep -rn \"x-vercel-isr\" --include=*.ts --include=*.js --include=*.md packages/integrations/vercel -l 2>/dev/null | grep -v node_modules | head; grep -n -i \"format\\|biome\\|prettier\\|changeset\" AGENTS.md | head",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016/clone/packages/integrations/vercel && cat test/isr.test.js | head -60; grep -n \"isr\\|ISR\" src/index.ts | head -40"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-016"
+  ]
+}

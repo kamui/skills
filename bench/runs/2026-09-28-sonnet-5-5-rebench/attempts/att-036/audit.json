@@ -1,0 +1,44 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-036/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-036-clone/88fc2eb5-471c-4b46-b8e5-11cb27e7cef4/subagents/agent-ad9488e2f8e634231.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-036/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-036-clone/88fc2eb5-471c-4b46-b8e5-11cb27e7cef4.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head && cat bokehjs/src/lib/models/widgets/date_picker.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-036/clone-work 2>/dev/null || cd /tmp; cat > t.js <<'E'\nfunction u(date){const o=date.getTimezoneOffset()*60000;date.setTime(date.getTime()-o);const s=date.toISOString().substr(0,10).split('-');return new Date(+s[0],+s[1]-1,+s[2]).toDateString()}\nfor (const v of [1568937600000,\"Mon Sep 16 2019\"]) console.log(process.env.TZ,v,u(new Date(v)))\nE\nfor tz in UTC America/Los_Angeles Europe/Paris Pacific/Auckland; do TZ=$tz node t.js; done"
+  ],
+  "workdirs": [
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [
+    "/tmp/<<E",
+    "/tmp/>",
+    "/tmp/America/Los_Angeles",
+    "/tmp/Europe/Paris",
+    "/tmp/Pacific/Auckland",
+    "/tmp/TZ=$tz",
+    "/tmp/UTC",
+    "/tmp/for",
+    "/tmp/in",
+    "/tmp/node",
+    "/tmp/t.js",
+    "/tmp/tz"
+  ],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-036/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-036"
+  ]
+}

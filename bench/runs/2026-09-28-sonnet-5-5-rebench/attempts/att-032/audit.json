@@ -1,0 +1,46 @@
+{
+  "transcripts": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-032-clone/3005052a-3b11-4c29-b68b-2445f718fd44/subagents/agent-a9ef81f9e0c9c70a8.jsonl",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/home/.claude/projects/-home-jack--t3-bench-runs-2026-09-28-sonnet-5-5-rebench-att-032-clone/3005052a-3b11-4c29-b68b-2445f718fd44.jsonl"
+  ],
+  "prompt_headers": [
+    "`high effort \u2192 8 inline angles \u2192 dedup (no verify) \u2192 \u226410 findings`"
+  ],
+  "report_findings_calls": 0,
+  "commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx && cat packages/react/src/field/control/FieldControl.tsx",
+    "cat packages/react/src/field/root/useFieldValidation.ts | head -150; grep -rn \"useValueChanged\" packages/react/src --include=*.tsx --include=*.ts -l | head -20",
+    "cat packages/react/src/internals/useValueChanged.ts; sed -n 150,420p packages/react/src/field/root/useFieldValidation.ts; cat packages/react/src/internals/field-register-control/useRegisterFieldControl.ts",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/clone/packages/react/src && grep -rn \"initialValue\\|registerFieldControl\\|\\.value\" field/root/FieldRoot.tsx internals/field-register-control/useFieldControlRegistration.ts | head -60; grep -rn \"useValueChanged\" --include=*.tsx -A12 number-field/root/NumberFieldRoot.tsx | head -60",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/clone/packages/react/src && cat internals/field-register-control/useFieldControlRegistration.ts; grep -rn \"useValueChanged\" . | head -20; git diff main...review-head -- field/control/FieldControl.test.tsx | head -300",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/clone/packages/react/src && grep -n \"setDirty\\|markedDirtyRef\\|setFilled\\|shouldValidateOnChange\" -B2 -A8 field/root/useFieldRootState.ts 2>/dev/null | head -80; ls field/root; sed -n 95,140p number-field/input/NumberFieldInput.tsx",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/clone/packages/react/src && grep -n \"setDirty\\|markedDirtyRef\\|setFilled\\|Dirty\" field/root/FieldRoot.tsx internals/field-root-context/*.ts* | head -30; grep -rn \"setDirty\" checkbox/root/CheckboxRoot.tsx slider/root/SliderRoot.tsx -B3 -A6 | head -60",
+    "sed -n 195,260p packages/react/src/field/control/FieldControl.test.tsx; TZ=UTC VITEST_ENV=jsdom ./node_modules/.bin/vitest run --project @base-ui/react packages/react/src/field packages/react/src/form 2>&1 | tail -15",
+    "cd /home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/clone/packages/react/src && sed -n 45,80p field/root/FieldRoot.tsx"
+  ],
+  "workdirs": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "unpaired_workdirs": [],
+  "file_tool_paths": [],
+  "diff_commands": [
+    "git diff main...review-head -- packages/react/src/field/control/FieldControl.tsx ",
+    "git diff main...review-head -- field/control/FieldControl.test.tsx "
+  ],
+  "guidance_probes": [],
+  "absent_outside_paths": [],
+  "violations": [],
+  "confined_requests": [],
+  "allowed_roots": [
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032/clone",
+    "/home/jack/.t3/bench-runs/2026-09-28-sonnet-5-5-rebench/att-032"
+  ]
+}
