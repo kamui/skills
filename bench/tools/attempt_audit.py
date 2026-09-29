@@ -89,6 +89,7 @@ BUILTIN_HEADER = re.compile(r"^`(high effort|medium effort|low effort|minimal pr
 CODEX_RUBRIC = "You are acting as a reviewer for a proposed code change"
 DIFF_CMD = re.compile(r"git\s+diff\s+[^;&|\n]*")
 DATA_SINK = re.compile(r"(?:^|&&|\|\||;)\s*(?:cat|tee)\b[^|;&<]*<<-?\s*(['\"]?)\w+\1[^|;&]*$")
+BINDING = re.compile(r"(?<![^\s;&|(])([A-Za-z_]\w*)=")
 ASSIGN = re.compile(r"(?<![\w$])([A-Za-z_]\w*)=(?:\$\(git rev-parse (?:--[\w-]+ )*'?([\w./@{}~^-]+)'?\)|'?([\w./@{}~^-]+)'?)(?=[\s;&|)]|$)")
 GUIDANCE = ("AGENTS.md", "AGENTS.override.md", "CLAUDE.md", "CLAUDE.local.md")
 CODEX_CMD = re.compile(r'cmd"?:\s*"((?:[^"\\]|\\.)*)"')
@@ -100,8 +101,12 @@ CODEX_WORKDIR = re.compile(r'(?:workdir|cwd|working_directory)"?\s*:\s*"((?:[^"\
 
 def without_written_data(cmd: str) -> str:
     """``cmd`` with the body dropped from each heredoc that ``cat`` or ``tee`` only writes to a file,
-    since that body is data and no command reads the paths it names."""
-    return HEREDOC.sub(lambda m: m.group(1) if DATA_SINK.search(m.group(1)) else m.group(0), cmd)
+    since that body is data and no command reads the paths it names, unless an unquoted delimiter
+    lets the shell run a command substitution in it."""
+    def drop(m):
+        substitutes = not m.group(2) and re.search(r"\$\(|`", m.group(0)[len(m.group(1)):])
+        return m.group(1) if DATA_SINK.search(m.group(1)) and not substitutes else m.group(0)
+    return HEREDOC.sub(drop, cmd)
 
 
 def commands_only(cmd: str) -> str:
@@ -481,11 +486,18 @@ def audit_codex(attempt: Path, roots):
 
 
 def expand_refs(command: str) -> str:
-    """Substitute `$NAME` and `${NAME}` bound in the same command to a ref literal or `$(git rev-parse <ref>)`,
-    so a diff range spelled through shell variables is recorded as the refs it names."""
-    for name, parsed, literal in ASSIGN.findall(command):
-        command = re.sub(r"\$\{?" + name + r"\}?(?!\w)", lambda _match: parsed or literal, command)
-    return command
+    """Substitute `$NAME` and `${NAME}` bound earlier in the same command to a ref literal or `$(git rev-parse <ref>)`,
+    so a diff range spelled through shell variables is recorded as the refs it names. Each use takes the
+    binding that most recently precedes it, and stays unexpanded when that binding is not a ref."""
+    bindings = {}
+    for m in BINDING.finditer(unquoted(command)):
+        ref = ASSIGN.match(command, m.start())
+        bindings.setdefault(m.group(1), []).append((m.start(), ref and (ref.group(2) or ref.group(3))))
+
+    def expand(use):
+        earlier = [ref for at, ref in bindings.get(use.group(1), []) if at < use.start()]
+        return earlier[-1] if earlier and earlier[-1] else use.group(0)
+    return re.sub(r"\$\{?([A-Za-z_]\w*)\}?(?!\w)", expand, command)
 
 
 def main() -> int:
