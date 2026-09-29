@@ -93,6 +93,15 @@ class AttemptAudit(unittest.TestCase):
     def exec_call(self, code: str) -> dict:
         return {"type": "response_item", "payload": {"type": "custom_tool_call", "name": "exec", "input": code}}
 
+    def test_diff_ranges_bound_to_shell_variables_are_recorded_as_their_refs(self):
+        bound = ("B=$(git rev-parse --verify 'main^{commit}') && H=$(git rev-parse --verify 'review-head^{commit}') "
+                 "&& git diff --stat $B...$H && git log $B..$H")
+        blocks = [{"type": "tool_use", "name": "Bash", "input": {"command": c}}
+                  for c in (bound, "X=main; git diff ${X}...HEAD", "git diff $B...$H")]
+        done = self.audit("review-code", [{"type": "assistant", "message": {"content": blocks}}])
+        self.assertEqual(json.loads(done.stdout)["diff_commands"],
+                         ["git diff --stat main^{commit}...review-head^{commit} ", "git diff main...HEAD", "git diff $B...$H"])
+
     def test_in_clone_commands_pass(self):
         rc, violations = self.bash("cat src/a.py", "cd src && cat ../README.md", "git diff main...HEAD -- src",
                                    "grep -rn 'x|y' . | head", "cd src && sed -n '1,5p' a.py")

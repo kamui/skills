@@ -88,6 +88,7 @@ HEREDOC = re.compile(r"^([^\n]*<<-?\s*(['\"]?)(\w+)\2[^\n]*)\n.*?(?:\n[ \t]*\3[ 
 BUILTIN_HEADER = re.compile(r"^`(high effort|medium effort|low effort|minimal prompt)[^`]*`$", re.M)
 CODEX_RUBRIC = "You are acting as a reviewer for a proposed code change"
 DIFF_CMD = re.compile(r"git\s+diff\s+[^;&|\n]*")
+ASSIGN = re.compile(r"(?<![\w$])([A-Za-z_]\w*)=(?:\$\(git rev-parse (?:--[\w-]+ )*'?([\w./@{}~^-]+)'?\)|'?([\w./@{}~^-]+)'?)(?=[\s;&|)]|$)")
 GUIDANCE = ("AGENTS.md", "AGENTS.override.md", "CLAUDE.md", "CLAUDE.local.md")
 CODEX_CMD = re.compile(r'cmd"?:\s*"((?:[^"\\]|\\.)*)"')
 # One exec_command object literal whose values are strings or bare scalars, so its cmd and workdir pair up.
@@ -472,6 +473,14 @@ def audit_codex(attempt: Path, roots):
     return files, commands, stray, rubric, texts
 
 
+def expand_refs(command: str) -> str:
+    """Substitute `$NAME` and `${NAME}` bound in the same command to a ref literal or `$(git rev-parse <ref>)`,
+    so a diff range spelled through shell variables is recorded as the refs it names."""
+    for name, parsed, literal in ASSIGN.findall(command):
+        command = re.sub(r"\$\{?" + name + r"\}?(?!\w)", lambda _match: parsed or literal, command)
+    return command
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--arm", required=True, choices=["claude-builtin", "codex", "review-code"])
@@ -562,7 +571,7 @@ def main() -> int:
                 (requests if ENFORCED and hook_denied else violations).append(f"file tool read outside allowed roots: {p}")
             else:
                 absent.append(p)
-    diffs = [m.group(0) for cmd in commands for m in DIFF_CMD.finditer(cmd)]
+    diffs = [m.group(0) for cmd in commands for m in DIFF_CMD.finditer(expand_refs(cmd))]
     report.update({"commands": commands, "workdirs": workdirs, "unpaired_workdirs": stray, "file_tool_paths": [p for p, _ in reads], "diff_commands": diffs, "guidance_probes": sorted(set(probes)),
                    "absent_outside_paths": sorted(set(absent)),
                    "violations": violations, "confined_requests": requests, "allowed_roots": roots})
