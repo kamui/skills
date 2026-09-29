@@ -49,7 +49,7 @@ direct visibility into their finders' model parameter.
 | | v2 | v2a | v5 | v5a |
 | --- | --- | --- | --- | --- |
 | Line | Panel | Panel, patched | Skeptic | Skeptic, patched |
-| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `legacy reviewer` | `code-review-publish-5a` |
+| Skill directory | `snapshot-path-omitted` | `code-review-deep-publish` | `legacy reviewer` | `snapshot-path-omitted` |
 | Pinned commit | `3c93b42` | `87c68a9` | `571f31d` | `c5f76df` |
 | Architecture | 2 axis finders + verifier | 2 axis finders + verifier | integrated reviewer + verifier | integrated reviewer + verifier |
 | Agents spawned | 3 | 3 | 1 | 1 |

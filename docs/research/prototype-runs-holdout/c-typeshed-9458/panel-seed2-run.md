@@ -135,7 +135,7 @@ Wall clock start: 2026-09-05T01:11Z (UTC, per `date -u`).
 
 - **Target:** (c) `python/typeshed#9458` — "Bump redis to 4.4.0"
 - **Arm:** v2a (Panel line, with merged fixes) — skill `code-review-deep-publish`, pinned at
-  `t3code/prototype-code-review-publish-2a dd3bcfe (workflow=v2a-1 with #53-#58 merged)`
+  `snapshot-path-omitted dd3bcfe (workflow=v2a-1 with #53-#58 merged)`
 - **Seed:** 2 (independent replicate of the same target/arm; nothing shared with other seeds except
   the packet and the mirror)
 - **Model:** I (the reviewer / orchestrator for this cell) ran on `claude-sonnet-5`. Every sub-agent
@@ -662,7 +662,7 @@ I set `coverage=incomplete` in this trailer (rather than `complete`) to honestly
 Requirements axis's twice-failed shape validation per SKILL.md § 2's explicit rule, even though the
 human-facing status line is `Changes Requested` regardless (ladder step 1 short-circuits before the
 coverage step would matter). `workflow=v2a-1` is taken from the dispatch's own pin
-("`t3code/prototype-code-review-publish-2a dd3bcfe (workflow=v2a-1 with #53-#58 merged)`").
+("`snapshot-path-omitted dd3bcfe (workflow=v2a-1 with #53-#58 merged)`").
 
 **Full rendered payload:** `/tmp/holdout/reports/c/panel-seed2-payload.md` — summary body (with the
 Mode line), the findings index, the Observations/Open-questions/Disputed sections, the run trailer,

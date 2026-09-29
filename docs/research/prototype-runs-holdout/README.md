@@ -1028,7 +1028,7 @@ lower-effort arm checks.
 | Row label | Skill | Snapshot | What differs |
 | --- | --- | --- | --- |
 | `v5b` | `legacy reviewer`, `workflow=v5b-1` | `main` at the commit recorded in [comparison-data.md](comparison-data.md#comparison-boundaries) | the advancing line |
-| `v2b` | `code-review-deep-publish` | `t3code/prototype-code-review-publish-2a` at the recorded commit | the Panel comparator; runs as `v2b` only once #59 has bumped it, otherwise as `v2a` with its merged fixes and the row label says which |
+| `v2b` | `code-review-deep-publish` | `snapshot-path-omitted` at the recorded commit | the Panel comparator; runs as `v2b` only once #59 has bumped it, otherwise as `v2a` with its merged fixes and the row label says which |
 | `v5b-noverify` | `legacy reviewer` with verification disabled | the `v5b` snapshot with `references/verifier.md` deleted | the v3 ablation; see below |
 | `v5b-effort-medium` | `legacy reviewer`, primary at effort `medium` | the `v5b` snapshot | #68's arm, targets (b) and (c) only; see [Lower-effort primary arm](#lower-effort-primary-arm) |
 

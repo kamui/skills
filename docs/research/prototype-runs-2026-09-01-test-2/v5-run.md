@@ -1,4 +1,4 @@
-# v5 run — `code-review-publish-5` against `redis/redis#15680`
+# v5 run — `snapshot-path-omitted` against `redis/redis#15680`
 
 > **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
@@ -8,7 +8,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5` (PR #17, workflow `v5-2`) |
+| Skill | `snapshot-path-omitted` (PR #17, workflow `v5-2`) |
 | Architecture | 1 integrated reviewer + consequence-triggered batched fresh-context verifier (not triggered) |
 | Agents spawned | 1 (no verifier — zero survivors) |
 | Total sub-agent tokens | unavailable from this harness |
@@ -24,7 +24,7 @@
 
 ## Full reviewer report (verbatim)
 
-# Review report — redis/redis#15680 (prototype `code-review-publish-5`, calibrated hybrid v5)
+# Review report — redis/redis#15680 (prototype `snapshot-path-omitted`, calibrated hybrid v5)
 
 ### Metadata
 

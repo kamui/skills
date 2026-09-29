@@ -256,7 +256,7 @@ Only the skill under test:
 | | v2 (PR #14) | v2a (PR #18) | v5 (PR #17) | v5a (PR #19) |
 | --- | --- | --- | --- | --- |
 | Line | Panel | Panel, patched | Skeptic | Skeptic, patched |
-| Skill directory | `code-review-publish-2` | `code-review-deep-publish` | `legacy reviewer` | `code-review-publish-5a` |
+| Skill directory | `snapshot-path-omitted` | `code-review-deep-publish` | `legacy reviewer` | `snapshot-path-omitted` |
 | Pinned commit | `3c93b42` | `87c68a9` | `571f31d` (skill identical to `16a3504`) | `c5f76df` |
 | Architecture | axis finders in parallel + fresh-context verifier when candidates exist | same, plus disposition ledger, question routing, and doc-sync drift sweep | 1 integrated reviewer + consequence-triggered fresh-context verifier | same, plus fix-sufficiency check, question channel, clean-verdict verifier, repo-wide drift sweep |
 

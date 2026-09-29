@@ -96,8 +96,8 @@ pinning** — record whatever you actually find, do not trust this table.
 | Nickname | What it is | Where to snapshot it from | Pin as of 2026-09-03 |
 | --- | --- | --- | --- |
 | v1 | Legacy two-axis reviewer, the Matt Pocock `code-review` lineage. Superseded; kept for historical comparison | snapshot path omitted | historical pin |
-| v2 | Panel line, original | `skills/code-review-publish-2` on `t3code/research-agentic-code-review-skills-1` (PR #14) | `3c93b42` |
-| v2a *(default)* | Panel line, patched | `skills/code-review-deep-publish` on `t3code/prototype-code-review-publish-2a` (PR #18) | `87c68a9` |
+| v2 | Panel line, original | `snapshot-path-omitted` on `t3code/research-agentic-code-review-skills-1` (PR #14) | `3c93b42` |
+| v2a *(default)* | Panel line, patched | `skills/code-review-deep-publish` on `snapshot-path-omitted` (PR #18) | `87c68a9` |
 | v5 | Skeptic line, original. **No longer on `main`** — it was replaced, so pin it from history | historical source path omitted (the pre-swap tree) | `571f31d` |
 | v5a *(default)* | Skeptic line, patched. **was the shipping snapshot at the time** | snapshot path omitted | historical pin |
 | *(new version)* | *(what it changes)* | *(its skill dir / branch / PR)* | *(pin and record)* |
@@ -107,7 +107,7 @@ pinning** — record whatever you actually find, do not trust this table.
 
 - the promoted snapshot = **v5a**
 - the earlier two-axis snapshot = **v1**, not the old v5
-- `skills/code-review-publish-5a` **no longer exists**
+- `snapshot-path-omitted` **no longer exists**
 - **v5 is not present on `main` in any directory.** Pin it from `571f31d` if a test needs it.
 
 The promotion also renamed ids inside the skill (`SKILL.md`, `agents/openai.yaml`, and the two

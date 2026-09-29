@@ -129,7 +129,7 @@ Per agent:
 
 # Run report — target (c) `python/typeshed#9458`, arm v2a (Panel line), seed 1
 
-Skill: `code-review-deep-publish`, pinned at `t3code/prototype-code-review-publish-2a dd3bcfe (workflow=v2a-1 with #53-#58 merged)`, read from `/tmp/holdout/skills/panel/`.
+Skill: `code-review-deep-publish`, pinned at `snapshot-path-omitted dd3bcfe (workflow=v2a-1 with #53-#58 merged)`, read from `/tmp/holdout/skills/panel/`.
 
 Model: `claude-sonnet-5` for the reviewer (this context) and for every sub-agent (`model: "sonnet"` passed explicitly on every `Agent` call — see § Every sub-agent dispatch for verbatim confirmation from each transcript).
 
@@ -140,7 +140,7 @@ Wall clock: started reading the dispatch and skill snapshot; timestamps not sepa
 - **Target:** `python/typeshed#9458` — "Bump redis to 4.4.0", merged 2023-01-05T15:25:11Z.
 - **Arm:** v2a (Panel line, with merged fixes #53–#58) — `code-review-deep-publish`.
 - **Seed:** 1.
-- **Skill pin:** `t3code/prototype-code-review-publish-2a dd3bcfe`.
+- **Skill pin:** `snapshot-path-omitted dd3bcfe`.
 - **Run identity:** base ref `main`, base SHA (pinned run identity used throughout) `8365b1aaefd46d506ca0dfe73e9721da2d03c566` (= merge-base; the base SHA as recorded on the PR, `70025c372346288675437fc0bd273db84cc0b3d5`, is not reachable in this truncated clone and the packet directs review against the merge-base), head SHA `55dfb451101480275ae05f2f08d1a899a691a77d`, merge-base `8365b1aaefd46d506ca0dfe73e9721da2d03c566`. Repository canonical web URL: `https://github.com/python/typeshed`.
 - **Originating reference:** `python/typeshed#9329` ("[stubsabot] Bump redis to 4.4.0"), a closed, unmerged pull request that this PR's body closes with `Closes #9329`; per the packet, treated as the originating issue text (spec source). `issues=python/typeshed#9329`.
 - **Posting identity:** `kamui`, did not author the PR, no prior comments/reviews on it → ordinary first review by a third party, event `COMMENT`. Target is merged → retrospective review, publication disabled.

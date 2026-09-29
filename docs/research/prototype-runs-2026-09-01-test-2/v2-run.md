@@ -1,4 +1,4 @@
-# v2 run — `code-review-publish-2` against `redis/redis#15680`
+# v2 run — `snapshot-path-omitted` against `redis/redis#15680`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-2` (PR #14, at commit `f42f708`) |
+| Skill | `snapshot-path-omitted` (PR #14, at commit `f42f708`) |
 | Architecture | axis finders → 1 mandatory fresh-context verifier (skipped: finders returned no candidates) |
 | Originating issue | none → Requirements axis `Not applicable`, Code axis runs alone (per SKILL) |
 | Agents spawned | 1 (Code finder; no verifier) |

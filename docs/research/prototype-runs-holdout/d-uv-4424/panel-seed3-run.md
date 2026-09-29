@@ -112,7 +112,7 @@ full; see § 2 for the survivor list with verification detail, and the payload f
 - **Target:** `astral-sh/uv#4424` — "Expose `toolchain-preference` as a CLI and configuration file
   option".
 - **Arm:** v2a (Panel line, with merged fixes) — skill `code-review-deep-publish` pinned at
-  `t3code/prototype-code-review-publish-2a dd3bcfe` (workflow=v2a-1 with #53–#58 merged).
+  `snapshot-path-omitted dd3bcfe` (workflow=v2a-1 with #53–#58 merged).
 - **Seed:** 3 (independent replicate).
 - **Model:** I (the reviewer/orchestrator for this cell) ran on `claude-sonnet-5`. Every sub-agent
   I dispatched (two finders, one verifier) was launched with `model: "sonnet"` explicitly on the

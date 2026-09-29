@@ -8,7 +8,7 @@ dev-set caveat that applies to this run.
 
 | | |
 | --- | --- |
-| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `t3code/prototype-code-review-publish-2a`, pinned commit `87c68a9`) |
+| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `snapshot-path-omitted`, pinned commit `87c68a9`) |
 | Includes fixes | `326ef6f` "Require paired peer-contract sweeps"; `940aa2c` "Sweep every changed contract, on both axes" (DESIGN.md §C9) |
 | Architecture | 2 axis finders in parallel (Code, Requirements) → 1 mandatory fresh-context verifier |
 | Model | `claude-sonnet-5` on the orchestrator and all three sub-agents, **passed explicitly on every Agent call and verified afterwards** from the harness's sub-agent transcripts |
@@ -162,7 +162,7 @@ verdicts:
 
 | Field | Value |
 | --- | --- |
-| Skill under test | `code-review-deep-publish`, pinned commit `87c68a9` (branch `t3code/prototype-code-review-publish-2a`, PR #18 in `kamui/skills`), nickname **v2a** ("Panel line") |
+| Skill under test | `code-review-deep-publish`, pinned commit `87c68a9` (branch `snapshot-path-omitted`, PR #18 in `kamui/skills`), nickname **v2a** ("Panel line") |
 | Fixes baked in | `326ef6f` "Require paired peer-contract sweeps"; `940aa2c` "Sweep every changed contract, on both axes" |
 | Target | `tokio-rs/tokio#7757`, "rt: improve spawn_blocking scalability with sharded queue" |
 | Run identity | head `9de7950e59f8acea412600c2102ab592c419483a`; base ref `master`; base SHA / merge-base `43134f1e5784993eb4fb3863933d74ac9e28f598` (identical) |

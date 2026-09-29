@@ -9,7 +9,7 @@ dev-set caveat that applies to this run. The earlier same-day run under the pre-
 
 | | |
 | --- | --- |
-| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `t3code/prototype-code-review-publish-2a`, pinned commit `87c68a9`) |
+| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `snapshot-path-omitted`, pinned commit `87c68a9`) |
 | Includes fixes | `326ef6f` "Require paired peer-contract sweeps" (handoff 5) **and** `940aa2c` "Sweep every changed contract, on both axes" (DESIGN.md §C9, merged via PR #38 as `87c68a9`): the Requirements axis must write a changed-contract list before sorting requirements, run a paired repo-wide case-insensitive sweep per contract, return the list, and may not mark a requirement `Met` while a live stale peer exists; the Code axis gains a "Sync drift from a changed rule" section |
 | Architecture | 2 axis finders in parallel (Code, Requirements) → 1 mandatory fresh-context verifier |
 | Model | `claude-fable-5-1` on every agent (orchestrator, both finders, verifier), verified from the harness's sub-agent transcripts. **Run 1 ran on `claude-sonnet-5`**, so this run is not model-matched to the one it supersedes — see the addendum's regression watch |

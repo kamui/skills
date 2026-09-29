@@ -1,4 +1,4 @@
-# v2 run — `code-review-publish-2` against `kamui/shortlist#66`
+# v2 run — `snapshot-path-omitted` against `kamui/shortlist#66`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-2` (PR #14, at commit `f42f708`) |
+| Skill | `snapshot-path-omitted` (PR #14, at commit `f42f708`) |
 | Architecture | 2 axis finders in parallel → 1 mandatory fresh-context verifier |
 | Agents spawned | 3 |
 | **Total sub-agent tokens** | **253,712** |

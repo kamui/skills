@@ -142,7 +142,7 @@ anything written earlier.
 - **Target:** `astral-sh/uv#4424` — "Expose `toolchain-preference` as a CLI and configuration file
   option" (holdout target (d))
 - **Arm:** v2a (Panel line, with merged fixes) — skill `code-review-deep-publish`, pinned at
-  `t3code/prototype-code-review-publish-2a dd3bcfe` (workflow=v2a-1 with #53-#58 merged)
+  `snapshot-path-omitted dd3bcfe` (workflow=v2a-1 with #53-#58 merged)
 - **Seed:** 1
 - **Model:** `claude-sonnet-5` for the reviewer (me, this context) and for every sub-agent. Every
   `Agent` call below was dispatched with `model: "sonnet"` explicitly; each is stated per-dispatch

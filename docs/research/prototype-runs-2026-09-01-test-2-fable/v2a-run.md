@@ -8,7 +8,7 @@ dev-set caveat that applies to this run.
 
 | | |
 | --- | --- |
-| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `t3code/prototype-code-review-publish-2a`, pinned commit `87c68a9`) |
+| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `snapshot-path-omitted`, pinned commit `87c68a9`) |
 | Includes fixes | `326ef6f` "Require paired peer-contract sweeps" (handoff 5); `940aa2c` "Sweep every changed contract, on both axes" (DESIGN.md §C9) |
 | Architecture | 2 axis finders in parallel (Code, Requirements) → 1 mandatory fresh-context verifier |
 | Model | `claude-fable-5-1` on every agent (orchestrator, both finders, verifier), verified from the harness's sub-agent transcripts — not the Sonnet 5 tier intended; see the addendum |

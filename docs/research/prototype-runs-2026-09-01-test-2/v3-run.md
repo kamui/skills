@@ -1,4 +1,4 @@
-# v3 run — `code-review-publish-3` against `redis/redis#15680`
+# v3 run — `snapshot-path-omitted` against `redis/redis#15680`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-3` (PR #13) |
+| Skill | `snapshot-path-omitted` (PR #13) |
 | Architecture | 1 integrated reviewer, self-falsification; conditional batched verifier (not triggered) |
 | Agents spawned | 1 (no verifier — zero survivors) |
 | Total sub-agent tokens | unavailable from this harness |
@@ -22,7 +22,7 @@
 
 ## Full reviewer report (verbatim)
 
-# Review report — redis/redis#15680 (code-review-publish-3 prototype run)
+# Review report — redis/redis#15680 (snapshot-path-omitted prototype run)
 
 ### Metadata
 

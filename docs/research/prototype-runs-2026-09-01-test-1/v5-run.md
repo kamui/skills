@@ -1,4 +1,4 @@
-# v5 run — `code-review-publish-5` against `kamui/shortlist#66`
+# v5 run — `snapshot-path-omitted` against `kamui/shortlist#66`
 
 > **Historical note:** The skill name and snapshot path are omitted from this archive. PR #42 later replaced v5 with v5a; this record retains its original data. Pin v5 from `571f31d` for a historical rerun.
 
@@ -8,7 +8,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5` ([PR #17](https://github.com/kamui/skills/pull/17), branch `t3code/prototype-code-review-publish-5`, workflow `v5-2`) |
+| Skill | `snapshot-path-omitted` ([PR #17](https://github.com/kamui/skills/pull/17), branch `snapshot-path-omitted`, workflow `v5-2`) |
 | Architecture | 1 integrated reviewer + consequence-triggered batched fresh-context verifier |
 | Agents spawned | 2 (verifier invoked) |
 | Total sub-agent tokens | **174,563** — 128,013 reviewer; 46,550 verifier |

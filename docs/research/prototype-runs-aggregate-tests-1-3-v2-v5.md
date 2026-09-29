@@ -11,8 +11,8 @@
 > workflow and snapshot path are omitted from this archive. **PR #42 (2026-09-03) later replaced v5 with v5a.**
 > This archive retains the run data; pin v5 from `571f31d` for a historical rerun.
 
-**2026-09-01.** Synthesis of the three controlled comparisons of `code-review-publish-2` through
-`code-review-publish-5`:
+**2026-09-01.** Synthesis of the three controlled comparisons of `snapshot-path-omitted` through
+`snapshot-path-omitted`:
 
 - [test 1](prototype-runs-2026-09-01-test-1/) — `kamui/shortlist#66`, a documentation/schema PR in
   the reviewer author's own repository, with an originating issue and two real doc-sync drifts
@@ -329,7 +329,7 @@ default shape.
 
 ### Advance v5 as the base
 
-**Carry `code-review-publish-5` forward as the winning prototype.** The case, on holdout evidence
+**Carry `snapshot-path-omitted` forward as the winning prototype.** The case, on holdout evidence
 (tests 2 and 3, which its design never saw): it is the only architecture whose verification layer
 has demonstrated action recalibration without finding erasure; it replicated the hardest true
 positive blind and cheaply; its calibration matched the defensible band everywhere; its habits

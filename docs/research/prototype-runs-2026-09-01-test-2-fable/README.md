@@ -22,7 +22,7 @@ these columns against the original GLM-5.3-Flash round or against test 1's Sonne
 ## Files
 
 - [`v2a-run.md`](v2a-run.md) — `code-review-deep-publish`, two axis finders + mandatory verifier
-- [`v5a-run.md`](v5a-run.md) — `code-review-publish-5a`, integrated reviewer + clean-verdict and
+- [`v5a-run.md`](v5a-run.md) — `snapshot-path-omitted`, integrated reviewer + clean-verdict and
   follow-up verifier batches
 - [`addendum-2026-09-02.md`](addendum-2026-09-02.md) — run conditions, model verification, packet
   reconstruction, mirror truncation, side-by-side table, finding-level agreement, regression watch

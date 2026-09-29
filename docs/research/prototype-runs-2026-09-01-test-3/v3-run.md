@@ -1,4 +1,4 @@
-# v3 run — `code-review-publish-3` against `tokio-rs/tokio#7757`
+# v3 run — `snapshot-path-omitted` against `tokio-rs/tokio#7757`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-3` (PR #13) |
+| Skill | `snapshot-path-omitted` (PR #13) |
 | Architecture | One tool-using reviewer (frequent path) did phases 1–3 candidate generation and falsification directly; per SKILL.md's conditional-verifier rule ("use at most one batched independent verifier only for a high-risk change... or high-impact candidate whose proof remains difficult"), one batched fresh-context verifier subagent was spawned to falsify the two surviving private-record candidates before any were admitted as findings. No standards/spec fan-out, no multi-agent default — matches the design's "routine-run efficiency" priority. |
 | Agents spawned | 1 — a single batched verifier given both candidates (the idle-count/keep-alive-timeout race, and the `fastrand_n` cfg claim) with pointers to exact files/lines, asked to disprove each. It confirmed candidate 1 (with one framing refinement) and falsified candidate 2 by finding a module-level `#[cfg(any(feature = "rt", feature = "macros"))]` gate on `mod rand;` in `tokio/src/util/mod.rs` that made the `fastrand_n`-level cfg clause moot — a fact I had missed. |
 | Total sub-agent tokens | subagent_tokens: 66414 (reported by the harness for the verifier run) |

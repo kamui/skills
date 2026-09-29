@@ -1,4 +1,4 @@
-# v5a run — `code-review-publish-5a` against `redis/redis#15680`
+# v5a run — `snapshot-path-omitted` against `redis/redis#15680`
 
 **2026-09-02.** Data only. Not published to the PR. See
 [`addendum-2026-09-02.md`](addendum-2026-09-02.md) for run conditions, model/harness, and the
@@ -8,7 +8,7 @@ dev-set caveat that applies to this run.
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5a` (research nickname **v5a**, "Skeptic line"; branch `t3code/prototype-code-review-publish-5a`, pinned commit `c5f76df`, workflow id `v5a-1`) |
+| Skill | `snapshot-path-omitted` (research nickname **v5a**, "Skeptic line"; branch `snapshot-path-omitted`, pinned commit `c5f76df`, workflow id `v5a-1`) |
 | Includes fix | `ff94971` "Require repo-wide peer-set search for drift candidates" (handoff 6) |
 | Architecture | 1 integrated reviewer + consequence-triggered fresh-context verification; **2** verifier sub-agents spawned this run (clean-verdict batch, then one follow-up candidate batch) |
 | Model | `claude-fable-5-1` on the primary and both verifiers, except the primary's final 11 turns (report assembly only), which ran on `claude-opus-5` after its last resume. Verified from the harness's sub-agent transcripts — not the Sonnet 5 tier intended; see the addendum |
@@ -170,7 +170,7 @@ The primary's complete report, verbatim, including both verifier prompts and bot
 
 | Field | Value |
 | --- | --- |
-| Skill | `code-review-publish-5a` (v5a), pinned commit `c5f76df`, workflow identifier `v5a-1` |
+| Skill | `snapshot-path-omitted` (v5a), pinned commit `c5f76df`, workflow identifier `v5a-1` |
 | Architecture | Single integrated reviewer, no mandatory fan-out. Two fresh-context sub-agents spawned, both `general-purpose` |
 | Sub-agent 1 | **Clean-verdict batch (G3)**. Trigger: zero surviving candidates on a failover / data-integrity surface. Verdict: `clean verdict stands` + one observation aside |
 | Sub-agent 2 | **Follow-up candidate batch (N3)**. Trigger: a late candidate derived from sub-agent 1's aside reached render eligibility as a `must-fix`, security/data-loss-class `invariant` candidate. Verdict: `confirmed` |

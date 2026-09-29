@@ -1,4 +1,4 @@
-# v2 run — `code-review-publish-2` against `tokio-rs/tokio#7757`
+# v2 run — `snapshot-path-omitted` against `tokio-rs/tokio#7757`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-2` (PR #14) |
+| Skill | `snapshot-path-omitted` (PR #14) |
 | Architecture | Two axis finders (Code, Requirements) spawned in parallel, sub-agent per axis → one fresh-context verifier spawned for the Code axis's 2 candidates → orchestrator assembles and would-publish one review. Full four-role design as written; no fan-out beyond the mandated one-finder-per-axis. |
 | Agents spawned | 3 — Code-axis finder (general-purpose sub-agent), Requirements-axis finder (general-purpose sub-agent, run in parallel with the first), fresh-context verifier (general-purpose sub-agent, spawned after both finders returned, given only claims/anchors/triggers, not `support`) |
 | Total sub-agent tokens | 116,441 (Code finder) + 60,193 (Requirements finder) + 51,300 (verifier) = **227,934** self-reported subagent tokens (orchestrator-level context not separately metered) |

@@ -16,7 +16,7 @@ dev-set caveat that applies to this run.
 
 | | |
 | --- | --- |
-| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `t3code/prototype-code-review-publish-2a`, pinned commit `5db5903`) |
+| Skill | `code-review-deep-publish` (research nickname **v2a**, "Panel line"; [PR #18](https://github.com/kamui/skills/pull/18), branch `snapshot-path-omitted`, pinned commit `5db5903`) |
 | Includes fix | `326ef6f` "Require paired peer-contract sweeps" (handoff 5's fix — the Requirements axis must now search both the new term and a surviving base-contract phrase before marking a vocabulary/enum requirement `Met`) |
 | Architecture | 2 axis finders in parallel (Code, Requirements) → 1 mandatory fresh-context verifier |
 | Model | `claude-sonnet-5` on every agent, verified from the harness's sub-agent transcripts |

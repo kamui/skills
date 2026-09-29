@@ -1,4 +1,4 @@
-# v5a run — `code-review-publish-5a` against `redis/redis#15680` (Sonnet 5)
+# v5a run — `snapshot-path-omitted` against `redis/redis#15680` (Sonnet 5)
 
 **2026-09-03.** Data only. Not published to the PR. This run replaces the 2026-09-02 Fable 5.1 run
 held in [`../prototype-runs-2026-09-01-test-2-fable/`](../prototype-runs-2026-09-01-test-2-fable/).
@@ -9,7 +9,7 @@ dev-set caveat.
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5a` (**v5a**, "Skeptic line"), pinned `c5f76df` |
+| Skill | `snapshot-path-omitted` (**v5a**, "Skeptic line"), pinned `c5f76df` |
 | Model | `claude-sonnet-5` on the primary and on the verifier, passed explicitly and verified from the harness transcripts |
 | Agents spawned | 2 (primary + clean-verdict verifier) |
 | Sub-agent tokens | primary 188,196 (71 tool uses, 1,330,564 ms) |
@@ -66,7 +66,7 @@ The primary's complete report, verbatim, including the verifier's exact prompt a
 
 | Field | Value |
 | --- | --- |
-| Skill | `code-review-publish-5a` ("v5a", Skeptic line), pinned at commit `c5f76df` on `t3code/prototype-code-review-publish-5a` (`kamui/skills`); staged standalone at `/tmp/handoff3/skill-v5a/` |
+| Skill | `snapshot-path-omitted` ("v5a", Skeptic line), pinned at commit `c5f76df` on `snapshot-path-omitted` (`kamui/skills`); staged standalone at `/tmp/handoff3/skill-v5a/` |
 | Workflow identifier | `v5a-1` (per `references/output-contract.md` and `validate_review.py`'s `WORKFLOW` constant) |
 | Target | `redis/redis` PR #15680, "Prevent data loss after cross-shard replica migration"; base `unstable`@`065d397030712fe216e795720ae0affd3211212c`; head `c54fa4184e7db1ea30c91916f6c0aeb12b5c3f61`; merge-base = base SHA |
 | Architecture | Single integrated reviewer, no mandatory fan-out for the frequent path. One sub-agent was spawned: a fresh-context **clean-verdict verifier** (G3 trigger — see below). No candidate-mode verifier batch was needed (no `must-fix`/security/data-loss/destructive-migration/compatibility-break candidate survived falsification). |

@@ -1,4 +1,4 @@
-# v3 run — `code-review-publish-3` against `kamui/shortlist#66`
+# v3 run — `snapshot-path-omitted` against `kamui/shortlist#66`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-3` (PR #13, branch `t3code/prototype-code-review-publish-3`) |
+| Skill | `snapshot-path-omitted` (PR #13, branch `snapshot-path-omitted`) |
 | Architecture | 1 integrated tool-using reviewer, self-falsification, no fan-out |
 | Agents spawned | 1 |
 | **Total sub-agent tokens** | **110,630** |

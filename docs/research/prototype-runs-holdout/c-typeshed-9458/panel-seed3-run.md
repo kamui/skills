@@ -134,7 +134,7 @@ Review payload (rendered, not posted): [`/tmp/holdout/reports/c/panel-seed3-payl
 ## 1. Metadata
 
 - **Target**: (c) `python/typeshed#9458` — "Bump redis to 4.4.0", merged 2023-01-05T15:25:11Z.
-- **Arm**: v2a (Panel line, with merged fixes) — skill `code-review-deep-publish` pinned at `t3code/prototype-code-review-publish-2a dd3bcfe` (workflow=v2a-1, #53-#58 merged).
+- **Arm**: v2a (Panel line, with merged fixes) — skill `code-review-deep-publish` pinned at `snapshot-path-omitted dd3bcfe` (workflow=v2a-1, #53-#58 merged).
 - **Seed**: 3.
 - **Model**: I (the reviewer/orchestrator, this context) ran as `claude-sonnet-5`. Every sub-agent I dispatched was given `model: "sonnet"` explicitly on the `Agent` call, and each one's own report states it ran as `claude-sonnet-5`:
   - Code-axis finder — `claude-sonnet-5` (confirmed in its own report header).

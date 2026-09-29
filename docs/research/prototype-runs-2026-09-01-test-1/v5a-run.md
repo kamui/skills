@@ -1,4 +1,4 @@
-# v5a run — `code-review-publish-5a` against `kamui/shortlist#66`
+# v5a run — `snapshot-path-omitted` against `kamui/shortlist#66`
 
 **2026-09-02.** Data only. Not published to the PR. See
 [`addendum-2026-09-02.md`](addendum-2026-09-02.md) for run conditions, model/harness, and the
@@ -8,7 +8,7 @@ dev-set caveat that applies to this run.
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5a` ([PR #19](https://github.com/kamui/skills/pull/19), branch `t3code/prototype-code-review-publish-5a`, pinned commit `c5f76df`, `workflow=v5a-1`) |
+| Skill | `snapshot-path-omitted` ([PR #19](https://github.com/kamui/skills/pull/19), branch `snapshot-path-omitted`, pinned commit `c5f76df`, `workflow=v5a-1`) |
 | Includes fix | `ff94971` "Require repo-wide peer-set search for drift candidates" (handoff 6's fix — the sync-drift paragraph now requires a repo-wide, case-insensitive peer-set sweep on both old wording and new vocabulary before comparing peers) |
 | Architecture | 1 integrated reviewer + consequence-triggered fresh-context verifier |
 | Agents spawned | 1 (verifier invoked — sole candidate proposed `must-fix`, which is mandatory) |

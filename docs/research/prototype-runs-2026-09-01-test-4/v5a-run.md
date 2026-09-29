@@ -1,4 +1,4 @@
-# v5a run — `code-review-publish-5a` against `microsoft/playwright#29698`
+# v5a run — `snapshot-path-omitted` against `microsoft/playwright#29698`
 
 **2026-09-03.** Data only. Not published to the PR. See [`README.md`](README.md) for the
 pinned run identity, the ground truth, and the conditions held constant across all four runs.
@@ -12,7 +12,7 @@ pinned run identity, the ground truth, and the conditions held constant across a
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5a`, snapshot `/tmp/handoff4/skill-v5a/skills/code-review-publish-5a/` (workflow id `v5a-1`) |
+| Skill | `snapshot-path-omitted`, snapshot `/tmp/handoff4/skill-v5a/snapshot-path-omitted/` (workflow id `v5a-1`) |
 | Architecture | SKILL.md as written: step 1 pinned by the packet (no re-resolution); step 2 built the private changed-file manifest and requirement ledger; step 3 ran as one integrated primary reviewer over the complete merge-base diff, falsifying every candidate in place, then dispatched exactly one candidate-mode verifier batch (one mandatory candidate) via `references/verifier.md`; step 4 skipped (no prior review/reply/trailer from the posting identity — first review); step 5 ran `scripts/validate_review.py` on the assembled payload (0 violations) before any write; step 6 (publish) executed only through "render the review exactly as it would be posted," per binding constraint 4 — no write attempted. |
 | Model | `sonnet` passed explicitly (`model: "sonnet"`) on the one `Agent` call made in this run (the verifier dispatch). No other sub-agents were spawned. |
 | Agents spawned | 1 — candidate-mode verifier, general-purpose agent type. |
@@ -42,9 +42,9 @@ This section is the complete, unsummarized primary-reviewer output. It is identi
 
 ```
 You are the independent verifier for one candidate finding from a static code review, per
-code-review-publish-5a's references/verifier.md, candidate mode. Read that file's "Verification
+snapshot-path-omitted's references/verifier.md, candidate mode. Read that file's "Verification
 task" and "Verdicts" sections as your authoritative instructions if you have access to it at
-/tmp/handoff4/skill-v5a/skills/code-review-publish-5a/references/verifier.md (read-only). You are
+/tmp/handoff4/skill-v5a/snapshot-path-omitted/references/verifier.md (read-only). You are
 NOT a second reviewer: do not search for unrelated findings, do not write anything, do not run any
 command against the repository.
 
@@ -236,7 +236,7 @@ None take a name/domain/path filter, so any cookie written into the context duri
    - `git log main..review-head -p --stat | head -50`
    - `git log main..review-head --format='%H %s%n%b' --`
    I did not read any history beyond the pinned head (`cb02d5ba126479dddb3ecbe32e8ead024ca5dd6b`).
-2. I did not read any `/tmp/handoff4/*` path other than `/tmp/handoff4/run-v5a` (the assigned repository clone) and `/tmp/handoff4/skill-v5a/skills/code-review-publish-5a/references/verifier.md`.
+2. I did not read any `/tmp/handoff4/*` path other than `/tmp/handoff4/run-v5a` (the assigned repository clone) and `/tmp/handoff4/skill-v5a/snapshot-path-omitted/references/verifier.md`.
 3. I made no writes anywhere and ran no repository commands other than read-only `git log`/`git diff`/`git branch` and file inspection (`cat`, `sed`, `grep`) — no build/test/lint/execute commands were run.
 ```
 
@@ -265,7 +265,7 @@ Every candidate considered in this run, in the order raised. `kind` and `action`
 
 ## Everything consulted beyond the diff
 
-**Skill package** (`/tmp/handoff4/skill-v5a/skills/code-review-publish-5a/`): `SKILL.md`, `DESIGN.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md` (read to confirm step 4 could be skipped), `scripts/context_fingerprint.py`, `scripts/test_context_fingerprint.py` (ran its self-test), `scripts/validate_review.py` (ran `--self-test` and the real payload).
+**Skill package** (`/tmp/handoff4/skill-v5a/snapshot-path-omitted/`): `SKILL.md`, `DESIGN.md`, `references/review-rubric.md`, `references/output-contract.md`, `references/verifier.md`, `references/re-review.md` (read to confirm step 4 could be skipped), `scripts/context_fingerprint.py`, `scripts/test_context_fingerprint.py` (ran its self-test), `scripts/validate_review.py` (ran `--self-test` and the real payload).
 
 **Packet:** `/tmp/handoff4/packet-playwright.md` (read in full).
 
@@ -388,7 +388,7 @@ All 10/10 reviewed; none ignored or unreviewed. Coverage is `complete`.
 
 **(e) Other `/tmp/handoff4` directories.** No. The primary reviewer read only `/tmp/handoff4/packet-playwright.md`, `/tmp/handoff4/run-v5a/` (the assigned repo), `/tmp/handoff4/skill-v5a/` (the assigned skill), and its own working files under `/tmp/handoff4/reports/v5a-work/` and the final `/tmp/handoff4/reports/v5a-report.md`. One incidental exception: an `ls -la` was run on `/tmp/handoff4/reports/` before this report existed, to create the directory; that listing showed two filenames belonging to another run (`v2-finder-code.md`, `v2-finder-requirements.md`) but their **contents were never read** — only the directory listing was seen, and no further action was taken on them. The verifier confirmed in its own report that it read only `/tmp/handoff4/run-v5a` and one file under `/tmp/handoff4/skill-v5a` (`references/verifier.md`), touching no other `/tmp/handoff4/*` path.
 
-**(f) Review validator script.** Yes, it ran, at `/tmp/handoff4/skill-v5a/skills/code-review-publish-5a/scripts/validate_review.py`. It was first run with `--self-test` (30 cases passed) to confirm the tool itself works, then run against the fully assembled real payload (summary body + both findings + the question + the observation, trailers included) with `python3 scripts/validate_review.py < payload.json`. **It passed with zero violations** (exit code 0, no output). `scripts/context_fingerprint.py`'s own regression suite (`scripts/test_context_fingerprint.py`) was also run and passed (7 case groups) before trusting the digest tool.
+**(f) Review validator script.** Yes, it ran, at `/tmp/handoff4/skill-v5a/snapshot-path-omitted/scripts/validate_review.py`. It was first run with `--self-test` (30 cases passed) to confirm the tool itself works, then run against the fully assembled real payload (summary body + both findings + the question + the observation, trailers included) with `python3 scripts/validate_review.py < payload.json`. **It passed with zero violations** (exit code 0, no output). `scripts/context_fingerprint.py`'s own regression suite (`scripts/test_context_fingerprint.py`) was also run and passed (7 case groups) before trusting the digest tool.
 
 ## Mechanism checklist
 

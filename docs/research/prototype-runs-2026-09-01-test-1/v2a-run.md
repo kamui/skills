@@ -114,7 +114,7 @@ verdicts:
 | Field | Value |
 | --- | --- |
 | Skill under test | `code-review-deep-publish` (research nickname **v2a**, "Panel line") |
-| Pinned commit | `87c68a9` (branch `t3code/prototype-code-review-publish-2a`, PR #18, `kamui/skills`) — includes `326ef6f` "Require paired peer-contract sweeps" and `940aa2c` "Sweep every changed contract, on both axes" |
+| Pinned commit | `87c68a9` (branch `snapshot-path-omitted`, PR #18, `kamui/skills`) — includes `326ef6f` "Require paired peer-contract sweeps" and `940aa2c` "Sweep every changed contract, on both axes" |
 | Target | `kamui/shortlist#66` — "Seed category profiles into the ledger and generalize Volatile-claim freshness" |
 | base / head / merge-base | base `main`@`ccd1842d742fd940b2afde4f903c7bdcb3a707eb`; head `4349ff41ff4d134e09017662dd30420b80e8eb30`; merge-base = base SHA |
 | Architecture | Two parallel finder sub-agents (Code axis, Requirements axis) fanned out from the orchestrator, then one fresh-context verifier sub-agent (all `support` fields withheld) |

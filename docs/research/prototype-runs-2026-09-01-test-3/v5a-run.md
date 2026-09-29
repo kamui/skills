@@ -1,4 +1,4 @@
-# v5a run — `code-review-publish-5a` against `tokio-rs/tokio#7757`
+# v5a run — `snapshot-path-omitted` against `tokio-rs/tokio#7757`
 
 **2026-09-03.** Data only. Not published to the PR. See
 [`addendum-2026-09-03.md`](addendum-2026-09-03.md) for run conditions, model verification, and the
@@ -8,7 +8,7 @@ dev-set caveat that applies to this run.
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-5a` (research nickname **v5a**, "Skeptic line"; branch `t3code/prototype-code-review-publish-5a`, pinned commit `c5f76df`, workflow id `v5a-1`) |
+| Skill | `snapshot-path-omitted` (research nickname **v5a**, "Skeptic line"; branch `snapshot-path-omitted`, pinned commit `c5f76df`, workflow id `v5a-1`) |
 | Includes fix | `ff94971` "Require repo-wide peer-set search for drift candidates" (handoff 6) |
 | Architecture | 1 integrated reviewer + consequence-triggered fresh-context verification; 1 verifier sub-agent spawned (candidate mode) |
 | Model | `claude-sonnet-5` on the primary and on the verifier, **passed explicitly on the Agent call and verified afterwards** from the harness's sub-agent transcripts (`message.model` on every assistant turn) |
@@ -103,7 +103,7 @@ report:
 
 | Field | Value |
 | --- | --- |
-| Skill / pinned commit | `code-review-publish-5a` @ `c5f76df` (includes `ff94971`) |
+| Skill / pinned commit | `snapshot-path-omitted` @ `c5f76df` (includes `ff94971`) |
 | Architecture | Single integrated reviewer, no mandatory fan-out. One fresh-context verifier sub-agent spawned. |
 | Trigger for sub-agent | `must-fix` candidate (mandatory verification rule) — also independently qualified under the "data loss" mandatory-verification trigger |
 | Model — primary reviewer (me) | Claude Sonnet 5 (per harness identity; this whole run executed as the "claude" launched agent on the configured model, which per the task instructions is Sonnet 5) |

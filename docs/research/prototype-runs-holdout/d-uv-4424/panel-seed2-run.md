@@ -92,7 +92,7 @@ Run start (UTC): 2026-09-05T01:11:09Z
 ## 1. Metadata
 
 - **Target:** `astral-sh/uv#4424` — "Expose `toolchain-preference` as a CLI and configuration file option"
-- **Arm:** v2a (Panel line, with merged fixes) — skill `code-review-deep-publish` pinned at `t3code/prototype-code-review-publish-2a dd3bcfe` (workflow=v2a-1 with #53-#58 merged)
+- **Arm:** v2a (Panel line, with merged fixes) — skill `code-review-deep-publish` pinned at `snapshot-path-omitted dd3bcfe` (workflow=v2a-1 with #53-#58 merged)
 - **Seed:** 2
 - **Model:** `claude-sonnet-5` — this reviewer ran on `claude-sonnet-5` (`model: "sonnet"` was not applicable to me, the top-level dispatch reviewer, since I run in the calling harness's context — I am the Sonnet-5 agent executing this dispatch directly). Every sub-agent I spawn is dispatched with `model: "sonnet"` explicitly, verified below from each dispatch's own transcript record.
 - **Posting identity:** `kamui`, not the PR author (`zanieb`) — ordinary first review by a third party.

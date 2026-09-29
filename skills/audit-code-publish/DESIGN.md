@@ -1,6 +1,6 @@
 # Design notes — audit-code-publish
 
-v2a is the Panel line's second iteration: `code-review-publish-2` (v2, PR #14, seeded at commit
+v2a is the Panel line's second iteration: `snapshot-path-omitted` (v2, PR #14, seeded at commit
 `f42f708`) with the fixes the three 2026-09-01 test runs proved necessary, and nothing that would
 move it toward the Skeptic line. The evidence base is
 [`docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md`](../../docs/research/prototype-runs-aggregate-tests-1-3-v2-v5.md)

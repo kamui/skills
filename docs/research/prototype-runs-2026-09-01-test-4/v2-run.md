@@ -1,4 +1,4 @@
-# v2 run — `code-review-publish-2` against `microsoft/playwright#29698`
+# v2 run — `snapshot-path-omitted` against `microsoft/playwright#29698`
 
 **2026-09-03.** Data only. Not published to the PR. See [`README.md`](README.md) for the
 pinned run identity, the ground truth, and the conditions held constant across all four runs.
@@ -12,7 +12,7 @@ pinned run identity, the ground truth, and the conditions held constant across a
 ---
 
 
-Skill: `code-review-publish-2` (prototype). Run resumed at the **Verify** phase after an earlier
+Skill: `snapshot-path-omitted` (prototype). Run resumed at the **Verify** phase after an earlier
 attempt's Find phase completed and the attempt was then killed by a rate limit. This orchestrator
 is a fresh context; the Find phase was not redone.
 
@@ -25,7 +25,7 @@ Wall clock (this orchestrator's session, Verify → Publish-rendering): **2026-0
 
 | | |
 | --- | --- |
-| **Skill** | `code-review-publish-2`, snapshot at `/tmp/handoff4/skill-v2/skills/code-review-publish-2/` |
+| **Skill** | `snapshot-path-omitted`, snapshot at `/tmp/handoff4/skill-v2/snapshot-path-omitted/` |
 | **Architecture** | Two-axis Find (Code, Requirements — run by the prior, crashed orchestrator; not redone) → single fresh-context Verify (run by this orchestrator) → render-only Publish (posting disabled). No re-review machinery invoked (first review on this PR). |
 | **Model** | `sonnet` passed explicitly on the one `Agent` call this orchestrator made (the verifier). The two finders were spawned by the prior, crashed orchestrator; their model parameter is not visible to this context and is not recorded in their reports — flagged as an evidence gap, not assumed. |
 | **Agents spawned** | 1 by this orchestrator (Verifier). 3 total in the run's lineage (Code finder + Requirements finder, spawned earlier; Verifier, spawned here). |
@@ -141,7 +141,7 @@ git show main --stat >/dev/null; git worktree list 2>/dev/null; git grep -c "sin
 
 ### 4. Sandbox confirmation
 
-I read only files under `/tmp/handoff4/run-v2` (the repo, at both `main` and `review-head` via `git show`/`git diff`/`git grep`, plus the working tree checked out at `review-head`) and `/tmp/handoff4/skill-v2/skills/code-review-publish-2/references/{code-axis.md,finding-format.md}`. I did not read any other `run-*`/`skill-*` directory, `mirror-pw.git`, `reports/`, or `packet-playwright.md`.
+I read only files under `/tmp/handoff4/run-v2` (the repo, at both `main` and `review-head` via `git show`/`git diff`/`git grep`, plus the working tree checked out at `review-head`) and `/tmp/handoff4/skill-v2/snapshot-path-omitted/references/{code-axis.md,finding-format.md}`. I did not read any other `run-*`/`skill-*` directory, `mirror-pw.git`, `reports/`, or `packet-playwright.md`.
 
 One disclosure: I wrote the full diff to `/tmp/handoff4_pr.diff` (outside the two named directories) so I could read it with the `Read` tool in one pass. That file's contents are entirely derived from `git diff main...review-head` inside the allowed repo — it isn't a read of any external/disallowed content — but since the path itself falls outside `/tmp/handoff4/run-v2` and `/tmp/handoff4/skill-v2`, I'm flagging it explicitly as you asked. No other paths outside the sandbox were touched.
 
@@ -240,8 +240,8 @@ git branch --show-current
 ## 6. Sandbox confirmation
 
 I read only:
-- `/tmp/handoff4/skill-v2/skills/code-review-publish-2/references/requirements-axis.md`
-- `/tmp/handoff4/skill-v2/skills/code-review-publish-2/references/finding-format.md`
+- `/tmp/handoff4/skill-v2/snapshot-path-omitted/references/requirements-axis.md`
+- `/tmp/handoff4/skill-v2/snapshot-path-omitted/references/finding-format.md`
 - Files under `/tmp/handoff4/run-v2` via the `git` and `grep` commands listed above.
 
 I did not read any other path under `/tmp/handoff4/` — no other `run-*`/`skill-*` directories, no `mirror-pw.git`, no `reports/`, no `packet-playwright.md`. Nothing to disclose.
@@ -260,7 +260,7 @@ Trigger: `SKILL.md` step 3 fires whenever either finder returns at least one can
 ### Exact prompt given to the verifier
 
 ```text
-You are the Verifier sub-agent for a controlled code-review experiment. Read your brief in full before doing anything else: `/tmp/handoff4/skill-v2/skills/code-review-publish-2/references/verify.md`. Follow it exactly.
+You are the Verifier sub-agent for a controlled code-review experiment. Read your brief in full before doing anything else: `/tmp/handoff4/skill-v2/snapshot-path-omitted/references/verify.md`. Follow it exactly.
 
 Your repository is `/tmp/handoff4/run-v2`, an offline clone. The branch `review-head` is checked out at the pinned head `cb02d5ba126479dddb3ecbe32e8ead024ca5dd6b`. The branch `main` is force-pinned to the merge-base `9a38aedf09f203a58008756e588324254abaef9a`. This is a first review — there are no prior findings to carry forward, so ignore the "Prior findings, on a re-review" section of your brief entirely.
 
@@ -439,7 +439,7 @@ git log 9a38aedf09f203a58008756e588324254abaef9a..cb02d5ba126479dddb3ecbe32e8ead
 ```
 None of these went beyond the pinned head `cb02d5ba126479dddb3ecbe32e8ead024ca5dd6b`; both range queries are bounded exactly at it. No `show`, `diff`, or `blame` was run.
 
-**(b) Path confinement:** I read only files under `/tmp/handoff4/run-v2` (the repository) and `/tmp/handoff4/skill-v2/skills/code-review-publish-2/references/verify.md` (my brief). I did not open `finding-format.md` or any other file. No path outside those two locations was read.
+**(b) Path confinement:** I read only files under `/tmp/handoff4/run-v2` (the repository) and `/tmp/handoff4/skill-v2/snapshot-path-omitted/references/verify.md` (my brief). I did not open `finding-format.md` or any other file. No path outside those two locations was read.
 
 ## Out-of-scope observation (not a verdict, not a finding of mine)
 

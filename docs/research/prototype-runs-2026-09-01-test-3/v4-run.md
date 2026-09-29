@@ -1,4 +1,4 @@
-# v4 run — `code-review-publish-4` against `tokio-rs/tokio#7757`
+# v4 run — `snapshot-path-omitted` against `tokio-rs/tokio#7757`
 
 **2026-09-01.** Data only. Not published to the PR.
 
@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| Skill | `code-review-publish-4` (PR #16) |
+| Skill | `snapshot-path-omitted` (PR #16) |
 | Architecture | Single integrated primary reviewer (tool-using, one pass over the full merge-base diff) → one batched, fresh-context independent verifier for the two `must-fix` candidates → primary reviewer renders/drops per verifier verdicts and assembles the publish payload. No separate standards/spec fan-out (the skill explicitly forbids that on the frequent path). |
 | Agents spawned | 1 — the mandatory verifier (`general-purpose`, isolated `Agent` call, no shared context with this conversation), batched with both `must-fix` candidates. No second verifier round was run. |
 | Total sub-agent tokens | 56,443 (verifier subagent, self-reported by the harness) |
