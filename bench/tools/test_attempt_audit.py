@@ -279,6 +279,17 @@ class AttemptAudit(unittest.TestCase):
         self.assertEqual(rc, 1, violations)
         self.assertIn(f"path outside allowed roots in command: {self.outside}/x", violations)
 
+    def test_a_heredoc_that_cat_or_tee_only_writes_is_data(self):
+        body = f"a path in the text: {self.outside}/x\nEOF"
+        for command in (f"cat > verdicts.json <<'EOF'\n{body}", f"cd src && tee out.txt <<EOF\n{body}\necho done"):
+            with self.subTest(command=command):
+                self.assertEqual(self.bash(command), (0, []))
+        for command in (f"bash <<'EOF'\ncat {self.outside}/x\nEOF", f"cat <<'EOF' | sh\ncat {self.outside}/x\nEOF",
+                        f"cat {self.outside}/x > v.json <<'EOF'\nx\nEOF"):
+            with self.subTest(command=command):
+                rc, violations = self.bash(command)
+                self.assertIn(f"path outside allowed roots in command: {self.outside}/x", violations)
+
     def test_a_cd_is_not_a_read_but_what_follows_it_is(self):
         # att-059: a fallback cd that never ran; the scratch file went to the work directory.
         fallback = f"cd {self.clone}/src 2>/dev/null || cd {self.outside}; cat > t.js <<'E'\nx\nE"
