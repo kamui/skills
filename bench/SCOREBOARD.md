@@ -1,12 +1,38 @@
 # Reviewer benchmark scoreboard
 
-This page holds the headline numbers of the reviewer benchmark, one section per suite. A suite fixes its targets, packets, diffs, registers and rubric, and every row is marked on each target it did not run or ran under a different identity. The legend under each table says which direction is better for each column. The method and its rules are in [README.md](README.md).
+How many registered defects each code reviewer finds, how much noise it adds, and what it costs, one section per suite of pull requests. The method is in [README.md](README.md).
 
-The page is generated from `bench/scoreboard.json`. Regenerate it with `python3 bench/tools/scoreboard.py`. `python3 bench/tools/scoreboard.py --check` fails when it is stale.
+Generated from `bench/scoreboard.json` by `python3 bench/tools/scoreboard.py`; `--check` fails when this page or a chart is stale.
 
 ## Sonnet 5.5 re-bench, twelve targets
 
 The Sonnet 5.5 rows come from the 2026-09-28 re-bench on Claude Code 2.1.284, three replicates per target. The Sonnet 5, Opus 5.5 and Codex rows come from earlier runs with two or three replicates per target, and each ran only some of the twelve targets. Every arm ran in a fresh home with the network off. The notes under the tables give each row's CLI and isolation.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="scoreboard/sonnet-5-5-12-targets-cost-dark.svg">
+  <img alt="Defects found against cost per review. The table below lists every plotted value." src="scoreboard/sonnet-5-5-12-targets-cost-light.svg">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="scoreboard/sonnet-5-5-12-targets-false-findings-dark.svg">
+  <img alt="Defects found against false findings. The table below lists every plotted value." src="scoreboard/sonnet-5-5-12-targets-false-findings-light.svg">
+</picture>
+
+| Reviewer | Version | Defects found | False findings per review | Noise per review | Cost per review | Completed reviews |
+| --- | --- | --- | --- | --- | --- | --- |
+| Claude Code built-in /code-review, Sonnet 5.5 high | claude-code 2.1.284 | 85% | 0.70 | 5.2 | $0.12 | 27 of 27 |
+| /review-code, Sonnet 5.5 high | 5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts) | 69% | 0.00 | 1.7 | $0.99 | 22 of 27 |
+| /review-code, Sonnet 5 high | c3c53da (main from #370, 2026-09-24) | 76% | 0.00 | 1.0 | $0.79 | 18 of 18 |
+| Claude Code built-in /code-review, Sonnet 5 high | claude-code 2.1.282 | 87% | 0.11 | 2.6 | $0.14 | 18 of 18 |
+| Claude Code built-in /code-review, Opus 5.5 high | claude-code 2.1.282 | 86% | 0.33 | 6.1 | $0.36 | 18 of 18 |
+| Codex CLI codex review, GPT-6 Astra default | codex-cli 0.156.1 | 62% | 0.00 | 0.2 | $0.29 † | 18 of 18 |
+
+Both charts and this table cover `i-requests-6667`, `k-graphql-js-1582`, `l-bokeh-9232`, `m-grpc-go-7390`, `n-ripgrep-2957`, `o-astro-16079`, `p-hono-5067`, `q-soba-195`, `r-base-ui-5460`. Up and left is better on both charts; the thin line joins the reviewers no other reviewer beats on both axes. A filled dot is this suite's run, a hollow dot an earlier run. Recall counts an incomplete review as finding nothing.
+
+Not plotted, because they did not run every one of these targets: /review-code, Sonnet 5 high at 5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts).
+
+<details>
+<summary>Every number, target by target</summary>
 
 The 12 targets and their register versions come from [`2026-09-28-sonnet-5-5-rebench`](runs/2026-09-28-sonnet-5-5-rebench/README.md). Rows come from:
 
@@ -81,3 +107,5 @@ Each cell is attempt-level recall, or clean when the target has no registered de
 | `t-rclone-9699` | clean, high risk (concurrency) | clean · 3 FF | clean · 0 FF | clean · 0 FF | *not run* | *not run* | *not run* | *not run* |
 
 *not run* means no run of the row included the target. *not comparable* means the row's run graded the target under a different register, packet or diff than this suite. *pending* means the row's run is not scored yet.
+
+</details>

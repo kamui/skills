@@ -9,31 +9,130 @@
       "reference": "claude-builtin-sonnet-5-5",
       "cohort_run": "runs/2026-09-28-sonnet-5-5-rebench",
       "entries": [
-        {"id": "claude-builtin-sonnet-5-5", "label": "Claude Code built-in /code-review, Sonnet 5.5 high", "version": "claude-code 2.1.284",
-         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": "results.v1.json", "arm": "claude-builtin-sonnet-5-5-high"}],
-         "note": "Safe mode, no sandbox. On Sonnet 5.5 the built-in runs the prompt it gave Opus 5.5 on claude-code 2.1.282 (8 angles, no verify step). 2 attempts wrote scratch files to /tmp and were replaced."},
-        {"id": "review-code-sonnet-5-5", "label": "/review-code, Sonnet 5.5 high", "version": "5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts)",
-         "sources": [{"run": "runs/2026-09-28-sonnet-5-5-rebench", "results": "results.v1.json", "arm": "review-code-sonnet-5-5-high-enforced"}],
-         "note": "Enforced sandbox (claude-strict-v2), claude-code 2.1.284. 5 of 36 reviews are incomplete: 4 stopped when the sandbox denied a Bash command, which no Sonnet 5 review under the same profile did, and 1 reported its own coverage incomplete."},
-        {"id": "review-code-sonnet-5-5e12864", "label": "/review-code, Sonnet 5 high", "version": "5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts)",
-         "sources": [
-           {"run": "runs/2026-09-28-verification-off-staged", "results": "results.v2.json", "arm": "review-code-sonnet-high-enforced-x394-control"},
-           {"run": "runs/2026-09-28-unseen-target-comparison", "results": "results.v1.json", "arm": "review-code-sonnet-high-enforced-x394-control"}
-         ],
-         "note": "Enforced sandbox. The control arm of the #409 experiments, from two runs, on claude-code 2.1.282 for five targets and 2.1.284 for two."},
-        {"id": "review-code-sonnet-5-c3c53da", "label": "/review-code, Sonnet 5 high", "version": "c3c53da (main from #370, 2026-09-24)",
-         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "review-code-sonnet-high"}],
-         "note": "No sandbox, claude-code 2.1.282."},
-        {"id": "claude-builtin-sonnet-5", "label": "Claude Code built-in /code-review, Sonnet 5 high", "version": "claude-code 2.1.282",
-         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "claude-builtin-sonnet-high"}],
-         "note": "Safe mode, no sandbox. A different built-in prompt from Sonnet 5.5's, with 3+5 angles and a verify step."},
-        {"id": "claude-builtin-opus-5-5", "label": "Claude Code built-in /code-review, Opus 5.5 high", "version": "claude-code 2.1.282",
-         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "claude-builtin-opus-high"}],
-         "note": "Safe mode, no sandbox."},
-        {"id": "codex-builtin", "label": "Codex CLI codex review, GPT-6 Astra default", "version": "codex-cli 0.156.1",
-         "sources": [{"run": "runs/2026-09-24-builtin-baseline", "results": "results.v3.json", "arm": "codex-default"}],
-         "note": "Workspace-write sandbox with network access off. Cost is list-price equivalent, because the maintainer's plan bills quota."}
-      ]
+        {
+          "id": "claude-builtin-sonnet-5-5",
+          "label": "Claude Code built-in /code-review, Sonnet 5.5 high",
+          "version": "claude-code 2.1.284",
+          "sources": [
+            {
+              "run": "runs/2026-09-28-sonnet-5-5-rebench",
+              "results": "results.v1.json",
+              "arm": "claude-builtin-sonnet-5-5-high"
+            }
+          ],
+          "note": "Safe mode, no sandbox. On Sonnet 5.5 the built-in runs the prompt it gave Opus 5.5 on claude-code 2.1.282 (8 angles, no verify step). 2 attempts wrote scratch files to /tmp and were replaced.",
+          "method": "claude-builtin",
+          "short": "Built-in · Sonnet 5.5"
+        },
+        {
+          "id": "review-code-sonnet-5-5",
+          "label": "/review-code, Sonnet 5.5 high",
+          "version": "5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts)",
+          "sources": [
+            {
+              "run": "runs/2026-09-28-sonnet-5-5-rebench",
+              "results": "results.v1.json",
+              "arm": "review-code-sonnet-5-5-high-enforced"
+            }
+          ],
+          "note": "Enforced sandbox (claude-strict-v2), claude-code 2.1.284. 5 of 36 reviews are incomplete: 4 stopped when the sandbox denied a Bash command, which no Sonnet 5 review under the same profile did, and 1 reported its own coverage incomplete.",
+          "method": "review-code",
+          "short": "/review-code 5e12864 · Sonnet 5.5"
+        },
+        {
+          "id": "review-code-sonnet-5-5e12864",
+          "label": "/review-code, Sonnet 5 high",
+          "version": "5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts)",
+          "sources": [
+            {
+              "run": "runs/2026-09-28-verification-off-staged",
+              "results": "results.v2.json",
+              "arm": "review-code-sonnet-high-enforced-x394-control"
+            },
+            {
+              "run": "runs/2026-09-28-unseen-target-comparison",
+              "results": "results.v1.json",
+              "arm": "review-code-sonnet-high-enforced-x394-control"
+            }
+          ],
+          "note": "Enforced sandbox. The control arm of the #409 experiments, from two runs, on claude-code 2.1.282 for five targets and 2.1.284 for two.",
+          "method": "review-code",
+          "short": "/review-code 5e12864 · Sonnet 5"
+        },
+        {
+          "id": "review-code-sonnet-5-c3c53da",
+          "label": "/review-code, Sonnet 5 high",
+          "version": "c3c53da (main from #370, 2026-09-24)",
+          "sources": [
+            {
+              "run": "runs/2026-09-24-builtin-baseline",
+              "results": "results.v3.json",
+              "arm": "review-code-sonnet-high"
+            }
+          ],
+          "note": "No sandbox, claude-code 2.1.282.",
+          "method": "review-code",
+          "short": "/review-code c3c53da · Sonnet 5"
+        },
+        {
+          "id": "claude-builtin-sonnet-5",
+          "label": "Claude Code built-in /code-review, Sonnet 5 high",
+          "version": "claude-code 2.1.282",
+          "sources": [
+            {
+              "run": "runs/2026-09-24-builtin-baseline",
+              "results": "results.v3.json",
+              "arm": "claude-builtin-sonnet-high"
+            }
+          ],
+          "note": "Safe mode, no sandbox. A different built-in prompt from Sonnet 5.5's, with 3+5 angles and a verify step.",
+          "method": "claude-builtin",
+          "short": "Built-in · Sonnet 5"
+        },
+        {
+          "id": "claude-builtin-opus-5-5",
+          "label": "Claude Code built-in /code-review, Opus 5.5 high",
+          "version": "claude-code 2.1.282",
+          "sources": [
+            {
+              "run": "runs/2026-09-24-builtin-baseline",
+              "results": "results.v3.json",
+              "arm": "claude-builtin-opus-high"
+            }
+          ],
+          "note": "Safe mode, no sandbox.",
+          "method": "claude-builtin",
+          "short": "Built-in · Opus 5.5"
+        },
+        {
+          "id": "codex-builtin",
+          "label": "Codex CLI codex review, GPT-6 Astra default",
+          "version": "codex-cli 0.156.1",
+          "sources": [
+            {
+              "run": "runs/2026-09-24-builtin-baseline",
+              "results": "results.v3.json",
+              "arm": "codex-default"
+            }
+          ],
+          "note": "Workspace-write sandbox with network access off. Cost is list-price equivalent, because the maintainer's plan bills quota.",
+          "method": "codex",
+          "short": "Codex · GPT-6 Astra"
+        }
+      ],
+      "chart": {
+        "targets": [
+          "i-requests-6667",
+          "k-graphql-js-1582",
+          "l-bokeh-9232",
+          "m-grpc-go-7390",
+          "n-ripgrep-2957",
+          "o-astro-16079",
+          "p-hono-5067",
+          "q-soba-195",
+          "r-base-ui-5460"
+        ]
+      }
     }
   ]
 }

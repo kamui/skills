@@ -213,6 +213,40 @@ class ScoreboardTest(unittest.TestCase):
         self.assertEqual((result.returncode, result.stdout.count("\n")), (1, 1))
         self.assertIn("stale", result.stdout)
 
+    def chart(self, *targets: str) -> None:
+        self.suite["chart"] = {"targets": list(targets)}
+        for entry, method in zip(self.suite["entries"], ("claude-builtin", "review-code")):
+            entry.update(method=method, short=f"short-{entry['id']}")
+
+    def test_chart_plots_every_row_that_ran_the_chart_targets_with_a_table_twin(self) -> None:
+        self.chart(BUG1, CLEAN)
+        page = self.page()
+        self.assertIn("| Ref | v-ref | 100% | 0.50 | 1.0 | $0.38 | 4 of 4 |", page)
+        self.assertIn("| Other | v-other | 50% | 0.00 | 0.5 | $0.10 | 4 of 4 |", page)
+        for chart in ("cost", "false-findings"):
+            for theme in ("light", "dark"):
+                svg = (self.root / "scoreboard" / f"s-{chart}-{theme}.svg").read_text(encoding="utf-8")
+                self.assertIn(">short-ref</text>", svg)
+                self.assertIn("<title>Other at v-other: 50% of registered defects found", svg)
+        self.assertFalse(any(line.startswith("Not plotted") for line in page))
+        self.chart(BUG1, BUG2)
+        self.assertIn("Not plotted, because they did not run every one of these targets: Other at v-other.", self.page())
+
+    def test_check_fails_when_a_chart_is_stale(self) -> None:
+        self.chart(BUG1, CLEAN)
+        self.page()
+        chart = self.root / "scoreboard" / "s-cost-dark.svg"
+        chart.write_text(chart.read_text(encoding="utf-8").replace("short-ref", "edited"), encoding="utf-8")
+        result = self.run_tool("--check")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("s-cost-dark.svg is stale", result.stdout)
+
+    def test_a_charted_suite_needs_methods_and_cohort_targets(self) -> None:
+        self.chart(BUG1, "t-elsewhere")
+        del self.suite["entries"][1]["method"]
+        self.assert_refused("s: chart targets must be a non-empty subset of the cohort; not in it: t-elsewhere",
+                            "s/other: a charted suite needs each entry's method")
+
     def test_rubric_mismatch_is_refused(self) -> None:
         self.write_run("r1", {"ref": REF_ROWS, "other": OTHER_ROWS}, graded={BUG1: 2}, rubric=2)
         self.assert_refused("s/ref: runs/r1 uses rubric v2, the cohort run v1")
