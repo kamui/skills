@@ -27,7 +27,7 @@ The Sonnet 5.5 rows come from the 2026-09-28 re-bench on Claude Code 2.1.284, th
 | Claude Code built-in /code-review, Opus 5.5 high | claude-code 2.1.282 | 86% | 0.33 | 6.1 | $0.36 | 18 of 18 |
 | Codex CLI codex review, GPT-6 Astra default | codex-cli 0.156.1 | 62% | 0.00 | 0.2 | $0.29 † | 18 of 18 |
 
-Both charts and this table cover `i-requests-6667`, `k-graphql-js-1582`, `l-bokeh-9232`, `m-grpc-go-7390`, `n-ripgrep-2957`, `o-astro-16079`, `p-hono-5067`, `q-soba-195`, `r-base-ui-5460`. Up and left is better on both charts; the thin line joins the reviewers no other reviewer beats on both axes. A filled dot is this suite's run, a hollow dot an earlier run. Recall counts an incomplete review as finding nothing.
+Both charts and this table cover `i-requests-6667`, `k-graphql-js-1582`, `l-bokeh-9232`, `m-grpc-go-7390`, `n-ripgrep-2957`, `o-astro-16079`, `p-hono-5067`, `q-soba-195`, `r-base-ui-5460`. Up and left is better on both charts; the thin line joins the reviewers no other reviewer beats on both axes. A filled dot is this suite's run, a hollow dot an earlier run. Recall averages every attempt, so a review that stopped or was filed harness-invalid counts as finding nothing.
 
 Not plotted, because they did not run every one of these targets: /review-code, Sonnet 5 high at 5e12864 (main from #406, 2026-09-27; #412 changed only its test scripts).
 

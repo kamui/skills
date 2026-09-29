@@ -388,9 +388,10 @@ class Board:
                 "then the raw false-finding count.", "", *table(header, rows), "", STATUS_LEGEND]
 
     def chart_rows(self) -> tuple:
-        """Entries that ran every chart target, with their figures over exactly those targets, and the rest."""
+        """Entries that ran every chart target and have every plotted figure over exactly those targets,
+        then the entries that did not run them all, then those missing a figure."""
         targets = self.suite["chart"]["targets"]
-        drawn, left_out = [], []
+        drawn, left_out, unavailable = [], [], []
         for item in self.loaded:
             if item["pending"] or not all(t in self.ran(item) for t in targets):
                 left_out.append(item)
@@ -403,13 +404,22 @@ class Board:
                 "cost": None if m["cost_contemporaneous_usd"] is None else m["cost_contemporaneous_usd"] / m["attempts_included"],
                 "false": valid["false_findings_raw"] / valid["count"] if valid["count"] else None,
                 "noise": valid["noise_items"] / valid["count"] if valid["count"] else None}))
-        return drawn, left_out
+            if any(drawn[-1][1][k] is None for k in ("recall", "cost", "false")):
+                unavailable.append(drawn.pop()[0])
+        return drawn, left_out, unavailable
 
     def chart_section(self) -> tuple:
         if "chart" not in self.suite:
             return [], {}
         targets = self.suite["chart"]["targets"]
-        drawn, left_out = self.chart_rows()
+        drawn, left_out, unavailable = self.chart_rows()
+        not_plotted = [(left_out, "they did not run every one of these targets"),
+                       (unavailable, "a plotted figure is unavailable for them")]
+        not_plotted = ["Not plotted, because " + reason + ": "
+                       + "; ".join(f"{i['entry']['label']} at {i['entry']['version']}" for i in items) + "."
+                       for items, reason in not_plotted if items]
+        if not drawn:
+            return [f"No reviewer is plotted on {code_list(targets)}.", *(line for n in not_plotted for line in ("", n))], {}
         cohort_run = self.root / self.suite["cohort_run"]
         points = []
         for item, f in drawn:
@@ -449,10 +459,9 @@ class Board:
                         "Cost per review", "Completed reviews"], rows)
         lines += ["", f"Both charts and this table cover {code_list(targets)}. Up and left is better on both charts; "
                   "the thin line joins the reviewers no other reviewer beats on both axes. A filled dot is this "
-                  "suite's run, a hollow dot an earlier run. Recall counts an incomplete review as finding nothing."]
-        if left_out:
-            lines += ["", "Not plotted, because they did not run every one of these targets: "
-                      + "; ".join(f"{i['entry']['label']} at {i['entry']['version']}" for i in left_out) + "."]
+                  "suite's run, a hollow dot an earlier run. Recall averages every attempt, so a review that "
+                  "stopped or was filed harness-invalid counts as finding nothing."]
+        lines += [line for n in not_plotted for line in ("", n)]
         return lines, files
 
     def render(self) -> tuple:
@@ -475,10 +484,11 @@ class Board:
 
 
 def cost_axis(values: list) -> tuple:
-    steps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100)
-    lo = max(s for s in steps if s <= min(values) * 0.9)
-    hi = min(s for s in steps if s >= max(values) * 1.2)
-    return lo, hi, tuple(s for s in steps if lo <= s <= hi), lambda v: f"${v:.2f}" if v < 1 else f"${v:g}", True
+    steps = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000)
+    lo = max((s for s in steps if s <= min(values) * 0.9), default=steps[0])
+    hi = min((s for s in steps if s >= max(values) * 1.2), default=steps[-1])
+    return (lo, hi, tuple(s for s in steps if lo <= s <= hi),
+            lambda v: f"${v:.2f}" if 0.01 <= v < 1 else f"${v:g}", True)
 
 
 def false_axis(values: list) -> tuple:

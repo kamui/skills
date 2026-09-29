@@ -60,7 +60,8 @@ def arm_row(arm: str, rows: dict) -> dict:
             "recall_attempt_level": round(sum(recalls) / len(recalls), 6) if recalls else None,
             "false_findings_raw": sum(p["false_findings_raw"] for p in parts),
             "fix_sufficient": {k: sum(p["fix_sufficient"][k] for p in parts) for k in ("sufficient", "partial", "absent")},
-            "cost_contemporaneous_usd": round(sum(s["cost"] for s in rows.values()), 6),
+            "cost_contemporaneous_usd": (None if any(s["cost"] is None for s in rows.values())
+                                         else round(sum(s["cost"] for s in rows.values()), 6)),
             "elapsed_to_completion_s": statistics.median([t for s in rows.values() for t in s["times"]])}
 
 
@@ -229,8 +230,32 @@ class ScoreboardTest(unittest.TestCase):
                 self.assertIn(">short-ref</text>", svg)
                 self.assertIn("<title>Other at v-other: 50% of registered defects found", svg)
         self.assertFalse(any(line.startswith("Not plotted") for line in page))
+        self.assertTrue(any(line.endswith("Recall averages every attempt, so a review that stopped or was filed "
+                                          "harness-invalid counts as finding nothing.") for line in page))
         self.chart(BUG1, BUG2)
         self.assertIn("Not plotted, because they did not run every one of these targets: Other at v-other.", self.page())
+
+    def test_chart_leaves_out_an_unavailable_figure_and_places_a_sub_cent_cost(self) -> None:
+        self.write_run("r1", {"ref": REF_ROWS, "other": {BUG1: spec(0.5, [20, 40], None), CLEAN: spec(None, [10, 10], 0.004)}},
+                       manifest_registers={BUG1: 1}, graded={BUG1: 2, BUG2: 1, CLEAN: 1})
+        self.chart(BUG1, CLEAN)
+        page = self.page()
+        self.assertIn("Not plotted, because a plotted figure is unavailable for them: Other at v-other.", page)
+        self.assertFalse(any(line.startswith("| Other | v-other | 50% |") for line in page))
+        self.write_run("r1", {"ref": REF_ROWS, "other": {BUG1: spec(0.5, [20, 40], 0.004), CLEAN: spec(None, [10, 10], 0.004)}},
+                       manifest_registers={BUG1: 1}, graded={BUG1: 2, BUG2: 1, CLEAN: 1})
+        self.assertIn("| Other | v-other | 50% | 0.00 | 0.0 | $0.00 | 4 of 4 |", self.page())
+        self.assertIn(">$0.001</text>", (self.root / "scoreboard" / "s-cost-light.svg").read_text(encoding="utf-8"))
+
+    def test_chart_with_nothing_plotted_names_every_left_out_row(self) -> None:
+        self.write_run("r1", {"ref": {**REF_ROWS, BUG2: spec(0.5, [30, 30], None)}, "other": OTHER_ROWS},
+                       manifest_registers={BUG1: 1}, graded={BUG1: 2, BUG2: 1, CLEAN: 1})
+        self.chart(BUG1, BUG2)
+        page = self.page()
+        self.assertIn(f"No reviewer is plotted on `{BUG1}`, `{BUG2}`.", page)
+        self.assertIn("Not plotted, because they did not run every one of these targets: Other at v-other.", page)
+        self.assertIn("Not plotted, because a plotted figure is unavailable for them: Ref at v-ref.", page)
+        self.assertFalse((self.root / "scoreboard").exists())
 
     def test_check_fails_when_a_chart_is_stale(self) -> None:
         self.chart(BUG1, CLEAN)
