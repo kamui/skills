@@ -1,0 +1,33 @@
+{
+  "artifact_id": "issue-151-packet-index",
+  "built_at": "2026-09-10T07:26:20.794342+00:00",
+  "note": "Packet ids are random and map to nothing published. The mapping from a packet to its attempt, arm and target is sealed with the packets, and the raw payload digests are sealed with it: a digest over the rendering of a four-candidate secret is that secret.",
+  "packet_count": 6,
+  "packets": [
+    {
+      "masked_packet_sha256": "6466116d51478b6d00e54b4d8932b6ff6543a3ab8b4250dbe118c342f5df88e1",
+      "packet_id": "1d3416e2-b657-4498-ae26-f0c0f504bc1d"
+    },
+    {
+      "masked_packet_sha256": "741e03e7f18cadc2e0234c2d846fdf964141b1e3f72d05ed2fa562534baef444",
+      "packet_id": "48d5db81-a8ca-47cc-b018-461fde3ac88d"
+    },
+    {
+      "masked_packet_sha256": "d736138989eaa5c61ffd6629f4bbfd64562a4d3792ef479f11d98888a6aa62ea",
+      "packet_id": "8814c28e-5b11-4e97-b9a3-e7e03ceb3643"
+    },
+    {
+      "masked_packet_sha256": "f6f7c539e8ca9cbcc48a01cf261daae529327d14a9b61934198a1411f8308ba1",
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970"
+    },
+    {
+      "masked_packet_sha256": "4ee2f9af04e652359f4d116d40b14aae371b9bb01027dadadfcc5f5560d56c18",
+      "packet_id": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6"
+    },
+    {
+      "masked_packet_sha256": "78b9b86f2cf52a5e4db5449879404eea3f93a5e3218949bbd135703596b8e44b",
+      "packet_id": "d5fbbc87-30af-45cd-8daa-02d0f0b78097"
+    }
+  ],
+  "schema_version": "bounded-discovery-v1"
+}

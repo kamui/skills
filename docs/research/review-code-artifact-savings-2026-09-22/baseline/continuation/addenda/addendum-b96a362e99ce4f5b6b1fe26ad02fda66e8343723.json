@@ -1,0 +1,95 @@
+{
+  "format": "implementation-gate-addendum/2",
+  "workflow": "v5b-24",
+  "record": "/tmp/rcs-savings/baseline/continuation/review/record.json",
+  "record_format": "implementation-gate-record/2",
+  "reviewed_head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+  "final_head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+  "delta": [
+    {
+      "path": "ledger/accounts.py",
+      "state": "reviewed"
+    },
+    {
+      "path": "tests/test_freeze.py",
+      "state": "reviewed"
+    }
+  ],
+  "replaced_by_full_review": null,
+  "fixed_findings": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "fixed",
+      "evidence": "ledger/accounts.py:89-91 now loops over both `debit` and `credit` and raises `LedgerError` before either `entries.append` call at ledger/accounts.py:94-95; tests/test_freeze.py:23-34 (`test_frozen_account_refuses_transfers_both_ways`) exercises a frozen source and a frozen target and passes under `python3 -m unittest discover -s tests -v` at b96a362e99ce4f5b6b1fe26ad02fda66e8343723 (18 tests, OK)"
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "classification": "fixed",
+      "evidence": "ledger/accounts.py:60-63 `Ledger.post`'s docstring now lists a frozen account among the errors it raises"
+    }
+  ],
+  "findings": [],
+  "questions": [],
+  "requirements": [
+    {
+      "source": "ledger-spec/account-freeze/criterion-2",
+      "class": "acceptance",
+      "disposition": "met",
+      "evidence": "ledger/accounts.py:65-69 refuses postings on a frozen account; ledger/accounts.py:89-91 refuses a transfer before either append when the source or the target is frozen; tests/test_freeze.py:15-34"
+    }
+  ],
+  "check_evidence": [
+    {
+      "check": "python3 -m unittest discover -s tests -v",
+      "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+      "outcome": "reviewer-executed",
+      "reason": "the fix changes ledger/accounts.py and tests/test_freeze.py, which the suite covers; 18 tests, pass, matching the caller-supplied evidence.md run at the same head"
+    }
+  ],
+  "verification": {
+    "tasks": [
+      {
+        "id": "accounts/transfer-frozen-only-mutation-paths",
+        "type": "safety-premise",
+        "area": "data-integrity",
+        "premise": "Ledger.post and Ledger.transfer are the only sites in the repository that append an Entry to an Account's entries list, so their frozen checks are the only gates spec criterion 2 needs.",
+        "evidence": "ledger/accounts.py:73,94-95",
+        "batch": "followup-1",
+        "ruling": "holds"
+      },
+      {
+        "id": "accounts/transfer-frozen-check-precedes-mutation",
+        "type": "safety-premise",
+        "area": "data-integrity",
+        "premise": "In Ledger.transfer, the frozen check on both debit and credit runs before either entries.append call, so a frozen account on either side is refused before any mutation, at head b96a362e99ce4f5b6b1fe26ad02fda66e8343723.",
+        "evidence": "ledger/accounts.py:87-95",
+        "batch": "followup-1",
+        "ruling": "holds"
+      }
+    ],
+    "batches": [
+      {
+        "name": "followup-1",
+        "phase": "follow-up",
+        "bundle": "/tmp/rcs-savings/baseline/continuation/work/followup",
+        "raw_return": "/tmp/rcs-savings/baseline/continuation/work/followup/raw-return.json",
+        "accounting": "/tmp/rcs-savings/baseline/continuation/work/followup/accounting.json",
+        "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+      }
+    ],
+    "allowance": {
+      "initial_spent": true,
+      "follow_up_spent": true,
+      "carried_from": null
+    },
+    "outstanding": []
+  },
+  "status": "Approved",
+  "coverage": "complete",
+  "coverage_gaps": [],
+  "routed": {
+    "unresolved": [],
+    "disputed": [],
+    "unrecoverable_inputs": []
+  }
+}

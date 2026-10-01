@@ -1,0 +1,40 @@
+# Fixture runs on 2026-09-19 (session t3code-cc6cfa77): agents, dispatch parameters, times, models
+
+agent-a5d6d45e8e46ec748.jsonl lines=75 models=claude-opus-5×75 efforts=high×75
+      2026-09-19T17:35:45.211Z Skill review-code
+      2026-09-19T17:40:40.848Z Agent
+      2026-09-19T17:46:24.441Z SubagentHandback
+agent-a9397d7c1d13e2199.jsonl lines=15 models=claude-opus-5×15 efforts=high×15
+      2026-09-19T17:42:56.693Z SubagentHandback
+agent-a619854bf88a6cabe.jsonl lines=55 models=claude-opus-5×55 efforts=high×55
+      2026-09-19T17:48:41.824Z Skill review-code
+      2026-09-19T17:51:50.892Z Agent
+      2026-09-19T17:58:39.619Z SubagentHandback
+agent-a7c7b57daf97e67a4.jsonl lines=18 models=claude-opus-5×18 efforts=high×18
+      2026-09-19T17:54:10.596Z SubagentHandback
+agent-a63df28a032f2d9e9.jsonl lines=61 models=claude-opus-5×61 efforts=high×61
+      2026-09-19T17:59:21.367Z Skill review-code
+      2026-09-19T18:05:12.190Z Agent
+      2026-09-19T18:14:16.391Z SubagentHandback
+agent-a60680f0d70134565.jsonl lines=16 models=claude-opus-5×16 efforts=high×16
+      2026-09-19T18:07:50.798Z SubagentHandback
+
+# Agent tool calls made by the fixture reviewers (route, model, and the tool result that returned the completed batch):
+## a5d6d45e8e46ec748
+>>> 2026-09-19T17:40:40.848Z Agent type=general-purpose model=opus bg=False desc=Verify review candidate batch
+<<< 2026-09-19T17:43:00.215Z RESULT for Agent@2026-09-19T17:40:40.848Z:   This agent's report was delivered to you as a message from "a9397d7c1d13e2199" (its SubagentHandback call). Read it there; it is not repeated here.    agentId: a9397d7c1d13e2199 (use SendMessage with to: 'a9397d7c1d13e2199', summary: '<5-10 word recap>' to
+## a619854bf88a6cabe
+>>> 2026-09-19T17:51:50.892Z Agent type=general-purpose model=opus bg=False desc=Verifier follow-up batch
+<<< 2026-09-19T17:54:13.681Z RESULT for Agent@2026-09-19T17:51:50.892Z:   This agent's report was delivered to you as a message from "a7c7b57daf97e67a4" (its SubagentHandback call). Read it there; it is not repeated here.    agentId: a7c7b57daf97e67a4 (use SendMessage with to: 'a7c7b57daf97e67a4', summary: '<5-10 word recap>' to
+## a63df28a032f2d9e9
+>>> 2026-09-19T18:05:12.190Z Agent type=general-purpose model=opus bg=False desc=Verify follow-up batch
+<<< 2026-09-19T18:07:56.664Z RESULT for Agent@2026-09-19T18:05:12.190Z:   This agent's report was delivered to you as a message from "a60680f0d70134565" (its SubagentHandback call). Read it there; it is not repeated here.    agentId: a60680f0d70134565 (use SendMessage with to: 'a60680f0d70134565', summary: '<5-10 word recap>' to
+
+# This session's own dispatches of the three fixture reviewers (main transcript fcf23a64-8c8a-4642-a1ba-58405fdc44cb.jsonl):
+# each was run_in_background=true; the Agent tool result was an async-launch acknowledgment and the report arrived as a task notification.
+  2026-09-19T17:35:37.720Z Agent subagent_type=general-purpose model=opus run_in_background=True description='Fixture initial gate review (R0)'
+    tool result at 2026-09-19T17:35:39.168Z: 'Async agent launched successfully. (This tool result is inte'...
+  2026-09-19T17:48:36.060Z Agent subagent_type=general-purpose model=opus run_in_background=True description='Case P: pending-verifier continuation'
+    tool result at 2026-09-19T17:48:37.071Z: 'Async agent launched successfully. (This tool result is inte'...
+  2026-09-19T17:59:14.601Z Agent subagent_type=general-purpose model=opus run_in_background=True description='Case D: disputed-blocker continuation'
+    tool result at 2026-09-19T17:59:15.758Z: 'Async agent launched successfully. (This tool result is inte'...

@@ -1,0 +1,90 @@
+{
+  "accounting": {
+    "decision_charged_usd": "0",
+    "frozen_total_cap_usd": "150.00",
+    "grading_closeout_reserve_usd": "10.00",
+    "ledger_actual_usd": "50.3304587",
+    "ledger_chain_intact": true,
+    "ledger_events": 88,
+    "ledger_reserved_usd": "0.00",
+    "ledger_uncertainty_usd": "0.164316",
+    "note": "no model session was charged to this ticket; the ledger is left as #152 settled it, and no stop event is appended because budget.py implements none",
+    "reserve_unused_usd": "6.9831994"
+  },
+  "artifact_id": "issue-153-decision-handoff",
+  "cells": {
+    "attempted": 6,
+    "attempts_recorded": 8,
+    "planned": 24,
+    "unattempted": 18,
+    "valid_completed": 0
+  },
+  "created_at": "2026-09-11T15:54:36.554492+00:00",
+  "decision": "inconclusive",
+  "decision_record": "decision.json",
+  "dispatch_authorized": false,
+  "dispatch_hold": "held. The epic's measurement is closed; nothing runs from this handoff.",
+  "disposition": "decision-delivered",
+  "experiment_disposition": "stopped-incomplete",
+  "next_stage": {
+    "must_not": [
+      "dispatch any cell from this handoff",
+      "read the per-target figures as a comparison between arms",
+      "treat the inconclusive outcome as evidence for or against the stronger-verifier hypothesis"
+    ],
+    "tickets": [
+      138,
+      129,
+      199
+    ],
+    "work": "#138 closes on this decision as a capped, inconclusive result; #129 records it under its known limits; #199 stays unscheduled and becomes the precondition of any future freeze."
+  },
+  "revealed": "revealed/: every sealed plaintext this decision reads, byte-identical to its sealed digest (verification.json)",
+  "rulings_froze_before_unblinding": {
+    "freeze_1_frozen_at": "2026-09-11T05:19:49.308651+00:00",
+    "freeze_2_frozen_at": "2026-09-11T06:11:00.439182+00:00",
+    "grading_handoff_redaction_map_opened": false,
+    "redaction_map_opened_by": "#153, after both freezes verified against the revealed tables"
+  },
+  "schema_version": "bounded-discovery-v1",
+  "stage": "decision",
+  "truth": {
+    "slot-1": {
+      "defects_after_grading": [
+        "GT-p1",
+        "GT-p2"
+      ],
+      "defects_v1": [
+        "GT-p1"
+      ],
+      "status": "buggy",
+      "truth_version_after_grading": "v2"
+    },
+    "slot-2": {
+      "defects_after_grading": [],
+      "defects_v1": [],
+      "status": "clean",
+      "truth_version_after_grading": "v1"
+    },
+    "slot-3": {
+      "defects_after_grading": [
+        "GT-r1"
+      ],
+      "defects_v1": [
+        "GT-r1"
+      ],
+      "status": "buggy",
+      "truth_version_after_grading": "v1"
+    },
+    "slot-4": {
+      "defects_after_grading": [
+        "GT-s1"
+      ],
+      "defects_v1": [
+        "GT-s1"
+      ],
+      "status": "buggy",
+      "truth_version_after_grading": "v1"
+    }
+  }
+}

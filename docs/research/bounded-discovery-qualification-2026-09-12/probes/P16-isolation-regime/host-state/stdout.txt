@@ -1,0 +1,12 @@
+== provider credentials reachable for a container session ==
+ANTHROPIC_API_KEY set: no
+ANTHROPIC_AUTH_TOKEN set: no
+ANTHROPIC_PROFILE set: no
+ant CLI: absent
+~/.config/anthropic: absent
+auth env files under ~/.config/bounded-discovery: 0
+
+== host absence: what is on this machine that a cell must not reach ==
+linked worktrees of the repository under test: 40
+revealed cleartext truth entries in the working tree: 5
+evaluator-only directories: 7

@@ -1,0 +1,51 @@
+{
+  "format": "implementation-gate-addendum/2",
+  "workflow": "v5b-24",
+  "record": "@TASK_ROOT@/review/record.json",
+  "record_format": "implementation-gate-record/2",
+  "reviewed_head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+  "final_head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+  "delta": [
+    {
+      "path": "ledger/accounts.py",
+      "state": "reviewed"
+    }
+  ],
+  "replaced_by_full_review": null,
+  "fixed_findings": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "classification": "still-open",
+      "evidence": "ledger/accounts.py:85-86 at 03ce7cd refuses a frozen source only; a transfer into a frozen account still reaches the credit append at ledger/accounts.py:90"
+    }
+  ],
+  "findings": [],
+  "questions": [],
+  "requirements": [],
+  "check_evidence": [
+    {
+      "check": "python3 -m unittest discover -s tests -v",
+      "head": "03ce7cd85d34afda4ae47f06d7958ea906b3fcc1",
+      "outcome": "reviewer-executed",
+      "reason": "the fix changes ledger/accounts.py, which the suite covers; 17 tests, pass"
+    }
+  ],
+  "verification": {
+    "tasks": [],
+    "batches": [],
+    "allowance": {
+      "initial_spent": true,
+      "follow_up_spent": false,
+      "carried_from": null
+    },
+    "outstanding": []
+  },
+  "status": "Changes Requested",
+  "coverage": "complete",
+  "coverage_gaps": [],
+  "routed": {
+    "unresolved": [],
+    "disputed": [],
+    "unrecoverable_inputs": []
+  }
+}

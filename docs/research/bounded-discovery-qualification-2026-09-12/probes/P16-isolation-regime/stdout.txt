@@ -1,0 +1,14 @@
+== the cell tree ==
+inside.txt
+== /Users ==
+ls: /Users: No such file or directory
+== worktrees of the repository under test ==
+ls: /Users/jack/.t3/worktrees: No such file or directory
+== the evaluator-only directory ==
+ls: /Users/jack/.config/bounded-discovery: No such file or directory
+== the revealed cleartext truth ==
+ls: /Users/jack/Development/skills/docs/research/bounded-discovery-decision-2026-09-11/revealed: No such file or directory
+== sibling probe roots ==
+ls: /private/tmp/bd207-probes/outside: No such file or directory
+== the mount parent ==
+p16cell

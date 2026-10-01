@@ -1,0 +1,201 @@
+{
+  "paths": [
+    {
+      "path": "runtime total",
+      "before": {
+        "bytes": 91790,
+        "words": 12858,
+        "commands": 21
+      },
+      "after": {
+        "bytes": 87803,
+        "words": 12289,
+        "commands": 21
+      },
+      "delta_bytes": -3987
+    },
+    {
+      "path": "always loaded",
+      "before": {
+        "bytes": 25953,
+        "words": 3531,
+        "commands": 6
+      },
+      "after": {
+        "bytes": 24894,
+        "words": 3377,
+        "commands": 6
+      },
+      "delta_bytes": -1059
+    },
+    {
+      "path": "local publishable",
+      "before": {
+        "bytes": 48374,
+        "words": 6535,
+        "commands": 8
+      },
+      "after": {
+        "bytes": 46819,
+        "words": 6317,
+        "commands": 8
+      },
+      "delta_bytes": -1555
+    },
+    {
+      "path": "PR publishable",
+      "before": {
+        "bytes": 50209,
+        "words": 6677,
+        "commands": 10
+      },
+      "after": {
+        "bytes": 49042,
+        "words": 6515,
+        "commands": 10
+      },
+      "delta_bytes": -1167
+    },
+    {
+      "path": "implementation-gate",
+      "before": {
+        "bytes": 48281,
+        "words": 6514,
+        "commands": 8
+      },
+      "after": {
+        "bytes": 46726,
+        "words": 6296,
+        "commands": 8
+      },
+      "delta_bytes": -1555
+    },
+    {
+      "path": "required verifier",
+      "before": {
+        "bytes": 64138,
+        "words": 8474,
+        "commands": 13
+      },
+      "after": {
+        "bytes": 61589,
+        "words": 8100,
+        "commands": 13
+      },
+      "delta_bytes": -2549
+    },
+    {
+      "path": "re-review",
+      "before": {
+        "bytes": 57963,
+        "words": 7813,
+        "commands": 13
+      },
+      "after": {
+        "bytes": 55571,
+        "words": 7477,
+        "commands": 13
+      },
+      "delta_bytes": -2392
+    },
+    {
+      "path": "continuation",
+      "before": {
+        "bytes": 44481,
+        "words": 6056,
+        "commands": 11
+      },
+      "after": {
+        "bytes": 43270,
+        "words": 5882,
+        "commands": 11
+      },
+      "delta_bytes": -1211
+    },
+    {
+      "path": "verifier instructions",
+      "before": {
+        "bytes": 19443,
+        "words": 2778,
+        "commands": 0
+      },
+      "after": {
+        "bytes": 19443,
+        "words": 2778,
+        "commands": 0
+      },
+      "delta_bytes": 0
+    },
+    {
+      "path": "verifier example brief",
+      "before": {
+        "bytes": 22941,
+        "words": 3075,
+        "commands": 0
+      },
+      "after": {
+        "bytes": 22941,
+        "words": 3075,
+        "commands": 0
+      },
+      "delta_bytes": 0
+    },
+    {
+      "path": "file-transport verifier example brief",
+      "before": {
+        "bytes": 23385,
+        "words": 3136,
+        "commands": 0
+      },
+      "after": {
+        "bytes": 23385,
+        "words": 3136,
+        "commands": 0
+      },
+      "delta_bytes": 0
+    },
+    {
+      "path": "ordinary verifier instructions",
+      "before": {
+        "bytes": 14211,
+        "words": 2029,
+        "commands": 0
+      },
+      "after": {
+        "bytes": 14211,
+        "words": 2029,
+        "commands": 0
+      },
+      "delta_bytes": 0
+    },
+    {
+      "path": "ordinary verifier example brief",
+      "before": {
+        "bytes": 16615,
+        "words": 2247,
+        "commands": 0
+      },
+      "after": {
+        "bytes": 16615,
+        "words": 2247,
+        "commands": 0
+      },
+      "delta_bytes": 0
+    }
+  ],
+  "examples_identical": {
+    "compose_review.py --example --profile publishable": true,
+    "compose_review.py --example --profile implementation-gate": true,
+    "context_fingerprint.py --example": true,
+    "build_verifier_prompt.py --example": true,
+    "continue_review.py --example": true
+  },
+  "example_leaves": {
+    "compose_review.py --example --profile publishable": 78,
+    "compose_review.py --example --profile implementation-gate": 76,
+    "context_fingerprint.py --example": 14,
+    "build_verifier_prompt.py --example": 41,
+    "continue_review.py --example": 31
+  },
+  "briefs_identical": true
+}

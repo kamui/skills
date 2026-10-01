@@ -1,0 +1,2 @@
+session 1512c921-e5ca-4d72-aead-dfe2021b2425 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22-B-clean2/1512c921-e5ca-4d72-aead-dfe2021b2425.jsonl sha256 0d57ebffef4ef5bea47fef3017dc172802db88e1906d5e5f46cae2e6ff99d720

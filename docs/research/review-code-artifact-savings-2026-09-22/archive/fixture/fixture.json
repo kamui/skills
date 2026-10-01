@@ -1,0 +1,107 @@
+{
+  "format": "savings-fixture/1",
+  "identity": {
+    "name": "Ledger Fixture",
+    "email": "fixture@example.invalid"
+  },
+  "commits": [
+    {
+      "label": "M0",
+      "parent": null,
+      "date": "2026-09-01T09:00:00+00:00",
+      "message": "Start the ledger fixture\n\nAccounts, statements, roles, and a statement command, with tests.\n",
+      "files": [
+        ".gitignore",
+        "AGENTS.md",
+        "README.md",
+        "ledger/__init__.py",
+        "ledger/accounts.py",
+        "ledger/auth.py",
+        "ledger/cli.py",
+        "ledger/statement.py",
+        "tests/test_accounts.py",
+        "tests/test_auth.py",
+        "tests/test_cli.py",
+        "tests/test_statement.py"
+      ]
+    },
+    {
+      "label": "A1",
+      "parent": "M0",
+      "date": "2026-09-02T10:00:00+00:00",
+      "message": "Add CSV statement export\n\n`ledger statement --format csv` prints the statement as CSV with a header row.\n\nCloses #3.\n",
+      "files": [
+        "ledger/cli.py",
+        "ledger/export.py",
+        "tests/test_export.py"
+      ]
+    },
+    {
+      "label": "B1",
+      "parent": "M0",
+      "date": "2026-09-03T10:00:00+00:00",
+      "message": "Filter statements by date range\n\nAdd inclusive --since and --until options with opening and closing balances.\n",
+      "files": [
+        "ledger/cli.py",
+        "ledger/statement.py",
+        "tests/test_filter.py"
+      ]
+    },
+    {
+      "label": "B2",
+      "parent": "B1",
+      "date": "2026-09-03T11:00:00+00:00",
+      "message": "Document statement date filters\n",
+      "files": [
+        "README.md"
+      ]
+    },
+    {
+      "label": "C1",
+      "parent": "M0",
+      "date": "2026-09-04T10:00:00+00:00",
+      "message": "Let delegates read statements\n\nOwners grant and revoke read-only statement access. Delegates can view only the accounts that granted them and never post.\n\nCloses #5.\n",
+      "files": [
+        "ledger/accounts.py",
+        "ledger/auth.py",
+        "tests/test_delegates.py"
+      ]
+    },
+    {
+      "label": "D1",
+      "parent": "M0",
+      "date": "2026-09-05T10:00:00+00:00",
+      "message": "Add account freezing\n\nA frozen account refuses new entries until it is unfrozen.\n",
+      "files": [
+        "ledger/accounts.py",
+        "tests/test_freeze.py"
+      ]
+    },
+    {
+      "label": "D2",
+      "parent": "D1",
+      "date": "2026-09-06T10:00:00+00:00",
+      "message": "Refuse transfers from frozen accounts\n",
+      "files": [
+        "ledger/accounts.py"
+      ]
+    },
+    {
+      "label": "D3",
+      "parent": "D2",
+      "date": "2026-09-07T10:00:00+00:00",
+      "message": "Refuse transfers into frozen accounts\n\nDocument the frozen-account errors on post and transfer.\n",
+      "files": [
+        "ledger/accounts.py",
+        "tests/test_freeze.py"
+      ]
+    }
+  ],
+  "refs": {
+    "main": "M0",
+    "csv-export": "A1",
+    "date-filter": "B2",
+    "delegates": "C1",
+    "freeze": "D3"
+  }
+}

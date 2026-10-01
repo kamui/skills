@@ -1,0 +1,202 @@
+{
+  "probe": "P26",
+  "rule": "the rendered prompt is tied to the pinned template it came from, no placeholder is left unfilled, and the arms differ only in the attempt id and the arm label. The third link - the same digest published in a public cell summary - is not checkable here, because no cell ran.",
+  "template": "dispatch-payload-contract.md",
+  "template_sha256": "8e2eac00133c6fd18f3e5f5a46d7a6f93d79618e13b517bbb093fa1e37ff7514",
+  "rendered": [
+    {
+      "directory": "probes/P22-uniform-payloads/A-clean",
+      "prompt_sha256": "dffa920c2bd920e25de13f489642e5959857fe9e42091ec901033ce3dfe0157c",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-A-clean",
+      "arm": "A",
+      "packet_sha256": "896f0aa85e2b9807257e348f5c9aee3868febc152c971e22cc64651d213867a0",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/A-clean-attempt-1",
+      "prompt_sha256": "46d5c57da1e59190a653c8b93437d706d06e9cf1752cc8fc071c5aff10f8c832",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-A-clean",
+      "arm": "A",
+      "packet_sha256": "b7921cbf31f17167df628c4172b07508685e0b12e35cca3ff17f2c324f80d7d4",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/A-clean-attempt-2",
+      "prompt_sha256": "2a60676f2e139585b638a6c6c86602388bd92cb275e8fe78e87a3c02c64e71d8",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-A-clean2",
+      "arm": "A",
+      "packet_sha256": "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/A-clean-attempt-3",
+      "prompt_sha256": "dffa920c2bd920e25de13f489642e5959857fe9e42091ec901033ce3dfe0157c",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-A-clean",
+      "arm": "A",
+      "packet_sha256": "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/A-findings",
+      "prompt_sha256": "8917bd6078604dd28489fd12e4f6a0a7012c734e7dae2c199a59cf4e90450cba",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-A-findings",
+      "arm": "A",
+      "packet_sha256": "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/A-findings-attempt-1",
+      "prompt_sha256": "632e0770657cf5d9ff7fc7d9ba90e1fe31aa005cec0aada93ffdad4abab67ab9",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-A-findings",
+      "arm": "A",
+      "packet_sha256": "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/B-clean",
+      "prompt_sha256": "4288547bf927eaa5e83229526aa65064bc2de5a70a7447fc8614aaa6b8245201",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-B-clean",
+      "arm": "B",
+      "packet_sha256": "896f0aa85e2b9807257e348f5c9aee3868febc152c971e22cc64651d213867a0",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/B-clean-attempt-1",
+      "prompt_sha256": "1b5c36795a86ec040985709b44603ca1a436b8c6b067bc794e47fdd8201e8d8b",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-B-clean",
+      "arm": "B",
+      "packet_sha256": "b7921cbf31f17167df628c4172b07508685e0b12e35cca3ff17f2c324f80d7d4",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/B-clean-attempt-2",
+      "prompt_sha256": "c3367c0d75a0d2f702902086bb4caddd658db54a0d7627c01b12cfe9a40984dc",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-B-clean2",
+      "arm": "B",
+      "packet_sha256": "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/B-clean-attempt-3",
+      "prompt_sha256": "4288547bf927eaa5e83229526aa65064bc2de5a70a7447fc8614aaa6b8245201",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-B-clean",
+      "arm": "B",
+      "packet_sha256": "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/B-findings",
+      "prompt_sha256": "d51b941a2b0171b7264872d9831e6036fdb757f417cab6563995f0b8849dd311",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-B-findings",
+      "arm": "B",
+      "packet_sha256": "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/B-findings-attempt-1",
+      "prompt_sha256": "86820c43c3f6cd3cf384ed9713fdffc36109f79f0bb5d32fed56597f919ca981",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-B-findings",
+      "arm": "B",
+      "packet_sha256": "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/C-clean",
+      "prompt_sha256": "58a6df272a2df6c1aa0dc9cf8a82e2c9b99d50c399d1b53852ca55060e951814",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-C-clean",
+      "arm": "C",
+      "packet_sha256": "896f0aa85e2b9807257e348f5c9aee3868febc152c971e22cc64651d213867a0",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/C-clean-attempt-1",
+      "prompt_sha256": "830b185d79f5f261b0dfc5455e2e085d6ccbc269f7ad554c71c6ffe03cc7f1c1",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-C-clean",
+      "arm": "C",
+      "packet_sha256": "b7921cbf31f17167df628c4172b07508685e0b12e35cca3ff17f2c324f80d7d4",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/C-clean-attempt-2",
+      "prompt_sha256": "744c62a7fd40913ef57d401da0d42d5d9f82943be4cbd2b9ceef4fee49806dbe",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-C-clean2",
+      "arm": "C",
+      "packet_sha256": "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/C-clean-attempt-3",
+      "prompt_sha256": "58a6df272a2df6c1aa0dc9cf8a82e2c9b99d50c399d1b53852ca55060e951814",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-C-clean",
+      "arm": "C",
+      "packet_sha256": "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/C-findings",
+      "prompt_sha256": "2b27fe53d70e8cfb81b4bcf2d6ac3cae9a7988520e75901392c632f49a22f17a",
+      "normalised_sha256": "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6",
+      "attempt_id": "probe-p22-C-findings",
+      "arm": "C",
+      "packet_sha256": "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": true
+    },
+    {
+      "directory": "probes/P22-uniform-payloads/C-findings-attempt-1",
+      "prompt_sha256": "455bdcc7f3fdf4078c33c324dd6abae026821544f38163060976e064a0febbda",
+      "normalised_sha256": "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308",
+      "attempt_id": "probe-p22-C-findings",
+      "arm": "C",
+      "packet_sha256": "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "unfilled_placeholders": [],
+      "carries_the_pinned_block": false
+    }
+  ],
+  "distinct_normalised_shapes": 2,
+  "packets_per_shape": {
+    "1c900771ba76f705e05055671500ec7e4f71d271b602baecbba997adc3c465a6": [
+      "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "896f0aa85e2b9807257e348f5c9aee3868febc152c971e22cc64651d213867a0"
+    ],
+    "89bced5eeda31e78860dc6d91c3d2ab4e3f8839145401394e30f6b648b1f4308": [
+      "001fbfd18620a17b306f82e892bce2af38c1776e6da1f3ee4936701d34c1aeb2",
+      "1d9ff9793702514686b527befec61438db88fc315bfa1ef792a2752bc284f83f",
+      "b7921cbf31f17167df628c4172b07508685e0b12e35cca3ff17f2c324f80d7d4"
+    ]
+  },
+  "recorded_at": "2026-09-12T21:21:48.251098+00:00"
+}

@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+node_modules/
+*.swp
+*.swo
+*~
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+/docs/research/bounded-discovery-prototype/ledger.json.lock
+/docs/research/bounded-discovery-qualification-2026-09-12/**/*.lock

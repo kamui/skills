@@ -1,0 +1,39 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P23-unjudged",
+  "purpose": "With no judgments recorded at all, does the audit refuse every retained shell command rather than passing any on its spelling?",
+  "retained_at": "2026-09-12T10:38:34.739235+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P23-network-judgments",
+  "argv": [
+    "python3",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/audit_probe.py",
+    "network",
+    "--transcript",
+    "/Users/jack/.claude/projects/-private-tmp-bd207-probes-p06/a9af4382-4cd8-4c87-a6c8-0b11f33c8f59.jsonl",
+    "--egress",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P06-P14-egress/egress.jsonl",
+    "--out",
+    "unjudged.json"
+  ],
+  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/audit_probe.py network --transcript /Users/jack/.claude/projects/-private-tmp-bd207-probes-p06/a9af4382-4cd8-4c87-a6c8-0b11f33c8f59.jsonl --egress /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P06-P14-egress/egress.jsonl --out unjudged.json",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 1
+}

@@ -1,0 +1,114 @@
+{
+  "run": {
+    "id": "review-a13922e",
+    "repository": "/tmp/rcs-savings/baseline/required-verification/repo",
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "a13922e76f42d9757608530348200affbf3bde2f",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab"
+  },
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect; no network access.",
+  "sources": [
+    {
+      "coordinate": "AGENTS.md:7",
+      "text": "Authorization decisions live in `ledger/auth.py`; callers never compare roles themselves."
+    },
+    {
+      "coordinate": "AGENTS.md:6",
+      "text": "Every public function's docstring names the errors it raises."
+    },
+    {
+      "coordinate": "issue-5/acceptance-criterion-2",
+      "text": "Only the account's owner can grant or revoke; anyone else gets `LedgerError` and nothing changes."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "ledger/grant-revoke-auth-placement",
+      "kind": "security",
+      "priority": "P2",
+      "action": "must-fix",
+      "title": "Move the owner check for grant/revoke into ledger/auth.py",
+      "claim": "Ledger.grant and Ledger.revoke each inline an ownership-based authorization check (`if account.owner != user: raise LedgerError(...)`) directly in ledger/accounts.py instead of routing the decision through ledger/auth.py, where every other authorization decision (can_view, can_post) lives.",
+      "trigger": "Any call to Ledger.grant or Ledger.revoke.",
+      "impact": "The repository's authorization decisions become split across two modules: future changes to who may administer delegate access (e.g. allowing a co-owner or auditor to grant) require editing accounts.py instead of the single auth.py surface the rest of the codebase relies on, and the check is duplicated verbatim in both methods.",
+      "change": "Add an auth.py function (for example can_manage_delegates(user, account)) that encapsulates the ownership check, and have Ledger.grant/Ledger.revoke call it instead of comparing account.owner to user themselves.",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 52,
+        "end_line": 64,
+        "side": "RIGHT"
+      },
+      "fix": "ledger/auth.py:18",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:55",
+          "text": "if account.owner != user:"
+        },
+        {
+          "coordinate": "ledger/accounts.py:62",
+          "text": "if account.owner != user:"
+        },
+        {
+          "coordinate": "ledger/auth.py:17",
+          "text": "return account.owner == user"
+        }
+      ],
+      "ranges": {
+        "anchor": {
+          "coordinate": "ledger/accounts.py:52-64",
+          "text": "ledger/accounts.py: +52,13"
+        },
+        "fix": {
+          "coordinate": "ledger/auth.py:18",
+          "text": "ledger/auth.py: +18,1"
+        }
+      },
+      "rule_source": "AGENTS.md:7"
+    },
+    {
+      "id": "ledger/grant-revoke-docstring-errors",
+      "kind": "requirement",
+      "priority": "P3",
+      "action": "must-fix",
+      "title": "Document the unknown-account error in grant/revoke docstrings",
+      "claim": "Ledger.grant and Ledger.revoke each call self.get(number), which raises LedgerError for an unknown account, but each docstring says only \"Raises LedgerError unless user owns the account,\" omitting the unknown-account case that sibling methods (post, transfer) enumerate explicitly.",
+      "trigger": "Calling Ledger.grant or Ledger.revoke with a number that is not in self.accounts.",
+      "impact": "A reader relying on the docstring per the repository's own convention (every public function's docstring names the errors it raises) cannot tell from grant/revoke's docstring that an unknown account also raises, unlike post's and transfer's docstrings which enumerate every raise condition.",
+      "change": "Reword each docstring to name both causes, e.g. \"Raises LedgerError for an unknown account or when user does not own it.\"",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 53,
+        "end_line": 53,
+        "side": "RIGHT"
+      },
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:53",
+          "text": "\"\"\"Let delegate read the account's statement. Raises LedgerError unless user owns the account.\"\"\""
+        },
+        {
+          "coordinate": "ledger/accounts.py:60",
+          "text": "\"\"\"Withdraw a delegate's access. Raises LedgerError unless user owns the account.\"\"\""
+        },
+        {
+          "coordinate": "ledger/accounts.py:67",
+          "text": "\"\"\"Post one entry. Raises LedgerError for a zero amount, an overdraft, or an unknown account.\"\"\""
+        }
+      ],
+      "ranges": {
+        "anchor": {
+          "coordinate": "ledger/accounts.py:53",
+          "text": "ledger/accounts.py: +53,1"
+        }
+      },
+      "rule_source": "AGENTS.md:6"
+    }
+  ],
+  "premises": []
+}

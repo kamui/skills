@@ -1,0 +1,2 @@
+session 3fbda135-8589-461a-870c-c6310fdbf6cd transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22-A-findings/3fbda135-8589-461a-870c-c6310fdbf6cd.jsonl sha256 38ea874bbf307db648e2f70c9a073a3a75c1d328d14ff5e6403a2b95023a0492

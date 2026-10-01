@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-B-findings",
+  "arm": "B",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite of `last_n` breaks exactly the behavior the PR description says it must preserve: returning the whole list when `n` exceeds its length.\n\nWith `items = [1,2,3,4,5]` and `n = 7`:\n- Old: `items[-7:]` — Python clamps the out-of-range negative start to 0, so this returns the full list `[1,2,3,4,5]`.\n- New: `items[len(items) - n:]` = `items[-2:]` — this returns only the last 2 elements `[4, 5]`, not the whole list.\n\nMore generally, for `len(items) <= n < 2*len(items)`, the new slice's start index normalizes to `2*len(items) - n` (a positive number less than `len(items)`), so the function silently returns a truncated slice instead of the full list. It only happens to return the full list once `n >= 2*len(items)`. This is a regression relative to both the old code and the stated intent, and should be fixed (e.g. by clamping `n` to `max(n, 0)` and using `items[max(len(items) - n, 0):]`, or simply keeping `items[-n:]` guarded for `n == 0`)."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "For `len(items) <= n < 2*len(items)`, `items[len(items) - n:]` does **not** return the whole list, contradicting the stated PR intent (\"must return the whole list when `n` exceeds its length, exactly as the slice did\").\n\nExample: `items=[1,2,3,4,5]`, `n=7` → old code `items[-7:]` returns `[1,2,3,4,5]` (full list, since the out-of-range negative index clamps to 0); new code `items[len(items)-n:]` = `items[-2:]` returns `[4,5]`.\n\nThe new slice's effective start index normalizes to `max(0, 2*len(items) - n)`, so full-list behavior is only restored once `n >= 2*len(items)`. Suggest clamping: `items[max(len(items) - n, 0):]` (and double-check the `n == 0` case, which also changes from returning the full list to returning `[]`).",
+      "trailer": "Confirm intended behavior for `n >= len(items)` and `n == 0`, and add regression tests for both.",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 8},
+      "priority": "P0",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "logic-regression"
+    }
+  ],
+  "stop": null
+}

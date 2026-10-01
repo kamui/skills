@@ -1,0 +1,175 @@
+{
+  "target_ref": "target-A",
+  "truth_version": "v1",
+  "register_status": "clean",
+  "register_defect_ids": [],
+  "packets": [
+    {
+      "packet_id": "1d3416e2-b657-4498-ae26-f0c0f504bc1d",
+      "status": "Approved",
+      "explicit_clean_claim": true,
+      "clean_claim_quote": "**Approved (advisory)** — no findings, no open questions.",
+      "honest_incomplete": false,
+      "incomplete_quote": "",
+      "items": [],
+      "safety_claims": [
+        {
+          "quote": "the mutex is now released before the early return (`balancer.go:273`), which by inspection closes off the described \"`UpdateClientConnState` gets stuck\" failure mode",
+          "ruling": "supported",
+          "citations": ["xds/internal/balancer/priority/balancer.go:271-274", "command: git -C clone diff master review-head (single +1 line adds b.mu.Unlock() at balancer.go:273)"],
+          "basis": "Confirmed at the pinned head that line 273 is the added `b.mu.Unlock()` inside the `if b.done.HasFired()` early-return branch of `run()`; this is exactly the narrow failure mode (permanently-held `b.mu` after that branch) named in the PR body, and it is closed off by the added line. Matches register verdict that the diff is a correct, complete fix for its own stated defect."
+        },
+        {
+          "quote": "Risk check: mutex balance across every `Lock`/`Unlock` site in the package — evidence-backed, no imbalance found.",
+          "ruling": "supported",
+          "citations": ["xds/internal/balancer/priority/balancer.go:127,182,222-233,271-284", "xds/internal/balancer/priority/balancer_child.go:152-153", "register: Not ground truth #3"],
+          "basis": "Independently enumerated every Lock/Unlock site in the package at the pinned head: UpdateClientConnState (two exit paths, both unlock), Close (Lock+defer Unlock), run (both branches now unlock), and the child init-timer callback (Lock+defer Unlock). All are balanced; no leak found anywhere in the package, consistent with the register's own audit (Not ground truth #3, scoped to run()) extended here to the whole package."
+        },
+        {
+          "quote": "`go vet ./xds/internal/balancer/priority/`: clean.",
+          "ruling": "supported",
+          "citations": ["command: go -C clone vet ./xds/internal/balancer/priority/ (exit 0, no output)"],
+          "basis": "Ran go vet on the package at the pinned head; it produced no output and exited 0, matching the claim."
+        },
+        {
+          "quote": "Full package test suite, `-race`, run once: pass (24 subtests).",
+          "ruling": "supported",
+          "citations": ["command: go -C clone test -count=1 -race -run 'Test/' ./xds/internal/balancer/priority/ (ok, 3.198s)", "command: go -C clone test -run 'Test/' -v ./xds/internal/balancer/priority/ | grep '^    --- PASS' | wc -l -> 28"],
+          "basis": "Ran the package tests with -race at the pinned head; result was `ok` with no failures, matching the pass claim. The specific subtest count is inaccurate (28 direct subtests of Test observed under -v, not 24); this is a minor factual slip in an otherwise-verified claim and does not change the substantive pass/fail assertion."
+        }
+      ],
+      "unmasking_cues": [
+        "No items array populated and no Observations/Findings sections at all — terser than the other two packets, which both carry an Observations section; consistent with the packet-level structural tell that only one arm in this pilot publishes structured `items` (this packet does not)."
+      ]
+    },
+    {
+      "packet_id": "c838196b-9ae8-4f61-b4dd-0f361d48f970",
+      "status": "Approved",
+      "explicit_clean_claim": true,
+      "clean_claim_quote": "**Approved (advisory)** — no findings; no open questions; one observation.",
+      "honest_incomplete": false,
+      "incomplete_quote": "",
+      "items": [
+        {
+          "item_ref": "c838196b-9ae8-4f61-b4dd-0f361d48f970/r1",
+          "structured_item_id": "a8ef944c-6747-4588-b55e-f889c90c736c",
+          "kind": "observation",
+          "anchor": "xds/internal/balancer/priority/balancer_child.go:152",
+          "quote": "The mutex leak this diff fixes also stranded a second waiter class beyond the one the pull request names, since `balancer_child.go`'s init-timer callback takes the same lock.",
+          "asserted_defect": "The pre-fix mutex leak in run() also blocks the balancer_child.go init-timer AfterFunc's cb.parent.mu.Lock() call, not just UpdateClientConnState, making the pre-existing bug's scope broader than the PR describes.",
+          "asserted_consequence": "A second class of goroutine (the per-child init-timer callback) can be left permanently blocked on b.mu whenever the pre-fix leak occurs, beyond the UpdateClientConnState caller the PR names.",
+          "defect_supported": "false",
+          "consequence_supported": "false",
+          "ruling": "false",
+          "materiality": "not-applicable",
+          "concept": "F1",
+          "requested_fix": "not-applicable",
+          "priority_error": false,
+          "priority_note": "Filed as a plain, unlabeled observation, not escalated to a priority tier, so there is no priority to be wrong about despite the underlying claim being false.",
+          "action_error": false,
+          "action_note": "Not used to justify any blocking action; the packet remains Approved and treats the item as a non-blocking observation.",
+          "citations": [
+            "xds/internal/balancer/priority/balancer.go:222-233 (Close holds b.mu via defer across the whole body, including the child.stop() loop, with a comment stating this stops init timers)",
+            "xds/internal/balancer/priority/balancer_child.go:127-138 (stop() calls stopInitTimer() synchronously)",
+            "xds/internal/balancer/priority/balancer_child.go:143-163 (startInitTimer/AfterFunc takes cb.parent.mu with defer Unlock and checks timerW.stopped)",
+            "balancer/balancer.go:368-370 (UpdateClientConnState/Close guaranteed synchronous from one goroutine)"
+          ],
+          "basis": "Close() acquires b.mu with defer Unlock() at the very top of its body and only releases it after iterating every child and calling stop(), which calls stopInitTimer() synchronously (setting timerW.stopped=true and calling timer.Stop()) while still holding the same lock; the code's own comment at balancer.go:227-228 states this loop exists specifically to stop the init timers. run()'s vulnerable early-return branch can only be taken once b.done.HasFired() is true, and that flag is only set inside Close() while Close() already holds b.mu, so run()'s Lock() call cannot even proceed until Close() has released the lock via its defer — by which point every existing child's timer has already been neutralized under that same lock. Any AfterFunc that races Close() either finishes via its own defer Unlock() before Close() begins, or blocks on ordinary bounded contention until Close()'s defer fires and then observes timerW.stopped==true and returns immediately. In every possible interleaving the timer goroutine is never permanently blocked by the pre-fix leak, so the 'second waiter class' claim is refuted, not merely unconfirmed."
+        }
+      ],
+      "safety_claims": [
+        {
+          "quote": "The body's literal instruction — release the mutex locked a couple of lines above — is met: the diff adds `b.mu.Unlock()` at the return that previously skipped it.",
+          "ruling": "supported",
+          "citations": ["xds/internal/balancer/priority/balancer.go:271-274"],
+          "basis": "Matches the diff and PR body exactly."
+        },
+        {
+          "quote": "Tracing the only two ways a stuck-call complaint could still apply post-fix showed both are out of scope: a race between an in-flight `UpdateClientConnState` call and a concurrent `Close()` cannot occur, because `balancer.Balancer`'s documented contract guarantees these methods are called synchronously from one goroutine; and a call made after `Close()` has already returned is explicitly illegal usage per that same contract and the review record.",
+          "ruling": "supported",
+          "citations": ["balancer/balancer.go:368-370", "register: Preexisting hints", "register: Not ground truth #1"],
+          "basis": "Independently confirmed the interface doc comment at balancer.go:368-370 states UpdateClientConnState/Close are guaranteed synchronous from the same goroutine; this matches the register's own reachability analysis and the maintainer's review comment quoted in the register's Preexisting hints section."
+        }
+      ],
+      "unmasking_cues": [
+        "This packet populates the structured `items` array (one entry) while the other two packets in this set have empty `items` arrays — matches the pilot's named structural tell that only one arm publishes structured items alongside body prose.",
+        "Distinctive internal-process phrasing not seen in the other two packets: \"A clean-verdict verifier batch attacked the complete disposition ledger (zero survivors on a concurrency-touching path triggers this); every disposition held.\" — suggests an automated adversarial self-check step specific to one review pipeline/strategy."
+      ]
+    },
+    {
+      "packet_id": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6",
+      "status": "Approved",
+      "explicit_clean_claim": true,
+      "clean_claim_quote": "**Approved (advisory)** — 0 must-fix findings, 0 open questions.",
+      "honest_incomplete": false,
+      "incomplete_quote": "",
+      "items": [
+        {
+          "item_ref": "d34ed404-3ac1-48eb-b8ee-70c49f7f19d6/r1",
+          "structured_item_id": null,
+          "kind": "observation",
+          "anchor": "CONTRIBUTING.md:66",
+          "quote": "The diff adds no test for the `b.done.HasFired()` early-return path and Codecov reports 0% patch coverage on the added line, while the repository's contribution guide only requires that existing tests pass.",
+          "asserted_defect": "None — the sentence is framed to state and then pre-emptively neutralize a possible coverage-gap objection, not to allege a failure of the code or the PR.",
+          "asserted_consequence": "",
+          "defect_supported": "none",
+          "consequence_supported": "none",
+          "ruling": "not-applicable",
+          "materiality": "not-applicable",
+          "concept": "N1",
+          "requested_fix": "not-applicable",
+          "priority_error": false,
+          "priority_note": "Filed as an unlabeled observation, consistent with its non-blocking, exculpatory framing.",
+          "action_error": false,
+          "action_note": "Not used to justify any blocking action; the packet remains Approved.",
+          "citations": ["xds/internal/balancer/priority/balancer.go:270-284 (diff touches only this file, no test file changed)", "CONTRIBUTING.md:66", "register: Not ground truth #4"],
+          "basis": "Confirmed the PR's diff is exactly +1/-0 in balancer.go with no test file touched, and CONTRIBUTING.md:66 states only that 'All tests need to be passing' before merge, not that new coverage is required, matching the item's paraphrase. This is the same underlying fact the register itself dismisses as non-material in its 'Not ground truth' item 4, and the item here is stated as a defusing observation rather than an allegation, so no defect or consequence is asserted."
+        }
+      ],
+      "safety_claims": [
+        {
+          "quote": "Acceptance requirement (pr-body, \"Release the mutex that is locked a couple of lines above\") — met: the added `b.mu.Unlock()` releases the mutex on that path.",
+          "ruling": "supported",
+          "citations": ["xds/internal/balancer/priority/balancer.go:271-274"],
+          "basis": "Matches the diff exactly."
+        },
+        {
+          "quote": "independent verification confirms the described interleaving cannot occur given the `balancer.Balancer` interface's documented single-goroutine call guarantee. This does not affect the fix's correctness.",
+          "ruling": "supported",
+          "citations": ["balancer/balancer.go:368-370", "register: Preexisting hints"],
+          "basis": "Confirmed the same interface guarantee cited above; matches the register's own reachability conclusion."
+        }
+      ],
+      "unmasking_cues": [
+        "Uses distinct \"must-fix\" / \"0 must-fix findings\" terminology in its status line, unlike the other two packets' plain \"no findings\" phrasing, and calls the Codecov patch-coverage percentage out by name — suggests a checklist- or metrics-driven review style distinct from the other two packets."
+      ]
+    }
+  ],
+  "concepts": {
+    "F1": {
+      "description": "False claim that the pre-fix mutex leak in priorityBalancer.run() also 'strands' a second class of waiter via balancer_child.go's init-timer AfterFunc callback (cb.parent.mu.Lock() at balancer_child.go:152). Refuted: Close() holds b.mu for its entire body via defer and synchronously stops every child's init timer (stopInitTimer, under the same lock) before it can ever release that lock; run()'s vulnerable early-return branch cannot even attempt its Lock() call until Close() has already released the lock, by which point all pre-existing timers are neutralized. No interleaving leaves the timer goroutine permanently blocked.",
+      "source": "adjudicator"
+    },
+    "N1": {
+      "description": "True but sub-threshold observation that the PR's added line (`b.mu.Unlock()` in run()'s early-return branch) has no dedicated regression test and shows 0% patch coverage, while the repository's CONTRIBUTING.md only requires that (existing) tests pass. Matches the register's 'Not ground truth' item 4 almost verbatim.",
+      "source": "register (Not ground truth #4), restated by adjudicator as a concept label"
+    }
+  },
+  "proposed_truth_revisions": [],
+  "commands_run": [
+    {"command": "git -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go status --short", "cwd": "n/a", "exit": 0, "seconds": 1, "summary": "Confirmed clone is clean before and after inspection."},
+    {"command": "git -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go log --oneline -1 review-head", "cwd": "n/a", "exit": 0, "seconds": 1, "summary": "review-head at 040de9b1 'Unlock mutex before returning'."},
+    {"command": "git -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go log --oneline -1 master", "cwd": "n/a", "exit": 0, "seconds": 1, "summary": "master at bdd707e6 (merge-base)."},
+    {"command": "grep -n \"b.mu\\|Lock()\\|Unlock()\\|timer\\|Timer\" xds/internal/balancer/priority/balancer_child.go", "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go", "exit": 0, "seconds": 1, "summary": "Located init-timer callback taking cb.parent.mu with defer Unlock at balancer_child.go:152-153."},
+    {"command": "sed -n '1,340p' xds/internal/balancer/priority/balancer.go", "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go", "exit": 0, "seconds": 1, "summary": "Read full balancer.go to trace Close()/run()/UpdateClientConnState lock discipline."},
+    {"command": "sed -n '90,180p' xds/internal/balancer/priority/balancer_child.go", "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go", "exit": 0, "seconds": 1, "summary": "Read stop()/startInitTimer()/stopInitTimer() to confirm timer neutralization happens under Close()'s lock."},
+    {"command": "grep -n \"All tests need to be passing\" CONTRIBUTING.md", "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go", "exit": 0, "seconds": 1, "summary": "Confirmed CONTRIBUTING.md:66 wording matches packet 3's citation."},
+    {"command": "go -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go vet ./xds/internal/balancer/priority/", "cwd": "n/a", "exit": 0, "seconds": 3, "summary": "go vet clean, no output."},
+    {"command": "go -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go test -count=1 -race -run 'Test/' ./xds/internal/balancer/priority/", "cwd": "n/a", "exit": 0, "seconds": 4, "summary": "Package tests pass under -race at pinned head (3.198s)."},
+    {"command": "go -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go test -run 'Test/' -v ./xds/internal/balancer/priority/ | grep -c '^    --- PASS'", "cwd": "n/a", "exit": 0, "seconds": 3, "summary": "Counted 28 direct subtests of Test, versus packet 1's claimed 24 — minor factual slip noted in its safety-claim ruling."},
+    {"command": "grep -n \"synchronous\" -A5 balancer/balancer.go", "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go", "exit": 0, "seconds": 1, "summary": "Confirmed balancer.Balancer interface doc guarantees UpdateClientConnState/Close are called synchronously from one goroutine, corroborating packets' and register's reachability analysis."},
+    {"command": "git -C /Users/jack/.config/bounded-discovery/issue-152/clones/grpc-go status --short (post-run check)", "cwd": "n/a", "exit": 0, "seconds": 1, "summary": "Clone remained unmodified throughout."}
+  ],
+  "outstanding": [],
+  "notes": "All three packets in this set carry the same Approved status and the same overall conclusion as the sealed register (adjudicated clean, D_u = 0): the one-line fix is correct, minimal, and idiom-consistent, and the PR's own stated failure-mode consequence is disputed by the maintainer and independently unreachable via the documented balancer.Balancer single-goroutine call guarantee. No packet made a false or unsupported explicit clean/approval claim about the diff itself. Packet c838196b's single raw item (the 'second waiter class' observation) is the only novel, register-uncovered claim across the three packets; I traced it to a firm refutation using Close()'s own lock discipline (independently confirmed in the clone, not just asserted) rather than leaving it unresolved, so it is recorded as ruling=false / concept=F1 rather than as a proposed truth revision. Packet d34ed404's coverage/Codecov observation is graded as asserting no defect (defect_supported=none) because it is framed exculpatorily, paralleling register 'Not ground truth' item 4; a stricter reading treating it as an implicit coverage complaint would instead rule it true-but-sub-threshold (materiality=sub-threshold, concept=N1) with the same non-blocking disposition — this judgment call does not change any packet's overall status or action assessment. Packet 1d3416e2's claimed subtest count (24) does not match the 28 I observed at the pinned head with -v; this is noted in its safety-claim basis but is a minor process-reporting detail, not a substantive correctness claim, so it did not change that claim's 'supported' ruling."
+}

@@ -1,0 +1,35 @@
+{
+  "format": "savings-task/1",
+  "name": "publishable",
+  "interface": "review-code-publish's inspection call: a one-shot publishable pull-request review from a supplied normalized packet",
+  "profile": "publishable",
+  "target": {
+    "kind": "pull-request",
+    "url": "https://github.com/example/ledger/pull/4",
+    "base_ref": "main",
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "0eb283dfe715341548387bf65af857affedf5dfa"
+  },
+  "repository": {
+    "refs": {
+      "main": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+      "csv-export": "0eb283dfe715341548387bf65af857affedf5dfa"
+    },
+    "checkout": "csv-export"
+  },
+  "directories": [
+    "work"
+  ],
+  "files": {
+    "prompt.md": {
+      "kind": "text"
+    },
+    "inputs/forge-1.json": {
+      "kind": "copy"
+    },
+    "inputs/packet.json": {
+      "kind": "copy"
+    }
+  }
+}

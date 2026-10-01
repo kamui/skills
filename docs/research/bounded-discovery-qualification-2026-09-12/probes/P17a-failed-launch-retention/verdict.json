@@ -1,0 +1,12 @@
+{
+  "probe": "P17",
+  "status": "unestablished",
+  "summary": "This is P17's failed-launch half, recorded as its own launch. The process could not be created - the binary does not exist - so the probe's own exit is 'launch-failed' and it establishes nothing by itself; its record is the evidence P17 reads. The retained request holds the exact argv and the requested model, effort, restriction flag and dollar allowance.",
+  "establishes": "Nothing on its own. It is an input to P17, which is where the verdict is.",
+  "residual": "Recorded unestablished deliberately: the recorder refuses to call a probe established when its process did not complete, and that rule is what stops a failed probe from becoming passing evidence.",
+  "refuted_by": null,
+  "observed_exit": "launch-failed",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:20:55.137915+00:00"
+}

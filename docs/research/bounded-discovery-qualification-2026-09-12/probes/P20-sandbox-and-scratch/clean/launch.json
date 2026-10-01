@@ -1,0 +1,41 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P20-clean",
+  "purpose": "A session whose commands stayed inside its root, so the audit's failure above is not vacuous.",
+  "retained_at": "2026-09-12T10:38:50.752180+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P20-sandbox-and-scratch",
+  "argv": [
+    "python3",
+    "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/audit_probe.py",
+    "reads",
+    "--transcript",
+    "/Users/jack/.claude/projects/-private-tmp-bd207-probes-p23/1898c606-9846-4d12-a5a8-d15ac5507383.jsonl",
+    "--root",
+    "/private/tmp/bd207-probes/p23",
+    "--permitted",
+    "/private/tmp/bd207-probes/p23",
+    "--out",
+    "clean.json"
+  ],
+  "command_line": "python3 /Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/scripts/audit_probe.py reads --transcript /Users/jack/.claude/projects/-private-tmp-bd207-probes-p23/1898c606-9846-4d12-a5a8-d15ac5507383.jsonl --root /private/tmp/bd207-probes/p23 --permitted /private/tmp/bd207-probes/p23 --out clean.json",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

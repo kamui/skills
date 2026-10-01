@@ -1,0 +1,206 @@
+{
+  "schema": "review-code-record/1",
+  "workflow": "v5b-25",
+  "run": {
+    "target_kind": "range",
+    "target": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "tree": null,
+    "specs": [
+      "ledger-spec/statement-date-filter"
+    ],
+    "supplied_inputs": "yes",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "base_ref": "main",
+    "packet_context": "none",
+    "issues": [],
+    "coverage": "complete",
+    "merged": false,
+    "prior_head": null,
+    "repository_url": null
+  },
+  "status": "Changes Requested",
+  "summary": {
+    "body": "**Changes Requested (advisory)** — 2 must-fix findings.\n\n**Intent:** Add inclusive date bounds to account statements, with an opening balance, filtered rows, a closing balance, invalid-date errors, and README guidance.\n\n**Issue fit:** Issue alignment was unavailable; the supplied statement-date-filter spec is the intent source. Criteria 3 and 5 are partial: a filtered row can carry an excluded credit, and the CLI accepts date spellings outside YYYY-MM-DD. The other four criteria are met in the inspected scope. Source: user-supplied spec; commit messages in the range.\n\n**Coverage:** Reviewed all four changed files in the complete pinned merge-base diff, relevant account and statement callers, base repository guidance, and each new test's setup, call, assertions, and cleanup. Accepted the supplied clean-head 17-test suite and two CLI error exercises. A reviewer focused check at the same head reproduced both defects; its first invocation lacked PYTHONPATH and was rerun with the repository on the path. The fresh verifier confirmed both findings and ran the three changed tests successfully. No source or forge changes were made.\n\n**Reviewed:** Range `2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...2ba40465ef91f15b2963a4b12e80f46ee0e9efae`: `2ba4046` against merge-base `2301c83`.\n\n## Findings\n\n- [P2] [must-fix] Exclude out-of-range entries from displayed running balances — anchor `ledger/statement.py:39-40`\n- [P2] [must-fix] Reject dates outside the documented YYYY-MM-DD format — anchor `ledger/cli.py:28`\n\n<!-- review-run head=2ba40465ef91f15b2963a4b12e80f46ee0e9efae base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-25 packet_context=none supplied_inputs=yes issues=none coverage=complete -->\n",
+    "trailer": "<!-- review-run head=2ba40465ef91f15b2963a4b12e80f46ee0e9efae base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-25 packet_context=none supplied_inputs=yes issues=none coverage=complete -->"
+  },
+  "items": [
+    {
+      "type": "finding",
+      "id": "ledger/statement-running-balance-filter",
+      "markdown": "**[P2] [must-fix] Exclude out-of-range entries from displayed running balances**\n\n**Triggers when:** Post a 100.00 credit dated October 1 before a 50.00 credit dated September 2, then request September 1 through September 30. Posting has no date-order guard.\n\n**Impact:** The September row shows 150.00 while the opening balance is 0.00 and the closing balance is 50.00. The row therefore includes a credit excluded from the requested range.\n\n**Change:** Start the accumulator at the balance before --since, when supplied, and add each entry only after confirming that its date is inside the range. Preserve posting order for displayed rows.\n\n**Source:** Supplied statement-date-filter spec, criterion 3.",
+      "trailer": "<!-- finding id=ledger/statement-running-balance-filter head=2ba40465ef91f15b2963a4b12e80f46ee0e9efae priority=P2 action=must-fix blocking=true kind=bug -->",
+      "priority": "P2",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "bug",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/statement.py",
+        "start_line": 39,
+        "end_line": 40,
+        "side": "RIGHT"
+      }
+    },
+    {
+      "type": "finding",
+      "id": "ledger/cli-strict-date-format",
+      "markdown": "**[P2] [must-fix] Reject dates outside the documented YYYY-MM-DD format**\n\n**Triggers when:** Run statement against a valid ledger with --since 20260901 or --since 2026-W36-2 on Python 3.14; the shared parser also handles --until.\n\n**Impact:** Both commands return 0 with no stderr, although the spec requires status 2 and an error message for invalid option dates.\n\n**Change:** Check the exact YYYY-MM-DD spelling before calling date.fromisoformat for either bound.\n\n**Source:** Supplied statement-date-filter spec, criteria 1 and 5.",
+      "trailer": "<!-- finding id=ledger/cli-strict-date-format head=2ba40465ef91f15b2963a4b12e80f46ee0e9efae priority=P2 action=must-fix blocking=true kind=requirement -->",
+      "priority": "P2",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "requirement",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/cli.py",
+        "start_line": 28,
+        "end_line": 28,
+        "side": "RIGHT"
+      }
+    }
+  ],
+  "prior_items": [],
+  "record": {
+    "repository": "/home/jack/.cache/rc357x/root/implementation-gate/repo",
+    "paths": {
+      "private_dir": "/home/jack/.cache/rc357x/root/implementation-gate/work/review",
+      "store": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/review-context.json",
+      "composition": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/composition.json",
+      "skill_root": "/home/jack/.cache/rc357x/skill"
+    },
+    "requirements": [
+      {
+        "source": "spec-ledger-spec/statement-date-filter/1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/cli.py:40-41 registers both optional date arguments; tests/test_filter.py:23-25 and README.md:7 cover inclusion."
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/2",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/statement.py:17-19,48-49 sums all earlier dated entries and places opening balance after the heading."
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/3",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "ledger/statement.py:36-41 adds an excluded entry before filtering it; focused-check-output.txt:4-8 shows 150.00 for a 50.00 in-range credit."
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/4",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/statement.py:22-24,52-53 sums through --until, or uses all entries when absent."
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/5",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "ledger/cli.py:28 accepts compact and week dates; focused-check-output.txt:9-10 shows status 0 without stderr. Supplied criterion-5.txt confirms status 2 for malformed month and reversed bounds."
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/6",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "README.md:7,12 documents both optional inclusive bounds."
+      }
+    ],
+    "files": [
+      {
+        "path": "README.md",
+        "state": "reviewed"
+      },
+      {
+        "path": "ledger/cli.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "ledger/statement.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_filter.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 -m unittest discover -s tests -v",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "accepted",
+        "reason": "Caller-supplied clean-head Python 3.14.7 run completed: 17 tests, none skipped, exit 0; inputs/unittest-head.txt read."
+      },
+      {
+        "check": "python3 -m ledger.cli statement /dev/null 1001 --since 2026-13-01",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "accepted",
+        "reason": "Caller-supplied criterion-5.txt shows exit 2 and argparse stderr for an invalid month; it does not exercise alternate ISO spellings."
+      },
+      {
+        "check": "python3 -m ledger.cli statement /dev/null 1001 --since 2026-09-03 --until 2026-09-01",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "accepted",
+        "reason": "Caller-supplied criterion-5.txt shows exit 2 and stderr for reversed bounds."
+      },
+      {
+        "check": "python3 -B work/review/focused_checks.py",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "reviewer-executed",
+        "reason": "Wrapped focused repro at the head exited 0 and produced both defect examples in focused-check-output.txt; the prior attempt failed to import ledger because PYTHONPATH was absent."
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "ledger/statement-running-balance-filter",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        },
+        {
+          "id": "ledger/cli-strict-date-format",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "name": "initial",
+          "phase": "initial",
+          "bundle": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/initial",
+          "raw_return": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/initial/worker-last-message.md",
+          "accounting": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/initial/accounting.json",
+          "operation": "Fresh foreground codex exec -m gpt-6-sol -c model_reasoning_effort=high, awaited to completion"
+        }
+      ],
+      "allowance": {
+        "initial_spent": true,
+        "follow_up_spent": false
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  },
+  "lineage": [],
+  "prior_record": null,
+  "finalization": {
+    "protocol": "review-code-finalization/2",
+    "report": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/report.md",
+    "inputs": {
+      "store": "/home/jack/.cache/rc357x/root/implementation-gate/work/review/review-context.json",
+      "packet": null,
+      "prior_record": null
+    },
+    "replies": []
+  }
+}

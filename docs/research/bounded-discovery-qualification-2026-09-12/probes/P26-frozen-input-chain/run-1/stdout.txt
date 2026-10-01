@@ -1,0 +1,1 @@
+chain: 18 rendered prompts, 2 distinct shape(s) once the attempt id and arm label are normalised, no unfilled placeholder

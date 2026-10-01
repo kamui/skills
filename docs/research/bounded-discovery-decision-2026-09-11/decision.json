@@ -1,0 +1,92 @@
+{
+  "artifact_id": "issue-153-decision",
+  "confirmation_study": {
+    "authorized": false,
+    "recommended": false,
+    "why": "a confirmation study follows a complete positive screen; none exists. What was observed on one buggy target (both stronger-verifier arms recovering what the control returned Approved on, one recovery finder-origin) is a hypothesis for a future freeze, not evidence for one."
+  },
+  "decided_at": "2026-09-11T15:54:36.554338+00:00",
+  "dispatch_authorized": false,
+  "experiment_id": "issue-138",
+  "measured_but_not_gating": {
+    "false_clean_by_arm": {
+      "A": 1,
+      "B": 0,
+      "C": 0
+    },
+    "finder_origin_material_recoveries": [
+      "GT-p1"
+    ],
+    "matched_cost_ratio_medians": {
+      "B/A": 1.205055605268156,
+      "C/A": 2.1057941933358055,
+      "C/B": 1.8139305552846687
+    },
+    "matched_pairs": {
+      "B/A": 2,
+      "C/A": 2,
+      "C/B": 2
+    },
+    "slot_1_recall_v2_by_arm": {
+      "A": 0.0,
+      "B": 1.0,
+      "C": 1.0
+    }
+  },
+  "outcome": "inconclusive",
+  "positive_screen_available": false,
+  "reject_available": false,
+  "schema_version": "bounded-discovery-v1",
+  "screens": {
+    "B": {
+      "blockers": [
+        "macro material recall is unavailable in the all attempts view",
+        "macro material recall is unavailable in the completed only view",
+        "planned cells with no attempt: slot-1-A-replicate-2, slot-1-B-replicate-2, slot-1-C-replicate-2, slot-2-A-replicate-2, slot-2-B-replicate-2, slot-2-C-replicate-2, slot-3-A-replicate-1, slot-3-A-replicate-2, slot-3-B-replicate-1, slot-3-B-replicate-2, slot-3-C-replicate-1, slot-3-C-replicate-2, slot-4-A-replicate-1, slot-4-A-replicate-2, slot-4-B-replicate-1, slot-4-B-replicate-2, slot-4-C-replicate-1, slot-4-C-replicate-2",
+        "planned cells attempted but with no valid completed outcome: slot-1-A-replicate-1, slot-1-B-replicate-1, slot-1-C-replicate-1, slot-2-A-replicate-1, slot-2-B-replicate-1, slot-2-C-replicate-1"
+      ],
+      "criteria": {
+        "macro material recall gain (all attempts)": "inconclusive",
+        "macro material recall gain (completed only)": "inconclusive",
+        "matched billed cell-cost ratio": "pass",
+        "no worse completion": "pass",
+        "no worse false-clean count or rate": "pass",
+        "zero candidate-arm false findings": "pass"
+      },
+      "verdict": "inconclusive"
+    },
+    "C": {
+      "blockers": [
+        "macro material recall is unavailable in the all attempts view",
+        "macro material recall is unavailable in the completed only view",
+        "planned cells with no attempt: slot-1-A-replicate-2, slot-1-B-replicate-2, slot-1-C-replicate-2, slot-2-A-replicate-2, slot-2-B-replicate-2, slot-2-C-replicate-2, slot-3-A-replicate-1, slot-3-A-replicate-2, slot-3-B-replicate-1, slot-3-B-replicate-2, slot-3-C-replicate-1, slot-3-C-replicate-2, slot-4-A-replicate-1, slot-4-A-replicate-2, slot-4-B-replicate-1, slot-4-B-replicate-2, slot-4-C-replicate-1, slot-4-C-replicate-2",
+        "planned cells attempted but with no valid completed outcome: slot-1-A-replicate-1, slot-1-B-replicate-1, slot-1-C-replicate-1, slot-2-A-replicate-1, slot-2-B-replicate-1, slot-2-C-replicate-1"
+      ],
+      "criteria": {
+        "macro material recall gain (all attempts)": "inconclusive",
+        "macro material recall gain (completed only)": "inconclusive",
+        "matched billed cell-cost ratio": "fail",
+        "no worse completion": "pass",
+        "no worse false-clean count or rate": "pass",
+        "zero candidate-arm false findings": "pass"
+      },
+      "verdict": "inconclusive"
+    }
+  },
+  "screens_v1": {
+    "B": "inconclusive",
+    "C": "inconclusive"
+  },
+  "supported_raw_false_findings": 0,
+  "truth_version_scored": "v2",
+  "what_would_change_it": {
+    "inconclusive_stands_if": "nothing further is run; the eighteen unattempted cells stay unattempted",
+    "proceed": "a complete grid of valid completed cells on all four targets with the frozen mix, which the frozen limits cannot fund (one replacement remains against six cells to re-run) and which the retained evidence cannot certify (no launch argv); it needs a new preregistration whose freeze closes #199's gaps first",
+    "reject": "a supported raw false finding in a candidate arm; none was ruled in any of the six packets, so no arm can be rejected on this evidence"
+  },
+  "why_positive_screen_unavailable": [
+    "18 of 24 planned cells were never attempted",
+    "no attempt is a valid completed outcome: five are operationally unresolved and three invalid",
+    "two of the three buggy targets have no attempt, so every macro recall is unavailable"
+  ]
+}

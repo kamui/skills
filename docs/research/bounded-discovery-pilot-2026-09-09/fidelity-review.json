@@ -1,0 +1,7 @@
+{
+  "finding_id": "pilot/actual-fidelity",
+  "historical_records": "Preserved as originally reported; coordinator fixes do not retroactively establish fidelity.",
+  "review": "https://github.com/kamui/skills/pull/197#pullrequestreview-5156879681",
+  "seal_opened": false,
+  "status": "blocked"
+}

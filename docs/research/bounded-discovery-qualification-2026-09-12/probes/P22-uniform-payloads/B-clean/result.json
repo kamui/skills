@@ -1,0 +1,111 @@
+{
+  "duration_api_ms": 8112,
+  "stop_reason": "end_turn",
+  "session_id": "202627d6-9ee3-4700-9ddc-bf4f7e6d8bbc",
+  "total_cost_usd": 0.023654799999999997,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 3054,
+    "cache_read_input_tokens": 24514,
+    "output_tokens": 481,
+    "output_tokens_details": {
+      "thinking_tokens": 11
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3054,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 105,
+        "cache_read_input_tokens": 9148,
+        "cache_creation_input_tokens": 435,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 435
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 1654,
+      "outputTokens": 12,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.001714,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5": {
+      "inputTokens": 6,
+      "outputTokens": 481,
+      "cacheReadInputTokens": 24514,
+      "cacheCreationInputTokens": 3054,
+      "webSearchRequests": 0,
+      "costUSD": 0.021940799999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 11,
+      "canonicalModel": "claude-sonnet-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 3,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Reviewed `packet.md`: the diff is a one-line comment typo fix (`Retrun` \u2192 `Return`) in `store.py` with no logic change, matching the stated PR intent exactly. No material defect found, so I wrote `review-payload.json` with `outcome: \"clean\"` and an empty `items` array.",
+  "ttft_ms": 1636,
+  "type": "result",
+  "duration_ms": 7261,
+  "uuid": "6e3d7ab6-4bfd-4a93-9dcc-2d93c9e492a0",
+  "ttft_stream_ms": 1070,
+  "time_to_request_ms": 33,
+  "first_content_frame_ms": 1224,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

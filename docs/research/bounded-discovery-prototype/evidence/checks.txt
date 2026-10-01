@@ -1,0 +1,36 @@
+Full adapter CLI suite
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 54.454s
+
+OK
+
+Budget self-test
+...
+----------------------------------------------------------------------
+Ran 3 tests in 2.538s
+
+OK
+
+Fake worker self-test
+.
+----------------------------------------------------------------------
+Ran 1 test in 1.139s
+
+OK
+
+Final fixture self-test
+.
+----------------------------------------------------------------------
+Ran 1 test in 15.599s
+
+OK
+
+Retained artifact verification
+Retained 9 invocations; 686 artifact hashes verified; 583541 bytes
+
+Python 3.9 syntax: all 5 scripts passed. Runtime execution used installed Python.
+
+Existing research helpers: agent_effort.py --self-test passed 5 cases; transcript_usage.py --self-test passed; test_transcript_usage.py passed 8 tests.
+
+The full suite was followed by the focused fixture self-test and retained invocation checks after fixture wording changes.

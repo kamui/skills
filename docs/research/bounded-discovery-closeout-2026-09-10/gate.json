@@ -1,0 +1,135 @@
+{
+  "all_reviewers_stopped": true,
+  "artifact_id": "issue-151-stop-gate",
+  "attempt_dispositions": {
+    "by_disposition": {
+      "complete": 5,
+      "stopped-budget": 1,
+      "stopped-invalid": 2
+    },
+    "count": 8
+  },
+  "check_classes": "required checks are the ones that show a reviewer run - a process, a container, an open attempt or a live reservation on the ledger - and every one must pass for the seal to open. A corroborating check that could not establish absence decides nothing and the required evidence governs; one that positively found a workspace is evidence and shuts the gate",
+  "checks": [
+    {
+      "check": "no reviewer or coordinator process is running",
+      "class": "required",
+      "command": [
+        "ps",
+        "-eo",
+        "pid=,ppid=,command="
+      ],
+      "detail": "no process outside this gate's own ancestry names a cell container, the coordinator or a cell workspace; 2 process(es) in the ancestry of this closeout session matched and were excluded, because the gate repeats the cell root on its own command line",
+      "exit_code": 0,
+      "match_count": 0,
+      "outcome": "passed",
+      "output_sha256": "3790677ee43436fd2465cd74e89619b48f5d7cae43c73e814fafdd547cc6ba66",
+      "own_ancestry_match_count": 2,
+      "passed": true,
+      "probe_completed": true
+    },
+    {
+      "check": "no cell container is running",
+      "class": "required",
+      "command": [
+        "docker",
+        "ps",
+        "-a",
+        "--no-trunc",
+        "--format",
+        "{{.Names}}\t{{.Status}}"
+      ],
+      "detail": "the container runtime is not running, so no cell container can be executing; because cells run under `docker run --rm` a terminated cell leaves nothing to list, and this establishes no cell is live rather than how each one exited",
+      "exit_code": 1,
+      "match_count": 0,
+      "outcome": "passed",
+      "output_sha256": "e90af6b84c50d45322cfde00d0a8a0a18a11c0b0107ea23418efad546a87dac0",
+      "passed": true,
+      "probe_completed": false
+    },
+    {
+      "check": "no live cell workspace remains",
+      "class": "corroborating",
+      "configured_root_exists": false,
+      "detail": "the configured cell root does not exist, but the sweep did not complete (exit 1): directories it could not enter were not swept, so absence beyond that root is unestablished",
+      "outcome": "unestablished",
+      "passed": false,
+      "probe_completed": false,
+      "sweep_command": [
+        "find",
+        "/Users/jack",
+        "-maxdepth",
+        "5",
+        "-type",
+        "d",
+        "-name",
+        "position-0*"
+      ],
+      "sweep_exit_code": 1,
+      "sweep_match_count": 0,
+      "sweep_output_sha256": "551b57cb6901ea0e5a5448e5a6aca5d25b9a905ca8bfd7f82939cf5eaeb565c3",
+      "sweep_ran": true
+    },
+    {
+      "attempts_closed": 8,
+      "attempts_opened": 8,
+      "check": "every opened attempt is closed on the ledger",
+      "class": "required",
+      "detail": "8 attempt-open events, 8 attempt-close events, 0 unclosed",
+      "outcome": "passed",
+      "passed": true,
+      "unclosed_count": 0
+    },
+    {
+      "check": "no budget reservation is outstanding",
+      "class": "required",
+      "detail": "reservation deltas sum to 0.00 and the ledger header carries reserved_usd 0.00; an in-flight dispatch would hold a live reservation",
+      "header_reserved_usd": "0.00",
+      "outcome": "passed",
+      "passed": true,
+      "reservation_delta_sum_usd": "0.00"
+    },
+    {
+      "check": "the ledger chain is unbroken through its last event",
+      "class": "required",
+      "detail": "80 events chain from the open event",
+      "event_count": 80,
+      "outcome": "passed",
+      "passed": true
+    },
+    {
+      "check": "no ledger event was appended after the last attempt closed",
+      "class": "required",
+      "detail": "the newest ledger event is 2026-09-09T08:50:09.887559+00:00, before this gate at 2026-09-10T07:03:56.304298+00:00",
+      "latest_event_at": "2026-09-09T08:50:09.887559+00:00",
+      "outcome": "passed",
+      "passed": true
+    }
+  ],
+  "corroboration_detected": [],
+  "every_check_established": false,
+  "note": "Recorded before any sealed outcome was opened. #151 launches no further experimental reviewer run under the stopped handoff; this gate is what permits the sealed pilot evidence to be read for closeout.",
+  "observed_at": "2026-09-10T07:03:56.304298+00:00",
+  "probes_captured_at": "2026-09-10T07:03:47.302136+00:00",
+  "raw_capture": "retained outside the repository and sealed with the closeout evidence: a process command line or a container name can contain a slot",
+  "re_evaluation": {
+    "checks_changed": [
+      {
+        "check": "no live cell workspace remains",
+        "class": "corroborating",
+        "now": "unestablished",
+        "was": "passed",
+        "why": "the configured cell root does not exist, but the sweep did not complete (exit 1): directories it could not enter were not swept, so absence beyond that root is unestablished"
+      }
+    ],
+    "note": "Scored from the probes captured at 2026-09-10T07:03:47.302136+00:00, at the original instant. The timestamps are the original ones; only the scoring rule moved.",
+    "original_all_reviewers_stopped": true,
+    "re_evaluated_at": "2026-09-10T08:57:16.595339+00:00",
+    "rule_change": "a probe that did not run or exited non-zero no longer passes its check on empty output; checks are classed as required or corroborating; the required ones must all pass, a corroborating check that could not establish absence decides nothing, and one that positively detected a workspace shuts the gate"
+  },
+  "schema_version": "bounded-discovery-v1",
+  "seal_may_be_opened": true,
+  "unestablished_corroboration": [
+    "no live cell workspace remains"
+  ]
+}

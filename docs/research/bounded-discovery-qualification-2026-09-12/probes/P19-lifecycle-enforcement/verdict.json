@@ -1,0 +1,12 @@
+{
+  "probe": "P19",
+  "status": "established",
+  "summary": "Seventeen claims against a real ledger through a claim-before-launch driver. Eight were refused, each naming its own rule: 'attempt ID already used', 'context ID used by a previous attempt', 'attempt or simultaneous cell cap' (twice - once for concurrency with two live attempts, once for the attempt cap), 'replacement evidence required', 'replacement ordinal mismatch', 'only documented protocol/input invalidity earns replacement', and 'replacement cap'. Nine were admitted and each of those, and only those, left a worker marker on disk. No refused claim started a worker.",
+  "establishes": "P19's substance: on this implementation the ledger's refusals gate an actual dispatch, and the absence of a started worker is asserted from the filesystem rather than from the driver's control flow. Contrast the pilot, where every lifecycle event was written after the fact and none of these rules gated anything.",
+  "residual": "Two things this is not. The battery runs in 158 ms, so the event timestamps are close together - what makes them contemporaneous is that each was written at its own claim and interleaved with the worker launches, not that they are far apart. And the worker here is a marker-writing subprocess, not a cell: P19 establishes the coordinator's claim path, while a real dispatch also has to pass gap-1's launch retention, the payload contract and the isolation regime, and this study has no authorized dispatch to run.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:18:33.575576+00:00"
+}

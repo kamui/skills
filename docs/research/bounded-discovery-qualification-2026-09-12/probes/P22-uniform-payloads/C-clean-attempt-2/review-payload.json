@@ -1,0 +1,11 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-C-clean2",
+  "arm": "C",
+  "outcome": "clean",
+  "summary": {
+    "body": "This is a comment-only change to `last_n` and matches its stated intent: no behavior change, just documenting what happens when `n` exceeds `len(items)`.\n\nVerified the claim against the actual slice semantics: `items[-n:]` when `n > len(items)` does return the whole list, because the negative start index clips to 0 rather than wrapping or erroring. The new comment is accurate for the case it describes.\n\n(Aside, not a defect in this diff: `items[-n:]` also returns the whole list when `n == 0`, since `-0 == 0` and `items[0:]` is the full list, which some readers might not expect from a function named `last_n`. The comment doesn't claim to cover that case, and the diff isn't changing behavior, so I'm not flagging it as an issue here — just noting it in case a follow-up wants to document or guard it.)\n\nNo material defect found; approving as-is."
+  },
+  "items": [],
+  "stop": null
+}

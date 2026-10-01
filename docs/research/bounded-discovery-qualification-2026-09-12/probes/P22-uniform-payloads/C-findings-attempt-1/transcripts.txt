@@ -1,0 +1,2 @@
+session db7544bc-d57d-47bf-ab5c-8e04c10a62c2 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22-C-findings/db7544bc-d57d-47bf-ab5c-8e04c10a62c2.jsonl sha256 b513f0a83fa097376a05f70529c63695e8f2ca6b66165d53d2e77827e9bea46b

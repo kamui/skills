@@ -1,0 +1,65 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "candidates": [],
+  "premises": [
+    {
+      "area": "security",
+      "evidence": [
+        {
+          "coordinate": "ledger/cli.py:44",
+          "text": "sys.stdout.write(FORMATS[args.format](ledger.get(args.account)))"
+        },
+        {
+          "coordinate": "ledger/auth.py:9",
+          "text": "def can_view(user: str, role: str, account: Account) -> bool:"
+        },
+        {
+          "coordinate": "ledger/export.py:18",
+          "text": "writer.writerows(statement_rows(account))"
+        }
+      ],
+      "id": "premise-1",
+      "premise": "The new `--format csv` path exposes no account data beyond what the base `statement` command already printed, and adds no authorization decision or bypass: at the merge-base the CLI never called `ledger/auth.py` `can_view` and the text path printed the same rows to the same caller."
+    },
+    {
+      "area": "data-integrity",
+      "evidence": [
+        {
+          "coordinate": "ledger/export.py:16",
+          "text": "writer = csv.writer(out, lineterminator=\"\\n\")"
+        },
+        {
+          "coordinate": "ledger/export.py:18",
+          "text": "writer.writerows(statement_rows(account))"
+        },
+        {
+          "coordinate": "ledger/statement.py:14",
+          "text": "def statement_rows(account: Account) -> list[tuple[str, str, str, str]]:"
+        }
+      ],
+      "id": "premise-2",
+      "premise": "For every entry description (including commas, quotes, CR/LF newlines) and every integer-cent amount, `statement_csv` emits rows whose `csv.reader` parse equals `statement_rows(account)` with header `date,description,amount,balance`, and writing the result to stdout via `sys.stdout.write` in the CLI does not alter the round trip."
+    }
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "id": "review-0eb283d",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/publishable/repo"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect; repository and disposable directories only, no network.",
+  "sources": [
+    {
+      "coordinate": "example/ledger#3/acceptance",
+      "text": "1. `ledger statement FILE ACCOUNT --format csv` prints the statement as CSV; text stays the default. 2. The first row is the header `date,description,amount,balance`. 3. Amounts and balances use the text statement's decimal format, for example `-4.50`. 4. Descriptions containing commas, quotes, or newlines round-trip through Python's `csv.reader`."
+    },
+    {
+      "coordinate": "AGENTS.md",
+      "text": "Amounts are integer cents; never use floats for money. Every public function's docstring names the errors it raises. Authorization decisions live in `ledger/auth.py`; callers never compare roles themselves. A refused operation leaves every account unchanged."
+    }
+  ]
+}

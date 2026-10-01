@@ -1,0 +1,5 @@
+The raw host capture this gate run scored is retained outside the repository, at
+~/.config/bounded-discovery/issue-207/raw/gate-capture.json, where the specification puts raw
+captures. A copy was committed here by hand in the first version of this bundle and has been
+removed: the containment boundary is the point of it, and this capture had no business crossing it
+even though its contents were benign.

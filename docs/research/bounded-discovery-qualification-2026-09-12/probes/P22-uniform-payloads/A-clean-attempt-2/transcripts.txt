@@ -1,0 +1,2 @@
+session 8273536d-2ebb-4436-9763-53e0e1bcc122 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22-A-clean2/8273536d-2ebb-4436-9763-53e0e1bcc122.jsonl sha256 0a7cc843e0dc121fbe46efe00418227b2cc25d7ef27f7a2a0f877521c2f0b686

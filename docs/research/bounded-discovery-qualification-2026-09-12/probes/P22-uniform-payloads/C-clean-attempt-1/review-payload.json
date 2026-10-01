@@ -1,0 +1,22 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-C-clean",
+  "arm": "C",
+  "outcome": "findings",
+  "summary": {
+    "body": "The new slice expression correctly fixes the stated bug: when `n` exceeds `len(items)`, `max(0, len(items) - n)` clamps to `0`, so the full list is returned, matching `items[-n:]`'s behavior in that case.\n\nHowever, the rewrite silently changes behavior for `n == 0`. `items[-0:]` is equivalent to `items[0:]` (because `-0 == 0` in Python), so the old code returned the **whole list** for `n = 0`. The new code computes `max(0, len(items) - 0) == len(items)`, so `items[len(items):]` returns an **empty list**. That is a behavior change the PR description doesn't mention — it only claims the fix preserves the old slice's behavior and only changes what happens when `n` exceeds the length. If any caller relies on `last_n(items, 0)` returning the full list (however accidental that quirk was), this rewrite breaks it silently.\n\nRelatedly, negative `n` also now behaves differently (e.g. `n = -1`: old code returns `items[1:]`, new code returns `[]`), though that input was already nonsensical/undefined before this change, so it's lower priority.\n\nRecommend either updating the PR description to call out the `n == 0` behavior change explicitly (if intentional), or adjusting the fix to preserve the old `n == 0` result if that matters to callers."
+  },
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "For `n == 0`, this change alters behavior: the old `items[-n:]` (i.e. `items[-0:]` == `items[0:]`) returned the **whole list**, but the new `items[max(0, len(items) - n):]` returns `items[len(items):]`, an **empty list**. The PR's stated intent only covers the case where `n` exceeds the list length (\"return the whole list when n exceeds its length, exactly as the slice did\") — it says nothing about `n == 0`, so this is an unannounced behavior change for that edge case.",
+      "trailer": "Confirm whether any caller depends on `last_n(items, 0)` returning the full list, and if so, adjust the fix (or explicitly document the behavior change) rather than silently altering it.",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 6, "end_line": 8},
+      "priority": "P2",
+      "action": "consider",
+      "blocking": false,
+      "kind": "behavior-change-edge-case"
+    }
+  ],
+  "stop": null
+}

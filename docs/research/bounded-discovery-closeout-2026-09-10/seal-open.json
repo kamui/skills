@@ -1,0 +1,22 @@
+{
+  "artifact_id": "issue-151-seal-open",
+  "ciphertext_sha256": "aee5c93d9ade23ef8c6f58b4bd08ec4eb74f1a526d24d4aa3af5727143ba3b54",
+  "extracted_outside_repository": true,
+  "gate_observed_at": "2026-09-10T07:03:56.304298+00:00",
+  "invalidated_attempts_sealed": [
+    "position-03-attempt-1",
+    "position-03-attempt-1-home"
+  ],
+  "note": "Opened only after the stop gate. The plaintext stays outside every checkout of this repository: its paths, ledger and transcripts name slots.",
+  "opened_at": "2026-09-10T07:04:26.028625+00:00",
+  "plaintext_sha256": "8d23ced49a5a5d2c129889e8a2b00c9060ed13d89eee2430a4c1216a5345f5cd",
+  "positions_covered": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "schema_version": "bounded-discovery-v1"
+}

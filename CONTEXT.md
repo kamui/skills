@@ -1,0 +1,25 @@
+# Review loop
+
+The vocabulary shared by the skills that implement work, publish reviews, and address them on a pull request.
+
+## Language
+
+**Spec source**:
+The issue, tickets, or written specification that describes the work a pull request implements.
+_Avoid_: prompt, context, ticket text
+
+**Round**:
+One addressing pass over a pull request's review feedback, skipped when there is nothing to address, followed by a re-review of the pull request.
+_Avoid_: loop, cycle, iteration
+
+**Delivery**:
+The whole run that takes a spec source to a pull request whose latest review status has been reached through one or more rounds, or through the delivery's own first review when that review approves with nothing to address. It never merges.
+_Avoid_: pipeline, chain, ship
+
+**Reviewing app**:
+The GitHub App a repository declares as the identity its reviews publish under.
+_Avoid_: bot, nitpikbot
+
+**Review-token command**:
+The shell command a publisher runs to obtain the reviewing app's short-lived token, produced by `review-bot` or given literally in the tracker doc.
+_Avoid_: token script, auth command

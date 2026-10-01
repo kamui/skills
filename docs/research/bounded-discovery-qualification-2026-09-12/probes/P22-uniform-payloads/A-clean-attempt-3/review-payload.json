@@ -1,0 +1,11 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-A-clean",
+  "arm": "A",
+  "outcome": "clean",
+  "summary": {
+    "body": "This is a comment-only change to `last_n` and matches its stated intent (no behaviour change). I checked the claim against the actual slicing semantics: for any `n` greater than `len(items)`, `-n` is more negative than `-len(items)`, so Python clamps the slice start to index 0 and `items[-n:]` does return the whole list, exactly as the new comment states. The code itself is untouched, so there's no behavioural risk introduced by this diff.\n\nApproving — the documentation is accurate for the case it describes."
+  },
+  "items": [],
+  "stop": null
+}

@@ -1,0 +1,1272 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "ticket": 207,
+  "rule": "E1 Unused, extended by rule rather than by hand: #148 section 7's list, #148's exclusion log, the revealed #138 slot registers, the two revealed excluded registers, and every pull request named in the revealed candidate inventory - candidates and the later fixes and confirming reports their rows cite. Every bare number resolves to the nearest repository its scope names - a register's own, on every line of the register - and each entry is marked by how the files evidence it: strong where some citation is backticked, linked or written out qualified, conservative where every citation is a bare number in running prose. Both are reserved, because prose also carries this project's own ticket citations and no rule separates the two, and missing a published reference costs the study its blind where over-reserving costs a hunt one candidate. Owner and repository names compare case-insensitively, as the forge does. A candidate on this list cannot be reused blind, and closing an issue or renaming a slot does not restore blindness.",
+  "derived_at": "2026-09-12T21:22:47.514189+00:00",
+  "sources_sha256": {
+    "criteria": "5cf56f151da7e78261ac98e8b5a909fe1139d5f4d627129011d9afc227665f27",
+    "exclusions": "4127b83a0e98c6dceaa75acb9c27ed95f6b65e7ff9d8e1ae863a45d8a6f15951",
+    "inventory": "562a1a870a0f709cf8973141ff2f709ab4d6ed137a7eca3f1faa85665e9ceef5",
+    "slots": "276395c5467db4427d8cee081d818831939f99f7e90bad9e4011c4a0b5e31cbc",
+    "register:excluded-grpc-go-8519-register": "b4e804c0c8464aaebd209817f61aefe97f44b9b2e6b2ab501d9ee1fcfa103ff7",
+    "register:excluded-jwt-456-register": "c1fa73c642fc7841a5cd67fa37795d53cf6d6e8583f0cccb4551f248ac09fe82",
+    "register:slot-1-register": "ac64e1d2deb8e298faaca784bd87a9b02ae3e4986fa13590bceaac6d4caf47cd",
+    "register:slot-2-register": "b9f1bd9504769530c9c120d8794b0b2cabc31ac53ced0e46f4db1c0060fdbe80",
+    "register:slot-3-register": "361801531f10227c95bb84b63791dc6e37f586abfe0b73d2b79169084047ce90",
+    "register:slot-4-register": "a96e8027b4d907ee95e8a8a26a6004f85c421d022a2e80a13ff12230a023eb23"
+  },
+  "inventory_rows_read": 33,
+  "reserved_count": 102,
+  "reserved": {
+    "BurntSushi/ripgrep#137": {
+      "repository": "BurntSushi/ripgrep",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "BurntSushi/ripgrep#2957": {
+      "repository": "BurntSushi/ripgrep",
+      "number": 2957,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "aio-libs/aiohttp#12119": {
+      "repository": "aio-libs/aiohttp",
+      "number": 12119,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "astral-sh/uv#4424": {
+      "repository": "astral-sh/uv",
+      "number": 4424,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "bokeh/bokeh#9232": {
+      "repository": "bokeh/bokeh",
+      "number": 9232,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "boutproject/BOUT-dev#137": {
+      "repository": "boutproject/BOUT-dev",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "clap-rs/clap#5040": {
+      "repository": "clap-rs/clap",
+      "number": 5040,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/slot-1-register.md"
+      ]
+    },
+    "clap-rs/clap#6212": {
+      "repository": "clap-rs/clap",
+      "number": 6212,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/slot-1-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "clap-rs/clap#6243": {
+      "repository": "clap-rs/clap",
+      "number": 6243,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/slot-1-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "cockroachdb/pebble#5743": {
+      "repository": "cockroachdb/pebble",
+      "number": 5743,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "etcd-io/bbolt#1179": {
+      "repository": "etcd-io/bbolt",
+      "number": 1179,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md"
+      ]
+    },
+    "etcd-io/etcd#124": {
+      "repository": "etcd-io/etcd",
+      "number": 124,
+      "confidence": "conservative",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "etcd-io/etcd#17563": {
+      "repository": "etcd-io/etcd",
+      "number": 17563,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "etcd-io/etcd#18749": {
+      "repository": "etcd-io/etcd",
+      "number": 18749,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "golang-jwt/jwt#124": {
+      "repository": "golang-jwt/jwt",
+      "number": 124,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "golang-jwt/jwt#456": {
+      "repository": "golang-jwt/jwt",
+      "number": 456,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a revealed excluded register, or a pull request it names",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/excluded-jwt-456-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "golang-jwt/jwt#484": {
+      "repository": "golang-jwt/jwt",
+      "number": 484,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-jwt-456-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "golang-jwt/jwt#510": {
+      "repository": "golang-jwt/jwt",
+      "number": 510,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-jwt-456-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "golang-jwt/jwt#513": {
+      "repository": "golang-jwt/jwt",
+      "number": 513,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-jwt-456-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "golang-jwt/jwt#520": {
+      "repository": "golang-jwt/jwt",
+      "number": 520,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-jwt-456-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "graphql/graphql-js#1582": {
+      "repository": "graphql/graphql-js",
+      "number": 1582,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "graphql/graphql-js#3760": {
+      "repository": "graphql/graphql-js",
+      "number": 3760,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "graphql/graphql-js#3816": {
+      "repository": "graphql/graphql-js",
+      "number": 3816,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#137": {
+      "repository": "grpc/grpc-go",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/slot-2-register.md",
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "grpc/grpc-go#5374": {
+      "repository": "grpc/grpc-go",
+      "number": 5374,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/slot-2-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "grpc/grpc-go#7390": {
+      "repository": "grpc/grpc-go",
+      "number": 7390,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "grpc/grpc-go#7417": {
+      "repository": "grpc/grpc-go",
+      "number": 7417,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/slot-2-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8095": {
+      "repository": "grpc/grpc-go",
+      "number": 8095,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/slot-2-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "grpc/grpc-go#8278": {
+      "repository": "grpc/grpc-go",
+      "number": 8278,
+      "confidence": "strong",
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8342": {
+      "repository": "grpc/grpc-go",
+      "number": 8342,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8369": {
+      "repository": "grpc/grpc-go",
+      "number": 8369,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8514": {
+      "repository": "grpc/grpc-go",
+      "number": 8514,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8515": {
+      "repository": "grpc/grpc-go",
+      "number": 8515,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/slot-2-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "grpc/grpc-go#8519": {
+      "repository": "grpc/grpc-go",
+      "number": 8519,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a revealed excluded register, or a pull request it names",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8523": {
+      "repository": "grpc/grpc-go",
+      "number": 8523,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8527": {
+      "repository": "grpc/grpc-go",
+      "number": 8527,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "grpc/grpc-go#8530": {
+      "repository": "grpc/grpc-go",
+      "number": 8530,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md"
+      ]
+    },
+    "grpc/grpc-go#8571": {
+      "repository": "grpc/grpc-go",
+      "number": 8571,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "grpc/grpc-go#8624": {
+      "repository": "grpc/grpc-go",
+      "number": 8624,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8630": {
+      "repository": "grpc/grpc-go",
+      "number": 8630,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#8639": {
+      "repository": "grpc/grpc-go",
+      "number": 8639,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#9136": {
+      "repository": "grpc/grpc-go",
+      "number": 9136,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "grpc/grpc-go#9331": {
+      "repository": "grpc/grpc-go",
+      "number": 9331,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed excluded register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/excluded-grpc-go-8519-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hashicorp/raft#581": {
+      "repository": "hashicorp/raft",
+      "number": 581,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "hyperium/h2#596": {
+      "repository": "hyperium/h2",
+      "number": 596,
+      "confidence": "strong",
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#628": {
+      "repository": "hyperium/h2",
+      "number": 628,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#661": {
+      "repository": "hyperium/h2",
+      "number": 661,
+      "confidence": "strong",
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#897": {
+      "repository": "hyperium/h2",
+      "number": 897,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/h2#898": {
+      "repository": "hyperium/h2",
+      "number": 898,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "hyperium/hyper#3952": {
+      "repository": "hyperium/hyper",
+      "number": 3952,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/cobra-holdout#9": {
+      "repository": "kamui/cobra-holdout",
+      "number": 9,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/shortlist#66": {
+      "repository": "kamui/shortlist",
+      "number": 66,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/skills#17": {
+      "repository": "kamui/skills",
+      "number": 17,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/skills#18": {
+      "repository": "kamui/skills",
+      "number": 18,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kamui/skills#19": {
+      "repository": "kamui/skills",
+      "number": 19,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "kubernetes/kubernetes#137": {
+      "repository": "kubernetes/kubernetes",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "kubernetes/kubernetes#137119": {
+      "repository": "kubernetes/kubernetes",
+      "number": 137119,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "libuv/libuv#124": {
+      "repository": "libuv/libuv",
+      "number": 124,
+      "confidence": "conservative",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "libuv/libuv#4400": {
+      "repository": "libuv/libuv",
+      "number": 4400,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "microsoft/playwright#29698": {
+      "repository": "microsoft/playwright",
+      "number": 29698,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "microsoft/playwright#29811": {
+      "repository": "microsoft/playwright",
+      "number": 29811,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "microsoft/playwright#30111": {
+      "repository": "microsoft/playwright",
+      "number": 30111,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "mvdan/sh#137": {
+      "repository": "mvdan/sh",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "mvdan/sh#934": {
+      "repository": "mvdan/sh",
+      "number": 934,
+      "confidence": "strong",
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#4045": {
+      "repository": "nats-io/nats-server",
+      "number": 4045,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#4861": {
+      "repository": "nats-io/nats-server",
+      "number": 4861,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#6266": {
+      "repository": "nats-io/nats-server",
+      "number": 6266,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "nats-io/nats-server#6388": {
+      "repository": "nats-io/nats-server",
+      "number": 6388,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/slot-3-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "nats-io/nats-server#6581": {
+      "repository": "nats-io/nats-server",
+      "number": 6581,
+      "confidence": "conservative",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names"
+      ],
+      "named_by": [
+        "revealed/targets/slot-3-register.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "nats-io/nats-server#6593": {
+      "repository": "nats-io/nats-server",
+      "number": 6593,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/slot-3-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#6623": {
+      "repository": "nats-io/nats-server",
+      "number": 6623,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/slot-3-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7387": {
+      "repository": "nats-io/nats-server",
+      "number": 7387,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7395": {
+      "repository": "nats-io/nats-server",
+      "number": 7395,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "a candidate in the revealed inventory, with its category and eligibility result published",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/slot-4-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats-server#7560": {
+      "repository": "nats-io/nats-server",
+      "number": 7560,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "nats-io/nats-server#7716": {
+      "repository": "nats-io/nats-server",
+      "number": 7716,
+      "confidence": "strong",
+      "reasons": [
+        "a revealed #138 target's register, or a pull request it names",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/slot-4-register.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "nats-io/nats.go#1949": {
+      "repository": "nats-io/nats.go",
+      "number": 1949,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "pola-rs/polars#24771": {
+      "repository": "pola-rs/polars",
+      "number": 24771,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "prometheus/prometheus#15141": {
+      "repository": "prometheus/prometheus",
+      "number": 15141,
+      "confidence": "strong",
+      "reasons": [
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "prometheus/prometheus#15316": {
+      "repository": "prometheus/prometheus",
+      "number": 15316,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "psf/black#3931": {
+      "repository": "psf/black",
+      "number": 3931,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "psf/black#3939": {
+      "repository": "psf/black",
+      "number": 3939,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "psf/requests#6667": {
+      "repository": "psf/requests",
+      "number": 6667,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "python/cpython#30637": {
+      "repository": "python/cpython",
+      "number": 30637,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "python/cpython#96475": {
+      "repository": "python/cpython",
+      "number": 96475,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "python/typeshed#9458": {
+      "repository": "python/typeshed",
+      "number": 9458,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "quic-go/quic-go#137": {
+      "repository": "quic-go/quic-go",
+      "number": 137,
+      "confidence": "conservative",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "quic-go/quic-go#5220": {
+      "repository": "quic-go/quic-go",
+      "number": 5220,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)",
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7",
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "redis/redis#15530": {
+      "repository": "redis/redis",
+      "number": 15530,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "redis/redis#15680": {
+      "repository": "redis/redis",
+      "number": 15680,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "redis/redis-py#3654": {
+      "repository": "redis/redis-py",
+      "number": 3654,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "scrapy/scrapy#6993": {
+      "repository": "scrapy/scrapy",
+      "number": 6993,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "scrapy/scrapy#7426": {
+      "repository": "scrapy/scrapy",
+      "number": 7426,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "scrapy/scrapy#7449": {
+      "repository": "scrapy/scrapy",
+      "number": 7449,
+      "confidence": "strong",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "spf13/cobra#1938": {
+      "repository": "spf13/cobra",
+      "number": 1938,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "tokio-rs/bytes#698": {
+      "repository": "tokio-rs/bytes",
+      "number": 698,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "tokio-rs/tokio#1197": {
+      "repository": "tokio-rs/tokio",
+      "number": 1197,
+      "confidence": "conservative",
+      "reasons": [
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "revealed/targets/inventory.md"
+      ],
+      "conservative_because": "every citation of it is a bare number in running prose, which no rule separates from a citation of this project's own tickets, so it is reserved rather than asserted"
+    },
+    "tokio-rs/tokio#7226": {
+      "repository": "tokio-rs/tokio",
+      "number": 7226,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "tokio-rs/tokio#7757": {
+      "repository": "tokio-rs/tokio",
+      "number": 7757,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "tokio-rs/tokio#964": {
+      "repository": "tokio-rs/tokio",
+      "number": 964,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "a candidate in the revealed inventory, with its category and eligibility result published"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "traefik/traefik#10244": {
+      "repository": "traefik/traefik",
+      "number": 10244,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    },
+    "trpc/trpc#5017": {
+      "repository": "trpc/trpc",
+      "number": 5017,
+      "confidence": "strong",
+      "reasons": [
+        "used or reserved by an earlier grid (#148 section 7)"
+      ],
+      "named_by": [
+        "targets/criteria.md section 7"
+      ]
+    },
+    "vercel/next.js#96725": {
+      "repository": "vercel/next.js",
+      "number": 96725,
+      "confidence": "strong",
+      "reasons": [
+        "named in #148's exclusion log",
+        "named in a revealed inventory row as a later fix, a confirming report or a related change"
+      ],
+      "named_by": [
+        "targets/exclusions.md",
+        "revealed/targets/inventory.md"
+      ]
+    }
+  }
+}

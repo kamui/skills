@@ -1,0 +1,89 @@
+{
+  "artifact_id": "issue-153-loss-stages",
+  "schema_version": "bounded-discovery-v1",
+  "note": "Coordinator judgments made after #152's rulings froze, joining each attempt's own stage records (candidate ledgers, discovery-barrier freeze, admitted finder claims, verifier dispatches) to the register's defect IDs. Stage evidence is operational, not ground truth; every row cites the sealed evidence it reads. 'admissible' is the screen's view after operational validity is joined: an attempt that is invalid, or unresolved, or stopped is not a valid completed outcome, so its recovery is measured but not admissible.",
+  "stage_vocabulary": {
+    "never-discovered": "no candidate raised by the primary, a finder or a verifier names the defect or a manifestation of it",
+    "raised-then-rejected-by-primary": "a candidate naming it was raised (by the primary or admitted from the finder) and dropped in primary falsification, including acquitted as intentional",
+    "omitted-from-verification-by-policy": "the pinned policy dispatched no verifier for the row or the clean verdict, so no fresh context attacked it",
+    "verifier-refuted-or-unresolved": "a verifier received the candidate and refuted it or left it unresolved",
+    "publication-or-cap-loss": "the finding was admitted and verified but lost to the item cap, the whole-review budget or a stop before publication",
+    "unknown": "the retained traces do not establish the stage"
+  },
+  "origin_vocabulary": {
+    "primary": "raised by the primary reviewer before any finder claim was admitted",
+    "finder": "raised by arm C's bounded discovery worker and admitted at the barrier",
+    "verifier-added": "added by the verifier as a correction or second scenario on a candidate it received"
+  },
+  "rows": [
+    {
+      "attempt_ref": "position-04-attempt-1", "cell_id": "slot-1-A-replicate-1", "arm": "A", "target_slot": "slot-1",
+      "defect_id": "GT-p1", "outcome": "missed", "stage": "never-discovered",
+      "also": ["omitted-from-verification-by-policy"],
+      "evidence": ["research-report.md section 3: three candidates raised (a redundant check_terminator call, a test-name mismatch, a num_args minimum-values case dropped as pre-existing); none names the trailing_values omission or the .last(true) routing", "research-report.md section 4: zero sub-agents dispatched; the zero-survivor clean-verdict batch requires a concurrency, data-integrity or security surface and command-line parsing is none of them", "review-payload.md: Approved (advisory), 0 must-fix findings"],
+      "note": "The primary read the whole enclosing function, ran the change's own test and a six-test regression group, and traced an adjacent num_args edge case to a pre-existing path. The .last(true) routing branch two hops away was never raised as a candidate, so nothing reached a verifier, and the policy dispatched no clean-verdict batch on this surface. This is the #185-shaped limit in a different shape: not hygiene survivors, but a surface outside the zero-survivor vocabulary."
+    },
+    {
+      "attempt_ref": "position-04-attempt-1", "cell_id": "slot-1-A-replicate-1", "arm": "A", "target_slot": "slot-1",
+      "defect_id": "GT-p2", "outcome": "missed", "stage": "never-discovered",
+      "also": ["omitted-from-verification-by-policy"],
+      "evidence": ["research-report.md section 3: no candidate names the option-state fall-through (ParseState::Opt) the new branch fails to guard", "research-report.md section 5: base/head comparison reads of parser.rs 95-180 and 255-330 were made to falsify the num_args case, not to enumerate the branch's sibling parse states"],
+      "note": "Same attempt, same stage. The base/head reads that would have exposed the option-state case were made in service of a different candidate."
+    },
+    {
+      "attempt_ref": "position-05-attempt-1", "cell_id": "slot-1-B-replicate-1", "arm": "B", "target_slot": "slot-1",
+      "defect_id": "GT-p2", "outcome": "recovered", "origin": "primary", "verified": "independent-confirmed", "fix": "sufficient",
+      "admissible": false, "why_inadmissible": "invalid on protocol grounds: a read outside the permitted roots (fidelity-assessment.json), replacement-eligible and never replaced",
+      "evidence": ["research-report.md section 3: candidate C1 (invariant) raised by the primary with a scratch-crate reproduction; survivor", "research-report.md section 4: one bd-verifier batch at claude-opus-5, verdict confirmed with two corrections", "rulings: packet d5fbbc87/r1 supported, material, bundled concept GT-p2 with requested fix sufficient for GT-p2"]
+    },
+    {
+      "attempt_ref": "position-05-attempt-1", "cell_id": "slot-1-B-replicate-1", "arm": "B", "target_slot": "slot-1",
+      "defect_id": "GT-p1", "outcome": "recovered", "origin": "verifier-added", "verified": "independent-confirmed", "fix": "partial",
+      "admissible": false, "why_inadmissible": "invalid on protocol grounds: a read outside the permitted roots (fidelity-assessment.json), replacement-eligible and never replaced",
+      "evidence": ["research-report.md section 4: the verifier added a second trigger and impact scenario, the single positional carrying .last(true) and value_terminator(\"--\") rejected on the first token, which the primary validated and folded into the one finding, raising it P2 to P1", "rulings: packet d5fbbc87/r1 concept GT-p1 (register-anchored manifestation), requested fix partial"],
+      "note": "The stronger verifier widened a correct primary candidate into the register's defect. The finding bundles both defects under one heading with one fix that restores GT-p2's outcome and not GT-p1's."
+    },
+    {
+      "attempt_ref": "position-06-attempt-1", "cell_id": "slot-1-C-replicate-1", "arm": "C", "target_slot": "slot-1",
+      "defect_id": "GT-p2", "outcome": "recovered", "origin": "primary", "verified": "independent-confirmed", "fix": "sufficient",
+      "admissible": false, "why_inadmissible": "stopped-budget and operationally unresolved: not a valid completed outcome",
+      "evidence": ["work/freeze.json (written before any finder claim was admitted): candidate parser/escape-terminator-opt-state-leak, survivor, verifier ruling pending", "phase-2 transcript: one bd-verifier batch at claude-opus-5 carrying two candidates", "rulings: packet 48d5db81/r1 supported, material, concept GT-p2, requested fix sufficient"]
+    },
+    {
+      "attempt_ref": "position-06-attempt-1", "cell_id": "slot-1-C-replicate-1", "arm": "C", "target_slot": "slot-1",
+      "defect_id": "GT-p1", "outcome": "recovered", "origin": "finder", "verified": "independent-confirmed", "fix": "partial",
+      "admissible": false, "why_inadmissible": "stopped-budget and operationally unresolved: not a valid completed outcome",
+      "also": ["publication-or-cap-loss"],
+      "evidence": ["work/freeze.json: the primary's frozen ledger carries no candidate naming trailing_values or .last(true)", "discovery.json / runner/admission.rendered.md: finder claim C1 names the trailing_values omission and the .last(true) hard error, C2 the hyphen-leading consequence; both admitted at the barrier", "phase-2 transcript: the admitted claim was carried into the verifier batch beside the primary's own candidate and published as the P1 finding", "primary-phase-2-result.json: subtype error_max_budget_usd after the payload was written, during its final re-validation; timing.json has no payload_validated_at"],
+      "note": "The only finder-origin material recovery in the pilot. The primary alone had frozen GT-p2 and not GT-p1; the finder supplied GT-p1; the shared verifier confirmed both. The cap took the final validation mark and the report's post-barrier sections, not the finding: the payload on disk carries both findings and is what #151 packeted."
+    },
+    {
+      "attempt_ref": "position-03-attempt-2", "cell_id": "slot-2-C-replicate-1", "arm": "C", "target_slot": "slot-2",
+      "defect_id": null, "outcome": "no-defect-to-recover", "stage": "raised-then-rejected-by-primary",
+      "evidence": ["discovery.json: finder claims C1 (progress obligation on the early return) and C2 (post-Close call still hangs)", "research-report.md section 3a: both falsified by the primary against the documented balancer contract and in-tree drivers, refuted with basis prevented and pre-existing+intentional; the clean-verdict batch at claude-opus-5 upheld every disposition", "rulings: packet c838196b has zero findings and one supported sub-threshold observation; the register is adjudicated clean"],
+      "note": "On the clean target the finder raised two concurrency claims and the primary rejected both. Both rejections were correct: the register lists the same class of objection under not-ground-truth. This is the admission step doing what the design asks of it, and it is why C carries zero raw false findings."
+    },
+    {
+      "attempt_ref": "position-01-attempt-2", "cell_id": "slot-2-A-replicate-1", "arm": "A", "target_slot": "slot-2",
+      "defect_id": null, "outcome": "no-defect-to-recover", "stage": null,
+      "evidence": ["review-payload.md: Approved (advisory), 0 must-fix findings", "usage-split.json: one claude-sonnet-5 worker transcript, so a verifier batch ran", "rulings: packet d34ed404 zero findings, one true sub-threshold observation, all safety claims supported"]
+    },
+    {
+      "attempt_ref": "position-02-attempt-1", "cell_id": "slot-2-B-replicate-1", "arm": "B", "target_slot": "slot-2",
+      "defect_id": null, "outcome": "no-defect-to-recover", "stage": null,
+      "evidence": ["review-payload.md: Approved (advisory), no findings", "usage-split.json: one claude-opus-5 worker transcript, so a verifier batch ran", "rulings: packet 1d3416e2 zero items, four supported safety claims"]
+    }
+  ],
+  "scope_selector": {
+    "slot-1": {"selected_scope": "clap_builder/src/parser/parser.rs Parser::parse 130-144", "defect_sites": ["GT-p1 at parser.rs:135-138", "GT-p2 at parser.rs:135-138"], "miss": false, "note": "Both defects sit inside the selected scope's own lines. The finder's fourth claim recorded that it could not read parser.rs:145-317 under the bound; that limit did not cost a recovery."},
+    "slot-2": {"selected_scope": "xds/internal/balancer/priority/balancer.go run 260-289", "defect_sites": [], "miss": false, "note": "Adjudicated clean; nothing to miss."}
+  },
+  "verifier_exposure": [
+    {"attempt_ref": "position-01-attempt-2", "arm": "A", "batch": "clean-verdict", "worker_model": "claude-sonnet-5", "candidates_received": 0, "finder_origin_received": 0},
+    {"attempt_ref": "position-02-attempt-1", "arm": "B", "batch": "clean-verdict", "worker_model": "claude-opus-5", "candidates_received": 0, "finder_origin_received": 0},
+    {"attempt_ref": "position-03-attempt-2", "arm": "C", "batch": "clean-verdict", "worker_model": "claude-opus-5", "candidates_received": 0, "finder_origin_received": 0, "note": "the two finder claims were rejected by the primary before the batch; the batch attacked the whole disposition ledger including those rejections"},
+    {"attempt_ref": "position-04-attempt-1", "arm": "A", "batch": "none", "worker_model": null, "candidates_received": 0, "finder_origin_received": 0, "note": "zero survivors on a surface outside the zero-survivor vocabulary: the policy permits no batch"},
+    {"attempt_ref": "position-05-attempt-1", "arm": "B", "batch": "candidate", "worker_model": "claude-opus-5", "candidates_received": 1, "finder_origin_received": 0},
+    {"attempt_ref": "position-06-attempt-1", "arm": "C", "batch": "candidate", "worker_model": "claude-opus-5", "candidates_received": 2, "finder_origin_received": 1}
+  ]
+}

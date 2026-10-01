@@ -1,0 +1,142 @@
+{
+ "run": {
+  "target_kind": "range",
+  "base_ref": "main",
+  "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+  "coverage": "complete"
+ },
+ "summary": {
+  "status": "Changes Requested",
+  "intent": "Let `ledger statement` take inclusive `--since`/`--until` bounds, with an opening balance, a running balance that continues from it, a bounded closing balance, exit 2 on bad dates, and README docs (spec ledger-spec/statement-date-filter; commits e16a48c, 2ba4046).",
+  "issue_fit": "Partial. Criteria 1, 2, 4, 5 and 6 are met; criterion 3 is not met when an account's entries are not in date order, which `post()`, `transfer()` and `load()` permit.",
+  "coverage": "Complete merge-base diff (4 files) reviewed. Supplied unittest run (17 tests, exit 0) and the criterion-5 CLI exercises were accepted: same head 2ba4046, clean tree. I reproduced the out-of-order case once with a disposable JSON file; a verifier confirmed the finding by trace. No test runs the out-of-order case, so the passing suite says nothing about it. Uncommitted changes: none. Python 3.11+ `date.fromisoformat` also accepts compact forms such as `20260901`, which criterion 5's `YYYY-MM-DD` wording does not address; not raised as a finding."
+ },
+ "findings": [
+  {
+   "id": "ledger/statement/running-balance-posting-order",
+   "title": "Start the running balance at the opening balance",
+   "priority": "P2",
+   "action": "must-fix",
+   "kind": "requirement",
+   "trigger": "An account whose posting order differs from date order (for example a 2026-09-05 entry posted before a 2026-08-01 entry) is rendered with `--since 2026-09-01`.",
+   "impact": "The row prints running balance 100.00 beside opening balance 50.00 and amount 100.00 (it should be 150.00, the closing balance), so the statement contradicts criterion 3. Entries dated after `--until` but posted earlier inflate listed rows the same way.",
+   "change": "In `statement_rows`, initialise `running` to `balance_before(account, since)` when `since` is given (else 0) and add only the amounts of rows that pass the filter.",
+   "source": "spec-ledger-spec/statement-date-filter/criterion-3",
+   "anchor": {
+    "type": "line",
+    "path": "ledger/statement.py",
+    "start_line": 34,
+    "end_line": 36,
+    "side": "RIGHT"
+   }
+  }
+ ],
+ "questions": [],
+ "observations": [],
+ "record": {
+  "repository": "/tmp/rcs-savings/treatment/implementation-gate/repo",
+  "paths": {
+   "evidence_packet": "/tmp/rcs-savings/treatment/implementation-gate/inputs/evidence.md",
+   "spec": "/tmp/rcs-savings/treatment/implementation-gate/inputs/spec.md"
+  },
+  "requirements": [
+   {
+    "source": "spec-ledger-spec/statement-date-filter/criterion-1",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "ledger/cli.py:37-38 adds --since/--until parsed by iso_day; statement.py filters inclusively"
+   },
+   {
+    "source": "spec-ledger-spec/statement-date-filter/criterion-2",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "ledger/statement.py render_statement emits `Opening balance:` from balance_before (entries < since) right after the heading"
+   },
+   {
+    "source": "spec-ledger-spec/statement-date-filter/criterion-3",
+    "class": "acceptance",
+    "disposition": "partial",
+    "evidence": "Listing is correct, but statement_rows:34-41 accumulates running over every entry in posting order, so it diverges from opening balance plus listed rows when entries are not date-ordered; reproduced and verifier-confirmed (ledger/statement/running-balance-posting-order)"
+   },
+   {
+    "source": "spec-ledger-spec/statement-date-filter/criterion-4",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "render_statement closing uses balance_through(until) or account.balance() when until is absent"
+   },
+   {
+    "source": "spec-ledger-spec/statement-date-filter/criterion-5",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "inputs/criterion-5.txt: invalid date and reversed range both exit 2 with stderr messages; cli.py main check and tests/test_filter.py"
+   },
+   {
+    "source": "spec-ledger-spec/statement-date-filter/criterion-6",
+    "class": "acceptance",
+    "disposition": "met",
+    "evidence": "README.md:7 example and lines 11-12 describe both options"
+   }
+  ],
+  "files": [
+   {
+    "path": "README.md",
+    "state": "reviewed"
+   },
+   {
+    "path": "ledger/cli.py",
+    "state": "reviewed"
+   },
+   {
+    "path": "ledger/statement.py",
+    "state": "reviewed"
+   },
+   {
+    "path": "tests/test_filter.py",
+    "state": "reviewed"
+   }
+  ],
+  "check_evidence": [
+   {
+    "check": "python3 -m unittest discover -s tests -v",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "outcome": "accepted",
+    "reason": "exact head, clean tree, 17 tests pass, output read; covers only date-ordered data"
+   },
+   {
+    "check": "criterion-5 CLI exercises (invalid --since, reversed range)",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "outcome": "accepted",
+    "reason": "exact head, clean tree, both exit 2, output read in criterion-5.txt"
+   }
+  ],
+  "verification": {
+   "tasks": [
+    {
+     "id": "ledger/statement/running-balance-posting-order",
+     "type": "candidate",
+     "trigger": "must-fix",
+     "batch": "initial",
+     "ruling": "confirmed"
+    }
+   ],
+   "batches": [
+    {
+     "bundle": "/tmp/rcs-savings/treatment/implementation-gate/work/initial",
+     "accounting": "/tmp/rcs-savings/treatment/implementation-gate/work/initial/accounting.json",
+     "operation": "Agent run_in_background=false"
+    }
+   ],
+   "allowance": {
+    "initial_spent": true,
+    "follow_up_spent": false,
+    "carried_from": null
+   },
+   "outstanding": []
+  },
+  "routed": {
+   "unresolved": [],
+   "disputed": [],
+   "unrecoverable_inputs": []
+  }
+ }
+}

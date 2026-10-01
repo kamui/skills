@@ -1,0 +1,27 @@
+{
+  "accepted_at": "2026-09-12T10:33:17.960338+00:00",
+  "arm": "B",
+  "artifact_id": "bounded-discovery-payload-receipt",
+  "attempt_id": "probe-p22-B-clean",
+  "body_sha256": "d7a8e960f370dbfe4969024150c6c59bbb7093eba2fd65d5c99035a93fef46e5",
+  "completion": "complete",
+  "contract_validator": null,
+  "item_count": 0,
+  "item_types": [],
+  "items_present": true,
+  "key_paths": [
+    "arm",
+    "attempt_id",
+    "outcome",
+    "schema_version",
+    "stop",
+    "summary.body"
+  ],
+  "outcome": "clean",
+  "payload_sha256": "333a0949cffe90fcf89236960ce852215b99dcf969e5c6966eac9689b8dbb006",
+  "produced_by": "arm",
+  "schema_version": "bounded-discovery-payload-v1",
+  "source_form": "review-payload.json",
+  "stop": null,
+  "validator_sha256": "c6c1fda996c8ad6ec7a95851e70049a2eeba54587939669ecdeb2d27d0bab030"
+}

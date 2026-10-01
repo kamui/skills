@@ -1,0 +1,24 @@
+{
+  "artifact_id": "issue-152-rulings-seal",
+  "cipher": "openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt, under #148's key",
+  "ciphertext_bytes": 388896,
+  "ciphertext_sha256": "3e3391165597c6663f0d1cf0388d29b57e4ac32069913dd60239e6f540aa7280",
+  "files_sealed": {
+    "amendment-1-target-A.json": "8c89b4ede0de74be8f097ff469961d227f5ee8e86fd280288a3ea41c1c2f6c68",
+    "amendment-1-target-B.json": "f3d05bb8124eee2a4f6c19a81f3c8e4de1dea33295ec643e052ee9749231a66d",
+    "amendment-prompt-target-A.md": "afbcab1fae2982eabab1964ff503563c9f04ac365c2fbfb988cd53cf6791c042",
+    "amendment-prompt-target-B.md": "8ea0a4744b49391faeda039998c43ff5ed0c8c4120d7da3154e17cad3cf0953f",
+    "derived-fields-amended-1.json": "631eca187e600906f66101142cbb962a52e6615fa82a53a2cc27ad83e385ac6e",
+    "launch-amendment-target-A.sh": "b8f4218a0cea51eb7eda372d70e602f716bab0b5ccf64180041801f4814b6d82",
+    "launch-amendment-target-B.sh": "e06b3bb98722c8fa96edc09e8cd13d8a516d3c493ef75aeaeaa2284f0331abb3",
+    "reproduction-target-A.txt": "d7d585e41094d62e361e96c2b05d8fac43744636c0d70bb82ec3cbbf2419c995",
+    "result-amendment-target-A.json": "ecc54cdd2254cf5e7ed293a8a902600770eff788e7f9707194d873860f55c2a2",
+    "result-amendment-target-B.json": "3a36c90a93ece1ca98959bc608ec975f6a11371d3e6375bdeef2ba4379545ac2",
+    "transcript-target-A.jsonl": "7c3fefdc346643257e01aeaa6e51c1328062346b6d1534ee2af9927f5f1d7173",
+    "transcript-target-B.jsonl": "ce3faabb379a3f5407e9433fa58db5272fd8bc355630cff2caf11fe737a5e42f"
+  },
+  "plaintext_sha256": "ac4e109c57d211c6b4f48bbd2f4842356020546d5446fb796e030b1b7326fe7f",
+  "schema_version": "bounded-discovery-v1",
+  "sealed_at": "2026-09-11T06:12:58.070343+00:00",
+  "why_sealed": "the ruling tables quote the packets' paths, symbols and citations, which name the targets; the public summary carries counts only"
+}

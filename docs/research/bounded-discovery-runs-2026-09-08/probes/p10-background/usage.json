@@ -1,0 +1,150 @@
+{
+  "prices": {
+    "input": 2.0,
+    "output": 10.0,
+    "cache_write_mult": 1.25,
+    "cache_write_1h_mult": 2.0,
+    "cache_read_mult": 0.1,
+    "unknown_tier_fallback": "unknown-tier cache writes are priced at cache_write_mult (5m) in cost; cost_bounds price them at the lower and the higher of the two multipliers"
+  },
+  "transcripts": [
+    {
+      "label": "a995295e-0dd6-4ca3-958e-1614065449b2.jsonl",
+      "turns": 3,
+      "lines": 6,
+      "tool_calls": 3,
+      "text_only_turns": 1,
+      "input": 6,
+      "cache_write": 9751,
+      "cache_write_5m": 0,
+      "cache_write_1h": 9751,
+      "cache_write_unknown": 0,
+      "cache_read": 17204,
+      "output": 634,
+      "thinking": 11,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:00:07",
+      "wall_seconds": 7.311,
+      "path": "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p10-work/a995295e-0dd6-4ca3-958e-1614065449b2.jsonl",
+      "cost": 0.048797,
+      "cost_bounds": {
+        "low": 0.048797,
+        "high": 0.048797,
+        "unknown_tier_tokens": 0,
+        "tiers_known": true,
+        "assumption": "all cache-write tiers known"
+      }
+    },
+    {
+      "label": "agent-a153a0322ab0fc2fd.jsonl",
+      "turns": 2,
+      "lines": 2,
+      "tool_calls": 1,
+      "text_only_turns": 1,
+      "input": 4,
+      "cache_write": 4564,
+      "cache_write_5m": 4564,
+      "cache_write_1h": 0,
+      "cache_write_unknown": 0,
+      "cache_read": 4398,
+      "output": 106,
+      "thinking": 0,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "wall": "0:00:01",
+      "wall_seconds": 0.806,
+      "path": "/Users/jack/.claude/projects/-private-tmp-bd149-probes-p10-work/a995295e-0dd6-4ca3-958e-1614065449b2/subagents/agent-a153a0322ab0fc2fd.jsonl",
+      "cost": 0.013358,
+      "cost_bounds": {
+        "low": 0.013358,
+        "high": 0.013358,
+        "unknown_tier_tokens": 0,
+        "tiers_known": true,
+        "assumption": "all cache-write tiers known"
+      }
+    }
+  ],
+  "timing": {
+    "completion_mode": null,
+    "root_dispatched_at": null,
+    "payload_validated_at": null,
+    "completed_at": null,
+    "elapsed_to_payload_seconds": null,
+    "elapsed_to_completion_seconds": null
+  },
+  "total": {
+    "label": "TOTAL",
+    "turns": 5,
+    "lines": 8,
+    "tool_calls": 4,
+    "text_only_turns": 2,
+    "input": 10,
+    "cache_write": 14315,
+    "cache_write_5m": 4564,
+    "cache_write_1h": 9751,
+    "cache_write_unknown": 0,
+    "cache_read": 21602,
+    "output": 740,
+    "thinking": 11,
+    "cache_write_unknown_by_cause": {
+      "no_breakdown": {
+        "tokens": 0,
+        "turns": 0
+      },
+      "residual": {
+        "tokens": 0,
+        "turns": 0
+      },
+      "inconsistent": {
+        "tokens": 0,
+        "turns": 0
+      }
+    },
+    "models": [
+      "claude-sonnet-5",
+      "claude-opus-5"
+    ],
+    "wall": "0:00:08",
+    "wall_seconds": 8.117,
+    "agent_span_sum_seconds": 8.117,
+    "cost": 0.062154,
+    "cost_bounds": {
+      "low": 0.062154,
+      "high": 0.062154,
+      "unknown_tier_tokens": 0,
+      "tiers_known": true,
+      "assumption": "all cache-write tiers known"
+    }
+  }
+}

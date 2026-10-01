@@ -1,0 +1,110 @@
+{
+  "baseline": "7387c169c9b5b23c5c679efb7110c9c07fc3f7f3",
+  "treatment": "44b9331ae45650450fbd56fbf1f0ad1d29257b15",
+  "model": "claude-sonnet-5",
+  "effort": "high",
+  "harness": "Claude Code 2.1.280",
+  "limits": {
+    "max_attempts": 22,
+    "planned_case_attempts": 20,
+    "replacement_slots": 2,
+    "attempt_usd": 15,
+    "screen_usd": 250,
+    "max_in_flight": 2
+  },
+  "state": "completed-inconclusive",
+  "model_probe": {
+    "counts_against_replacement_slots": true,
+    "cap_usd": 0.1
+  },
+  "cases": {
+    "C1": {
+      "status": "inconclusive-not-run",
+      "reason": "Historical truncated mirror and packet unavailable."
+    },
+    "C2": {
+      "status": "inconclusive-not-run",
+      "reason": "Historical frozen mirror unavailable; packet text exists."
+    },
+    "C3": {
+      "status": "inconclusive-not-run",
+      "reason": "Historical frozen mirror unavailable; packet text exists."
+    },
+    "C4": {
+      "status": "inconclusive-not-run",
+      "reason": "Historical frozen mirror unavailable."
+    },
+    "C5": {
+      "status": "inconclusive-not-run",
+      "reason": "Historical target and released-source mirror unavailable."
+    },
+    "C6": {
+      "status": "inconclusive-not-run",
+      "reason": "Historical frozen mirror unavailable; packet text exists."
+    },
+    "C7": {
+      "status": "inconclusive-not-run",
+      "reason": "Pre-review PR body unavailable; current body was edited after the first review and reveals the fix."
+    },
+    "C8": {
+      "status": "paired-consequential-outcomes-pass",
+      "attempts": [
+        "C8-B1",
+        "C8-T1"
+      ],
+      "scoring": "C8-scoring.md",
+      "limit": "Fingerprint input differs by one trailing PR-body newline; strict exact-identity crosscheck not met."
+    },
+    "C9": {
+      "status": "inconclusive-not-run",
+      "reason": "Required live acceptance capture unavailable; pinned source explicitly says it is still owed."
+    },
+    "C10": {
+      "status": "inconclusive-not-run",
+      "reason": "Depends on admitted C9 records and acceptance packet; synthetic commit not constructed."
+    }
+  },
+  "attempts": [
+    {
+      "id": "P0",
+      "kind": "availability-probe",
+      "record": "model-preflight.json",
+      "counts_against_limit": true,
+      "case": null
+    },
+    {
+      "id": "C8-B1",
+      "case": "C8",
+      "kind": "case-review",
+      "record": "C8-B1/run.json",
+      "result": "C8-B1/stdout.json",
+      "counts_against_limit": true
+    },
+    {
+      "id": "C8-T1",
+      "case": "C8",
+      "kind": "case-review",
+      "record": "C8-T1/run.json",
+      "result": "C8-T1/stdout.json",
+      "counts_against_limit": true
+    }
+  ],
+  "C8_packet_sha256": "690d137c0cbde961517e7a7b9f3f1fb349def76d963244b8688ce773253fb6ec",
+  "C8_order": "baseline then treatment; lowest SHA256 bit 0 maps to baseline first, 1 to treatment first",
+  "C8_order_bit": 0,
+  "freeze_notes": [
+    "Owner retained Sonnet 5 high for experiment; Sol 6 high applies to subsequent collaboration/review subagents.",
+    "C7/C8 expectations independently vetted before case dispatch.",
+    "No change to frozen attempt or spend limits. Availability probe consumes one replacement slot conservatively."
+  ],
+  "accounting": {
+    "counted_attempts": 3,
+    "completed_case_attempts": 2,
+    "stopped_case_attempts": 0,
+    "failed_case_attempts": 0,
+    "availability_probes": 1,
+    "replacement_slots_used_by_probe": 1,
+    "harness_reported_usd": 5.7210414,
+    "cost_scope": "Model availability probe and both matched case processes, including harness helper charges. Excludes collaboration agents and this delivery; those costs are unavailable. Harness figures are list-price usage costs, not billing receipts."
+  }
+}

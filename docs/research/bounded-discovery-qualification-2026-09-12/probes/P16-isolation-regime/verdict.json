@@ -1,0 +1,12 @@
+{
+  "probe": "P16",
+  "status": "unestablished",
+  "summary": "Split result. Host absence is unreachable on this host: 40 linked worktrees of the repository under test plus its primary checkout share an object store that reaches the #153 revealed registers, leak sets and 28-candidate inventory in cleartext (5 entries under revealed/), and seven evaluator-only directories sit under ~/.config/bounded-discovery. The container regime's filesystem property does hold: a container bound to only the cell tree saw the cell's files and nothing else - /Users, the worktree root, the evaluator directory, the revealed truth and even the sibling probe roots under the same /private/tmp parent were all absent - and docker inspect asserts exactly one bind, source and destination both the cell tree. But no cell can be dispatched inside it: the runtime in that container cannot authenticate. ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN and ANTHROPIC_PROFILE are all unset, the ant CLI and ~/.config/anthropic are absent, and no auth env file exists anywhere under the evaluator directories, so the separately provisioned container token the pilot's deviation 8 relied on does not exist on this machine.",
+  "establishes": "Two of the three things P16 must answer. The regime the host can reach is containers, not absence, and the mount set is assertable from the runtime's own inspection rather than claimed. It does not establish the third and decisive one - that a cell can run under that regime - and the catalogue is explicit that a control which cannot be observed is not a pass.",
+  "residual": "Two residuals, one of them a stop condition. (1) Even under container mounts the boundary is conditional on the mount set being correct, where absence would have been unconditional, so the mount set is per-cell primary evidence. P13 is why: an allow-listed interpreter reads whatever is mounted. (2) A study cannot dispatch from this host until a container provider credential is provisioned and a cell image is built and pinned against 2.1.269. That is an operator action with its own billing path, not something this qualification can perform, and it is listed in the not-ready handoff.",
+  "refuted_by": "The host-absence half is refuted outright by the host's own state, and no probe can restore it.",
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:11:59.503117+00:00"
+}

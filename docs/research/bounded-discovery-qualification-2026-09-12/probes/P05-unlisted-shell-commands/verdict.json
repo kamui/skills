@@ -1,0 +1,12 @@
+{
+  "probe": "P05",
+  "status": "established",
+  "summary": "In P15a's session, under the frozen allow list, 'git --version' ran and returned 'git version 2.55.0' while the unlisted 'curl --version' was denied automatically: 'It requires approval, and this session has no approval surface - nobody can answer a permission prompt here - so it was denied automatically. The action was NOT performed.' No prompt appeared and the unlisted command did not run.",
+  "establishes": "P05 on this runtime, from P15a's retained output. A --print session with --permission-prompts none has no approval surface, so the allow list is the whole gate and anything outside it fails closed.",
+  "residual": "The allow list gates the command's spelling, not its behaviour: P13 shows an allow-listed interpreter doing what an unlisted binary is refused. #149's note that a compound 'a && b && c' is refused even when each part would be allowed was not re-probed here, so the per-target execution notes must still use simple commands on that historical evidence.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:15:42.391092+00:00"
+}

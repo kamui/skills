@@ -1,0 +1,120 @@
+{
+  "duration_api_ms": 5670,
+  "stop_reason": "end_turn",
+  "session_id": "a181baed-a118-437a-bd07-8bf4e0f71eb5",
+  "total_cost_usd": 0.040819999999999995,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 8684,
+    "cache_read_input_tokens": 8150,
+    "output_tokens": 326,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8684,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 132,
+        "cache_read_input_tokens": 8150,
+        "cache_creation_input_tokens": 534,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 534
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 1121,
+      "outputTokens": 13,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.001186,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-haiku-4-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5": {
+      "inputTokens": 4,
+      "outputTokens": 326,
+      "cacheReadInputTokens": 8150,
+      "cacheCreationInputTokens": 8684,
+      "webSearchRequests": 0,
+      "costUSD": 0.039633999999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01XSbM4CdFpcg4JcmTdJT54N",
+      "tool_input": {
+        "command": "curl --version",
+        "description": "Check curl version"
+      }
+    }
+  ],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "TOOLS: Agent, Bash, Edit, Glob, Grep, Read, Write\nALLOWED: git version 2.55.0\nUNLISTED: Permission for this tool use was denied. It requires approval, and this session has no approval surface \u2014 nobody can answer a permission prompt here \u2014 so it was denied automatically. The action was NOT performed.\nREAD: inside-root canary for the probe root",
+  "ttft_ms": 2586,
+  "type": "result",
+  "duration_ms": 4940,
+  "uuid": "302bbd51-2d7e-43cf-8039-c97b03dc548e",
+  "ttft_stream_ms": 1944,
+  "time_to_request_ms": 35,
+  "first_content_frame_ms": 1945,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

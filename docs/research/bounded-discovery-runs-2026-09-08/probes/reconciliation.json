@@ -1,0 +1,139 @@
+{
+  "note": "Recomputed against the runtime's own figure for every probe session. meter_split.py prices each transcript at its own model's rate from rates.json and sums the groups. Where the two differ the larger was charged to the ledger and the difference is the reconciliation residual. p3b was terminated before it wrote a result envelope, so it has no runtime figure and was settled from its retained per-request records.",
+  "probes": {
+    "p1-settings": {
+      "difference_usd": "1E-7",
+      "models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.056633",
+      "runtime_self_report_usd": "0.0566329",
+      "session_id": "819a42e7-a268-4bee-af41-a01206cd002b",
+      "transcripts": 2
+    },
+    "p10-background": {
+      "difference_usd": "-0.0012508",
+      "models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.082191",
+      "runtime_self_report_usd": "0.0834418",
+      "session_id": "a995295e-0dd6-4ca3-958e-1614065449b2",
+      "transcripts": 2
+    },
+    "p2a-isolation-finder": {
+      "difference_usd": "-0.001342",
+      "models": [
+        "claude-opus-5"
+      ],
+      "recomputed_usd": "0.090336",
+      "runtime_self_report_usd": "0.091678",
+      "session_id": "3a05c7cf-07b2-453a-aade-cbb5e3a5b1b6",
+      "transcripts": 1
+    },
+    "p2b-isolation-primary": {
+      "difference_usd": "4E-7",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.058708",
+      "runtime_self_report_usd": "0.0587076",
+      "session_id": "6efcf900-a2af-46d1-ad1f-db912d4b15b4",
+      "transcripts": 1
+    },
+    "p2c-egress": {
+      "difference_usd": "-4E-7",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.049894",
+      "runtime_self_report_usd": "0.0498944",
+      "session_id": "43d6403a-2623-44c9-b1b2-7e7579cd7d76",
+      "transcripts": 1
+    },
+    "p3a-cancellation-precheck": {
+      "difference_usd": "4E-7",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.077244",
+      "runtime_self_report_usd": "0.0772436",
+      "session_id": "d20a4f67-5c2d-4b4a-8ff3-b5077b5eda78",
+      "transcripts": 1
+    },
+    "p3b-cancelled": {
+      "difference_usd": null,
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.299386",
+      "runtime_self_report_usd": null,
+      "session_id": "b18af76d-b4a2-410c-9210-3afb087ea195",
+      "transcripts": 1
+    },
+    "p4-allowance": {
+      "difference_usd": "0.000000",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.067136",
+      "runtime_self_report_usd": "0.067136",
+      "session_id": "5c168712-73c6-4c4e-a8d7-c55985710ff2",
+      "transcripts": 1
+    },
+    "p5-cell-config": {
+      "difference_usd": "-0.00134845",
+      "models": [
+        "claude-opus-5",
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.091806",
+      "runtime_self_report_usd": "0.09315445",
+      "session_id": "8423b77a-4062-4883-90b5-06c179581a62",
+      "transcripts": 2
+    },
+    "p6-shell-allowlist": {
+      "difference_usd": "-0.0013802",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.057229",
+      "runtime_self_report_usd": "0.0586092",
+      "session_id": "c75cab68-a6a8-46e1-ab40-1d81966af2ef",
+      "transcripts": 1
+    },
+    "p7-shell-escape": {
+      "difference_usd": "-0.0013318",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.046391",
+      "runtime_self_report_usd": "0.0477228",
+      "session_id": "979452b2-3b0b-4d57-a93b-4dced1c3b9ce",
+      "transcripts": 1
+    },
+    "p8-writes": {
+      "difference_usd": "-0.001275599999999997",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.025806",
+      "runtime_self_report_usd": "0.027081599999999997",
+      "session_id": "52ee1bfb-6cdd-42db-9a6a-4d2abdf43a82",
+      "transcripts": 1
+    },
+    "p9-writes-allowed": {
+      "difference_usd": "-0.0012814",
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "recomputed_usd": "0.029872",
+      "runtime_self_report_usd": "0.0311534",
+      "session_id": "510747fd-4ec9-4c98-aa49-537d7d084169",
+      "transcripts": 1
+    }
+  },
+  "schema_version": "bounded-discovery-v1"
+}
