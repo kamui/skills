@@ -1,0 +1,312 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/control/publishable/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code",
+  "task_root": "/tmp/rcs-savings/control/publishable",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 13,
+          "lines": 20,
+          "tool_calls": 12,
+          "text_only_turns": 1,
+          "input": 26,
+          "cache_write": 36121,
+          "cache_write_5m": 0,
+          "cache_write_1h": 36121,
+          "cache_write_unknown": 0,
+          "cache_read": 389746,
+          "output": 5434,
+          "thinking": 642,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:01:01",
+          "wall_seconds": 60.703,
+          "path": "/tmp/rcs-savings/evidence/control/publishable/transcript.jsonl",
+          "settings": {
+            "lines": 20,
+            "models": {
+              "claude-sonnet-5": 20
+            },
+            "efforts": {
+              "high": 20
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 13,
+        "lines": 20,
+        "tool_calls": 12,
+        "text_only_turns": 1,
+        "input": 26,
+        "cache_write": 36121,
+        "cache_write_5m": 0,
+        "cache_write_1h": 36121,
+        "cache_write_unknown": 0,
+        "cache_read": 389746,
+        "output": 5434,
+        "thinking": 642,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:01:01",
+        "wall_seconds": 60.703
+      }
+    },
+    "workers": null,
+    "all": {
+      "label": "total",
+      "turns": 13,
+      "lines": 20,
+      "tool_calls": 12,
+      "text_only_turns": 1,
+      "input": 26,
+      "cache_write": 36121,
+      "cache_write_5m": 0,
+      "cache_write_1h": 36121,
+      "cache_write_unknown": 0,
+      "cache_read": 389746,
+      "output": 5434,
+      "thinking": 642,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:01:01",
+      "wall_seconds": 60.703
+    }
+  },
+  "harness": {
+    "num_turns": 13,
+    "duration_ms": 63055,
+    "total_cost_usd": 0.27835519999999997,
+    "subagents_spawned": 0,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 1,
+    "failed": 0,
+    "repair_loops": 0,
+    "runs": [
+      {
+        "command": "W=/tmp/rcs-savings/control/publishable/work; S=/tmp/rcs-savings/skills/d8c2dd9/skills/review-code\ncat > $W/composition.json <<'E'\n{\n  \"run\": {\n    \"head\": \"0eb283dfe715341548387bf65af857affedf5dfa\",\n    \"base_ref\": \"main\",\n    \"base_sha\": \"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab\",\n    \"merge_base\": \"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab\",\n    \"context\": \"45a2fe742898267c6a52acfad4ff52cb5b988f8eb671321fe4749f479997822f\",\n    \"issues\": [\"example/ledger#3\"],\n    \"coverage\": \"complete\",\n    \"merged\": false,\n    \"repository_url\": \"https://github.com/example/ledger\"\n  },\n  \"summary\": {\n    \"status\": \"Approved\",\n    \"intent\": \"Add `--format csv` to `ledger statement` via a new `ledger/export.py` reusing `statement_rows` (PR body; closes #3).\",\n    \"issue_fit\": \"Met \u2014 all four acceptance criteria of #3 (csv option with text default, header row, text decimal format, csv.reader round-trip) are implemented.\",\n    \"coverage\": \"All 3 changed files reviewed against the complete merge-base diff. Reviewer-executed full suite at the head in a disposable export: 16 tests, OK. Newline/CR descriptions checked to round-trip through csv.reader. No verification workers were needed: no must-fix, security, data-integrity, or compatibility candidate survived and no safety-premise check applied.\"\n  },\n  \"findings\": [],\n  \"questions\": [],\n  \"observations\": [\n    {\n      \"fact\": \"The round-trip test covers a comma and quotes but not the newline case named in acceptance criterion 4; a manual check shows `csv.writer` quoting handles it.\",\n      \"evidence\": \"`tests/test_export.py:21-23`, `ledger/export.py:16-18`.\"\n    }\n  ]\n}\nE\ncd /tmp/rcs-savings/control/publishable/repo; python3 $S/scripts/finalize_review.py --store $W/store $W 2>&1 | tail -30; ls $W",
+        "failed": false,
+        "at": "2026-09-23T20:56:55.671000+00:00"
+      }
+    ],
+    "validation": {
+      "status": "captured",
+      "at": "2026-09-23T20:56:55.671000+00:00",
+      "turns_after": 3,
+      "tool_calls_after": 2,
+      "seconds_after": 21.077
+    }
+  },
+  "after_last_addendum": {
+    "status": "unavailable",
+    "reason": "no addendum write"
+  },
+  "loads": {
+    "items": [
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md"
+          }
+        ],
+        "bytes": 11806,
+        "words": 1701
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/pull-request-target.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md"
+          },
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md"
+          }
+        ],
+        "bytes": 1895,
+        "words": 250
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 3431,
+        "words": 347
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 11806,
+        "words": 1701
+      },
+      "reference": {
+        "count": 5,
+        "bytes": 1895,
+        "words": 250
+      },
+      "helper-example": {
+        "count": 2,
+        "bytes": 3431,
+        "words": 347
+      }
+    },
+    "mixed": {
+      "calls": 0,
+      "bytes": 0,
+      "words": 0
+    }
+  },
+  "worker_loads": [],
+  "authored": {
+    "writes": [
+      {
+        "path": "/dev/null",
+        "tool": "Bash",
+        "chars": 965,
+        "agent": "root",
+        "class": "other"
+      },
+      {
+        "path": "$W/composition.json",
+        "tool": "Bash",
+        "chars": 1754,
+        "agent": "root",
+        "class": "composition"
+      },
+      {
+        "path": "$W/report.md",
+        "tool": "Bash",
+        "chars": 2827,
+        "agent": "root",
+        "class": "report"
+      }
+    ],
+    "by_class": {
+      "other": {
+        "writes": 1,
+        "chars": 965
+      },
+      "composition": {
+        "writes": 1,
+        "chars": 1754
+      },
+      "report": {
+        "writes": 1,
+        "chars": 2827
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/control/publishable/work/composition.json",
+        "shape": "composition",
+        "bytes": 1498,
+        "mechanical": {
+          "fields": 8,
+          "words": 7
+        },
+        "judgment": {
+          "fields": 9,
+          "words": 116
+        },
+        "sections": {
+          "run": {
+            "fields": 9,
+            "words": 8
+          },
+          "summary": {
+            "fields": 4,
+            "words": 87
+          },
+          "findings": {
+            "fields": 1,
+            "words": 0
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "observations": {
+            "fields": 2,
+            "words": 28
+          }
+        },
+        "written_by": "tool"
+      }
+    ]
+  }
+}

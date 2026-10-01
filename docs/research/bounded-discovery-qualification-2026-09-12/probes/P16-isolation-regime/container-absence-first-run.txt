@@ -1,0 +1,17 @@
+== the cell tree is present ==
+total 8
+drwxr-xr-x    3 root     root            96 Sep 12 10:11 .
+drwxr-xr-x    3 root     root          4096 Sep 12 10:11 ..
+-rw-r--r--    1 root     root            18 Sep 12 10:11 inside.txt
+== the host user tree ==
+ls: /Users: No such file or directory
+== every worktree of the repository under test ==
+ls: /Users/jack/.t3/worktrees: No such file or directory
+== the evaluator-only directory ==
+ls: /Users/jack/.config/bounded-discovery: No such file or directory
+== the revealed cleartext truth ==
+ls: /Users/jack/Development/skills/docs/research/bounded-discovery-decision-2026-09-11/revealed: No such file or directory
+== the sibling probe roots on the host ==
+ls: /private/tmp/bd207-probes/outside: No such file or directory
+== what this container can actually see at the mount parent ==
+p16cell

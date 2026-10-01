@@ -1,0 +1,245 @@
+{
+  "schema_version": "bounded-discovery-v1",
+  "experiment_id": "issue-207-P25-stop",
+  "owner": "kamui",
+  "currency": "USD",
+  "total_ceiling_usd": "1.00",
+  "pre_freeze_ceiling_usd": "1.00",
+  "frozen_total_cap_usd": "1.00",
+  "grading_closeout_reserve_usd": "0.30",
+  "actual_usd": "0.09",
+  "reserved_usd": "0.05",
+  "uncertainty_usd": "0.03",
+  "pre_freeze_actual_usd": "0.09",
+  "pre_freeze_reserved_usd": "0.00",
+  "planned_cells": 1,
+  "attempts_dispatched": 0,
+  "replacement_limit": 1,
+  "attempt_limit": 2,
+  "events": [
+    {
+      "event_id": "P25-0001",
+      "previous_event_id": null,
+      "observed_at": "2026-09-12T10:19:30.384248+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "open",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [],
+      "reason": "A probe ledger for P25 only. It carries no study money."
+    },
+    {
+      "event_id": "a3bdd4ac-d521-49cc-bfbb-51b930a72cb7",
+      "previous_event_id": "P25-0001",
+      "observed_at": "2026-09-12T10:19:38.967797+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "cap-freeze",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop"
+      ],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop"
+      ],
+      "reason": "Freeze the total cap and the protected grading/closeout reserve",
+      "frozen_total_cap_usd": "1.00",
+      "grading_closeout_reserve_usd": "0.30"
+    },
+    {
+      "event_id": "4f7e0165-3dd8-46cb-8cbe-8785df6f2d65",
+      "previous_event_id": "a3bdd4ac-d521-49cc-bfbb-51b930a72cb7",
+      "observed_at": "2026-09-12T10:19:39.007979+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop"
+      ],
+      "reservation_id": "R1",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.10",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "1e5e9e0b-83ea-432a-9b36-2a4e9874086b",
+      "previous_event_id": "4f7e0165-3dd8-46cb-8cbe-8785df6f2d65",
+      "observed_at": "2026-09-12T10:19:39.050679+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop"
+      ],
+      "reservation_id": "R2",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.10",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop"
+      ],
+      "reason": "Conservative reservation"
+    },
+    {
+      "event_id": "ba04e247-4e15-4485-8062-88885d2480a9",
+      "previous_event_id": "1e5e9e0b-83ea-432a-9b36-2a4e9874086b",
+      "observed_at": "2026-09-12T10:19:39.092723+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop"
+      ],
+      "reservation_id": "R2",
+      "actual_delta_usd": "0.04",
+      "reservation_delta_usd": "-0.10",
+      "uncertainty_usd": "0.02",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "d21e3f8c-1736-47c7-9745-1a0b8e97795f",
+      "previous_event_id": "ba04e247-4e15-4485-8062-88885d2480a9",
+      "observed_at": "2026-09-12T10:19:39.127078+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "review",
+      "operation": "attempt-open",
+      "attempt_id": "A",
+      "helper_id": null,
+      "request_refs": [],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [],
+      "reason": "Claim fresh attempt before root dispatch",
+      "disposition": null,
+      "cell_id": "cell-A",
+      "contexts": [
+        "ctx-A"
+      ],
+      "predecessor": null,
+      "replacement_ordinal": 0
+    },
+    {
+      "event_id": "554e7410-6f91-4b3c-a043-3d36f80ef00f",
+      "previous_event_id": "d21e3f8c-1736-47c7-9745-1a0b8e97795f",
+      "observed_at": "2026-09-12T10:19:39.168814+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "closeout",
+      "operation": "stop",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop/battery-output.txt"
+      ],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop/battery-output.txt"
+      ],
+      "reason": "P25 probe: terminal stop with an outstanding reservation, retained uncertainty and one open attempt"
+    },
+    {
+      "event_id": "a8922ddd-6ba9-42ee-8aa1-e8e6a5547fe5",
+      "previous_event_id": "554e7410-6f91-4b3c-a043-3d36f80ef00f",
+      "observed_at": "2026-09-12T10:19:39.214702+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "pre-freeze",
+      "operation": "settle",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop"
+      ],
+      "reservation_id": "R1",
+      "actual_delta_usd": "0.05",
+      "reservation_delta_usd": "-0.10",
+      "uncertainty_usd": "0.01",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop"
+      ],
+      "reason": "Usage settlement"
+    },
+    {
+      "event_id": "cc0f6215-8830-4443-9942-42b100339f3e",
+      "previous_event_id": "a8922ddd-6ba9-42ee-8aa1-e8e6a5547fe5",
+      "observed_at": "2026-09-12T10:19:39.251772+00:00",
+      "ticket": 147,
+      "actor": "kamui",
+      "phase": "review",
+      "operation": "attempt-close",
+      "attempt_id": "A",
+      "helper_id": null,
+      "request_refs": [],
+      "reservation_id": null,
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [],
+      "reason": "complete",
+      "disposition": "complete",
+      "cell_id": "cell-A",
+      "contexts": [
+        "ctx-A"
+      ],
+      "predecessor": null,
+      "replacement_ordinal": 0
+    },
+    {
+      "event_id": "e9ea5544-cb5e-4713-8639-6204c52af907",
+      "previous_event_id": "cc0f6215-8830-4443-9942-42b100339f3e",
+      "observed_at": "2026-09-12T10:19:39.377468+00:00",
+      "ticket": 207,
+      "actor": "kamui",
+      "phase": "grading",
+      "operation": "reserve",
+      "attempt_id": null,
+      "helper_id": null,
+      "request_refs": [
+        "probes/P25-ledger-stop"
+      ],
+      "reservation_id": "R5",
+      "actual_delta_usd": "0",
+      "reservation_delta_usd": "0.05",
+      "uncertainty_usd": "0",
+      "rate_usage_evidence": [
+        "probes/P25-ledger-stop"
+      ],
+      "reason": "Conservative reservation"
+    }
+  ]
+}

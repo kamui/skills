@@ -1,0 +1,12 @@
+{
+  "probe": "P17",
+  "status": "established",
+  "summary": "Every one of the bundle's 65 launches retained its exact argv and its requested model, effort, dollar allowance, restriction flag, tool list and allow list in an exclusively created, flushed and fsynced record written before the process was created (probes/retention.json, written by this launch, which ran last and counted itself). One launch never started at all - P17a names a binary that does not exist - and its record is there with the full request, exit recorded as launch-failed and the OS error retained.",
+  "establishes": "gap-1's mechanical property on this runtime: the requested settings are recoverable for every launch, including one that failed, so 'every arm received identical allowances' is a checkable claim rather than an unestablishable one. Every committed report a verdict cites - freshness, reconciliation, retention, the frozen-input chain, the reservation set and the eligibility record - now comes from a retained launch whose output matches it.",
+  "residual": "The part P17 asks for that this cannot supply: a retained launch per phase and worker in each arm, compared against the frozen allowances. There are no arms, no frozen allowances and no authorized dispatch. Earlier runs of several probes are kept under their run-1/ directories rather than overwritten, which is part of why the count grew; the earlier run of this probe, over the nineteen launches that existed then, is one of them.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T21:39:53.244832+00:00"
+}

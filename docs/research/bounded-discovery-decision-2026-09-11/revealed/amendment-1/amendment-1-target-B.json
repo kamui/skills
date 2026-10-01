@@ -1,0 +1,64 @@
+{
+  "target_ref": "target-B",
+  "amendment": 1,
+  "prompted_by": "an independent reviewer's argument, relayed verbatim; checked against the code, not accepted on authority",
+  "changed": true,
+  "items": [
+    {
+      "item_ref": "48d5db81-a8ca-47cc-b018-461fde3ac88d/r2",
+      "structured_item_id": "1acd0336-697c-40aa-a269-b904415ce6b6",
+      "kind": "finding",
+      "anchor": "clap_builder/src/parser/parser.rs:135-138",
+      "quote": "Restore `--`'s escape effect for every token after a consumed value-terminator",
+      "asserted_defect": "When a positional's value_terminator is literally `--`, the new branch at parser.rs:135-138 consumes it without ever setting trailing_values, so every token after it is processed as if `--` had never been typed.",
+      "asserted_consequence": "(a) A later `.last(true)` positional becomes unreachable via a single `--` and hard-errors with unknown_argument where it previously routed correctly; (b) a subcommand name typed after `--` gets dispatched as a subcommand instead of taken literally; (c) a later hyphen-leading value is parsed as an unknown option instead of a positional value.",
+      "defect_supported": "supported",
+      "consequence_supported": "supported",
+      "ruling": "supported",
+      "materiality": "material",
+      "concept": "GT-p1",
+      "requested_fix": "partial",
+      "priority_error": false,
+      "priority_note": "P1 is correct for the register's confirmed material regression.",
+      "action_error": false,
+      "action_note": "A real, demonstrated, upstream-confirmed regression; must-fix is justified.",
+      "citations": [
+        "register: GT-p1 trigger and reproduction",
+        "clap_builder/src/parser/parser.rs:391-417",
+        "command: cargo test --offline --locked --test builder adj_terminator_first_token_last_positional -- --nocapture (review-head) -> ADJ_RESULT err kind=UnknownArgument msg=\"unexpected argument 'after' found\"",
+        "command: cargo test --offline --locked --test builder adj_terminator_first_token_subcommand_dispatch -- --nocapture (review-head) -> ADJ_RESULT ok cmd1=[] subcommand=Some(\"sub\")",
+        "clap_builder/src/builder/debug_asserts.rs:567-569",
+        "command: cargo test --offline --locked --test builder adj_amend_single_positional_last_and_terminator -- --nocapture (review-head) -> ADJ_RESULT err kind=UnknownArgument msg=\"unexpected argument '--' found\"",
+        "command: cargo test --offline --locked --test builder adj_amend_single_positional_last_and_terminator -- --nocapture (master/merge-base) -> ADJ_RESULT ok cmd1=[\"x\"]",
+        "clap_builder/src/parser/parser.rs:391-404 (the is_last_set() && !trailing_values guard, which fires on '--' itself in the single-positional case, before parser.rs:413-417 is ever reached in that iteration)"
+      ],
+      "basis": "The reviewer's single-positional case (`cmd1` carrying both `.last(true)` and `value_terminator(\"--\")`, `--` as the first token, e.g. `prog -- x`) reproduces at the pinned head as `UnknownArgument` on `--` itself, and I confirmed it parses successfully (cmd1=[\"x\"]) at the merge-base, so it is a genuine additional manifestation of GT-p1's regression, not a pre-existing failure. Tracing the control flow: for this case, pos_counter stays 0 across the pos_counter-correction block at parser.rs:319-389 (the positional is both terminated and last, so none of the correction branches advance it), so the very next check at parser.rs:391 resolves the SAME `--` token against `cmd1`, whose `is_last_set() && !trailing_values` guard at parser.rs:392-403 fires immediately and returns `Err(unknown_argument)` before execution ever reaches the `check_terminator` success arm at parser.rs:413-417 that packet `48d5db81…/r2`'s requested fix edits. Because that arm is unreachable for this manifestation, the requested fix — as written, touching only parser.rs:413-417 — would not restore it, even though it does restore the two-positional case (a) and the subcommand-dispatch case (b), both of which resolve the terminator on a token before pos_counter reaches the `.last(true)` positional, giving the edited arm a chance to run and set trailing_values in time. This downgrades `requested_fix` for this item from `sufficient` to `partial`: it restores some known manifestations of GT-p1 and not this one. No other field of this item changes; the defect and its other consequences remain independently confirmed and material as previously ruled."
+    }
+  ],
+  "concepts": {},
+  "basis": "Ran a temporary test with a single positional `cmd1` carrying both `.last(true)` and `value_terminator(\"--\")`, input `[\"do\", \"--\", \"x\"]`. At the pinned head (review-head, 3604b131) it fails: `ADJ_RESULT err kind=UnknownArgument msg=\"unexpected argument '--' found\"` (clap_builder/src/parser/parser.rs:397, the is_last_set()&&!trailing_values guard). At the merge-base (master, 4ecbf54a) the identical input succeeds: `ADJ_RESULT ok cmd1=[\"x\"]`. This confirms the case is a real, diff-introduced manifestation of GT-p1. Tracing parser.rs:319-417 at the pinned head shows pos_counter never advances past this single positional before parser.rs:391 re-examines the same `--` token, so the `is_last_set()` guard at parser.rs:392 throws before parser.rs:413-417 (the arm packet `48d5db81…/r2` asks to edit) is reached in that iteration; the requested fix is therefore never exercised for this manifestation, confirming the reviewer's argument.",
+  "commands_run": [
+    {
+      "command": "cargo test --offline --locked --test builder adj_amend_single_positional_last_and_terminator -- --nocapture",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 101,
+      "seconds": 4,
+      "summary": "On review-head (pinned head), the single-positional .last(true)+value_terminator(\"--\") scenario with `--` as the first token produced UnknownArgument on '--' itself, confirming the guard at parser.rs:392 fires before parser.rs:413-417 is reached."
+    },
+    {
+      "command": "git stash push -- tests/builder/multiple_values.rs; git switch master; (re-added adj_amend_single_positional_last_and_terminator test); cargo test --offline --locked --test builder adj_amend_single_positional_last_and_terminator -- --nocapture",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 101,
+      "seconds": 6,
+      "summary": "On master (merge-base), the identical scenario parsed successfully with cmd1=[\"x\"], confirming the single-positional case is a regression introduced by this diff and a manifestation of GT-p1, not a pre-existing failure."
+    },
+    {
+      "command": "git checkout -- tests/builder/multiple_values.rs; git switch review-head; git stash pop; git checkout -- tests/builder/multiple_values.rs; git status --short",
+      "cwd": "/Users/jack/.config/bounded-discovery/issue-152/clones/clap",
+      "exit": 0,
+      "seconds": 1,
+      "summary": "Restored master's and review-head's test files to their original state and returned to review-head; clone left clean (git status --short empty)."
+    }
+  ],
+  "notes": "The original ruling for 48d5db81…/r2 judged the requested fix `sufficient` based on the two manifestations it independently verified as restored (the two-positional register case and the subcommand-dispatch case), but did not check the single-positional .last(true)+value_terminator(\"--\") case the reviewer raised. That case is a real, confirmed manifestation of the same GT-p1 defect, and the requested edit (parser.rs:413-417 only) is provably unreachable for it because an earlier guard (parser.rs:392) rejects the token first. The fix-sufficiency rating is corrected to `partial`; the item's ruling, materiality, concept, and priority/action assessments are unchanged since the defect and its other consequences remain real and material."
+}

@@ -1,0 +1,28 @@
+{
+ "run": {"id":"review-2ba4046","repository":"/tmp/rcs-savings/control/implementation-gate/repo","base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab","head":"2ba40465ef91f15b2963a4b12e80f46ee0e9efae","merge_base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab"},
+ "batch": {"id":"initial","phase":"initial"},
+ "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect.",
+ "sources": [
+  {"coordinate":"spec-ledger-spec/statement-date-filter/criterion-3","text":"Only entries dated within the range are listed, and each row's running balance continues from the opening balance."},
+  {"coordinate":"spec-ledger-spec/statement-date-filter/criterion-2","text":"With --since, the line after the heading is `Opening balance: <amount>`, the balance of every entry dated before --since."},
+  {"coordinate":"AGENTS.md","text":"Amounts are integer cents; never use floats for money. Every public function's docstring names the errors it raises."}
+ ],
+ "candidates": [{
+  "id":"ledger/statement/running-balance-not-from-opening",
+  "kind":"requirement","priority":"P2","action":"must-fix",
+  "title":"Start row running balances from the opening balance",
+  "claim":"With --since, statement_rows accumulates the running balance over every entry in posting order, so a row's running balance does not continue from the opening balance (sum of entries dated before --since) when entries are not posted in date order.",
+  "trigger":"An account whose entries are not in date order (Ledger.post and the JSON loader accept any day) and --since is given, e.g. entries [2026-09-05 +5000, 2026-08-01 +1000, 2026-09-10 -200] with --since 2026-09-01.",
+  "impact":"Opening balance prints 10.00 but the first row's running balance is 50.00 (should be 60.00) and the next 58.00 (should be 68.00); the statement is internally inconsistent, violating criterion 3.",
+  "change":"In statement_rows, start running at balance_before(account, since) when since is given (and count only in-range entries), so each listed row continues from the opening balance.",
+  "anchor":{"type":"line","path":"ledger/statement.py","start_line":33,"end_line":41,"side":"RIGHT"},
+  "evidence":[
+   {"coordinate":"ledger/statement.py:34-36","text":"running = 0\n    for entry in account.entries:\n        running += entry.amount"},
+   {"coordinate":"ledger/statement.py:49","text":"lines.append(f\"Opening balance: {format_cents(balance_before(account, since))}\")"}
+  ],
+  "ranges":{"anchor":{"coordinate":"ledger/statement.py:14-54","text":"ledger/statement.py: +14,41"}},
+  "requirement_source":"spec-ledger-spec/statement-date-filter/criterion-3",
+  "test_evidence":[{"command":"python3 -m ledger.cli statement <ooo.json with entries [[\"2026-09-05\",\"late\",5000],[\"2026-08-01\",\"early\",1000],[\"2026-09-10\",\"x\",-200]]> 1001 --since 2026-09-01","head":"2ba40465ef91f15b2963a4b12e80f46ee0e9efae","exit_status":0,"output":"Opening balance: 10.00\n2026-09-05  late  50.00  50.00\n2026-09-10  x  -2.00  58.00\nClosing balance: 58.00"}]
+ }],
+ "premises": []
+}

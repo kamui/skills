@@ -1,0 +1,6 @@
+clap-rs/clap#6212                  excluded  E1=FAIL; E2=pass; E3=pass; E5=pass
+nats-io/nats-server#7395           excluded  E1=FAIL; E2=pass; E3=pass; E5=pass
+grpc/grpc-go#8519                  excluded  E1=FAIL; E2=pass; E3=pass; E5=pass
+golang-jwt/jwt#456                 excluded  E1=FAIL; E2=pass; E3=pass; E5=pass
+kamui/skills#208                   excluded  E1=pass; E2=FAIL; E3=FAIL; E5=pass
+kamui/skills#209                   excluded  E1=pass; E2=FAIL; E3=FAIL; E5=pass

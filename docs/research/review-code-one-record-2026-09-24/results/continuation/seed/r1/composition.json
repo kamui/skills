@@ -1,0 +1,148 @@
+{
+  "run": {
+    "target_kind": "range",
+    "target": "main...864eea86ab86bf5a3375898bc606933ea20696cc",
+    "change_description": "864eea86ab86bf5a3375898bc606933ea20696cc\nAdd account freezing\n\nA frozen account refuses new entries until it is unfrozen.\n\n",
+    "specs": [
+      "ledger-spec/account-freeze"
+    ],
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "issues": [],
+    "coverage": "complete"
+  },
+  "summary": {
+    "status": "Changes Requested",
+    "intent": "Add account freezing: a frozen account accepts no new entries until it is unfrozen (spec `ledger-spec/account-freeze`).",
+    "issue_fit": "Partial — freezing, unfreezing, refused postings, and readable balances are implemented; criterion 2's refusal of transfers into and out of a frozen account is not.",
+    "coverage": "Complete merge-base diff reviewed (2 files); `Ledger.transfer` and the statement and CLI readers inspected. Reviewer-executed `python3 -m unittest discover -s tests -v` at the head: 17 tests, pass."
+  },
+  "findings": [
+    {
+      "id": "accounts/frozen-transfer-bypass",
+      "title": "Refuse transfers that touch a frozen account",
+      "priority": "P1",
+      "action": "must-fix",
+      "kind": "bug",
+      "trigger": "A transfer names a frozen account as its source or its target.",
+      "impact": "`Ledger.transfer` appends both entries without reading `frozen`, so the frozen account is debited or credited despite the freeze that spec criterion 2 forbids.",
+      "change": "In `Ledger.transfer` (`ledger/accounts.py:85`), raise `LedgerError` before appending either entry when the source or target account is frozen.",
+      "source": "Spec `ledger-spec/account-freeze`, criterion 2.",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 65,
+        "end_line": 66,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "ledger/accounts.py",
+        "start_line": 85
+      }
+    },
+    {
+      "id": "accounts/post-docstring-frozen",
+      "title": "Name the frozen-account error in the post docstring",
+      "priority": "P3",
+      "action": "consider",
+      "kind": "maintainability",
+      "trigger": "A caller reads `Ledger.post`'s docstring to learn which errors to handle.",
+      "impact": "The docstring still lists only zero amounts, overdrafts, and unknown accounts, although `post` now raises `LedgerError` for a frozen account.",
+      "change": "Add the frozen-account case to the `Ledger.post` docstring at `ledger/accounts.py:61`.",
+      "source": "`AGENTS.md`: every public function's docstring names the errors it raises.",
+      "anchor": {
+        "type": "line",
+        "path": "ledger/accounts.py",
+        "start_line": 65,
+        "end_line": 66,
+        "side": "RIGHT"
+      },
+      "fix": {
+        "path": "ledger/accounts.py",
+        "start_line": 61
+      }
+    }
+  ],
+  "questions": [],
+  "observations": [],
+  "record": {
+    "repository": "/home/jack/.cache/rc357x/root/continuation/repo",
+    "paths": {
+      "spec": "/home/jack/.cache/rc357x/root/continuation/inputs/spec.md"
+    },
+    "requirements": [
+      {
+        "source": "ledger-spec/account-freeze/criterion-1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:52-58 sets and clears `frozen` through `self.get`, which raises for an unknown account"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-2",
+        "class": "acceptance",
+        "disposition": "partial",
+        "evidence": "ledger/accounts.py:65-66 refuses postings; ledger/accounts.py:83-88 appends transfer entries without a frozen check"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:65-66 raises before the append at ledger/accounts.py:70; tests/test_freeze.py:15-21"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-4",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/accounts.py:56-58; tests/test_freeze.py:23-27"
+      },
+      {
+        "source": "ledger-spec/account-freeze/criterion-5",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "`Account.balance` and `render_statement` never read `frozen`; tests/test_freeze.py:29-31"
+      }
+    ],
+    "files": [
+      {
+        "path": "ledger/accounts.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_freeze.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 -m unittest discover -s tests -v",
+        "head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+        "outcome": "reviewer-executed",
+        "reason": "no caller evidence was supplied; the suite covers the changed ledger rules"
+      }
+    ],
+    "verification": {
+      "tasks": [
+        {
+          "id": "accounts/frozen-transfer-bypass",
+          "type": "candidate",
+          "trigger": "must-fix",
+          "batch": "initial",
+          "ruling": "confirmed"
+        }
+      ],
+      "batches": [
+        {
+          "bundle": "/home/jack/.cache/rc357x/root/continuation/review/initial",
+          "accounting": "/home/jack/.cache/rc357x/root/continuation/review/initial/accounting.json",
+          "operation": "Agent subagent_type=general-purpose model=sonnet run_in_background=false"
+        }
+      ],
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

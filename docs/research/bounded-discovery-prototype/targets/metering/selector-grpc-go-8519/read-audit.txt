@@ -1,0 +1,30 @@
+session bf565dcd-52dd-41be-be86-3a5b828444b5
+tool calls by name: {'Read': 12, 'Grep': 9, 'Glob': 1, 'Write': 1, 'ToolSearch': 2}
+note: the one Write call was refused by the session's tool policy (Write disallowed); the output directory stayed empty and the outputs were taken from the final message
+paths outside /tmp/bd148/selector/grpc-go-8519: [('Write', 'non-read tool')]
+
+Read	/tmp/bd148/selector/grpc-go-8519/packet.md
+Read	/tmp/bd148/selector/grpc-go-8519/diff.patch
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go
+Grep	/tmp/bd148/selector/grpc-go-8519/head	hdrMu
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/http2_server.go
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/server_stream.go
+Grep	/tmp/bd148/selector/grpc-go-8519/head/internal/transport	trailer\s+metadata\.MD|^\ttrailer|do\(fn func\(\)\)|func \(ht \*serverHandlerTransport\) do
+Grep	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go	stats \[\]stats.Handler|ht.stats|func NewServerHandlerTransport
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go
+Grep	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go	stats\s+\[\]stats\.Handler
+Grep	/tmp/bd148/selector/grpc-go-8519/head/internal/transport	writeStatus\(s \*ServerStream|internalServerTransport interface|writeHeader\(s \*ServerStream
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/transport.go
+Grep	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server_test.go	func \(s\) TestHandlerTransport_HandleStreams_StatsHandlers|type mockStatsHandler|func newHandleStreamTest
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server_test.go
+Grep	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go	ht\.writes|closedCh|func \(ht \*serverHandlerTransport\) HandleStreams|case fn := <-ht.writes
+Glob	/tmp/bd148/selector/grpc-go-8519/head	**/server.go
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go
+Grep	/tmp/bd148/selector/grpc-go-8519/head/stats/stats.go	type Handler interface
+Grep	/tmp/bd148/selector/grpc-go-8519/head/stats	type Handler interface
+Read	/tmp/bd148/selector/grpc-go-8519/head/stats/handlers.go
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server.go
+Read	/tmp/bd148/selector/grpc-go-8519/head/internal/transport/handler_server_test.go
+Write	/tmp/bd148/selector/grpc-go-8519/output/selection.json
+ToolSearch
+ToolSearch

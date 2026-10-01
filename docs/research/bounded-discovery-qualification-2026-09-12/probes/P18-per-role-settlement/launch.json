@@ -1,0 +1,33 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P18",
+  "purpose": "Do per-role totals reconcile to the settled charge over real transcripts, for the primary, finder and verifier roles? Re-run with the identical command against the reconciliation report now keyed by each launch's bundle-relative path; the earlier run, published at the reviewed head, is retained under run-1/.",
+  "retained_at": "2026-09-12T21:39:07.003170+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+  "argv": [
+    "python3",
+    "-c",
+    "\nimport json\nfrom decimal import Decimal\nreport = json.load(open('docs/research/bounded-discovery-qualification-2026-09-12/probes/reconciliation.json'))\nroles = {}\nfor name, row in sorted(report['probes'].items()):\n    per_role = row.get('per_role_usd') or {}\n    if not per_role:\n        continue\n    total = sum(Decimal(v) for v in per_role.values())\n    recomputed = Decimal(str(row['recomputed_usd']))\n    print('%-34s %s  roles %s  sum %s  recomputed %s  %s'\n          % (name, row['charged_usd'], ','.join(sorted(per_role)), total, recomputed,\n             'reconciles' if total == recomputed else 'DOES NOT RECONCILE'))\n    for role in per_role:\n        roles[role] = roles.get(role, 0) + 1\n    assert total == recomputed, name\nprint()\nprint('roles observed across the bundle:', dict(sorted(roles.items())))\nprint('unassigned roles:', roles.get('unassigned', 0))\n"
+  ],
+  "command_line": "python3 -c '\nimport json\nfrom decimal import Decimal\nreport = json.load(open('\"'\"'docs/research/bounded-discovery-qualification-2026-09-12/probes/reconciliation.json'\"'\"'))\nroles = {}\nfor name, row in sorted(report['\"'\"'probes'\"'\"'].items()):\n    per_role = row.get('\"'\"'per_role_usd'\"'\"') or {}\n    if not per_role:\n        continue\n    total = sum(Decimal(v) for v in per_role.values())\n    recomputed = Decimal(str(row['\"'\"'recomputed_usd'\"'\"']))\n    print('\"'\"'%-34s %s  roles %s  sum %s  recomputed %s  %s'\"'\"'\n          % (name, row['\"'\"'charged_usd'\"'\"'], '\"'\"','\"'\"'.join(sorted(per_role)), total, recomputed,\n             '\"'\"'reconciles'\"'\"' if total == recomputed else '\"'\"'DOES NOT RECONCILE'\"'\"'))\n    for role in per_role:\n        roles[role] = roles.get(role, 0) + 1\n    assert total == recomputed, name\nprint()\nprint('\"'\"'roles observed across the bundle:'\"'\"', dict(sorted(roles.items())))\nprint('\"'\"'unassigned roles:'\"'\"', roles.get('\"'\"'unassigned'\"'\"', 0))\n'",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

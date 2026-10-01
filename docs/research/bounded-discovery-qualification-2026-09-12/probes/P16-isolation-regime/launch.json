@@ -1,0 +1,39 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P16",
+  "purpose": "Which isolation regime can this host actually reach - host absence, container mounts, or both - with the mount set asserted from the runtime's own inspection and the residual reach stated?",
+  "retained_at": "2026-09-12T10:11:43.316848+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/private/tmp/bd207-probes",
+  "argv": [
+    "docker",
+    "run",
+    "--rm",
+    "-v",
+    "/private/tmp/bd207-probes/p16cell:/private/tmp/bd207-probes/p16cell",
+    "alpine:3",
+    "sh",
+    "-c",
+    "echo '== the cell tree =='; ls /private/tmp/bd207-probes/p16cell; echo '== /Users =='; ls /Users 2>&1; echo '== worktrees of the repository under test =='; ls /Users/jack/.t3/worktrees 2>&1; echo '== the evaluator-only directory =='; ls /Users/jack/.config/bounded-discovery 2>&1; echo '== the revealed cleartext truth =='; ls /Users/jack/Development/skills/docs/research/bounded-discovery-decision-2026-09-11/revealed 2>&1; echo '== sibling probe roots =='; ls /private/tmp/bd207-probes/outside 2>&1; echo '== the mount parent =='; ls /private/tmp/bd207-probes 2>&1"
+  ],
+  "command_line": "docker run --rm -v /private/tmp/bd207-probes/p16cell:/private/tmp/bd207-probes/p16cell alpine:3 sh -c 'echo '\"'\"'== the cell tree =='\"'\"'; ls /private/tmp/bd207-probes/p16cell; echo '\"'\"'== /Users =='\"'\"'; ls /Users 2>&1; echo '\"'\"'== worktrees of the repository under test =='\"'\"'; ls /Users/jack/.t3/worktrees 2>&1; echo '\"'\"'== the evaluator-only directory =='\"'\"'; ls /Users/jack/.config/bounded-discovery 2>&1; echo '\"'\"'== the revealed cleartext truth =='\"'\"'; ls /Users/jack/Development/skills/docs/research/bounded-discovery-decision-2026-09-11/revealed 2>&1; echo '\"'\"'== sibling probe roots =='\"'\"'; ls /private/tmp/bd207-probes/outside 2>&1; echo '\"'\"'== the mount parent =='\"'\"'; ls /private/tmp/bd207-probes 2>&1'",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

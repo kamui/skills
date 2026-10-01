@@ -1,0 +1,66 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "candidates": [
+    {
+      "action": "must-fix",
+      "anchor": {
+        "end_line": 36,
+        "path": "ledger/statement.py",
+        "side": "RIGHT",
+        "start_line": 34,
+        "type": "line"
+      },
+      "change": "Initialise running to balance_before(account, since) when since is given (else 0) and add only the amounts of listed rows.",
+      "claim": "statement_rows accumulates the running balance over every entry in posting order, including entries excluded by the filter, instead of starting from the opening balance and adding only listed rows; when entries are not in date order (post() and transfer() accept any day and load() keeps file order) a listed row's running balance is not opening balance plus listed amounts.",
+      "evidence": [
+        {
+          "coordinate": "ledger/statement.py:34-41",
+          "text": "    running = 0\n    for entry in account.entries:\n        running += entry.amount\n        if since is not None and entry.day < since:\n            continue\n        if until is not None and entry.day > until:\n            continue\n        rows.append((entry.day.isoformat(), entry.description, format_cents(entry.amount), format_cents(running)))"
+        },
+        {
+          "coordinate": "ledger/accounts.py:post",
+          "text": "post(number, day, ...) appends Entry(day, ...) with no ordering check against existing entries; load() in ledger/cli.py posts entries in file order"
+        },
+        {
+          "coordinate": "reproduction",
+          "text": "entries in file order [[2026-09-05,late,10000],[2026-08-01,early,5000]]; `ledger statement F 1001 --since 2026-09-01` printed:\nOpening balance: 50.00\n2026-09-05  late  100.00  100.00\nClosing balance: 150.00"
+        }
+      ],
+      "id": "ledger/statement/running-balance-posting-order",
+      "impact": "The row shows running balance 100.00 while the printed opening balance is 50.00 and the amount is 100.00 (expected 150.00, which is also the closing balance), so the statement is internally inconsistent and violates criterion 3.",
+      "kind": "requirement",
+      "priority": "P2",
+      "ranges": {
+        "anchor": {
+          "coordinate": "ledger/statement.py:14-54",
+          "text": "ledger/statement.py:14-54 @head"
+        }
+      },
+      "requirement_source": "spec-ledger-spec/statement-date-filter/criterion-3",
+      "title": "Start the running balance at the opening balance",
+      "trigger": "An account whose posting order differs from date order, e.g. a 2026-09-05 entry posted before a 2026-08-01 entry, rendered with --since 2026-09-01"
+    }
+  ],
+  "premises": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "id": "review-2ba4046",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/implementation-gate/repo"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect; disposable directories only, no network.",
+  "sources": [
+    {
+      "coordinate": "spec-ledger-spec/statement-date-filter/criterion-3",
+      "text": "Only entries dated within the range are listed, and each row's running balance continues from the opening balance."
+    },
+    {
+      "coordinate": "spec-ledger-spec/statement-date-filter/criterion-2",
+      "text": "With --since, the line after the heading is `Opening balance: <amount>`, the balance of every entry dated before --since."
+    }
+  ]
+}

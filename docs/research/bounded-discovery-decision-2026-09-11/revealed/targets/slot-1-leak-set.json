@@ -1,0 +1,22 @@
+{
+  "label": "clap-6212",
+  "staging": "/tmp/bd148/staging/clap.git",
+  "shas": [
+    "24cbf6898ee298ab89c587b786b6cbab6f672832",
+    "36eb896ead6e34fdad83db0e99a544040a8200f4",
+    "59b2a12d0c34a536f929fabcc2567f9c7a37a771",
+    "78a7962bbb01dd0eb9dbf33af800d6c988f47cf7",
+    "9d17332fc7cc0ce32405147b68d0eb1096a1cfc7",
+    "af904ae2d76234593c81029df9fc3017e4520790",
+    "c3051b590ef9f135fd6445baff92c30ae5a28da4",
+    "c98855a62d6e6d0ddab1c20808b1a9f99382eebb",
+    "ccba5f5ad1b233f4499c9aefd7b7684571d44acd"
+  ],
+  "unresolved_tokens": [],
+  "hidden_numbers": [
+    "5040",
+    "6212",
+    "6243"
+  ],
+  "section_chars": 1249
+}

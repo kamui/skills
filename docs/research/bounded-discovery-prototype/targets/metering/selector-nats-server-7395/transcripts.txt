@@ -1,0 +1,2 @@
+session 7e3f8257-03da-43f8-9c64-a27bf1fe737f transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-selector-nats-server-7395/7e3f8257-03da-43f8-9c64-a27bf1fe737f.jsonl sha256 39f2555b97f1f58e026dd87e3965a5e11beeea1bbba0f507cb33eebbf4e68b98

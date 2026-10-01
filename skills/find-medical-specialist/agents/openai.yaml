@@ -1,0 +1,6 @@
+interface:
+  display_name: "Find Medical Specialists"
+  short_description: "Compare specialists by insurance, availability and reviews"
+  default_prompt: "Use $find-medical-specialist to find the top shortlisted medical specialists in your area taking your insurance."
+policy:
+  allow_implicit_invocation: false

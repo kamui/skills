@@ -1,0 +1,14 @@
+{
+  "artifact_id": "issue-151-grading-packets-seal",
+  "cipher": "openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt, under #148's key",
+  "ciphertext_bytes": 8848,
+  "ciphertext_sha256": "ba9e8541a04e194b3d65469bffb72c48af1d9863e4f19ccec0dcf769b6d68790",
+  "files_sealed": [
+    "grading-packets.json",
+    "redaction-map.json"
+  ],
+  "plaintext_sha256": "7d26007be0eb98142fee4e4de536f7addded7cffc4e6f4304e61d576e1a4286d",
+  "schema_version": "bounded-discovery-v1",
+  "sealed_at": "2026-09-10T07:26:45.818050+00:00",
+  "why_sealed": "the packets keep file paths and symbol names so the grading can mean something, and those name the target; publishing the pilot's packets would name the two slots it ran on, and the public selection rule turns that pair into the clean slot"
+}

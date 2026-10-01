@@ -1,0 +1,7 @@
+race-A exit: 1 event line(s)
+{"event_id": "42079299-ddb8-4ef9-83e3-66043c3172cc", "previous_event_id": "P09-0001", "observed_at": "2026-09-12T10:16:02.264719+00:00", "ticket": 207, "actor": "kamui", "phase": "pre-freeze", "operation": "reserve", "attempt_id": null, "helper_id": null, "request_refs": ["P09"], "reservation_id": "race-A", "actual_delta_usd": "0", "reservation_delta_usd": "0.08", "uncertainty_usd": "0", "rate_usage_evidence": ["P09"], "reason": "Conservative reservation"}
+race-B exit: 0 event line(s)
+total budget or protected reserve cannot fit reservation
+--- reserve events written to the ledger ---
+1
+reserved_usd 0.08

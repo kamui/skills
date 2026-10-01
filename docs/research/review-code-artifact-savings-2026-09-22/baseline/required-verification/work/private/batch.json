@@ -1,0 +1,21 @@
+{
+  "commit_id": "a13922e76f42d9757608530348200affbf3bde2f",
+  "event": "COMMENT",
+  "body": "**Changes Requested (advisory)** \u2014 2 must-fix findings.\n\n**Intent:** Add a `delegate` role so an account owner can grant and revoke another user's read-only statement access, per issue #5.\n\n**Issue fit:** Met \u2014 all five acceptance criteria in issue #5 hold: owner-only grant/revoke that leaves state unchanged on refusal, delegate view scoped to only the granting account, delegates never post, and owner/auditor/teller access is untouched.\n\n**Coverage:** Complete merge-base diff reviewed (ledger/accounts.py, ledger/auth.py, tests/test_delegates.py); no file ignored or unreviewed. Focused test tests/test_delegates.py run once at head a13922e: 3/3 pass. Full suite (`python3 -m unittest discover -s tests -v`) also run once at head: 17/17 pass, no regression.\n\n**Reviewed:** `a13922e` against merge-base `2301c83`.\n\n## Findings\n\n- [P2] [must-fix] Move the owner check for grant/revoke into ledger/auth.py \u2014 anchor [`ledger/accounts.py:52-64`](https://github.com/example/ledger/blob/a13922e76f42d9757608530348200affbf3bde2f/ledger/accounts.py?plain=1#L52-L64); fix [`ledger/auth.py:18`](https://github.com/example/ledger/blob/a13922e76f42d9757608530348200affbf3bde2f/ledger/auth.py?plain=1#L18)\n- [P3] [must-fix] Document the unknown-account error in grant/revoke docstrings \u2014 anchor [`ledger/accounts.py:53`](https://github.com/example/ledger/blob/a13922e76f42d9757608530348200affbf3bde2f/ledger/accounts.py?plain=1#L53)\n\n## Observations\n\n- ledger/cli.py has no notion of a caller's identity or role, so the new delegate role and Ledger.grant/revoke are reachable only through the library API, not through the shipped `statement` command. Evidence: ledger/cli.py:35-44 (main() calls render_statement(ledger.get(args.account)) unconditionally, with no user/role argument).\n\n<!-- review-run head=a13922e76f42d9757608530348200affbf3bde2f base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-24 context=0a72f34a0de2b71f1b30b8c3a0632038c1055de08f6a976fce5b959763524489 issues=example/ledger#5 coverage=complete -->\n",
+  "comments": [
+    {
+      "path": "ledger/accounts.py",
+      "line": 64,
+      "side": "RIGHT",
+      "start_line": 52,
+      "start_side": "RIGHT",
+      "body": "**[P2] [must-fix] Move the owner check for grant/revoke into ledger/auth.py**\n\n**Triggers when:** Any call to Ledger.grant or Ledger.revoke.\n\n**Impact:** Authorization decisions end up split across two modules: a future change to who may administer delegate access (e.g. letting a co-owner grant) requires editing accounts.py in two places instead of the single ledger/auth.py surface every other permission check uses, and the ownership comparison is duplicated verbatim in both methods.\n\n**Change:** Add an ledger/auth.py function (for example can_manage_delegates(user, account)) that encapsulates the ownership check, and have Ledger.grant/Ledger.revoke call it instead of comparing account.owner to user themselves.\n\n**Source:** AGENTS.md:7\n\n<!-- finding id=ledger/grant-revoke-auth-placement head=a13922e76f42d9757608530348200affbf3bde2f priority=P2 action=must-fix blocking=true kind=security fix=ledger/auth.py:18 -->"
+    },
+    {
+      "path": "ledger/accounts.py",
+      "line": 53,
+      "side": "RIGHT",
+      "body": "**[P3] [must-fix] Document the unknown-account error in grant/revoke docstrings**\n\n**Triggers when:** Calling Ledger.grant or Ledger.revoke with a number that is not in self.accounts.\n\n**Impact:** A reader relying on the docstring, per AGENTS.md's convention that every public function's docstring names the errors it raises, cannot tell from grant/revoke's docstring that an unknown account also raises LedgerError, unlike post's and transfer's docstrings, which enumerate that cause explicitly.\n\n**Change:** Reword each docstring to name both causes, e.g. \"Raises LedgerError for an unknown account or when user does not own it.\"\n\n**Source:** AGENTS.md:6\n\n<!-- finding id=ledger/grant-revoke-docstring-errors head=a13922e76f42d9757608530348200affbf3bde2f priority=P3 action=must-fix blocking=true kind=requirement -->"
+    }
+  ]
+}

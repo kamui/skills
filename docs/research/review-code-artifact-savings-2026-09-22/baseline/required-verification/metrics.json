@@ -1,0 +1,714 @@
+{
+  "format": "interface-metrics/1",
+  "transcript": "/tmp/rcs-savings/evidence/baseline/required-verification/transcript.jsonl",
+  "skill_root": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code",
+  "task_root": "/tmp/rcs-savings/baseline/required-verification",
+  "usage": {
+    "root": {
+      "transcripts": [
+        {
+          "label": "transcript.jsonl",
+          "turns": 35,
+          "lines": 89,
+          "tool_calls": 58,
+          "text_only_turns": 1,
+          "input": 70,
+          "cache_write": 111943,
+          "cache_write_5m": 0,
+          "cache_write_1h": 111943,
+          "cache_write_unknown": 0,
+          "cache_read": 2886043,
+          "output": 40366,
+          "thinking": 22098,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:10:12",
+          "wall_seconds": 612.253,
+          "path": "/tmp/rcs-savings/evidence/baseline/required-verification/transcript.jsonl",
+          "settings": {
+            "lines": 89,
+            "models": {
+              "claude-sonnet-5": 89
+            },
+            "efforts": {
+              "high": 89
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 35,
+        "lines": 89,
+        "tool_calls": 58,
+        "text_only_turns": 1,
+        "input": 70,
+        "cache_write": 111943,
+        "cache_write_5m": 0,
+        "cache_write_1h": 111943,
+        "cache_write_unknown": 0,
+        "cache_read": 2886043,
+        "output": 40366,
+        "thinking": 22098,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:10:12",
+        "wall_seconds": 612.253
+      }
+    },
+    "workers": {
+      "transcripts": [
+        {
+          "label": "agent-ab13e1917cbc04b9f.jsonl",
+          "turns": 9,
+          "lines": 22,
+          "tool_calls": 14,
+          "text_only_turns": 1,
+          "input": 18,
+          "cache_write": 40125,
+          "cache_write_5m": 40125,
+          "cache_write_1h": 0,
+          "cache_write_unknown": 0,
+          "cache_read": 234368,
+          "output": 11198,
+          "thinking": 8331,
+          "cache_write_unknown_by_cause": {
+            "no_breakdown": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "residual": {
+              "tokens": 0,
+              "turns": 0
+            },
+            "inconsistent": {
+              "tokens": 0,
+              "turns": 0
+            }
+          },
+          "models": [
+            "claude-sonnet-5"
+          ],
+          "wall": "0:02:06",
+          "wall_seconds": 125.616,
+          "path": "/tmp/rcs-savings/evidence/baseline/required-verification/subagents/agent-ab13e1917cbc04b9f.jsonl",
+          "settings": {
+            "lines": 22,
+            "models": {
+              "claude-sonnet-5": 22
+            },
+            "efforts": {
+              "high": 22
+            }
+          }
+        }
+      ],
+      "total": {
+        "label": "total",
+        "turns": 9,
+        "lines": 22,
+        "tool_calls": 14,
+        "text_only_turns": 1,
+        "input": 18,
+        "cache_write": 40125,
+        "cache_write_5m": 40125,
+        "cache_write_1h": 0,
+        "cache_write_unknown": 0,
+        "cache_read": 234368,
+        "output": 11198,
+        "thinking": 8331,
+        "cache_write_unknown_by_cause": {
+          "no_breakdown": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "residual": {
+            "tokens": 0,
+            "turns": 0
+          },
+          "inconsistent": {
+            "tokens": 0,
+            "turns": 0
+          }
+        },
+        "models": [
+          "claude-sonnet-5"
+        ],
+        "wall": "0:02:06",
+        "wall_seconds": 125.616
+      }
+    },
+    "all": {
+      "label": "total",
+      "turns": 44,
+      "lines": 111,
+      "tool_calls": 72,
+      "text_only_turns": 2,
+      "input": 88,
+      "cache_write": 152068,
+      "cache_write_5m": 40125,
+      "cache_write_1h": 111943,
+      "cache_write_unknown": 0,
+      "cache_read": 3120411,
+      "output": 51564,
+      "thinking": 30429,
+      "cache_write_unknown_by_cause": {
+        "no_breakdown": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "residual": {
+          "tokens": 0,
+          "turns": 0
+        },
+        "inconsistent": {
+          "tokens": 0,
+          "turns": 0
+        }
+      },
+      "models": [
+        "claude-sonnet-5"
+      ],
+      "wall": "0:12:18",
+      "wall_seconds": 737.869
+    }
+  },
+  "harness": {
+    "num_turns": 59,
+    "duration_ms": 624943,
+    "total_cost_usd": 1.6895247000000002,
+    "subagents_spawned": 1,
+    "permission_denials": 0
+  },
+  "finalizer": {
+    "invocations": 1,
+    "failed": 0,
+    "repair_loops": 0,
+    "runs": [
+      {
+        "command": "cd /tmp/rcs-savings/skills/d8c2dd9/skills/review-code\npython3 scripts/finalize_review.py --store /tmp/rcs-savings/baseline/required-verification/work/private/store.json /tmp/rcs-savings/baseline/required-verification/work/private\necho \"EXIT: $?\"",
+        "failed": false,
+        "at": "2026-09-23T04:08:15.901000+00:00"
+      }
+    ],
+    "validation": {
+      "status": "captured",
+      "at": "2026-09-23T04:08:15.901000+00:00",
+      "turns_after": 5,
+      "tool_calls_after": 6,
+      "seconds_after": 74.658
+    }
+  },
+  "after_last_addendum": {
+    "status": "unavailable",
+    "reason": "no addendum write"
+  },
+  "loads": {
+    "items": [
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "entrypoint",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/SKILL.md"
+          }
+        ],
+        "bytes": 11806,
+        "words": 1701
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/pull-request-target.md"
+          }
+        ],
+        "bytes": 8707,
+        "words": 1190
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/review-rubric.md"
+          }
+        ],
+        "bytes": 7786,
+        "words": 1049
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/changed-tests.md"
+          }
+        ],
+        "bytes": 5082,
+        "words": 825
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/check-evidence.md"
+          }
+        ],
+        "bytes": 2693,
+        "words": 384
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-handoff.md"
+          }
+        ],
+        "bytes": 10381,
+        "words": 1453
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/rendering.md"
+          }
+        ],
+        "bytes": 6311,
+        "words": 898
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/review_context.py"
+          }
+        ],
+        "bytes": 2773,
+        "words": 324
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 2381,
+        "words": 215
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          },
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 1830,
+        "words": 182
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-example",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
+        "bytes": 2574,
+        "words": 266
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/finalize_review.py"
+          },
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/account_verifier_return.py"
+          }
+        ],
+        "bytes": 1723,
+        "words": 203
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier.md"
+          }
+        ],
+        "bytes": 4735,
+        "words": 684
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-return.md"
+          }
+        ],
+        "bytes": 3911,
+        "words": 517
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "reference",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/references/verifier-concurrency.md"
+          }
+        ],
+        "bytes": 2269,
+        "words": 353
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "script-source",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/build_verifier_prompt.py"
+          }
+        ],
+        "bytes": 809,
+        "words": 90
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "bundle",
+            "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/manifest.json"
+          }
+        ],
+        "bytes": 752,
+        "words": 57
+      },
+      {
+        "tool": "Read",
+        "loads": [
+          {
+            "kind": "bundle",
+            "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/brief.md"
+          }
+        ],
+        "bytes": 18636,
+        "words": 2556
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/context_fingerprint.py"
+          }
+        ],
+        "bytes": 939,
+        "words": 92
+      },
+      {
+        "tool": "Bash",
+        "loads": [
+          {
+            "kind": "helper-help",
+            "what": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code/scripts/compose_review.py"
+          }
+        ],
+        "bytes": 1045,
+        "words": 94
+      }
+    ],
+    "totals": {
+      "entrypoint": {
+        "count": 1,
+        "bytes": 11806,
+        "words": 1701
+      },
+      "reference": {
+        "count": 9,
+        "bytes": 51875,
+        "words": 7353
+      },
+      "helper-help": {
+        "count": 6,
+        "bytes": 6480,
+        "words": 713
+      },
+      "helper-example": {
+        "count": 3,
+        "bytes": 4955,
+        "words": 481
+      },
+      "script-source": {
+        "count": 1,
+        "bytes": 809,
+        "words": 90
+      },
+      "bundle": {
+        "count": 2,
+        "bytes": 19388,
+        "words": 2613
+      }
+    },
+    "mixed": {
+      "calls": 1,
+      "bytes": 1830,
+      "words": 182
+    }
+  },
+  "worker_loads": [
+    {
+      "transcript": "/tmp/rcs-savings/evidence/baseline/required-verification/subagents/agent-ab13e1917cbc04b9f.jsonl",
+      "dispatch_prompt": {
+        "bytes": 2231,
+        "words": 279
+      },
+      "items": [
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/brief.md"
+            }
+          ],
+          "bytes": 18636,
+          "words": 2556
+        },
+        {
+          "tool": "Read",
+          "loads": [
+            {
+              "kind": "bundle",
+              "what": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/manifest.json"
+            }
+          ],
+          "bytes": 752,
+          "words": 57
+        }
+      ],
+      "totals": {
+        "bundle": {
+          "count": 2,
+          "bytes": 19388,
+          "words": 2613
+        }
+      },
+      "mixed": {
+        "calls": 0,
+        "bytes": 0,
+        "words": 0
+      }
+    }
+  ],
+  "authored": {
+    "writes": [
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/private/verifier-input-initial.json",
+        "tool": "Write",
+        "chars": 5106,
+        "agent": "root",
+        "class": "verifier-input"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/raw-return.json",
+        "tool": "Write",
+        "chars": 3315,
+        "agent": "root",
+        "class": "raw-return"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/private/composition.json",
+        "tool": "Write",
+        "chars": 3785,
+        "agent": "root",
+        "class": "composition"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/report.md",
+        "tool": "Write",
+        "chars": 12692,
+        "agent": "root",
+        "class": "report"
+      }
+    ],
+    "by_class": {
+      "verifier-input": {
+        "writes": 1,
+        "chars": 5106
+      },
+      "raw-return": {
+        "writes": 1,
+        "chars": 3315
+      },
+      "composition": {
+        "writes": 1,
+        "chars": 3785
+      },
+      "report": {
+        "writes": 1,
+        "chars": 12692
+      }
+    },
+    "fields": [
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/private/bundle-initial/raw-return.json",
+        "shape": "raw-return",
+        "bytes": 3315,
+        "mechanical": {
+          "fields": 1,
+          "words": 1
+        },
+        "judgment": {
+          "fields": 31,
+          "words": 306
+        },
+        "sections": {
+          "manifest_sha256": {
+            "fields": 1,
+            "words": 1
+          },
+          "candidates": {
+            "fields": 28,
+            "words": 306
+          },
+          "premises": {
+            "fields": 1,
+            "words": 0
+          },
+          "duplicate_groups": {
+            "fields": 1,
+            "words": 0
+          },
+          "observation": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/private/composition.json",
+        "shape": "composition",
+        "bytes": 3787,
+        "mechanical": {
+          "fields": 8,
+          "words": 7
+        },
+        "judgment": {
+          "fields": 38,
+          "words": 322
+        },
+        "sections": {
+          "run": {
+            "fields": 9,
+            "words": 8
+          },
+          "summary": {
+            "fields": 4,
+            "words": 96
+          },
+          "findings": {
+            "fields": 30,
+            "words": 186
+          },
+          "questions": {
+            "fields": 1,
+            "words": 0
+          },
+          "observations": {
+            "fields": 2,
+            "words": 39
+          }
+        },
+        "written_by": "tool"
+      },
+      {
+        "path": "/tmp/rcs-savings/baseline/required-verification/work/private/verifier-input-initial.json",
+        "shape": "verifier-input",
+        "bytes": 5106,
+        "mechanical": {
+          "fields": 8,
+          "words": 25
+        },
+        "judgment": {
+          "fields": 56,
+          "words": 359
+        },
+        "sections": {
+          "run": {
+            "fields": 5,
+            "words": 5
+          },
+          "batch": {
+            "fields": 2,
+            "words": 2
+          },
+          "run_policy": {
+            "fields": 1,
+            "words": 18
+          },
+          "sources": {
+            "fields": 6,
+            "words": 37
+          },
+          "candidates": {
+            "fields": 49,
+            "words": 322
+          },
+          "premises": {
+            "fields": 1,
+            "words": 0
+          }
+        },
+        "written_by": "tool"
+      }
+    ]
+  }
+}

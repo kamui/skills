@@ -1,0 +1,35 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P17",
+  "purpose": "Was every launch in this bundle retained before its process was created, with the requested allowances readable back from the record, and did a launch that never started keep its record anyway? This is the run that produced the committed probes/retention.json, run after every other launch in the bundle exists; the earlier run, over the nineteen launches that existed then, is retained under run-1/.",
+  "retained_at": "2026-09-12T21:39:37.679924+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+  "argv": [
+    "python3",
+    "docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py",
+    "retention",
+    "--bundle",
+    "docs/research/bounded-discovery-qualification-2026-09-12"
+  ],
+  "command_line": "python3 docs/research/bounded-discovery-qualification-2026-09-12/scripts/qualify.py retention --bundle docs/research/bounded-discovery-qualification-2026-09-12",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

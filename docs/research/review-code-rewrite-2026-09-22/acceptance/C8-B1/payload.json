@@ -1,0 +1,26 @@
+{
+  "summary": {
+    "body": "**Approved (advisory)** \u2014 1 consider finding.\n\n**Mode:** Retrospective review of merged pull request; publication disabled.\n\n**Intent:** Move the pull-request root invocation's first-review eligibility guard out of a 42-line Python heredoc in `references/pull-request-target.md` and into a new `scripts/forge_packet.py eligibility` subcommand, called through an absolute path like the block's other scripts, preserving every condition, deferral reason, verdict line, and exit-handling behavior unchanged.\n\n**Issue fit:** No originating issue; the pull request carries no closing reference. Built from the pull-request title and body (issues=none). The promise that conditions, deferral reasons, verdict lines, and exit handling are unchanged is met: verified line-for-line against the removed heredoc and the new `eligibility` function, and confirmed by running `test_command_chains.py`, `test_run_events.py`, `test_forge_packet.py`, and `forge_packet.py --self-test` at the reviewed head, all passing. The byte-count claims (`pull-request-target.md` 12,566 to 8,775 bytes; always-loaded set unchanged at 92,272 bytes) are met, verified directly with `wc -c` against the base and head trees. The \"10 `scripts/test_*.py` suites\" claim is met (10 files present).\n\n**Coverage:** Complete merge-base diff reviewed across all 6 changed files (CHANGELOG.md, DESIGN.md, references/pull-request-target.md, scripts/forge_packet.py, scripts/test_command_chains.py, scripts/test_run_events.py). Focused checks run at the reviewed head from `skills/review-code`: `python3 scripts/test_forge_packet.py`, `python3 scripts/test_command_chains.py`, `python3 scripts/test_run_events.py`, and `python3 scripts/forge_packet.py --self-test`, all exit 0.\n\n**Reviewed:** `0ea287f` against merge-base `160d120`.\n\n## Findings\n\n- [P3] [consider] Document eligibility's exit code on an unrecognized page shape \u2014 anchor [`skills/review-code/scripts/forge_packet.py:94-100`](https://github.com/kamui/skills/blob/0ea287f0c07fda09b9d063612353dcef37f38063/skills/review-code/scripts/forge_packet.py?plain=1#L94-L100)\n\n<!-- review-run head=0ea287f0c07fda09b9d063612353dcef37f38063 base-ref=main base-sha=160d1201bed57d96de6fc8b1ae657bd098aa2de6 merge-base=160d1201bed57d96de6fc8b1ae657bd098aa2de6 workflow=v5b-22 context=832509935f5049b6f9bb6992042e77615f5bf013f5d44d191b27578d56b9df4d issues=none coverage=complete -->\n",
+    "trailer": "<!-- review-run head=0ea287f0c07fda09b9d063612353dcef37f38063 base-ref=main base-sha=160d1201bed57d96de6fc8b1ae657bd098aa2de6 merge-base=160d1201bed57d96de6fc8b1ae657bd098aa2de6 workflow=v5b-22 context=832509935f5049b6f9bb6992042e77615f5bf013f5d44d191b27578d56b9df4d issues=none coverage=complete -->",
+    "repository_url": "https://github.com/kamui/skills"
+  },
+  "items": [
+    {
+      "type": "finding",
+      "id": "review-code/forge-packet-eligibility-exit-codes",
+      "markdown": "**[P3] [consider] Document eligibility's exit code on an unrecognized page shape**\n\n**Triggers when:** `forge_packet.py eligibility` reads a saved root page whose shape it cannot interpret, such as `{\"data\": \"x\"}` (a truthy non-object `data`).\n\n**Impact:** `pr = ((page.get(\"data\") or {}).get(\"repository\") or {}).get(\"pullRequest\")` raises an uncaught `AttributeError` and the process exits 1 with a bare traceback, but the module's `Exit codes:` table attributes exit 1 only to a `--self-test` failure or `later-state` output and exit 2 only to `normalize`'s handled unrecognized-shape case, so a reader has no accurate account of `eligibility`'s own unhandled-shape exit code.\n\n**Change:** Add a line to the `Exit codes:` table (or the `eligibility` section above it) stating that `eligibility` also exits non-zero via an uncaught exception, distinct from the documented `1`/`2` cases, when it cannot interpret the page's shape.\n\n**Source:** docs/agents/scripts.md, `Each script` exit-code convention.\n\nClosing this without action is a correct response.",
+      "trailer": "<!-- finding id=review-code/forge-packet-eligibility-exit-codes head=0ea287f0c07fda09b9d063612353dcef37f38063 priority=P3 action=consider blocking=false kind=maintainability -->",
+      "priority": "P3",
+      "action": "consider",
+      "blocking": false,
+      "kind": "maintainability",
+      "anchor": {
+        "type": "line",
+        "path": "skills/review-code/scripts/forge_packet.py",
+        "start_line": 94,
+        "end_line": 100,
+        "side": "RIGHT"
+      }
+    }
+  ]
+}

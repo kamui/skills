@@ -1,0 +1,478 @@
+#!/usr/bin/env python3
+"""Run the documented thread write loop against a stub `gh`.
+
+Usage: python3 scripts/test_thread_writes.py [-v]
+Inputs: the thread write loop block in review-code-publish's
+`references/publication.md` and resolve-review's
+`references/addressing-protocol.md`, and a stub `gh` on PATH that keeps a fake
+thread state; no forge access and no live writes.
+Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
+
+Both references must carry the same helper and loop. The loop must refuse an
+invalid `writes.jsonl` before any write, preserve reply bodies exactly, post
+each reply before its thread action, continue after a failure, record every
+attempt, and reconcile an ambiguous write before its single retry, never
+posting a confirmed reply again.
+"""
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+SCRIPTS = Path(__file__).resolve().parent
+SKILLS = SCRIPTS.parent.parent
+PUBLICATION = SKILLS / "review-code-publish" / "references" / "publication.md"
+ADDRESSING = SKILLS / "resolve-review" / "references" / "addressing-protocol.md"
+LAUNCHER = SKILLS / "resolve-review" / "scripts" / "run_block.py"
+SHELLS = [shell for shell in ("sh", "bash", "zsh", "dash") if shutil.which(shell)]
+NASTY = "Line \"one\"\n\tback\\slash $(touch pwned) `touch pwned2` $HOME 'q' — ünïcödé 🚀 sep\n\n"
+
+FAKE_GH = r"""#!/usr/bin/env python3
+import json, os, re, subprocess, sys
+args = sys.argv[1:]
+path = os.environ["GH_STATE"]
+with open(path, encoding="utf-8") as f:
+    state = json.load(f)
+if "--silent" in args:  # the block's token check
+    state["checks"].append(os.environ.get("GH_TOKEN"))
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(state, f)
+    sys.exit(int(os.environ.get("GH_SILENT_RC", "0")))
+request = None
+if "--input" in args:
+    with open(args[args.index("--input") + 1], encoding="utf-8") as f:
+        request = json.load(f)
+if "graphql" in args:
+    query, target = request["query"], request["variables"]["id"]
+    kind = "reopen" if "unresolveReviewThread" in query else "resolve" if "resolveReviewThread" in query else "read"
+else:
+    kind, target = "reply", re.search(r"comments/(\d+)/replies", " ".join(args)).group(1)
+plan = state["plan"].get("%s:%s" % (kind, target), [])
+mode = plan.pop(0) if plan else "ok"
+repository = (subprocess.run(["git", "remote", "get-url", "origin"], cwd=os.getcwd(), capture_output=True,
+                             text=True).stdout.strip() if os.environ.get("GH_RECORD_CONTEXT") else None)
+state["log"].append({"kind": kind, "target": target, "args": args, "input": request, "mode": mode,
+                     "token": os.environ.get("GH_TOKEN"), "cwd": os.getcwd(), "repository": repository})
+out, err, rc = "", "", 0
+if kind == "reply":
+    if mode in ("ok", "landed", "short"):
+        state["next_id"] += 1
+        new = state["next_id"]
+        state["comments"].setdefault(state["threads"][target], []).append(
+            {"fullDatabaseId": str(new), "url": "https://github.test/c/%d" % new, "body": request["body"],
+             "author": {"login": state.get("author_login", state["viewer"])}, "replyTo": {"fullDatabaseId": target}})
+    if mode == "crash":  # the reply lands, then the loop dies before it can record a result
+        state["comments"].setdefault(state["threads"][target], []).append(
+            {"fullDatabaseId": "8999", "url": "https://github.test/c/8999", "body": request["body"],
+             "author": {"login": state.get("author_login", state["viewer"])}, "replyTo": {"fullDatabaseId": target}})
+        state["log"][-1]["mode"] = mode
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(state, f)
+        os.kill(os.getppid(), 9)
+        sys.exit(1)
+    if mode == "ok":
+        out = json.dumps({"id": new, "html_url": "https://github.test/c/%d" % new, "in_reply_to_id": int(target),
+                          "body": request["body"]})
+    elif mode == "short":
+        out = json.dumps({"id": new})
+    elif mode == "refuse":
+        err, rc = "gh: Validation Failed (HTTP 422)\n", 1
+    else:
+        err, rc = ("gh: timeout awaiting response\n" if mode == "landed" else "gh: HTTP 502 Bad Gateway\n"), 1
+elif kind in ("resolve", "reopen"):
+    if mode in ("ok", "landed"):
+        state["resolved"][target] = kind == "resolve"
+    name = "unresolveReviewThread" if kind == "reopen" else "resolveReviewThread"
+    if mode == "ok":
+        out = json.dumps({"data": {name: {"thread": {"isResolved": kind == "resolve"}}}})
+    elif mode == "stuck":
+        out = json.dumps({"data": {name: {"thread": {"isResolved": kind != "resolve"}}}})
+    elif mode == "refuse":
+        out = json.dumps({"errors": [{"message": "Resource not accessible by integration"}]})
+        err, rc = "gh: Resource not accessible by integration (HTTP 403)\n", 1
+    else:
+        err, rc = ("gh: timeout awaiting response\n" if mode == "landed" else "gh: HTTP 502 Bad Gateway\n"), 1
+else:
+    if mode == "ok" or mode == "window":
+        nodes = [] if mode == "window" else [{"fullDatabaseId": "1", "url": "u", "body": "finding",
+                                             "author": {"login": "reviewer"}, "replyTo": None}] + state["comments"].get(target, [])
+        out = json.dumps({"data": {"viewer": {"login": state["viewer"]}, "node": {
+            "isResolved": state["resolved"].get(target, False),
+            "comments": {"pageInfo": {"hasPreviousPage": mode == "window"}, "nodes": nodes}}}})
+    else:
+        err, rc = "gh: HTTP 502 Bad Gateway\n", 1
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(state, f)
+sys.stdout.write(out)
+sys.stderr.write(err)
+sys.exit(rc)
+"""
+
+
+def loop_block(path: Path) -> str:
+    found = [b for b in re.findall(r"```sh\n(.*?)```", path.read_text(encoding="utf-8"), re.S) if "write-loop.sh" in b]
+    assert len(found) == 1, (path, len(found))
+    return found[0]
+
+
+def shared(block: str) -> str:
+    return block[:block.index("\nSH\n") + 4]
+
+
+def row(item, cid=None, tid=None, body=None, action="none", **extra):
+    return dict(id=item, comment_id=cid, thread_id=tid, body=body, action=action, **extra)
+
+
+class Loop(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.binary = self.root / "bin"
+        self.binary.mkdir()
+        (self.binary / "gh").write_text(FAKE_GH, encoding="utf-8")
+        (self.binary / "gh").chmod(0o755)
+        self.count = 0
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def fresh(self, rows, plan=None, threads=None, raw=None, viewer="addresser", author=None):
+        self.count += 1
+        private = self.root / f"private {self.count}"  # a space checks quoting
+        private.mkdir()
+        text = raw if raw is not None else "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+        (private / "writes.jsonl").write_text(text, encoding="utf-8")
+        state = {"plan": plan or {}, "log": [], "checks": [], "comments": {}, "resolved": {}, "next_id": 9000,
+                 "viewer": viewer, "author_login": author or viewer,
+                 "threads": threads or {str(r["comment_id"]): r["thread_id"]
+                                        for r in rows if r.get("comment_id")}}
+        (private / "state.json").write_text(json.dumps(state), encoding="utf-8")
+        return private
+
+    def run_loop(self, private, shell="sh", source=PUBLICATION, tok="", silent_rc=0,
+                 launcher=False, launcher_path=LAUNCHER, cwd=None, record_context=False):
+        text = loop_block(source).replace("<private-dir>", shlex.quote(str(private))).replace("<pr>", "7")
+        if tok:  # the block assigns `tok=` empty; a reviewing app fills it in
+            marker = "tok=  #"
+            self.assertIn(marker, text)
+            text = text.replace(marker, "tok=%s  #" % shlex.quote(tok), 1)
+        env = dict(os.environ, PATH=f"{self.binary}{os.pathsep}{os.environ['PATH']}",
+                   GH_STATE=str(private / "state.json"), GH_SILENT_RC=str(silent_rc),
+                   GH_RECORD_CONTEXT="1" if record_context else "")
+        env.pop("GH_TOKEN", None)  # only the block's own acquisition may supply one
+        env.pop("GH_REPO", None)  # the documented addressing invocation clears another-repository overrides
+        command = ([sys.executable, str(launcher_path), str(source), "--marker", "write-loop.sh", "--",
+                    f"private-dir={private}", "pr=7"] if launcher else [shell, "-c", text])
+        result = subprocess.run(command, cwd=cwd or private, env=env, capture_output=True, text=True,
+                                encoding="utf-8", timeout=120)
+        state = json.loads((private / "state.json").read_text(encoding="utf-8"))
+        results_path = private / "write-results.jsonl"
+        results = ([json.loads(line) for line in results_path.read_text(encoding="utf-8").split("\n") if line]
+                   if results_path.exists() else [])
+        return result, state, results
+
+    @staticmethod
+    def calls(state, kind=None):
+        return [(c["kind"], c["target"]) for c in state["log"] if kind is None or c["kind"] == kind]
+
+    def test_both_references_carry_the_same_loop(self):
+        publication, addressing = loop_block(PUBLICATION), loop_block(ADDRESSING)
+        self.assertEqual(shared(publication), shared(addressing))
+        for block in (publication, addressing):
+            self.assertTrue(block.rstrip().endswith('\nsh "$d/write-loop.sh" "$d" "$pr"'))
+        text = PUBLICATION.read_text(encoding="utf-8")
+        rules = text[text.index(publication) + len(publication) + 4:].strip().split("\n\n")
+        self.assertEqual(len(rules), 3)
+        for paragraph in rules:
+            self.assertIn(paragraph, ADDRESSING.read_text(encoding="utf-8"))
+
+    def test_mappings_and_dispositions(self):
+        publication = PUBLICATION.read_text(encoding="utf-8")
+        addressing = ADDRESSING.read_text(encoding="utf-8")
+        self.assertIn("`action`: `resolve` for `fixed`, `accepted`, and `obsolete`; `none` for `still-open`, "
+                      "`not-verifiable`, disputed items", publication)
+        self.assertIn("`action`: `resolve` for `implemented`, `already-addressed`, and `answered` items", addressing)
+        self.assertIn("`reopen` for a thread resolved too early", addressing)
+        self.assertIn("`none` for `declined`, `needs-info`, and `blocked`", addressing)
+        self.assertNotIn("rather than batching resolutions at the end", addressing)
+        self.assertIn("never as a detached sweep of resolutions after the replies", addressing)
+
+    def test_validation_refuses_before_any_write(self):
+        good = row("a", 101, "T1", "ok", "resolve")
+        cases = {
+            "not a JSON object": "[1]\n",
+            "missing action": json.dumps({k: v for k, v in good.items() if k != "action"}) + "\n",
+            "unknown field extra": json.dumps(dict(good, extra=1)) + "\n",
+            "action is not resolve": json.dumps(dict(good, action="close")) + "\n",
+            "a reply needs comment_id and thread_id": json.dumps(row("a", None, "T1", "x")) + "\n",
+            "resolve needs thread_id": json.dumps(row("a", None, None, None, "resolve")) + "\n",
+            "body is not a non-empty string": json.dumps(dict(good, body="")) + "\n",
+            "is_resolved is not a boolean": json.dumps(dict(good, is_resolved=0)) + "\n",
+            "duplicate id a": json.dumps(good) + "\n" + json.dumps(row("a", 102, "T2", "y")) + "\n",
+            "second thread action on T1": json.dumps(good) + "\n" + json.dumps(row("b", None, "T1", None, "resolve")) + "\n",
+            "duplicate reply to comment 101": json.dumps(good) + "\n" + json.dumps(row("b", 101, "T1", "ok")) + "\n",
+            "row on thread T1 follows that thread's action on line 2":
+                json.dumps(good) + "\n" + json.dumps(row("b", 101, "T1", "answered")) + "\n",
+        }
+        for reason, raw in cases.items():
+            with self.subTest(reason=reason):
+                # the valid first row would be written if validation ran lazily
+                private = self.fresh([], raw=json.dumps(row("z", 100, "T0", "first")) + "\n" + raw,
+                                     threads={"100": "T0", "101": "T1", "102": "T2"})
+                result, state, results = self.run_loop(private)
+                self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                self.assertIn(reason, result.stdout)
+                self.assertIn("writes.jsonl refused; nothing was written", result.stdout)
+                self.assertEqual((state["log"], results), ([], []))
+
+    def test_exact_bodies_in_reply_then_action_order(self):
+        rows = [row("a", 101, "T1", NASTY, "resolve"), row("b", None, "T2", None, "resolve", is_resolved=False),
+                row("c", 103, "T3", "declined: reason", "none"), row("d", None, "T4", None, "resolve", is_resolved=True),
+                row("e"), row("f", 106, "T6", "reopened: regressed", "reopen", is_resolved=True)]
+        for source in (PUBLICATION, ADDRESSING):
+            for shell in SHELLS:
+                with self.subTest(source=source.name, shell=shell):
+                    private = self.fresh(rows)
+                    result, state, results = self.run_loop(private, shell, source)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(self.calls(state), [("reply", "101"), ("resolve", "T1"), ("resolve", "T2"),
+                                                         ("reply", "103"), ("reply", "106"), ("reopen", "T6")])
+                    self.assertEqual(state["log"][0]["input"], {"body": NASTY})
+                    self.assertEqual(state["comments"]["T1"][0]["body"], NASTY)
+                    self.assertFalse((private / "pwned").exists() or (private / "pwned2").exists())
+                    self.assertIn("writes: 6 confirmed, 6 not required, 0 unresolved", result.stdout)
+                    skipped = {(r["item"], r["reason"]) for r in results if r["kind"] == "skip"}
+                    self.assertIn(("d", "thread already in that state"), skipped)
+                    self.assertIn(("e", "no thread action"), skipped)
+                    replies = [r for r in results if r["step"] == "reply" and r["kind"] == "write" and "exit" in r]
+                    self.assertEqual(len(replies), 3)
+                    self.assertTrue(all(r["outcome"] == "confirmed" and r["created_id"] for r in replies))
+                    self.assertNotIn(NASTY, (private / "write-results.jsonl").read_text(encoding="utf-8"))
+                    again, state, _ = self.run_loop(private, shell, source)
+                    self.assertEqual(again.returncode, 0, again.stdout)
+                    self.assertEqual(len(state["log"]), 6, "a confirmed write ran again")
+        private = self.fresh(rows)
+        result, state, results = self.run_loop(private, source=ADDRESSING, launcher=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.calls(state), [("reply", "101"), ("resolve", "T1"), ("resolve", "T2"),
+                                             ("reply", "103"), ("reply", "106"), ("reopen", "T6")])
+        self.assertEqual(state["log"][0]["input"], {"body": NASTY})
+        self.assertEqual(len([r for r in results if r["step"] == "reply" and r["kind"] == "write"
+                              and "exit" in r]), 3)
+
+    def test_failed_reply_blocks_its_action_and_later_items_continue(self):
+        rows = [row("a", 101, "T1", "fixed", "resolve"), row("b", 102, "T2", "fixed too", "resolve")]
+        private = self.fresh(rows, plan={"reply:101": ["refuse"]})
+        result, state, results = self.run_loop(private)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "102"), ("resolve", "T2")])
+        self.assertIn("unresolved a reply: failed (refused: HTTP 422)", result.stdout)
+        self.assertIn("unresolved a resolve: blocked (reply not confirmed)", result.stdout)
+        self.assertIn("writes: 2 confirmed, 0 not required, 2 unresolved", result.stdout)
+        self.assertTrue(Path(next(r for r in results if r["outcome"] == "failed")["stderr"]).read_text(encoding="utf-8"))
+        again, state, _ = self.run_loop(private)
+        self.assertEqual(again.returncode, 1)
+        self.assertEqual(len(state["log"]), 3, "a refused write was retried")
+
+    def test_shared_thread_action_waits_for_every_reply_on_the_thread(self):
+        for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
+            with self.subTest(source=source.name, launcher=launcher, order="action first"):
+                private = self.fresh([row("a", 101, "T1", "fixed", "resolve"), row("b", 101, "T1", "answered")])
+                result, state, results = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(result.returncode, 3, result.stdout)
+                self.assertIn("row on thread T1 follows that thread's action on line 1", result.stdout)
+                self.assertEqual((state["log"], results), ([], []))
+            with self.subTest(source=source.name, launcher=launcher, order="action last, sibling refused"):
+                private = self.fresh([row("a", 101, "T1", "fixed"), row("b", 101, "T1", "answered", "resolve")],
+                                     plan={"reply:101": ["refuse"]})
+                result, state, _ = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101")])
+                self.assertIn("unresolved b resolve: blocked (reply not confirmed)", result.stdout)
+                again, state, _ = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual((again.returncode, len(state["log"])), (1, 2), again.stdout)
+            with self.subTest(source=source.name, launcher=launcher, order="action last, sibling lost then retried"):
+                private = self.fresh([row("a", 101, "T1", "fixed"), row("b", 101, "T1", "answered", "resolve")],
+                                     plan={"reply:101": ["lost"]})
+                result, state, _ = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101")])
+                again, state, _ = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("reply", "101"), ("read", "T1"),
+                                                     ("reply", "101"), ("resolve", "T1")])
+
+    def test_ambiguous_reply_that_landed_is_reconciled_without_reposting(self):
+        for mode in ("landed", "short"):
+            with self.subTest(mode=mode):
+                private = self.fresh([row("a", 101, "T1", NASTY, "resolve")], plan={"reply:101": [mode]})
+                result, state, _ = self.run_loop(private)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101")])
+                self.assertIn("unresolved a reply: ambiguous", result.stdout)
+                again, state, results = self.run_loop(private)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
+                read = next(r for r in results if r["kind"] == "read" and "exit" in r)
+                self.assertEqual((read["outcome"], read["created_id"]), ("confirmed", 9001))
+
+    def test_app_reply_is_reconciled_across_the_bot_suffix(self):
+        # A reviewing app is `reviewer[bot]` to `viewer` and `reviewer` to `author{login}`.
+        # An unnormalized compare reads its own landed reply as absent and posts it twice.
+        for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
+            with self.subTest(source=source.name, launcher=launcher):
+                private = self.fresh([row("a", 101, "T1", "fixed", "resolve")],
+                                     plan={"reply:101": ["landed"]}, viewer="reviewer[bot]", author="reviewer")
+                result, _, _ = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                again, state, results = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
+                read = next(r for r in results if r["kind"] == "read" and "exit" in r)
+                self.assertEqual(read["outcome"], "confirmed")
+
+    def test_app_token_is_proved_before_the_loop_and_reaches_every_write(self):
+        # The command is several words: expanded bare in command position it would be one
+        # command name under zsh, which is why the block runs it through `sh -c`.
+        rows = [row("a", 101, "T1", "fixed", "resolve")]
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                private = self.fresh(rows)
+                result, state, _ = self.run_loop(private, shell, tok="printf %s app-token-xyz")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(state["checks"], ["app-token-xyz"], "the token is proved exactly once")
+                self.assertEqual({call["token"] for call in state["log"]}, {"app-token-xyz"},
+                                 "every write in the loop runs under the token")
+                self.assertNotIn("app-token-xyz", json.dumps([call["args"] for call in state["log"]]),
+                                 "a token never reaches argv")
+
+    def test_unusable_app_token_stops_the_loop_before_its_first_write(self):
+        # A token the forge refuses would fail every reply, and `refused earlier; not retried`
+        # then skips it on every rerun, so the round could never publish against this results file.
+        rows = [row("a", 101, "T1", "fixed", "resolve")]
+        cases = [("printf %s ", 0, "prints nothing"), ("false unused-argument", 0, "exits non-zero"),
+                 ("printf %s stale-token", 22, "the forge refuses the token")]
+        for shell in SHELLS:
+            for tok, silent_rc, reason in cases:
+                with self.subTest(shell=shell, tok=reason):
+                    private = self.fresh(rows)
+                    result, state, _ = self.run_loop(private, shell, tok=tok, silent_rc=silent_rc)
+                    self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                    self.assertIn("no usable token", result.stdout)
+                    self.assertIn("no reply or resolution was written", result.stdout)
+                    self.assertEqual(state["log"], [])
+                    self.assertFalse((private / "write-results.jsonl").exists())
+
+    def test_interrupted_write_is_reconciled_before_any_retry(self):
+        for source, launcher in ((PUBLICATION, False), (ADDRESSING, False), (ADDRESSING, True)):
+            with self.subTest(source=source.name, launcher=launcher):
+                private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"reply:101": ["crash"]})
+                result, state, results = self.run_loop(private, source=source, launcher=launcher)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual([(r["kind"], r["outcome"]) for r in results], [("write", "ambiguous")])
+                again, state, _ = self.run_loop(private, source=source, launcher=launcher)
+                self.assertEqual(again.returncode, 0, again.stdout)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("resolve", "T1")])
+                self.assertEqual(len(state["comments"]["T1"]), 1, "an interrupted reply was posted again")
+
+    def test_ambiguous_reply_that_was_lost_retries_once(self):
+        private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"reply:101": ["lost", "lost"]})
+        self.assertEqual(self.run_loop(private)[0].returncode, 1)
+        second, state, _ = self.run_loop(private)
+        self.assertEqual(second.returncode, 1, second.stdout)
+        self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("reply", "101")])
+        third, state, _ = self.run_loop(private)
+        self.assertEqual(third.returncode, 1)
+        self.assertEqual(self.calls(state, "reply"), [("reply", "101")] * 2, "more than one retry")
+        self.assertIn("unresolved a reply: blocked (retry budget spent)", third.stdout)
+        success = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"reply:101": ["lost"]})
+        self.run_loop(success)
+        retried, state, _ = self.run_loop(success)
+        self.assertEqual(retried.returncode, 0, retried.stdout)
+        self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1"), ("reply", "101"), ("resolve", "T1")])
+
+    def test_unsettled_reconciliation_never_retries(self):
+        for read_mode in ("lost", "window"):
+            with self.subTest(read=read_mode):
+                private = self.fresh([row("a", 101, "T1", "fixed", "none")],
+                                     plan={"reply:101": ["lost"], "read:T1": [read_mode]})
+                self.run_loop(private)
+                result, state, _ = self.run_loop(private)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(self.calls(state), [("reply", "101"), ("read", "T1")])
+                self.assertIn("unresolved a reply: blocked (reconciliation unsettled; not retried)", result.stdout)
+
+    def test_failed_resolution_after_confirmed_reply_never_reposts(self):
+        private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"resolve:T1": ["refuse"]})
+        result, state, _ = self.run_loop(private)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unresolved a resolve: failed (refused: HTTP 403)", result.stdout)
+        again, state, _ = self.run_loop(private)
+        self.assertEqual((again.returncode, self.calls(state)), (1, [("reply", "101"), ("resolve", "T1")]))
+        private = self.fresh([row("a", 101, "T1", "fixed", "resolve")], plan={"resolve:T1": ["lost"]})
+        self.assertEqual(self.run_loop(private)[0].returncode, 1)
+        again, state, _ = self.run_loop(private)
+        self.assertEqual(again.returncode, 0, again.stdout)
+        self.assertEqual(self.calls(state), [("reply", "101"), ("resolve", "T1"), ("read", "T1"), ("resolve", "T1")])
+
+    def test_unexpected_returned_state_is_a_failure(self):
+        private = self.fresh([row("a", None, "T1", None, "resolve")], plan={"resolve:T1": ["stuck"]})
+        result, _, results = self.run_loop(private)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unresolved a resolve: failed (returned isResolved false)", result.stdout)
+        self.assertEqual(results[-1]["is_resolved"], False)
+
+    def test_all_skipped_round_succeeds(self):
+        private = self.fresh([row("d", None, "T4", None, "resolve", is_resolved=True), row("e"),
+                              row("g", None, "T7", None, "reopen", is_resolved=False)])
+        result, state, results = self.run_loop(private)
+        self.assertEqual((result.returncode, state["log"]), (0, []), result.stdout)
+        self.assertIn("writes: 0 confirmed, 6 not required, 0 unresolved", result.stdout)
+        self.assertEqual({r["outcome"] for r in results}, {"skipped"})
+        empty = self.fresh([])
+        self.assertEqual(self.run_loop(empty)[0].returncode, 0)
+
+    def test_changed_body_is_not_covered_by_an_earlier_confirmation(self):
+        private = self.fresh([row("a", 101, "T1", "first draft", "none")])
+        self.assertEqual(self.run_loop(private)[0].returncode, 0)
+        (private / "writes.jsonl").write_text(json.dumps(row("a", 101, "T1", "corrected draft", "none")) + "\n",
+                                              encoding="utf-8")
+        result, state, _ = self.run_loop(private)
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual([c["input"]["body"] for c in state["log"]], ["first draft", "corrected draft"])
+
+    def test_launcher_preserves_target_checkout_repository_context(self):
+        target = self.root / "target checkout"
+        installed = self.root / "installed skill"
+        target.mkdir()
+        shutil.copytree(SKILLS / "resolve-review", installed)
+        for path, remote in ((target, "https://github.test/target/repository.git"),
+                             (installed, "https://github.test/wrong/skill.git")):
+            subprocess.run(["git", "init", "-q"], cwd=path, check=True)
+            subprocess.run(["git", "remote", "add", "origin", remote], cwd=path, check=True)
+        private = self.fresh([row("a", 101, "T1", "fixed", "resolve")])
+        source = installed / "references" / "addressing-protocol.md"
+        launcher = installed / "scripts" / "run_block.py"
+        result, state, _ = self.run_loop(private, source=source, launcher=True, launcher_path=launcher, cwd=target,
+                                         record_context=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(state["log"])
+        self.assertEqual({Path(call["cwd"]).resolve() for call in state["log"]}, {target.resolve()})
+        self.assertEqual({call["repository"] for call in state["log"]},
+                         {"https://github.test/target/repository.git"})
+
+
+if __name__ == "__main__":
+    try:
+        unittest.main()
+    except OSError as error:
+        print(f"test_thread_writes: cannot run a subprocess: {error}", file=sys.stderr)
+        raise SystemExit(2)

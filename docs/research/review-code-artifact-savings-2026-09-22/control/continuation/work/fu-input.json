@@ -1,0 +1,18 @@
+{
+  "run": {"id":"review-b96a362","repository":"/tmp/rcs-savings/control/continuation/repo","base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab","head":"b96a362e99ce4f5b6b1fe26ad02fda66e8343723","merge_base":"2301c83ee0b2ba0248fe3d2d1f6cd481963545ab"},
+  "batch": {"id":"follow-up","phase":"follow-up"},
+  "run_policy": "Focused commands at most five minutes, provisioning ten; disposable copies only; no network, credentials, or destructive effect.",
+  "sources": [
+    {"coordinate":"ledger-spec/account-freeze/criterion-2","text":"A frozen account accepts no new entries of any kind: postings, transfers out of it, and transfers into it each raise `LedgerError`."},
+    {"coordinate":"ledger-spec/account-freeze/criterion-3","text":"A refused operation changes no account."}
+  ],
+  "candidates": [],
+  "premises": [
+    {"id":"premise-transfer-check-before-mutation","area":"data-integrity",
+     "premise":"At the head, `Ledger.transfer` raises LedgerError for a frozen source or a frozen target before either entry is appended, for every input reaching those appends, so a refused transfer changes no account.",
+     "evidence":[{"coordinate":"ledger/accounts.py:86-94","text":"debit = self.get(source)\n        credit = self.get(target)\n        for account in (debit, credit):\n            if account.frozen:\n                raise LedgerError(f\"account {account.number} is frozen\")\n        if debit.balance() < amount:\n            raise LedgerError(f\"transfer would overdraw {source}\")\n        debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\n        credit.entries.append(Entry(day, f\"transfer from {source}\", amount))"}]},
+    {"id":"premise-no-other-entry-path","area":"data-integrity",
+     "premise":"At the head, no code in the repository's ledger package other than `Ledger.post` and `Ledger.transfer` appends to an account's `entries` or otherwise creates an Entry on an existing account, so both frozen checks cover every entry-creating path.",
+     "evidence":[{"coordinate":"ledger/accounts.py:61-75","text":"Ledger.post checks account.frozen then appends entry"},{"coordinate":"ledger/cli.py:20-21","text":"for day, description, cents in item.get(\"entries\", []):\n            ledger.post(item[\"number\"], date.fromisoformat(day), description, cents)"}]}
+  ]
+}

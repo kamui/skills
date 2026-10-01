@@ -1,0 +1,12 @@
+{
+  "probe": "P26",
+  "status": "unestablished",
+  "summary": "The first run of P26. It reported all 18 rendered prompts as carrying the pinned template block, because it compared only the block's first 200 bytes - and the nine prompts rendered from the uncommitted revision 1 share that opening. It also did not yet check that a normalised shape stands for one input. Both claims were wrong in the same way, and the parent directory's run corrects them.",
+  "establishes": null,
+  "residual": null,
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T21:23:11.943073+00:00"
+}

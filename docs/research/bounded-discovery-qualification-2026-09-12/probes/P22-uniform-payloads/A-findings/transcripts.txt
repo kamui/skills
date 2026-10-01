@@ -1,0 +1,2 @@
+session 304cb623-6692-4be9-98f9-9cbc251ff0d9 transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p22r2-A-findings/304cb623-6692-4be9-98f9-9cbc251ff0d9.jsonl sha256 5b715acfabb7580b90e9056ef90546e7cd668492ee29cf9a3c8f725d748b0167

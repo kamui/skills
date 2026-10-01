@@ -1,0 +1,48 @@
+{
+  "bundle_id": "b49a07a8b3fc5f96301912fd5b68e4f9",
+  "candidates": [],
+  "premises": [
+    {
+      "id": "accounts/transfer-frozen-only-mutation-paths",
+      "ruling": "holds",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:73",
+          "text": "account.entries.append(entry)"
+        },
+        {
+          "coordinate": "ledger/accounts.py:94-95",
+          "text": "debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\ncredit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+        },
+        {
+          "coordinate": "ledger/statement.py:18",
+          "text": "for entry in account.entries:"
+        },
+        {
+          "coordinate": "ledger/cli.py:22",
+          "text": "ledger.post(item[\"number\"], date.fromisoformat(day), description, cents)"
+        }
+      ]
+    },
+    {
+      "id": "accounts/transfer-frozen-check-precedes-mutation",
+      "ruling": "holds",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:87-88",
+          "text": "debit = self.get(source)\ncredit = self.get(target)"
+        },
+        {
+          "coordinate": "ledger/accounts.py:89-91",
+          "text": "for account in (debit, credit):\n    if account.frozen:\n        raise LedgerError(f\"account {account.number} is frozen\")"
+        },
+        {
+          "coordinate": "ledger/accounts.py:94-95",
+          "text": "debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\ncredit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+        }
+      ]
+    }
+  ],
+  "duplicate_groups": [],
+  "observation": null
+}

@@ -1,0 +1,12 @@
+{
+  "probe": "P12",
+  "status": "established",
+  "summary": "Background sub-agents are supported in the frozen cell configuration: the primary dispatched bd-verifier with run_in_background requested, ran 'python3 -c \"print(6*7)\"' and got 42 back while the child was still going, then collected the child's completion and reported its final word DONEBG.",
+  "establishes": "P12. The foreground-verification rule is the experiment's choice, not a harness limit, and the freeze's interpretation limit about elapsed distributions stands on this record rather than on #149's.",
+  "residual": "Supported is not used: the frozen rule stays foreground in every arm, and this probe changes nothing about it. It also does not measure what concurrency would cost or whether two live workers on one machine stay isolated - the one-cell-at-a-time rule exists for the second reason.",
+  "refuted_by": null,
+  "observed_exit": "0",
+  "expected_exit": 0,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T10:09:58.109398+00:00"
+}

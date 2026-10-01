@@ -1,0 +1,87 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P00",
+  "recorded_at": "2026-09-12T09:54:14.511188+00:00",
+  "ticket": 207,
+  "what_this_pins": "the runtime, host, toolchain, configuration and repository state that every other probe in this bundle ran against. A probe record that does not name this inventory establishes nothing, and a probe run after any row here changes must be re-run.",
+  "runtime": {
+    "cli": "Claude Code",
+    "version": "2.1.269",
+    "launcher_path": "/Users/jack/.local/bin/claude",
+    "launcher_sha256": "c942e1228b93cb4d52183b3dfbc77f28264f35aa947acd9c0853d029164cf450",
+    "help_sha256": "ae85d661e9c086f05637ebcd868f5702b477ff6e55e2e65b8ada7807cd51a4b6",
+    "versions_capture_sha256": "a06d7fb5ebbd011bc908687c66959917cba5ca62c0d6b5a88a699a90b4d4b124",
+    "entrypoint_of_this_coordinator": "sdk-ts"
+  },
+  "host": {
+    "kernel": "Darwin 27.0.0 arm64 (xnu-13432.1.9~1)",
+    "product": "macOS 27.0 (26A428)",
+    "machine": "arm64 T6030"
+  },
+  "toolchain": {
+    "python3": "3.14.7",
+    "git": "2.55.0",
+    "go": "go1.27.0 darwin/arm64",
+    "rustc": "1.98.0 (88d9e12ae 2026-08-18)",
+    "node": "v24.19.0"
+  },
+  "container_runtime": {
+    "cli": "docker 29.7.2 (client at /opt/homebrew/bin/docker)",
+    "server_version": "29.7.2",
+    "daemon_state_at_inventory": "running; started by this session with `open -a Docker` after it was found down",
+    "cell_image": null,
+    "cell_image_note": "no cell image exists for this study. The pilot's image (deviation 7) was built around claude 2.1.263 and is not this runtime; a future freeze builds and pins its own image against the version above. See P16."
+  },
+  "configuration": {
+    "managed_settings": "absent (/Library/Application Support/ClaudeCode/managed-settings.json)",
+    "user_settings_sha256": "f32d5ce382dcbdc7e1b84090cbdfb7180a13f1737e88cf6e1e5757c412390903",
+    "user_settings_default_model": "claude-fable-5-1[1m]",
+    "user_settings_hook_events": [
+      "PermissionRequest",
+      "PostCompact",
+      "PostToolUse",
+      "PostToolUseFailure",
+      "PreToolUse",
+      "SessionStart",
+      "Stop",
+      "StopFailure",
+      "SubagentStart",
+      "SubagentStop",
+      "TeammateIdle",
+      "UserPromptSubmit"
+    ],
+    "user_settings_hook_bytes": 27415,
+    "project_settings": "absent (.claude/settings.json, .claude/settings.local.json)",
+    "consequence_recorded_here": "this host's user settings install hooks on twelve events, including SessionStart and UserPromptSubmit, and set a default model. The documented behaviour of --restricted in this version is that user, project and local settings files are ignored, so a restricted cell does not inherit them and an unrestricted one does. That makes D7's route choice a fidelity question, not only a tooling question: a cell launched without --restricted inherits twelve hook events that can inject context and intercept tool calls. P15 probes it."
+  },
+  "repository": {
+    "path": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad",
+    "head": "d6a9b15dc02997646598dd022b3391702eb996fc",
+    "worktrees_of_this_repository_on_this_host": 40,
+    "revealed_cleartext_truth_present": true,
+    "consequence": "host absence of forbidden material, the frozen isolation control, is not reachable on this host: 40 linked worktrees plus the primary checkout share an object store that reaches the #153 revealed registers, leak sets and candidate inventory in cleartext. See P16."
+  },
+  "pinned_tooling_sha256": {
+    "docs/research/bounded-discovery-pilot-2026-09-09/scripts/run_cell.py": "24e719c2faf0c26c25a492f917777231061cc0223250bdf3c8968b1896c6d494",
+    "docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py": "4312b5d5170a8f6dc1086bb062b2425898614bf1c75c445d46dc5e60799d0d03",
+    "docs/research/bounded-discovery-readiness-2026-09-12/scripts/roots.py": "d52f553afeb6541d64550edcb32e8871522e3dd7905e8797de1766dc2fdd709f",
+    "docs/research/bounded-discovery-readiness-2026-09-12/scripts/shutdown.py": "072e06fc53f48df3cef843ae6c1773029c59f715d0e293a48477afbfba86c24c",
+    "docs/research/bounded-discovery-readiness-2026-09-12/scripts/payload.py": "c6c1fda996c8ad6ec7a95851e70049a2eeba54587939669ecdeb2d27d0bab030",
+    "docs/research/bounded-discovery-runs-2026-09-08/scripts/egress_proxy.py": "dbbd8abaf5ac0ed92294447169454c1aaee54c91020b8d16444e47e9efd8214c",
+    "docs/research/bounded-discovery-runs-2026-09-08/scripts/meter_split.py": "72170b831fb7b334f6ec1ab3d4f79c4d4972b6e6ae726491afaf37a88aef5028",
+    "docs/research/bounded-discovery-runs-2026-09-08/scripts/check_cell_isolation.py": "3bd5812450063e8ed2fc1fce45565f11919a9aef7671e800390c12c2887aa5b8",
+    "docs/research/bounded-discovery-runs-2026-09-08/scripts/verify_freeze.py": "edf318783707178402b543e39166a8e5c5a456a2492599535bb5a764498c30ad",
+    "docs/research/bounded-discovery-runs-2026-09-08/scripts/seal_schedule.py": "faaf812ed63ae3332611de73d5d63d5e94eceb5ad11805cd1f411be4a4a3bf28",
+    "docs/research/bounded-discovery-runs-2026-09-08/scripts/score_attempts.py": "bd6e2dd547624068aafc09108e35ffd99890220ab54bf8838473b63fef5098f0",
+    "docs/research/bounded-discovery-runs-2026-09-08/dispatch-template.md": "a1c34371abe4819512db336543bfc6d160765addf4f1177e57b4b76ad8dd626c",
+    "docs/research/bounded-discovery-runs-2026-09-08/rates.json": "60d8a067c8ce7b1fcb9ceb3097e8d84756f2c37eef22eb55c7a89e4d3bf84c9c",
+    "docs/research/tools/agent_effort.py": "5197b343d5336de7fe8f8935c64a36a5a35a3bae461550a63cfb3bc2c615a4af",
+    "docs/research/tools/transcript_usage.py": "9f1ca60d140e73d20c780165a24de86bf3d161cb739c89026c634e5a0d3d6c00",
+    "docs/research/tools/build_packet.py": "b5add0603f4e0f19de875416eec841e461fa01e636e048846787614f9245e5df",
+    "docs/research/bounded-discovery-prototype/targets/tools/extract_requests.py": "451eb87cb948d13d459db9e2148ac5e858551930fdbf6e63cf0edf66eaf802dd",
+    "docs/research/bounded-discovery-prototype/targets/criteria.md": "5cf56f151da7e78261ac98e8b5a909fe1139d5f4d627129011d9afc227665f27",
+    "docs/research/bounded-discovery-proposal-2026-09-12/SPECIFICATION.md": "33b2e7d2521881f9c08ee286f01e6b056bca4339f1cfb6fae974ef10ca252123",
+    "docs/research/bounded-discovery-proposal-2026-09-12/probes.md": "5e30cfd16eaf9d604948c38f877a31cf4a6c1c6a9ef79171f8de14e4d1c636f4",
+    "docs/research/bounded-discovery-proposal-2026-09-12/readiness.json": "9b02f02de0b852f08ade2b200690637015f95bcaea64262eade6583638ba6f23"
+  }
+}

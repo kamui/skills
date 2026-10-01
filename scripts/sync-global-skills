@@ -1,0 +1,242 @@
+#!/bin/sh
+
+set -eu
+
+repo_slug="kamui/skills"
+repo_url="https://github.com/kamui/skills.git"
+repo_branch="main"
+skill_agents="codex claude-code pi opencode"
+
+sync_state_root=${XDG_STATE_HOME:-"$HOME/.local/state"}
+sync_state_dir="$sync_state_root/kamui-skills"
+sync_lock_dir="$sync_state_dir/sync.lock"
+global_skill_root="$HOME/.agents/skills"
+global_lock_file="$HOME/.agents/.skill-lock.json"
+sync_tmp_dir=""
+
+fail() {
+  printf 'kamui skills sync: %s\n' "$*" >&2
+  exit 1
+}
+
+cleanup() {
+  if [ -n "$sync_tmp_dir" ]; then
+    case "$sync_tmp_dir" in
+      "${TMPDIR:-/tmp}"/kamui-skills-sync.*)
+        rm -rf -- "$sync_tmp_dir"
+        ;;
+    esac
+  fi
+  rmdir "$sync_lock_dir" 2>/dev/null || true
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || fail "required command not found: $1"
+}
+
+list_managed_skills() {
+  output_file=$1
+
+  if [ ! -f "$global_lock_file" ]; then
+    : >"$output_file"
+    return
+  fi
+
+  jq -r \
+    --arg source "$repo_slug" \
+    --arg url "$repo_url" \
+    '.skills // {}
+      | to_entries[]
+      | select(
+          .value.source == $source
+          and .value.sourceType == "github"
+          and .value.sourceUrl == $url
+        )
+      | .key' \
+    "$global_lock_file" | LC_ALL=C sort -u >"$output_file"
+}
+
+is_managed_skill() {
+  skill_name=$1
+
+  [ -f "$global_lock_file" ] &&
+    jq -e \
+      --arg name "$skill_name" \
+      --arg source "$repo_slug" \
+      --arg url "$repo_url" \
+      '.skills[$name].source == $source
+        and .skills[$name].sourceType == "github"
+        and .skills[$name].sourceUrl == $url' \
+      "$global_lock_file" >/dev/null
+}
+
+is_managed_skill_at_ref() {
+  skill_name=$1
+  expected_ref=$2
+
+  is_managed_skill "$skill_name" &&
+    jq -e \
+      --arg name "$skill_name" \
+      --arg ref "$expected_ref" \
+      '.skills[$name].ref == $ref' \
+      "$global_lock_file" >/dev/null
+}
+
+has_locked_skill() {
+  skill_name=$1
+
+  [ -f "$global_lock_file" ] &&
+    jq -e --arg name "$skill_name" '.skills | has($name)' "$global_lock_file" >/dev/null
+}
+
+assert_install_is_safe() {
+  skill_name=$1
+  source_skill_dir=$2
+  installed_skill_dir="$global_skill_root/$skill_name"
+
+  if is_managed_skill "$skill_name"; then
+    return
+  fi
+
+  if [ ! -e "$installed_skill_dir" ] && ! has_locked_skill "$skill_name"; then
+    return
+  fi
+
+  if [ -d "$installed_skill_dir" ] &&
+    diff -qr "$source_skill_dir" "$installed_skill_dir" >/dev/null; then
+    return
+  fi
+
+  fail "refusing to overwrite $skill_name because it is not verified as a $repo_slug skill"
+}
+
+installed_set_is_intact() {
+  expected_file=$1
+  actual_file=$2
+  expected_ref=$3
+
+  list_managed_skills "$actual_file"
+  cmp -s "$expected_file" "$actual_file" || return 1
+
+  while IFS= read -r skill_name; do
+    [ -n "$skill_name" ] || continue
+    [ -f "$global_skill_root/$skill_name/SKILL.md" ] || return 1
+    is_managed_skill_at_ref "$skill_name" "$expected_ref" || return 1
+  done <"$expected_file"
+}
+
+for required_command in git npx jq diff cmp mktemp sort; do
+  require_command "$required_command"
+done
+
+mkdir -p "$sync_state_dir"
+chmod 700 "$sync_state_dir"
+
+if ! mkdir "$sync_lock_dir" 2>/dev/null; then
+  fail "another sync is running, or $sync_lock_dir is stale"
+fi
+trap cleanup 0 1 2 15
+
+sync_tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/kamui-skills-sync.XXXXXX")
+remote_sha_file="$sync_tmp_dir/remote.sha"
+current_managed_file="$sync_tmp_dir/current-managed"
+state_sha_file="$sync_state_dir/main.sha"
+state_manifest_file="$sync_state_dir/managed-skills"
+
+git ls-remote "$repo_url" "refs/heads/$repo_branch" | awk '{print $1}' >"$remote_sha_file"
+remote_sha=$(sed -n '1p' "$remote_sha_file")
+[ -n "$remote_sha" ] || fail "could not resolve $repo_slug@$repo_branch"
+
+if [ -f "$state_sha_file" ] &&
+  [ -f "$state_manifest_file" ] &&
+  [ "$(sed -n '1p' "$state_sha_file")" = "$remote_sha" ] &&
+  installed_set_is_intact "$state_manifest_file" "$current_managed_file" "$repo_branch"; then
+  printf 'kamui skills sync: already at %s\n' "$remote_sha"
+  exit 0
+fi
+
+source_dir="$sync_tmp_dir/source"
+git clone --quiet --depth 1 --branch "$repo_branch" "$repo_url" "$source_dir"
+synced_sha=$(git -C "$source_dir" rev-parse HEAD)
+desired_skills_file="$sync_tmp_dir/desired-skills"
+
+find "$source_dir/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -print |
+  while IFS= read -r skill_file; do
+    basename "$(dirname "$skill_file")"
+  done |
+  LC_ALL=C sort -u >"$desired_skills_file"
+
+[ -s "$desired_skills_file" ] || fail "no skills found in $repo_slug@$repo_branch"
+
+while IFS= read -r skill_name; do
+  case "$skill_name" in
+    '' | *[!a-z0-9-]*) fail "unsafe skill name in $repo_slug: $skill_name" ;;
+  esac
+  assert_install_is_safe "$skill_name" "$source_dir/skills/$skill_name"
+done <"$desired_skills_file"
+
+set -- -g
+while IFS= read -r skill_name; do
+  set -- "$@" --skill "$skill_name"
+done <"$desired_skills_file"
+for skill_agent in $skill_agents; do
+  set -- "$@" -a "$skill_agent"
+done
+
+npx --yes skills@latest add "$repo_slug#$repo_branch" "$@" --yes
+
+post_install_sha=$(git ls-remote "$repo_url" "refs/heads/$repo_branch" | awk '{print $1}')
+[ "$post_install_sha" = "$synced_sha" ] ||
+  fail "$repo_slug@$repo_branch changed during sync; retrying is safe"
+
+list_managed_skills "$current_managed_file"
+
+while IFS= read -r skill_name; do
+  case "$skill_name" in
+    '' | *[!a-z0-9-]*) fail "unsafe skill name in global lock: $skill_name" ;;
+  esac
+
+  if grep -Fqx "$skill_name" "$desired_skills_file"; then
+    continue
+  fi
+
+  if ! is_managed_skill "$skill_name"; then
+    fail "refusing to remove $skill_name because its $repo_slug provenance could not be verified"
+  fi
+
+  printf 'kamui skills sync: removing stale skill %s\n' "$skill_name"
+  npx --yes skills@latest remove --global "$skill_name" --yes
+
+  if [ -e "$global_skill_root/$skill_name" ] || is_managed_skill "$skill_name"; then
+    fail "removal verification failed for $skill_name"
+  fi
+done <"$current_managed_file"
+
+final_managed_file="$sync_tmp_dir/final-managed"
+list_managed_skills "$final_managed_file"
+
+if ! cmp -s "$desired_skills_file" "$final_managed_file"; then
+  printf 'Expected skills:\n' >&2
+  sed 's/^/  /' "$desired_skills_file" >&2
+  printf 'Source-verified installed skills:\n' >&2
+  sed 's/^/  /' "$final_managed_file" >&2
+  fail "installed skill set does not match $repo_slug@$synced_sha"
+fi
+
+while IFS= read -r skill_name; do
+  installed_skill_dir="$global_skill_root/$skill_name"
+  source_skill_dir="$source_dir/skills/$skill_name"
+
+  [ -f "$installed_skill_dir/SKILL.md" ] || fail "$skill_name is missing from $global_skill_root"
+  diff -qr "$source_skill_dir" "$installed_skill_dir" >/dev/null ||
+    fail "$skill_name does not match $repo_slug@$synced_sha"
+done <"$desired_skills_file"
+
+sha_tmp_file="$sync_state_dir/main.sha.tmp.$$"
+manifest_tmp_file="$sync_state_dir/managed-skills.tmp.$$"
+printf '%s\n' "$synced_sha" >"$sha_tmp_file"
+cp "$desired_skills_file" "$manifest_tmp_file"
+mv "$sha_tmp_file" "$state_sha_file"
+mv "$manifest_tmp_file" "$state_manifest_file"
+
+printf 'kamui skills sync: installed %s at %s\n' "$repo_slug" "$synced_sha"

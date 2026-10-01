@@ -1,0 +1,33 @@
+{
+  "schema_version": "bounded-discovery-qualification-v1",
+  "probe": "P09",
+  "purpose": "Of two operations racing for the same remaining capacity, is exactly one admitted and does the other exit non-zero with no event written?",
+  "retained_at": "2026-09-12T10:16:02.221134+00:00",
+  "retained_before_process_creation": true,
+  "cwd": "/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-qualification-2026-09-12/probes/P09-atomic-contention",
+  "argv": [
+    "sh",
+    "-c",
+    "\nBUD=/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py\npython3 \"$BUD\" contention-ledger.json reserve --id race-A --amount 0.08 --phase pre-freeze --ticket 207 --evidence P09 > race-A.out 2>&1 &\npython3 \"$BUD\" contention-ledger.json reserve --id race-B --amount 0.08 --phase pre-freeze --ticket 207 --evidence P09 > race-B.out 2>&1 &\nwait\necho \"race-A exit: $(grep -c reservation_delta_usd race-A.out) event line(s)\"; cat race-A.out\necho \"race-B exit: $(grep -c reservation_delta_usd race-B.out) event line(s)\"; cat race-B.out\necho \"--- reserve events written to the ledger ---\"\npython3 -c \"import json;d=json.load(open(\\\"contention-ledger.json\\\"));print(sum(1 for e in d[\\\"events\\\"] if e[\\\"operation\\\"]==\\\"reserve\\\"));print(\\\"reserved_usd\\\",d[\\\"reserved_usd\\\"])\"\n"
+  ],
+  "command_line": "sh -c '\nBUD=/Users/jack/.t3/worktrees/skills/t3code-159a16ad/docs/research/bounded-discovery-readiness-2026-09-12/scripts/budget.py\npython3 \"$BUD\" contention-ledger.json reserve --id race-A --amount 0.08 --phase pre-freeze --ticket 207 --evidence P09 > race-A.out 2>&1 &\npython3 \"$BUD\" contention-ledger.json reserve --id race-B --amount 0.08 --phase pre-freeze --ticket 207 --evidence P09 > race-B.out 2>&1 &\nwait\necho \"race-A exit: $(grep -c reservation_delta_usd race-A.out) event line(s)\"; cat race-A.out\necho \"race-B exit: $(grep -c reservation_delta_usd race-B.out) event line(s)\"; cat race-B.out\necho \"--- reserve events written to the ledger ---\"\npython3 -c \"import json;d=json.load(open(\\\"contention-ledger.json\\\"));print(sum(1 for e in d[\\\"events\\\"] if e[\\\"operation\\\"]==\\\"reserve\\\"));print(\\\"reserved_usd\\\",d[\\\"reserved_usd\\\"])\"\n'",
+  "env_additions": {},
+  "requested": {
+    "model": null,
+    "effort": null,
+    "max_budget_usd": null,
+    "restricted": false,
+    "tools": null,
+    "allowed_tools": [],
+    "disallowed_tools": [],
+    "add_dir": [],
+    "permission_prompts": null,
+    "session_id": null,
+    "output_format": null,
+    "agents_json_sha256": null,
+    "print_mode": false,
+    "resume": null
+  },
+  "runtime_inventory": "probes/P00-runtime-inventory/inventory.json",
+  "expect_exit": 0
+}

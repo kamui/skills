@@ -1,0 +1,5 @@
+/Library/Application Support/ClaudeCode/managed-settings.json: absent
+/Users/jack/.claude/settings.json: f32d5ce382dcbdc7e1b84090cbdfb7180a13f1737e88cf6e1e5757c412390903
+/Users/jack/.claude.json: 21b24aaee81484e44a11aa8efd3094fb068f1830afe61a78e234a225816cb02a
+.claude/settings.json: absent
+.claude/settings.local.json: absent

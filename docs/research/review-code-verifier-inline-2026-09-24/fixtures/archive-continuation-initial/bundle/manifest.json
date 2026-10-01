@@ -1,0 +1,21 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "27cd8dfea73fb13f2b48221546b38a22a43b3beee66fb3ce2f26949dad29c99d",
+  "bundle_id": "dfc4e918ab0e001ab9df67b9937f61ab",
+  "candidate_ids": [
+    "accounts/frozen-transfer-bypass"
+  ],
+  "format": "verifier-manifest/3",
+  "input_sha256": "232267867244579ff5ab2e690651b63e19ff718b3cf11ce8e4cb3192687feb78",
+  "premise_ids": [],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "864eea86ab86bf5a3375898bc606933ea20696cc",
+    "id": "review-864eea8",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/baseline/continuation/repo"
+  }
+}

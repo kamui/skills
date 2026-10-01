@@ -1,0 +1,122 @@
+#!/bin/sh
+
+set -eu
+
+fail() {
+  printf 'kamui skills timer: %s\n' "$*" >&2
+  exit 1
+}
+
+script_dir=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+sync_script="$script_dir/sync-global-skills"
+[ -x "$sync_script" ] || fail "$sync_script is not executable"
+
+timer_path="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+for timer_command in git npx jq; do
+  timer_command_path=$(command -v "$timer_command") || fail "$timer_command not found"
+  timer_command_dir=${timer_command_path%/*}
+  case ":$timer_path:" in
+    *":$timer_command_dir:"*) ;;
+    *) timer_path="$timer_command_dir:$timer_path" ;;
+  esac
+done
+
+case $(uname -s) in
+  Linux)
+    command -v systemctl >/dev/null 2>&1 || fail "systemctl not found"
+    case "$sync_script$timer_path" in
+      *'"'* | *'%'* | *'\'*) fail "repository path or PATH cannot be written safely to a systemd unit" ;;
+    esac
+
+    systemd_user_dir="${XDG_CONFIG_HOME:-"$HOME/.config"}/systemd/user"
+    mkdir -p "$systemd_user_dir"
+
+    cat >"$systemd_user_dir/kamui-skills-sync.service" <<EOF
+[Unit]
+Description=Sync kamui skills from GitHub main
+
+[Service]
+Type=oneshot
+Environment="PATH=$timer_path"
+ExecStart="$sync_script"
+EOF
+
+    cat >"$systemd_user_dir/kamui-skills-sync.timer" <<'EOF'
+[Unit]
+Description=Periodically sync kamui skills
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+RandomizedDelaySec=1min
+Unit=kamui-skills-sync.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    systemd_wants_dir="$systemd_user_dir/timers.target.wants"
+    mkdir -p "$systemd_wants_dir"
+    ln -sf "$systemd_user_dir/kamui-skills-sync.timer" \
+      "$systemd_wants_dir/kamui-skills-sync.timer"
+
+    if systemctl --user daemon-reload >/dev/null 2>&1; then
+      systemctl --user start kamui-skills-sync.timer
+      systemctl --user start kamui-skills-sync.service
+      printf 'kamui skills timer: installed and started systemd user timer\n'
+    else
+      printf 'kamui skills timer: installed systemd user timer; it will start with the next user systemd session\n'
+    fi
+    ;;
+
+  Darwin)
+    case "$sync_script$timer_path" in
+      *'&'* | *'<'* | *'>'*) fail "repository path or PATH contains XML-sensitive characters" ;;
+    esac
+
+    launch_agents_dir="$HOME/Library/LaunchAgents"
+    launch_logs_dir="$HOME/Library/Logs"
+    launch_label="com.kamui.skills-sync"
+    launch_plist="$launch_agents_dir/$launch_label.plist"
+    mkdir -p "$launch_agents_dir" "$launch_logs_dir"
+
+    cat >"$launch_plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$launch_label</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$sync_script</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$timer_path</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>900</integer>
+  <key>StandardOutPath</key>
+  <string>$launch_logs_dir/kamui-skills-sync.log</string>
+  <key>StandardErrorPath</key>
+  <string>$launch_logs_dir/kamui-skills-sync.log</string>
+</dict>
+</plist>
+EOF
+
+    launch_domain="gui/$(id -u)"
+    launchctl bootout "$launch_domain/$launch_label" 2>/dev/null || true
+    launchctl bootstrap "$launch_domain" "$launch_plist"
+    launchctl enable "$launch_domain/$launch_label"
+    launchctl kickstart -k "$launch_domain/$launch_label"
+    printf 'kamui skills timer: installed launchd agent\n'
+    ;;
+
+  *)
+    fail "unsupported operating system: $(uname -s)"
+    ;;
+esac

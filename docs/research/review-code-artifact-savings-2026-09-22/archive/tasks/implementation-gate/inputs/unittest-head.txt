@@ -1,0 +1,22 @@
+test_open_refuses_duplicate (test_accounts.AccountsTest.test_open_refuses_duplicate) ... ok
+test_post_refuses_zero_and_overdraft (test_accounts.AccountsTest.test_post_refuses_zero_and_overdraft) ... ok
+test_post_updates_balance (test_accounts.AccountsTest.test_post_updates_balance) ... ok
+test_refused_transfer_changes_nothing (test_accounts.AccountsTest.test_refused_transfer_changes_nothing) ... ok
+test_transfer_moves_money (test_accounts.AccountsTest.test_transfer_moves_money) ... ok
+test_only_tellers_post (test_auth.AuthTest.test_only_tellers_post) ... ok
+test_owner_views_only_own_account (test_auth.AuthTest.test_owner_views_only_own_account) ... ok
+test_staff_view_every_account (test_auth.AuthTest.test_staff_view_every_account) ... ok
+test_unknown_role_sees_nothing (test_auth.AuthTest.test_unknown_role_sees_nothing) ... ok
+test_statement (test_cli.CliTest.test_statement) ... ok
+test_unknown_account_exits_2 (test_cli.CliTest.test_unknown_account_exits_2) ... ok
+test_cli_refuses_reversed_range (test_filter.FilterTest.test_cli_refuses_reversed_range) ... ok
+test_opening_and_closing_balances (test_filter.FilterTest.test_opening_and_closing_balances) ... ok
+test_rows_are_inclusive (test_filter.FilterTest.test_rows_are_inclusive) ... ok
+test_format_cents (test_statement.StatementTest.test_format_cents) ... ok
+test_render_ends_with_closing_balance (test_statement.StatementTest.test_render_ends_with_closing_balance) ... ok
+test_rows_carry_running_balance (test_statement.StatementTest.test_rows_carry_running_balance) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.003s
+
+OK

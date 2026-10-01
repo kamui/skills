@@ -1,0 +1,2 @@
+session fd3eda59-92de-4464-ac1e-7058e71b123d transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd207-probes-p15b/fd3eda59-92de-4464-ac1e-7058e71b123d.jsonl sha256 97a6ec1f168cacc984e0500fd2db2b4adccbfc02ece0a38cd1808d235d6c6f81

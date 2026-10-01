@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-C-findings",
+  "arm": "C",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite of `last_n` is not equivalent to the slice it replaces and contradicts the PR's own stated intent (\"must return the whole list when `n` exceeds its length, exactly as the slice did\"). Flagged one correctness issue below with a concrete counterexample."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "`items[len(items) - n:]` is not equivalent to `items[-n:]`, and it breaks exactly the case the PR claims to preserve.\n\nPython slicing normalizes a negative start index by adding `len(items)` **once**, then clamps to 0 if still negative. `items[-n:]` relies on that single normalization: the effective start is `max(0, len(items) - n)`, so for `n >= len(items)` it correctly clamps to 0 and returns the whole list.\n\nThe rewrite computes `len(items) - n` itself and passes that literal as the slice bound. When this value is negative (i.e. `n > len(items)`), Python normalizes it *again* by adding `len(items)` a second time, giving `max(0, 2*len(items) - n)` instead of `max(0, len(items) - n)`.\n\nConcrete example: `items = [1, 2, 3]`, `n = 4` (n exceeds length, the exact case called out in the PR description):\n- old: `items[-4:]` → `[1, 2, 3]` (whole list, as intended)\n- new: `items[3 - 4:]` = `items[-1:]` → `[3]` (wrong — drops two elements)\n\nThis is wrong for any `len(items) < n < 2*len(items)`. It's also wrong for `n = 0`: old `items[-0:]` → whole list `[1, 2, 3]`; new `items[3:]` → `[]`.\n\nThe patch needs to clamp explicitly, e.g. `items[max(0, len(items) - n):]`, or simply keep `items[-n:]` if there was no actual reason to change it.",
+      "trailer": "last_n-slice-bound-not-equivalent",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 2, "end_line": 2, "side": "RIGHT"},
+      "priority": "P0",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "correctness"
+    }
+  ],
+  "stop": null
+}

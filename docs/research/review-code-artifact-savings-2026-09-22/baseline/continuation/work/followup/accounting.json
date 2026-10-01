@@ -1,0 +1,67 @@
+{
+  "accounted": {
+    "candidates": [],
+    "premises": [
+      "accounts/transfer-frozen-only-mutation-paths",
+      "accounts/transfer-frozen-check-precedes-mutation"
+    ]
+  },
+  "format": "verifier-accounting/2",
+  "manifest_sha256": "52670f5520a6d884231312ae7a97ee9560368e1f7b2bdda13c630759a7b090af",
+  "raw_return": "/tmp/rcs-savings/baseline/continuation/work/followup/raw-return.json",
+  "raw_return_sha256": "bbf9d5ccb7b96bb77de227393718d11acacd32218e2d6f33ba27056cd9e172b1",
+  "return": {
+    "candidates": [],
+    "duplicate_groups": [],
+    "manifest_sha256": "52670f5520a6d884231312ae7a97ee9560368e1f7b2bdda13c630759a7b090af",
+    "observation": null,
+    "premises": [
+      {
+        "evidence": [
+          {
+            "coordinate": "ledger/accounts.py:73",
+            "text": "account.entries.append(entry)"
+          },
+          {
+            "coordinate": "ledger/accounts.py:94-95",
+            "text": "debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\ncredit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+          },
+          {
+            "coordinate": "ledger/statement.py:18",
+            "text": "for entry in account.entries:"
+          },
+          {
+            "coordinate": "ledger/cli.py:22",
+            "text": "ledger.post(item[\"number\"], date.fromisoformat(day), description, cents)"
+          }
+        ],
+        "id": "accounts/transfer-frozen-only-mutation-paths",
+        "ruling": "holds"
+      },
+      {
+        "evidence": [
+          {
+            "coordinate": "ledger/accounts.py:87-88",
+            "text": "debit = self.get(source)\ncredit = self.get(target)"
+          },
+          {
+            "coordinate": "ledger/accounts.py:89-91",
+            "text": "for account in (debit, credit):\n    if account.frozen:\n        raise LedgerError(f\"account {account.number} is frozen\")"
+          },
+          {
+            "coordinate": "ledger/accounts.py:94-95",
+            "text": "debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\ncredit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+          }
+        ],
+        "id": "accounts/transfer-frozen-check-precedes-mutation",
+        "ruling": "holds"
+      }
+    ]
+  },
+  "structurally_complete": true,
+  "violations": [],
+  "withheld": {
+    "candidates": [],
+    "premises": []
+  }
+}

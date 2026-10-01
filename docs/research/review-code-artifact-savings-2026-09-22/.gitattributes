@@ -1,0 +1,5 @@
+# Verbatim captured evidence: reviewer outputs and a hash-pinned archive input keep their exact bytes.
+baseline/*/work/** -whitespace
+archive/tasks/implementation-gate/inputs/criterion-5.txt -whitespace
+control/*/work/** -whitespace
+treatment/*/work/** -whitespace

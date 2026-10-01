@@ -1,0 +1,2 @@
+session c75cab68-a6a8-46e1-ab40-1d81966af2ef transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd149-probes-p6-work/c75cab68-a6a8-46e1-ab40-1d81966af2ef.jsonl sha256 d41d407fbfa60cdbc98c7ca4a31056113cc9e85bfafd7318d1f97cf41df68949

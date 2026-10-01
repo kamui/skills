@@ -1,0 +1,12 @@
+{
+  "probe": "P27-ledger-smoke",
+  "status": "unestablished",
+  "summary": "The record the study ledger's third event cites. Before any chargeable work, the pinned budget.py was smoke-tested against this study's own freshly opened ledger: a USD 0.01 pre-freeze reservation, id probe-dryrun, then its settlement at USD 0. Nothing ran and nothing was charged. The reservation was issued by hand with the evidence argument 'x' and no --ticket flag, so it carries ticket 147, which is budget.py's default, and 'x' in both evidence fields; the settlement named ticket 207 and pointed here. This directory did not exist until the review of PR #211 found the dangling citation.",
+  "establishes": "Nothing as a probe: this smoke test was run directly rather than through probe.py, so there is no retained launch record, stdout or exit status for it, and the recorder refuses to call anything established without one. The ledger's own two events are the only evidence that it happened, and they show what it did: one reservation and one zero settlement, which is exactly what the chain and the totals reconcile to.",
+  "residual": "P27 is outside the specification's P00-P26 catalogue; it is a record, not a qualification probe. The placeholder values in the ledger's second event stay as written. The ledger is append-only and terminally stopped, and P21's shutdown gate scored its 28-event chain; rewriting or re-chaining those events to tidy two fields would falsify the record the gate cleared, which is worse than the placeholders. This note is the correction.",
+  "refuted_by": null,
+  "observed_exit": null,
+  "expected_exit": null,
+  "read_from": "the probe's own retained output, not asserted beside it",
+  "recorded_at": "2026-09-12T21:21:59.013532+00:00"
+}

@@ -1,0 +1,38 @@
+{
+  "finalize": {
+    "exit": 0,
+    "stdout": "status Incomplete\ncoverage incomplete\nrecord /home/jack/.cache/rc357x/root/continuation/work/incomplete/record.json\npayload /home/jack/.cache/rc357x/root/continuation/work/incomplete/payload.json\nbatch /home/jack/.cache/rc357x/root/continuation/work/incomplete/batch.json\nreport /home/jack/.cache/rc357x/root/continuation/work/incomplete/report.md\n"
+  },
+  "status": "Incomplete",
+  "coverage": "incomplete",
+  "outstanding": [
+    "accounts/refusal-atomicity: required data-integrity premise, no awaited verifier route (disposable exercise record)"
+  ],
+  "allowance": {
+    "initial_spent": true,
+    "follow_up_spent": false
+  },
+  "lineage": [
+    "/home/jack/.cache/rc357x/root/continuation/seed/r1/record.json",
+    "/home/jack/.cache/rc357x/root/continuation/seed/r2/record.json"
+  ],
+  "lineage_check": {
+    "exit": 0
+  },
+  "implement_publish_gate_met": false,
+  "review_code_publish_emission": {
+    "COMMENT": {
+      "exit": 0,
+      "stdout": ""
+    },
+    "APPROVE": {
+      "exit": 1,
+      "stdout": "summary: event-status: APPROVE requires Approved\n"
+    },
+    "REQUEST_CHANGES": {
+      "exit": 1,
+      "stdout": "summary: event-status: REQUEST_CHANGES requires Changes Requested\n"
+    }
+  },
+  "unmet": []
+}

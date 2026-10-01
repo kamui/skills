@@ -1,0 +1,9 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-A-clean",
+  "arm": "A",
+  "outcome": "clean",
+  "summary": {"body": "Reviewed the one-line diff in `store.py`: a comment typo fix (`Retrun` → `Return`) with no code changes. This matches the stated intent exactly and introduces no behavior change. No issues found."},
+  "items": [],
+  "stop": null
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Code"
+  short_description: "Review local changes or a pull request"
+  default_prompt: "Use $review-code to review my changes without publishing."

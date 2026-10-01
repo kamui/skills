@@ -1,0 +1,20 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-C-findings",
+  "arm": "C",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite of `last_n` does not preserve the slicing semantics it claims to. `items[len(items) - n:]` only matches `items[-n:]` when `0 < n <= len(items)`; it diverges exactly in the cases the PR says it must handle.\n\n- **`n = 0`**: the old code (`items[-n:]` with `-0 == 0`) returns the *whole list*. The new code computes `items[len(items):]`, which is always `[]`. Silent behavior change for a common boundary value.\n- **`n` slightly greater than `len(items)`**: the PR explicitly states the function \"must return the whole list when `n` exceeds its length, exactly as the slice did.\" But for `items = [1,2,3,4,5]`, `n = 6`: old code gives `items[-6:]`, which Python clamps to the full list `[1,2,3,4,5]`. New code gives `items[5-6:] == items[-1:] == [5]` — a single element instead of the whole list. This directly contradicts the stated intent and will silently truncate results for any `n` in `(len(items), 2*len(items))`.\n\nOnly for `0 < n <= len(items)` do the two expressions agree. This needs a fix (e.g. clamp `n` to `[0, len(items)]` before slicing, or just revert to `items[-n:]`, which already has correct behavior for all these cases) plus a test covering `n = 0` and `n > len(items)`.", "trailer": ""},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "`items[len(items) - n:]` is not equivalent to `items[-n:]` outside the range `0 < n <= len(items)`, breaking the two cases the PR explicitly calls out:\n\n- `n = 0`: old returns the whole list (`items[-0:] == items[0:]`); new returns `[]` (`items[len(items):]`).\n- `n > len(items)` but `n < 2*len(items)` (e.g. `len(items)=5, n=6`): old returns the whole list (`items[-6:]` clamps to full list); new returns only `items[-1:]`, i.e. one element instead of the full list — the exact regression the PR text says must not happen.\n\nSuggest reverting to `items[-n:]` (which already satisfies the stated requirement for all `n >= 0`) or explicitly clamping `n` to `[0, len(items)]` before slicing, and adding tests for `n = 0` and `n` just above `len(items)`.",
+      "trailer": "",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 8},
+      "priority": "P0",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "incorrect-boundary-behavior"
+    }
+  ],
+  "stop": null
+}

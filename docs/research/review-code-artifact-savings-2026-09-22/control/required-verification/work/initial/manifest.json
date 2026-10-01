@@ -1,0 +1,24 @@
+{
+  "batch": {
+    "id": "initial",
+    "phase": "initial"
+  },
+  "brief_sha256": "030ea51efd0e1e4ecac4780ff3c37b18931c5038c44ff4b0caa78a8f062d513b",
+  "candidate_ids": [
+    "ledger/grant-owner-check-outside-auth"
+  ],
+  "format": "verifier-manifest/2",
+  "input_sha256": "698ec9a59248ea27ba0a2732258268cb57a47fc60aa27f6969f645b14ea4cef8",
+  "premise_ids": [
+    "premise-refused-grant-revoke-no-change",
+    "premise-delegate-view-scoped",
+    "premise-delegate-never-posts"
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "a13922e76f42d9757608530348200affbf3bde2f",
+    "id": "review-a13922e",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/control/required-verification/repo"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "assistant_lines": 81,
+  "classification": "a file tool's path is classified against the recorded roots whether or not it still exists; a shell token that does not resolve today is unresolved, never counted as inside",
+  "efforts": {
+    "high": 81
+  },
+  "fresh_context": true,
+  "models": {
+    "claude-sonnet-5": 81
+  },
+  "paths_named": 13,
+  "paths_outside_permitted_roots": [],
+  "paths_unresolved": [],
+  "permitted_roots": [
+    "work",
+    "clone",
+    "inputs",
+    "module-cache",
+    "build-cache"
+  ],
+  "permitted_roots_note": "labels, not paths: a clone directory is named after its target and this record is public",
+  "read_outside_permitted_roots": false,
+  "root_user_messages": 1,
+  "summary_records": 0,
+  "synthetic_error_lines": 0,
+  "tool_calls": {
+    "Bash": 39,
+    "Write": 5
+  },
+  "transcript": "transcript-target-A.jsonl",
+  "unresolved_shell_paths": false
+}

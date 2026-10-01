@@ -1,0 +1,31 @@
+{
+  "accepted_at": "2026-09-12T10:33:18.121474+00:00",
+  "arm": "C",
+  "artifact_id": "bounded-discovery-payload-receipt",
+  "attempt_id": "probe-p22-C-stopped",
+  "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "completion": "stopped-budget",
+  "contract_validator": null,
+  "item_count": 0,
+  "item_types": [],
+  "items_present": true,
+  "key_paths": [
+    "arm",
+    "attempt_id",
+    "outcome",
+    "schema_version",
+    "stop.detail",
+    "stop.reason",
+    "summary.body"
+  ],
+  "outcome": "stopped",
+  "payload_sha256": "16bfbc2e624466ce70f92297ebff2cd8f9fab27ecf39ef29068d6ca499b9dd84",
+  "produced_by": "coordinator",
+  "schema_version": "bounded-discovery-payload-v1",
+  "source_form": "review-payload.json",
+  "stop": {
+    "detail": "the attempt ended as stopped-budget and retained no payload",
+    "reason": "budget"
+  },
+  "validator_sha256": "c6c1fda996c8ad6ec7a95851e70049a2eeba54587939669ecdeb2d27d0bab030"
+}

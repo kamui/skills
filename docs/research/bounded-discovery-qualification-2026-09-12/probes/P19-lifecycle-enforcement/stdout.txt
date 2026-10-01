@@ -1,0 +1,1 @@
+lifecycle: 17 claims, 8 refused before any worker, 9 events written when they happened

@@ -1,0 +1,157 @@
+{
+  "schema": "implementation-gate-record/2",
+  "profile": "implementation-gate",
+  "workflow": "v5b-24",
+  "run": {
+    "repository": "/tmp/rcs-savings/baseline/implementation-gate/repo",
+    "target": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+    "base_ref": "main",
+    "base_sha": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "context": "c6f93b91a90cfb272435e704bdf117d13f1b236401814c252ef638cb376ff7c5",
+    "issues": [],
+    "specs": [
+      "ledger-spec/statement-date-filter"
+    ],
+    "coverage": "complete"
+  },
+  "status": "Approved",
+  "summary": {
+    "body": "**Approved (advisory)** \u2014 no findings.\n\n**Intent:** Let `ledger statement` accept optional inclusive `--since`/`--until` date bounds, add an opening-balance line and range-scoped closing balance, and document the new flags.\n\n**Issue fit:** Met \u2014 all six spec-ledger-spec/statement-date-filter criteria are satisfied: bounded, inclusive filtering; the opening-balance line and its before-`--since` sum; range-restricted rows with running balances that continue from the opening balance; the `--until`-scoped (or whole-history) closing balance; exit-2 rejection of an invalid date or a reversed range; and the README update. Source: user-supplied spec; commit messages in the range.\n\n**Coverage:** Complete merge-base diff reviewed (README.md, ledger/cli.py, ledger/statement.py, tests/test_filter.py); unchanged ledger/accounts.py, ledger/auth.py, and the three pre-existing test modules inspected for regressions, none found. Caller-supplied `unittest discover` (17/17 pass) and the two criterion-5 CLI exercises accepted as exact-head, clean-tree evidence; reviewer ran four additional focused CLI invocations (--until-only, --since-only, and two non-canonical date formats) to settle a candidate by trace.\n\n**Reviewed:** Range `2301c83ee0b2ba0248fe3d2d1f6cd481963545ab...2ba40465ef91f15b2963a4b12e80f46ee0e9efae`: `2ba4046` against merge-base `2301c83`.\n\n## Observations\n\n- `iso_day` delegates entirely to `date.fromisoformat`, which on Python \u226511 (the reviewed environment runs 3.14.7) accepts ISO 8601 forms other than `YYYY-MM-DD` \u2014 e.g. `--since 2026-W01-1` (a week-date string) parses as 2025-12-29 instead of being rejected \u2014 looser than spec item 1's documented format and item 5's invalid-date rejection. Evidence: ledger/cli.py:25-30; reviewer execution: `--since 2026-W01-1` exits 0 and opens with 2025-12-29 rather than exiting 2.\n\n<!-- review-run head=2ba40465ef91f15b2963a4b12e80f46ee0e9efae base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-24 context=c6f93b91a90cfb272435e704bdf117d13f1b236401814c252ef638cb376ff7c5 issues=none coverage=complete -->\n",
+    "trailer": "<!-- review-run head=2ba40465ef91f15b2963a4b12e80f46ee0e9efae base-ref=main base-sha=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab merge-base=2301c83ee0b2ba0248fe3d2d1f6cd481963545ab workflow=v5b-24 context=c6f93b91a90cfb272435e704bdf117d13f1b236401814c252ef638cb376ff7c5 issues=none coverage=complete -->"
+  },
+  "items": [
+    {
+      "type": "observation",
+      "markdown": "`iso_day` delegates entirely to `date.fromisoformat`, which on Python \u226511 (the reviewed environment runs 3.14.7) accepts ISO 8601 forms other than `YYYY-MM-DD` \u2014 e.g. `--since 2026-W01-1` (a week-date string) parses as 2025-12-29 instead of being rejected \u2014 looser than spec item 1's documented format and item 5's invalid-date rejection. Evidence: ledger/cli.py:25-30; reviewer execution: `--since 2026-W01-1` exits 0 and opens with 2025-12-29 rather than exiting 2."
+    }
+  ],
+  "record": {
+    "repository": "/tmp/rcs-savings/baseline/implementation-gate/repo",
+    "paths": {
+      "private_dir": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs",
+      "store": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/review-context.json",
+      "composition": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/composition.json",
+      "addenda": "/tmp/rcs-savings/baseline/implementation-gate/work/private.4XwGSs/addenda",
+      "skill_root": "/tmp/rcs-savings/skills/d8c2dd9/skills/review-code",
+      "evidence_packet": "/tmp/rcs-savings/baseline/implementation-gate/inputs/evidence.md",
+      "spec": "/tmp/rcs-savings/baseline/implementation-gate/inputs/spec.md"
+    },
+    "requirements": [
+      {
+        "source": "spec-ledger-spec/statement-date-filter/1",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/cli.py:40-41 adds optional --since/--until; ledger/statement.py:37-40 filters entries with inclusive day<since/day>until bounds"
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/2",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/statement.py:48-49 prints \"Opening balance: \" right after the heading when since is set, using balance_before (statement.py:17-19), the sum of entries dated before since"
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/3",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/statement.py:27-42: rows outside since..until are skipped after running is incremented, so the first listed row's running balance equals balance_before(since) plus its own amount; tests/test_filter.py:27-31 confirms Opening balance: 100.00 followed by running 60.00 for a -40.00 row"
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/4",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/statement.py:52-53 uses balance_through(until) (statement.py:22-24, sum of entries dated on or before until) when until is set, else account.balance()"
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/5",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "ledger/cli.py:25-30 (iso_day raises ArgumentTypeError, causing argparse to exit 2) and cli.py:48-50 (explicit since>until check, exit 2 with stderr message); inputs/criterion-5.txt records exit 2 for 2026-13-01 and for a reversed --since/--until at head 2ba4046"
+      },
+      {
+        "source": "spec-ledger-spec/statement-date-filter/6",
+        "class": "acceptance",
+        "disposition": "met",
+        "evidence": "README.md:7 adds an example invocation with both flags; README.md:12 documents both as inclusive and optional and states the opening/closing balance behavior"
+      }
+    ],
+    "files": [
+      {
+        "path": "README.md",
+        "state": "reviewed"
+      },
+      {
+        "path": "ledger/cli.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "ledger/statement.py",
+        "state": "reviewed"
+      },
+      {
+        "path": "tests/test_filter.py",
+        "state": "reviewed"
+      }
+    ],
+    "check_evidence": [
+      {
+        "check": "python3 -m unittest discover -s tests -v",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "accepted",
+        "reason": "supplied by caller; exact reviewed head, clean committed tree, matching Python 3.14.7/stdlib-only environment, complete readable output showing 17/17 pass (inputs/unittest-head.txt)"
+      },
+      {
+        "check": "python3 -m ledger.cli statement /dev/null 1001 --since 2026-13-01",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "accepted",
+        "reason": "supplied acceptance exercise for criterion 5 (invalid date); exact head, exit 2, output in inputs/criterion-5.txt"
+      },
+      {
+        "check": "python3 -m ledger.cli statement /dev/null 1001 --since 2026-09-03 --until 2026-09-01",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "accepted",
+        "reason": "supplied acceptance exercise for criterion 5 (reversed range); exact head, exit 2, output in inputs/criterion-5.txt"
+      },
+      {
+        "check": "python3 -m ledger.cli statement <tmp.json> 1001 --until 2026-09-01 (no --since)",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "reviewer-executed",
+        "reason": "no supplied evidence exercised --until alone; ran to confirm no opening-balance line and closing balance restricted to on/before until with no crash"
+      },
+      {
+        "check": "python3 -m ledger.cli statement <tmp.json> 1001 --since 2026-09-01 (no --until)",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "reviewer-executed",
+        "reason": "no supplied evidence exercised --since alone; ran to confirm opening balance prints and closing balance covers every entry (until absent)"
+      },
+      {
+        "check": "python3 -m ledger.cli statement <tmp.json> 1001 --since 20260901",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "reviewer-executed",
+        "reason": "investigated iso_day's reliance on date.fromisoformat; this non-dashed form parses to the same correct date, no divergence"
+      },
+      {
+        "check": "python3 -m ledger.cli statement <tmp.json> 1001 --since 2026-W01-1",
+        "head": "2ba40465ef91f15b2963a4b12e80f46ee0e9efae",
+        "outcome": "reviewer-executed",
+        "reason": "confirmed date.fromisoformat accepts an ISO week-date string outside YYYY-MM-DD, exits 0 with an unexpected 2025-12-29 date instead of exiting 2; basis for the published observation"
+      }
+    ],
+    "verification": {
+      "tasks": [],
+      "batches": [],
+      "allowance": {
+        "initial_spent": false,
+        "follow_up_spent": false,
+        "carried_from": null
+      },
+      "outstanding": []
+    },
+    "routed": {
+      "unresolved": [],
+      "disputed": [],
+      "unrecoverable_inputs": []
+    }
+  }
+}

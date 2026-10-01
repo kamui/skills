@@ -1,0 +1,21 @@
+{
+  "batch": {
+    "id": "followup-1",
+    "phase": "follow-up"
+  },
+  "brief_sha256": "81e4161d2a1ea507216717c451ff8414e6bbf353aa6893b68eaba76f1d23f357",
+  "candidate_ids": [],
+  "format": "verifier-manifest/2",
+  "input_sha256": "9ad11c68a3d4f2549c9ae606b91b3109a331757d4f6a256b8778846d2dda76db",
+  "premise_ids": [
+    "accounts/transfer-frozen-only-mutation-paths",
+    "accounts/transfer-frozen-check-precedes-mutation"
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "id": "review-b96a362-followup1",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/baseline/continuation/repo"
+  }
+}

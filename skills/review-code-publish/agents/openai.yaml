@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Code Review"
+  short_description: "Inspect a pull request and publish its review"
+  default_prompt: "Use $review-code-publish to inspect the current pull request and publish its review."

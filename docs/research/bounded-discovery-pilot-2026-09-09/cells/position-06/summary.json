@@ -1,0 +1,156 @@
+{
+  "accounting": {
+    "reconciliation_residual_usd": "0.0055772",
+    "self_report_usd": "9.0040632",
+    "settled_usd": "9.0040632",
+    "usage_split_total_usd": "8.998486",
+    "within_tolerance": true
+  },
+  "arm": "C",
+  "attempt_ordinal": 1,
+  "block": "pilot",
+  "completion": "stopped-budget",
+  "dispatch_template_sha256": "a1c34371abe4819512db336543bfc6d160765addf4f1177e57b4b76ad8dd626c",
+  "disposition": "dispatched",
+  "egress": {
+    "attempts": 143,
+    "refused": 66
+  },
+  "elapsed_seconds": 2148.942,
+  "fidelity": {
+    "by_role": {
+      "finder": {
+        "assistant_lines": 34,
+        "expected_effort": "high",
+        "expected_model": "claude-opus-5",
+        "transcripts": 1,
+        "verified": true
+      },
+      "primary": {
+        "assistant_lines": 187,
+        "expected_effort": "high",
+        "expected_model": "claude-sonnet-5",
+        "transcripts": 1,
+        "verified": true
+      },
+      "worker": {
+        "assistant_lines": 51,
+        "expected_effort": "high",
+        "expected_model": "claude-opus-5",
+        "transcripts": 1,
+        "verified": true
+      }
+    },
+    "model_effort_verified": true,
+    "models_priced": [
+      "claude-opus-5",
+      "claude-sonnet-5"
+    ],
+    "transcript_count": 3
+  },
+  "finder": {
+    "cost_usd": 1.21765,
+    "discovery_sha256": "a8f67aec88d1c4a47850738cc4a66505e6a858b9968271938b52db7ac804073c",
+    "problem_count": 0
+  },
+  "isolation": {
+    "forbidden_paths_examined": 55,
+    "mounts_limited_to_cell_tree_caches_and_home": true,
+    "post_dispatch_checks": [
+      {
+        "check": "forbidden paths are absent",
+        "passed": true
+      },
+      {
+        "check": "permitted roots exist and hold no forbidden path",
+        "passed": true
+      },
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the preparation attestation covers these exact object stores, with no leak-set hit",
+        "passed": true
+      },
+      {
+        "check": "egress proxy refuses a host that is not allow-listed",
+        "passed": true
+      }
+    ],
+    "post_dispatch_ready": true,
+    "pre_dispatch_checks": [
+      {
+        "check": "forbidden paths are absent",
+        "passed": true
+      },
+      {
+        "check": "permitted roots exist and hold no forbidden path",
+        "passed": true
+      },
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the preparation attestation covers these exact object stores, with no leak-set hit",
+        "passed": true
+      },
+      {
+        "check": "egress proxy refuses a host that is not allow-listed",
+        "passed": true
+      }
+    ],
+    "pre_dispatch_ready": true
+  },
+  "phases": [
+    {
+      "cost_usd": 2.8751205999999994,
+      "elapsed_seconds": 884.777,
+      "exit_code": 0,
+      "is_error": false,
+      "label": "primary-phase-1",
+      "num_turns": 72,
+      "subtype": "success"
+    },
+    {
+      "cost_usd": 4.9112925500000015,
+      "elapsed_seconds": 1262.196,
+      "exit_code": 1,
+      "is_error": true,
+      "label": "primary-phase-2",
+      "num_turns": 28,
+      "subtype": "error_max_budget_usd"
+    }
+  ],
+  "position": 6,
+  "preparation": {
+    "attestation_ready": true,
+    "checks": [
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the mirror has no alternate object store",
+        "passed": true
+      },
+      {
+        "check": "no sealed leak-set object resolves in the clone or its mirror",
+        "passed": true
+      }
+    ]
+  },
+  "problems": [],
+  "read_audit_passed": true,
+  "rendered_prompt_hmac_sha256": {
+    "admission.md": "cc7a9fe81375c6353397166872fce47149225c4558523e6be05f6099e7515deb",
+    "admission.rendered.md": "8c08e173e04f4b16a6ecb09ab2710013c360bd0078d8ffac3e25ace32ae1884a",
+    "agents.json": "0e494211890cd15dd8bb7fdc9a82bdabdb0cda9ba1ffab3bd6d6bb0e267e7e24",
+    "dispatch.md": "b05c3b1e080502bb121c7570786c099063c98d44d50db84d89ce6061b5b66ce1",
+    "finder-prompt.md": "61e480ad5d218bf42c8ec190218902b9cdcdf2e1cab04ec0793cc32e7d3f80fd"
+  },
+  "replicate": 1,
+  "schema_version": "bounded-discovery-v1",
+  "worker_model": "claude-opus-5"
+}

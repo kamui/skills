@@ -1,0 +1,2 @@
+session 3b43ece6-dd64-4eb7-921d-c523eb471b3d transcripts: 1
+/Users/jack/.claude/projects/-private-tmp-bd148-adjudication-clap-6212/3b43ece6-dd64-4eb7-921d-c523eb471b3d.jsonl sha256 d580ef42bccabc5237339913cce958c919a1c626b498ea81ad17c3258fe7c632

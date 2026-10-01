@@ -1,0 +1,61 @@
+{
+  "batch": {
+    "id": "follow-up",
+    "phase": "follow-up"
+  },
+  "candidates": [],
+  "premises": [
+    {
+      "area": "data-integrity",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:68-73",
+          "text": "if account.frozen:\n            raise LedgerError(f\"account {number} is frozen\")\n        ...\n        account.entries.append(entry)"
+        },
+        {
+          "coordinate": "ledger/accounts.py:89-95",
+          "text": "for account in (debit, credit):\n            if account.frozen:\n                raise LedgerError(f\"account {account.number} is frozen\")\n        ...\n        debit.entries.append(...)\n        credit.entries.append(...)"
+        },
+        {
+          "coordinate": "ledger/cli.py:20-21",
+          "text": "ledger.post(item[\"number\"], ...) on freshly opened accounts"
+        }
+      ],
+      "id": "premise-entry-paths",
+      "premise": "At head b96a362, the only code that appends to an Account's entries list is Ledger.post and Ledger.transfer in ledger/accounts.py (across ledger/*.py, non-test), and each refuses a frozen account before any append."
+    },
+    {
+      "area": "data-integrity",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:83-95",
+          "text": "validation and frozen loop precede debit.entries.append and credit.entries.append at lines 94-95"
+        }
+      ],
+      "id": "premise-transfer-atomic",
+      "premise": "At head b96a362, a Ledger.transfer refused because the source or the target is frozen (or for any other LedgerError) mutates neither account: every raise precedes both appends, and neither append can raise between them."
+    }
+  ],
+  "run": {
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "id": "review-b96a362",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "repository": "/tmp/rcs-savings/treatment/continuation/repo"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; disposable copies only; no network, credentials, or destructive effect.",
+  "sources": [
+    {
+      "coordinate": "ledger-spec/account-freeze/criterion-2",
+      "text": "A frozen account accepts no new entries of any kind: postings, transfers out of it, and transfers into it each raise `LedgerError`."
+    },
+    {
+      "coordinate": "ledger-spec/account-freeze/criterion-3",
+      "text": "A refused operation changes no account."
+    },
+    {
+      "coordinate": "AGENTS.md",
+      "text": "A refused operation leaves every account unchanged."
+    }
+  ]
+}

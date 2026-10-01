@@ -1,0 +1,21 @@
+{
+  "schema_version": "bounded-discovery-payload-v1",
+  "attempt_id": "probe-p22-B-findings",
+  "arm": "B",
+  "outcome": "findings",
+  "summary": {"body": "The rewrite of `last_n` does not preserve the slice's clamping behavior and actually breaks the exact case the PR description says it must fix. See the inline finding for a concrete counterexample."},
+  "items": [
+    {
+      "type": "finding",
+      "markdown": "`items[len(items) - n:]` is not equivalent to `items[-n:]` when `n` exceeds `len(items)`, so this change contradicts its own stated intent (\"must return the whole list when `n` exceeds its length, exactly as the slice did\").\n\nCounterexample: `items = [1, 2, 3]`, `n = 5`.\n- Old: `items[-5:]` → the negative index is more negative than `-len(items)`, so Python clamps the start to `0`, returning the whole list `[1, 2, 3]` (correct, per the stated intent).\n- New: `items[len(items) - n:]` = `items[3 - 5:]` = `items[-2:]` → this is itself a valid negative index that wraps around again, returning `[2, 3]` — a truncated, wrong result.\n\nMore generally, the new code is wrong for any `len(items) < n < 2 * len(items)` (it silently re-wraps instead of clamping), and it also changes behavior for `n = 0`: `items[-0:]` is `items[0:]` (whole list), but `items[len(items) - 0:]` is `items[len(items):]` (empty list).\n\nThe original one-line slice `items[-n:]` already handled `n > len(items)` correctly via Python's own clamping, so this change appears to be an unnecessary and incorrect rewrite.",
+      "trailer": "last_n-breaks-n-greater-than-length",
+      "anchor": {"type": "line", "path": "store.py", "start_line": 8, "end_line": 8, "side": "RIGHT"},
+      "priority": "P0",
+      "action": "must-fix",
+      "blocking": true,
+      "kind": "logic-error",
+      "fix": "Revert to `return items[-n:]`, which already returns the whole list whenever `n >= len(items)` (including `n == 0`) and otherwise matches the new code for `0 < n <= len(items)`."
+    }
+  ],
+  "stop": null
+}

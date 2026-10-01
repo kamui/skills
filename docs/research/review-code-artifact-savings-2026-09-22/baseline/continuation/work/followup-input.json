@@ -1,0 +1,53 @@
+{
+  "run": {
+    "id": "review-b96a362-followup1",
+    "repository": "/tmp/rcs-savings/baseline/continuation/repo",
+    "base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab",
+    "head": "b96a362e99ce4f5b6b1fe26ad02fda66e8343723",
+    "merge_base": "2301c83ee0b2ba0248fe3d2d1f6cd481963545ab"
+  },
+  "batch": {
+    "id": "followup-1",
+    "phase": "follow-up"
+  },
+  "run_policy": "Focused commands at most five minutes, provisioning ten; no production service, credentials, or destructive effect.",
+  "sources": [
+    {
+      "coordinate": "spec-ledger-spec/account-freeze/criterion-2",
+      "text": "A frozen account accepts no new entries of any kind: postings, transfers out of it, and transfers into it each raise LedgerError."
+    },
+    {
+      "coordinate": "spec-ledger-spec/account-freeze/criterion-3",
+      "text": "A refused operation changes no account."
+    }
+  ],
+  "candidates": [],
+  "premises": [
+    {
+      "id": "accounts/transfer-frozen-only-mutation-paths",
+      "area": "data-integrity",
+      "premise": "Ledger.post and Ledger.transfer are the only sites in the repository that append an Entry to an Account's entries list, so their frozen checks are the only gates spec criterion 2 needs.",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:73",
+          "text": "account.entries.append(entry)"
+        },
+        {
+          "coordinate": "ledger/accounts.py:94-95",
+          "text": "debit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\ncredit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+        }
+      ]
+    },
+    {
+      "id": "accounts/transfer-frozen-check-precedes-mutation",
+      "area": "data-integrity",
+      "premise": "In Ledger.transfer, the frozen check on both debit and credit runs before either entries.append call, so a frozen account on either side is refused before any mutation, at head b96a362e99ce4f5b6b1fe26ad02fda66e8343723.",
+      "evidence": [
+        {
+          "coordinate": "ledger/accounts.py:89-95",
+          "text": "for account in (debit, credit):\n    if account.frozen:\n        raise LedgerError(f\"account {account.number} is frozen\")\nif debit.balance() < amount:\n    raise LedgerError(f\"transfer would overdraw {source}\")\ndebit.entries.append(Entry(day, f\"transfer to {target}\", -amount))\ncredit.entries.append(Entry(day, f\"transfer from {source}\", amount))"
+        }
+      ]
+    }
+  ]
+}

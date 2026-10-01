@@ -1,0 +1,124 @@
+{
+  "accounting": {
+    "reconciliation_residual_usd": "0.0034858",
+    "self_report_usd": "4.5304828",
+    "settled_usd": "4.5304828",
+    "usage_split_total_usd": "4.526997",
+    "within_tolerance": true
+  },
+  "arm": "A",
+  "attempt_ordinal": 1,
+  "block": "pilot",
+  "completion": "complete",
+  "dispatch_template_sha256": "a1c34371abe4819512db336543bfc6d160765addf4f1177e57b4b76ad8dd626c",
+  "disposition": "dispatched",
+  "egress": {
+    "attempts": 69,
+    "refused": 35
+  },
+  "elapsed_seconds": 1110.633,
+  "fidelity": {
+    "by_role": {
+      "primary": {
+        "assistant_lines": 183,
+        "expected_effort": "high",
+        "expected_model": "claude-sonnet-5",
+        "transcripts": 1,
+        "verified": true
+      }
+    },
+    "model_effort_verified": true,
+    "models_priced": [
+      "claude-sonnet-5"
+    ],
+    "transcript_count": 1
+  },
+  "isolation": {
+    "forbidden_paths_examined": 55,
+    "mounts_limited_to_cell_tree_caches_and_home": true,
+    "post_dispatch_checks": [
+      {
+        "check": "forbidden paths are absent",
+        "passed": true
+      },
+      {
+        "check": "permitted roots exist and hold no forbidden path",
+        "passed": true
+      },
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the preparation attestation covers these exact object stores, with no leak-set hit",
+        "passed": true
+      },
+      {
+        "check": "egress proxy refuses a host that is not allow-listed",
+        "passed": true
+      }
+    ],
+    "post_dispatch_ready": true,
+    "pre_dispatch_checks": [
+      {
+        "check": "forbidden paths are absent",
+        "passed": true
+      },
+      {
+        "check": "permitted roots exist and hold no forbidden path",
+        "passed": true
+      },
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the preparation attestation covers these exact object stores, with no leak-set hit",
+        "passed": true
+      },
+      {
+        "check": "egress proxy refuses a host that is not allow-listed",
+        "passed": true
+      }
+    ],
+    "pre_dispatch_ready": true
+  },
+  "phases": [
+    {
+      "cost_usd": 4.530482799999999,
+      "elapsed_seconds": 1109.363,
+      "exit_code": 0,
+      "is_error": false,
+      "label": "primary-phase-1",
+      "num_turns": 101,
+      "subtype": "success"
+    }
+  ],
+  "position": 4,
+  "preparation": {
+    "attestation_ready": true,
+    "checks": [
+      {
+        "check": "clone is at the pinned head with a clean tree",
+        "passed": true
+      },
+      {
+        "check": "the mirror has no alternate object store",
+        "passed": true
+      },
+      {
+        "check": "no sealed leak-set object resolves in the clone or its mirror",
+        "passed": true
+      }
+    ]
+  },
+  "problems": [],
+  "read_audit_passed": true,
+  "rendered_prompt_hmac_sha256": {
+    "agents.json": "4dce08b5a861e19424bff2a92b12e5e9dd2f7424e305758a94713e21da020e6f",
+    "dispatch.md": "67f981c1ae8bf3ffbe7de344a13b1bc4c81a42bc5ee9f1ca6d8d02b3073ba4dc"
+  },
+  "replicate": 1,
+  "schema_version": "bounded-discovery-v1",
+  "worker_model": "claude-sonnet-5"
+}
