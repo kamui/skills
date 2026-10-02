@@ -8,7 +8,7 @@ Record each task's id, trigger or area, premise and evidence when applicable, ba
 
 After the complete diff, file accounting, and primary falsification, combine selected tasks in one initial batch. Choose an awaited host route before dispatch and record its operation. An agent id or acknowledgment is not completion. With no awaited route or no fresh-context isolation, dispatch nothing and report required verification incomplete, naming `review-wait-unavailable` when appropriate. Never hand back while a batch is pending.
 
-Use a fresh worker without the primary conversation, such as `fork_turns=none`. The builder embeds the worker instructions, return encoding, and applicable specialized procedures, so the primary does not read `verifier.md` or `verifier-concurrency.md`. A failed batch still spends its allowance; repairs and worker changes grant no replacement batch.
+Start the initial batch in a fresh worker without the primary conversation, such as `fork_turns=none`. For the follow-up, resume that worker when available and still isolated from the primary conversation at the same pinned revisions and relevant inputs; otherwise start a fresh worker. The builder embeds the worker instructions, return encoding, and applicable specialized procedures, so the primary does not read `verifier.md` or `verifier-concurrency.md`. A failed batch still spends its allowance; repairs and worker changes grant no replacement batch.
 
 ## Reconcile
 
@@ -48,7 +48,7 @@ After selecting the batch, run relative to this skill root:
 python3 scripts/build_verifier_prompt.py input.json --output <private-dir>/initial
 ```
 
-On exit 0, send only the new bundle's `brief.md` to the fresh-context worker, by absolute path or exact bytes. It prints the bundle's unique ID, which the worker echoes in its inline JSON return. Retain the original private input beside the bundle. A distinct follow-up uses a distinct directory and batch ID. Never dispatch a refused build or use a stale bundle: report a non-zero exit and stop dispatch, repair the input or helper as appropriate, and rerun the build into a new path, which gets a new ID. Unrecoverable mandatory verification follows the review's incomplete-coverage rules.
+On exit 0, send only the new bundle's `brief.md` to the selected verifier, by absolute path or exact bytes. It prints the bundle's unique ID, which the worker echoes in its inline JSON return. Retain the original private input beside the bundle. A distinct follow-up uses a distinct directory and batch ID. Never dispatch a refused build or use a stale bundle: report a non-zero exit and stop dispatch, repair the input or helper as appropriate, and rerun the build into a new path, which gets a new ID. Unrecoverable mandatory verification follows the review's incomplete-coverage rules.
 
 Await the completed response and save it **verbatim** once to a new file, such as `<private-dir>/initial-return.json`, and pass that as `<return>`.
 
