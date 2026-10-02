@@ -1884,8 +1884,7 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
         current = routed.get(key) if isinstance(routed.get(key), list) else []
         names_item = key != "unrecoverable_inputs"
         for entry in entries:
-            identity = task_id(entry)
-            if entry in current or identity in settled or (names_item and (identity in closed or identity not in prior["items"])):
+            if entry in current or task_id(entry) in settled or (names_item and (entry in closed or entry not in prior["items"])):
                 continue
             report.add(f"record.routed.{key}", "prior-record", f"drops `{entry}`; " + (
                 "a routed item survives until its classification or a task in this run settles it" if names_item else
