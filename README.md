@@ -109,9 +109,9 @@ The host agent needs write access to the pull request to post replies and resolv
 
 ### `implement-publish`
 
-Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. It delegates the implementation to the best matching installed skill, creates a suitable branch when the current one is not pull-request ready, and links the spec source in the pull-request body.
+Implements the work described by a spec, issue, or set of tickets, then opens one pull request containing the implementation. The model chooses how to implement, within the user's instructions, any implementation skill they name, and repository conventions. It works on a branch suitable as a pull-request head and links each spec source in the pull-request body.
 
-Before pushing or opening the pull request, it has a fresh-context general-purpose subagent invoke `review-code` in one-shot mode on the local base-to-head range. It addresses blocking findings, then re-verifies them and inspects the complete fix delta so the review still covers the final committed head — resuming the same reviewer where the host can wait for that continuation, otherwise handing the phase to one fresh isolated reviewer whose completion it can await. Every phase runs on a route that returns the result while the step is still active. `review-code-publish` handles the published review afterward.
+Before pushing or opening the pull request, it has a fresh-context subagent invoke `review-code` in one-shot mode on the local base-to-head range. It publishes only when that review is `Approved` with complete coverage at the commit it pushes. `Needs Information`, `Changes Requested`, and `Incomplete` all keep the work local: it fixes warranted findings or supplies what the reviewer asked for, then continues the review from its latest accepted record, resuming the same reviewer or handing the phase to another isolated one. Every phase runs on a route that returns the result while the step is still active. `review-code-publish` handles the published review afterward.
 
 It activates when a caller asks to implement work from a spec or issue and publish the result as a pull request. You can also invoke it directly:
 

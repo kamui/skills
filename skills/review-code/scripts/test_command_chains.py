@@ -3,17 +3,19 @@
 
 Usage: python3 scripts/test_command_chains.py
 Inputs: output.md's `render_review.py` command, implement-publish's prior-record
-continuation and lineage check, the pull-request target's fetch command, the
-publisher's freshness and review-submission block, its dismissal command, a
-disposable Git repository, and a stub `gh` on PATH; no forge access and no live writes.
+continuation, record check and approval gate, the pull-request target's fetch
+command, the publisher's freshness and review-submission block, its dismissal command,
+a disposable Git repository, and a stub `gh` on PATH; no forge access and no live writes.
 Exit 0: checks pass; 1: assertion failure; 2: a subprocess cannot run.
 
 The finalize command, run in the reviewed repository, must write the record, the
 payload and batch the composer produces for the derived composition, fill only
 the record's own paths and the other derived fields the fixtures omit, and stop
 visibly at a refused composition with nothing promoted. implement-publish's
-continuation must finalize from its prior record and pass its documented lineage
-check, which refuses a sibling that forked from an earlier record. The submission
+continuation must finalize from its prior record and pass its documented record
+check, which refuses another head and a sibling that forked from an earlier
+record; its gate must withhold publication from a checked `Needs Information`
+record and permit it only for an `Approved` one. The submission
 block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
 POST failure's own status under a distinct attempted-write stage. Every token
@@ -88,17 +90,12 @@ print({"match": os.environ["GH_HEAD"], "mismatch": "c" * 40, "malformed": "not-a
        "short": os.environ["GH_HEAD"][:7], "two-lines": os.environ["GH_HEAD"] + "\n" + os.environ["GH_HEAD"]}[mode])
 """
 
-IMPLEMENT = SKILL.parent / "implement-publish"
+IMPLEMENT = SKILL.parent / "implement-publish" / "SKILL.md"
+GATE = ["status Approved", "coverage complete"]
 
 
 def command(text: str) -> str:
     found = re.findall(r"^(python3 scripts/render_review\.py .+)$", text, re.MULTILINE)
-    assert len(found) == 1, found
-    return found[0]
-
-
-def lineage_check(text: str) -> str:
-    found = re.findall(r"`(python3 <skill root>/scripts/render_review\.py --check [^`]+)`", text)
     assert len(found) == 1, found
     return found[0]
 
@@ -241,43 +238,79 @@ class Chains(unittest.TestCase):
         self.assertIn("derive failed with exit 2", result.stdout)
         self.assertIn("cannot read composition", result.stdout)
 
-    # --- implement-publish: continuation from a prior record ------------------
+    # --- implement-publish: continuation, record check and approval gate ------
 
-    def test_implement_publish_continues_from_its_accepted_record(self):
+    def test_implement_publish_publishes_only_an_approved_record_of_its_chain(self):
         repo, base, first = self.repository()
-        (repo / "src" / "queue.ts").write_text("\n".join(f"fixed {i}" for i in range(1, 11)) + "\n", encoding="utf-8")
-        subprocess.run(["git", "commit", "-qam", "fix"], cwd=repo, check=True, capture_output=True)
-        second = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+
+        def commit(prefix):
+            (repo / "src" / "queue.ts").write_text("\n".join(f"{prefix} {i}" for i in range(1, 11)) + "\n", encoding="utf-8")
+            subprocess.run(["git", "commit", "-qam", prefix], cwd=repo, check=True, capture_output=True)
+            return subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+
+        second = commit("fixed")
+        skill = IMPLEMENT.read_text(encoding="utf-8")
+        self.assertIn("Supply the latest accepted record as `prior_record`", skill)
+        for line in GATE:
+            self.assertIn(f"`{line}`", skill)
+        self.assertIn("`Needs Information`, `Changes Requested`, and `Incomplete` all withhold publication", skill)
+        check = block(skill, "render_review.py --check").strip()
         composition = self.compositions(base, first)["range fixture"]
-        continuation = (IMPLEMENT / "references" / "continuation.md").read_text(encoding="utf-8")
-        self.assertIn("`prior_record` set to the absolute path of the latest accepted record", continuation)
-        check = lineage_check(continuation)
+        composition["record"]["routed"]["unresolved"] = []
+        still_open = {"id": "queue/retry-order", "classification": "still-open", "action": "question",
+                      "note": "Still unanswered at the final head."}
+        answered = {"id": "queue/retry-order", "classification": "obsolete", "action": "question",
+                    "note": "The maintainer confirmed that retry order is outside the contract."}
         records = {}
-        for name, head, prior in (("r1", first, None), ("r2", second, "r1"), ("sibling", second, "r1")):
+        # R3 continues R2 at an unchanged head: an answer, with no code change, is what settles the question.
+        for name, head, prior, item in (("r1", first, None, None), ("r2", second, "r1", still_open),
+                                        ("sibling", second, "r1", answered), ("r3", second, "r2", answered)):
             private, store = self.private(repo, base, head, name)
             value = json.loads(json.dumps(composition))
-            if prior is not None:
-                value["prior_items"] = [{"id": "queue/retry-order", "classification": "still-open", "action": "question",
-                                         "note": "Still unanswered at the final head."}]
+            if item is not None:
+                value["prior_items"] = [item]
+            if item is answered:
+                value["questions"] = []
+                value["summary"]["status"] = "Approved"
             (private / "composition.json").write_text(json.dumps(value), encoding="utf-8")
             extra = f"--prior-record {shlex.quote(str(records[prior]))}" if prior else ""
             result = self.sh("sh", self.documented(private, store, extra), cwd=repo)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             records[name] = private / "record.json"
 
-        def run_check(record, *accepted):
-            text = (check.replace("<skill root>", shlex.quote(str(SKILL))).replace("<final committed head>", second)
+        def run_check(head, record, *accepted):
+            text = (check.replace("<skill root>", shlex.quote(str(SKILL))).replace("<committed head>", head)
                     .replace("--lineage <each accepted record>", " ".join(f"--lineage {shlex.quote(str(r))}" for r in accepted))
-                    .replace("<new record>", shlex.quote(str(record))).replace("<private-dir>", shlex.quote(str(record.parent))))
+                    .replace("<candidate record>", shlex.quote(str(record))).replace("<private-dir>", shlex.quote(str(record.parent))))
+            self.assertNotRegex(text, r"<[a-z][^>]*>")
             return self.sh("sh", text, cwd=repo)
 
-        accepted = run_check(records["r2"], records["r1"])
-        self.assertEqual(accepted.returncode, 0, accepted.stdout)
+        def publishable(result):
+            return result.returncode == 0 and result.stdout.splitlines()[:2] == GATE
+
+        opened = run_check(first, records["r1"])
+        self.assertEqual((opened.returncode, opened.stdout.splitlines()[0]), (0, "status Needs Information"), opened.stdout)
+        self.assertFalse(publishable(opened), "an unanswered question is not approval")
+        moved = run_check(second, records["r1"])
+        self.assertEqual(moved.returncode, 1, moved.stdout)
+        self.assertIn(f"reviews head `{first}`, not `{second}`", moved.stdout)
+
+        continued = run_check(second, records["r2"], records["r1"])
+        self.assertEqual((continued.returncode, continued.stdout.splitlines()[0]), (0, "status Needs Information"), continued.stdout)
         self.assertEqual(json.loads(records["r2"].read_text(encoding="utf-8"))["lineage"], [str(records["r1"])])
-        # Once R2 is accepted, a sibling that continued R1 again does not descend from it.
-        forked = run_check(records["sibling"], records["r1"], records["r2"])
+        self.assertFalse(publishable(continued), "a usable record at the final head is still not approval")
+
+        # Once R2 is accepted, a sibling that continued R1 again does not descend from it, whatever its status.
+        self.assertTrue(publishable(run_check(second, records["sibling"], records["r1"])), "the sibling approves on R1 alone")
+        forked = run_check(second, records["sibling"], records["r1"], records["r2"])
         self.assertEqual(forked.returncode, 1, forked.stdout)
         self.assertIn(f"does not descend from `{records['r2']}`", forked.stdout)
+
+        approved = run_check(second, records["r3"], records["r1"], records["r2"])
+        self.assertEqual(approved.stdout.splitlines()[:2], GATE, approved.stdout)
+        self.assertTrue(publishable(approved))
+        later = run_check(commit("later"), records["r3"], records["r1"], records["r2"])
+        self.assertEqual(later.returncode, 1, "an approval never carries to a later commit: " + later.stdout)
 
     # --- pull-request fetch -------------------------------------------------
 

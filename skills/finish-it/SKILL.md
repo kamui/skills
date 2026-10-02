@@ -73,7 +73,7 @@ A subagent's report is a claim. After each step, read the forge for the step's *
 
 Brief the subagent to invoke `implement-publish` with the spec source, base branch, and current branch from the packet.
 
-Artifact: exactly one open pull request whose head is the branch. Record its URL and head SHA into the packet.
+Artifact: exactly one open pull request whose head is the branch. Record its URL and head SHA into the packet. `implement-publish` publishes only after its local review approves the final commit, so a gate it cannot meet, such as a question only a person can answer, leaves no pull request and is a failed step.
 
 ### 5. Review
 
