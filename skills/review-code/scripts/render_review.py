@@ -1642,7 +1642,7 @@ def names_task(entries: list[str], identity: str) -> bool:
 
 
 def task_id(entry: str) -> str:
-    """The task or item id an ``outstanding`` or routed entry names: the text before ``:``."""
+    """The task id an ``outstanding`` or ``routed.unrecoverable_inputs`` entry names: the text before ``:``."""
     return entry.split(":", 1)[0].strip()
 
 
@@ -1884,7 +1884,8 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
         current = routed.get(key) if isinstance(routed.get(key), list) else []
         names_item = key != "unrecoverable_inputs"
         for entry in entries:
-            if entry in current or task_id(entry) in settled or (names_item and (entry in closed or entry not in prior["items"])):
+            released = (entry in settled or entry in closed or entry not in prior["items"]) if names_item else task_id(entry) in settled
+            if entry in current or released:
                 continue
             report.add(f"record.routed.{key}", "prior-record", f"drops `{entry}`; " + (
                 "a routed item survives until its classification or a task in this run settles it" if names_item else
