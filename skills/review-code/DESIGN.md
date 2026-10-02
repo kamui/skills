@@ -14,9 +14,9 @@ The reviewer judges evidence, admission, priority, and whether a safety area app
 
 | Concern | Current owner |
 | --- | --- |
-| Target resolution and pinned context | [`SKILL.md`](SKILL.md) Inputs and Steps, [`targets.md`](references/targets.md) for a pull request or a range or working tree, [`forge_packet.py`](scripts/forge_packet.py) `fetch` for a pull request's queries and pagination, and [`review_context.py`](scripts/review_context.py); `targets.md` owns a local target's run fields, and the packet owns a pull request's |
+| Target resolution and pinned context | [`SKILL.md`](SKILL.md) Inputs, Modes, and Review contract, [`targets.md`](references/targets.md) for a pull request or a range or working tree, [`forge_packet.py`](scripts/forge_packet.py) `fetch` for a pull request's queries and pagination, and [`review_context.py`](scripts/review_context.py); `targets.md` owns a local target's run fields, and the packet owns a pull request's |
 | Finding admission, requirements ledger, conformance, released compatibility, changed tests, supplied checks, uncertainty, priority | [`rubric.md`](references/rubric.md), read on every path |
-| Verification triggers and batch allowance | [`SKILL.md`](SKILL.md) Verification; [`verification.md`](references/verification.md) governs a dispatched batch for the primary, and the [verifier brief](references/verifier.md) (worker instructions, its supplied-check and conformance sections, and the inline return encoding) and [concurrency check](references/verifier-concurrency.md), embedded by the builder without their primary-facing load condition, govern its worker. The builder also embeds the rubric's Released compatibility and Changed tests sections by heading. The [builder](scripts/build_verifier_prompt.py)'s `--example` and refusals own the input shape, and the [accounting helper](scripts/account_verifier_return.py) owns which records account a task |
+| Verification triggers and batch allowance | [`SKILL.md`](SKILL.md) Verification; [`verification.md`](references/verification.md) governs dispatch, accounting, and reconciliation. The [builder](scripts/build_verifier_prompt.py) embeds the complete [worker instructions](references/verifier.md), including concurrency guidance, without their primary-facing load condition. Its `--example` and refusals own the input shape; the [accounting helper](scripts/account_verifier_return.py) checks which tasks a return accounts for. |
 | Record meaning, rendered syntax, and the report | [`SKILL.md`](SKILL.md) Return names the artifacts; [`output.md`](references/output.md) owns authoring, identity and the finalize command, `render_review.py --example` owns the input's keys, and the [finalizer](scripts/render_review.py) owns derived fields, the record's shape, the report's contents, the prior-record check and every refusal |
 | Prior reviews and re-reviews from a prior record | [`prior-state.md`](references/prior-state.md); [`forge_packet.py`](scripts/forge_packet.py) owns `packet_context`, `later-state`'s exclusions and the `shortcut` identity check, and the finalizer owns the prior-item trailer and the lineage |
 | Publication | [`review-code-publish`](../review-code-publish/SKILL.md) and its [publication reference](../review-code-publish/references/publication.md) |
@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-30-x382-x415` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-31` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -40,6 +40,26 @@ Workflow `v5b-30-x382-x415` versions admission, verification, rendering, and sta
 **Verifier returns.** A worker returns its JSON inline and the primary saves it verbatim. Every build generates a fresh opaque `bundle_id`, stores it in the manifest and prints it after the brief's return encoding, and the worker copies it into its return; a rebuild of the same input gets a new ID. Accounting refuses a bundle whose manifest no longer matches its input, brief and printed ID, or that an older builder wrote, and withholds every task of a return whose `bundle_id` is not the bundle's. The finalizer requires each batch's accounting report to carry its bundle's ID and manifest hash. `--repair-of` records a repaired return's original, which must carry the bundle's ID. Structural success is only structural, and a repair grants no batch.
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
+
+## Judgment-led instructions, 2026-10-02
+
+The main skill now explains its contribution relative to an ordinary review prompt: promised-outcome review, consequences beyond the diff, independent challenges to consequential claims, and a durable record across fixes. These are commitments about review behavior and handoff, not claims of higher recall or precision than a built-in reviewer.
+
+The rubric and verifier retain evidence standards while leaving investigation order and proof strategy to the model. The rewrite removes prescribed candidate-search sequences, exhaustive interleaving enumeration, test-by-test trace recipes, and the requirement that a safety ruling cite a new line merely to differ from the supplied evidence. A ruling still needs decisive evidence. Conformance still comes from the pinned artifact, compatibility remains separate from compliance, and changed tests still need meaningful assertions.
+
+Target pinning, record schemas, prior-state handling, verification triggers and batch allowance, execution bounds, and publication ownership remain the integration contract. The recording and handoff references now defer mechanical field shapes to the scripts. A single self-contained worker brief replaces conditional section assembly; the protocols themselves remain unchanged. Workflow `v5b-31` prevents the duplicate shortcut from reusing reviews made under the earlier reasoning instructions.
+
+Instruction size and existing script tests can establish a smaller, compatible prompt. Review quality needs a comparison on the same changes; this rewrite does not establish a quality improvement.
+
+### Arena synthesis
+
+Candidate A was the initial rewrite; candidate B was an independent Claude Opus 5.5 attempt at high effort from the same baseline and user prompt. The read-only cross-judge scored both 20/25 and chose A on the rubric's review-value tie-break. The parent agreed after reading both artifacts and rationales. There were no dropouts.
+
+A remains the base for purpose, admission, and freedom to choose an investigation. Two ideas came from B: the shorter recording and verifier-handoff references that defer schemas to scripts, and one self-contained worker brief that removes conditional section extraction. The synthesis restores the caller-cited Inputs table and Return heading and updates the README's workflow identity. It rejects B's unsupported comparison with ordinary reviewers, blanket exclusion of linter-detectable defects, and prescribed every-branch and new-citation proof requirements.
+
+All ten `review-code` test scripts passed on the synthesis, including the documented command-chain exercises, verifier handoff, rendering, prior records, and instruction budgets. All 50 relative Markdown links resolved, including six section anchors, and the caller-cited headings and Inputs table were checked. `git diff --check` passed. No live comparison of review quality has run.
+
+Measured instruction bytes fell from 73,374 to 54,916 across runtime files, from 29,870 to 20,401 for the always-loaded set, and from 17,701 to 8,980 for the complete verifier instructions. The brief now has one instruction set for every task, so separate ordinary and specialized measurements are redundant. The budget check measures that one brief and sets lower ceilings above the measured paths.
 
 ## Denied-command recovery, issue #415, 2026-09-29
 

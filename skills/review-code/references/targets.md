@@ -1,6 +1,6 @@
 # Targets
 
-Read at step 1 to pin the target: a pull request, or a range or working tree.
+Read when pinning a pull request, range, or working-tree target.
 
 ## Pull request
 
