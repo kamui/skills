@@ -256,27 +256,32 @@ class Chains(unittest.TestCase):
         self.assertIn("`Needs Information`, `Changes Requested`, and `Incomplete` all withhold publication", skill)
         check = block(skill, "render_review.py --check").strip()
         composition = self.compositions(base, first)["range fixture"]
-        composition["record"]["routed"]["unresolved"] = []
         still_open = {"id": "queue/retry-order", "classification": "still-open", "action": "question",
                       "note": "Still unanswered at the final head."}
         answered = {"id": "queue/retry-order", "classification": "obsolete", "action": "question",
                     "note": "The maintainer confirmed that retry order is outside the contract."}
         records = {}
-        # R3 continues R2 at an unchanged head: an answer, with no code change, is what settles the question.
-        for name, head, prior, item in (("r1", first, None, None), ("r2", second, "r1", still_open),
-                                        ("sibling", second, "r1", answered), ("r3", second, "r2", answered)):
+
+        def finalize(name, head, prior=None, item=None):
             private, store = self.private(repo, base, head, name)
             value = json.loads(json.dumps(composition))
             if item is not None:
                 value["prior_items"] = [item]
-            if item is answered:
+            if prior is not None and item is not still_open:
                 value["questions"] = []
+                value["record"]["routed"]["unresolved"] = []
                 value["summary"]["status"] = "Approved"
             (private / "composition.json").write_text(json.dumps(value), encoding="utf-8")
             extra = f"--prior-record {shlex.quote(str(records[prior]))}" if prior else ""
             result = self.sh("sh", self.documented(private, store, extra), cwd=repo)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             records[name] = private / "record.json"
+
+        finalize("r1", first)
+        finalize("r2", second, "r1", still_open)
+        finalize("sibling", second, "r1", answered)
+        # R3 continues R2 at an unchanged head: an answer, with no code change, is what settles the routed question.
+        finalize("r3", second, "r2", answered)
 
         def run_check(head, record, *accepted):
             text = (check.replace("<skill root>", shlex.quote(str(SKILL))).replace("<committed head>", head)
@@ -309,8 +314,12 @@ class Chains(unittest.TestCase):
         approved = run_check(second, records["r3"], records["r1"], records["r2"])
         self.assertEqual(approved.stdout.splitlines()[:2], GATE, approved.stdout)
         self.assertTrue(publishable(approved))
-        later = run_check(commit("later"), records["r3"], records["r1"], records["r2"])
+        third = commit("later")
+        later = run_check(third, records["r3"], records["r1"], records["r2"])
         self.assertEqual(later.returncode, 1, "an approval never carries to a later commit: " + later.stdout)
+        # The later commit's review continues R3, whose settled question is neither rendered nor routed any more.
+        finalize("r4", third, "r3")
+        self.assertTrue(publishable(run_check(third, records["r4"], records["r1"], records["r2"], records["r3"])))
 
     # --- pull-request fetch -------------------------------------------------
 
