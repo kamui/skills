@@ -20,7 +20,7 @@ Keep a ledger of each item's concern, prior discussion, disposition, and reply u
 
 ## 2. Address
 
-Make the changes the evidence warrants and prepare one reply per item in the protocol's shape. Follow a user-named implementation skill; otherwise choose the implementation approach. Weigh optional suggestions under the protocol's scope rule. Answer questions, explain disagreements, and use `needs-info` or `blocked` when the work cannot be settled. Ask a focused question after available evidence fails to answer it, through the session or the pull request as the caller permits.
+Make the changes the evidence warrants and prepare one reply per item in the protocol's shape. Follow a user-named implementation skill; otherwise choose the implementation approach. Weigh optional suggestions under the optional-finding default in the protocol's Questions section. Answer questions, explain disagreements, and use `needs-info` or `blocked` when the work cannot be settled. Ask a focused question after available evidence fails to answer it, through the session or the pull request as the caller permits.
 
 A finding declined earlier that the original reviewer verdicts `not-fixed` is disputed. Answer the reviewer's counter-argument and say it needs a human decision under the protocol's two-round cap.
 
