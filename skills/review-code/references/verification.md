@@ -16,17 +16,17 @@ Put every selected task in one batch. The verifier must judge your claims withou
 python3 scripts/build_verifier_prompt.py input.json --output <private-dir>/initial
 ```
 
-On exit 0, send only the new bundle's `brief.md` to a verifier that starts with none of this conversation (`fork_turns=none` or the host's equivalent). The brief is complete, so add nothing to it. Choose a route that returns the finished result while you wait, and record that operation. An agent id or an acknowledgment is not a result. With no such route, dispatch nothing and report `review-wait-unavailable`. Reuse the same verifier for the follow-up when the host allows it. Never dispatch a refused build. Fix the input and build into a new directory.
+On exit 0, send only the new bundle's `brief.md` to a verifier that starts with none of this conversation (`fork_turns=none` or the host's equivalent). The brief is complete, so add nothing to it. Choose a route that returns the finished result while you wait, and record that operation. An agent id or an acknowledgment is not a result. With no such route, dispatch nothing and report `review-wait-unavailable`. Reuse the same verifier for the follow-up when the host allows it. Never dispatch a refused build. Fix the input and build into a new directory. Build with `--inline` when the verifier cannot write a file you can read.
 
 ## Account
 
-Save the response exactly as returned, once, to a new file, then account for it:
+The verifier writes its return to the bundle's new `return.json` and replies with only that path. Pass it, unread, as `<return>`. If the reply is the JSON itself, save it exactly as returned, once, to a new file and pass that with `--inline`:
 
 ```sh
 python3 scripts/account_verifier_return.py --bundle <private-dir>/initial --output <private-dir>/initial/accounting.json <return>
 ```
 
-The report splits each role's ids into `accounted` and `withheld` and holds the full return. Exit 0 means the return is structurally complete, nothing more. Exit 1 leaves a report you can still use for the accounted records while the rest stay withheld. A return carrying another bundle's id answers a different brief and withholds everything.
+The report splits each role's ids into `accounted` and `withheld` and holds the full return. Exit 0 means the return is structurally complete, nothing more. Exit 1 leaves a report you can still use for the accounted records while the rest stay withheld. A return carrying another bundle's id answers a different brief and withholds everything. A `<return>` that is not the assigned regular file is refused without a report: its tasks stay `withheld`, and a failed handoff never earns another batch.
 
 When only the encoding is broken, such as a Markdown fence around the JSON, write a separate repaired file that preserves every judgment and account it with `--repair-of <original>`. A repair never invents a verdict, evidence, or ruling, and never earns another batch.
 

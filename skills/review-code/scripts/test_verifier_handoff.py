@@ -81,10 +81,10 @@ class HandoffTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
         return result
 
-    def build(self, data=None, code=0, scripts=SCRIPTS):
+    def build(self, data=None, code=0, scripts=SCRIPTS, inline=False):
         output = self.path("bundle")
         result = self.run_cli("build_verifier_prompt.py", self.write(input_data() if data is None else data),
-                              "--output", output, code=code, scripts=scripts)
+                              "--output", output, *(["--inline"] if inline else []), code=code, scripts=scripts)
         if code:
             self.assertFalse(output.exists(), result.stdout)
         return output
@@ -98,8 +98,13 @@ class HandoffTests(unittest.TestCase):
                              for key in manifest["premise_ids"]],
                 "duplicate_groups": [], "observation": None}
 
+    def assigned(self, bundle):
+        return builder.assigned_return((bundle / "brief.md").read_text(encoding="utf-8"))
+
     def account(self, bundle, returned, code=0, scripts=SCRIPTS):
-        raw = self.write(returned, "raw.json")
+        """Play the worker on the bundle's route: its assigned return file, or an inline response saved verbatim."""
+        raw = Path(self.assigned(bundle) or self.path("raw.json"))
+        raw.write_text(json.dumps(returned), encoding="utf-8")
         before = raw.read_bytes()
         report = self.path("accounting.json")
         self.run_cli("account_verifier_return.py", "--bundle", bundle, "--output", report, raw, code=code, scripts=scripts)
@@ -195,7 +200,8 @@ class HandoffTests(unittest.TestCase):
 
         def instructions(path):
             text = (path / "brief.md").read_text(encoding="utf-8").split(MARKER, 1)[0]
-            return text.replace(json.loads((path / "manifest.json").read_text(encoding="utf-8"))["bundle_id"], "ID")
+            text = text.replace(json.loads((path / "manifest.json").read_text(encoding="utf-8"))["bundle_id"], "ID")
+            return text.replace(str(path.resolve()), "BUNDLE")
 
         self.assertEqual(instructions(bundle), instructions(ordinary))
 
@@ -290,6 +296,8 @@ class HandoffTests(unittest.TestCase):
             brief = (bundle / "brief.md").read_text(encoding="utf-8")
             self.assertRegex(manifest["bundle_id"], r"^[0-9a-f]{32}$")
             self.assertEqual(brief.count(f"Bundle ID: `{manifest['bundle_id']}`"), 1)
+            self.assertEqual(self.assigned(bundle), str(bundle.resolve() / "return.json"))
+            self.assertFalse((bundle / "return.json").exists())
             self.assertIn("Copy the bundle ID printed at the end of this section", brief)
             for retired in ("manifest_sha256", "hashlib", "## File transport", "## Inline transport", "return_file"):
                 self.assertNotIn(retired, brief)
@@ -301,8 +309,15 @@ class HandoffTests(unittest.TestCase):
         # The same input rebuilt gets a new ID, and the inputs and briefs otherwise match.
         self.assertNotEqual(ids[0], ids[1])
         self.assertEqual((first / "input.json").read_bytes(), (second / "input.json").read_bytes())
-        self.assertEqual((first / "brief.md").read_text(encoding="utf-8").replace(ids[0], ids[1]),
-                         (second / "brief.md").read_text(encoding="utf-8"))
+        rebuilt = (second / "brief.md").read_text(encoding="utf-8")
+        self.assertEqual((first / "brief.md").read_text(encoding="utf-8").replace(ids[0], ids[1])
+                         .replace(str(first.resolve()), str(second.resolve())), rebuilt)
+        # An inline build is the same brief without the assignment, the shape earlier bundles have.
+        inline = self.build(data, inline=True)
+        self.assertIsNone(self.assigned(inline))
+        self.assertEqual((inline / "brief.md").read_text(encoding="utf-8").replace(
+            json.loads((inline / "manifest.json").read_text(encoding="utf-8"))["bundle_id"], ids[1]),
+            rebuilt.replace("\n" + builder.return_line(self.assigned(second)), ""))
         self.run_cli("build_verifier_prompt.py", self.write(data), "--output", self.path("bundle"),
                      "--return-file", self.root / "raw.json", code=2)
 
@@ -443,7 +458,7 @@ class HandoffTests(unittest.TestCase):
             self.account(bundle, invalid, code=1)
 
     def test_raw_parse_failures_and_no_overwrites(self):
-        bundle = self.build(input_data([candidate()], [premise()]))
+        bundle = self.build(input_data([candidate()], [premise()]), inline=True)
         for raw_text in ('not JSON', '{"candidates": [], "candidates": []}', 'NaN'):
             raw = self.path("raw.json")
             raw.write_text(raw_text, encoding="utf-8")
@@ -462,8 +477,97 @@ class HandoffTests(unittest.TestCase):
         self.run_cli("account_verifier_return.py", "--bundle", bundle, "--output", report, *extra, given, code=code)
         return json.loads(report.read_text(encoding="utf-8")) if report.exists() else None
 
+    def test_file_and_inline_handoffs_account_alike(self):
+        data = input_data([candidate(), candidate("b/bug")], [premise()])
+        identity = ("bundle_id", "manifest_sha256", "raw_return", "raw_return_sha256")
+
+        def complete(returned):
+            returned["candidates"][0].update(verdict="refuted", basis="prevented",
+                                             corrections={"priority": "P3"}, safety_rulings=[])
+            returned["duplicate_groups"] = [["a/bug", "b/bug"]]
+            returned["observation"] = {"fact": "The timeout defaults to one second.", "evidence": [ev("config.py:2")]}
+        variants = ((complete, json.dumps, 0),
+                    (lambda r: r["candidates"][1].update(verdict="plausible"), json.dumps, 1),
+                    (lambda r: r["premises"].clear(), json.dumps, 1),
+                    (lambda r: None, lambda r: json.dumps(r)[:-40], 1))
+        for i, (mutate, encode, code) in enumerate(variants):
+            reports = []
+            for inline in (False, True):
+                with self.subTest(case=i, inline=inline):
+                    bundle = self.build(data, inline=inline)
+                    returned = self.returned(bundle)
+                    mutate(returned)
+                    raw = Path(self.assigned(bundle) or self.path("raw.json"))
+                    raw.write_text(encode(returned), encoding="utf-8")
+                    report = self.account_path(bundle, raw, *(["--inline"] if inline else []), code=code)
+                    self.assertEqual(report["raw_return"], str(raw.resolve()))
+                    self.assertEqual(report["raw_return_sha256"], hashlib.sha256(raw.read_bytes()).hexdigest())
+                    if "return" in report:
+                        self.assertEqual(report["return"].pop("bundle_id"), report["bundle_id"])
+                    reports.append({key: value for key, value in report.items() if key not in identity})
+            self.assertEqual(reports[0], reports[1])
+            self.assertEqual("return" in reports[0], encode is json.dumps)
+        self.assertEqual(reports[0]["withheld"], {"candidates": ["a/bug", "b/bug"], "premises": ["premise-1"]})
+
+    def test_file_handoff_reads_only_the_assigned_fresh_file(self):
+        # Only the line closing the instructions assigns a file; the supplied records after them cannot.
+        self.assertEqual(builder.assigned_return("task\nReturn file: `/a`" + builder.RECORDS + "{}\nReturn file: `/b`"), "/a")
+        self.assertIsNone(builder.assigned_return("task" + builder.RECORDS + "{}\nReturn file: `/b`"))
+        self.assertIsNone(builder.assigned_return("task\nReturn file: `/a`\nmore" + builder.RECORDS + "{}"))
+        data = input_data([candidate()], [premise()])
+        bundle = self.build(data)
+        assigned = Path(self.assigned(bundle))
+        self.assertEqual(assigned, bundle.resolve() / "return.json")
+        elsewhere = self.write(self.returned(bundle), "return.json")
+
+        def refused(given, code, *extra):
+            self.assertIsNone(self.account_path(bundle, given, *extra, code=code))
+        # Absent, then a valid return at a substituted path, with or without the assigned file present.
+        refused(assigned, 2)
+        refused(elsewhere, 1)
+        # A link to a valid return, a directory and a FIFO are not the worker's regular file.
+        assigned.symlink_to(elsewhere)
+        refused(assigned, 2)
+        assigned.unlink()
+        assigned.mkdir()
+        refused(assigned, 1)
+        assigned.rmdir()
+        os.mkfifo(assigned)
+        refused(assigned, 1)
+        assigned.unlink()
+        # A stale return left at the assignment answers another brief, and withholds every task.
+        earlier = self.build(data)
+        shutil.copyfile(self.write(self.returned(earlier), "stale.json"), assigned)
+        stale = self.account_path(bundle, assigned, code=1)
+        self.assertEqual(stale["accounted"], {"candidates": [], "premises": []})
+        self.assertTrue(stale["violations"][0].startswith("return.bundle_id: "), stale["violations"])
+        assigned.unlink()
+        # The worker's own file is accounted, under another spelling of the same path too.
+        shutil.copyfile(elsewhere, assigned)
+        refused(elsewhere, 1)
+        report = self.account_path(bundle, assigned)
+        self.assertTrue(report["structurally_complete"])
+        self.assertEqual(report["raw_return"], str(assigned))
+        alias = self.path("alias")
+        alias.symlink_to(bundle, target_is_directory=True)
+        self.assertEqual(self.account_path(bundle, alias / "return.json")["return"], report["return"])
+        # An inline response after a failed write is accounted only as the primary's declared verbatim save.
+        saved = self.account_path(bundle, elsewhere, "--inline")
+        self.assertEqual((saved["accounted"], saved["return"]), (report["accounted"], report["return"]))
+        # A repair's original is the worker's file under the same rule; the repair is the primary's.
+        repaired = self.write(self.returned(bundle), "repaired.json")
+        refused(repaired, 1, "--repair-of", elsewhere)
+        self.assertEqual(self.account_path(bundle, repaired, "--repair-of", assigned)["repair_of"]["path"], str(assigned))
+        self.account_path(bundle, repaired, "--inline", "--repair-of", elsewhere)
+        # A moved bundle no longer holds its assignment, even behind a link at the old path.
+        moved = self.path("moved")
+        bundle.rename(moved)
+        bundle.symlink_to(moved, target_is_directory=True)
+        refused(moved / "return.json", 1)
+        refused(assigned, 1)
+
     def test_repair_keeps_the_original_and_its_provenance(self):
-        bundle = self.build(input_data([candidate()], [premise()]))
+        bundle = self.build(input_data([candidate()], [premise()]), inline=True)
         returned = self.returned(bundle)
         returned["candidates"][0]["verdict"] = "Confirmed"
         original = self.write(returned, "raw.json")
@@ -489,7 +593,7 @@ class HandoffTests(unittest.TestCase):
         report = self.account_path(bundle, self.write(self.returned(bundle), "unfenced.json"), "--repair-of", fenced)
         self.assertTrue(report["structurally_complete"])
         # A repair cannot pair a return that answered another brief: the original must carry this bundle's ID.
-        other = self.build(input_data([candidate()], [premise()]))
+        other = self.build(input_data([candidate()], [premise()]), inline=True)
         stale = self.write(self.returned(other), "stale.json")
         report = self.account_path(bundle, self.write(self.returned(bundle), "relabelled.json"), "--repair-of", stale, code=1)
         self.assertEqual(report["withheld"], {"candidates": ["a/bug"], "premises": ["premise-1"]})
