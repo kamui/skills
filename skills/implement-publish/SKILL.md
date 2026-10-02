@@ -37,7 +37,7 @@ Read `report.md` and validate the record under the gate before accepting it. Kee
 
 After fixes or new information, even without a code change, continue the review by resuming the completed reviewer or using another isolated one. Supply the latest accepted record as `prior_record`, the unchanged base and specification sources, the previously reviewed and final commit SHAs, fixed finding ids, and updated evidence with retention or invalidation reasons.
 
-`review-code` owns review scope, finding classification, carried confirmations, unresolved questions, and verifier accounting. Its verification allowance is shared across continuations: a changed worker, failed work, or a repair grants no fresh one, and a replacement reviewer cannot bypass pending work. A record from before `review-code-record/1` cannot be a prior record; brief a full base-to-head review without `prior_record` instead.
+`review-code` owns review scope, finding classification, carried confirmations, unresolved questions, and verifier accounting. Its verification allowance is shared across continuations: a changed worker, failed work, or a repair grants no fresh one, and a replacement reviewer cannot bypass pending work. A record from before `review-code-record/1` cannot be a prior record; brief a full base-to-head review without `prior_record` instead, and have its coverage name the earlier record.
 
 ## Gate
 

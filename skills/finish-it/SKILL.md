@@ -18,7 +18,7 @@ Three terms carry the skill:
 
 Invoking this skill authorizes every write the underlying skills make on its behalf: creating an issue from a prose spec, opening the pull request, publishing reviews, replies, thread resolutions, and addressing summaries. It never merges, never closes an issue, and leaves labels and assignees alone.
 
-The delivery runs unattended. Questions the underlying skills would put to a user land on the pull request instead; a stop names the step and its reason.
+The delivery runs unattended. Questions the underlying skills would put to a user land on the pull request once it exists; a stop names the step and its reason.
 
 If `implement-publish`, `review-code-publish`, `resolve-review`, or `review-code` is not among the installed skills, stop with `missing-dependency: <name>` before any write. Check all four first. `review-bot` is optional; its absence is a recorded fallback to the authenticated user with gating withheld, never a missing-dependency stop.
 
