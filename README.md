@@ -97,7 +97,7 @@ Addresses every review comment on a pull request, makes warranted changes, repli
 
 Before pushing fixes or posting disposition replies, a fresh-context subagent reviews the addressing round for incomplete fixes and regressions, then checks the proposed replies against the code. It receives the original feedback and repository evidence without the implementation conversation. Unresolved feedback keeps its protocol disposition and remains open for the original reviewer.
 
-The skill is deliberately independent of a particular code-review or implementation skill. Normal skill routing can select another installed skill when useful; if none applies, the model handles the work directly.
+The skill is deliberately independent of a particular code-review or implementation skill. It follows an implementation skill the user names; otherwise the model chooses how to investigate, implement, and verify the work.
 
 It activates when review feedback on a pull request needs working through, including as the fix step of a review loop. You can also invoke it directly:
 
