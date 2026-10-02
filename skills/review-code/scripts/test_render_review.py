@@ -1110,7 +1110,8 @@ class PriorRecord(unittest.TestCase):
                     r3 = self.accepted(self.directory(), 2, self.composition(status="Approved"), r2)
                     checked = run([RENDER, "--check", "--head", self.heads[2], "--lineage", r1, "--lineage", r2, "--lineage", r3, r3.parent])
                     self.assertEqual((checked.returncode, checked.stdout.splitlines()[:2]), (0, ["status Approved", "coverage complete"]))
-        # An entry is its item's whole id: an open item whose id holds a `:` is not mistaken for a settled prefix.
+        # An entry is its item's whole id: an open item whose id holds a `:` is not mistaken for a settled prefix,
+        # and of the tasks this run ruled on only one named by that whole id releases it.
         colon = "ledger:post-docstring"
         routed = {"unresolved": [colon], "disputed": [], "unrecoverable_inputs": []}
         finding = dict(self.consider(), id=colon)
@@ -1118,6 +1119,15 @@ class PriorRecord(unittest.TestCase):
         still_open = [{"id": colon, "classification": "still-open", "action": "consider", "note": "Still undocumented."}]
         result = self.finalize(self.directory(), 1, self.composition(status="Approved", findings=[finding], prior_items=still_open), r1)
         self.refused(result, f"drops `{colon}`")
+        for task, releases in ((fixtures.premise_task("ledger"), False), (fixtures.candidate_task(colon), True)):
+            with self.subTest(task=task["id"]):
+                private = self.directory()
+                result = self.finalize(private, 1, self.composition(status="Approved", findings=[finding], prior_items=still_open,
+                                                                    tasks=[task], batches=[bundle(private, [task])]), r1)
+                if releases:
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                else:
+                    self.refused(result, f"drops `{colon}`")
         # An unrecoverable input names no item, so settling every item releases nothing.
         missing = dict(status="Incomplete", coverage="incomplete", gaps=["the benchmark artifact was not supplied"])
         r1 = self.accepted(self.directory(), 0, self.composition(
