@@ -1099,6 +1099,42 @@ class PriorRecord(unittest.TestCase):
                                                    batches=[bundle(private, [holds], "follow-up", "follow-up")],
                                                    prior_items=self.open_items("fixed")[:1]), r1)
 
+    def test_a_settled_routed_item_releases_its_entry(self):
+        settled = self.open_items()[1:]
+        for key in ("unresolved", "disputed"):
+            routed = {"unresolved": [], "disputed": [], "unrecoverable_inputs": [], key: [CONSIDER_ID]}
+            r1 = self.accepted(self.directory(), 0, self.composition(status="Approved", findings=[self.consider()], routed=routed))
+            for name, kept in (("the settling run drops it", None), ("the settling run keeps it and the next drops it", routed)):
+                with self.subTest(key=key, case=name):
+                    r2 = self.accepted(self.directory(), 1, self.composition(status="Approved", prior_items=settled, routed=kept), r1)
+                    r3 = self.accepted(self.directory(), 2, self.composition(status="Approved"), r2)
+                    checked = run([RENDER, "--check", "--head", self.heads[2], "--lineage", r1, "--lineage", r2, "--lineage", r3, r3.parent])
+                    self.assertEqual((checked.returncode, checked.stdout.splitlines()[:2]), (0, ["status Approved", "coverage complete"]))
+        # An entry is its item's whole id: an open item whose id holds a `:` is not mistaken for a settled prefix,
+        # and of the tasks this run ruled on only one named by that whole id releases it.
+        colon = "ledger:post-docstring"
+        routed = {"unresolved": [colon], "disputed": [], "unrecoverable_inputs": []}
+        finding = dict(self.consider(), id=colon)
+        r1 = self.accepted(self.directory(), 0, self.composition(status="Approved", findings=[finding], routed=routed))
+        still_open = [{"id": colon, "classification": "still-open", "action": "consider", "note": "Still undocumented."}]
+        result = self.finalize(self.directory(), 1, self.composition(status="Approved", findings=[finding], prior_items=still_open), r1)
+        self.refused(result, f"drops `{colon}`")
+        for task, releases in ((fixtures.premise_task("ledger"), False), (fixtures.candidate_task(colon), True)):
+            with self.subTest(task=task["id"]):
+                private = self.directory()
+                result = self.finalize(private, 1, self.composition(status="Approved", findings=[finding], prior_items=still_open,
+                                                                    tasks=[task], batches=[bundle(private, [task])]), r1)
+                if releases:
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                else:
+                    self.refused(result, f"drops `{colon}`")
+        # An unrecoverable input names no item, so settling every item releases nothing.
+        missing = dict(status="Incomplete", coverage="incomplete", gaps=["the benchmark artifact was not supplied"])
+        r1 = self.accepted(self.directory(), 0, self.composition(
+            findings=[self.consider()], routed={"unresolved": [], "disputed": [], "unrecoverable_inputs": ["the benchmark artifact"]}, **missing))
+        result = self.finalize(self.directory(), 1, self.composition(status="Approved", prior_items=settled), r1)
+        self.refused(result, "drops `the benchmark artifact`; an unrecoverable input survives until a task in this run settles it")
+
     def test_sibling_fork_is_rejected_by_the_callers_lineage_check(self):
         r1 = self.first()
         r2 = self.accepted(self.directory(), 1, self.composition(findings=[self.must_fix()], tasks=[self.carried(r1)],

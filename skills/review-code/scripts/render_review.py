@@ -50,10 +50,13 @@ with its action, in `prior_items`; render an open one (`still-open`,
 `not-verifiable`, `disputed`) again under its id, a must-fix staying must-fix,
 and a settled one (`fixed`, `accepted`, `obsolete`) never; keep every prior
 `outstanding` and `routed` entry unless a task this run ruled on settled it
-(a carried confirmation settles nothing); record a batch only for a phase the
-prior left unspent; and name, for a carried confirmation, `confirmed_in` (the
-prior or a record in its lineage) and the `batch` whose accounting report
-confirmed it, which must be the provenance the prior's own task carries.
+(a carried confirmation settles nothing), or the item a `routed.unresolved`
+or `routed.disputed` entry names is settled: classified `fixed`, `accepted`
+or `obsolete` here, or no longer open in the prior; record a batch only for
+a phase the prior left unspent; and name, for a carried confirmation,
+`confirmed_in` (the prior or a record in its lineage) and the `batch` whose
+accounting report confirmed it, which must be the provenance the prior's own
+task carries.
 `run.prior_head`, when a delta review sets it, is the prior's head, and the
 prior's coverage must be complete. Without a prior record a local target has
 no prior items.
@@ -1639,7 +1642,7 @@ def names_task(entries: list[str], identity: str) -> bool:
 
 
 def task_id(entry: str) -> str:
-    """The task or item id an ``outstanding`` or routed entry names: the text before ``:``."""
+    """The task id an ``outstanding`` or ``routed.unrecoverable_inputs`` entry names: the text before ``:``."""
     return entry.split(":", 1)[0].strip()
 
 
@@ -1875,13 +1878,18 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
         if task_id(entry) not in kept and task_id(entry) not in settled:
             report.add("record.verification.outstanding", "prior-record", f"drops `{entry}`; outstanding work survives until a "
                        "task in this run settles it")
+    closed = {identity for identity, item in classified.items() if item["classification"] not in OPEN_CLASSIFICATIONS}
     routed = record.get("routed") if isinstance(record, dict) and isinstance(record.get("routed"), dict) else {}
     for key, entries in prior["routed"].items():
         current = routed.get(key) if isinstance(routed.get(key), list) else []
+        names_item = key != "unrecoverable_inputs"
         for entry in entries:
-            if entry not in current and task_id(entry) not in settled:
-                report.add(f"record.routed.{key}", "prior-record", f"drops `{entry}`; routed items survive until a task in this "
-                           "run settles them")
+            released = (entry in settled or entry in closed or entry not in prior["items"]) if names_item else task_id(entry) in settled
+            if entry in current or released:
+                continue
+            report.add(f"record.routed.{key}", "prior-record", f"drops `{entry}`; " + (
+                "a routed item survives until its classification or a task in this run settles it" if names_item else
+                "an unrecoverable input survives until a task in this run settles it"))
 
 
 def read_verification(

@@ -18,7 +18,7 @@ Three terms carry the skill:
 
 Invoking this skill authorizes every write the underlying skills make on its behalf: creating an issue from a prose spec, opening the pull request, publishing reviews, replies, thread resolutions, and addressing summaries. It never merges, never closes an issue, and leaves labels and assignees alone.
 
-The delivery runs unattended. Questions the underlying skills would put to a user land on the pull request instead; a stop names the step and its reason.
+The delivery runs unattended. Questions the underlying skills would put to a user land on the pull request once it exists; a stop names the step and its reason.
 
 If `implement-publish`, `review-code-publish`, `resolve-review`, or `review-code` is not among the installed skills, stop with `missing-dependency: <name>` before any write. Check all four first. `review-bot` is optional; its absence is a recorded fallback to the authenticated user with gating withheld, never a missing-dependency stop.
 
@@ -73,7 +73,7 @@ A subagent's report is a claim. After each step, read the forge for the step's *
 
 Brief the subagent to invoke `implement-publish` with the spec source, base branch, and current branch from the packet.
 
-Artifact: exactly one open pull request whose head is the branch. Record its URL and head SHA into the packet.
+Artifact: exactly one open pull request whose head is the branch. Record its URL and head SHA into the packet. `implement-publish` publishes only after its local review approves the final commit, so a gate it cannot meet, such as a question only a person can answer, leaves no pull request and is a failed step.
 
 ### 5. Review
 
