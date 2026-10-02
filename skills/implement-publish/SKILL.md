@@ -5,73 +5,60 @@ description: Implement work from a spec, issue, or set of tickets and open a pul
 
 # Implement and publish
 
-Implement the work, review it locally with a fresh-context subagent, then open one pull request linked to its spec. This skill stops at the pull request; `review-code-publish` handles the published review.
+Take a specification through implementation and an independent local review, then publish it as exactly one pull request. Publishing means pushing the reviewed branch and creating or updating its pull request, never merging or deploying. `review-code-publish` owns the published review.
 
-## Process
+Implementation method, investigation, sequencing, tools, and additional verification are yours to choose within the user's instructions, any implementation skill they name, and repository conventions.
 
-### 1. Resolve the targets
+## Resolve the delivery
 
-Read `docs/agents/issue-tracker.md` when present. Resolve the spec, forge, source and target repositories, and base branch from repository configuration, Git remotes, and the user's request. Record every issue, ticket, or written specification supplied by the user or inferred from the request, branch name, or commits for the pull request to address. Ask before any external write if the spec or publication target is ambiguous.
+Resolve the forge, source and target repositories, base branch, and every issue, ticket, and written specification the change addresses, including those inferred from the request, branch, and commits. Use repository tracker configuration such as `docs/agents/issue-tracker.md` where present. Settle consequential ambiguity before any external write, continuing independent local work meanwhile.
 
-### 2. Prepare the branch
+If the `review-code` skill is not installed, report `missing-dependency: review-code` before implementing.
 
-Follow the repository's branch and commit conventions. If the current branch is unsuitable as a pull-request head under them, branch from the base before any work starts. Implement on a branch, never on the base.
+Work on a branch suitable as a pull-request head, never the base. Leave issue status, labels, and assignees alone.
 
-### 3. Implement
+## Implement and keep evidence
 
-Use the implementation skill the user names, otherwise the best-matching model-invoked implementation skill. Implement directly if none applies.
+Complete the requested behavior and commit it. Run the repository's documented checks for affected behavior and its dependents. Choose further checks and acceptance exercises by the change's risks, verifying more broadly where impact is uncertain.
 
-Read the Supplied checks section of `review-code`'s `references/rubric.md` for the verification format and reuse criteria. Save a compact summary:
+Keep a compact evidence summary under the Supplied checks section of `review-code`'s `references/rubric.md`, which owns its form and reuse rules. Add each acceptance exercise's criterion, method, and observation, and any required work that is missing and why. After a change, update it with which evidence still applies and which was replaced. Never rerun a check only to fill the summary.
 
-- Shared full commit SHA, clean/dirty input state and relevant environment.
-- One line per check: command or check-run identity, result and readable output reference. Include relevant exceptions and coverage limits; link to logs instead of copying them.
-- For required acceptance exercises that checks do not settle: criterion, method and observation under the same shared context, without correctness claims.
+## Review locally
 
-For initial implementation and review fixes, report missing required evidence and why it is missing. Do not add verification solely to populate the summary.
+Everything stays local until the gate passes.
 
-Apply these **verification rules** to implementation and review fixes:
+Use a fresh-context reviewer that has not seen the implementation conversation and can dispatch `review-code`'s verifiers. Honor a reviewer tier the caller names, and keep the selected tier for every continuation.
 
-- Run the repository's documented focused checks for changed behavior and its dependents. Documentation-only changes need tests only when documented checks cover them.
-- Batch related changes before running shared checks once; group review fixes sharing a check into one continuation.
-- Rerun checks when changes may affect their inputs, environment or covered behavior. Run the affected broader suite for shared dependency or configuration changes, cross-module changes, or uncertain impact, even if it passed earlier.
-- Reuse success only for the same check at the exact head, with unchanged relevant inputs and environment and sufficient coverage. Uncommitted runs count only for the commit made from exactly that tree.
-- Repeat required acceptance exercises when changes affect their criterion, method or inputs.
-- Retain unaffected results at their original head and input state without rerunning solely because the head changed. They cannot satisfy checks explicitly required at the new head.
+Before dispatching or continuing a review, choose a route that returns the completed result while you stay active: a foreground result, or a dispatch followed by a supported wait. An acknowledgment or agent identifier is not completion. With no such route, dispatch nothing and report `review-wait-unavailable` with the phase, missing operation, and pending work. Never change global runtime settings to obtain one.
 
-Finish with committed changes and recorded verification results. Keep implementation and review local until step 5.
+Brief the reviewer to invoke `review-code` with `mode: one-shot` on the local base-to-head range. Supply the repository, explicit base and committed head, every specification source, and the evidence summary with its gaps: observations and artifacts, without implementation rationale or correctness claims. Require the completed status, coverage, and the `record.json`, `payload.json`, `batch.json`, and `report.md` paths.
 
-### 4. Review before publishing
+Read `report.md` and validate the record under the gate before accepting it. Keep every accepted record's absolute path, in order. Evaluate findings against the code and specification; fix warranted defects, verify, and commit. Decline a finding only with evidence; a disputed `must-fix` blocks until the review settles it.
 
-Before dispatching any review or continuation, choose an **awaited** route that returns its completed result while this step stays active, without changing global runtime settings. An acknowledgment is not completion; never hand back with a phase pending. If no route exists, stop before dispatch with `review-wait-unavailable`, naming the phase, missing operation and pending work. Failed or partial reviews instead follow the coverage gate below.
+After fixes or new information, even without a code change, continue the review by resuming the completed reviewer or using another isolated one. Supply the latest accepted record as `prior_record`, the unchanged base and specification sources, the previously reviewed and final commit SHAs, fixed finding ids, and updated evidence with retention or invalidation reasons.
 
-Spawn one resumable **general-purpose** reviewer capable of dispatching a verifier, with a fresh context excluding the implementation conversation (`fork_turns="none"` or equivalent). Brief it to:
+`review-code` owns review scope, finding classification, carried confirmations, unresolved questions, and verifier accounting. Its verification allowance is shared across continuations: a changed worker, failed work, or a repair grants no fresh one, and a replacement reviewer cannot bypass pending work. A record from before `review-code-record/1` cannot be a prior record; brief a full base-to-head review without `prior_record` instead.
 
-- Invoke `review-code` with `mode: one-shot`, reviewing the base-to-committed-head range with explicit refs and every spec source from step 1 as user-supplied specs.
-- Use step 3's saved verification results and missing required evidence, passing checks as caller-supplied check evidence. Supply observations and artifact references without implementation rationale or correctness claims.
-- Return the output of `review-code`'s `scripts/render_review.py --check` on the record's private directory: status, coverage, and the `record.json`, `payload.json`, `batch.json` and `report.md` paths. Keep the verification results' path with the review record.
+## Gate
 
-Read `report.md`; a missing report, or a record `--check` refuses, is an incomplete review, and its record is discarded. Otherwise accept the record as the current result and keep the absolute path of every `record.json` you accepted, the latest last. Evaluate findings against the code and spec. Treat `must-fix` as blocking and `consider` as optional. Report coverage gaps and unresolved questions. Fix warranted defects, verify under step 3 and commit. Give evidence-based reasons for declining findings; disputed blockers remain unresolved.
+Validate each returned record against the committed head it reviewed, every accepted record in order, and itself:
 
-After committing fixes, read and follow [the continuation procedure](references/continuation.md) before choosing or dispatching the next phase, and include it in the continuation brief.
+```sh
+python3 <skill root>/scripts/render_review.py --check --head <committed head> --lineage <each accepted record> --lineage <candidate record> <private-dir>
+```
 
-Require review of the final committed head with no blocking defects or material coverage gaps; any later commit requires review. That review is the record `python3 <skill root>/scripts/render_review.py --check --head <final head> --lineage <record> … <private-dir>` accepts with exit 0, with one `--lineage` for the final record and each record accepted before it; `<skill root>` is the record's `record.paths.skill_root`. If isolated review is unavailable or this gate remains unmet, report why and stop before publishing. Otherwise proceed through step 5 before returning.
+`<skill root>` is the record's `record.paths.skill_root`. A non-zero exit means a missing report, an invalid record, another head, or a continuation that forked from an older accepted record. Discard that record and continue from the latest accepted one.
 
-### 5. Open the pull request
+Exit 0 establishes usable artifacts that match the head and history, not approval. Publish only when the final record's check names the commit you will push and prints `status Approved` and `coverage complete`: no required review work, evidence, or verification is unfinished.
 
-Using the resolved forge's tools, push the reviewed head and find an open pull request matching both source and target repositories and branches. Update its body if found; otherwise create one with a title and body. Finish with exactly one pull request at the reviewed head.
+`Needs Information`, `Changes Requested`, and `Incomplete` all withhold publication. Resolve what the reviewer needs and continue the review; an unanswered question never authorizes publication. `consider` findings may remain after approval. Any later commit needs review. If the gate cannot be met, report why and stop before publishing.
 
-Write its body as a briefing that a reviewer with the diff can read in under a minute. Use these sections in order, in place of `## Summary` and `## Test plan`:
+## Publish
 
-- `## Why`: the intent and approach in one or two short paragraphs. Link every issue from step 1 as **closes**, **partially implements** with remaining work, or **affects** with its impact, and link any other related ticket as context. For closure, use supported automatic closure on merge or note its unavailability. Name and link external specs.
-- `## Scope`: bullets naming real symbols and paths.
-- `## Tradeoffs`: rejected alternatives a reviewer would ask about.
-- `## Blast Radius`: what the change touches and why it is safe or risky, in one to three sentences.
-- `## Verification`: step 3's verification results and gaps, identifying acceptance criteria and preserving each result's head and input state, shared where they match. Report a performance change as one `before → after` number.
+Push the reviewed head. Find an open pull request matching both source and target repositories and branches, and update its body or create one. Confirm exactly one matching open pull request at the reviewed head.
 
-Drop `## Scope`, `## Tradeoffs`, or `## Blast Radius` when it has nothing to say. Link logs, metric tables, and other bulky evidence. Attach screenshots or video only when they prove a claim.
+Follow the repository's title and body conventions. Otherwise write a briefing readable in under a minute with `## Why`, `## Scope`, `## Tradeoffs`, `## Blast Radius`, and `## Verification`, omitting empty sections. Link every specification source and issue by its actual relationship, state a partial implementation's remaining work, and use the forge's issue-closing syntax for completed issues or note its absence. Preserve each verification result's head, input state, and gaps. Link bulky evidence, and give before and after measurements for a performance claim.
 
-Leave issue status, labels and assignees alone.
+Attempt each external write once. After an ambiguous result, read the target before one retry, then report unresolved failure rather than writing again.
 
-Attempt each write once; on an ambiguous result read the target before a single retry, then report unresolved failure rather than writing again.
-
-Finish with the pull request link, head SHA, branch, spec source, review outcome, remaining optional findings and anything that failed.
+Finish with the pull request URL, head commit, branch, specification sources, review outcome, remaining optional findings or questions, and anything that failed.
