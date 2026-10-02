@@ -8,7 +8,7 @@ Record each task's id, trigger or area, premise and evidence when applicable, ba
 
 After the complete diff, file accounting, and primary falsification, combine selected tasks in one initial batch. Choose an awaited host route before dispatch and record its operation. An agent id or acknowledgment is not completion. With no awaited route or no fresh-context isolation, dispatch nothing and report required verification incomplete, naming `review-wait-unavailable` when appropriate. Never hand back while a batch is pending.
 
-Start the initial batch in a fresh worker without the primary conversation, such as `fork_turns=none`. For the follow-up, resume that worker when available and still isolated from the primary conversation at the same pinned revisions and relevant inputs; otherwise start a fresh worker. The builder embeds the worker instructions, return encoding, and applicable specialized procedures, so the primary does not read `verifier.md` or `verifier-concurrency.md`. A failed batch still spends its allowance; repairs and worker changes grant no replacement batch.
+Start the initial batch in a fresh worker without the primary conversation, such as `fork_turns=none`. For follow-ups and continuations, resume that isolated worker when available; otherwise start fresh. Supply the new pinned brief and have it recheck affected evidence at that head. The builder embeds the worker instructions, return encoding, and applicable specialized procedures, so the primary does not read `verifier.md` or `verifier-concurrency.md`. A failed batch still spends its allowance; repairs and worker changes grant no replacement batch.
 
 ## Reconcile
 
