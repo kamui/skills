@@ -488,6 +488,13 @@ def record_accounting() -> None:
     unrendered = [premise_task(ruling="fails", reopened_as="payments/retry-idempotency"), candidate_task(batch="follow-up")]
     refused(outcome("Approved", unrendered, both), "verification", "failed premise reopened as a confirmed candidate that is not rendered",
             needle="premise `premise-1` fails")
+    # Only a refutation that follows the failure closes it: the follow-up's, for a premise the initial batch failed.
+    for premise_batch, candidate_batch in (("initial", "initial"), ("follow-up", "initial"), ("follow-up", "follow-up")):
+        early = [premise_task(ruling="fails", batch=premise_batch, reopened_as="payments/retry-idempotency"),
+                 candidate_task(batch=candidate_batch, ruling="refuted")]
+        refused(outcome("Approved", early, both), "verification",
+                f"premise failed in the {premise_batch} batch, reopened as a candidate the {candidate_batch} batch refuted",
+                needle="premise `premise-1` fails")
     unestablished = outcome("Approved", withdrawn, both)
     write_accounting(unestablished["record"]["verification"]["batches"][1]["accounting"], [candidate_task(batch="follow-up")])
     refused(unestablished, "verification", "reopened candidate refuted over an accounting that confirmed it",
