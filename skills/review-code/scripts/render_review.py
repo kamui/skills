@@ -1933,6 +1933,9 @@ def read_verification(
 
     tasks = read_rows(report, f"{where}.tasks", verification.get("tasks", []), ("id", "type", "ruling"))
     rendered_findings = {finding["id"] for finding in findings}
+    follow_up = [batch["name"] for _where, batch in batches if batch["phase"] == "follow-up"]
+    refuted_in_follow_up = {task["id"] for _where, task in tasks
+                            if task["type"] == "candidate" and task["ruling"] == "refuted" and task.get("batch") in follow_up}
     by_id: dict[str, dict[str, Any]] = {}
     for location, task in tasks:
         identity = task["id"]
@@ -1960,8 +1963,9 @@ def read_verification(
             if reopened is not None and not (isinstance(reopened, str) and reopened.strip() and "\n" not in reopened):
                 report.add(location, "schema", "`reopened_as` must be a one-line item id when present")
                 reopened = None
-            if task["ruling"] == "fails" and not (reopened in rendered or (reopened and names_task(outstanding, reopened))):
-                report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as a rendered item or an `outstanding` entry")
+            refuted_after = reopened in refuted_in_follow_up and task.get("batch") not in follow_up
+            if task["ruling"] == "fails" and not (reopened in rendered or refuted_after or (reopened and names_task(outstanding, reopened))):
+                report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as: a rendered item, a candidate task the follow-up ruled `refuted` after the failure, or an `outstanding` entry")
             if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
                     and reopened not in {q["id"] for q in questions} and not names_task(outstanding, identity)):
                 report.add(location, "verification", f"premise `{identity}` is unresolved, so it names a rendered question in `reopened_as` or stays in `outstanding`")
