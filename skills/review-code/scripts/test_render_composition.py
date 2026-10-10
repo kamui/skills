@@ -477,6 +477,21 @@ def record_accounting() -> None:
     assert record["record"]["verification"]["allowance"]["follow_up_spent"] is True
     refused(outcome("Approved", [premise_task(ruling="fails")], [batch_paths("initial")]), "verification",
             "failed premise with nothing reopened", needle="reopened_as")
+    # The follow-up can refute the reopened candidate instead: nothing renders, and the record keeps both tasks.
+    both = [batch_paths("initial"), batch_paths("follow-up")]
+    withdrawn = [premise_task(ruling="fails", reopened_as="payments/retry-idempotency"), candidate_task(batch="follow-up", ruling="refuted")]
+    record, _ = gate(outcome("Approved", withdrawn, both), "failed premise whose reopened candidate the follow-up refuted")
+    assert record["run"]["coverage"] == "complete" and record["record"]["verification"]["outstanding"] == []
+    assert record["record"]["verification"]["tasks"] == withdrawn
+    restated = [premise_task(ruling="fails", reopened_as="premise-2"), premise_task("premise-2", batch="follow-up")]
+    refused(outcome("Approved", restated, both), "verification", "failed premise reopened as a premise that holds", needle="premise `premise-1` fails")
+    unrendered = [premise_task(ruling="fails", reopened_as="payments/retry-idempotency"), candidate_task(batch="follow-up")]
+    refused(outcome("Approved", unrendered, both), "verification", "failed premise reopened as a confirmed candidate that is not rendered",
+            needle="premise `premise-1` fails")
+    unestablished = outcome("Approved", withdrawn, both)
+    write_accounting(unestablished["record"]["verification"]["batches"][1]["accounting"], [candidate_task(batch="follow-up")])
+    refused(unestablished, "verification", "reopened candidate refuted over an accounting that confirmed it",
+            needle="establishes `confirmed`, not `refuted`")
     # A new blocker found after feedback needs a follow-up confirmation; with the follow-up spent it stays unpublished and outstanding.
     new_blocker = [candidate_task(), candidate_task("queue/lost-ack", batch="follow-up")]
     two_findings = copy.deepcopy(composition["findings"]) + [finding(id="queue/lost-ack", title="Acknowledge only after the write",
