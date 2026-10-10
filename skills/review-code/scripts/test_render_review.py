@@ -262,6 +262,24 @@ class Finalize(unittest.TestCase):
         report, _ = self.succeeded(private, store, composition=incomplete)
         self.assertIn("- `src/queue.ts`: unreviewed", report)
 
+    def test_failed_premise_whose_reopened_candidate_was_refuted_approves(self):
+        private = self.directory("refuted-reopening")
+        store = self.store(private)
+        composition = self.composition(private, store)
+        composition.update(findings=[], questions=[], observations=[])
+        composition["summary"]["status"] = "Approved"
+        premise = fixtures.premise_task(ruling="fails", reopened_as="payments/retry-idempotency")
+        candidate = fixtures.candidate_task(batch="follow-up", ruling="refuted")
+        composition["record"]["verification"] = {
+            "tasks": [premise, candidate], "outstanding": [],
+            "batches": [bundle(private, [premise]), bundle(private, [candidate], "follow-up", "follow-up")]}
+        self.write(private, composition)
+        report, record = self.succeeded(private, store, composition=composition)
+        self.assertEqual(record["record"]["verification"]["tasks"], [premise, candidate])
+        self.assertIn("Reopened as `payments/retry-idempotency`.", report)
+        checked = self.check(private, "--head", HEAD)
+        self.assertEqual((checked.returncode, checked.stdout.splitlines()[:2]), (0, ["status Approved", "coverage complete"]))
+
     def test_every_anchor_form_carries_each_body_once(self):
         private = self.directory("anchors")
         store = self.store(private, MANIFEST + [{"path": DELETED, "status": "D"}])
