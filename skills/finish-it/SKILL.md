@@ -89,7 +89,7 @@ When this delivery ran step 5 and its review is `Approved` at the current head w
 2. **Prepare the checkout.** Fetch, confirm the working tree is clean, and check out the pull request's head branch at its live head. A dirty tree is a stop, not something to clean up.
 3. **Resolve.** Brief the subagent to invoke `resolve-review` on the pull request. Artifact: an addressing summary this pass posted, or the existing same-head summary it updated, its last edit later than the review this round addressed, carrying an `addressed head=` equal to the pushed head, which equals the local head. Record whether the round added commits.
 4. **Review** as in step 5, on the new head.
-5. **Count the round**, then, from the second round of this delivery on, stop early when the review reached `Approved`, or when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. Once rounds start, the first round of a delivery always runs, a pull request that entered already `Approved` included.
+5. **Count the round**, then stop early when the review is `Approved` at the current head and the empty ledger check holds. From the second round of this delivery on, also stop early when the round made no progress: no commits added and the review's only unsettled items are disputed findings or questions waiting on a person. Once rounds start, the first round of a delivery always runs, a pull request that entered already `Approved` included.
 
 ### 7. Report
 
