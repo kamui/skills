@@ -1,7 +1,6 @@
 ---
 name: finish-it
-description: "Take a spec, issue, branch, or pull request through implement-publish, review-code-publish, and rounds of resolve-review, each step in a fresh subagent, resuming from wherever the pull request already is. Invoke only when the caller asks for finish-it by name."
-disable-model-invocation: true
+description: "Take a spec, issue, branch, or pull request to a reviewed pull request: implement and publish it, then run review-and-resolve rounds, each step in a fresh subagent, resuming wherever the pull request stands. Use only when the user says the explicit phrase \"Finish it\"."
 ---
 
 # Finish it
