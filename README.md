@@ -53,7 +53,7 @@ The skills use the open `SKILL.md` format. Their core behavior and model-selecti
 
 Installation has been checked with the `skills` CLI targets for Codex, Claude Code, Pi, and OpenCode. Other harnesses that support Agent Skills should also work. `agents/openai.yaml` adds optional Codex and ChatGPT interface metadata; other harnesses can ignore it.
 
-The four skills on the implementation and review loop are model-invocable, and `review-bot` is model-invocable so those skills can reach it; `finish-it` runs only when invoked by name. `find-medical-specialist` requires explicit invocation in Codex through its interface policy. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `review-code-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
+The four skills on the implementation and review loop are model-invocable, and `review-bot` is model-invocable so those skills can reach it; `finish-it` is model-invocable only when the user says the explicit phrase "Finish it". `find-medical-specialist` requires explicit invocation in Codex through its interface policy. A plain read-only review request now selects `review-code` in session mode for the working tree, current branch, range, or pull request; `review-code-publish` is for posting and calls it with `mode: one-shot`. Each skill is also directly invocable by name in [Codex](https://developers.openai.com/codex/skills), [Claude Code](https://code.claude.com/docs/en/skills), [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md), and [OpenCode](https://opencode.ai/docs/skills/).
 
 Skills that ship scripts run them with `python3` on the standard library alone, Python 3.9 or newer, and need `git`; `review-bot` needs `openssl` instead. macOS and Linux, including WSL, are the supported platforms; native Windows is not.
 
@@ -125,7 +125,7 @@ The host agent needs access to the forge to create the pull request.
 
 Runs one delivery: a spec, issue, branch, or pull request goes through `implement-publish`, one `review-code-publish` review, and rounds of `resolve-review` followed by `review-code-publish`, each step in its own fresh-context subagent that receives a fixed handoff packet and reads everything else from the pull request. It resumes from wherever the pull request already is: given a pull request with one round done it has two rounds remaining, and given one with many it still has at least one. The round total defaults to 3 and is set in the invocation text (`rounds: 5`). When the delivery's own first review approves with nothing to address, it runs no rounds. Otherwise the first round always runs, a pull request that entered already approved included. After any completed round it stops early on `Approved` at the current head when the skill's empty ledger check holds; from the second round on it also stops when a round makes no progress. A prose spec becomes an issue first, so every step has one stable spec source. It never merges.
 
-It is not model-invocable and runs only when invoked by name:
+The model invokes it only when the user says the explicit phrase "Finish it"; it also runs when invoked by name:
 
 ```text
 $finish-it
