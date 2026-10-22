@@ -481,6 +481,50 @@ def record_accounting() -> None:
     # High-risk no-blocker conclusion: a premise that holds approves, and a question can carry an unresolved one.
     record, _ = gate(outcome("Approved", [premise_task()], [batch_paths("initial")]), "safety premise holds")
     assert record["record"]["verification"]["tasks"][0]["type"] == "safety-premise"
+    details = record["summary"]["body"].split("<summary>Review details</summary>", 1)[1]
+    assert (f"## Settled premises\n\n- `premise-1` (data-integrity) at `{HEAD}` — {premise_task()['premise']}" in details), \
+        "a premise that holds is published, collapsed, with the head that settled it"
+    # A pull-request delta review carries a premise an earlier round settled, and publishes it with that round's head.
+    carried = {"id": "premise-0", "area": "concurrency", "premise": "One worker drains the retry queue.", "head": PRIOR}
+    delta = base_composition()
+    delta["run"]["prior_head"] = PRIOR
+    delta["record"] = copy.deepcopy(gate_composition()["record"])
+    delta["record"]["verification"]["carried_premises"] = [carried]
+    record, _ = gate(delta, "pull-request delta review carries a settled premise")
+    assert record["record"]["verification"]["carried_premises"] == [carried]
+    assert f"- `premise-0` (concurrency) at `{PRIOR}` — One worker drains the retry queue." in record["summary"]["body"]
+    for name, change, rule, needle in (
+        ("full review", {"run.prior_head": None}, "verification", "only a delta review carries settled premises"),
+        ("settled at this head", {"record.verification.carried_premises.0.head": HEAD}, "verification", "keeps the earlier head"),
+        ("abbreviated head", {"record.verification.carried_premises.0.head": PRIOR[:7]}, "trailer-sha", "`head`"),
+        ("unknown area", {"record.verification.carried_premises.0.area": "performance"}, "verification", "`area` must be one of"),
+        ("unknown key", {"record.verification.carried_premises.0.batch": "initial"}, "schema", "unknown key `batch`"),
+        ("carried and challenged", {"record.verification.carried_premises.0.id": "payments/retry-idempotency"}, "verification",
+         "both carried and challenged again"),
+    ):
+        value = copy.deepcopy(delta)
+        for path, replacement in change.items():
+            *parents, key = path.split(".")
+            holder = value
+            for part in parents:
+                holder = holder[int(part)] if part.isdigit() else holder[part]
+            if replacement is None:
+                del holder[key]
+            else:
+                holder[key] = replacement
+        refused(value, rule, f"carried premise: {name}", needle=needle)
+    refused(mutate(**{"run.prior_head": PRIOR, "record.verification.carried_premises": [carried]}), "prior-record",
+            "local carried premise without a prior record", needle="only from a prior record")
+    # A delta review sends an optional task only for a risk area the delta touches, and names it.
+    optional = candidate_task("queue/empty-pop", "optional", ruling="refuted")
+    on_delta = outcome("Approved", [optional], [batch_paths("initial")])
+    gate(on_delta, "optional task on a full review needs no area")
+    on_delta["run"]["prior_head"] = PRIOR
+    refused(on_delta, "verification", "optional task on a delta review without an area", needle="only for a risk area the delta touches")
+    on_delta["record"]["verification"]["tasks"][0]["area"] = "failover"
+    gate(on_delta, "optional task on a delta review that names its risk area")
+    on_delta["record"]["verification"]["tasks"][0]["area"] = "style"
+    refused(on_delta, "verification", "optional task naming no risk area", needle="named in `area`")
     gate(outcome("Needs Information", [premise_task(ruling="unresolved", reopened_as="queue/retry-order")], [batch_paths("initial")],
                  questions=copy.deepcopy(composition["questions"])), "unresolved premise routed to a material question")
     refused(outcome("Approved", [premise_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
@@ -648,8 +692,8 @@ def compact_reviews() -> None:
                 value["findings"][0][key] = empty
             refused(value, "schema", f"missing structured {key}", needle=key)
     value = base_composition()
-    value["run"]["coverage"] = "incomplete"
-    value["summary"]["coverage_gaps"] = ["src/queue.ts: execution unavailable; supply the queue fixture."]
+    value["run"].update(files="incomplete", coverage="incomplete")
+    value["summary"]["coverage_gaps"] = ["src/queue.ts: diff chunk missing; rebuild the context store."]
     payload, _, _ = composed(value, "visible question and coverage gap")
     visible = payload["summary"]["body"].split("<details>", 1)[0]
     assert "## Open questions" in visible and "## Coverage gaps" in visible
@@ -1042,7 +1086,7 @@ def main() -> int:
     _, batch, _ = composed(blocked, "required issue beside a blocker")
     assert batch["body"].startswith("**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.")
     gap = copy.deepcopy(required_issue)
-    gap["run"]["coverage"] = "incomplete"
+    gap["run"].update(verification="incomplete", coverage="incomplete")
     gap["summary"]["status"] = "Incomplete"
     gap["summary"]["coverage_gaps"] = ["The reviewThreads continuation failed; a missing reply could settle a prior finding."]
     _, batch, _ = composed(gap, "required issue beside a genuine coverage gap")
@@ -1070,7 +1114,7 @@ def main() -> int:
     incomplete = base_composition()
     incomplete["findings"] = [consider()]
     incomplete["questions"] = []
-    incomplete["run"]["coverage"] = "incomplete"
+    incomplete["run"].update(verification="incomplete", coverage="incomplete")
     incomplete["summary"]["status"] = "Incomplete"
     incomplete["summary"]["coverage_gaps"] = [
         "`reviewThreads` continuation 2 failed; a reply there could change `payments/retry-naming`.",
@@ -1084,12 +1128,15 @@ def main() -> int:
     approved_incomplete["summary"]["status"] = "Approved"
     refused(approved_incomplete, "status-consistency", "Approved with incomplete coverage")
     del incomplete["summary"]["coverage_gaps"]
-    refused(incomplete, "coverage-gaps", "incomplete coverage without a named gap")
+    incomplete["run"]["files"] = "incomplete"
+    refused(incomplete, "coverage-gaps", "an unreviewed file without a named gap", needle="name each unreviewed file")
+    incomplete["run"].update(files="complete", verification="complete")
+    refused(incomplete, "coverage-gaps", "incomplete coverage with neither fact incomplete", needle="goes in `outstanding`")
     gaps_but_complete = base_composition()
     gaps_but_complete["summary"]["coverage_gaps"] = ["a gap"]
     refused(gaps_but_complete, "coverage-gaps", "coverage gaps with complete coverage")
     blocker_incomplete = base_composition()
-    blocker_incomplete["run"]["coverage"] = "incomplete"
+    blocker_incomplete["run"].update(verification="incomplete", coverage="incomplete")
     blocker_incomplete["summary"]["coverage_gaps"] = ["Verification of `payments/retry-budget` did not finish."]
     payload, _, _ = composed(blocker_incomplete, "blocker takes precedence over incomplete coverage")
     assert payload["summary"]["body"].startswith("**Changes Requested (advisory)**") and "## Coverage gaps" in payload["summary"]["body"]

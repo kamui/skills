@@ -60,7 +60,7 @@ A CI job at the reviewed head settles the checks it runs; do not rerun them loca
 
 Supplied results do not replace changed-test inspection, independent verification, or safety-premise challenges. Missing metadata alone is neither a defect nor a coverage gap; judge what obligation remains unsettled. Keep test failures, environment failures, and missing checks distinct.
 
-In `summary.check_details`, account for each supplied check as `accepted`, `historical`, `reviewer-executed`, `pending`, or `unused/unavailable`, with its identity, original head, and a reason for the last four. Group shared context and reference supporting artifacts. Execute within Changed tests' bounds.
+In `summary.check_details`, account for each supplied check as `accepted`, `historical`, `reviewer-executed`, `pending`, `failed`, or `unavailable`, with its identity, original head, and a reason for the last five. Group shared context and reference supporting artifacts. Execute within Changed tests' bounds.
 
 ## Questions, observations, and gaps
 

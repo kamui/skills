@@ -61,7 +61,7 @@ Allow one initial batch and at most one follow-up, shared with runs continuing a
 
 ## Status
 
-Record two facts: `files` is complete when every changed file is reviewed or defensibly ignored, and `verification` when no required verification is outstanding. Coverage is complete when both are and required inputs and checks are accounted for. Each gap names the missing evidence, what it could change, affected candidate ids, and the recovery request.
+Record two facts: `files` is complete when every changed file is reviewed or defensibly ignored, and `verification` when `outstanding` is empty. Besides unfinished required verification, `outstanding` holds each gap tied to no file, such as a missing input or a check that never ran, with the check as its id. Coverage is complete when both facts are. Each gap names the missing evidence, what it could change, affected candidate ids, and the recovery request.
 
 Choose the first applicable status:
 
