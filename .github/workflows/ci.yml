@@ -11,15 +11,19 @@ permissions:
 jobs:
   skill-tests:
     name: Skill tests (${{ matrix.label }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # setup-python publishes no Python 3.9 build for Ubuntu 26.04, which ubuntu-latest is moving to:
+          # https://github.com/actions/runner-images/issues/14748
           - python: "3.9"
             label: Python 3.9
+            os: ubuntu-24.04
           - python: "3.x"
             label: latest Python 3
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
