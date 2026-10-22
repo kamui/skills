@@ -54,7 +54,7 @@ python3 scripts/review_context.py --worktree --merge-base <pinned merge-base> --
 
 This is also the shared context build: retain its output and store and do not snapshot or build again there. A non-zero exit is reported with the script's output: `snapshot-failed` when named by the snapshot operation, otherwise `script-failure`. Its `snapshot` section's `head` is the run head. A working-tree snapshot with an empty manifest and no dirty submodule content returns `nothing-to-review`. An empty explicitly requested range can still produce a record with an empty ledger.
 
-The snapshot leaves the real index, refs, and working files unchanged, and working files win over staging. Submodules are gitlinks at their checked-out commits; dirty submodule content is unreviewed and must be named under Coverage gaps, making coverage incomplete unless the user deliberately set it aside with a reason.
+The snapshot leaves the real index, refs, and working files unchanged, and working files win over staging. Submodules are gitlinks at their checked-out commits; dirty submodule content is unreviewed and must be an `outstanding` item, making coverage incomplete unless the user deliberately set it aside with a reason.
 
 Snapshots are unreferenced loose objects that `git gc --prune=now` can remove; the saved record retains snapshot identity and the manifest after that. Refs under `refs/review-code/session/` are leftovers from earlier versions of this skill; report them and delete them with `git update-ref -d` only on the user's authorization.
 
