@@ -18,7 +18,9 @@ record; its gate must withhold publication from a checked `Needs Information`
 record and permit it only for an `Approved` one. The submission
 block must never POST after a failed, empty, malformed,
 or mismatched head, must exit 3 only on that preflight route, and must keep a
-POST failure's own status under a distinct attempted-write stage. Every token
+POST failure's own status under a distinct attempted-write stage. Each run must
+write into its own attempt directory, so a retry in the same private directory
+never reads an earlier attempt's files, and no shell block may delete files. Every token
 acquisition must publish its write under a proved token and write nothing when
 the token is missing or refused; the dismissal, whose single write is its own
 proof, must write nothing when the token is missing. Neither the token nor the
@@ -388,8 +390,9 @@ class Chains(unittest.TestCase):
             (binary / "gh").chmod(0o755)
         return binary
 
-    def submission(self, shell, head_mode="match", post_rc=0, batch_head=fixtures.HEAD, tok="", silent_rc=0):
-        private = Path(tempfile.mkdtemp(dir=self.root))
+    def submission(self, shell, head_mode="match", post_rc=0, batch_head=fixtures.HEAD, tok="", silent_rc=0,
+                   private=None):
+        private = private or Path(tempfile.mkdtemp(dir=self.root))
         (private / "batch.json").write_text(json.dumps({"commit_id": batch_head, "event": "COMMENT", "body": "b",
                                                         "comments": []}), encoding="utf-8")
         binary = self.gh_binary()
@@ -413,6 +416,16 @@ class Chains(unittest.TestCase):
     @staticmethod
     def posts(calls):
         return [call for call in calls if "POST" in call]
+
+    @staticmethod
+    def attempt(result):
+        found = re.findall(r"attempt files in (\S+)$", result.stdout, re.MULTILINE)
+        assert len(found) == 1, result.stdout
+        return Path(found[0])
+
+    @staticmethod
+    def written(private, name):
+        return sorted(private.rglob(name))
 
     @staticmethod
     def tokens(private):
@@ -451,7 +464,7 @@ class Chains(unittest.TestCase):
                     self.assertIn("nothing was written", result.stdout)
                     self.assertNotIn("write attempted", result.stdout)
                     self.assertEqual(self.posts(calls), [])
-                    self.assertFalse((private / "review-response.json").exists())
+                    self.assertEqual(self.written(private, "review-response.json"), [])
 
     def dismissal(self, shell, tok="printf %s dismissal-token", why="superseded"):
         private = Path(tempfile.mkdtemp(dir=self.root))
@@ -512,8 +525,8 @@ class Chains(unittest.TestCase):
                     self.assertNotIn("write attempted", result.stdout)
                     self.assertEqual(self.posts(calls), [])
                     self.assertEqual(len(calls), 1)
-                    self.assertFalse((private / "head.txt").exists())
-                    self.assertFalse((private / "review-response.json").exists())
+                    self.assertEqual(self.written(private, "head.txt"), [])
+                    self.assertEqual(self.written(private, "review-response.json"), [])
                     if mode == "fail":
                         self.assertIn("HTTP 404", result.stdout)
 
@@ -527,7 +540,9 @@ class Chains(unittest.TestCase):
                 self.assertEqual(calls[0], ["api", "repos/{owner}/{repo}/pulls/7", "--jq", ".head.sha"])
                 self.assertEqual(self.posts(calls), [["api", "--method", "POST", "repos/{owner}/{repo}/pulls/7/reviews",
                                                       "--input", str(private / "batch.json")]])
-                self.assertEqual((private / "head.txt").read_text(encoding="utf-8").strip(), fixtures.HEAD)
+                attempt = self.attempt(result)
+                self.assertEqual(attempt.parent, private)
+                self.assertEqual((attempt / "head.txt").read_text(encoding="utf-8").strip(), fixtures.HEAD)
                 self.assertEqual(json.loads((private / "batch.json").read_text(encoding="utf-8"))["commit_id"],
                                  fixtures.HEAD)
 
@@ -549,13 +564,42 @@ class Chains(unittest.TestCase):
         result, calls, private = self.submission("sh", post_rc=1)
         self.assertEqual((result.returncode, len(self.posts(calls))), (1, 1))
         self.assertIn("re-read the pull request's reviews before one retry", result.stdout)
-        self.assertTrue((private / "review-response.stderr").read_text(encoding="utf-8"))
+        self.assertTrue((self.attempt(result) / "review-response.stderr").read_text(encoding="utf-8"))
         retry, calls, _ = self.submission("sh", post_rc=0)
         self.assertEqual(retry.returncode, 0, retry.stdout)
         self.assertEqual([("POST" in call) for call in calls], [False, True])
         stale, calls, _ = self.submission("sh", head_mode="mismatch")
         self.assertEqual((stale.returncode, self.posts(calls)), (3, []))
 
+
+    def test_a_retry_in_the_same_private_directory_never_reads_an_earlier_attempt(self):
+        # A harness may refuse any block containing `rm`, so earlier attempts' files stay on disk.
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                first, _, private = self.submission(shell)
+                self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+                earlier = self.attempt(first)
+                (earlier / "head.txt").write_text("STALE-HEAD\n", encoding="utf-8")
+                (earlier / "review-response.json").write_text("STALE-RESPONSE\n", encoding="utf-8")
+                attempts = []
+                for head_mode, post_rc, rc in (("fail", 0, 3), ("match", 1, 1)):
+                    result, calls, _ = self.submission(shell, head_mode, post_rc=post_rc, private=private)
+                    self.assertEqual(result.returncode, rc, result.stdout + result.stderr)
+                    self.assertNotIn("STALE", result.stdout + result.stderr)
+                    attempts.append(self.attempt(result))
+                failed, retried = attempts
+                self.assertFalse((failed / "head.txt").exists())
+                self.assertEqual((retried / "head.txt").read_text(encoding="utf-8").strip(), fixtures.HEAD)
+                self.assertEqual((retried / "review-response.json").read_text(encoding="utf-8"), "")
+                self.assertEqual(len({earlier, failed, retried}), 3)
+                self.assertEqual({p.parent for p in attempts}, {private})
+                self.assertEqual((earlier / "head.txt").read_text(encoding="utf-8"), "STALE-HEAD\n")
+
+    def test_no_publication_block_deletes_files(self):
+        blocks = re.findall(r"```sh\n(.*?)```", PUBLICATION.read_text(encoding="utf-8"), re.S)
+        self.assertTrue(blocks)
+        for text in blocks:
+            self.assertNotRegex(text, r"\brm\b")
 
 if __name__ == "__main__":
     try:
