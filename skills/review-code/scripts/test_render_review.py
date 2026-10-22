@@ -196,8 +196,8 @@ class Finalize(unittest.TestCase):
             self.assertIn(f"`{task['id']}`", report.split("## Verification", 1)[1])
         for batch in verification["batches"]:
             self.assertIn(f"accounting `{batch['accounting']}`", report)
-        for entry in verification["outstanding"]:
-            self.assertIn(f"- Outstanding: {entry}", report)
+        for item in verification["outstanding"]:
+            self.assertIn(f"- Outstanding `{item['id']}`: {item['claim']} Settled by: {item['settled_by']}", report)
         for entry in accounting["routed"]["unrecoverable_inputs"]:
             self.assertIn(f"- Unrecoverable input: {entry}", report)
         for key in ("unresolved", "disputed"):
@@ -252,11 +252,11 @@ class Finalize(unittest.TestCase):
         store = self.store(private)
         incomplete = self.composition(private, store)
         incomplete.update(findings=[], observations=[])
-        incomplete["run"]["coverage"] = "incomplete"
+        incomplete["run"].update(files="incomplete", verification="incomplete", coverage="incomplete")
         incomplete["summary"].update(status="Incomplete", coverage_gaps=["`src/queue.ts` unreviewed: diff chunk missing"])
         incomplete["record"]["files"][2]["state"] = "unreviewed"
         incomplete["record"]["verification"] = fixtures.verification(
-            [fixtures.premise_task(batch=None, ruling="pending")], [], outstanding=["premise-1: no awaited route"])
+            [fixtures.premise_task(batch=None, ruling="pending")], [], outstanding=[fixtures.pending_work("premise-1", "no awaited route")])
         incomplete["record"]["routed"]["unrecoverable_inputs"] = ["the spec's benchmark artifact"]
         self.write(private, incomplete)
         report, _ = self.succeeded(private, store, composition=incomplete)
@@ -676,7 +676,7 @@ class Derive(unittest.TestCase):
     def authored(self, private, kind):
         """What the reviewer writes: judgments, prose, and only the mechanical fields no saved input owns."""
         value = fixtures.gate_composition()
-        value["run"] = {"coverage": "complete", "specs": []}
+        value["run"] = {"files": "complete", "verification": "complete", "coverage": "complete", "specs": []}
         if kind != "pull-request":
             value["run"].update(base_ref="main", base_sha=self.base, issues=["acme/payments#123"], change_description=MESSAGE,
                                 specs=["spec/retries"])
@@ -1001,18 +1001,20 @@ class PriorRecord(unittest.TestCase):
                 "anchor": {"type": "line", "path": "src/ledger.py", "start_line": 2, "end_line": 2, "side": "RIGHT"}}
 
     def composition(self, status="Changes Requested", findings=None, tasks=None, batches=None, prior_items=None,
-                    outstanding=None, routed=None, coverage="complete", gaps=None):
+                    outstanding=None, routed=None, coverage="complete", gaps=None, files="complete"):
         summary = {"status": status, "intent": "Freeze accounts.", "issue_fit": "The spec's freeze rule, checked row by row.",
                    "coverage": "Complete merge-base diff reviewed."}
         if gaps:
             summary["coverage_gaps"] = gaps
         return {
             "run": {"target_kind": "range", "target": "main...HEAD", "base_ref": "main", "base_sha": self.base, "issues": [],
-                    "specs": ["spec/freeze"], "change_description": "Freeze accounts", "coverage": coverage},
+                    "specs": ["spec/freeze"], "change_description": "Freeze accounts", "files": files,
+                    "verification": "incomplete" if outstanding else "complete", "coverage": coverage},
             "summary": summary,
             "findings": findings if findings is not None else [], "questions": [], "observations": [],
             "prior_items": prior_items or [],
-            "record": {"repository": str(self.repo), "requirements": [], "files": [{"path": "src/ledger.py", "state": "reviewed"}],
+            "record": {"repository": str(self.repo), "requirements": [],
+                       "files": [{"path": "src/ledger.py", "state": "reviewed" if files == "complete" else "unreviewed"}],
                        "check_evidence": [],
                        "verification": {"tasks": tasks or [], "batches": batches or [], "outstanding": outstanding or []},
                        "routed": routed or {"unresolved": [], "disputed": [], "unrecoverable_inputs": []}},
@@ -1115,7 +1117,7 @@ class PriorRecord(unittest.TestCase):
         private = self.directory()
         self.accepted(private, 1, self.composition(
             status="Incomplete", tasks=[pending], prior_items=self.open_items("fixed"), coverage="incomplete",
-            outstanding=["ledger/negative-balance: must-fix candidate arrived after the follow-up was spent"],
+            outstanding=[fixtures.pending_work("ledger/negative-balance", "must-fix candidate arrived after the follow-up was spent")],
             gaps=["`ledger/negative-balance` needs confirmation the spent allowance cannot give"]), r1)
 
     def test_required_unresolved_verification_leaves_it_incomplete(self):
@@ -1124,12 +1126,12 @@ class PriorRecord(unittest.TestCase):
         pending = fixtures.premise_task(batch=None, ruling="pending")
         r1 = self.accepted(private, 0, self.composition(
             findings=[self.must_fix()], tasks=[task, pending], batches=[bundle(private, [task])], coverage="incomplete",
-            outstanding=["premise-1: no awaited route"], gaps=["premise-1 unverified"]))
+            outstanding=[fixtures.pending_work("premise-1", "no awaited route")], gaps=["premise-1 unverified"]))
         # The fix settles the finding, but the outstanding premise survives: complete coverage is refused.
         result = self.finalize(self.directory(), 1, self.composition(status="Approved", prior_items=self.open_items("fixed")[:1]), r1)
-        self.refused(result, "drops `premise-1: no awaited route`")
+        self.refused(result, "drops `premise-1`")
         self.accepted(self.directory(), 1, self.composition(
-            status="Incomplete", prior_items=self.open_items("fixed")[:1], coverage="incomplete", outstanding=["premise-1: no awaited route"],
+            status="Incomplete", prior_items=self.open_items("fixed")[:1], coverage="incomplete", outstanding=[fixtures.pending_work("premise-1", "no awaited route")],
             gaps=["premise-1 unverified"]), r1)
         # A task here that settles it lets it go.
         private = self.directory()
@@ -1196,6 +1198,44 @@ class PriorRecord(unittest.TestCase):
 
     # --- refusals -------------------------------------------------------------------------
 
+    def test_delta_review_after_unfinished_verification(self):
+        # Every file was reviewed and only a premise is outstanding, so the next run reviews the delta and carries it.
+        private = self.directory()
+        task = fixtures.candidate_task(FINDING_ID)
+        pending = fixtures.premise_task(batch=None, ruling="pending")
+        outstanding = [fixtures.pending_work("premise-1", "an awaited verifier ruling on the premise")]
+        r1 = self.accepted(private, 0, self.composition(
+            findings=[self.must_fix()], tasks=[task, pending], batches=[bundle(private, [task])], coverage="incomplete",
+            outstanding=outstanding))
+        prior = json.loads(r1.read_text(encoding="utf-8"))
+        self.assertEqual({key: prior["run"][key] for key in ("files", "verification", "coverage")},
+                         {"files": "complete", "verification": "incomplete", "coverage": "incomplete"})
+        body = prior["summary"]["body"]
+        self.assertIn("## Unfinished verification\n\n- `premise-1` — The verifier has not ruled on `premise-1`. "
+                      "Settled by: an awaited verifier ruling on the premise", body)
+        self.assertIn("files=complete verification=incomplete coverage=incomplete -->", prior["summary"]["trailer"])
+
+        def delta(**change):
+            value = self.composition(**{"prior_items": self.open_items("fixed")[:1], **change})
+            value["run"]["prior_head"] = self.heads[0]
+            return value
+
+        carried = self.accepted(self.directory(), 1, delta(status="Incomplete", coverage="incomplete", outstanding=outstanding), r1)
+        record = json.loads(carried.read_text(encoding="utf-8"))
+        self.assertEqual(record["run"]["prior_head"], self.heads[0])
+        self.assertIn("Delta review of", record["summary"]["body"])
+        self.assertIn("## Unfinished verification", record["summary"]["body"])
+        # A carried item keeps the delta review from approving, and dropping it unsettled is refused.
+        self.refused(self.finalize(self.directory(), 1, delta(status="Approved", coverage="incomplete", outstanding=outstanding), r1),
+                     "contradicts `run.coverage=incomplete`")
+        self.refused(self.finalize(self.directory(), 1, delta(status="Needs Information", coverage="incomplete",
+                                                              outstanding=outstanding), r1), "contradicts `run.coverage=incomplete`")
+        self.refused(self.finalize(self.directory(), 1, delta(status="Approved"), r1), "drops `premise-1`")
+        # Settling the item in the delta review's own batch lets it approve.
+        private = self.directory()
+        holds = fixtures.premise_task(batch="follow-up")
+        self.accepted(private, 1, delta(status="Approved", tasks=[holds], batches=[bundle(private, [holds], "follow-up", "follow-up")]), r1)
+
     def test_prior_record_refusals(self):
         r1 = self.first()
         good = dict(findings=[self.must_fix()], tasks=[self.carried(r1)], prior_items=self.open_items())
@@ -1235,7 +1275,7 @@ class PriorRecord(unittest.TestCase):
             ("unconfirmed carried blocker", dict(tasks=[]), "requires a candidate task with its id"),
             ("routed dropped", None, "drops `ledger/frozen-transfer`"),
             ("prior head", None, "starts at its head"),
-            ("delta review over incomplete prior coverage", None, "reviews the full diff, not the delta"),
+            ("delta review over a prior unreviewed file", None, "left a changed file unreviewed, so this run reviews the full diff"),
             ("base changed", None, "a re-review after fixes keeps its base"),
             ("repository changed", None, "but the prior record reviewed"),
             ("lineage rewritten", None, "`lineage=[]` conflicts"),
@@ -1263,15 +1303,15 @@ class PriorRecord(unittest.TestCase):
                     continue
                 if name == "prior head":
                     value["run"]["prior_head"] = self.heads[2]
-                elif name == "delta review over incomplete prior coverage":
+                elif name == "delta review over a prior unreviewed file":
                     base = self.directory()
-                    task, pending = fixtures.candidate_task(FINDING_ID), fixtures.premise_task(batch=None, ruling="pending")
+                    task = fixtures.candidate_task(FINDING_ID)
                     prior = self.accepted(base, 0, self.composition(
-                        findings=[self.must_fix()], tasks=[task, pending], batches=[bundle(base, [task])], coverage="incomplete",
-                        outstanding=["premise-1: no awaited route"], gaps=["premise-1 unverified"]))
-                    value.update(prior_items=self.open_items()[:1], summary=dict(value["summary"], coverage_gaps=["premise-1 unverified"]))
-                    value["run"].update(prior_head=self.heads[0], coverage="incomplete")
-                    value["record"]["verification"].update(tasks=[self.carried(prior)], outstanding=["premise-1: no awaited route"])
+                        findings=[self.must_fix()], tasks=[task], batches=[bundle(base, [task])], coverage="incomplete",
+                        files="incomplete", gaps=["`src/ledger.py` unreviewed: diff chunk missing"]))
+                    value.update(prior_items=self.open_items()[:1])
+                    value["run"]["prior_head"] = self.heads[0]
+                    value["record"]["verification"]["tasks"] = [self.carried(prior)]
                     self.refused(self.finalize(private, 1, value, prior), needle)
                     continue
                 elif name == "base changed":
