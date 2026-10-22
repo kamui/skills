@@ -18,7 +18,7 @@ Read when your judgments are settled. You write one input file of judgments and 
 
 ## Identity
 
-`workflow=v5b-35` versions review behavior for the duplicate-review shortcut. Raise it in `render_review.py` and here whenever admission, verification, rendering, or prior-state rules change. List caller-supplied issues and specs in `run.specs`. The finalizer derives the rest of the run trailer.
+`workflow=v5b-36` versions review behavior for the duplicate-review shortcut. Raise it in `render_review.py` and here whenever admission, verification, rendering, or prior-state rules change. List caller-supplied issues and specs in `run.specs`. The finalizer derives the rest of the run trailer.
 
 ## Finalize
 
