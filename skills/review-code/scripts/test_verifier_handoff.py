@@ -448,7 +448,6 @@ class HandoffTests(unittest.TestCase):
         returned["observation"] = {"fact": "The timeout defaults to one second.", "evidence": [ev("config.py:2")]}
         self.account(bundle, returned)
         for mutation in (
-            lambda r: r["candidates"][0]["corrections"].update(priority="P4"),
             lambda r: r["candidates"][0]["safety_rulings"][0].pop("conditions"),
             lambda r: r.update(observation=[r["observation"], r["observation"]]),
             lambda r: r.update(duplicate_groups=[["a/bug", "unknown"]]),
@@ -456,6 +455,35 @@ class HandoffTests(unittest.TestCase):
             invalid = copy.deepcopy(returned)
             mutation(invalid)
             self.account(bundle, invalid, code=1)
+
+    def test_invalid_correction_field_is_dropped_and_verdict_kept(self):
+        bundle = self.build(input_data([candidate(), candidate("b/bug")]))
+        returned = self.returned(bundle)
+        returned["candidates"][0]["corrections"] = {"priority": "P4", "action": "block", "extra": "x", "change": "Keep the key"}
+        returned["candidates"][1]["corrections"] = "P1"
+        raw = Path(self.assigned(bundle))
+        raw.write_text(json.dumps(returned), encoding="utf-8")
+        report = self.account_path(bundle, raw, code=1)
+        self.assertEqual(report["accounted"]["candidates"], ["a/bug", "b/bug"])
+        self.assertEqual(report["return"]["candidates"][0]["verdict"], "confirmed")
+        self.assertEqual(report["return"]["candidates"][0]["corrections"], {"change": "Keep the key"})
+        self.assertNotIn("corrections", report["return"]["candidates"][1])
+        for field in ("candidates[0].corrections.priority", "candidates[0].corrections.action",
+                      "candidates[0].corrections: unknown field extra", "candidates[1].corrections"):
+            self.assertTrue(any(line.startswith(field) and line.endswith("dropped, verdict kept")
+                                for line in report["violations"]), (field, report["violations"]))
+        self.assertEqual(json.loads(raw.read_text(encoding="utf-8")), returned)
+        for mutation in (
+            lambda c: c.update(verdict="plausible"),
+            lambda c: c.update(id=7),
+            lambda c: c.update(verdict="refuted", basis="contradiction"),
+            lambda c: c.update(evidence=[]),
+        ):
+            invalid = self.returned(bundle)
+            invalid["candidates"][0]["corrections"] = {"priority": "P4"}
+            mutation(invalid["candidates"][0])
+            report = self.account(bundle, invalid, code=1)
+            self.assertEqual(report["withheld"]["candidates"], ["a/bug"])
 
     def test_raw_parse_failures_and_no_overwrites(self):
         bundle = self.build(input_data([candidate()], [premise()]), inline=True)
