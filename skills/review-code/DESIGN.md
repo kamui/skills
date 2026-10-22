@@ -1,6 +1,6 @@
 # Review-code design
 
-`review-code` inspects a pull request, a committed range, or a working tree, and it returns a validated review record. It does not publish. This file explains the current design for maintainers. [`SKILL.md`](SKILL.md) and its references define runtime behavior. The [design history](../../docs/review-code/HISTORY.md) lives outside the installed skill. It keeps earlier rules, experiments, issue evidence, dated design notes, and release notes, and some of the rules there have since been superseded.
+`review-code` inspects a pull request, a committed range, or a working tree, and it returns a validated review record. It does not publish. This file explains the current design for maintainers. [`SKILL.md`](SKILL.md) and its references define runtime behavior. The [design history](../../docs/review-code/HISTORY.md) lives outside the installed skill. It keeps earlier rules, experiments, issue evidence, dated design notes, and release notes. Rules there may have been superseded.
 
 ## Review and verification
 
