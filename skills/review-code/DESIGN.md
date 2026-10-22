@@ -21,7 +21,7 @@ The reviewer judges evidence, admission, priority, and whether a safety area app
 | Prior reviews and re-reviews from a prior record | [`prior-state.md`](references/prior-state.md); [`forge_packet.py`](scripts/forge_packet.py) owns `packet_context`, `later-state`'s exclusions and the `shortcut` identity check, and the finalizer owns the prior-item trailer and the lineage |
 | Publication | [`review-code-publish`](../review-code-publish/SKILL.md) and its [publication reference](../review-code-publish/references/publication.md) |
 
-Keep dated evidence and superseded decisions in the [history](../../docs/review-code/HISTORY.md). Update this file when the current architecture or rule ownership changes. The [instruction budget check](scripts/test_instruction_budget.py) requires a dated entry here before any measured-load limit rises; that rationale belongs with the current design.
+Keep dated evidence and superseded decisions in the [history](../../docs/review-code/HISTORY.md). Update this file when the current architecture or rule ownership changes. The [instruction budget check](scripts/test_instruction_budget.py) limits instruction size to keep the skill small. Before raising a limit, look for text to cut. Change notes here don't need byte counts.
 
 ## Current mechanics
 
@@ -46,6 +46,16 @@ Workflow `v5b-32` versions admission, verification, rendering, and state semanti
 A verifier confirmed a candidate and returned `corrections.priority: "P4"`. Accounting withheld the whole record for that one optional field, the required task stayed unfinished, and the review ended `Incomplete`. `account_verifier_return.py` now drops an unknown or invalid correction field, or a `corrections` value that is not an object, from the report's retained return, records one violation naming it, and keeps the record accounted. The raw return file and its hash stay untouched. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. A dropped correction still makes the report structurally incomplete and exits 1, which verification already treats as usable for the accounted records.
 
 `verifier.md` now lists the allowed `priority` and `action` values, adding 64 bytes to the verifier instructions and example brief. `verification.md` says the report's return omits dropped corrections, raising the required-verifier path from 46,754 to 46,786 bytes. The runtime total rises from 55,891 to 55,987 of its 56,000 limit. `verifier-accounting/3` keeps its shape, so prior records' reports still establish carried confirmations. Workflow advances to `v5b-32` because verification now accounts a ruling it used to withhold, so the duplicate shortcut does not reuse a review that ended `Incomplete` for this reason.
+
+## Exact-head CI replaces local reruns, issue #449, 2026-10-22
+
+In the slowest sampled re-review, 46 of 81 minutes went to rerunning suites that CI had already passed at the same head. The caller's brief asked for the reruns, and the rubric had no rule for a CI job that was still running.
+
+Supplied checks now treats a CI job at the reviewed head as settling the checks it runs. A passed job is `accepted`. For a failed job, the reviewer reads the log and reruns only the failing test, which becomes a `must-fix` candidate. The reviewer records a running job as `pending` and doesn't wait for it. When a caller asks to rerun a check that CI covers, the reviewer cites CI instead. A job that doesn't match the obligation settles nothing, and the one-suite cap stays.
+
+A pending required check doesn't block approval by itself, because the forge's merge rules already wait on required checks. `record.check_evidence` accepts `pending` at the reviewed head with a reason and doesn't change status.
+
+Workflow `v5b-32` stops the duplicate-review shortcut from reusing a review that reran CI-covered checks.
 
 ## Settled routed items release their entries, issue #421, 2026-10-02
 
