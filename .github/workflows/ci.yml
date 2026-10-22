@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  skill-tests:
+    name: Skill tests (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # setup-python publishes no Python 3.9 build for Ubuntu 26.04, which ubuntu-latest is moving to:
+          # https://github.com/actions/runner-images/issues/14748
+          - python: "3.9"
+            label: Python 3.9
+            os: ubuntu-24.04
+          - python: "3.x"
+            label: latest Python 3
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run skills/*/scripts/test_*.py
+        run: |
+          python --version
+          failed=""
+          for test_file in skills/*/scripts/test_*.py; do
+            [ -f "$test_file" ] || { echo "::error::no test files match skills/*/scripts/test_*.py"; exit 1; }
+            echo "::group::$test_file"
+            if ! (cd "$(dirname "$test_file")" && python "$(basename "$test_file")"); then
+              echo "::error file=$test_file::$test_file failed"
+              failed="$failed $test_file"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "Failed test files:$failed"
+            exit 1
+          fi
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on scripts/
+        run: |
+          shellcheck --version
+          shellcheck scripts/sync-global-skills scripts/install-sync-timer

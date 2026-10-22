@@ -30,6 +30,10 @@ A script does mechanical work: builds a prompt, validates a payload, hashes cont
 
 `review-code/scripts/review_context.py --worktree` writes unreferenced loose objects and a temporary index without changing the real index, refs, or working files; configured clean filters run, including on untracked files, and retain their normal side effects.
 
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on each push to `main`. It runs each `skills/*/scripts/test_*.py` file from its own directory on Python 3.9 and on the latest Python 3, and the job fails and names each file that exits non-zero. A new test file there runs without a workflow change. It also runs `shellcheck` on `scripts/sync-global-skills` and `scripts/install-sync-timer`. Test files under `docs/research` are not run.
+
 ## `review-bot` departures
 
 `review-bot/scripts/review_token.py` mints a GitHub App installation token, which the conventions above do not anticipate. It departs from them in three recorded ways:
