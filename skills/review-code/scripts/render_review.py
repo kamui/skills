@@ -137,7 +137,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-33"
+WORKFLOW = "v5b-34"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -1779,7 +1779,7 @@ def load_prior(path: str) -> tuple[dict[str, Any] | None, list[str]]:
                  else "complete",
         "repository": record.get("repository"), "lineage": list(lineage), "items": items,
         "allowance": {flag: allowance.get(flag) is True for flag in ("initial_spent", "follow_up_spent")},
-        # A record finalized before workflow v5b-33 wrote each outstanding entry as `<id>: <reason>`.
+        # A record finalized before workflow v5b-34 wrote each outstanding entry as `<id>: <reason>`.
         "outstanding": [task_id(e) if isinstance(e, str) else e.get("id") for e in verification["outstanding"]
                         if isinstance(e, str) or isinstance(e, dict) and isinstance(e.get("id"), str)],
         "routed": {key: [e for e in routed.get(key) or [] if isinstance(e, str)] for key in ("unresolved", "disputed", "unrecoverable_inputs")},
