@@ -20,7 +20,7 @@ If `review-code` is not among the installed skills, stop with `missing-dependenc
 
 ## Inspect
 
-Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, the user's review instructions verbatim, such as a full re-review or a named risk, and the duplicate-review shortcut on unless those instructions ask for a new review.
+Invoke `review-code` with `mode: one-shot`, the explicit pull-request target (coordinate, URL, or current branch's open pull request), any user-supplied issues or spec, the user's review instructions verbatim, such as a full re-review or a named risk, and the duplicate-review shortcut on only when the user gave no review instructions.
 `review-code` follows those instructions over its defaults.
 Pass through supplied phase-1 packets, reviewer identity, focused-test policy, and check evidence under its Inputs table when provided.
 A supplied review-token command stays here rather than travelling with them: `references/publication.md` spends it on the writes below, and `review-code` never publishes.
