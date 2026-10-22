@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-32` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-33` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -40,6 +40,14 @@ Workflow `v5b-32` versions admission, verification, rendering, and state semanti
 **Verifier returns.** A brief assigns `return.json` inside its newly created bundle; the worker creates it and replies with only its path, and accounting reads that path alone, as a regular file reached through no link. An `--inline` build assigns no file, and the primary saves the inline response verbatim, as it does when a worker's write fails. Every build generates a fresh opaque `bundle_id`, stores it in the manifest and prints it after the brief's return encoding, and the worker copies it into its return; a rebuild of the same input gets a new ID. Accounting refuses a bundle whose manifest no longer matches its input, brief and printed ID, or that an older builder wrote, and withholds every task of a return whose `bundle_id` is not the bundle's. The finalizer requires each batch's accounting report to carry its bundle's ID and manifest hash. `--repair-of` records a repaired return's original, which must carry the bundle's ID. Structural success is only structural, and a repair grants no batch.
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
+
+## Invalid corrections keep their verdict, issue #452, 2026-10-22
+
+A verifier confirmed a candidate but returned `corrections.priority: "P4"`. Accounting withheld the whole record because of that one optional field. The required task stayed unfinished, and the review ended `Incomplete`.
+
+`account_verifier_return.py` now drops an unknown or invalid correction field from the report's copy of the return and keeps the record accounted. If `corrections` is not an object, it drops the whole value. Each drop adds one violation that names what it dropped. The raw return file and its hash don't change. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. Because a drop is a violation, the helper exits 1, and verification already uses an exit-1 report for its accounted records.
+
+`verifier.md` now lists the allowed `priority` and `action` values. `verification.md` says the report's copy of the return leaves out dropped corrections. `verifier-accounting/3` keeps its shape, so reports in prior records still establish carried confirmations. Verification now accounts a verdict it used to withhold, so the workflow advances to `v5b-33`. That stops the duplicate shortcut from reusing a review that ended `Incomplete` for this reason.
 
 ## Exact-head CI replaces local reruns, issue #449, 2026-10-22
 
