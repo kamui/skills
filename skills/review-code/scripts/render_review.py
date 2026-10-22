@@ -2286,7 +2286,9 @@ def example_composition() -> dict[str, Any]:
 
 # --- finalize -------------------------------------------------------------------------------------------------------
 
-SKILL_ROOT = Path(__file__).resolve().parent.parent
+# The path this script was invoked through, symlinks kept: publishers run scripts from the root a record names, and a
+# harness may refuse the resolved target of an installed skill.
+SKILL_ROOT = Path(os.path.abspath(__file__)).parent.parent
 REPORT = "report.md"
 OUTPUTS = ("record.json", "payload.json", "batch.json")
 # Leftovers of the retired profiles, removed with the other stale output so none reads as this run's.

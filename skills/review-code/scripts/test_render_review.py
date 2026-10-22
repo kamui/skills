@@ -588,6 +588,27 @@ class Finalize(unittest.TestCase):
         self.assertIn("batch.json is missing", self.check(private).stdout)
         self.assertEqual(self.check(self.directory("empty")).returncode, 1)
 
+    def test_symlinked_install_records_and_runs_from_the_installed_root(self):
+        installed = self.root / "home" / ".claude" / "skills" / "review-code"
+        installed.parent.mkdir(parents=True)
+        installed.symlink_to(SKILL, target_is_directory=True)
+        private = self.directory("symlinked")
+        store = self.store(private)
+        composition = self.composition(private, store)
+        composition["record"]["paths"].pop("skill_root")
+        self.write(private, composition)
+        finalized = run([installed / "scripts" / "render_review.py", "--store", store, private], cwd=self.root)
+        self.assertEqual(finalized.returncode, 0, finalized.stdout + finalized.stderr)
+        record = json.loads((private / "record.json").read_text(encoding="utf-8"))
+        recorded = Path(record["record"]["paths"]["skill_root"])
+        self.assertEqual(recorded, installed)
+        render = recorded / "scripts" / "render_review.py"
+        checked = run([render, "--check", "--head", HEAD, private], cwd=self.root)
+        self.assertEqual((checked.returncode, checked.stdout), (0, finalized.stdout))
+        emitted = run([render, "--emit-batch", private / "payload.json"], cwd=self.root)
+        self.assertEqual(emitted.returncode, 0, emitted.stdout + emitted.stderr)
+        self.assertEqual(json.loads(emitted.stdout), json.loads((private / "batch.json").read_text(encoding="utf-8")))
+
 
 # --- mechanical fields derived from the store and packet ----------------------------------------------------------
 
