@@ -62,7 +62,7 @@ later machine can verify what it restored.
 **`target.json`.** The file holds `id` and `schema_version`. It holds `repo`, `pr`, `head`,
 `merge_base`, and `base_sha`. `base_sha` is the PR's recorded base, and the file keeps it separate
 from the computed merge-base. `base_ref_name` is the upstream name, for example `master`.
-`local_base_branch` is always `main`, per §6. `negative_shas` lists the excluded SHAs with the
+`local_base_branch` is always `main`, per §5. `negative_shas` lists the excluded SHAs with the
 reason for each exclusion. The file also holds `cutoff`, `diff_manifest_sha256`, and
 `packet_sha256`. `diff_manifest_sha256` covers the changed-file list with per-file blob hashes, so
 a rebuilt mirror is checked against the frozen diff identity. The file records `shape`,
