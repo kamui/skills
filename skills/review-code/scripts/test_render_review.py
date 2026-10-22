@@ -628,6 +628,8 @@ class Derive(unittest.TestCase):
         for directory in ("src", "docs"):
             (self.repo / directory).mkdir(parents=True)
         self.git("init", "-q")
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.invalid")
         self.write_files({"AGENTS.md": "Root rules.\n", "docs/notes.md": "notes\n"})
         self.git("add", ".")
         self.git("commit", "-qm", "base")
@@ -642,8 +644,8 @@ class Derive(unittest.TestCase):
         self.temp.cleanup()
 
     def git(self, *args):
-        return subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", *args], cwd=self.repo,
-                              capture_output=True, text=True, encoding="utf-8", check=True).stdout.strip()
+        return subprocess.run(["git", *args], cwd=self.repo, capture_output=True, text=True, encoding="utf-8",
+                              check=True).stdout.strip()
 
     def write_files(self, extra, changed=None):
         for name, count in (("src/payments.ts", 60), ("src/retry-policy.ts", 30), ("src/queue.ts", 10)):
