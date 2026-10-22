@@ -43,9 +43,11 @@ Workflow `v5b-33` versions admission, verification, rendering, and state semanti
 
 ## Invalid corrections keep their verdict, issue #452, 2026-10-22
 
-A verifier confirmed a candidate and returned `corrections.priority: "P4"`. Accounting withheld the whole record for that one optional field, the required task stayed unfinished, and the review ended `Incomplete`. `account_verifier_return.py` now drops an unknown or invalid correction field, or a `corrections` value that is not an object, from the report's retained return, records one violation naming it, and keeps the record accounted. The raw return file and its hash stay untouched. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. A dropped correction still makes the report structurally incomplete and exits 1, which verification already treats as usable for the accounted records.
+A verifier confirmed a candidate but returned `corrections.priority: "P4"`. Accounting withheld the whole record because of that one optional field. The required task stayed unfinished, and the review ended `Incomplete`.
 
-`verifier.md` now lists the allowed `priority` and `action` values, and `verification.md` says the report's return omits dropped corrections. `verifier-accounting/3` keeps its shape, so prior records' reports still establish carried confirmations. Workflow advances to `v5b-33` because verification now accounts a ruling it used to withhold, so the duplicate shortcut does not reuse a review that ended `Incomplete` for this reason.
+`account_verifier_return.py` now drops an unknown or invalid correction field from the report's copy of the return and keeps the record accounted. It drops a `corrections` value that is not an object whole. Each drop adds one violation that names what it dropped. The raw return file and its hash don't change. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. Because a drop is a violation, the helper exits 1, and verification already uses an exit-1 report for its accounted records.
+
+`verifier.md` now lists the allowed `priority` and `action` values. `verification.md` says the report's copy of the return leaves out dropped corrections. `verifier-accounting/3` keeps its shape, so reports in prior records still establish carried confirmations. Verification now accounts a ruling it used to withhold, so the workflow advances to `v5b-33`. That stops the duplicate shortcut from reusing a review that ended `Incomplete` for this reason.
 
 ## Exact-head CI replaces local reruns, issue #449, 2026-10-22
 
