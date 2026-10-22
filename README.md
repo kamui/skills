@@ -176,7 +176,7 @@ The addresser evaluates every item against the current code and replies with one
 
 The reviewer submits one semantic status after coverage is known: `Changes Requested` for unsettled `must-fix` findings, `Incomplete` for unfinished material coverage or verification, `Needs Information` for an outcome-changing unanswered question, and `Approved` otherwise. Forge authorization controls only whether that status travels as `REQUEST_CHANGES`, `APPROVE`, or the default `COMMENT`; it never changes the conclusion.
 
-Each published review ends with a hidden `workflow=` trailer naming the version of the review rules. When the latest review at the current head carries the current version, the duplicate-review shortcut skips the pull request instead of reviewing it again. Raising the version after a rule change gives each open pull request one fresh review. [`output.md`](skills/review-code/references/output.md#identity) says when to raise it, and the [design history](docs/review-code/HISTORY.md#workflow-versions) lists earlier versions.
+Each published review ends with a hidden `workflow=` trailer naming the version of the review rules. When the latest review at the current head carries the current version, the duplicate-review shortcut skips the pull request instead of reviewing it again. Raising the version after a rule change gives each open pull request one fresh review. [`output.md`](skills/review-code/references/output.md#identity) says when to raise it, and the [design history](docs/review-code/HISTORY.md#workflow-versions) says how to find what an earlier version changed.
 
 ## Review comments and replies
 
