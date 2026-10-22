@@ -74,10 +74,10 @@ Run the head re-fetch, the equality check, and the single review POST as one she
 ```sh
 d=<private-dir> pr=<pr> reviewed=<reviewed head>
 tok=  # the review-token command when a reviewing app publishes; empty publishes as the authenticated user
-rm -f "$d/head.txt" "$d/review-response.json"
-gh api "repos/{owner}/{repo}/pulls/$pr" --jq .head.sha > "$d/head.part" 2> "$d/head.stderr"
+a=$(mktemp -d "$d/post.XXXXXX") || { echo "preflight failed: no attempt directory under $d; nothing was written"; exit 3; }
+gh api "repos/{owner}/{repo}/pulls/$pr" --jq .head.sha > "$a/head.part" 2> "$a/head.stderr"
 rc=$?
-live=$(cat "$d/head.part")
+live=$(cat "$a/head.part")
 batch_head=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["commit_id"])' "$d/batch.json" 2> /dev/null)
 case $live in
   *[!0-9a-f]*|"") shape=bad ;;
@@ -89,27 +89,27 @@ elif [ "$batch_head" != "$reviewed" ]; then reason="batch.json commit_id is not 
 elif [ "$live" != "$reviewed" ]; then reason="live head $live is not the reviewed head $reviewed"
 else reason=; fi
 if [ -n "$reason" ]; then
-  echo "preflight failed: $reason; nothing was written"; cat "$d/head.part" "$d/head.stderr"; exit 3
+  echo "preflight failed: $reason; nothing was written; attempt files in $a"; cat "$a/head.part" "$a/head.stderr"; exit 3
 fi
-mv "$d/head.part" "$d/head.txt"
+mv "$a/head.part" "$a/head.txt"
 if [ -n "$tok" ]; then
-  GH_TOKEN=$(sh -c "$tok" 2> "$d/reviewer.stderr") || GH_TOKEN=
+  GH_TOKEN=$(sh -c "$tok" 2> "$a/reviewer.stderr") || GH_TOKEN=
   export GH_TOKEN
-  if [ -z "$GH_TOKEN" ] || ! gh api "repos/{owner}/{repo}" --silent 2>> "$d/reviewer.stderr"; then
-    echo "preflight failed: the review-token command yielded no usable token; nothing was written"; cat "$d/reviewer.stderr"; exit 3
+  if [ -z "$GH_TOKEN" ] || ! gh api "repos/{owner}/{repo}" --silent 2>> "$a/reviewer.stderr"; then
+    echo "preflight failed: the review-token command yielded no usable token; nothing was written; attempt files in $a"; cat "$a/reviewer.stderr"; exit 3
   fi
 fi
-echo "preflight passed: live head $live"
-gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$d/review-response.json" 2> "$d/review-response.stderr"
+echo "preflight passed: live head $live; attempt files in $a"
+gh api --method POST "repos/{owner}/{repo}/pulls/$pr/reviews" --input "$d/batch.json" > "$a/review-response.json" 2> "$a/review-response.stderr"
 rc=$?
 if [ "$rc" -ne 0 ]; then
   echo "write attempted: review POST exited $rc; re-read the pull request's reviews before one retry"
-  cat "$d/review-response.json" "$d/review-response.stderr"; exit "$rc"
+  cat "$a/review-response.json" "$a/review-response.stderr"; exit "$rc"
 fi
-echo "review POST exited 0"; cat "$d/review-response.json"
+echo "review POST exited 0"; cat "$a/review-response.json"
 ```
 
-A `preflight failed` line with exit 3 is the freshness route: a failed, empty, malformed, or mismatched head, or a batch whose `commit_id` is not the reviewed head, publishes nothing, no POST runs, and the stale or unreadable head is reported. A `write attempted` line means the POST ran and exits with its own status, whatever that number is; exit 3 after that line is a write failure, never a preflight failure. The block posts the batch unchanged, reviewed `commit_id` included; it checks the head just before the write and is not an atomic compare-and-swap against a concurrent push. The malformed-comment rejection, ambiguous-write reconciliation, one-retry, gating, and retrospective rules above and below still govern what follows each outcome.
+A `preflight failed` line with exit 3 marks the freshness route. The block takes that route when the head fetch fails or returns an empty, malformed, or mismatched head, or when the batch's `commit_id` is not the reviewed head. On that route no POST runs and nothing publishes. Report the stale or unreadable head. A `write attempted` line means the POST ran. The block then exits with the POST's own status, whatever that number is. An exit 3 after that line is a write failure, never a preflight failure. The block posts the batch unchanged, with its reviewed `commit_id`. It checks the head just before the write, but that check is not an atomic compare-and-swap against a concurrent push. Each run writes its head and response files to a new `post.XXXXXX` attempt directory under `<private-dir>`. A retry therefore never reads an earlier attempt's files, and the block deletes nothing. Once that directory exists, each preflight line ends with `attempt files in <dir>`. Cite that directory with the outcome in the report. The rules above and below for malformed-comment rejection, ambiguous-write reconciliation, the one retry, gating, and retrospective runs still govern what follows each outcome.
 
 ## Authorized gating emission
 
