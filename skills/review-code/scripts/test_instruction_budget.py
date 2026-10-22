@@ -7,7 +7,7 @@ first review of a pull request or local target (one record shape serves both), a
 review with one required verifier batch, and a re-review, which covers both a pull
 request's prior review and a local prior record. Evidence and code are excluded;
 the example brief also reports its supplied records.
-Raise a limit only with a dated DESIGN.md justification. Exit 0 within all limits,
+The limits keep the skill small; before raising one, look for text to cut. Exit 0 within all limits,
 1 over budget, 2 when an instruction or helper output cannot be read.
 """
 from __future__ import annotations
@@ -21,7 +21,6 @@ import build_verifier_prompt as builder
 
 SKILL = Path(__file__).resolve().parent.parent
 ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
-# DESIGN.md records the 2026-10-02 synthesis, the 2026-10-22 exact-head CI raise, and the evidence required to raise these limits.
 BUDGET = 22_000
 LIMITS = {"runtime total": 57_000, "always loaded": BUDGET, "review": 40_000,
           "required verifier": 48_000, "re-review": 50_000,
