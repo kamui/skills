@@ -130,7 +130,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-31"
+WORKFLOW = "v5b-32"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -912,7 +912,7 @@ CANDIDATE_RULINGS = ("confirmed", "refuted", "unresolved", "withheld", "pending"
 PREMISE_RULINGS = ("holds", "fails", "unresolved", "withheld", "pending")
 PHASES = ("initial", "follow-up")
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
-EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "failed", "unavailable")
+EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "pending", "failed", "unavailable")
 BATCH_CAP = 2  # one initial plus one follow-up
 
 
@@ -2100,7 +2100,7 @@ def read_record(
         else:
             if row["head"] != run.get("head"):
                 report.add(where, "check-evidence", f"`{row['outcome']}` evidence is attributed to the reviewed head; a result from another head is `historical` and is never relabelled")
-            if row["outcome"] == "reviewer-executed":
+            if row["outcome"] in ("reviewer-executed", "pending"):
                 read_line(report, where, row, "reason")
     fields["check_evidence"] = [r for _w, r in evidence]
 
