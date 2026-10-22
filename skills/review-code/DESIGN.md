@@ -25,7 +25,7 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-31` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-32` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
@@ -40,6 +40,12 @@ Workflow `v5b-31` versions admission, verification, rendering, and state semanti
 **Verifier returns.** A brief assigns `return.json` inside its newly created bundle; the worker creates it and replies with only its path, and accounting reads that path alone, as a regular file reached through no link. An `--inline` build assigns no file, and the primary saves the inline response verbatim, as it does when a worker's write fails. Every build generates a fresh opaque `bundle_id`, stores it in the manifest and prints it after the brief's return encoding, and the worker copies it into its return; a rebuild of the same input gets a new ID. Accounting refuses a bundle whose manifest no longer matches its input, brief and printed ID, or that an older builder wrote, and withholds every task of a return whose `bundle_id` is not the bundle's. The finalizer requires each batch's accounting report to carry its bundle's ID and manifest hash. `--repair-of` records a repaired return's original, which must carry the bundle's ID. Structural success is only structural, and a repair grants no batch.
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
+
+## Invalid corrections keep their verdict, issue #452, 2026-10-22
+
+A verifier confirmed a candidate and returned `corrections.priority: "P4"`. Accounting withheld the whole record for that one optional field, the required task stayed unfinished, and the review ended `Incomplete`. `account_verifier_return.py` now drops an unknown or invalid correction field, or a `corrections` value that is not an object, from the report's retained return, records one violation naming it, and keeps the record accounted. The raw return file and its hash stay untouched. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. A dropped correction still makes the report structurally incomplete and exits 1, which verification already treats as usable for the accounted records.
+
+`verifier.md` now lists the allowed `priority` and `action` values. That adds 64 bytes to the verifier instructions, the example brief and the runtime total, which rises from 55,891 to 55,955 of its 56,000 limit. `verifier-accounting/3` keeps its shape, so prior records' reports still establish carried confirmations. Workflow advances to `v5b-32` because verification now accounts a ruling it used to withhold, so the duplicate shortcut does not reuse a review that ended `Incomplete` for this reason.
 
 ## Settled routed items release their entries, issue #421, 2026-10-02
 
