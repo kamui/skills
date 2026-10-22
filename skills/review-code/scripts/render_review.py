@@ -2543,7 +2543,7 @@ def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> bool:
 def check_unread_manifests(report: Report, verification: dict[str, Any], unread: dict[str, Any]) -> None:
     """A batch whose manifest cannot be read establishes no ruling, so only unfinished work listed in `outstanding` names it."""
     tasks, outstanding = verification.get("tasks"), verification.get("outstanding")
-    listed = {e.get("id") for e in outstanding if isinstance(e, dict)} if isinstance(outstanding, list) else set()
+    listed = [e.get("id") for e in outstanding if isinstance(e, dict)] if isinstance(outstanding, list) else []
     for index, task in enumerate(tasks if isinstance(tasks, list) else []):
         batch = task.get("batch") if isinstance(task, dict) else None
         if isinstance(batch, str) and batch in unread and not (task.get("ruling") in ("withheld", "pending") and task.get("id") in listed):

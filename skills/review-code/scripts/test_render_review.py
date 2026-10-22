@@ -331,6 +331,15 @@ class Finalize(unittest.TestCase):
         _report, record = self.succeeded(private, store, composition=composition)
         self.assertEqual((record["status"], record["run"]["coverage"]), ("Incomplete", "incomplete"))
 
+        # Ids that are not strings get a named refusal over such a batch, not a traceback.
+        composition["record"]["verification"]["tasks"][0]["id"] = ["payments/retry-idempotency"]
+        composition["record"]["verification"]["outstanding"][0]["id"] = {"id": task["id"]}
+        self.write(private, composition)
+        result = self.finalize(private, store)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertIn("failed with exit 1; later stages did not run:", result.stdout)
+
     def test_a_task_batch_that_is_not_a_name_is_refused_by_schema(self):
         for shape in (["initial"], {"name": "initial"}):
             for manifest in (True, False):
