@@ -1357,12 +1357,11 @@ def read_summary(report: Report, summary: Any, run: dict[str, Any] | None) -> di
     if not isinstance(gaps, list) or not all(isinstance(gap, str) and gap.strip() and "\n" not in gap for gap in gaps):
         report.add("summary.coverage_gaps", "schema", "`coverage_gaps` must be a list of one-line entries")
         gaps = []
-    coverage = run["coverage"] if run else None
-    # Every other gap is an `outstanding` item, which publishes as its own section.
     if run is not None and run["files"] == "incomplete" and not gaps:
         report.add("summary.coverage_gaps", "coverage-gaps", "`run.files` is `incomplete`, so `coverage_gaps` must name each unreviewed file")
-    if coverage == "complete" and gaps:
-        report.add("summary.coverage_gaps", "coverage-gaps", "`coverage_gaps` is non-empty, which contradicts `run.coverage=complete`")
+    if run is not None and run["files"] == "complete" and gaps:
+        report.add("summary.coverage_gaps", "coverage-gaps", "`coverage_gaps` names only unreviewed files, and `run.files=complete`; "
+                   "a gap tied to no file, such as a check that never ran, goes in `outstanding` so the next round settles or reports it")
     fields["coverage_gaps"] = gaps
     fields["check_details"] = read_lines(report, "summary.check_details", summary.get("check_details", []))
     return fields

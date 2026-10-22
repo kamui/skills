@@ -1086,9 +1086,9 @@ def main() -> int:
     _, batch, _ = composed(blocked, "required issue beside a blocker")
     assert batch["body"].startswith("**Changes Requested (advisory)** — 1 must-fix finding, 1 open question.")
     gap = copy.deepcopy(required_issue)
-    gap["run"].update(verification="incomplete", coverage="incomplete")
+    gap["run"].update(files="incomplete", coverage="incomplete")
     gap["summary"]["status"] = "Incomplete"
-    gap["summary"]["coverage_gaps"] = ["The reviewThreads continuation failed; a missing reply could settle a prior finding."]
+    gap["summary"]["coverage_gaps"] = ["`src/queue.ts` unreviewed: diff chunk missing; rebuild the context store."]
     _, batch, _ = composed(gap, "required issue beside a genuine coverage gap")
     assert batch["body"].startswith("**Incomplete** — 1 open question.") and "## Coverage gaps" in batch["body"]
     print("ok required issue: body question, current workflow, no-issue identity, status precedence")
@@ -1114,21 +1114,17 @@ def main() -> int:
     incomplete = base_composition()
     incomplete["findings"] = [consider()]
     incomplete["questions"] = []
-    incomplete["run"].update(verification="incomplete", coverage="incomplete")
+    incomplete["run"].update(files="incomplete", coverage="incomplete")
     incomplete["summary"]["status"] = "Incomplete"
-    incomplete["summary"]["coverage_gaps"] = [
-        "`reviewThreads` continuation 2 failed; a reply there could change `payments/retry-naming`.",
-        "Verification of `payments/retry-budget` did not finish; it stays unpublished.",
-    ]
+    incomplete["summary"]["coverage_gaps"] = ["`src/queue.ts` unreviewed: diff chunk missing; rebuild the context store."]
     payload, batch, _ = composed(incomplete, "incomplete coverage with a verified unrelated finding")
     assert payload["summary"]["body"].startswith("**Incomplete** — 1 optional improvement.") and len(batch["comments"]) == 1
-    assert "## Coverage gaps\n\n- `reviewThreads` continuation 2 failed" in payload["summary"]["body"]
+    assert "## Coverage gaps\n\n- `src/queue.ts` unreviewed" in payload["summary"]["body"]
     assert "coverage=incomplete -->" in payload["summary"]["trailer"]
     approved_incomplete = copy.deepcopy(incomplete)
     approved_incomplete["summary"]["status"] = "Approved"
     refused(approved_incomplete, "status-consistency", "Approved with incomplete coverage")
     del incomplete["summary"]["coverage_gaps"]
-    incomplete["run"]["files"] = "incomplete"
     refused(incomplete, "coverage-gaps", "an unreviewed file without a named gap", needle="name each unreviewed file")
     incomplete["run"].update(files="complete", verification="complete")
     refused(incomplete, "coverage-gaps", "incomplete coverage with neither fact incomplete", needle="goes in `outstanding`")
@@ -1138,6 +1134,9 @@ def main() -> int:
     blocker_incomplete = base_composition()
     blocker_incomplete["run"].update(verification="incomplete", coverage="incomplete")
     blocker_incomplete["summary"]["coverage_gaps"] = ["Verification of `payments/retry-budget` did not finish."]
+    refused(blocker_incomplete, "coverage-gaps", "a gap tied to no file beside other unfinished work", needle="goes in `outstanding`")
+    blocker_incomplete["run"].update(files="incomplete", verification="complete")
+    blocker_incomplete["summary"]["coverage_gaps"] = ["`src/queue.ts` unreviewed: diff chunk missing; rebuild the context store."]
     payload, _, _ = composed(blocker_incomplete, "blocker takes precedence over incomplete coverage")
     assert payload["summary"]["body"].startswith("**Changes Requested (advisory)**") and "## Coverage gaps" in payload["summary"]["body"]
     print("ok statuses: all four composed, contradictions with blockers, coverage, and questions refused")
