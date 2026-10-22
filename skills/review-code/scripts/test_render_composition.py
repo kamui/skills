@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import atexit
 import copy
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -278,6 +279,18 @@ def write_accounting(path: str, tasks: list) -> None:
     Path(path).write_text(json.dumps(report), encoding="utf-8")
 
 
+def write_bundle(batch: dict, tasks: list) -> None:
+    """A bundle manifest and the accounting report reconciled against it, as the helper scripts write them."""
+    write_accounting(batch["accounting"], tasks)
+    manifest = json.dumps({"format": "verifier-manifest/3", "bundle_id": f"bundle-{batch['name']}",
+                           "batch": {"id": batch["name"], "phase": batch["phase"]}}).encode("utf-8")
+    Path(batch["bundle"]).mkdir(parents=True, exist_ok=True)
+    (Path(batch["bundle"]) / "manifest.json").write_bytes(manifest)
+    report = json.loads(Path(batch["accounting"]).read_text(encoding="utf-8"))
+    report.update(bundle_id=f"bundle-{batch['name']}", manifest_sha256=hashlib.sha256(manifest).hexdigest())
+    Path(batch["accounting"]).write_text(json.dumps(report), encoding="utf-8")
+
+
 def candidate_task(identity: str = "payments/retry-idempotency", trigger: str = "must-fix", batch: str | None = "initial",
                    ruling: str = "confirmed") -> dict:
     return {"id": identity, "type": "candidate", "trigger": trigger, "batch": batch, "ruling": ruling}
@@ -298,7 +311,7 @@ def verification(tasks: list, batches: list, initial: bool | None = None, follow
                  outstanding: list | None = None) -> dict:
     phases = {b["phase"] for b in batches}
     for batch in batches:
-        write_accounting(batch["accounting"], [t for t in tasks if t.get("batch") == batch["name"]])
+        write_bundle(batch, [t for t in tasks if t.get("batch") == batch["name"]])
     return {"tasks": tasks, "batches": batches,
             "allowance": {"initial_spent": bool(phases) if initial is None else initial,
                           "follow_up_spent": "follow-up" in phases if follow_up is None else follow_up},
@@ -414,6 +427,9 @@ def record_accounting() -> None:
     ]
     for rule, bad in contradictions:
         refused(bad, rule, f"record rejects {rule}")
+    for shape in (["initial"], {"name": "initial"}):
+        refused(mutate(**{"record.verification.tasks.0.batch": shape}), "schema", f"a task whose `batch` is a {type(shape).__name__}",
+                needle="`batch` must be a batch name or null")
     # Every target kind shares the record shape; the record names the skill root its readers run scripts from.
     gate(mutate(**{"run.target_kind": "worktree", "run.tree": "e" * 40, "run.target": None}), "worktree record")
     gate(mutate(**{"run.prior_head": PRIOR}), "delta review record")
@@ -473,6 +489,18 @@ def record_accounting() -> None:
     Path(premise_mismatch["record"]["verification"]["batches"][0]["accounting"]).write_text(
         json.dumps({"withheld": ["premise-1"], "accounted": "x", "return": None}), encoding="utf-8")
     refused(premise_mismatch, "verification", "malformed accounting report", needle="does not account")
+    # An accounted record without its verdict or ruling establishes nothing.
+    for task, key in ((candidate_task(), "verdict"), (candidate_task(ruling="refuted"), "verdict"), (premise_task(), "ruling")):
+        confirmed = task["ruling"] == "confirmed"
+        silent = outcome("Changes Requested" if confirmed else "Approved", [task], [batch_paths("initial")],
+                         findings=copy.deepcopy(composition["findings"]) if confirmed else None)
+        accounting = Path(silent["record"]["verification"]["batches"][0]["accounting"])
+        report = json.loads(accounting.read_text(encoding="utf-8"))
+        for returned in report["return"]["candidates"] + report["return"]["premises"]:
+            del returned[key]
+        accounting.write_text(json.dumps(report), encoding="utf-8")
+        refused(silent, "verification", f"{task['type']} task `{task['ruling']}`, accounted record has no {key}",
+                needle=f"returns no `{key}` for `{task['id']}`")
     # A batch whose accounting produced no report still records its withheld tasks as outstanding work.
     no_report = outcome("Incomplete", [candidate_task(ruling="withheld"), candidate_task("payments/retry-naming", "optional", ruling="withheld")],
                         [batch_paths("initial")], outstanding=[pending_work("payments/retry-idempotency", "accounting produced no report")])
@@ -561,6 +589,30 @@ def record_accounting() -> None:
     write_accounting(unestablished["record"]["verification"]["batches"][1]["accounting"], [candidate_task(batch="follow-up")])
     refused(unestablished, "verification", "reopened candidate refuted over an accounting that confirmed it",
             needle="establishes `confirmed`, not `refuted`")
+    # In a mandatory area the reopened candidate needs a follow-up ruling, or it stays outstanding; concurrency does not.
+    late = premise_task(ruling="fails", batch="follow-up", reopened_as="payments/retry-naming")
+    for status, premise, items, name in (
+        ("Approved", late, {"findings": [consider()]}, "premise fails in the follow-up, reopened_as a rendered finding with no candidate task"),
+        ("Approved", dict(late, batch="initial"), {"findings": [consider()]},
+         "premise fails in the initial batch, reopened_as a rendered finding with no candidate task"),
+        ("Needs Information", dict(late, reopened_as="queue/retry-order"), {"questions": copy.deepcopy(composition["questions"])},
+         "premise fails in the follow-up, reopened_as a rendered question with no candidate task"),
+    ):
+        refused(outcome(status, [premise], both, **items), "verification", name, needle="premise `premise-1` fails")
+    same_batch = [premise_task(ruling="fails", reopened_as="payments/retry-idempotency"), candidate_task()]
+    refused(outcome("Changes Requested", same_batch, both, findings=copy.deepcopy(composition["findings"])), "verification",
+            "premise fails in the initial batch, reopened_as a finding the same batch confirmed", needle="premise `premise-1` fails")
+    pending_reopened = [late, candidate_task("payments/retry-naming", "data-integrity", batch=None, ruling="pending")]
+    record, _ = gate(outcome("Incomplete", pending_reopened, both,
+                             outstanding=[pending_work("payments/retry-naming", "the follow-up was spent before the premise failed")]),
+                     "premise fails in the follow-up, reopened candidate pending and named in outstanding")
+    assert record["run"]["coverage"] == "incomplete" and record["status"] == "Incomplete"
+    asked = [premise_task(ruling="fails", reopened_as="queue/retry-order"),
+             candidate_task("queue/retry-order", "data-integrity", batch="follow-up", ruling="unresolved")]
+    gate(outcome("Needs Information", asked, both, questions=copy.deepcopy(composition["questions"])),
+         "premise fails in the initial batch, reopened_as a question the follow-up left unresolved")
+    gate(outcome("Approved", [dict(late, area="concurrency")], both, findings=[consider()]),
+         "concurrency premise fails in the follow-up, reopened_as a rendered finding with no candidate task")
     # A new blocker found after feedback needs a follow-up confirmation; with the follow-up spent it stays unpublished and outstanding.
     new_blocker = [candidate_task(), candidate_task("queue/lost-ack", batch="follow-up")]
     two_findings = copy.deepcopy(composition["findings"]) + [finding(id="queue/lost-ack", title="Acknowledge only after the write",

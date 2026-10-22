@@ -281,6 +281,85 @@ class Finalize(unittest.TestCase):
         checked = self.check(private, "--head", HEAD)
         self.assertEqual((checked.returncode, checked.stdout.splitlines()[:2]), (0, ["status Approved", "coverage complete"]))
 
+    def test_a_batch_whose_manifest_cannot_be_read_establishes_no_ruling(self):
+        def unread(private, tasks):
+            batch = dict(bundle(private, tasks), name="initial", phase="initial")
+            (private / "initial" / "manifest.json").unlink()
+            return batch
+
+        private = self.directory("unread-ruled")
+        store = self.store(private)
+        composition = self.composition(private, store)
+        composition["record"]["verification"]["batches"] = [unread(private, [fixtures.candidate_task()])]
+        self.write(private, composition)
+        result = self.finalize(private, store)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("derive failed with exit 1", result.stdout)
+        self.assertIn("task `payments/retry-idempotency` names batch `initial`, whose bundle manifest", result.stdout)
+        self.assertEqual(self.consumables(private), [])
+
+        # A second row with no manifest, borrowing the initial batch's report, cannot close a failed premise.
+        private = self.directory("unread-follow-up")
+        store = self.store(private)
+        composition = self.composition(private, store)
+        composition.update(findings=[], questions=[], observations=[])
+        composition["summary"]["status"] = "Approved"
+        premise = fixtures.premise_task(ruling="fails", reopened_as="payments/retry-idempotency")
+        candidate = fixtures.candidate_task(batch="follow-up", ruling="refuted")
+        initial = bundle(private, [premise, dict(candidate, batch="initial")])
+        (private / "follow-up").mkdir()
+        borrowed = {"name": "follow-up", "phase": "follow-up", "bundle": str(private / "follow-up"),
+                    "accounting": initial["accounting"], "operation": initial["operation"]}
+        composition["record"]["verification"] = {"tasks": [premise, candidate], "outstanding": [], "batches": [initial, borrowed]}
+        self.write(private, composition)
+        result = self.finalize(private, store)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("task `payments/retry-idempotency` names batch `follow-up`, whose bundle manifest", result.stdout)
+
+        # Withheld work listed in outstanding still records such a batch.
+        private = self.directory("unread-withheld")
+        store = self.store(private)
+        composition = self.composition(private, store)
+        composition.update(findings=[], questions=[])
+        composition["summary"]["status"] = "Incomplete"
+        composition["run"].update(verification="incomplete", coverage="incomplete")
+        task = fixtures.candidate_task(ruling="withheld")
+        composition["record"]["verification"] = {
+            "tasks": [task], "batches": [unread(private, [task])],
+            "outstanding": [fixtures.pending_work(task["id"], "the bundle manifest cannot be read")]}
+        self.write(private, composition)
+        _report, record = self.succeeded(private, store, composition=composition)
+        self.assertEqual((record["status"], record["run"]["coverage"]), ("Incomplete", "incomplete"))
+
+        # Ids that are not strings get a named refusal over such a batch, not a traceback.
+        composition["record"]["verification"]["tasks"][0]["id"] = ["payments/retry-idempotency"]
+        composition["record"]["verification"]["outstanding"][0]["id"] = {"id": task["id"]}
+        self.write(private, composition)
+        result = self.finalize(private, store)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertIn("failed with exit 1; later stages did not run:", result.stdout)
+
+    def test_a_task_batch_that_is_not_a_name_is_refused_by_schema(self):
+        for shape in (["initial"], {"name": "initial"}):
+            for manifest in (True, False):
+                with self.subTest(batch=shape, manifest=manifest):
+                    private = self.directory("batch-shape")
+                    store = self.store(private)
+                    composition = self.composition(private, store)
+                    task = fixtures.candidate_task()
+                    batch = dict(bundle(private, [task]), name="initial", phase="initial")
+                    if not manifest:
+                        (private / "initial" / "manifest.json").unlink()
+                    composition["record"]["verification"]["tasks"] = [dict(task, batch=shape)]
+                    composition["record"]["verification"]["batches"] = [batch]
+                    self.write(private, composition)
+                    result = self.finalize(private, store)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("compose failed with exit 1", result.stdout)
+                    self.assertIn("record.verification.tasks[0]: schema: `batch` must be a batch name or null", result.stdout)
+                    self.assertNotIn("Traceback", result.stderr)
+
     def test_every_anchor_form_carries_each_body_once(self):
         private = self.directory("anchors")
         store = self.store(private, MANIFEST + [{"path": DELETED, "status": "D"}])
