@@ -26,6 +26,10 @@ Use the single-context layout: `GLOSSARY.md` at the repo root and `docs/adr/`. S
 
 `review-code-publish` and `implement-publish` require `review-code`; each stops with a named report when it is absent. `finish-it` requires `implement-publish`, `review-code-publish`, `resolve-review`, and `review-code`, and stops with `missing-dependency: <name>` before any write. These are the two named exceptions to installing skills alone. `review-bot` is optional for `review-code-publish` and `finish-it`; its absence is a recorded fallback to the authenticated user with gating withheld, never a stop or a third install-alone exception.
 
+### Design docs
+
+A DESIGN.md describes the current design and who owns each rule. When a change alters either, edit the text in place. Don't add dated or per-issue sections. The pull request records why a change was made, and superseded decisions go in the matching history file under `docs/`, such as `docs/review-code/HISTORY.md`.
+
 ### Global skill sync
 
 After successfully pushing or merging a change under `skills/` into `origin/main`, run `scripts/sync-global-skills` and report its result. The script owns installation and provenance-checked removal; do not reproduce those operations by hand.

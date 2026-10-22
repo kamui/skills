@@ -1,31 +1,32 @@
 # Design: a rerunnable reviewer benchmark suite (`bench/`)
 
-**Status: §8 steps 1–5 implemented in [`bench/`](https://github.com/kamui/code-review-bench/blob/main/bench/README.md): the #137 targets migrated,
-mirrors and dependency caches rebuilt and verified, the arms written as data, and the shakedown
-filed as the run `bench/runs/2026-09-24-toy/` by `file_attempt.py`. Step 6 added the runner, scorer
-and comparer (`run_cell.py`, `score.py`, `compare.py`), the four fresh targets with sealed
-registers, and the first frozen run, `bench/runs/2026-09-24-builtin-baseline/`, which awaits
-dispatch.**
+**Status: §8 steps 1 to 5 are implemented in [`bench/`](https://github.com/kamui/code-review-bench/blob/main/bench/README.md). The #137 targets are
+migrated. The mirrors and dependency caches are rebuilt and verified. The arms are written as data.
+`file_attempt.py` filed the shakedown as the run `bench/runs/2026-09-24-toy/`. Step 6 added the
+runner `run_cell.py`, the scorer `score.py`, and the comparer `compare.py`. It also added the four
+fresh targets with sealed registers and the first frozen run, `bench/runs/2026-09-24-builtin-baseline/`,
+which awaits dispatch.**
 
-Written 2026-09-24 after the first-draft proposal was reviewed by a Codex reviewer (`gpt-6-astra`,
-reasoning `high`); the review is
-[`builtin-review-benchmark-2026-09-24/review-2.md`](builtin-review-benchmark-2026-09-24/review-2.md)
+This design was written on 2026-09-24, after a Codex reviewer reviewed the first-draft proposal.
+The reviewer was `gpt-6-astra` with reasoning `high`. The review is
+[`builtin-review-benchmark-2026-09-24/review-2.md`](builtin-review-benchmark-2026-09-24/review-2.md),
 and §9 records the disposition of every item. This design supersedes the layout of
-[`builtin-review-benchmark-2026-09-24/`](builtin-review-benchmark-2026-09-24/README.md), whose
-tools and fixtures migrate here (§8).
+[`builtin-review-benchmark-2026-09-24/`](builtin-review-benchmark-2026-09-24/README.md). That
+bundle's tools and fixtures migrate here, as §8 describes.
 
 ## 1. Why
 
-The benchmark will be rerun whenever a new model ships, whenever Claude Code or Codex change
-their built-in reviewers, and whenever `review-code` changes. The current layout cannot support
-that: the mechanism, the truth, and one experiment's narrative sit in a dated research bundle;
-target definitions are shell fragments quoted in prose; registers are markdown; packets and
-mirrors live outside the repository; results are hand-pasted rows. A rerun rebuilds by hand and
-compares by reading.
+The benchmark will be rerun whenever a new model ships, whenever Claude Code or Codex change their
+built-in reviewers, and whenever `review-code` changes. The current layout cannot support that.
+The mechanism, the truth, and one experiment's narrative sit in a dated research bundle. Target
+definitions are shell fragments quoted in prose. Registers are markdown. Packets and mirrors live
+outside the repository. Results are rows pasted by hand. A rerun has to rebuild everything by hand
+and compare results by reading them.
 
-The design separates three things that change on different clocks and adds the one thing the
-first draft lacked: an explicit **comparison contract** that says which revisions two runs must
-share to be compared, and which differences are declared dimensions rather than confounds.
+The design separates three things that change on different schedules. It also adds the one thing
+the first draft lacked, an explicit **comparison contract**. The contract says which revisions two
+runs must share before they can be compared. It also says which differences are declared
+dimensions rather than confounds.
 
 ## 2. Layout
 
@@ -52,167 +53,188 @@ bench/
 docs/research/<dated>/       narrative only: hypothesis, freeze, deviations, evaluation, pointing at a run
 ```
 
-Mirrors, dependency caches, and transcripts never enter the repository. They live in a cache
-root outside it (`~/.t3/bench-cache/`) with their identities and archive hashes recorded in the
-manifests, so a later machine can verify what it restored.
+Mirrors, dependency caches, and transcripts never enter the repository. They live in a cache root
+outside it, `~/.t3/bench-cache/`. The manifests record their identities and archive hashes, so a
+later machine can verify what it restored.
 
 ## 3. Suite manifests
 
-**`target.json`.** `id`, `schema_version`; `repo`, `pr`, `head`, `merge_base`, `base_sha` (the
-PR's recorded base, kept separate from the computed merge-base), `base_ref_name` (upstream name,
-e.g. `master`), `local_base_branch` (always `main`, §6), `negative_shas` with the reason each is
-excluded, `cutoff`, `diff_manifest_sha256` (the changed-file list with per-file blob hashes, so a
-rebuilt mirror is checked against the frozen diff identity), `packet_sha256`; `shape`, `domain`,
-`language`; `merged_at`, `fix_published_at`, `originating_issue`; `provisioning` (recipe, resolved
-dependency identities such as lockfile hashes and cache archive hashes, toolchain and platform
-record, focused-command allowance, what is unavailable); `exposure` (when the target entered the
-suite, which runs and skill-development work used it, when its register was published);
+**`target.json`.** The file holds `id` and `schema_version`. It holds `repo`, `pr`, `head`,
+`merge_base`, and `base_sha`. `base_sha` is the PR's recorded base, and the file keeps it separate
+from the computed merge-base. `base_ref_name` is the upstream name, for example `master`.
+`local_base_branch` is always `main`, per §5. `negative_shas` lists the excluded SHAs with the
+reason for each exclusion. The file also holds `cutoff`, `diff_manifest_sha256`, and
+`packet_sha256`. `diff_manifest_sha256` covers the changed-file list with per-file blob hashes, so
+a rebuilt mirror is checked against the frozen diff identity. The file records `shape`,
+`domain`, and `language`, and also `merged_at`, `fix_published_at`, and `originating_issue`.
+`provisioning` holds the recipe, the resolved dependency identities such as lockfile hashes and
+cache archive hashes, the toolchain and platform record, the focused-command allowance, and what is
+unavailable. `exposure` records when the target entered the suite, which runs and
+skill-development work used it, and when its register was published. Last, the file names the
 `current_register` version.
 
-**`packet.md`** is the factual forge state at the cutoff: title, body, commits, reviews and
-comments up to the cutoff, with the omissions reported. It carries **no run policy**: no
-execution note, no worker model, no report instructions, no experiment label. Those were baked
-into the #137 packets and would restore the very intervention the current benchmark removed; the
-run supplies policy separately (§5). The #137 packets are preserved byte-for-byte with their
-hashes as `packet.legacy.md` and a derived factual `packet.md` is built and hashed once.
+**`packet.md`** is the factual forge state at the cutoff. It holds the title, the body, the
+commits, and the reviews and comments up to the cutoff, and it reports the omissions. It carries
+**no run policy**. It has no execution note, no worker model, no report instructions, and no
+experiment label. The #137 packets included those, and they would restore the very intervention
+that the current benchmark removed. The run supplies policy separately, as §5 describes. The #137
+packets are preserved byte-for-byte with their hashes as `packet.legacy.md`. A derived factual
+`packet.md` is built and hashed once.
 
-**`register.v<N>.json`.** `target`, `version`, `sealed_at`, `sealed_by` (adjudicator configuration:
-person or model, effort, tools, evidence access), `supersedes`; `defects[]` with `id` (stable across
-versions), `title`, `trigger`, `consequence`, `required_outcome`, `evidence[]`, `demonstration`
-(the reproduction performed), `added_in_version`; `non_defects[]` (plausible claims adjudicated
-false, with reasoning, so a later scorer can classify a repeated claim consistently); `clean_basis`
-for a clean target. A new version adds defects or non-defects and never renumbers; the old file
-stays.
+**`register.v<N>.json`.** The file holds `target`, `version`, `sealed_at`, `sealed_by`, and
+`supersedes`. `sealed_by` is the adjudicator configuration, which covers person or model, effort,
+tools, and evidence access. `defects[]` lists each defect with an `id` that stays stable across
+versions, plus `title`, `trigger`, `consequence`, `required_outcome`, `evidence[]`,
+`demonstration`, and `added_in_version`. `demonstration` is the reproduction that was performed.
+`non_defects[]` lists plausible claims adjudicated false, with reasoning, so a later scorer can
+classify a repeated claim consistently. A clean target has `clean_basis`. A new version adds
+defects or non-defects and never renumbers. The old file stays.
 
-**`arm.json`.** `id`, `kind` (`review-code`, `claude-builtin`, `codex`), `model`, `effort`,
-`requested_workers` (model and effort for sub-agents or verifiers), `skill_tree` (a tree hash, or
-`current`, which `run_cell.py` resolves to a hash at run start and freezes in the manifest),
-`isolation` (fresh home, safe mode, allowed tools, sandbox mode, network off), `adapter`
-(transport for the range and the packet, output capture rule), `budget_usd_per_attempt`. Nothing
-in an arm file is "as observed"; observations go in `attempt.json`.
+**`arm.json`.** The file holds `id`, `kind`, `model`, `effort`, `requested_workers`, `skill_tree`,
+`isolation`, `adapter`, and `budget_usd_per_attempt`. `kind` is `review-code`, `claude-builtin`,
+or `codex`. `requested_workers` gives the model and effort for sub-agents or verifiers.
+`skill_tree` is a tree hash or `current`. `run_cell.py` resolves `current` to a hash at run start
+and freezes that hash in the manifest. `isolation` covers a fresh home, safe mode, allowed tools,
+sandbox mode, and network off. `adapter` sets the transport for the range and the packet, and the
+output capture rule. Nothing in an arm file is "as observed". Observations go in `attempt.json`.
 
 ## 4. Run manifests
 
-**`manifest.json`.** `run_id`, `created_at`, `method_revision` (commit of the one-shot method),
-`rubric_version`, `schema_versions`; `arms[]` as resolved: the arm file hash, the resolved skill
-tree, the CLI versions observed at a pre-dispatch probe, the built-in prompt hashes expected;
-`cohort` (the frozen list of target IDs with their register versions; exclusions with reasons);
-`planned_cells[]` (`target`, `arm`, `replicate`), `caps` (attempts, replacements, spend, reserve,
-concurrency), `sealed_order`, `rates` (the `rates.json` entries used, by date), `execution_policy`
-(the allowance text given to every arm, and per-target availability). A change to any resolved
-field after the first dispatch invalidates the affected cells; the manifest is append-only after
-that point and drift is recorded as a deviation with the cells it invalidates.
+**`manifest.json`.** The file holds `run_id`, `created_at`, `method_revision`, `rubric_version`,
+and `schema_versions`. `method_revision` is the commit of the one-shot method. `arms[]` lists each
+arm as resolved, with the arm file hash, the resolved skill tree, the CLI versions observed at a
+pre-dispatch probe, and the expected built-in prompt hashes. `cohort` is the frozen list of target
+IDs with their register versions, plus the exclusions with reasons. `planned_cells[]` lists cells
+by `target`, `arm`, and `replicate`. `caps` sets limits on attempts, replacements, spend, reserve,
+and concurrency. The file also holds `sealed_order`. `rates` holds the `rates.json` entries used,
+by date. `execution_policy` holds the allowance text given to every arm and the per-target
+availability. After the first dispatch, a change to any resolved field invalidates the affected
+cells. From that point on the manifest is append-only, and any drift is recorded as a deviation
+with the cells it invalidates.
 
-**`attempt.json`.** `attempt_id` (never reused), `cell`, `predecessor`, `retry_reason`,
-`continuity` (`fresh` or `resumed from <attempt>`), `dispatched_at`; `observed` (harness and CLI
-version, model per request from transcripts, effort, built-in prompt hash and header line,
-skill tree, executed diff commands, sandbox, tree identity before and after); `phase_reached`,
-`disposition` (`valid completed`, `stopped: <reason>`, `harness-invalid: <reason>`,
-`skill failure`), `arm_reported_complete`; `audit` (violations, guidance probes, network commands);
-`usage` (per-request records with model, cache tier and service tier, plus the priced total and
-its bounds); `timing` (§7); `native_payload` path and hash; `normalized` path, `parse_status`
-(`parsed`, `empty`, `unresolved` with the reason); `transcript_archive` (path outside the repo,
-SHA-256, restoration check result).
+**`attempt.json`.** `attempt_id` is never reused. The file also holds `cell`, `predecessor`,
+`retry_reason`, `continuity`, and `dispatched_at`. `continuity` is `fresh` or
+`resumed from <attempt>`. `observed` records the harness and CLI version, the model per request
+from transcripts, the effort, the built-in prompt hash and header line, the skill tree, the
+executed diff commands, the sandbox, and the tree identity before and after. The file records
+`phase_reached` and `disposition`. `disposition` is `valid completed`, `stopped: <reason>`,
+`harness-invalid: <reason>`, or `skill failure`. The file also records `arm_reported_complete`.
+`audit` lists violations, guidance probes, and network commands. `usage` holds per-request records
+with model, cache tier and service tier, plus the priced total and its bounds. `timing` follows
+§7. The file holds the `native_payload` path and hash, and the `normalized` path. `parse_status`
+is `parsed`, `empty`, or `unresolved` with the reason. `transcript_archive` holds the path outside
+the repo, the SHA-256, and the result of the restoration check.
 
-**`mapping.v<M>.json`.** `attempt_id`, `register` (target, version, file hash), `rubric_version`,
-`scored_by` (adjudicator configuration), `blind_token`; `items[]` keyed by stable item ID with
-`assignment` (`defect:<id>`, `false-finding`, `non-material`, `unresolved`), `duplicate_group`,
-`fix_sufficiency` (`sufficient`, `partial`, `absent`, `n/a`) for recoveries, `priority_error`,
-`notes`; `review_level` (`native_verdict`, `approved_on_buggy`, `zero_recovery`, `false_clean`,
-`completion`). Unavailable is distinct from zero everywhere.
+**`mapping.v<M>.json`.** The file holds `attempt_id`, `register`, `rubric_version`, `scored_by`,
+and `blind_token`. `register` names the target, the version, and the file hash. `scored_by` is the
+adjudicator configuration. `items[]` is keyed by stable item ID. Each item has `assignment`,
+`duplicate_group`, `fix_sufficiency`, `priority_error`, and `notes`. `assignment` is
+`defect:<id>`, `false-finding`, `non-material`, or `unresolved`. `fix_sufficiency` applies to
+recoveries and is `sufficient`, `partial`, `absent`, or `n/a`. `review_level` holds
+`native_verdict`, `approved_on_buggy`, `zero_recovery`, `false_clean`, and `completion`.
+Unavailable is distinct from zero everywhere.
 
-**`results.v<M>.json`.** For each `(target, arm)`: attempts included, cells unattempted, cells
-harness-invalid, replacements used; recall in **attempt-level** and **completed-only** views;
-raw and unique false findings; approved-on-buggy and zero-recovery counts, kept apart; fix
-sufficiency; priority and rank errors; noise; contemporaneous cost, common-rate repriced cost, and
-quota consumed, each labelled; elapsed to payload and to completion. Per-shape and per-cohort
-(regression versus fresh) tables. The file names the mapping versions and register versions it
-was computed from.
+**`results.v<M>.json`.** For each `(target, arm)`, the file reports the attempts included, the
+cells unattempted, the cells that were harness-invalid, and the replacements used. It reports
+recall in an **attempt-level** view and a **completed-only** view. It reports raw and unique false
+findings. It reports approved-on-buggy and zero-recovery counts and keeps them apart. It reports
+fix sufficiency, priority and rank errors, and noise. It reports contemporaneous cost, common-rate
+repriced cost, and quota consumed, and labels each one. It reports the elapsed time to payload and
+to completion. It has per-shape and per-cohort tables, where the cohorts are regression and fresh.
+The file names the mapping versions and register versions it was computed from.
 
 ## 5. Run policy and isolation
 
-Run policy is a per-run document rendered from the manifest and given identically to every arm
-alongside the packet: the local branch layout (`main` at the merge-base, `review-head` at the
-head), the execution allowance, what is unavailable, and nothing about how to review.
+Run policy is a per-run document. It is rendered from the manifest and given identically to every
+arm alongside the packet. It states the local branch layout, with `main` at the merge-base and
+`review-head` at the head. It states the execution allowance and what is unavailable. It says
+nothing about how to review.
 
-Reviewers run on the same machine as the suite, so the suite's plaintext registers, other
-attempts, and the repository history are readable unless something prevents it. Three controls,
-in strength order, and the manifest records which applied:
+Reviewers run on the same machine as the suite. The suite's plaintext registers, other attempts,
+and the repository history are therefore readable unless something prevents it. The design has
+three controls, listed in order of strength, and the manifest records which ones applied:
 
-1. **Export, not checkout.** Each attempt's working set is an export directory holding only the
-   clone, the packet, the run policy, and the fresh home; the reviewer's working directory is
+1. **Export, not checkout.** Each attempt's working set is an export directory. It holds only the
+   clone, the packet, the run policy, and the fresh home. The reviewer's working directory is
    inside it. Nothing from `bench/` is mounted or copied in.
 2. **Read audit with relative paths resolved.** `attempt_audit.py` resolves every path against the
-   command's working directory and flags any that escapes the export, including `..` escapes and
-   `~` expansion; it verifies that the built-in's guidance probes hit nothing. The first draft's
-   audit missed relative paths (review M1) and is fixed as part of migration.
-3. **Enforced sandbox.** A dedicated unprivileged user (`bench`) that owns the export and cache
-   roots and has no read access to the maintainer's home or the repository checkout; the wrapper
+   command's working directory. It flags any path that escapes the export, including `..` escapes
+   and `~` expansion. It verifies that the built-in's guidance probes hit nothing. Review item M1
+   found that the first draft's audit missed relative paths, and the migration fixes that.
+3. **Enforced sandbox.** A dedicated unprivileged user, `bench`, owns the export and cache roots.
+   That user has no read access to the maintainer's home or the repository checkout. The wrapper
    runs reviewers as that user. This is the only control that makes contamination impossible
-   rather than detectable, and it is a one-time setup step; a run that lacks it says so.
+   rather than detectable. It is a one-time setup step. A run that lacks it says so.
 
-Network is off for every arm (no web tools, sandbox network disabled, and any network command in
-the audit is a violation). Registers for fresh targets stay encrypted until first scoring.
+Network is off for every arm. The arms get no web tools, the sandbox disables the network, and the
+audit treats any network command as a violation. Registers for fresh targets stay encrypted until
+first scoring.
 
 ## 6. Comparison contract
 
-Two runs are comparable on a target when they share the target's `packet_sha256`,
-`diff_manifest_sha256`, register version (or the later run's mapping has been re-adjudicated
-against the earlier version's defects, §7), rubric version, metric code revision, execution
-policy, and provisioning identity. Every other difference is a **declared dimension** that the
-comparison names: product version (harness, CLI, prompt hash), model, effort, skill tree, rates,
-adjudicator configuration. A product-version delta is reported as a product-version delta, never
-as an isolated model or skill effect.
+Two runs are comparable on a target when they share all of the following: the target's
+`packet_sha256`, the `diff_manifest_sha256`, the register version, the rubric version, the metric
+code revision, the execution policy, and the provisioning identity. The register version may
+differ if the later run's mapping has been re-adjudicated against the earlier version's defects,
+as §7 describes. Every other difference is a **declared dimension** that the comparison names. The
+declared dimensions are the product version, meaning the harness, the CLI, and the prompt hash, and
+also the model, effort, skill tree, rates, and adjudicator configuration. The comparison reports a
+product-version delta as a product-version delta, never as an isolated model or skill effect.
 
-The cohort is frozen per run. `compare.py` never silently intersects: it takes the intended cohort,
-reports which targets are missing from which run and why, and labels any subset analysis as such.
-Costs are shown contemporaneous and common-rate repriced side by side, with quota separate.
+The cohort is frozen per run. `compare.py` never silently intersects cohorts. It takes the
+intended cohort and reports which targets are missing from which run and why. It labels any subset
+analysis as a subset analysis. It shows contemporaneous costs and common-rate repriced costs side
+by side, and it shows quota separately.
 
 ## 7. Scoring, register revisions, and timing
 
-**Rubric.** `bench/rubric/scoring.v<N>.md` states the definitions once: material defect, false
-finding including unsupported assertions, duplicate grouping, fix sufficiency, false clean
-(approved on a buggy target) versus zero recovery, priority and rank errors, noise. The #137
-evaluation and the 2026-09-24 draft disagreed on false clean (review M6); version 1 of the rubric
-carries both counts as separate columns so neither history is rewritten.
+**Rubric.** `bench/rubric/scoring.v<N>.md` states each definition once. It defines material
+defect, false finding including unsupported assertions, duplicate grouping, fix sufficiency, false
+clean versus zero recovery, priority and rank errors, and noise. False clean means approved on a
+buggy target. The #137 evaluation and the 2026-09-24 draft disagreed on false clean, as review
+item M6 noted. Version 1 of the rubric carries both counts as separate columns, so neither history
+is rewritten.
 
-**Register revisions.** Adding a defect changes judgments, not just arithmetic: items previously
-mapped `non-material` or `false-finding` may be recoveries of the new defect. When a register gains
-a version, every historical attempt on that target gets a **blind re-adjudication for the new
-defect only**, producing a new mapping version; the old mapping and results stay, and the
-comparison names which mapping version it used. Target (n)'s history is the worked example: its
-version 1 (clean) and version 2 (GT-n1) both migrate, with the adjudication ruling as evidence.
+**Register revisions.** Adding a defect changes judgments as well as arithmetic. Items previously
+mapped `non-material` or `false-finding` may be recoveries of the new defect. When a register
+gains a version, every historical attempt on that target gets a **blind re-adjudication for the
+new defect only**. That re-adjudication produces a new mapping version. The old mapping and results
+stay, and the comparison names which mapping version it used. Target (n)'s history is the worked
+example. Its version 1, which is clean, and its version 2, which has GT-n1, both migrate, with the
+adjudication ruling as evidence.
 
-**Timing.** Four events, in order: `dispatched_at`, `payload_validated_at` (the arm's own validator
-for `review-code`; successful normalization for the built-ins, which therefore runs inside the
-wrapper before completion is declared), `completed_at` (written only on a valid completed
-attempt), and `stopped_at` in the attempt record for every other outcome. The first wrapper
-wrote completion on any exit and stamped validation afterwards (review M8); the migrated
-`dispatch.sh` stamps validation during normalization, writes `completed_at` only after it, and
-writes `stop.json` for any other outcome.
+**Timing.** The suite records four events, in order. The first is `dispatched_at`. The second is
+`payload_validated_at`. For `review-code`, the arm's own validator sets it. For the built-ins,
+successful normalization sets it, so normalization runs inside the wrapper before the wrapper
+declares completion. The third is `completed_at`, which is written only on a valid completed
+attempt. The fourth is `stopped_at`, which goes in the attempt record for every other outcome. The
+first wrapper wrote completion on any exit and stamped validation afterwards, as review item M8
+found. The migrated `dispatch.sh` stamps validation during normalization, writes `completed_at`
+only after that, and writes `stop.json` for any other outcome.
 
-**Parsing.** An output that lacks the arm's expected markers is `unresolved`, not an empty review;
-the authoritative final response is selected by session and role, not "last text seen"; fixtures
-cover clean, incomplete, malformed and multi-worker outputs.
+**Parsing.** An output that lacks the arm's expected markers is `unresolved`, not an empty review.
+The authoritative final response is selected by session and role, not by "last text seen".
+Fixtures cover clean, incomplete, malformed and multi-worker outputs.
 
 ## 8. Migration
 
-1. Create `bench/` with the schemas, the rubric v1, `rates.json` seeded from the dated evidence
-   already recorded, and `harness/` seeded with the two Claude Code 2.1.281 prompt hashes.
-2. Move `dispatch.sh` (under its own name until `run_cell.py` replaces it), `attempt_audit.py`,
-   `normalize_review.py`, `codex_usage.py`, `transcript_usage.py`, and `build_packet.py` into
-   `bench/tools/`, keeping their provenance checks, replay support, request deduplication,
-   cache-tier bounds, native output retention and blind rendering; update links in the research
-   docs that cite them. Apply the three defect fixes from the review: relative-path audit, timing
-   semantics, unresolved parsing.
-3. Convert the six #137 targets: `target.json` from the shell fragments and README tables;
-   `packet.legacy.md` preserved with the recorded hash and a factual `packet.md` derived from it;
-   `register.v1.json` from each prose register, and `register.v2.json` for (n); `smoke.json` from
-   the recorded provisioning outcomes where they exist, otherwise re-measured at rebuild.
-4. Rebuild mirrors and caches into the cache root, verify negative SHAs and diff identities,
-   archive the caches with hashes.
-5. File the toy fixtures as `bench/runs/2026-09-24-toy/` with attempt manifests, and rewrite the
-   2026-09-24 README as the narrative for the first real run, pointing at its future run
+1. Create `bench/` with the schemas, the rubric v1, and `rates.json` seeded from the dated evidence
+   already recorded. Seed `harness/` with the two Claude Code 2.1.281 prompt hashes.
+2. Move `dispatch.sh`, `attempt_audit.py`, `normalize_review.py`, `codex_usage.py`,
+   `transcript_usage.py`, and `build_packet.py` into `bench/tools/`. `dispatch.sh` keeps its own
+   name until `run_cell.py` replaces it. Keep their provenance checks, replay support, request
+   deduplication, cache-tier bounds, native output retention and blind rendering. Update the links
+   in the research docs that cite them. Apply the three defect fixes from the review, which cover
+   the relative-path audit, the timing semantics, and unresolved parsing.
+3. Convert the six #137 targets. Build `target.json` from the shell fragments and README tables.
+   Preserve `packet.legacy.md` with the recorded hash, and derive a factual `packet.md` from it.
+   Build `register.v1.json` from each prose register, and build `register.v2.json` for (n). Build
+   `smoke.json` from the recorded provisioning outcomes where they exist, and otherwise re-measure
+   the outcomes at rebuild.
+4. Rebuild mirrors and caches into the cache root. Verify the negative SHAs and diff identities.
+   Archive the caches with hashes.
+5. File the toy fixtures as `bench/runs/2026-09-24-toy/` with attempt manifests. Rewrite the
+   2026-09-24 README as the narrative for the first real run, and point it at the run's future
    directory.
 6. Only then add the four fresh targets and freeze the first run.
 
