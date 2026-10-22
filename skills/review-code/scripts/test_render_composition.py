@@ -403,6 +403,11 @@ def record_accounting() -> None:
     # Every target kind shares the record shape; the record names the skill root its readers run scripts from.
     gate(mutate(**{"run.target_kind": "worktree", "run.tree": "e" * 40, "run.target": None}), "worktree record")
     gate(mutate(**{"run.prior_head": PRIOR}), "delta review record")
+    pending = {"check": "CI test job", "head": HEAD, "outcome": "pending", "reason": "still running at the reviewed head; not awaited"}
+    record, _ = gate(mutate(**{"record.check_evidence": [pending]}), "pending CI job at the reviewed head")
+    assert record["record"]["check_evidence"] == [pending], "a pending CI job is carried as recorded"
+    refused(mutate(**{"record.check_evidence": [dict(pending, head=PRIOR)]}), "check-evidence", "pending CI job at another head")
+    refused(mutate(**{"record.check_evidence": [{k: v for k, v in pending.items() if k != "reason"}]}), "schema", "pending CI job without a reason")
     refused(mutate(**{"record.paths.skill_root": None}), "record-paths", "record requires skill_root", needle="`skill_root`")
     refused(mutate(**{"record.verification.allowance.carried_from": "/tmp/x/record.json"}), "verification", "retired carried_from",
             needle="retired")
