@@ -214,10 +214,10 @@ Arm C uses the following state machine.
    trigger.
 4. `admitting → initial-verification` or `reconciling`: Apply the baseline triggers to the
    complete admitted union. Send every ordinarily eligible candidate, whatever its origin or
-   scope, and all required related rows to B's fresh initial task. If a baseline high-risk surface
-   has zero findings, send the complete compact disposition ledger to the clean-verdict task.
-   Otherwise, record the no-batch reason and continue. The finder gets no verification
-   continuation and no restart.
+   scope, and all required related rows to B's fresh initial task. If the review has zero findings
+   and touches a baseline high-risk surface, send the complete compact disposition ledger to the
+   clean-verdict task. Otherwise, record the no-batch reason and continue. The finder gets no
+   verification continuation and no restart.
 5. `initial-verification → reconciling`: Validate the corrections and the scope against the diff,
    merge IDs, re-falsify reopened rows, and finish any remaining work. Recompute post-refutation
    zero-survivor eligibility. Collect all newly eligible candidates and newly related rows into
@@ -245,7 +245,7 @@ operational invalidity separately from status.
 | --- | --- | --- |
 | No findings, ordinary surface, empty finder | C completes both freezes and admission; A and B run the normal pass; no eligible trigger is recorded | No findings; derive, with Approved only if the review is otherwise complete |
 | Primary-only survivor | Normal eligible initial verification; C waits for the barrier | Confirmed mandatory or baseline-eligible optional findings; derive |
-| Finder-only survivor in C | Primary falsifies or adopts it; a distinct fresh initial verifier runs if it is eligible | Same eligibility as a primary-origin claim; no automatic second verification |
+| Finder-only survivor in C | Primary tries to falsify it and adopts it only if it survives; a distinct fresh initial verifier runs if it is eligible | Same eligibility as a primary-origin claim; no automatic second verification |
 | Both discover the same defect | Preserve both source IDs; the model merges them into one canonical claim before dispatch | At most one finding for the concept or outcome; independent discovery is not verification |
 | Primary mandatory candidate outside finder scope | Send it and the ordinarily required related rows to normal verification | Confirmation required; the finder bound cannot exclude it |
 | High-risk zero-survivor, including a clean target | Initial clean-verdict task over the full disposition ledger; C runs it after the barrier | No finding unless it is reopened, re-falsified, and verified when required; derive |

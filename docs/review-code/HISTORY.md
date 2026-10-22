@@ -1303,7 +1303,7 @@ The references follow the epic's target layout, with today's semantics. `rubric.
 
 ## Action and remedy experiments rejected, 2026-09-27
 
-The entries below record the additions later rejected by the isolated #381 and #385 runs. Their added sentences are removed. The 74,000-byte shared runtime cap remains necessary for retained rules; the current justification is in DESIGN.md.
+The entries below record the additions later rejected by the isolated #381 and #385 runs. Their added sentences are removed. The 74,000-byte shared runtime cap remains necessary for retained rules; the current justification is in [Rejected action and remedy wording, issues #381 and #385](#rejected-action-and-remedy-wording-issues-381-and-385-2026-09-27), near the end of this file.
 
 ## Action from demonstrated consequence, issue #381, 2026-09-26
 
@@ -1319,7 +1319,7 @@ The entries below record the additions later rejected by the isolated #381 and #
 
 ## Lifecycle sentence removed pending a valid run, 2026-09-27
 
-The entry below records the addition that #384's two inconclusive runs left unvalidated. Its sentence is removed until a valid run decides it; the current justification is in DESIGN.md.
+The entry below records the addition that #384's two inconclusive runs left unvalidated. Its sentence is removed until a valid run decides it; the current justification is in [Lifecycle sentence rejected, issue #384](#lifecycle-sentence-rejected-issue-384-2026-09-27), near the end of this file.
 
 ## Lifecycle comparison for moved state updates, issue #384, 2026-09-26
 
