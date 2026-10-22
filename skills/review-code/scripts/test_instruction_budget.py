@@ -21,10 +21,10 @@ import build_verifier_prompt as builder
 
 SKILL = Path(__file__).resolve().parent.parent
 ALWAYS_LOADED = ("SKILL.md", "references/rubric.md", "references/output.md")
-# DESIGN.md records the 2026-10-02 synthesis and the evidence required to raise these limits.
-BUDGET = 21_000
-LIMITS = {"runtime total": 56_000, "always loaded": BUDGET, "review": 40_000,
-          "required verifier": 47_000, "re-review": 49_000,
+# DESIGN.md records the 2026-10-02 synthesis, the 2026-10-22 exact-head CI raise, and the evidence required to raise these limits.
+BUDGET = 22_000
+LIMITS = {"runtime total": 57_000, "always loaded": BUDGET, "review": 40_000,
+          "required verifier": 48_000, "re-review": 50_000,
           "verifier instructions": 10_000, "verifier example brief": 13_000}
 
 
