@@ -25,13 +25,26 @@ Keep dated evidence and superseded decisions in the [history](../../docs/review-
 
 ## Current mechanics
 
-Workflow `v5b-33` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
+Workflow `v5b-34` versions admission, verification, rendering, and state semantics. `review-code-record/1`, `review-code-finalization/2`, `forge-fetch/1`, `packet-context/1`, `verifier-manifest/3` and `verifier-accounting/3` are the private schemas.
 
 **Compact presentation.** Workflow `v5b-28` changes rendering. The summary leads with outcome and findings; routine context, detailed checks, observations, and settled history collapse under `Review details`. Unresolved items and coverage gaps stay visible. Composition still requires a finding's trigger, impact, and change separately, but the renderer combines their prose and optional source without field labels. Payload validation checks for explanatory prose instead of reconstructing those fields from visible labels. Priority, action, hidden trailers, pinned coordinates, status, and publication events keep their meanings.
 
 **One record.** Every run writes `record.json`, `payload.json`, `batch.json` and, last, `report.md`, whatever the target and whoever the caller. `render_review.py` derives the mechanical fields a saved input owns (run identity from the store and packet, `packet_context` from the packet, `supplied_inputs` from the caller's specs, the record's own paths, the spent allowance, the lineage, and each batch's name, phase and raw return from its bundle and accounting report), refuses an explicit copy that disagrees, composes and validates the payload, projects the advisory batch, and promotes the report last as the success marker. `--check` reads a record read-only and, with `--head` and `--lineage`, checks it against a caller's expectations. `--emit-batch --event` is the gating projection `review-code-publish` runs. A private directory has one writer at a time.
 
-**Prior records.** A local run from `prior_record` re-reviews a finalized record after fixes and writes a new, complete record in a new directory. The one-hop check refuses a prior that is not a finalized local `review-code-record/1` of the same repository and base; an unclassified or unknown prior item; an open item not rendered again, or an open `must-fix` downgraded; a settled item rendered again; a dropped `outstanding` entry no task settled; a dropped `routed` entry that neither a task nor, for an unresolved or disputed item, its settlement released; a batch for a phase the prior spent, or spent flags below the prior's; a carried confirmation whose `confirmed_in` and `batch` are not the provenance the prior's own task carries, or whose accounting does not confirm it; an explicit lineage other than the prior's plus the prior; and a delta review over incomplete prior coverage. One hop cannot see a sibling that continued an ancestor again, so the caller keeps its latest accepted record and requires it, with every earlier accepted record, in the final record's lineage.
+**Prior records.** A local run from `prior_record` re-reviews a finalized record after fixes and writes a new, complete record in a new directory. The one-hop check refuses:
+
+- a prior that is not a finalized local `review-code-record/1` of the same repository and base;
+- an unclassified or unknown prior item;
+- an open item the run does not render again, or an open `must-fix` it downgrades;
+- a settled item rendered again;
+- a dropped `outstanding` entry that no task settled;
+- a dropped `routed` entry that no task released, unless the item is unresolved or disputed and its settlement released the entry;
+- a batch for a phase the prior spent, or spent flags below the prior's;
+- a carried confirmation whose `confirmed_in` and `batch` differ from the provenance on the prior's own task, or whose accounting does not confirm it;
+- an explicit lineage other than the prior's lineage plus the prior;
+- a delta review from a prior that left a changed file `unreviewed`.
+
+The check looks back only one record, so it cannot see a second run that also continued from an ancestor. The caller therefore keeps its latest accepted record and requires that record, and every earlier record it accepted, in the final record's lineage.
 
 **Fetch.** `forge_packet.py fetch` runs the root query, every continuation and each referenced issue through `gh`, saves each response, records the calls in `fetch.json`, and writes `packet.json` with the same code `normalize` runs, so who fetched never changes the packet or its digest. A failed call is saved, not followed, and named as a gap. It is the one recorded departure from "forge calls stay in `SKILL.md`" besides `review-bot`'s ([`scripts.md`](../../docs/agents/scripts.md)). No script records timing; measurements read transcript tool-call timestamps.
 
@@ -40,6 +53,16 @@ Workflow `v5b-33` versions admission, verification, rendering, and state semanti
 **Verifier returns.** A brief assigns `return.json` inside its newly created bundle; the worker creates it and replies with only its path, and accounting reads that path alone, as a regular file reached through no link. An `--inline` build assigns no file, and the primary saves the inline response verbatim, as it does when a worker's write fails. Every build generates a fresh opaque `bundle_id`, stores it in the manifest and prints it after the brief's return encoding, and the worker copies it into its return; a rebuild of the same input gets a new ID. Accounting refuses a bundle whose manifest no longer matches its input, brief and printed ID, or that an older builder wrote, and withholds every task of a return whose `bundle_id` is not the bundle's. The finalizer requires each batch's accounting report to carry its bundle's ID and manifest hash. `--repair-of` records a repaired return's original, which must carry the bundle's ID. Structural success is only structural, and a repair grants no batch.
 
 **Open risks.** [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) found no overall cost or latency saving, more finalizer repairs under the stricter preconditions, verifier returns still inline under Claude Code, and primaries still opening worker-only references. Epic #355 removes machinery instead of automating it further. Rewriting a finalized record in place after a later record names it in its lineage is unsupported; nothing guards it now that no addenda directory exists.
+
+## Delta re-reviews after unfinished verification, issue #448, 2026-10-22
+
+A delta review used to need the earlier review's `coverage` complete. `coverage` was incomplete when a changed file went unreviewed, and also when required verification did not finish. In the second case the next round reviewed the whole diff again and still had to finish the leftover checks. One sampled delivery spent about 49 minutes on this over two rounds.
+
+The run now records two more facts beside `coverage`. `files` is incomplete when a changed file is `unreviewed` and complete otherwise. `verification` is incomplete when `outstanding` lists an item and complete otherwise. `coverage` is incomplete when either one is, so status precedence doesn't change and a review with unfinished verification still can't approve. A delta review now needs only `files` complete. The other delta conditions don't change.
+
+Each `outstanding` item is now an object with `id`, `claim` and `settled_by`. The summary lists these items under `Unfinished verification`, so a later pull-request review can carry or settle them. A local `prior_record` run already keeps every outstanding entry until a task that run rules on settles it. Unfinished verification no longer needs its own coverage-gap line. The finalizer refuses a delta review from a prior with an `unreviewed` file, a `files` or `verification` fact that the record contradicts, and an outstanding entry in the old `<id>: <reason>` string form. A prior record from before `v5b-34` still loads. Its string entries keep their ids, and its file rows supply its `files` fact.
+
+This supersedes #92's coverage condition for delta scope, and the part of #331 that recorded unfinished verification only as coverage gaps. The verifier allowance, the required checks, and which earlier must-fix findings need the verifier don't change. The trailer gains two keys, so the workflow advances to `v5b-34`.
 
 ## The installed skill root, issue #456, 2026-10-22
 

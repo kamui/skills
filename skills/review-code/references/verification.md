@@ -39,7 +39,7 @@ Read the accounted rulings against the diff before you use them. Check the verif
 - A premise that `fails` reopens as a candidate, named in the task's `reopened_as`. A reopened candidate the follow-up refutes is withheld like any other, and the record keeps both tasks. An `unresolved` premise names its question there or stays outstanding. A `holds` covers only that premise under its conditions.
 - The verifier's `observation` is an ordinary observation. Publishing it as a finding takes full admission and any confirmation it needs.
 
-Collect everything newly required into the one follow-up: reopened premises, changed claims, admitted asides, and the premises a clean conclusion needs once refutations removed every blocker. After the allowance is spent, required work that remains stays unpublished and listed in `outstanding` with its task id and reason, and coverage is incomplete. No batch establishes that the whole change is safe.
+Collect everything newly required into the one follow-up: reopened premises, changed claims, admitted asides, and the premises a clean conclusion needs once refutations removed every blocker. After the allowance is spent, required work that remains stays unpublished and listed in `outstanding` with its task `id`, `claim`, and `settled_by`; the review publishes each under `Unfinished verification`, and coverage is incomplete. No batch establishes that the whole change is safe.
 
 ## Record
 

@@ -58,8 +58,14 @@ a phase the prior left unspent; and name, for a carried confirmation,
 accounting report confirmed it, which must be the provenance the prior's own
 task carries.
 `run.prior_head`, when a delta review sets it, is the prior's head, and the
-prior's coverage must be complete. Without a prior record a local target has
-no prior items.
+prior must leave no changed file `unreviewed`; its unfinished verification
+carries forward under the outstanding rule above. Without a prior record a
+local target has no prior items.
+
+`run.files` is `incomplete` exactly when a changed file is `unreviewed`, and
+`run.verification` exactly when `outstanding` lists an item (`id`, `claim`,
+`settled_by`); either one incomplete makes `run.coverage` incomplete. The
+summary publishes each outstanding item under `Unfinished verification`.
 
 Each prior item may add `reply` (drafted reply prose, or null), `thread_id`
 and `comment_id`: both null for an item without a forge thread, otherwise the
@@ -70,7 +76,8 @@ and `still-open` replies. These fields never reach the payload.
 
 The composer renders the finding, question and observation syntax, trailers,
 the summary's status line, counts, indexes, sections, Mode line and run
-trailer (`workflow`, `packet_context`, `supplied_inputs`) from the authored
+trailer (`workflow`, `packet_context`, `supplied_inputs`, `files`,
+`verification`, `coverage`) from the authored
 fields, checks every contradiction it can decide (run identity, anchors
 against the pinned manifest, priority and action, stable ids, status against
 blockers and coverage, requirement, file, check-evidence, verification and
@@ -130,7 +137,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-33"
+WORKFLOW = "v5b-34"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -144,6 +151,9 @@ KINDS = (
     "requirement",
 )
 COVERAGE = ("complete", "incomplete")
+# `files`: every changed file is reviewed or ignored. `verification`: no required verification is outstanding.
+# `coverage` also needs every required input and check, so either fact incomplete makes it incomplete.
+COVERAGE_FACTS = ("files", "verification", "coverage")
 SIDES = ("LEFT", "RIGHT")
 MAX_OBSERVATIONS = 3
 PERMISSION_SENTENCE = "Closing this without action is a correct response."
@@ -159,6 +169,8 @@ RUN_REQUIRED = (
     "packet_context",
     "supplied_inputs",
     "issues",
+    "files",
+    "verification",
     "coverage",
 )
 FINDING_REQUIRED = ("id", "head", "priority", "action", "blocking", "kind")
@@ -312,9 +324,10 @@ def check_run_trailer(report: Report, location: str, raw: Any) -> dict[str, str]
     supplied = fields.get("supplied_inputs")
     if supplied is not None and supplied not in SUPPLIED_INPUTS:
         report.add(location, "trailer-grammar", f"`supplied_inputs={supplied}` must be one of {list(SUPPLIED_INPUTS)}")
-    coverage = fields.get("coverage")
-    if coverage is not None and coverage not in COVERAGE:
-        report.add(location, "trailer-grammar", f"`coverage={coverage}` must be one of {list(COVERAGE)}")
+    for key in COVERAGE_FACTS:
+        value = fields.get(key)
+        if value is not None and value not in COVERAGE:
+            report.add(location, "trailer-grammar", f"`{key}={value}` must be one of {list(COVERAGE)}")
     issues = fields.get("issues")
     if issues is not None and issues != "none":
         coordinates = issues.split(",")
@@ -912,6 +925,7 @@ CANDIDATE_RULINGS = ("confirmed", "refuted", "unresolved", "withheld", "pending"
 PREMISE_RULINGS = ("holds", "fails", "unresolved", "withheld", "pending")
 PHASES = ("initial", "follow-up")
 FILE_STATES = ("reviewed", "ignored", "unreviewed")
+OUTSTANDING_KEYS = ("id", "claim", "settled_by")
 EVIDENCE_OUTCOMES = ("accepted", "historical", "reviewer-executed", "pending", "failed", "unavailable")
 BATCH_CAP = 2  # one initial plus one follow-up
 
@@ -1256,10 +1270,14 @@ def read_run(report: Report, run: Any) -> dict[str, Any] | None:
         fields["issues"] = None
     else:
         fields["issues"] = ",".join(sorted(issues)) if issues else "none"
-    coverage = run.get("coverage")
-    if coverage not in COVERAGE:
-        report.add("run.coverage", "trailer-grammar", f"`coverage` must be one of {list(COVERAGE)}, not `{coverage!r}`")
-    fields["coverage"] = coverage
+    for key in COVERAGE_FACTS:
+        value = run.get(key)
+        if value not in COVERAGE:
+            report.add(f"run.{key}", "trailer-grammar", f"`{key}` must be one of {list(COVERAGE)}, not `{value!r}`")
+        fields[key] = value
+    for key in ("files", "verification"):
+        if fields[key] == "incomplete" and fields["coverage"] == "complete":
+            report.add("run.coverage", "coverage-gaps", f"`run.{key}=incomplete` contradicts `run.coverage=complete`")
     merged = run.get("merged")
     if not isinstance(merged, bool):
         report.add(
@@ -1280,7 +1298,7 @@ def read_run(report: Report, run: Any) -> dict[str, Any] | None:
     return fields
 
 
-def read_summary(report: Report, summary: Any, coverage: Any) -> dict[str, Any] | None:
+def read_summary(report: Report, summary: Any, run: dict[str, Any] | None) -> dict[str, Any] | None:
     if not isinstance(summary, dict):
         report.add("summary", "schema", "`summary` must be an object")
         return None
@@ -1319,11 +1337,14 @@ def read_summary(report: Report, summary: Any, coverage: Any) -> dict[str, Any] 
     if not isinstance(gaps, list) or not all(isinstance(gap, str) and gap.strip() and "\n" not in gap for gap in gaps):
         report.add("summary.coverage_gaps", "schema", "`coverage_gaps` must be a list of one-line entries")
         gaps = []
-    if coverage == "incomplete" and not gaps:
+    coverage = run["coverage"] if run else None
+    # Unfinished verification publishes as its own section, so it alone needs no gap line.
+    only_verification = run is not None and run["files"] == "complete" and run["verification"] == "incomplete"
+    if coverage == "incomplete" and not gaps and not only_verification:
         report.add(
             "summary.coverage_gaps",
             "coverage-gaps",
-            "`run.coverage` is `incomplete`, so `coverage_gaps` must name each uncovered file, check, connection, or verification",
+            "`run.coverage` is `incomplete`, so `coverage_gaps` must name each uncovered file, check, or connection",
         )
     if coverage == "complete" and gaps:
         report.add("summary.coverage_gaps", "coverage-gaps", "`coverage_gaps` is non-empty, which contradicts `run.coverage=complete`")
@@ -1496,6 +1517,7 @@ def compose_body(
     questions: list[tuple[str, dict[str, Any], str]],
     observations: list[dict[str, Any]],
     priors: list[dict[str, Any]],
+    outstanding: list[dict[str, str]],
     trailer: str,
 ) -> str:
     identity = {"head": run["head"], "merge_base": run["merge_base"], "repository_url": run["repository_url"]}
@@ -1591,6 +1613,9 @@ def compose_body(
     settled = [p for p in priors if p["classification"] in ("fixed", "accepted", "obsolete")]
     if settled:
         details.append("## Settled findings\n\n" + "\n".join(f"- `{p['id']}` — {p['classification']}: {p['note']}" for p in settled))
+    if outstanding:
+        paragraphs.append("## Unfinished verification\n\n" + "\n".join(
+            f"- `{item['id']}` — {item['claim']} Settled by: {item['settled_by']}" for item in outstanding))
     if summary["coverage_gaps"]:
         paragraphs.append("## Coverage gaps\n\n" + "\n".join(f"- {gap}" for gap in summary["coverage_gaps"]))
     if run["target_kind"] == "worktree":
@@ -1636,13 +1661,8 @@ def read_lines(report: Report, location: str, value: Any) -> list[str]:
     return value
 
 
-def names_task(entries: list[str], identity: str) -> bool:
-    """Whether an ``outstanding`` entry names a task: the id alone, or the id followed by ``:`` and a reason."""
-    return any(entry == identity or entry.startswith(identity + ":") for entry in entries)
-
-
 def task_id(entry: str) -> str:
-    """The task id an ``outstanding`` or ``routed.unrecoverable_inputs`` entry names: the text before ``:``."""
+    """The task id a ``routed.unrecoverable_inputs`` entry names: the text before ``:``."""
     return entry.split(":", 1)[0].strip()
 
 
@@ -1755,10 +1775,13 @@ def load_prior(path: str) -> tuple[dict[str, Any] | None, list[str]]:
     allowance = verification["allowance"]
     return {
         "path": path, "doc": doc, "head": run.get("head"), "base_ref": run.get("base_ref"), "base_sha": run.get("base_sha"),
-        "coverage": run.get("coverage"),
+        "files": "incomplete" if any(isinstance(row, dict) and row.get("state") == "unreviewed" for row in record.get("files") or [])
+                 else "complete",
         "repository": record.get("repository"), "lineage": list(lineage), "items": items,
         "allowance": {flag: allowance.get(flag) is True for flag in ("initial_spent", "follow_up_spent")},
-        "outstanding": [e for e in verification["outstanding"] if isinstance(e, str)],
+        # A record finalized before workflow v5b-34 wrote each outstanding entry as `<id>: <reason>`.
+        "outstanding": [task_id(e) if isinstance(e, str) else e.get("id") for e in verification["outstanding"]
+                        if isinstance(e, str) or isinstance(e, dict) and isinstance(e.get("id"), str)],
         "routed": {key: [e for e in routed.get(key) or [] if isinstance(e, str)] for key in ("unresolved", "disputed", "unrecoverable_inputs")},
         "tasks": {t["id"]: t for t in verification["tasks"] if isinstance(t, dict) and isinstance(t.get("id"), str)},
         "batches": {b["name"]: b.get("accounting") for b in verification["batches"] if isinstance(b, dict) and isinstance(b.get("name"), str)},
@@ -1845,9 +1868,9 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
                        "re-review after fixes keeps its base")
     if run.get("prior_head") is not None and run["prior_head"] != prior["head"]:
         report.add("run.prior_head", "prior-record", f"a delta review from the prior record starts at its head `{prior['head']}`")
-    elif run.get("prior_head") is not None and prior["coverage"] != "complete":
-        report.add("run.prior_head", "prior-record", "the prior record's coverage is incomplete, so this run reviews the full "
-                   "diff, not the delta")
+    elif run.get("prior_head") is not None and prior["files"] != "complete":
+        report.add("run.prior_head", "prior-record", "the prior record left a changed file unreviewed, so this run reviews the "
+                   "full diff, not the delta")
 
     rendered = {item["id"]: item for item in items if item["type"] in ("finding", "question")}
     classified: dict[str, dict[str, Any]] = {}
@@ -1873,9 +1896,8 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
                        "every open prior finding and question")
 
     settled = {task["id"] for task in tasks if task.get("ruling") not in ("pending", "withheld") and "confirmed_in" not in task}
-    kept = {task_id(entry) for entry in outstanding}
     for entry in prior["outstanding"]:
-        if task_id(entry) not in kept and task_id(entry) not in settled:
+        if entry not in outstanding and entry not in settled:
             report.add("record.verification.outstanding", "prior-record", f"drops `{entry}`; outstanding work survives until a "
                        "task in this run settles it")
     closed = {identity for identity, item in classified.items() if item["classification"] not in OPEN_CLASSIFICATIONS}
@@ -1892,8 +1914,17 @@ def check_prior(report: Report, prior: dict[str, Any], run: dict[str, Any], reco
                 "an unrecoverable input survives until a task in this run settles it"))
 
 
+def read_outstanding(report: Report, where: str, value: Any) -> list[dict[str, str]]:
+    """Each unfinished required verification item, with what it claims and what would settle it."""
+    rows = read_rows(report, where, value, OUTSTANDING_KEYS)
+    for location, row in rows:
+        for key in row.keys() - set(OUTSTANDING_KEYS):
+            report.add(location, "schema", f"unknown key `{key}`; an outstanding item has {list(OUTSTANDING_KEYS)}")
+    return [{key: row[key] for key in OUTSTANDING_KEYS} for _location, row in rows]
+
+
 def read_verification(
-    report: Report, verification: Any, coverage: Any, findings: list[dict[str, Any]], questions: list[dict[str, Any]],
+    report: Report, verification: Any, state: Any, findings: list[dict[str, Any]], questions: list[dict[str, Any]],
     prior: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Check verification tasks, batches, allowance, and outstanding work for contradictions; see the docstring."""
@@ -1902,9 +1933,12 @@ def read_verification(
     if not isinstance(verification, dict):
         report.add(where, "schema", "`verification` must be an object with `tasks`, `batches`, `allowance`, and `outstanding`")
         verification = {}
-    outstanding = read_lines(report, f"{where}.outstanding", verification.get("outstanding", []))
-    if outstanding and coverage != "incomplete":
-        report.add(f"{where}.outstanding", "coverage-gaps", "outstanding verification contradicts `run.coverage=complete`; required work that did not finish never establishes safety")
+    items = read_outstanding(report, f"{where}.outstanding", verification.get("outstanding", []))
+    outstanding = [item["id"] for item in items]
+    if outstanding and state != "incomplete":
+        report.add(f"{where}.outstanding", "coverage-gaps", "outstanding verification contradicts `run.verification=complete`; required work that did not finish never establishes safety")
+    elif not outstanding and state == "incomplete":
+        report.add(f"{where}.outstanding", "coverage-gaps", "`run.verification=incomplete` needs the unfinished required work in `outstanding`")
 
     batches = read_rows(report, f"{where}.batches", verification.get("batches", []), ("name", "phase", "bundle", "raw_return", "accounting", "operation"))
     names: dict[str, str] = {}
@@ -1948,7 +1982,7 @@ def read_verification(
             if task["ruling"] not in CANDIDATE_RULINGS:
                 report.add(location, "verification", f"a candidate task's `ruling` must be one of {list(CANDIDATE_RULINGS)}")
             if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
-                    and identity not in {q["id"] for q in questions} and not names_task(outstanding, identity)):
+                    and identity not in {q["id"] for q in questions} and identity not in outstanding):
                 report.add(location, "verification", f"required candidate `{identity}` is unresolved, so it renders as a question with its id or stays in `outstanding`")
         elif task["type"] == "safety-premise":
             if task.get("area") not in PREMISE_AREAS:
@@ -1964,10 +1998,10 @@ def read_verification(
                 report.add(location, "schema", "`reopened_as` must be a one-line item id when present")
                 reopened = None
             refuted_after = reopened in refuted_in_follow_up and task.get("batch") not in follow_up
-            if task["ruling"] == "fails" and not (reopened in rendered or refuted_after or (reopened and names_task(outstanding, reopened))):
+            if task["ruling"] == "fails" and not (reopened in rendered or refuted_after or reopened in outstanding):
                 report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as: a rendered item, a candidate task the follow-up ruled `refuted` after the failure, or an `outstanding` entry")
             if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
-                    and reopened not in {q["id"] for q in questions} and not names_task(outstanding, identity)):
+                    and reopened not in {q["id"] for q in questions} and identity not in outstanding):
                 report.add(location, "verification", f"premise `{identity}` is unresolved, so it names a rendered question in `reopened_as` or stays in `outstanding`")
         else:
             report.add(location, "verification", "`type` must be `candidate` or `safety-premise`")
@@ -1994,7 +2028,7 @@ def read_verification(
                 why = f"accounting report `{accounting}` establishes `{established}`, not `{task['ruling']}`"
         if why:
             report.add(location, "verification", f"task `{identity}`: {why}; a ruling stands only on the verifier result that accounted for it")
-        if task["ruling"] in ("withheld", "pending") and task.get("trigger") != "optional" and not names_task(outstanding, identity):
+        if task["ruling"] in ("withheld", "pending") and task.get("trigger") != "optional" and identity not in outstanding:
             report.add(location, "verification", f"`{identity}` is {task['ruling']} required work, so `outstanding` names it")
 
     for finding in findings:
@@ -2022,7 +2056,7 @@ def read_verification(
         report.add(f"{where}.batches", "verification", "a follow-up batch needs the initial batch spent first")
     return {"tasks": [t for _w, t in tasks], "batches": [b for _w, b in batches],
             "allowance": {"initial_spent": spent["initial"], "follow_up_spent": spent["follow-up"]},
-            "outstanding": outstanding}
+            "outstanding": items}
 
 
 def rendered_ids(findings: list[dict[str, Any]], questions: list[dict[str, Any]]) -> set[str]:
@@ -2044,7 +2078,6 @@ def read_record(
         report.add("record", "schema", "`record` must be an object")
         return {}
     fields: dict[str, Any] = {"repository": read_line(report, "record", record, "repository")}
-    coverage = run.get("coverage")
 
     paths = record.get("paths")
     if not isinstance(paths, dict):
@@ -2077,8 +2110,9 @@ def read_record(
         if row["path"] in states:
             report.add(where, "file-accounting", f"`{row['path']}` is accounted for twice")
         states[row["path"]] = row["state"]
-    if "unreviewed" in states.values() and coverage != "incomplete":
-        report.add("record.files", "coverage-gaps", "an `unreviewed` file contradicts `run.coverage=complete`")
+    if ("unreviewed" in states.values()) != (run.get("files") == "incomplete") and run.get("files") in COVERAGE:
+        report.add("record.files", "coverage-gaps", f"`run.files={run['files']}` means " + (
+            "no file is `unreviewed`" if run["files"] == "complete" else "at least one changed file is `unreviewed`"))
     if store is not None and isinstance(store.get("context"), dict) and isinstance(store["context"].get("manifest"), list):
         manifest = {e["path"] for e in store["context"]["manifest"] if isinstance(e, dict) and isinstance(e.get("path"), str)}
         for path in sorted(manifest - states.keys()):
@@ -2104,7 +2138,7 @@ def read_record(
                 read_line(report, where, row, "reason")
     fields["check_evidence"] = [r for _w, r in evidence]
 
-    fields["verification"] = read_verification(report, record.get("verification"), coverage, findings, questions, prior)
+    fields["verification"] = read_verification(report, record.get("verification"), run.get("verification"), findings, questions, prior)
 
     routed = record.get("routed", {})
     if not isinstance(routed, dict):
@@ -2116,7 +2150,7 @@ def read_record(
             if identity not in known:
                 report.add(f"record.routed.{key}", "stable-id", f"`{identity}` is not a rendered or prior item id")
     unrecoverable = read_lines(report, "record.routed.unrecoverable_inputs", routed.get("unrecoverable_inputs", []))
-    if unrecoverable and coverage != "incomplete":
+    if unrecoverable and run.get("coverage") != "incomplete":
         report.add("record.routed.unrecoverable_inputs", "coverage-gaps", "an unrecoverable input contradicts `run.coverage=complete`; it derives provisional `Incomplete`")
     fields["routed"] = {key: routed.get(key, []) for key in ("unresolved", "disputed", "unrecoverable_inputs")}
     return fields
@@ -2139,7 +2173,7 @@ def compose_record(composition: Any, store: dict[str, Any] | None = None, prior:
         report.add("input", "schema", "the composition input must be a JSON object")
         return None, {}, report.lines
     run = read_run(report, composition.get("run"))
-    summary = read_summary(report, composition.get("summary"), run["coverage"] if run else None)
+    summary = read_summary(report, composition.get("summary"), run)
     head = run["head"] if run and isinstance(run["head"], str) else "0" * 40
 
     def read_list(key: str) -> list[Any]:
@@ -2195,16 +2229,19 @@ def compose_record(composition: Any, store: dict[str, Any] | None = None, prior:
     if prior is not None and run is not None:
         verification = (record or {}).get("verification") or {}
         check_prior(report, prior, run, composition.get("record"), [i for _l, i, _t in findings + questions], priors,
-                    verification.get("tasks", []), verification.get("outstanding", []))
+                    verification.get("tasks", []), [item["id"] for item in verification.get("outstanding", [])])
     if report.lines or run is None or summary is None:
         return None, {}, report.lines
 
     trailer = (
         f"<!-- review-run head={run['head']} base-ref={run['base_ref']} base-sha={run['base_sha']} "
         f"merge-base={run['merge_base']} workflow={WORKFLOW} packet_context={run['packet_context']} "
-        f"supplied_inputs={run['supplied_inputs']} issues={run['issues']} coverage={run['coverage']} -->"
+        f"supplied_inputs={run['supplied_inputs']} issues={run['issues']} files={run['files']} "
+        f"verification={run['verification']} coverage={run['coverage']} -->"
     )
-    body = compose_body(report, run, summary, findings, questions, [o for _l, o in observations], [p for _l, p in priors], trailer)
+    outstanding = ((record or {}).get("verification") or {}).get("outstanding", [])
+    body = compose_body(report, run, summary, findings, questions, [o for _l, o in observations], [p for _l, p in priors],
+                        outstanding, trailer)
     if report.lines:
         return None, {}, report.lines
     payload: dict[str, Any] = {"summary": {"body": body, "trailer": trailer}, "items": []}
@@ -2243,7 +2280,7 @@ def example_composition() -> dict[str, Any]:
         "fix": {"path": "src/retry-policy.ts", "start_line": 18},
     }
     composition: dict[str, Any] = {
-        "run": {"coverage": "complete", "specs": []},
+        "run": {"files": "complete", "verification": "complete", "coverage": "complete", "specs": []},
         "summary": {"status": "Changes Requested",
                     "intent": "Add retries for charge submission without changing payment semantics.",
                     "issue_fit": "Partial — retry availability is implemented, but acceptance criterion 2's idempotency guarantee remains open.",
@@ -2650,7 +2687,7 @@ def ledger_sections(record: dict[str, Any], prior_record: str | None) -> list[st
             if task.get("reopened_as"):
                 line += f" Reopened as {code(task['reopened_as'])}."
             lines.append(line)
-    lines.extend(f"- Outstanding: {entry}" for entry in verification["outstanding"])
+    lines.extend(f"- Outstanding {code(item['id'])}: {item['claim']} Settled by: {item['settled_by']}" for item in verification["outstanding"])
     parts.append("## Verification\n\n" + "\n".join(lines))
 
     routed = record["routed"]
@@ -2807,7 +2844,7 @@ MERGE_BASE_BLOB = f"{REPOSITORY_URL}/blob/{MERGE_BASE}"
 RUN_TRAILER = (
     f"<!-- review-run head={HEAD} base-ref=main base-sha={BASE_SHA} "
     f"merge-base={MERGE_BASE} workflow={WORKFLOW} packet_context={CONTEXT} "
-    "supplied_inputs=no issues=acme/payments#123 coverage=complete -->"
+    "supplied_inputs=no issues=acme/payments#123 files=complete verification=complete coverage=complete -->"
 )
 
 # The contract's summary example carries these two fragments byte-for-byte;
