@@ -150,7 +150,7 @@ from build_verifier_prompt import MANIFEST_FORMAT
 
 # --- payload validation ----------------------------------------------------
 
-WORKFLOW = "v5b-35"
+WORKFLOW = "v5b-36"
 PRIORITIES = ("P0", "P1", "P2", "P3")
 ACTIONS = ("must-fix", "consider")
 KINDS = (
@@ -932,6 +932,7 @@ FINALIZATION_PROTOCOL = "review-code-finalization/2"
 REQUIREMENT_CLASSES = ("acceptance", "supporting", "artifact")
 REQUIREMENT_DISPOSITIONS = ("met", "partial", "not-verifiable")
 MANDATORY_KINDS = ("security", "compatibility")
+MANDATORY_AREAS = ("security", "data-integrity", "destructive-migration", "compatibility")
 TRIGGERS = ("must-fix", "security", "data-integrity", "destructive-migration", "compatibility", "prior-must-fix", "optional")
 PREMISE_AREAS = ("security", "data-integrity", "destructive-migration", "compatibility", "concurrency")
 CANDIDATE_RULINGS = ("confirmed", "refuted", "unresolved", "withheld", "pending")
@@ -1733,11 +1734,12 @@ def accounted_ruling(accounting: str, role: str, identity: str) -> tuple[str | N
         return None, f"accounting report `{accounting}` does not account for `{identity}` among its {role}"
     for record in role_list(doc, "return", role):
         if isinstance(record, dict) and record.get("id") == identity:
-            if role == "premises":
-                return record.get("ruling"), ""
+            key, rulings = ("ruling", ("holds", "fails", "unresolved")) if role == "premises" else ("verdict", ("confirmed", "refuted"))
+            if record.get(key) not in rulings:
+                return None, f"accounting report `{accounting}` returns no `{key}` for `{identity}`"
             if record.get("verdict") == "refuted" and record.get("basis") == "unresolved":
                 return "unresolved", ""
-            return record.get("verdict"), ""
+            return record[key], ""
     return None, f"accounting report `{accounting}` holds no returned record for `{identity}`"
 
 
@@ -2029,8 +2031,9 @@ def read_verification(
     tasks = read_rows(report, f"{where}.tasks", verification.get("tasks", []), ("id", "type", "ruling"))
     rendered_findings = {finding["id"] for finding in findings}
     follow_up = [batch["name"] for _where, batch in batches if batch["phase"] == "follow-up"]
-    refuted_in_follow_up = {task["id"] for _where, task in tasks
-                            if task["type"] == "candidate" and task["ruling"] == "refuted" and task.get("batch") in follow_up}
+    ruled_in_follow_up = {task["id"]: task["ruling"] for _where, task in tasks
+                          if task["type"] == "candidate" and task.get("batch") in follow_up}
+    question_ids = {q["id"] for q in questions}
     by_id: dict[str, dict[str, Any]] = {}
     for location, task in tasks:
         identity = task["id"]
@@ -2064,16 +2067,27 @@ def read_verification(
             if reopened is not None and not (isinstance(reopened, str) and reopened.strip() and "\n" not in reopened):
                 report.add(location, "schema", "`reopened_as` must be a one-line item id when present")
                 reopened = None
-            refuted_after = reopened in refuted_in_follow_up and task.get("batch") not in follow_up
-            if task["ruling"] == "fails" and not (reopened in rendered or refuted_after or reopened in outstanding):
-                report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as: a rendered item, a candidate task the follow-up ruled `refuted` after the failure, or an `outstanding` entry")
+            ruled_after = ruled_in_follow_up.get(reopened) if task.get("batch") not in follow_up else None
+            if task.get("area") in MANDATORY_AREAS:
+                closed = (ruled_after == "refuted" or ruled_after == "confirmed" and reopened in rendered_findings
+                          or ruled_after == "unresolved" and reopened in question_ids)
+                needs = ("a rendered finding the follow-up confirmed after the failure, a rendered question it left unresolved, a "
+                         "candidate it refuted")
+            else:
+                closed = reopened in rendered or ruled_after == "refuted"
+                needs = "a rendered item, a candidate task the follow-up ruled `refuted` after the failure"
+            if task["ruling"] == "fails" and not (closed or reopened in outstanding):
+                report.add(location, "verification", f"premise `{identity}` fails, so `reopened_as` names the candidate it reopened as: {needs}, or an `outstanding` entry")
             if (task["ruling"] == "unresolved" and task.get("trigger") != "optional"
-                    and reopened not in {q["id"] for q in questions} and identity not in outstanding):
+                    and reopened not in question_ids and identity not in outstanding):
                 report.add(location, "verification", f"premise `{identity}` is unresolved, so it names a rendered question in `reopened_as` or stays in `outstanding`")
         else:
             report.add(location, "verification", "`type` must be `candidate` or `safety-premise`")
             continue
         batch = task.get("batch")
+        if batch is not None and not isinstance(batch, str):
+            report.add(location, "schema", "`batch` must be a batch name or null")
+            continue
         accounting, why = None, ""
         if "confirmed_in" in task:
             check_carried(report, location, task, prior, rendered_findings)
@@ -2493,8 +2507,9 @@ def derive_packet(report: Report, run: dict[str, Any], packet: dict[str, Any], c
     settle(report, run, "packet_context", digest, "run", "the packet's intent, as forge_packet.py hashes it")
 
 
-def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> None:
-    """A batch's identity from its bundle manifest and its raw return from the accounting report reconciled."""
+def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> bool:
+    """A batch's identity from its bundle manifest and its raw return from the accounting report reconciled; whether
+    the manifest could be read."""
     bundle, accounting = batch.get("bundle"), batch.get("accounting")
     manifest_bytes, manifest, identity = None, {}, {}
     if isinstance(bundle, str):
@@ -2514,7 +2529,7 @@ def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> None:
         reconciled = reconciled or {}
     settle(report, batch, "raw_return", text_or_none(reconciled.get("raw_return")), where, f"accounting report `{accounting}`", same_path)
     if manifest_bytes is None or not reconciled:
-        return
+        return manifest_bytes is not None
     formats = (manifest.get("format"), reconciled.get("format"))
     if formats != (MANIFEST_FORMAT, ACCOUNTING_FORMAT):
         report.add(where, "derived-field", f"bundle `{bundle}` and accounting report `{accounting}` are {json.dumps(formats[0])} and "
@@ -2522,6 +2537,19 @@ def derive_batch(report: Report, where: str, batch: dict[str, Any]) -> None:
     elif (reconciled.get("bundle_id") != manifest.get("bundle_id")
           or reconciled.get("manifest_sha256") != hashlib.sha256(manifest_bytes).hexdigest()):
         report.add(where, "derived-field", f"accounting report `{accounting}` accounts a return to another manifest than `{bundle}/manifest.json`")
+    return True
+
+
+def check_unread_manifests(report: Report, verification: dict[str, Any], unread: dict[str, Any]) -> None:
+    """A batch whose manifest cannot be read establishes no ruling, so only unfinished work listed in `outstanding` names it."""
+    tasks, outstanding = verification.get("tasks"), verification.get("outstanding")
+    listed = [e.get("id") for e in outstanding if isinstance(e, dict)] if isinstance(outstanding, list) else []
+    for index, task in enumerate(tasks if isinstance(tasks, list) else []):
+        batch = task.get("batch") if isinstance(task, dict) else None
+        if isinstance(batch, str) and batch in unread and not (task.get("ruling") in ("withheld", "pending") and task.get("id") in listed):
+            report.add(f"record.verification.tasks[{index}]", "derived-field", f"task `{task.get('id')}` names batch `{batch}`, "
+                       f"whose bundle manifest `{unread[batch]}/manifest.json` cannot be read; only `withheld` or `pending` work "
+                       "listed in `outstanding` names such a batch")
 
 
 def derive_run(report: Report, run: dict[str, Any], packet: Any, store: Any) -> None:
@@ -2567,11 +2595,15 @@ def derive(args: argparse.Namespace, private: Path, composition: Any, packet: An
     settle(report, record, "lineage", lineage, "record", "the prior record's lineage and the prior record itself", same_lineage)
     verification = record.get("verification")
     batches = verification.get("batches") if isinstance(verification, dict) else None
+    unread: dict[str, Any] = {}
     for index, batch in enumerate(batches if isinstance(batches, list) else []):
         if isinstance(batch, dict):
             written = set(batch)
-            derive_batch(report, f"record.verification.batches[{index}]", batch)
+            if not derive_batch(report, f"record.verification.batches[{index}]", batch) and isinstance(batch.get("name"), str):
+                unread[batch["name"]] = batch.get("bundle")
             batches[index] = ordered(batch, written, BATCH_ORDER)
+    if unread:
+        check_unread_manifests(report, verification, unread)
     if isinstance(verification, dict) and isinstance(batches, list):
         phases = {batch.get("phase") for batch in batches if isinstance(batch, dict)}
         carried = prior["allowance"] if prior is not None else {"initial_spent": False, "follow_up_spent": False}
