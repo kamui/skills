@@ -1330,3 +1330,187 @@ The entry below records the addition that #384's two inconclusive runs left unva
 ## Workflow versions
 
 To find the rules behind a version, search for the commit that set it. For example, `git log --reverse -S 'WORKFLOW = "v5b-32"' -- skills/review-code/scripts/render_review.py` lists the commits that added or removed `v5b-32`, oldest first. The first one introduced it, and its pull request names the issue. This repository's history starts at `v5b-30-x382-x415`. For earlier versions, read the workflow paragraph in `git show ad70b0b:README.md`, which lists each one with its issue.
+
+# Dated design notes moved from DESIGN.md (issue #463)
+
+`DESIGN.md` kept these dated sections until #463 reduced it to the current design again. They are unchanged and keep the order they had there, newest first.
+
+## Delta re-reviews challenge only what the delta affects, issue #450, 2026-10-22
+
+In sampled delta re-reviews, 40 to 55 percent of the time went to the verifier round trip, and a 7-line delta still spent 3 minutes there. Every sampled delta re-review sent the verifier optional tasks and challenged safety premises for the whole pull request again. The reviewer could not tell which premises an earlier round had checked, because the rulings stayed in the private record.
+
+On a delta review, `prior-state.md` now sends optional verifier tasks only when the delta touches security, data integrity, destructive migration, compatibility, concurrency or failover. Each optional candidate task on a delta review names that `area`, and the finalizer refuses one without it. Failover is accepted there because it is a trigger in `SKILL.md`, although the premise areas still leave it out.
+
+The summary now lists every settled premise under `Settled premises` in the collapsed details, with the head that settled it. A `holds` premise task is settled at the reviewed head. A premise the delta and new evidence leave alone is copied into `record.verification.carried_premises` with its original head, and the next round reads the list again. A premise missing from the list is unchecked, so a premise no earlier round settled is still challenged before approval. Only a delta review carries premises, and a carried premise cannot share an id with a task in the same run. A local `prior_record` run may carry only a premise the prior record settled, with the same id, area, text and head. The finalizer can't check a pull-request run's list against the earlier review without parsing its body, so that rule stays an instruction, as it does for `Unfinished verification`.
+
+#448's open question was a gap tied to no file, such as a check that never ran. A delta can follow such a gap, and nothing carried it. Such a gap now goes in `outstanding`, with the check as its id. `run.coverage` is incomplete only when `files` or `verification` is, and `coverage_gaps` holds only unreviewed files. A local run keeps the entry until a task, or a check recorded at the final head under that id with a result, settles it. A result here is `accepted`, `reviewer-executed`, `pending` or `failed`; `unavailable` settles nothing.
+
+The rubric's check outcomes now match `EVIDENCE_OUTCOMES`: `failed` is added and `unused` is gone. Required verification is unchanged. The summary renders a new section and the delta rules change what a run verifies, so the workflow advances to `v5b-35`. A record from before `v5b-35` still loads as a prior record and carries no premises.
+
+## Delta re-reviews after unfinished verification, issue #448, 2026-10-22
+
+A delta review used to need the earlier review's `coverage` complete. `coverage` was incomplete when a changed file went unreviewed, and also when required verification did not finish. In the second case the next round reviewed the whole diff again and still had to finish the leftover checks. One sampled delivery spent about 49 minutes on this over two rounds.
+
+The run now records two more facts beside `coverage`. `files` is incomplete when a changed file is `unreviewed` and complete otherwise. `verification` is incomplete when `outstanding` lists an item and complete otherwise. `coverage` is incomplete when either one is, so status precedence doesn't change and a review with unfinished verification still can't approve. A delta review now needs only `files` complete. The other delta conditions don't change.
+
+Each `outstanding` item is now an object with `id`, `claim` and `settled_by`. The summary lists these items under `Unfinished verification`, so a later pull-request review can carry or settle them. A local `prior_record` run already keeps every outstanding entry until a task that run rules on settles it. Unfinished verification no longer needs its own coverage-gap line. The finalizer refuses a delta review from a prior with an `unreviewed` file, a `files` or `verification` fact that the record contradicts, and an outstanding entry in the old `<id>: <reason>` string form. A prior record from before `v5b-34` still loads. Its string entries keep their ids, and its file rows supply its `files` fact.
+
+This supersedes #92's coverage condition for delta scope, and the part of #331 that recorded unfinished verification only as coverage gaps. The verifier allowance, the required checks, and which earlier must-fix findings need the verifier don't change. The trailer gains two keys, so the workflow advances to `v5b-34`.
+
+## The installed skill root, issue #456, 2026-10-22
+
+`record.paths.skill_root` named the symlink target of an installed skill, such as a synced folder on another drive. Publishers run `--check` and `--emit-batch` from the root the record names, and a harness safety check can refuse to run scripts from the target while it allows the installed path. The finalizer now records the path it was invoked through and doesn't resolve symlinks. It still accepts an explicit `skill_root` that names either path to the same directory. The record format, payload and batch don't change, so the workflow version stays the same.
+
+## Invalid corrections keep their verdict, issue #452, 2026-10-22
+
+A verifier confirmed a candidate but returned `corrections.priority: "P4"`. Accounting withheld the whole record because of that one optional field. The required task stayed unfinished, and the review ended `Incomplete`.
+
+`account_verifier_return.py` now drops an unknown or invalid correction field from the report's copy of the return and keeps the record accounted. If `corrections` is not an object, it drops the whole value. Each drop adds one violation that names what it dropped. The raw return file and its hash don't change. An invalid `id`, `verdict`, `basis`, `evidence`, `settling_fact` or safety ruling still withholds the record. Because a drop is a violation, the helper exits 1, and verification already uses an exit-1 report for its accounted records.
+
+`verifier.md` now lists the allowed `priority` and `action` values. `verification.md` says the report's copy of the return leaves out dropped corrections. `verifier-accounting/3` keeps its shape, so reports in prior records still establish carried confirmations. Verification now accounts a verdict it used to withhold, so the workflow advances to `v5b-33`. That stops the duplicate shortcut from reusing a review that ended `Incomplete` for this reason.
+
+## Exact-head CI replaces local reruns, issue #449, 2026-10-22
+
+In the slowest sampled re-review, 46 of 81 minutes went to rerunning suites that CI had already passed at the same head. The caller's brief asked for the reruns, and the rubric had no rule for a CI job that was still running.
+
+Supplied checks now treats a CI job at the reviewed head as settling the checks it runs. A passed job is `accepted`. For a failed job, the reviewer reads the log and reruns only the failing test, which becomes a `must-fix` candidate. The reviewer records a running job as `pending` and doesn't wait for it. When a caller asks to rerun a check that CI covers, the reviewer cites CI instead. A job that doesn't match the obligation settles nothing, and the one-suite cap stays.
+
+A pending required check doesn't block approval by itself, because the forge's merge rules already wait on required checks. `record.check_evidence` accepts `pending` at the reviewed head with a reason and doesn't change status.
+
+Workflow `v5b-32` stops the duplicate-review shortcut from reusing a review that reran CI-covered checks.
+
+## Settled routed items release their entries, issue #421, 2026-10-02
+
+A prior `routed.unresolved` or `routed.disputed` entry survived unless a task ruled on its id, and classifying its item `fixed`, `accepted` or `obsolete` was not such a ruling. The run that settled a routed question therefore had to keep the entry, and the run after it could neither keep it, because the id was no longer a rendered or prior item, nor drop it. `implement-publish` now continues a local review until it is `Approved`, so that chain is an ordinary one. The entry now leaves once its item is settled, in the run that classifies it or any later one. An open item still keeps its entry, and `routed.unrecoverable_inputs` is unchanged: it names no item, so only a task releases it. A supplied input that no task names still leaves the chain `Incomplete`, as before this change.
+
+The rule belongs to local `prior_record` runs, which carry no duplicate-shortcut identity, and no pull-request review renders differently, so workflow `v5b-31` stands. `prior-state.md`'s Keep state rule gains two sentences: the re-review path rises from 48,302 to 48,538 bytes and the runtime total from 55,551 to 55,787, within their limits.
+
+## Worker-written verifier returns, 2026-10-02
+
+The verifier writes its return to a file so the primary no longer generates the same JSON again to save it. This replaces [#358](#inline-only-verifier-returns-issue-358-2026-09-24)'s inline-only transport and keeps its identity rules: the `bundle_id`, both private formats, the return encoding and the allowance are unchanged, so workflow `v5b-31` stands and an inline bundle built earlier still accounts.
+
+#344's file transport is not restored. It needed a host that confined the worker to creating one file, a `--return-file` argument and a manifest `return_file`. The assignment is instead a line closing the brief's instructions, which the manifest already binds by hash, inside a directory the builder creates, so nothing there predates the build and a return left by another brief carries another `bundle_id`. A refused handoff leaves no report, changes no ruling and earns no batch.
+
+The handoff instructions for worker and primary, with a request for the smallest decisive excerpt per citation, raise the verifier instructions from 8,980 to 9,272 bytes, the required-verifier path from 46,259 to 46,650 and the runtime total from 54,916 to 55,551. The runtime limit had 84 bytes of headroom and rises from 55,000 to 56,000; the other limits stand. No latency or cost effect is claimed; that needs a live matched comparison.
+
+## Judgment-led instructions, 2026-10-02
+
+The main skill now explains its contribution relative to an ordinary review prompt: promised-outcome review, consequences beyond the diff, independent challenges to consequential claims, and a durable record across fixes. These are commitments about review behavior and handoff, not claims of higher recall or precision than a built-in reviewer.
+
+The rubric and verifier retain evidence standards while leaving investigation order and proof strategy to the model. The rewrite removes prescribed candidate-search sequences, exhaustive interleaving enumeration, test-by-test trace recipes, and the requirement that a safety ruling cite a new line merely to differ from the supplied evidence. A ruling still needs decisive evidence. Conformance still comes from the pinned artifact, compatibility remains separate from compliance, and changed tests still need meaningful assertions.
+
+Target pinning, record schemas, prior-state handling, verification triggers and batch allowance, execution bounds, and publication ownership remain the integration contract. The recording and handoff references now defer mechanical field shapes to the scripts. A single self-contained worker brief replaces conditional section assembly; the protocols themselves remain unchanged. Workflow `v5b-31` prevents the duplicate shortcut from reusing reviews made under the earlier reasoning instructions.
+
+Instruction size and existing script tests can establish a smaller, compatible prompt. Review quality needs a comparison on the same changes; this rewrite does not establish a quality improvement.
+
+### Arena synthesis
+
+Candidate A was the initial rewrite; candidate B was an independent Claude Opus 5.5 attempt at high effort from the same baseline and user prompt. The read-only cross-judge scored both 20/25 and chose A on the rubric's review-value tie-break. The parent agreed after reading both artifacts and rationales. There were no dropouts.
+
+A remains the base for purpose, admission, and freedom to choose an investigation. Two ideas came from B: the shorter recording and verifier-handoff references that defer schemas to scripts, and one self-contained worker brief that removes conditional section extraction. The synthesis restores the caller-cited Inputs table and Return heading and updates the README's workflow identity. It rejects B's unsupported comparison with ordinary reviewers, blanket exclusion of linter-detectable defects, and prescribed every-branch and new-citation proof requirements.
+
+All ten `review-code` test scripts passed on the synthesis, including the documented command-chain exercises, verifier handoff, rendering, prior records, and instruction budgets. All 50 relative Markdown links resolved, including six section anchors, and the caller-cited headings and Inputs table were checked. `git diff --check` passed. No live comparison of review quality has run.
+
+Measured instruction bytes fell from 73,374 to 54,916 across runtime files, from 29,870 to 20,401 for the always-loaded set, and from 17,701 to 8,980 for the complete verifier instructions. The brief now has one instruction set for every task, so separate ordinary and specialized measurements are redundant. The budget check measures that one brief and sets lower ceilings above the measured paths.
+
+## Denied-command recovery, issue #415, 2026-09-29
+
+The always-loaded boundary rule tells a reviewer to keep working after a command is denied or refused: retry once in an allowed form, or record the evidence as unavailable and continue to the artifacts. Four of 36 Sonnet 5.5 reviews in [the benchmark](https://github.com/kamui/skills/issues/415) stopped after one sandbox denial. The rule adds no execution permission or new phase. Workflow `v5b-30-x382-x415` prevents reuse of a review made without it.
+
+The rule and workflow marker add 186 bytes to each primary path and the runtime total. The always-loaded set is 29,870 bytes, so its limit falls from 31,000 to 30,000; the other limits stand. The focused paid re-run awaits an approved spending cap and is not claimed by this change.
+
+## One record, prior records and packet identity, issue #357, 2026-09-24
+
+The staged `SKILL.md` is active, reconciled with #356's reference names: it keeps the issue-tracker read, the focused-test timing wrapper until #359, and names the context build arguments `targets.md` now carries. `compose_review.py`, `validate_review.py` and `finalize_review.py` merged into `render_review.py`; `continue_review.py`, `context_fingerprint.py`, `continuation-addendum.md` and their tests are gone. The `profile`, `return_format` and merged-target publication authorization inputs are gone, `fragments.md` had no consumer, and the retrospective Mode line reads only "Retrospective review of merged pull request". Workflow `v5b-25` covers the record, state, trailer and Mode-line changes. Older trailers carry no `packet_context` or `supplied_inputs`, so each open pull request gets one fresh review at its next run: a one-time duplicate-review miss.
+
+**Removed rules and their replacements.** Each rule a removed mechanism enforced has a replacement check with a fixture in `test_render_review.py`, `test_render_composition.py`, `test_forge_packet.py` or `test_command_chains.py`, or is a deliberate behavior change below.
+
+| Removed rule | Replacement |
+| --- | --- |
+| A chain file names the current record and links its reviewed head; forks, cycles and unlinked files are refused | `lineage` is derived as the prior's plus the prior, and an explicit copy that differs is refused; `--check --lineage` refuses a sibling fork against the caller's accepted records; a prior inside the run's own directory is refused, so no record lists itself |
+| A chain file needs its finalization marker and report; unknown protocols establish nothing | The prior-record check and `--check` refuse a missing marker, another protocol or schema, and a missing report |
+| One repository across the chain | The prior's repository, base ref and base SHA must match |
+| A fixed id must be open, and a new id must not be | Every prior open item is classified once with its action, an unknown id is refused, an open item is rendered again under its id, and a settled one never is |
+| Per-file coverage the delta did not reach stays as the chain left it | The new record accounts for every file of the pinned manifest, and a delta review needs the prior's coverage complete |
+| Check evidence keeps its original head | The record's check-evidence rule, unchanged |
+| A carried confirmation names its chain file and batch (`carried:<file>#<batch>`) | `confirmed_in` and `batch` must match the provenance of the prior's own task, transitively, and that record's accounting must confirm the id; the `carried:` form and `carried_from` are refused as retired |
+| Spent allowance is cumulative and never reset; a follow-up needs the initial batch | The finalizer derives the flags from the prior's and this record's batches, refuses a lower explicit copy, and refuses a batch for a phase the prior spent |
+| Outstanding work and routed items survive every addendum | They survive unless a task this run ruled on settles them; a carried confirmation settles nothing |
+| A replacement record carries every open item, an open must-fix as must-fix, routed and outstanding work, spent flags and confirmations | The same rules hold for every prior-record run |
+| An interrupted addendum is incomplete and a retry replaces it | Finalization stages every output and promotes the report last; a failure removes what it wrote |
+| The finalizer refuses a digest the saved inputs no longer produce | `packet_context` is derived from the saved packet, and an explicit copy that differs is refused |
+| The digest covers PR and issue text, comments with availability and completeness, specs and guidance | `packet_context` covers the PR and linked-issue intent and the set of linked issues; `supplied_inputs=no` in both runs replaces the spec identities; base equality fixes the guidance |
+
+**Behavior changes.** A record from before `review-code-record/1`, including a version-1 or version-2 addenda chain, is not a prior record: the caller reviews in full from the base with a new allowance and names the earlier record in coverage, instead of mapping version-1 chains by hand. `continue_review.py state` is gone because the latest record is complete. `--check` accepts only `review-code-record/1`, not pre-protocol outputs. Local runs keep no digest; they never had a duplicate shortcut. Rewriting a finalized record in place after another names it is unsupported. A local `prior_record` run rechecks fixed findings itself, as continuations did, and spent allowance alone leaves a fixed ordinary finding complete; required verification that remains keeps coverage incomplete.
+
+**Budget.** The always-loaded set falls from 31,989 to 29,873 bytes and the runtime total from 83,195 to 77,361; a first review of either target kind falls from 54,621 to 51,479, the required-verifier path from 67,129 to 64,086, and a pull-request re-review from 61,147 to 60,631. Their limits fall to the next thousand. The continuation path, 42,692 bytes under #356, becomes the re-review path at 60,631: a prior-record run is a complete re-review that reads `targets.md`, `prior-state.md` and the finalizer's example rather than an addendum procedure, so this path's limit rises from 43,000 to 61,000 as the one re-review limit. #359's removal of the fetch queries and timing wrappers from `targets.md` is expected to lower it.
+
+**Exercise.** The [bounded exercise](../../docs/research/review-code-one-record-2026-09-24/README.md) ran the four archived #341 tasks against this change, with the continuation reseeded as a prior record, and the callers' local artifact paths without forge writes. It records observations, not recall, precision, cost or latency.
+
+## Inline-only verifier returns, issue #358, 2026-09-24
+
+The verifier has one return transport. `--return-file`, `--inline-fallback`, the file-transport brief section, the manifest's `return_file` and the transport choice in `verification.md` are gone, and the worker no longer computes the manifest's SHA-256: the builder generates a `bundle_id` for each build and the worker echoes it. The return schema was already folded into `verifier.md` by #356; its inline instruction now closes that section. The worker is sent only `brief.md`. The manifest and accounting formats move to `verifier-manifest/3` and `verifier-accounting/3`, and the helpers refuse the old bundles. Verdicts, triggers, the allowance and the rendered record are unchanged, so workflow `v5b-25` stands.
+
+**Removed rules and their replacements.** Each rule a removed mechanism enforced has a replacement check with a fixture in `test_verifier_handoff.py` or `test_render_review.py`, or is a deliberate behavior change below.
+
+| Removed rule | Replacement |
+| --- | --- |
+| The worker echoes the manifest file's SHA-256, so a return pairs with one run, batch, input and brief; a different hash withholds every task | The worker echoes the build's `bundle_id`; a different, missing or null ID withholds every task. Fixtures: a stale return from another run with the same batch name, phase and candidate IDs at another head or with another claim, a rebuilt brief with identical input, the same run's follow-up, a wrong ID, and the retired hash echo |
+| A batch name and task IDs alone never pair a return | Unchanged: the ID is random per build, never derived from the input, so equal inputs still get distinct IDs |
+| The manifest binds the input and brief by hash, and accounting recomputes it | Kept, and the manifest also binds the ID, which the brief must print exactly once; a tampered brief, manifest or ID is refused with no report |
+| At finalization, the accounting report's `manifest_sha256` must match the batch's bundle | Kept, and the report's `bundle_id` must equal the manifest's and both files must be the current formats |
+| The assigned return path must equal the manifest's `return_file`; the file is read without following links; an absent, linked, non-regular, unreadable, moved or partial file withholds every task | Behavior change: the worker writes nothing, so there is no assigned file to guard. The primary's verbatim save of the inline response is the raw return, and an unparseable save withholds every task as before |
+| `--inline-fallback` records the assigned file's state beside a save after a failed write | Removed with the file transport: nothing can fail to be written |
+| `--repair-of` records the original's path and hash, and repair fixes encoding only | Kept. The original's raw bytes must also contain the bundle's ID, so a repair cannot relabel another brief's return; a fenced or otherwise mis-encoded original still qualifies |
+| Exactly one record per task in its own role; missing, duplicate, unknown, wrong-role or uncited records are withheld | Unchanged, with their fixtures |
+
+**Behavior changes.** A bundle built before this change cannot be accounted, and a batch recorded with the old formats is refused at finalization; rebuild the batch. A prior record's accounting reports are still read for carried confirmations in either format, because the finalizer already checked them when it wrote that record. A worker that cannot reply inline cannot return at all. In [#347's measurement](../../docs/research/review-code-artifact-savings-2026-09-22/combined.md) every primary dispatched inline, because a Claude Code worker cannot be limited to creating one file, so the file path ran only in tests.
+
+**Archived returns.** [`reencode_returns.py`](../../docs/research/review-code-verifier-inline-2026-09-24/reencode_returns.py) rebuilt the four #341 verifier bundles in the new format from their archived inputs and replaced each return's `manifest_sha256` with the new bundle's ID. The originals are unchanged. Its `check` finds each re-encoded return accounted exactly as the archived report accounted the original, and each archived bundle refused by the new helper. The [fixtures](../../docs/research/review-code-verifier-inline-2026-09-24/README.md) are comparison inputs and do not authorize a live return in the old format.
+
+**Budget.** The runtime total falls from 77,361 to 76,286 bytes, the required-verifier path from 64,086 to 63,656, the verifier instructions from 17,583 to 17,480 and the example brief from 21,081 to 20,978; the file-transport brief's measurement goes. The runtime total, required-verifier and example-brief limits fall to the next thousand.
+
+## Scripted fetch and no timing log, issue #359, 2026-09-24
+
+`forge_packet.py fetch` replaces the GraphQL root query, the continuation shapes and the pagination loop that `targets.md` spelled out for the model, and `targets.md` keeps only the call and its exit handling. `run_events.py`, its tests and the event hooks in `review_context.py`, `build_verifier_prompt.py`, `account_verifier_return.py` and `render_review.py` are gone, and so is every `wrap` prefix: the focused-test wrapper in `SKILL.md`, the fetch and CI wrappers in `targets.md`, and `review-code-publish`'s Timing events section, its `ev` and `forge()` scaffolding and the thread write loop's wrapper. Fetch mechanics and timing only, so workflow `v5b-25` stands.
+
+**Packet identity.** `normalize` is unchanged from #357 (`04fe1b4`), and `fetch` writes exactly what `normalize` prints for its saved responses in call order. So `packet_context`, its normalized intent inputs and the caller's `supplied_inputs` marker are the same whoever fetched; `fetch` passes no supplied-input provenance of its own, and `explicit_issues` still separates referenced issues from closing ones. Later timing measurements use transcript tool-call timestamps, which [`transcript_usage.py`](https://github.com/kamui/code-review-bench/blob/main/bench/tools/transcript_usage.py) already parses; its `--timing` sidecar stays and is now filled from those timestamps.
+
+**Removed rules and their replacements.** Each rule the removed prose or wrapper enforced has a replacement with a fixture in `test_forge_packet.py`, `test_command_chains.py` or `test_thread_writes.py`, or is a deliberate behavior change below.
+
+| Removed rule | Replacement |
+| --- | --- |
+| Run the root query once, then one continuation per connection reporting `hasNextPage: true`, repeating with each `endCursor` until it is false, nested issue and thread comments included | `fetch` follows every connection, outer and nested, to its last page. Fixtures: a single page, and continuations of `closingIssuesReferences`, `reviews` (two further pages), `reviewThreads`, `comments`, issue comments and thread comments |
+| Save every response to its own file, a failed call included, and normalize exactly once into `packet.json` | `fetch` saves each response as `gh` printed it and writes the packet `normalize` derives from them; the fixtures compare the two byte for byte and their digests |
+| A failed or missing continuation is a named gap, never complete coverage, and cannot pass the later-state check | Kept, and a failed response is not followed further, even when its data reports another page. Fixtures: an HTTP error body and a GraphQL error each leave a named gap at exit 0, and the partial packet is refused by `shortcut` through its gaps alone while the complete one qualifies |
+| A failed root query stops the step | `fetch` exits 2 naming `no root page` and the failed call, fetches no issue and writes no packet |
+| Fetch each explicitly referenced non-closing issue once | `--issue` values are fetched once each with their comment continuations; one already among the closing issues is skipped |
+| Do not fetch these again later | `fetch` refuses a directory holding another fetch or stray responses, and a second call into its own directory only adds issues the saved responses lack |
+| The wrapper's exit 2 with a `run_events:` line is a failed call | A `gh` that cannot run is `fetch`'s exit 2 |
+| A token never reaches the recorded `argv` or events | Tokens stay in the environment; the submission, dismissal and thread-loop fixtures still assert that `argv` never carries one |
+
+**Behavior changes.** No run records `run-events.jsonl`, so fetch, focused-test, write, context, brief, accounting and finalization intervals are no longer captured by scripts. `interface_metrics.py` still measures `run_events.py --help` for archived revisions that ship it. The fetch targets `--repo` explicitly instead of `gh`'s `{owner}`/`{repo}` placeholders, so a fork checkout still reads the base repository. Issues the pull-request body links need the packet first, so they take a second `fetch` call that adds only them and rewrites `packet.json`; before, the model fetched them after reading the root page and normalized once. A CI read is saved to the private directory unwrapped.
+
+**Budget.** `targets.md` falls from 14,438 to 11,488 bytes, `SKILL.md` from 9,520 to 9,091, `review-code-publish`'s `SKILL.md` from 5,507 to 5,301 and `publication.md` from 33,621 to 30,643. The always-loaded set falls from 29,873 to 29,444 bytes, the runtime total from 76,286 to 72,907, a first review from 51,479 to 48,100, the required-verifier path from 63,656 to 60,277 and a re-review from 60,631 to 57,252. The runtime total, review, required-verifier and re-review limits fall to the next thousand; the always-loaded limit stays at 30,000.
+
+## Rejected action and remedy wording, issues #381 and #385, 2026-09-27
+
+The isolated action variant lost ripgrep's registered defect in a valid review, and the remedy variant lost Hono's. Each baseline target had full recovery, so the protocol's recall-retention guardrail stops both runs. The two action sentences and the completeness sentence are removed. The [run reports](https://github.com/kamui/code-review-bench/blob/main/bench/runs/2026-09-27-audit-recovery.md) preserve the paid evidence; [HISTORY.md](../../docs/review-code/HISTORY.md#action-and-remedy-experiments-rejected-2026-09-27) preserves the original design entries. The lifecycle experiment #384 is inconclusive and remains open.
+
+The removal subtracts 379 runtime and always-loaded bytes. Runtime total is 73,341 bytes and always loaded is 29,837. The shared runtime limit stays 74,000: the retained lifecycle and destroyed-test rules, identity and presentation changes still exceed the former 73,000 limit. No limit is raised. Workflow advances to `v5b-29-x382` because removing the action recheck changes verification semantics; the #382 policy remains in effect.
+
+## Lifecycle sentence rejected, issue #384, 2026-09-27
+
+[The staged gate run](https://github.com/kamui/code-review-bench/blob/main/bench/runs/2026-09-27-x384-staged-gate/README.md) rejects the sentence: two valid candidate reviews of r-base-ui-5460 approved the change and recovered neither GT-r1 nor GT-r2, so the 2 of 3 thresholds were unattainable. The removal below stands, and no text or workflow changes with this entry.
+
+### Removed pending a valid run
+
+`SKILL.md`'s optional-scrutiny rule loses the lifecycle sentence and nothing else changes. Both earlier #384 runs are inconclusive: [the first](https://github.com/kamui/code-review-bench/blob/main/bench/runs/2026-09-26-x384-lifecycle/README.md) has 0 valid reviews of 4 and [the matched run](https://github.com/kamui/code-review-bench/blob/main/bench/runs/2026-09-27-x384-matched-isolation/README.md) has 3 of 8. Neither measures a pass or a rejection, so this is not a rejection. #380 adopts only changes that pass an isolated experiment, and the sentence was shipping without one. The experiment reads the frozen candidate tree `938f7c80925248cc76943317d6fec243ddac5a08`, not `main`, so a later run is unaffected. [HISTORY.md](../../docs/review-code/HISTORY.md#lifecycle-sentence-removed-pending-a-valid-run-2026-09-27) preserves the original design entry.
+
+The removal subtracts 153 bytes and 22 words from every measured path except the verifier briefs. The always-loaded set falls from 29,837 to 29,684 bytes, a first review from 48,558 to 48,405, the required-verifier path from 60,735 to 60,582, a re-review from 57,751 to 57,598 and the runtime total from 73,341 to 73,188. The runtime total still exceeds the former 73,000 limit, so every limit stands. Workflow advances to `v5b-30-x382` because the removal changes when a review may conclude with no blocker.
+
+## Destroyed test protection, issue #382, 2026-09-26
+
+The Changed tests section gains one bullet: an existing test that could catch its defect at the merge-base but no longer can at head is a correctness `must-fix` gap until the change or an authorized person explicitly accepts losing that protection. The maintainer chose the coverage-inclusive policy the k-graphql-js-1582 register allowed, because the baseline reviewers found the fixture that bypasses stack creation and still approved under the `consider` cap for ineffective tests. The bullet overrides that cap and the test-hygiene clause in Priority and action only for demonstrated lost protection. Missing extra assertions, pre-existing ineffective tests and optional additional cases stay `consider`. An accepted loss resolves through prior-state's existing `accepted` state. The workflow identity moves from `v5b-28` to `v5b-28-x382`, as #380 requires of skill changes, so the duplicate-review shortcut cannot reuse a review made under the old cap and the experiment stays identifiable.
+
+**Budget.** The bullet adds 221 bytes and 37 words to the always-loaded set, and the identity in `output.md` 5 bytes more, so the set rises from 29,990 to 30,216, a first review from 48,711 to 48,937, the required-verifier path from 60,888 to 61,114, a re-review from 57,904 to 58,130 and the runtime total from 73,494 to 73,720. The verifier example brief, which embeds Changed tests, rises from 20,978 to 21,199. The always-loaded, required-verifier, re-review and example-brief limits rise to the next thousand; the runtime total stays inside 74,000. The bytes buy the experiment [#382](https://github.com/kamui/skills/issues/382) preregisters under [#389](https://github.com/kamui/skills/issues/389)'s protocol: GT-k1 must-fix with a sufficient remedy in 3/3 GraphQL replicates, GraphQL approvals falling from 2/2 to 0/3, and no new false findings or recall loss on the other targets. If it fails, revert the bullet, those four limits and the identity.
