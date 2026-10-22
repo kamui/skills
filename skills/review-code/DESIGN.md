@@ -21,7 +21,7 @@ The reviewer judges evidence, admission, priority, and whether a safety area app
 | Prior reviews and re-reviews from a prior record | [`prior-state.md`](references/prior-state.md); [`forge_packet.py`](scripts/forge_packet.py) owns `packet_context`, `later-state`'s exclusions and the `shortcut` identity check, and the finalizer owns the prior-item trailer and the lineage |
 | Publication | [`review-code-publish`](../review-code-publish/SKILL.md) and its [publication reference](../review-code-publish/references/publication.md) |
 
-Keep dated evidence and superseded decisions in the [history](../../docs/review-code/HISTORY.md). Update this file when the current architecture or rule ownership changes. The [instruction budget check](scripts/test_instruction_budget.py) requires a dated entry here before any measured-load limit rises; that rationale belongs with the current design.
+Keep dated evidence and superseded decisions in the [history](../../docs/review-code/HISTORY.md). Update this file when the current architecture or rule ownership changes. The [instruction budget check](scripts/test_instruction_budget.py) limits instruction size to keep the skill small. Before raising a limit, look for text to cut. Change notes here don't need byte counts.
 
 ## Current mechanics
 
@@ -48,6 +48,16 @@ A delta review needed the earlier review's `coverage` complete, and `coverage` t
 A delta review now needs only `files` complete, with the other delta conditions unchanged. Each `outstanding` item becomes an object of `id`, `claim` and `settled_by`, and the summary publishes it under `Unfinished verification`, so a later pull-request review can carry or settle it; a local `prior_record` run already keeps every outstanding entry until a task this run rules on settles it. The finalizer refuses a delta from a prior with an `unreviewed` file, a `files` or `verification` fact the record contradicts, and an outstanding entry in the old `<id>: <reason>` form. A prior record from `v5b-31` still loads: its string entries keep their ids and its file rows give its `files` fact. Unfinished verification needs no coverage-gap line of its own. This supersedes #92's coverage condition on delta scope and the part of #331's outstanding-work handling that wrote unfinished verification only as coverage gaps. The verifier allowance, the required checks and which earlier must-fix findings need the verifier are unchanged. The trailer gains two keys, so the workflow advances to `v5b-32`.
 
 **Budget.** The runtime total rises from 55,891 to 56,337 bytes, past its 56,000 limit, which rises to 57,000. The always-loaded set rises from 20,401 to 20,459, a first review from 39,109 to 39,224, the required-verifier path from 46,754 to 46,973 and a re-review from 48,538 to 48,937, each within its limit. The bytes carry the two facts, the carried-item rule and the outstanding item's fields.
+
+## Exact-head CI replaces local reruns, issue #449, 2026-10-22
+
+In the slowest sampled re-review, 46 of 81 minutes went to rerunning suites that CI had already passed at the same head. The caller's brief asked for the reruns, and the rubric had no rule for a CI job that was still running.
+
+Supplied checks now treats a CI job at the reviewed head as settling the checks it runs. A passed job is `accepted`. For a failed job, the reviewer reads the log and reruns only the failing test, which becomes a `must-fix` candidate. The reviewer records a running job as `pending` and doesn't wait for it. When a caller asks to rerun a check that CI covers, the reviewer cites CI instead. A job that doesn't match the obligation settles nothing, and the one-suite cap stays.
+
+A pending required check doesn't block approval by itself, because the forge's merge rules already wait on required checks. `record.check_evidence` accepts `pending` at the reviewed head with a reason and doesn't change status.
+
+Workflow `v5b-32` stops the duplicate-review shortcut from reusing a review that reran CI-covered checks.
 
 ## Settled routed items release their entries, issue #421, 2026-10-02
 

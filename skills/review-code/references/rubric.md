@@ -44,7 +44,7 @@ For unresolved compatibility, name what could settle it and whether that fact co
 
 Assess whether changed tests can detect the behavior they claim to protect. Follow enough of their setup, assertions, and cleanup to settle that question, using execution or a code trace as appropriate.
 
-When the repository provides a cheap focused command and a safe disposable environment, run the changed test or the smallest affected group once at the pinned head. Reuse readable exact-head CI evidence of that same test. Keep the reviewed tree intact and build output disposable. Follow caller or repository run limits; otherwise allow five minutes per command and ten for provisioning. Use no production services, credentials, or destructive external effects. Run at most one suite and never a suite to reproduce a focused failure. Record the command, head, exit status, and decisive output, or why execution was unavailable.
+An exact-head CI job that runs the changed test settles it under Supplied checks. Otherwise, when the repository provides a cheap focused command and a safe disposable environment, run the changed test or the smallest affected group once at the pinned head. Keep the reviewed tree intact and build output disposable. Follow caller or repository run limits; otherwise allow five minutes per command and ten for provisioning. Use no production services, credentials, or destructive external effects. Run at most one suite and never a suite to reproduce a focused failure. Record the command, head, exit status, and decisive output, or why execution was unavailable.
 
 A reproducible introduced assertion failure is a bug candidate; decide whether the product or expectation is wrong from the evidence. A CI test failure is ordinarily `must-fix` and needs independent confirmation. Environment failure is unavailable evidence. A code trace can settle a case without execution; unavailability alone is never a pass.
 
@@ -56,9 +56,11 @@ Evidence uses shared context plus one line per check; expanded records are also 
 
 Reuse evidence when its identity, inputs, environment, scope, and successful completion match the obligation. Read the relevant output. Exact-head obligations require the reviewed commit; an uncommitted run counts only for the commit made from exactly that tree. Earlier evidence remains historical at its original head. A new head does not automatically require rerunning everything: select a focused check or trace where the existing evidence cannot settle the question.
 
+A CI job at the reviewed head settles the checks it runs; do not rerun them locally, even when a caller asks, and record that CI answered such a request. Cite a passed job as `accepted`. For a failed job, read its log and rerun only the failing test; the failure is a `must-fix` candidate. Record a running job as `pending` without waiting; alone it does not block approval, because the forge's merge rules gate required checks. A skipped job, or one in another environment or of narrower scope, settles nothing. Run a check locally only when no CI job at the head covers it and the new commits could break it.
+
 Supplied results do not replace changed-test inspection, independent verification, or safety-premise challenges. Missing metadata alone is neither a defect nor a coverage gap; judge what obligation remains unsettled. Keep test failures, environment failures, and missing checks distinct.
 
-In `summary.check_details`, account for each supplied check as `accepted`, `historical`, `reviewer-executed`, or `unused/unavailable`, with its identity, original head, and a reason for the last three. Group shared context and reference supporting artifacts. Execute within Changed tests' bounds.
+In `summary.check_details`, account for each supplied check as `accepted`, `historical`, `reviewer-executed`, `pending`, or `unused/unavailable`, with its identity, original head, and a reason for the last four. Group shared context and reference supporting artifacts. Execute within Changed tests' bounds.
 
 ## Questions, observations, and gaps
 
