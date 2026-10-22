@@ -73,7 +73,7 @@ def base_composition() -> dict:
     return {
         "run": {
             "head": HEAD, "base_ref": "main", "base_sha": BASE, "merge_base": MERGE_BASE, "packet_context": CONTEXT,
-            "supplied_inputs": "no", "issues": ["acme/payments#123"], "coverage": "complete", "repository_url": REPO, "merged": False,
+            "supplied_inputs": "no", "issues": ["acme/payments#123"], "files": "complete", "verification": "complete", "coverage": "complete", "repository_url": REPO, "merged": False,
         },
         "summary": {
             "status": "Changes Requested",
@@ -235,7 +235,7 @@ def local_targets() -> None:
         snapshot = json.loads(store.read_text(encoding="utf-8"))["context"]["snapshot"]
         value = {"run": {"head": snapshot["head"], "base_sha": base, "merge_base": base,
                          "base_ref": "HEAD", "target_kind": "worktree", "tree": snapshot["tree"],
-                         "supplied_inputs": "no", "issues": [], "coverage": "complete", "merged": False,
+                         "supplied_inputs": "no", "issues": [], "files": "complete", "verification": "complete", "coverage": "complete", "merged": False,
                          "change_description": ""},
                  "summary": {"status": "Approved", "intent": "Edit file.",
                              "issue_fit": "Issue alignment unavailable; no stated promises.",
@@ -287,6 +287,11 @@ def premise_task(identity: str = "premise-1", ruling: str = "holds", batch: str 
     return {"id": identity, "type": "safety-premise", "area": "data-integrity",
             "premise": "The charge lookup always succeeds before `submitCharge()` records the charge.",
             "evidence": "src/charges.ts:31", "batch": batch, "ruling": ruling, **extra}
+
+
+def pending_work(identity: str, settled_by: str) -> dict:
+    """An unfinished required verification item; its claim reads as the published review states it."""
+    return {"id": identity, "claim": f"The verifier has not ruled on `{identity}`.", "settled_by": settled_by}
 
 
 def verification(tasks: list, batches: list, initial: bool | None = None, follow_up: bool | None = None,
@@ -387,8 +392,17 @@ def record_accounting() -> None:
         ("verification", mutate(**{"record.verification.tasks": []})),
         ("verification", mutate(**{"record.verification.tasks.0.batch": "follow-up"})),
         ("stable-id", mutate(**{"record.verification.tasks": [candidate_task(), candidate_task()]})),
-        ("coverage-gaps", mutate(**{"record.verification.outstanding": ["premise-2: follow-up spent"]})),
+        ("coverage-gaps", mutate(**{"record.verification.outstanding": [pending_work("premise-2", "follow-up spent")]})),
         ("coverage-gaps", mutate(**{"record.files.0.state": "unreviewed"})),
+        ("coverage-gaps", mutate(**{"run.files": "incomplete", "run.coverage": "incomplete", "summary.status": "Changes Requested",
+                                    "summary.coverage_gaps": ["a file gap"]})),
+        ("coverage-gaps", mutate(**{"run.verification": "incomplete", "run.coverage": "incomplete"})),
+        ("coverage-gaps", mutate(**{"run.verification": "incomplete"})),
+        ("coverage-gaps", mutate(**{"run.files": "incomplete", "record.files.0.state": "unreviewed"})),
+        ("schema", mutate(**{"record.verification.outstanding": ["premise-2: follow-up spent"], "run.verification": "incomplete",
+                             "run.coverage": "incomplete"})),
+        ("schema", mutate(**{"record.verification.outstanding": [{"id": "premise-2", "claim": "c"}], "run.verification": "incomplete",
+                             "run.coverage": "incomplete"})),
         ("file-accounting", mutate(**{"record.files.1.path": "src/payments.ts"})),
         ("schema", mutate(**{"record.files.3.reason": None})),
         ("requirements", mutate(**{"record.requirements.0.class": "wish"})),
@@ -415,8 +429,7 @@ def record_accounting() -> None:
         value = mutate(**{"findings": findings or [], "questions": questions or [], "observations": [], "summary.status": status})
         value["record"]["verification"] = verification(tasks, batches, **extra)
         if value["record"]["verification"]["outstanding"]:
-            value["run"]["coverage"] = "incomplete"
-            value["summary"]["coverage_gaps"] = ["required verification did not finish: " + "; ".join(value["record"]["verification"]["outstanding"])]
+            value["run"].update(verification="incomplete", coverage="incomplete")
         return value
 
     # No blocker and no high-risk area: no task, no batch, nothing spent.
@@ -432,7 +445,7 @@ def record_accounting() -> None:
     gate(outcome("Needs Information", [candidate_task("queue/retry-order", "data-integrity", ruling="unresolved")], [batch_paths("initial")],
                  questions=copy.deepcopy(composition["questions"])), "unresolved required candidate routed to its question")
     gate(outcome("Incomplete", [candidate_task(ruling="unresolved")], [batch_paths("initial")],
-                 outstanding=["payments/retry-idempotency: settling fact unavailable"]), "unresolved required candidate left outstanding")
+                 outstanding=[pending_work("payments/retry-idempotency", "settling fact unavailable")]), "unresolved required candidate left outstanding")
     # A ruling stands only on the accounting report of the batch it names.
     mismatched = copy.deepcopy(composition)
     write_accounting(mismatched["record"]["verification"]["batches"][0]["accounting"], [candidate_task(ruling="refuted")])
@@ -457,7 +470,7 @@ def record_accounting() -> None:
     refused(premise_mismatch, "verification", "malformed accounting report", needle="does not account")
     # A batch whose accounting produced no report still records its withheld tasks as outstanding work.
     no_report = outcome("Incomplete", [candidate_task(ruling="withheld"), candidate_task("payments/retry-naming", "optional", ruling="withheld")],
-                        [batch_paths("initial")], outstanding=["payments/retry-idempotency: accounting produced no report"])
+                        [batch_paths("initial")], outstanding=[pending_work("payments/retry-idempotency", "accounting produced no report")])
     Path(no_report["record"]["verification"]["batches"][0]["accounting"]).unlink()
     gate(no_report, "withheld tasks over a batch with no accounting report")
     # High-risk no-blocker conclusion: a premise that holds approves, and a question can carry an unresolved one.
@@ -467,7 +480,7 @@ def record_accounting() -> None:
                  questions=copy.deepcopy(composition["questions"])), "unresolved premise routed to a material question")
     refused(outcome("Approved", [premise_task(ruling="unresolved")], [batch_paths("initial")]), "verification",
             "unresolved premise with neither a question nor outstanding work", needle="premise-1")
-    gate(outcome("Incomplete", [premise_task(ruling="unresolved")], [batch_paths("initial")], outstanding=["premise-1: settling fact unavailable"]),
+    gate(outcome("Incomplete", [premise_task(ruling="unresolved")], [batch_paths("initial")], outstanding=[pending_work("premise-1", "settling fact unavailable")]),
          "unresolved premise left outstanding")
     # A premise that fails reopens as a candidate; the follow-up confirms the new blocker it became.
     reopened = [premise_task(ruling="fails", reopened_as="payments/retry-idempotency"),
@@ -510,7 +523,7 @@ def record_accounting() -> None:
             "unconfirmed new blocker rendered after the allowance is spent", needle="queue/lost-ack")
     exhausted = outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
                         [batch_paths("initial"), batch_paths("follow-up")], findings=copy.deepcopy(composition["findings"]),
-                        outstanding=["queue/lost-ack: must-fix candidate arrived after the follow-up was spent"])
+                        outstanding=[pending_work("queue/lost-ack", "must-fix candidate arrived after the follow-up was spent")])
     record, _ = gate(exhausted, "exhausted allowance leaves the new blocker outstanding")
     assert record["run"]["coverage"] == "incomplete" and record["status"] == "Changes Requested"
     refused(outcome("Changes Requested", [candidate_task(), candidate_task("queue/lost-ack", batch=None, ruling="pending")],
@@ -518,7 +531,7 @@ def record_accounting() -> None:
             "pending required work missing from outstanding", needle="queue/lost-ack")
     # Missing evidence: a withheld required result is outstanding work, never completed verification.
     withheld = outcome("Incomplete", [candidate_task(ruling="withheld")], [batch_paths("initial")],
-                       outstanding=["payments/retry-idempotency: return cited no raw location"])
+                       outstanding=[pending_work("payments/retry-idempotency", "return cited no raw location")])
     gate(withheld, "withheld candidate outstanding")
     refused(outcome("Approved", [candidate_task(ruling="withheld")], [batch_paths("initial")]), "verification",
             "withheld candidate without outstanding work", needle="withheld")
@@ -530,7 +543,7 @@ def record_accounting() -> None:
     refused(outcome("Approved", [premise_task(trigger="must-fix")], [batch_paths("initial")]), "verification",
             "a premise trigger other than optional", needle="only as `optional`")
     # No awaited route: required work is pending with no batch, and nothing is spent.
-    gate(outcome("Incomplete", [premise_task(ruling="pending", batch=None)], [], outstanding=["premise-1: review-wait-unavailable"]),
+    gate(outcome("Incomplete", [premise_task(ruling="pending", batch=None)], [], outstanding=[pending_work("premise-1", "review-wait-unavailable")]),
          "pending premise with no route")
     print("ok record: confirmed, refuted, unresolved, premise, new-blocker, missing-evidence, and exhausted outcomes")
 
@@ -1012,7 +1025,7 @@ def main() -> int:
     assert body.startswith("**Needs Information** — 1 open question.")
     assert "**[Question] Which originating issue applies?**" in body
     assert required_issue["summary"]["issue_fit"] in body
-    assert "issues=none coverage=complete" in body and f"workflow={vr.WORKFLOW} " in body
+    assert "issues=none files=complete verification=complete coverage=complete" in body and f"workflow={vr.WORKFLOW} " in body
     assert "## Coverage gaps" not in body and batch["comments"] == [] and batch["event"] == "COMMENT"
     assert payload["items"][0]["id"] == "workflow/required-issue"
     wrong = copy.deepcopy(required_issue)

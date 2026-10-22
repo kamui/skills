@@ -40,7 +40,7 @@ def payload(anchor: dict, fragment: str) -> dict:
     trailer = (
         f"<!-- review-run head={HEAD} base-ref=main base-sha={MERGE_BASE} "
         f"merge-base={MERGE_BASE} workflow={WORKFLOW} packet_context={'a' * 64} "
-        "supplied_inputs=no issues=kamui/skills#84 coverage=complete -->"
+        "supplied_inputs=no issues=kamui/skills#84 files=complete verification=complete coverage=complete -->"
     )
     question = {
         "type": "question", "id": "effort-profile/deletion",

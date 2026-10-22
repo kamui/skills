@@ -66,7 +66,7 @@ A material question identifies an unavailable fact or decision, who or what can 
 
 An observation is an evidenced, non-actionable fact. Publish at most three, with one sentence and an evidence pointer each; keep others privately as `observation (unpublished, cap)`. Observations never hide unfinished candidates or safety assertions and do not affect status.
 
-Record consequential competing readings as ambiguities, including the reading applied. Required evidence or unfinished verification leaves a coverage gap naming its effect, affected ids, and recovery input. Required unresolved verification becomes a qualifying question or outstanding work.
+Record consequential competing readings as ambiguities, including the reading applied. Missing required evidence leaves a coverage gap naming its effect, affected ids, and recovery input. Required unresolved verification becomes a qualifying question or outstanding work.
 
 ## Priority and action
 
